@@ -14,11 +14,13 @@
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
+            :concurrency-limit 100
             :description "Run query"}
 
            :command
            {:fn teet.db-api.db-api-ion/db-api-command
             :integration :api-gateway/proxy
+            :concurrency-limit 100
             :description "Execute a command"}
 
            :tara

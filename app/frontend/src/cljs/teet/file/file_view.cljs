@@ -379,7 +379,7 @@
      (when actions?
        [:div {:class (<class file-style/file-actions-column-style action-column-width)}
         [:div {:style {:display :flex}}
-         (when allow-replacement-opts
+         (when (and allow-replacement-opts (file-model/editable? file))
            (with-meta
              [file-replacement-modal-button (merge allow-replacement-opts
                                                    {:file file

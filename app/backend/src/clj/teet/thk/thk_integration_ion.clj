@@ -116,8 +116,7 @@
   (write-error-to-log ctx)
   nil)
 
-(defn process-thk-file
-  [event]
+(defn- process-thk-file* [event]
   (try
     (let [result (ctx-> {:event event
                          :connection (environment/datomic-connection)
@@ -131,11 +130,17 @@
                         update-entity-info
                         move-file-to-processed)]
       (log/event :thk-file-processed
-                 {:input result})
-      "{\"success\": true}")
+                 {:input result}))
     (catch Exception e
       (log/error (.getCause e) "Exception in THK import")
       (on-import-error (ex-data e)))))
+
+;; entrypoint for thk import lambda call (from s3 event)
+(defn process-thk-file
+  [event]
+  (future
+    (process-thk-file* event))
+  "{\"success\": true}")
 
 (defn import-thk-local-file
   [filepath]
@@ -161,8 +166,7 @@
 (defn export-projects [{conn :connection :as ctx}]
   (assoc ctx :csv (thk-export/export-thk-projects conn)))
 
-(defn export-projects-to-thk
-  [_event] ; ignore event (cron lambda trigger with no payload)
+(defn- export-projects-to-thk* []
   (try
     (ctx-> {:connection (environment/datomic-connection)
             :s3 {:bucket-name (environment/config-value :thk :export-bucket-name)
@@ -173,9 +177,15 @@
            export-projects
            csv->file
            write-file-to-s3)
-    "{\"success\": true}"
     (catch Exception e
       (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
+
+;; entrypoint for thk-export lambda call (from cloudwatch cron event)
+(defn export-projects-to-thk
+  [_event] ; ignore event (cron lambda trigger with no payload)
+  (future
+    (export-projects-to-thk*))
+  "{\"success\": true}")
 
 (defn export-projects-to-local-file [filepath]
   (let [dump (fn [{file :file}]

@@ -98,8 +98,8 @@
          (some
            (fn [{:activity/keys [estimated-start-date
                                  estimated-end-date] :as activity}]
-             (when (and (date/date-after? estimated-end-date application-date)
-                        (date/date-after? application-date estimated-start-date)
+             (when (and (date/date-within? application-date
+                                           [estimated-start-date estimated-end-date])
                         (not= (get-in activity [:activity/name :db/ident])
                               :activity.name/land-acquisition))
                activity)))

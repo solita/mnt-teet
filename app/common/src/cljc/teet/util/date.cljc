@@ -28,6 +28,13 @@
   #?(:clj (.after a b)
      :cljs (> a b)))
 
+(defn date-within?
+  "is `date` (as timestamp) within `start-date` and `end-date` inclusive?"
+  [date [start-date end-date :as interval]]
+  {:pre [(vector? interval) (some? start-date) (some? end-date)]}
+  (and (not (date-after? date end-date))
+       (not (date-after? start-date date))))
+
 #?(:clj
    (defn inc-days [date days]
      (-> date
@@ -100,4 +107,3 @@
        (let [t (now)]
          (.setDate t (- (.getDate (now)) 1))
          (assert (date-before-today? t))))))
-
