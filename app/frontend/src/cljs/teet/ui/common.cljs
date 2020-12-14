@@ -430,7 +430,7 @@
                      {:class [(<class info-row-item-style (:right-align-last? opts))
                               (:class row-options)]})
          [typography/SectionHeading label]
-         [:p data]]))]))
+         [:div data]]))]))
 
 (defn column-with-space-between [space-between & children]
   (let [cls (<class common-styles/padding-bottom space-between)]
