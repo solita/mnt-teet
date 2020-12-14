@@ -56,7 +56,7 @@
                                        :thk.project/related-cadastral-units)]
     (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
                         :select_feature_properties
-                        {:ids        related-cadastral-unit-ids
+                        {:ids related-cadastral-unit-ids
                          :properties ["KINNISTU" "L_AADRESS" "TUNNUS"]})
          (map (fn [[key properties]]
                 (assoc properties :link/external-id (name key))))
