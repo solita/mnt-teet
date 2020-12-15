@@ -76,20 +76,30 @@
   another file with the same metadata."
   [db {id :db/id :as file}]
   (let [task-id (get-in (du/entity db id) [:task/_files 0 :db/id])
+
+        ;; Take latest versions of all files in task
         task-files (map first
                         (d/q '[:find ?f
                                :where
                                [?t :task/files ?f]
                                [(missing? $ ?f :meta/deleted?)]
+                               (not-join [?f]
+                                         [?replacement :file/previous-version ?f])
                                :in $ ?t]
                              db task-id))
         old-file (d/pull db modify-file-keys id)
-        new-file (-> file
-                     (select-keys modify-file-keys)
-                     ;; Take :db/id from map as the ref attribute value
-                     (update :file/part :db/id)
-                     cu/without-nils)
-        metadata (file-db/file-metadata (du/entity db id new-file))]
+        new-file (select-keys file modify-file-keys)
+
+        ;; Fetch info needed to calculate metadata and
+        ;; make the changes to it
+        file-metadata-info (-> (file-db/pull-file-metadata-by-id db id)
+                               (assoc :file/document-group
+                                      (when-let [dg (:file/document-group file)]
+                                        (d/pull db [:filename/code] dg)))
+                               (merge (select-keys file
+                                                   [:file/name :file/sequence-number
+                                                    :file/part])))
+        metadata (file-db/file-metadata file-metadata-info)]
 
     ;; Check if any other file in this task already has the same metadata
     ;; that this file would have after applying the tx
@@ -103,4 +113,9 @@
                    :teet/error :two-files-with-same-metadata})
 
       ;; No files with same metadata, return tx data
-      (du/modify-entity-tx old-file new-file))))
+      (du/modify-entity-tx
+       old-file
+       (-> new-file
+           ;; Take :db/id from map as the ref attribute value
+           (update :file/part :db/id)
+           cu/without-nils)))))
