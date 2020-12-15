@@ -120,8 +120,7 @@
                                            :id (str "link-delete-button-" id)
                                            :icon-position :start
                                            :action #(e! (link-controller/->DeleteLink from to type id
-                                                                                      in-progress-atom))}]
-      ])])
+                                                                                      in-progress-atom))}]])])
 
 (def type-options [:task :file :cadastral-unit :estate])
 
