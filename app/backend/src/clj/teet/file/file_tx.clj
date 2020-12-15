@@ -54,7 +54,12 @@
                           :in $ ?part
                           :where
                           [?file :file/part ?part]
-                          [(missing? $ ?file :meta/deleted?)]]
+                          ;; File is not deleted
+                          [(missing? $ ?file :meta/deleted?)]
+
+                          ;; File has not been replaced with newer version
+                          (not-join [?file]
+                                    [?replacement :file/previous-version ?file])]
                         db part-id)
                    (mapv first))]
     (if (seq files)
