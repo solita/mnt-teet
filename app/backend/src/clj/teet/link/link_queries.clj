@@ -64,7 +64,7 @@
                        (string/contains-words? (:L_AADRESS %) text)))
          (sort-by :L_AADRESS))))
 
-  (defn search-estate [db {:keys [api-url api-secret]} project text]
+(defn search-estate [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
                                               :in $ ?p]
                                             db project)
@@ -79,8 +79,7 @@
          (filterv #(and (not (str/blank? (:KINNISTU %)))
                         (string/contains-words? (:KINNISTU %) text)))
          (map #(assoc % :link/external-id (:KINNISTU %)))
-         (sort-by #(Integer/parseInt (:link/external-id %)))
-         )))
+         (sort-by #(Integer/parseInt (:link/external-id %))))))
 
 ;; Estate id: fetch all units, distinct from properties
 
