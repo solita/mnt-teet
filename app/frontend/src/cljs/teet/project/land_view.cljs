@@ -397,8 +397,8 @@
                         (:land-acquisitions project-info))
         deleted-unit? (:deleted unit)]
     [:div {:class (<class cadastral-unit-container-style)}
-     [:div {:class (<class cadastral-unit-quality-style quality) }
-      [:span {:title (str MOOTVIIS " – " MUUDET) } (case quality
+     [:div {:class (<class cadastral-unit-quality-style quality)}
+      [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
                                                     :bad "!!!"
                                                     :questionable "!"
                                                     "")]]
