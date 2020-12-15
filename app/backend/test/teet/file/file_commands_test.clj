@@ -155,3 +155,53 @@
                                                       [:db/id :db/ident]
                                                       :file.document-group/general)
                          :file/part nil})))))
+
+
+(deftest file-extension-can-change-with-file-upload
+  (tu/local-login tu/mock-user-boss)
+  (tu/store-data!
+    :task-id
+    (tu/create-task {:user tu/mock-user-boss
+                     :activity (tu/->db-id "p1-lc1-act1")
+                     :task {:task/type :task.type/third-party-review
+                            :task/group :task.group/land-purchase}}))
+
+  (testing "Uploading file with metadata"
+    (tu/store-data!
+      :original-file
+      (fake-upload (tu/get-data :task-id)
+                   {:file/name "first-file.png"
+                    :file/size 10240
+                    :file/document-group :file.document-group/general
+                    :file/sequence-number 666}))
+
+    (is (= {:thk.project/id "11111"
+            :description "first-file"
+            :extension "png"
+            :document-group "0"
+            :sequence-number 666
+            :activity "MO"
+            :task "EK"
+            :part "00"}
+           (file-db/file-metadata-by-id (tu/db)
+                                        (:db/id (tu/get-data :original-file))))))
+
+  (testing "Replacing a file with different extension changes extension, but keeps everything else"
+    (tu/store-data!
+      :replacing-file
+      (fake-upload (tu/get-data :task-id)
+                   {:file/name "second-file.doc"
+                    :file/size 10240
+                    :file/sequence-number 666}
+                   (:db/id (tu/get-data :original-file))))
+
+    (is (= {:thk.project/id "11111"
+            :description "first-file"
+            :extension "doc"
+            :document-group "0"
+            :sequence-number 666
+            :activity "MO"
+            :task "EK"
+            :part "00"}
+           (file-db/file-metadata-by-id (tu/db)
+                                        (:db/id (tu/get-data :replacing-file)))))))
