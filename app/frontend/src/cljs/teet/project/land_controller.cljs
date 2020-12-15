@@ -371,8 +371,7 @@
                     #(animate/scroll-into-view!
                        (js/document.getElementById
                          (estate-dom-id linked-estate))) 1000)
-                  result
-                  ))))))
+                  result))))))
 
   RefreshEstateInfo
   (process-event [_ app]
