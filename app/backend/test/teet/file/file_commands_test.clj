@@ -5,7 +5,8 @@
             [teet.file.file-storage :as file-storage]
             [clojure.string :as str]
             [datomic.client.api :as d]
-            [teet.file.file-db :as file-db]))
+            [teet.file.file-db :as file-db]
+            [teet.util.datomic :as du]))
 
 (use-fixtures :each
   (tu/with-config {:file {:allowed-suffixes #{"png" "doc" "xls"}
@@ -155,3 +156,78 @@
                                                       [:db/id :db/ident]
                                                       :file.document-group/general)
                          :file/part nil})))))
+
+(deftest delete-part
+  (tu/local-login tu/mock-user-boss)
+  (tu/store-data!
+   :task-id
+   (tu/create-task {:user tu/mock-user-boss
+                    :activity (tu/->db-id "p1-lc1-act1")
+                    :task {:task/type :task.type/third-party-review
+                           :task/group :task.group/land-purchase}}))
+
+  ;; Upload file and replacement for it
+  (tu/store-data!
+   :original-file
+   (fake-upload (tu/get-data :task-id)
+                {:file/name "file in part 1.png"
+                 :file/size 4096
+                 :file/document-group :file.document-group/annexes
+                 :file/sequence-number 420
+                 :file/part {:file.part/number 1
+                             :file.part/name "this is the part"}}))
+
+  (tu/store-data!
+   :replacement-file
+   (fake-upload (tu/get-data :task-id)
+                {:file/name "file in part 1.png"
+                 :file/size 4096
+                 :file/document-group :file.document-group/annexes
+                 :file/sequence-number 420
+                 :file/part {:file.part/number 1
+                             :file.part/name "this is the part"}}
+                (:db/id (tu/get-data :original-file))))
+
+  (tu/store-data!
+   :original-part-id
+   (get-in (du/entity (tu/db) (:db/id (tu/get-data :replacement-file)))
+           [:file/part :db/id]))
+
+  (is (thrown-with-msg?
+       Exception #"part being deleted contains files"
+       (tu/local-command :task/delete-part
+                         {:part-id (tu/get-data :original-part-id)}))
+      "Part can't be deleted because it has files")
+
+  ;; Create new part and change file to new part
+  (tu/store-data!
+   :new-part-id
+   (get-in
+    (tu/local-command :task/create-part
+                      {:task-id (tu/get-data :task-id)
+                       :part-name "other part"})
+    [:tempids "new-part"]))
+
+  (tu/local-command
+   :file/modify
+   {:db/id (:db/id (tu/get-data :replacement-file))
+    :file/name "file in part 1.png"
+    :file/size 4096
+    :file/document-group (d/pull (tu/db)
+                                 [:db/id :db/ident]
+                                 :file.document-group/annexes)
+    :file/sequence-number 420
+    :file/part {:db/id (tu/get-data :new-part-id)}})
+
+  (is (thrown-with-msg?
+       Exception #"part being deleted contains files"
+       (tu/local-command :task/delete-part
+                         {:part-id (tu/get-data :new-part-id)}))
+      "New part can't be deleted")
+
+  (testing "Deleting old part works"
+    (tu/local-command :task/delete-part
+                      {:part-id (tu/get-data :original-part-id)})
+
+    (is (:meta/deleted? (du/entity (tu/db) (tu/get-data :original-part-id)))
+        "Old part has deleted flag")))
