@@ -367,7 +367,7 @@
 (defn application-response
   [e! application project]
   (let [response (:cooperation.application/response application)]
-    [:div
+    [:div {:class (<class common-styles/margin-bottom 1)}
      [Divider {:style {:margin "1.5rem 0"}}]
      [:div {:class [(<class common-styles/flex-row-space-between)
                     (<class common-styles/margin-bottom 1)]}
@@ -390,6 +390,29 @@
                               :end-icon (r/as-element [icons/content-add])}
       (tr [:cooperation :add-files])]]))
 
+(defn- decision-status [decision]
+  (let [decision (or decision :cooperation.position.decision/unanswered)
+        status-color (case decision
+                       :cooperation.position.decision/agreed "green"
+                       :cooperation.position.decision/rejected "red"
+                       :cooperation.position.decision/partially-rejected "magenta"
+                       :cooperaiton.position.decision/unanswered theme-colors/gray-lighter)]
+    [:div
+     [:div {:class [(<class common-styles/status-circle-style status-color)
+                    (<class common-styles/inline-block)]}]
+     (tr [:enum decision])]))
+
+(defn- application-conclusion [e! {:cooperation.application/keys [position] :as application}]
+  [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
+   [typography/Heading2 (tr [:cooperation :decision-title])]
+   [:div {:class (<class common-styles/flex-row)}
+    [:div {:class (<class common-styles/flex-table-column-style 20)}
+     "Maateeamet"]
+    [:div {:class (<class common-styles/flex-table-column-style 30)}
+     "Margit Vaino"]
+    [:div {:class (<class common-styles/flex-table-column-style 50)}
+     (decision-status (:cooperation.position/decision position))]]])
+
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
@@ -405,7 +428,9 @@
          (tr-enum (get-in application [:cooperation.application/activity :activity/name]))]]
        [application-information application]
        (if (:cooperation.application/response application)
-         [application-response e! application project]
+         [:<>
+          [application-response e! application project]
+          [application-conclusion e! application project]]
          [form/form-modal-button
           {:max-width "sm"
            :modal-title (tr [:cooperation :add-application-response])
