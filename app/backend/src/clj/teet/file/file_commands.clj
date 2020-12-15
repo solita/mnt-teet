@@ -11,7 +11,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             teet.file.file-tx
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.file.filename-metadata :as filename-metadata]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -131,21 +132,32 @@
       (let [old-file (find-previous-version db task-id previous-version-id
                                             [:file/name :file/document-group])
             version (-> old-file :file/version inc)
+            ;; If filetype changes we need to change the extension in the filename, but keep the original name
+            file-name-with-extension (str
+                                       (:description
+                                         (filename-metadata/name->description-and-extension
+                                           (:file/name old-file)))
+                                       "."
+                                       (:extension
+                                         (filename-metadata/name->description-and-extension
+                                           (:file/name file))))
+
             key (new-file-key file)
             res (tx [(list 'teet.file.file-tx/upload-file-to-task
                            {:db/id task-id
                             :task/files
                             [(cu/without-nils
-                              (merge
-                               old-file
-                               (select-keys file [:file/size])
-                               {:db/id "new-file"
-                                :file/s3-key key
-                                :file/original-name (:file/name file)
-                                :file/version version
-                                :file/previous-version (:db/id old-file)
-                                :file/status :file.status/draft}
-                               (creation-meta user)))]})])
+                               (merge
+                                 old-file
+                                 (select-keys file [:file/size])
+                                 {:db/id "new-file"
+                                  :file/s3-key key
+                                  :file/original-name (:file/name file)
+                                  :file/version version
+                                  :file/previous-version (:db/id old-file)
+                                  :file/status :file.status/draft
+                                  :file/name file-name-with-extension}
+                                 (creation-meta user)))]})])
             file-id (get-in res [:tempids "new-file"])]
         (try
           {:url (file-storage/upload-url key)
