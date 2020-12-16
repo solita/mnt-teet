@@ -166,7 +166,8 @@
                                               #(do (action)
                                                    (close))
                                               action)}
-                                 confirm-button-text]]}
+                                 confirm-button-text]]
+                    :data-cy "confirm-dialog"}
       [DialogContentText
        (if modal-text
          modal-text

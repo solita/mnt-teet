@@ -124,7 +124,7 @@
 
 (defn modal
   "Default modal container"
-  [{:keys [title on-close open-atom actions disable-content-wrapper? max-width]
+  [{:keys [title on-close open-atom actions disable-content-wrapper? max-width data-cy]
     :or {max-width "sm"}
     :as _opts} content]
   (r/with-let [open-atom (or open-atom (r/atom true))       ;;creates new atoms unnecessarily
@@ -141,7 +141,8 @@
     [Dialog {:full-width true
              :max-width max-width
              :open @open-atom
-             :on-close close-fn}
+             :on-close close-fn
+             :data-cy data-cy}
      (if title
        ;; Title specified, show title and close button
        [DialogTitle {:disable-typography true

@@ -116,7 +116,7 @@
        date])]])
 
 (defn- application-information [{:cooperation.application/keys [response] :as application}]
-  [:div {:<class (common-styles/margin-bottom 1)}
+  [:div {:class (common-styles/margin-bottom 1)}
    (if response
      (let [{:cooperation.response/keys [date valid-until]} response]
        [common/basic-information-row
@@ -167,8 +167,8 @@
     [:ul {:class (<class third-party-list)}
      (for [{id :db/id
             :cooperation.3rd-party/keys [name]} third-parties]
-       ^{:key (str id)}
        (let [currently-selected-third-party? (= name selected-third-party-name)]
+         ^{:key (str id)}
          [:li.project-third-party
           [url/Link {:page :cooperation-third-party
                      :class (<class common-styles/white-link-style
@@ -299,66 +299,70 @@
 (defn application-response-change-fn
   [val change]
   (-> (merge val change)
-       (update :cooperation.response/valid-months #(and (not-empty %) (js/parseInt %)))
+       (update :cooperation.response/valid-months #(and (or (number? %)
+                                                            (not-empty %))
+                                                        (js/parseInt %)))
        cu/without-empty-vals
        cooperation-model/with-valid-until))
 
 (defn- application-response-form [{:keys [e! project-id application-id]} close-event form-atom]
-  [form/form2 {:e! e!
-               :value @form-atom
-               :on-change-event (form/update-atom-event form-atom application-response-change-fn)
-               :cancel-event close-event
-               :save-event #(common-controller/->SaveForm
-                              :cooperation/create-application-response
-                              {:thk.project/id project-id
-                               :application-id application-id
-                               :form-data (common-controller/prepare-form-data
-                                            (-> @form-atom
-                                                (update :cooperation.response/content
-                                                        (fn [editor-state]
-                                                          (if (or (string? editor-state) (nil? editor-state))
-                                                            editor-state
-                                                            (rich-text-editor/editor-state->markdown editor-state))))))}
-                              (fn [response]
-                                (fn [e!]
-                                  (e! (close-event))
-                                  (e! (cooperation-controller/->ResponseCreated response (boolean (:db/id @form-atom)))))))
-               :spec ::cooperation-model/response-form}
-   [:div
-    [:div {:class (<class common-styles/gray-container-style)}
-     [Grid {:container true :spacing 3}
-      [Grid {:item true :xs 12}
-       [form/field :cooperation.response/status
-        [select/select-enum {:e! e!
-                             :attribute :cooperation.response/status}]]]
+  (let [max-months 1200
+        min-months 0]
+    [form/form2 {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom application-response-change-fn)
+                 :cancel-event close-event
+                 :save-event #(common-controller/->SaveForm
+                                :cooperation/create-application-response
+                                {:thk.project/id project-id
+                                 :application-id application-id
+                                 :form-data (common-controller/prepare-form-data
+                                              (-> @form-atom
+                                                  (update :cooperation.response/content
+                                                          (fn [editor-state]
+                                                            (if (or (string? editor-state) (nil? editor-state))
+                                                              editor-state
+                                                              (rich-text-editor/editor-state->markdown editor-state))))))}
+                                (fn [response]
+                                  (fn [e!]
+                                    (e! (close-event))
+                                    (e! (cooperation-controller/->ResponseCreated response (boolean (:db/id @form-atom)))))))
+                 :spec ::cooperation-model/response-form}
+     [:div
+      [:div {:class (<class common-styles/gray-container-style)}
+       [Grid {:container true :spacing 3}
+        [Grid {:item true :xs 12}
+         [form/field :cooperation.response/status
+          [select/select-enum {:e! e!
+                               :attribute :cooperation.response/status}]]]
 
-      [Grid {:item true :xs 12}
-       [form/field :cooperation.response/date
-        [date-picker/date-input {}]]]
+        [Grid {:item true :xs 12}
+         [form/field :cooperation.response/date
+          [date-picker/date-input {}]]]
 
-      [Grid {:item true :xs 6
-             :style {:display :flex
-                     :align-items :flex-end}}
-       [form/field {:attribute :cooperation.response/valid-months
-                    :validate (fn [val]
-                                (when (and (some? val) (not (str/blank? val)))
-                                  (let [val (js/parseInt val)]
-                                    (when (or (js/isNaN val) (> val 1200))
-                                      true))))}
-        [text-field/TextField {:type :number
-                               :max 1000
-                               :min 0}]]]
+        [Grid {:item true :xs 6
+               :style {:display :flex
+                       :align-items :flex-end}}
+         [form/field {:attribute :cooperation.response/valid-months
+                      :validate (fn [val]
+                                  (when (and (some? val) (not (str/blank? val)))
+                                    (let [val (js/parseInt val)]
+                                      (when (or (js/isNaN val) (>= val max-months) (>= min-months val))
+                                        true))))}
+          [text-field/TextField {:type :number
+                                 :max max-months
+                                 :min min-months}]]]
 
-      [Grid {:item true :xs 6
-             :style {:display :flex
-                     :align-items :flex-end}}
-       (when (:cooperation.response/valid-until @form-atom)
-         [form/field :cooperation.response/valid-until
-          [date-picker/date-input {:read-only? true}]])]
-      [Grid {:item true :xs 12}
-       [form/field :cooperation.response/content
-        [rich-text-editor/rich-text-field {}]]]]]
-    [form/footer2]]])
+        [Grid {:item true :xs 6
+               :style {:display :flex
+                       :align-items :flex-end}}
+         (when (:cooperation.response/valid-until @form-atom)
+           [form/field :cooperation.response/valid-until
+            [date-picker/date-input {:read-only? true}]])]
+        [Grid {:item true :xs 12}
+         [form/field :cooperation.response/content
+          [rich-text-editor/rich-text-field {}]]]]]
+      [form/footer2]]]))
 
 (defn application-response
   [e! application project]

@@ -18,8 +18,17 @@ Cypress.Commands.add("dummyLogin", (name) => {
             name)
     })
 
-    // check that logout link is in header
-    cy.get("header a.header-logout")
+    // check that the dashboard page is loaded
+    cy.get("[data-cy=dashboard-header]")
+})
+
+// Select language
+Cypress.Commands.add("selectLanguage", (lang) => {
+  cy.get("#language-select")
+    .should((select) => {
+      Cypress.dom.isAttached(select)
+    })
+    .select(lang);
 })
 
 // Create random name with prefix and assign it
@@ -63,6 +72,39 @@ Cypress.Commands.add("formCancel", () => {
     cy.get("form button.cancel").click()
 })
 
+
+Cypress.Commands.add("projectByName", (projectName) => {
+  cy.visit("#/projects/list?row-filter=all")
+  cy.get("input[id='filter input for :thk.project/project-name']").type(projectName)
+  cy.get("td").contains(projectName).click()
+
+  // check project page is rendered
+  cy.get("h1").contains(projectName)
+})
+
+// Opts must have:
+// - fixturePath: string path to file under fixtures
+// - mimeType: MIME type of the file
+// - inputSelector: selector string for cy.get for finding the file input
+// Optionally:
+// - fileName: file name, if other than fixture path
+Cypress.Commands.add("uploadFile", (opts) => {
+  cy.fixture(opts.fixturePath, "base64").then(fileContent => {
+    const blob = Cypress.Blob.base64StringToBlob(fileContent, opts.mimeType)
+
+    const file = new File([blob], opts.fileName || opts.fixturePath, {type: opts.mimeType})
+    const list = new DataTransfer()
+
+    list.items.add(file)
+
+    const fileList = list.files
+
+    cy.get(opts.inputSelector).then($el => {
+      $el[0].files = fileList
+      $el[0].dispatchEvent(new Event("change", {bubbles: true}))
+    })
+  })
+})
 //
 //
 // -- This is a child command --
