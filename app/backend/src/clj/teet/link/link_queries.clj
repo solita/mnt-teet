@@ -15,38 +15,38 @@
 
 (defn search-task [db project lang text]
   (with-language lang
-                 (let [all-project-tasks
-                       (d/q '[:find (pull ?t [:task/type :db/id])
-                              :where
-                              [?p :thk.project/lifecycles ?l]
-                              [?l :thk.lifecycle/activities ?a]
-                              [?a :activity/tasks ?t]
-                              [(missing? $ ?t :meta/deleted?)]
-                              :in $ ?p]
-                            db project)
+    (let [all-project-tasks
+          (d/q '[:find (pull ?t [:task/type :db/id])
+                 :where
+                 [?p :thk.project/lifecycles ?l]
+                 [?l :thk.lifecycle/activities ?a]
+                 [?a :activity/tasks ?t]
+                 [(missing? $ ?t :meta/deleted?)]
+                 :in $ ?p]
+            db project)
 
-                       matching-project-tasks
-                       (into []
-                             (comp
-                               (map first)
-                               (map #(assoc % :searchable-text (tr-enum (:task/type %))))
-                               (filter #(string/contains-words? (:searchable-text %)
-                                                                text))
-                               (map :db/id))
-                             all-project-tasks)
+          matching-project-tasks
+          (into []
+            (comp
+              (map first)
+              (map #(assoc % :searchable-text (tr-enum (:task/type %))))
+              (filter #(string/contains-words? (:searchable-text %)
+                         text))
+              (map :db/id))
+            all-project-tasks)
 
-                       found-tasks (mapv
-                                     first
-                                     (d/q '[:find (pull ?t [:db/id :task/type
-                                                            :task/estimated-start-date
-                                                            :task/estimated-end-date
-                                                            {:task/assignee [:user/given-name :user/family-name]}
-                                                            {:activity/_tasks [:activity/name]}])
-                                            :in $ [?t ...]]
-                                          db matching-project-tasks))]
-                   (sort-by
-                     #(tr [:enum (get-in % [:task/type :db/ident])])
-                     found-tasks))))
+          found-tasks (mapv
+                        first
+                        (d/q '[:find (pull ?t [:db/id :task/type
+                                               :task/estimated-start-date
+                                               :task/estimated-end-date
+                                               {:task/assignee [:user/given-name :user/family-name]}
+                                               {:activity/_tasks [:activity/name]}])
+                               :in $ [?t ...]]
+                          db matching-project-tasks))]
+      (sort-by
+        #(tr [:enum (get-in % [:task/type :db/ident])])
+        found-tasks))))
 
 (defn search-cadastral-unit [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
