@@ -7,7 +7,7 @@ describe("Task view", function() {
 
     // Navigate to Detailed design -> Design requirements
     cy.get("li a").contains("Detailed design").click()
-    cy.get("li a").contains("Data").click()
+    cy.get("li a").contains("Design requirements").click()
   })
 
   context("File upload", function() {
