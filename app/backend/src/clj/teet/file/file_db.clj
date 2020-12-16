@@ -159,21 +159,26 @@
                        (format "%02d"))
               "00")}))
 
+(defn pull-file-metadata-by-id
+  "Recursively pull all information from file that is needed for determining file metadata."
+  [db file-id]
+  (d/pull db [:file/name
+              :file/sequence-number
+              {:file/document-group [:filename/code]}
+              {:task/_files [:db/id
+                             {:task/type [:filename/code]}
+                             {:activity/_tasks
+                              [{:activity/name [:filename/code]}
+                               {:thk.lifecycle/_activities
+                                [{:thk.project/_lifecycles
+                                  [:thk.project/id]}]}]}]}
+              {:file/part [:file.part/number]}] file-id))
+
 (defn file-metadata-by-id
   "Return file metadata for a given file id."
   [db file-id]
   (file-metadata
-   (d/pull db [:file/name
-               :file/sequence-number
-               {:file/document-group [:filename/code]}
-               {:task/_files [:db/id
-                              {:task/type [:filename/code]}
-                              {:activity/_tasks
-                               [{:activity/name [:filename/code]}
-                                {:thk.lifecycle/_activities
-                                 [{:thk.project/_lifecycles
-                                   [:thk.project/id]}]}]}]}
-               {:file/part [:file.part/number]}] file-id)))
+   (pull-file-metadata-by-id db file-id)))
 
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
