@@ -139,6 +139,7 @@
          (when (and (columns :delete) delete-action)
            [buttons/delete-button-with-confirm
             {:action #(delete-action file)
+             :modal-text (tr [:file :delete])
              :trashcan? true}])])]
      (when (columns :meta)
        [:div.file-row-meta {:class (<class file-style/file-row-meta)}
@@ -294,7 +295,9 @@
                               [buttons/button-primary
                                {:id (str "confirmation-confirm")
                                 :disabled @progress?
-                                :on-click #(do (e! (file-controller/->UploadNewVersion file @selected-file))
+                                :on-click #(do (e! (file-controller/->UploadNewVersion file
+                                                                                       @selected-file
+                                                                                       (:db/id task)))
                                                (reset! progress? true))}
                                (tr [:file-upload :replace-file-confirm])]]}
       (if @progress?
@@ -406,8 +409,10 @@
           [file-comments-link file])])]))
 
 (defn file-list2
-  [{:keys [sort-by-value] :as opts} files]
-  [:div {:class (<class common-styles/margin-bottom 1.5)}
+  [{:keys [sort-by-value data-cy] :as opts} files]
+  [:div (merge {:class (<class common-styles/margin-bottom 1.5)}
+               (when data-cy
+                 {:data-cy data-cy}))
    (mapc (r/partial file-row2 opts)
          (sorted-by
            sort-by-value
@@ -426,25 +431,6 @@
      [file-list2 (assoc opts :sort-by-value @sort-by-atom)
       (->> files
            (filtered-by @filter-atom))]]))
-
-(defn file-table
-  ([files] (file-table {} files))
-  ([{:keys [filtering?]
-     :or {filtering? true} :as opts} files]
-   (r/with-let [items-for-sort-select (sort-items)
-                filter-atom (r/atom "")
-                sort-by-atom (r/atom (first items-for-sort-select))]
-     [:<>
-      (when filtering?
-        [file-filter-and-sorter
-         filter-atom
-         sort-by-atom
-         items-for-sort-select])
-      [:div.file-table-files
-       (->> files
-            (filtered-by @filter-atom)
-            (sorted-by @sort-by-atom)
-            (mapc (r/partial file-row opts)))]])))
 
 (defn file-upload-button []
   [buttons/button-primary {:start-icon (r/as-element
@@ -724,7 +710,8 @@
                   :on-change-event change-event
                   :save-event save-event
                   :cancel-event cancel-event
-                  :delete delete}
+                  :delete delete
+                  :delete-message (tr [:file :delete])}
        ^{:attribute :file/part}
        [select/form-select {:items parts
                             :format-item #(gstr/format "%s #%02d"
@@ -823,7 +810,8 @@
                      (str/upper-case extension)]]
                    [:div {:style {:flex-grow 1
                                   :text-align :end}}
-                    [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+                    [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                               :data-cy "edit-file-button"}
                      (tr [:buttons :edit])]]]
                   [file-identifying-info (du/enum= :activity.name/land-acquisition
                                                    (:activity/name activity))
