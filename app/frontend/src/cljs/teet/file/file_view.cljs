@@ -409,8 +409,10 @@
           [file-comments-link file])])]))
 
 (defn file-list2
-  [{:keys [sort-by-value] :as opts} files]
-  [:div {:class (<class common-styles/margin-bottom 1.5)}
+  [{:keys [sort-by-value data-cy] :as opts} files]
+  [:div (merge {:class (<class common-styles/margin-bottom 1.5)}
+               (when data-cy
+                 {:data-cy data-cy}))
    (mapc (r/partial file-row2 opts)
          (sorted-by
            sort-by-value
@@ -808,7 +810,8 @@
                      (str/upper-case extension)]]
                    [:div {:style {:flex-grow 1
                                   :text-align :end}}
-                    [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+                    [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                               :data-cy "edit-file-button"}
                      (tr [:buttons :edit])]]]
                   [file-identifying-info (du/enum= :activity.name/land-acquisition
                                                    (:activity/name activity))

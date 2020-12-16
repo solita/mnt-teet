@@ -265,10 +265,11 @@
       task
       [:div
        [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
-                                :on-click #(upload! {})}
+                                :on-click #(upload! {})
+                                :data-cy "task-file-upload"}
         (tr [:buttons :upload])]]])])
 
-(defn file-content-view
+(defn- file-content-view
   [e! upload! activity task files-form project-id files parts selected-part]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
@@ -288,7 +289,8 @@
                                   :allow-replacement-opts allow-replacement-opts
                                   :sort-by-value @sort-by-atom
                                   :download? true
-                                  :land-acquisition? land-acquisition?}
+                                  :land-acquisition? land-acquisition?
+                                  :data-cy "task-file-list"}
             general-files]))
        [:div
         (when (not (zero? (:file.part/number selected-part)))
@@ -308,7 +310,7 @@
               parts
               [selected-part])))]])))
 
-(defn task-file-view
+(defn- task-file-view
   [e! activity task upload! files-form project-id]
   (let [parts (:file.part/_task task)
         files (:task/files task)]
@@ -327,7 +329,7 @@
                           [icons/content-add])}
            (tr [:task :add-part])]}]])]))
 
-(defn task-details
+(defn- task-details
   [e! new-document project-id activity {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
@@ -384,7 +386,7 @@
   (fn [_]
     [:span]))
 
-(defn task-page-content
+(defn- task-page-content
   [e! app activity {status :task/status :as task} pm? files-form]
   [:div.task-page
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
@@ -402,7 +404,7 @@
      activity task files-form]]])
 
 
-(defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
+(defn- edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
   (when initialization-fn
     (initialization-fn))
   (fn [e! {id :db/id send-to-thk? :task/send-to-thk? :as task}]
