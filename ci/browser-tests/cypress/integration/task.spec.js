@@ -1,11 +1,11 @@
 describe("Task view", function() {
   before(() => {
     cy.randomName("filename", "myfile")
-    cy.dummyLogin("carla")
+    cy.dummyLogin("benjamin")
     cy.selectLanguage("ENG")
-    cy.projectByName("task test")
+    cy.projectByName("cooperation test")
 
-    // Navigate to Detailed design -> Data
+    // Navigate to Detailed design -> Design requirements
     cy.get("li a").contains("Detailed design").click()
     cy.get("li a").contains("Data").click()
   })

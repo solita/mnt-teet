@@ -18,8 +18,8 @@ Cypress.Commands.add("dummyLogin", (name) => {
             name)
     })
 
-    // check that logout link is in header
-    cy.get("header a.header-logout")
+    // check that the dashboard page is loaded
+    cy.get("[data-cy=dashboard-header]")
 })
 
 // Select language

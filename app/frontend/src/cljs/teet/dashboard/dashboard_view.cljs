@@ -151,7 +151,8 @@
   [:div {:style {:margin "3rem" :display "flex" :justify-content "center"}}
    [Paper {:style {:flex 1
                    :max-width "800px" :padding "1rem"}}
-    [typography/Heading1 (tr [:dashboard :my-projects])]
+    [typography/Heading1 {:data-cy "dashboard-header"}
+     (tr [:dashboard :my-projects])]
     (mapc (r/partial project-card {:e! e!
                                    :open-projects @open-projects-atom
                                    :toggle-project #(swap! open-projects-atom cu/toggle %)})
