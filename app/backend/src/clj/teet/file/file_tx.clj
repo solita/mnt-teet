@@ -90,8 +90,8 @@
         old-file (d/pull db modify-file-keys id)
         new-file (select-keys file modify-file-keys)
 
-        ;; Fetch info needed to calculate metadata and
-        ;; make the changes to it
+        ;; Fetch file's current metadata related info and
+        ;; apply the changes to it before calculating the metadata
         file-metadata-info (-> (file-db/pull-file-metadata-by-id db id)
                                (assoc :file/document-group
                                       (when-let [dg (:file/document-group file)]
@@ -99,6 +99,8 @@
                                (merge (select-keys file
                                                    [:file/name :file/sequence-number
                                                     :file/part])))
+
+        ;; File metadata as it would be after applying this tx
         metadata (file-db/file-metadata file-metadata-info)]
 
     ;; Check if any other file in this task already has the same metadata
