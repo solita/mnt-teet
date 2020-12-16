@@ -9,6 +9,7 @@
 (defrecord ApplicationCreated [save-response])
 
 (defrecord ResponseCreated [response edit?])
+(defrecord DecisionCreated [response])
 
 (extend-protocol t/Event
 
@@ -33,4 +34,11 @@
     (t/fx (snackbar-controller/open-snack-bar app (if edit?
                                                     (tr [:cooperation :response-edited])
                                                     (tr [:cooperation :new-response-created])))
+          common-controller/refresh-fx))
+
+  DecisionCreated
+  (process-event [{r :response} app]
+    (t/fx (snackbar-controller/open-snack-bar
+           app
+           (tr [:cooperation :decision-created]))
           common-controller/refresh-fx)))

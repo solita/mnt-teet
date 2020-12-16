@@ -396,22 +396,57 @@
                        :cooperation.position.decision/agreed "green"
                        :cooperation.position.decision/rejected "red"
                        :cooperation.position.decision/partially-rejected "magenta"
-                       :cooperaiton.position.decision/unanswered theme-colors/gray-lighter)]
+                       :cooperation.position.decision/unanswered theme-colors/gray-lighter)]
     [:div
      [:div {:class [(<class common-styles/status-circle-style status-color)
                     (<class common-styles/inline-block)]}]
      (tr [:enum decision])]))
 
-(defn- application-conclusion [e! {:cooperation.application/keys [position] :as application}]
-  [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
-   [typography/Heading2 (tr [:cooperation :decision-title])]
-   [:div {:class (<class common-styles/flex-row)}
+(defn- decision [{:cooperation.application/keys [position] creator :meta/creator}]
+  [:div {:class (<class common-styles/flex-row)}
     [:div {:class (<class common-styles/flex-table-column-style 20)}
      "Maateeamet"]
     [:div {:class (<class common-styles/flex-table-column-style 30)}
-     "Margit Vaino"]
+     ;; Show creator of application (if no decision made yet), otherwise show creator
+     ;; of the decision
+     (user-model/user-name (or (some-> position :meta/creator)
+                               creator))]
     [:div {:class (<class common-styles/flex-table-column-style 50)}
-     (decision-status (:cooperation.position/decision position))]]])
+     (decision-status (:cooperation.position/decision position))]])
+
+(defn- decision-form [{:keys [e! application]} close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              :save-event #(common-controller/->SaveForm
+                            :cooperation/save-decision
+                            {:application-id (:db/id application)
+                             :decision-form @form-atom}
+                            (fn [response]
+                              (fn [e!]
+                                (e! (close-event))
+                                (e! (cooperation-controller/->DecisionCreated response)))))}
+   ^{:attribute :cooperation.position/decision :xs 10}
+   [select/select-enum {:e! e!
+                        :attribute :cooperation.position/decision}]
+
+
+   ^{:attribute :cooperation.position/comment}
+   [rich-text-editor/rich-text-field {}]])
+
+(defn- application-conclusion [e! {:cooperation.application/keys [position] :as application
+                                   creator :meta/creator}]
+  [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
+   [typography/Heading2 (tr [:cooperation :decision-title])]
+   [decision application]
+   (when (not position)
+     [form/form-modal-button
+      {:max-width "sm"
+       :modal-title (tr [:cooperation :create-decision-title])
+       :form-component [decision-form {:e! e! :application application}]
+       :button-component [buttons/button-primary {:class :create-decision}
+                          (tr [:cooperation :create-decision-button])]}])])
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]

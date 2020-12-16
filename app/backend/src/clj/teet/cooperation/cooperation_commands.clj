@@ -3,7 +3,8 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.meta.meta-model :as meta-model]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.spec.alpha :as s]))
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -70,3 +71,17 @@
                             :cooperation.response/status]))
             {:db/id "new-application-response"}
             (meta-model/creation-meta user))}]})
+
+(s/def ::application-id integer?)
+(s/def ::decision-form (s/keys :req [:cooperation.position/decision]
+                               :opt [:cooperation.position/comment]))
+
+(defcommand :cooperation/save-decision
+  {:doc "Save decision for an application"
+   :spec (s/keys :req-un [::application-id
+                          ::decision-form])
+   :context {:keys [user db]}
+   :payload {:keys [application-id decision-form]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/application-approval {}}}
+  nil)
