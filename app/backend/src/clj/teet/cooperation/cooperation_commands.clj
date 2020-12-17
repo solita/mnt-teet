@@ -74,34 +74,34 @@
             (meta-model/creation-meta user))}]})
 
 (s/def ::application-id integer?)
-(s/def ::decision-form (s/keys :req [:cooperation.position/decision]
-                               :opt [:cooperation.position/comment
-                                     :db/id]))
+(s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
+                              :opt [:cooperation.opinion/comment
+                                    :db/id]))
 
-(defn- decision-id-matches
-  "Check that decision id matches application's current decision id.
+(defn- opinion-id-matches
+  "Check that opinion id matches application's current opinion id.
   Either both are nil or they are the same entity id."
-  [db application-id decision-id]
+  [db application-id opinion-id]
   (let [application (du/entity db application-id)
-        current-decision-id (get-in application
-                                    [:cooperation.application/position :db/id])]
-    (= decision-id current-decision-id)))
+        current-opinion-id (get-in application
+                                    [:cooperation.application/opinion :db/id])]
+    (= opinion-id current-opinion-id)))
 
-(defcommand :cooperation/save-decision
-  {:doc "Save decision for an application"
+(defcommand :cooperation/save-opinion
+  {:doc "Save opinion for an application"
    :spec (s/keys :req-un [::application-id
-                          ::decision-form])
+                          ::opinion-form])
    :context {:keys [user db]}
-   :payload {:keys [application-id decision-form]}
+   :payload {:keys [application-id opinion-form]}
    :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
    :authorization {:cooperation/application-approval {}}
-   :pre [(decision-id-matches db application-id (:db/id decision-form))]
+   :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
    :transact [{:db/id application-id
                :cooperation.application/position
                (merge
-                {:db/id (or (:db/id decision-form) "new-decision")}
-                (select-keys decision-form [:cooperation.position/decision
+                {:db/id (or (:db/id opinion-form) "new-opinion")}
+                (select-keys opinion-form [:cooperation.position/opinion
                                             :cooperation.position/comment])
-                (if (:db/id decision-form)
-                  (meta-model/creation-meta user)
-                  (meta-model/modification-meta user)))}]})
+                (if (:db/id opinion-form)
+                  (meta-model/modification-meta user)
+                  (meta-model/creation-meta user)))}]})

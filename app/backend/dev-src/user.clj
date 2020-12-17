@@ -189,7 +189,7 @@
                              "cooperation.3rd-party"
                              "cooperation.application"
                              "cooperation.response"
-                             "cooperation.position"}
+                             "cooperation.opinion"}
           types {:permission/projects "List<thk.project>"
                  :thk.project/lifecycles "List<thk.lifecycle>"
                  :thk.lifecycle/activities "List<activity>"
@@ -267,7 +267,7 @@
            "\"cooperation.3rd-party\" --> thk.project\n"
            "\"cooperation.3rd-party\" ||--o{ cooperation.application\n"
            "cooperation.application --> cooperation.response\n"
-           "cooperation.application --> cooperation.position\n"
+           "cooperation.application --> cooperation.opinion\n"
 
            "note top of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
            "\n@enduml")))

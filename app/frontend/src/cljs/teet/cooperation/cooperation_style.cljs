@@ -7,8 +7,8 @@
   {:padding "1.5rem 0"
    :border-top (str "1px solid " theme-colors/black-coral-1)})
 
-(def decision-color
-  {:cooperation.position.decision/agreed "#308653"
-   :cooperation.position.decision/partially-rejected "#FFB511"
-   :cooperation.position.decision/rejectected "#D73E3E"
-   :cooperation.position.decision/unanswered theme-colors/gray-light})
+(def opinion-status-color
+  {:cooperation.opinion.status/agreed "#308653"
+   :cooperation.opinion.status/partially-rejected "#FFB511"
+   :cooperation.opinion.status/rejectected "#D73E3E"
+   :cooperation.opinion.status/unanswered theme-colors/gray-light})

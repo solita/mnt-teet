@@ -91,7 +91,7 @@
      :cooperation.response/valid-until
      :cooperation.response/valid-months
      {:meta/creator user-model/user-display-attributes}]}
-   {:cooperation.application/position
+   {:cooperation.application/opinion
     [:db/id
-     :cooperation.position/comment
-     :cooperation.position/decision]}])
+     :cooperation.opinion/comment
+     :cooperation.opinion/status]}])

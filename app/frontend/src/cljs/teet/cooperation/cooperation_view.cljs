@@ -93,25 +93,25 @@
                                (tr-enum (:cooperation.response/status response))
                                (tr [:cooperation :applied]))]]))
 
-(defn position-status
-  [position]
-  (let [indicator-color (case (:cooperation.position/decision position)
-                          :cooperation.position.decision/agreed theme-colors/success
-                          :cooperation.position.decision/rejected theme-colors/error
-                          :cooperation.position.decision/partially-rejected theme-colors/warning
+(defn opinion-status
+  [opinion]
+  (let [indicator-color (case (:cooperation.opinion/decision opinion)
+                          :cooperation.opinion.decision/agreed theme-colors/success
+                          :cooperation.opinion.decision/rejected theme-colors/error
+                          :cooperation.opinion.decision/partially-rejected theme-colors/warning
                           theme-colors/black-coral-1)]
-    [color-and-status indicator-color (if position
-                                        (tr-enum (:cooperation.position/decision position))
+    [color-and-status indicator-color (if opinion
+                                        (tr-enum (:cooperation.opinion/decision opinion))
                                         (tr [:cooperation :unanswered]))]))
 
-(defn cooperation-position
-  [{:cooperation.application/keys [position]}]
+(defn cooperation-opinion
+  [{:cooperation.application/keys [opinion]}]
   [common/basic-information-row
    {:right-align-last? false}
    [[(tr [:cooperation :conclusion])
      ;; colored circle based on status
-     [position-status position]]
-    (when-let [date (:meta/created-at position)]
+     [opinion-status opinion]]
+    (when-let [date (:meta/created-at opinion)]
       [(tr [:common :date])
        date])]])
 
@@ -158,7 +158,7 @@
       [typography/Text {:class (<class common-styles/margin-bottom 1)}
        (tr [:cooperation :responsible-person]
            {:user-name (user-model/user-name (:activity/manager activity))})]
-      [cooperation-position application]])])
+      [cooperation-opinion application]])])
 
 (defn- third-parties [e! project third-parties selected-third-party-name]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
@@ -390,26 +390,22 @@
                               :end-icon (r/as-element [icons/content-add])}
       (tr [:cooperation :add-files])]]))
 
-(defn- decision-status [decision]
-  (let [decision (or decision :cooperation.position.decision/unanswered)
-        status-color (case decision
-                       :cooperation.position.decision/agreed "green"
-                       :cooperation.position.decision/rejected "red"
-                       :cooperation.position.decision/partially-rejected "magenta"
-                       :cooperation.position.decision/unanswered theme-colors/gray-lighter)]
-    [color-and-status status-color (tr [:enum decision])]))
+(defn- opinion-status [status]
+  [color-and-status
+   (cooperation-style/opinion-status-color (or status :cooperation.opinion.status/unanswered))
+   (tr [:enum status])])
 
-(defn- decision [{:cooperation.application/keys [position] creator :meta/creator}]
+(defn- opinion [{:cooperation.application/keys [opinion] creator :meta/creator}]
   [:div {:class (<class common-styles/flex-row)}
     [:div {:class (<class common-styles/flex-table-column-style 20)}
-     "Maateeamet"]
+     (tr [:])"Maateeamet"]
     [:div {:class (<class common-styles/flex-table-column-style 30)}
      ;; Show creator of application (if no decision made yet), otherwise show creator
      ;; of the decision
-     (user-model/user-name (or (some-> position :meta/creator)
+     (user-model/user-name (or (some-> opinion :meta/creator)
                                creator))]
     [:div {:class (<class common-styles/flex-table-column-style 50)}
-     (decision-status (:cooperation.position/decision position))]])
+     (opinion-status (:cooperation.opinion/decision opinion))]])
 
 (defn- decision-form [{:keys [e! application]} close-event form-atom]
   [form/form
@@ -419,20 +415,20 @@
     :cancel-event close-event
     :save-event #(cooperation-controller/save-decision-event
                   application @form-atom close-event)}
-   ^{:attribute :cooperation.position/decision :xs 10}
+   ^{:attribute :cooperation.opinion/decision :xs 10}
    [select/select-enum {:e! e!
-                        :attribute :cooperation.position/decision}]
+                        :attribute :cooperation.opinion/decision}]
 
 
-   ^{:attribute :cooperation.position/comment}
+   ^{:attribute :cooperation.opinion/comment}
    [rich-text-editor/rich-text-field {}]])
 
-(defn- application-conclusion [e! {:cooperation.application/keys [position] :as application
+(defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application
                                    creator :meta/creator}]
   [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
    [typography/Heading2 (tr [:cooperation :decision-title])]
    [decision application]
-   (when (not position)
+   (when (not opinion)
      [form/form-modal-button
       {:max-width "sm"
        :modal-title (tr [:cooperation :create-decision-title])
