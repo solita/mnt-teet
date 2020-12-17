@@ -90,4 +90,8 @@
      :cooperation.response/content
      :cooperation.response/valid-until
      :cooperation.response/valid-months
-     {:meta/creator user-model/user-display-attributes}]}])
+     {:meta/creator user-model/user-display-attributes}]}
+   {:cooperation.application/position
+    [:db/id
+     :cooperation.position/comment
+     :cooperation.position/decision]}])

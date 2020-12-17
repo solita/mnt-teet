@@ -4,7 +4,8 @@
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as cu]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [teet.util.datomic :as du]))
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -74,7 +75,17 @@
 
 (s/def ::application-id integer?)
 (s/def ::decision-form (s/keys :req [:cooperation.position/decision]
-                               :opt [:cooperation.position/comment]))
+                               :opt [:cooperation.position/comment
+                                     :db/id]))
+
+(defn- decision-id-matches
+  "Check that decision id matches application's current decision id.
+  Either both are nil or they are the same entity id."
+  [db application-id decision-id]
+  (let [application (du/entity db application-id)
+        current-decision-id (get-in application
+                                    [:cooperation.application/position :db/id])]
+    (= decision-id current-decision-id)))
 
 (defcommand :cooperation/save-decision
   {:doc "Save decision for an application"
@@ -83,5 +94,14 @@
    :context {:keys [user db]}
    :payload {:keys [application-id decision-form]}
    :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
-   :authorization {:cooperation/application-approval {}}}
-  nil)
+   :authorization {:cooperation/application-approval {}}
+   :pre [(decision-id-matches db application-id (:db/id decision-form))]
+   :transact [{:db/id application-id
+               :cooperation.application/position
+               (merge
+                {:db/id (or (:db/id decision-form) "new-decision")}
+                (select-keys decision-form [:cooperation.position/decision
+                                            :cooperation.position/comment])
+                (if (:db/id decision-form)
+                  (meta-model/creation-meta user)
+                  (meta-model/modification-meta user)))}]})

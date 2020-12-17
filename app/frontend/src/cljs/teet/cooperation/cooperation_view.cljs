@@ -397,10 +397,7 @@
                        :cooperation.position.decision/rejected "red"
                        :cooperation.position.decision/partially-rejected "magenta"
                        :cooperation.position.decision/unanswered theme-colors/gray-lighter)]
-    [:div
-     [:div {:class [(<class common-styles/status-circle-style status-color)
-                    (<class common-styles/inline-block)]}]
-     (tr [:enum decision])]))
+    [color-and-status status-color (tr [:enum decision])]))
 
 (defn- decision [{:cooperation.application/keys [position] creator :meta/creator}]
   [:div {:class (<class common-styles/flex-row)}
@@ -415,18 +412,13 @@
      (decision-status (:cooperation.position/decision position))]])
 
 (defn- decision-form [{:keys [e! application]} close-event form-atom]
-  [form/form {:e! e!
-              :value @form-atom
-              :on-change-event (form/update-atom-event form-atom merge)
-              :cancel-event close-event
-              :save-event #(common-controller/->SaveForm
-                            :cooperation/save-decision
-                            {:application-id (:db/id application)
-                             :decision-form @form-atom}
-                            (fn [response]
-                              (fn [e!]
-                                (e! (close-event))
-                                (e! (cooperation-controller/->DecisionCreated response)))))}
+  [form/form
+   {:e! e!
+    :value @form-atom
+    :on-change-event (form/update-atom-event form-atom merge)
+    :cancel-event close-event
+    :save-event #(cooperation-controller/save-decision-event
+                  application @form-atom close-event)}
    ^{:attribute :cooperation.position/decision :xs 10}
    [select/select-enum {:e! e!
                         :attribute :cooperation.position/decision}]

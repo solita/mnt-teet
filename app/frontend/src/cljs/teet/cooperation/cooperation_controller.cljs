@@ -3,7 +3,9 @@
             [teet.log :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.util.collection :as cu]))
 
 (defrecord ThirdPartyCreated [name save-response])
 (defrecord ApplicationCreated [save-response])
@@ -42,3 +44,19 @@
            app
            (tr [:cooperation :decision-created]))
           common-controller/refresh-fx)))
+
+(defn prepare-decision-form [form]
+  (-> form
+      (update :cooperation.position/comment
+              #(when % (rich-text-editor/editor-state->markdown %)))
+      cu/without-nils))
+
+(defn save-decision-event [application form close-event]
+  (common-controller/->SaveForm
+   :cooperation/save-decision
+   {:application-id (:db/id application)
+    :decision-form (prepare-decision-form form)}
+   (fn [response]
+     (fn [e!]
+       (e! (close-event))
+       (e! (->DecisionCreated response))))))
