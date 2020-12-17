@@ -196,4 +196,5 @@
                                            {:value opt :label (tr [:link :type-label opt])})
                                          type-options))
                               :on-change (fn [val]
-                                           (change-search-value (:value val)))}]]])]))
+                                           (change-search-value (:value val)))
+                              :data-item? true}]]])]))
