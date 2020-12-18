@@ -1,6 +1,5 @@
 (ns teet.cooperation.cooperation-controller
   (:require [tuck.core :as t]
-            [teet.log :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]
@@ -11,7 +10,7 @@
 (defrecord ApplicationCreated [save-response])
 
 (defrecord ResponseCreated [response edit?])
-(defrecord DecisionCreated [response])
+(defrecord OpinionCreated [response])
 
 (extend-protocol t/Event
 
@@ -38,25 +37,25 @@
                                                     (tr [:cooperation :new-response-created])))
           common-controller/refresh-fx))
 
-  DecisionCreated
+  OpinionCreated
   (process-event [{r :response} app]
     (t/fx (snackbar-controller/open-snack-bar
            app
-           (tr [:cooperation :decision-created]))
+           (tr [:cooperation :opinion-created]))
           common-controller/refresh-fx)))
 
-(defn prepare-decision-form [form]
+(defn prepare-opinion-form [form]
   (-> form
       (update :cooperation.position/comment
               #(when % (rich-text-editor/editor-state->markdown %)))
       cu/without-nils))
 
-(defn save-decision-event [application form close-event]
+(defn save-opinion-event [application form close-event]
   (common-controller/->SaveForm
-   :cooperation/save-decision
+   :cooperation/save-opinion
    {:application-id (:db/id application)
-    :decision-form (prepare-decision-form form)}
+    :opinion-form (prepare-opinion-form form)}
    (fn [response]
      (fn [e!]
        (e! (close-event))
-       (e! (->DecisionCreated response))))))
+       (e! (->OpinionCreated response))))))

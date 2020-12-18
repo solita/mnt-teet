@@ -93,16 +93,23 @@
                                (tr-enum (:cooperation.response/status response))
                                (tr [:cooperation :applied]))]]))
 
-(defn opinion-status
-  [opinion]
-  (let [indicator-color (case (:cooperation.opinion/decision opinion)
-                          :cooperation.opinion.decision/agreed theme-colors/success
-                          :cooperation.opinion.decision/rejected theme-colors/error
-                          :cooperation.opinion.decision/partially-rejected theme-colors/warning
-                          theme-colors/black-coral-1)]
-    [color-and-status indicator-color (if opinion
-                                        (tr-enum (:cooperation.opinion/decision opinion))
-                                        (tr [:cooperation :unanswered]))]))
+(defn- opinion-status [status]
+  [color-and-status
+   (cooperation-style/opinion-status-color (or status :cooperation.opinion.status/unanswered))
+   (tr [:enum status])])
+
+
+(defn- opinion-view [{:cooperation.application/keys [opinion] creator :meta/creator}]
+  [:div {:class (<class common-styles/flex-row)}
+    [:div {:class (<class common-styles/flex-table-column-style 20)}
+     (tr [:cooperation :competent-authority-name])]
+    [:div {:class (<class common-styles/flex-table-column-style 30)}
+     ;; Show creator of application (if no opinion given yet),
+     ;; otherwise show creator of the opinion
+     (user-model/user-name (or (some-> opinion :meta/creator)
+                               creator))]
+    [:div {:class (<class common-styles/flex-table-column-style 50)}
+     (opinion-status (:cooperation.opinion/status opinion))]])
 
 (defn cooperation-opinion
   [{:cooperation.application/keys [opinion]}]
@@ -110,7 +117,7 @@
    {:right-align-last? false}
    [[(tr [:cooperation :conclusion])
      ;; colored circle based on status
-     [opinion-status opinion]]
+     [opinion-status (:cooperation.opinion/status opinion)]]
     (when-let [date (:meta/created-at opinion)]
       [(tr [:common :date])
        date])]])
@@ -158,7 +165,7 @@
       [typography/Text {:class (<class common-styles/margin-bottom 1)}
        (tr [:cooperation :responsible-person]
            {:user-name (user-model/user-name (:activity/manager activity))})]
-      [cooperation-opinion application]])])
+      [opinion-view application]])])
 
 (defn- third-parties [e! project third-parties selected-third-party-name]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
@@ -390,34 +397,21 @@
                               :end-icon (r/as-element [icons/content-add])}
       (tr [:cooperation :add-files])]]))
 
-(defn- opinion-status [status]
-  [color-and-status
-   (cooperation-style/opinion-status-color (or status :cooperation.opinion.status/unanswered))
-   (tr [:enum status])])
 
-(defn- opinion [{:cooperation.application/keys [opinion] creator :meta/creator}]
-  [:div {:class (<class common-styles/flex-row)}
-    [:div {:class (<class common-styles/flex-table-column-style 20)}
-     (tr [:])"Maateeamet"]
-    [:div {:class (<class common-styles/flex-table-column-style 30)}
-     ;; Show creator of application (if no decision made yet), otherwise show creator
-     ;; of the decision
-     (user-model/user-name (or (some-> opinion :meta/creator)
-                               creator))]
-    [:div {:class (<class common-styles/flex-table-column-style 50)}
-     (opinion-status (:cooperation.opinion/decision opinion))]])
 
-(defn- decision-form [{:keys [e! application]} close-event form-atom]
+
+
+(defn- opinion-form [{:keys [e! application]} close-event form-atom]
   [form/form
    {:e! e!
     :value @form-atom
     :on-change-event (form/update-atom-event form-atom merge)
     :cancel-event close-event
-    :save-event #(cooperation-controller/save-decision-event
+    :save-event #(cooperation-controller/save-opinion-event
                   application @form-atom close-event)}
-   ^{:attribute :cooperation.opinion/decision :xs 10}
+   ^{:attribute :cooperation.opinion/status :xs 10}
    [select/select-enum {:e! e!
-                        :attribute :cooperation.opinion/decision}]
+                        :attribute :cooperation.opinion/status}]
 
 
    ^{:attribute :cooperation.opinion/comment}
@@ -426,15 +420,15 @@
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application
                                    creator :meta/creator}]
   [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
-   [typography/Heading2 (tr [:cooperation :decision-title])]
-   [decision application]
+   [typography/Heading2 (tr [:cooperation :opinion-title])]
+   [opinion-view application]
    (when (not opinion)
      [form/form-modal-button
       {:max-width "sm"
-       :modal-title (tr [:cooperation :create-decision-title])
-       :form-component [decision-form {:e! e! :application application}]
-       :button-component [buttons/button-primary {:class :create-decision}
-                          (tr [:cooperation :create-decision-button])]}])])
+       :modal-title (tr [:cooperation :create-opinion-title])
+       :form-component [opinion-form {:e! e! :application application}]
+       :button-component [buttons/button-primary {:class :create-opinion}
+                          (tr [:cooperation :create-opinion-button])]}])])
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
