@@ -432,11 +432,6 @@
       (->> files
            (filtered-by @filter-atom))]]))
 
-(defn file-upload-button []
-  [buttons/button-primary {:start-icon (r/as-element
-                                        [icons/file-cloud-upload])}
-   (tr [:task :upload-files])])
-
 (defn- file-icon-style []
   {:display :inline-block
    :margin-right "0.25rem"

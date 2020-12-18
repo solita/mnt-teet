@@ -164,14 +164,14 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! project-id activity task files-form upload-progress close!]
+(defn- add-files-form [e! project-id activity task files-form upload-progress close! linked-from] ;;TODO make map
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
       {:e!              e!
        :value           files-form
        :on-change-event file-controller/->UpdateFilesForm
-       :save-event      #(file-controller/->AddFilesToTask files-form task close!)
+       :save-event      #(file-controller/->AddFilesToTask files-form task close! linked-from)
        :cancel-fn close!
        :in-progress?    upload-progress
        :spec :task/add-files}
@@ -329,41 +329,60 @@
                           [icons/content-add])}
            (tr [:task :add-part])]}]])]))
 
-(defn- task-details
+(defn file-upload-controls
+  [e!]
+  (let [file-upload-open? (r/atom false)]
+    {:file-upload-open? file-upload-open?
+     :upload! #(do (e! (file-controller/->UpdateFilesForm %))
+                   (reset! file-upload-open? true))
+     :close! #(do (reset! file-upload-open? false)
+                  (e! (file-controller/->AfterUploadRefresh)))}))
+
+(defn task-file-upload
+  [{:keys [e! task activity project-id controls linked-from
+           drag-container-id new-document files-form]}]
+  (r/with-let [{:keys [file-upload-open? upload! close!]}
+               (or controls (file-upload-controls e!))]
+    (when (task-model/can-submit? task)
+      [:<>
+       [file-upload/FileUpload {:drag-container-id drag-container-id
+                                :drop-message (tr [:drag :drop-to-task])
+                                :on-drop #(upload! {:task/files %})}]
+       [panels/modal {:open-atom file-upload-open?
+                      :max-width "lg"
+                      :title [:<>
+                              (tr [:task :upload-files])
+                              [typography/GreyText {:style {:display :inline
+                                                            :margin-left "1rem"}}
+                               (str (tr-enum (:activity/name activity))
+                                    " / "
+                                    (tr-enum (:task/type task)))]]
+                      :on-close close!}
+        [add-files-form e! project-id activity task files-form
+         (:in-progress? new-document)
+         close! linked-from]]])))
+
+(defn task-details
   [e! new-document project-id activity {:task/keys [description files] :as task} files-form]
-  (r/with-let [file-upload-open? (r/atom false)
-               upload! #(do (e! (file-controller/->UpdateFilesForm %))
-                            (reset! file-upload-open? true))
-               close! #(do (reset! file-upload-open? false)
-                           (e! (file-controller/->AfterUploadRefresh)))]
+  (r/with-let [upload-controls (file-upload-controls e!)]
     ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])
      [task-basic-info task]
-     [task-file-view e! activity task upload! files-form project-id]
-     (when (task-model/can-submit? task)
-       [:<>
-        [file-upload/FileUpload {:drag-container-id "task-details-drop"
-                                 :drop-message (tr [:drag :drop-to-task])
-                                 :on-drop #(upload! {:task/files %})}]
-        [panels/modal {:open-atom file-upload-open?
-                       :button-component (file-view/file-upload-button)
-                       :max-width "lg"
-                       :title [:<>
-                               (tr [:task :upload-files])
-                               [typography/GreyText {:style {:display :inline
-                                                             :margin-left "1rem"}}
-                                (str (tr-enum (:activity/name activity))
-                                     " / "
-                                     (tr-enum (:task/type task)))]]
-                       :on-close close!}
-         [add-files-form e! project-id activity task files-form
-          (:in-progress? new-document)
-          close!]]
-        (when (seq files)
-          [when-authorized :task/submit task
-           [submit-results-button e! task]])])
+     [task-file-view e! activity task (:upload! upload-controls) files-form project-id]
+     [task-file-upload {:e! e!
+                        :task task
+                        :activity activity
+                        :project-id project-id
+                        :drag-container-id "task-details-drop"
+                        :files-form files-form
+                        :controls upload-controls
+                        :new-document new-document}]
+     (when (and (task-model/can-submit? task)
+                (seq files))
+       [when-authorized :task/submit task
+        [submit-results-button e! task]])
      (when (task-model/reviewing? task)
        [when-authorized :task/review task
         [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
