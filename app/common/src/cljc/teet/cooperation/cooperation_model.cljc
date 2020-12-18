@@ -94,4 +94,8 @@
    {:cooperation.application/opinion
     [:db/id
      :cooperation.opinion/comment
-     :cooperation.opinion/status]}])
+     :cooperation.opinion/status
+     {:meta/creator user-model/user-display-attributes}
+     {:meta/modifier user-model/user-display-attributes}
+     :meta/created-at
+     :meta/modified-at]}])

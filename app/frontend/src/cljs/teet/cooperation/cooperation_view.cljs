@@ -24,7 +24,8 @@
             [teet.user.user-model :as user-model]
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.util.collection :as cu]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.ui.format :as fmt]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -100,17 +101,25 @@
      (tr-enum status)]))
 
 
-(defn- opinion-view [{:cooperation.application/keys [opinion] creator :meta/creator}]
-  [:div {:class (<class common-styles/flex-row)}
-    [:div {:class (<class common-styles/flex-table-column-style 20)}
-     (tr [:cooperation :competent-authority-name])]
-    [:div {:class (<class common-styles/flex-table-column-style 30)}
-     ;; Show creator of application (if no opinion given yet),
-     ;; otherwise show creator of the opinion
-     (user-model/user-name (or (some-> opinion :meta/creator)
-                               creator))]
-    [:div {:class (<class common-styles/flex-table-column-style 50)}
-     (opinion-status (:cooperation.opinion/status opinion))]])
+(defn- opinion-view [{:cooperation.application/keys [opinion]
+                      application-creator :meta/creator}]
+  (let [{:meta/keys [creator modifier created-at modified-at]
+         comment :cooperation.opinion/comment} opinion]
+    [:<>
+     [:div {:class (<class common-styles/flex-row)}
+      [:div {:class (<class common-styles/flex-table-column-style 20)}
+       (tr [:cooperation :competent-authority-name])]
+      [:div {:class (<class common-styles/flex-table-column-style 30)}
+       ;; Show last modifier or creator of the opinion if present
+       ;; otherwise show creator of the application
+       (user-model/user-name (or modifier creator application-creator))]
+      [:div {:class (<class common-styles/flex-table-column-style 50)
+             :style {:flex-direction :column}}
+       (opinion-status (:cooperation.opinion/status opinion))
+       (when-let [date (or modified-at created-at)]
+         [:div (fmt/date date)])]]
+     (when comment
+       [:div [rich-text-editor/display-markdown comment]])]))
 
 (defn cooperation-opinion
   [{:cooperation.application/keys [opinion]}]
