@@ -3,6 +3,8 @@ describe('Meeting Links Test', function () {
         cy.dummyLogin("Danny")
         cy.selectLanguage("ENG")
         cy.projectByName("integration test project")
+        cy.randomName("testmeeting", "testmeeting")
+        cy.randomName("testtopic", "testtopic")
         cy.backendCommand(":thk.project/update-cadastral-units", "{:project-id \"18463\" :cadastral-units " +
             "#{\"2:63801:001:0241\"" +
              "\"2:92901:001:0138\"" +
@@ -17,6 +19,12 @@ describe('Meeting Links Test', function () {
             "\"2:93001:001:0071\"" +
             "\"2:93001:001:0009\"" +
             "\"2:63801:001:0237\"}}")
+    })
+
+    after(() => {
+        cy.get(".button-with-menu button").click({"multiple":true, "force":true})
+        cy.get("#delete-button").click()
+        cy.get("#confirm-delete").click()
     })
 
 
@@ -34,7 +42,7 @@ describe('Meeting Links Test', function () {
         cy.wait(1000)
 
         cy.contains('Create meeting').click()
-        
+
         cy.get(`input[class*=':date-input']`).type(new Date().toLocaleDateString("et-EE"))
 
         cy.wait(1000)
@@ -43,13 +51,20 @@ describe('Meeting Links Test', function () {
         cy.get("[class*=end-time]").type("11:00" )
 
         cy.formInput(
-            ":meeting/title", "Test meeting #1",
+            ":meeting/title", this.testmeeting,
             ":meeting/location", "Test environment RAM")
         cy.formSubmit()
 
-        let sel = 'a:contains("Test meeting #1")'
+        let sel = "a:contains(" + this.testmeeting + ")"
         cy.get(sel).click()
-        cy.get('h3:contains("Test topic")').click()
+
+        cy.get("#add-agenda").click()
+
+        cy.formInput(":meeting.agenda/topic", this.testtopic)
+        cy.get("button[type=submit]").click({"multiple":true, "force": true})
+
+        cy.get(".agenda-heading h3").contains(this.testtopic)
+        cy.get(".agenda-heading h3").click()
 
         const select = "#links-type-select"
         const option = `[data-item*=':cadastral-unit']`
@@ -61,8 +76,7 @@ describe('Meeting Links Test', function () {
         cy.wait(1000)
 
         const search = `input[placeholder='Link...']`
-        cy.get(search).type("Tartu")
-
-        cy.wait(1000)
+        cy.get(search).type("Tee")
+        cy.wait(3000)
     })
 })
