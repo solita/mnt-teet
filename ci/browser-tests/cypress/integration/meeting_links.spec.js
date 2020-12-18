@@ -21,12 +21,33 @@ describe('Meeting Links Test', function () {
 
 
     it('sort searched cadastral units ', function () {
-        cy.get("h1").contains("Alatskivi")
+        cy.get("h1").contains("integration test project")
 
         cy.get("button.project-menu").click()
         cy.get("li.project-menu-item-project-meetings").click()
 
-        let sel = 'a:contains("Test meeting #3 #1")'
+        cy.wait(1000)
+
+        // create test meeting
+        cy.contains('Preliminary design').click()
+
+        cy.wait(1000)
+
+        cy.contains('Create meeting').click()
+        
+        cy.get(`input[class*=':date-input']`).type(new Date().toLocaleDateString("et-EE"))
+
+        cy.wait(1000)
+
+        cy.get("[class*=start-time]").type( "10:00")
+        cy.get("[class*=end-time]").type("11:00" )
+
+        cy.formInput(
+            ":meeting/title", "Test meeting #1",
+            ":meeting/location", "Test environment RAM")
+        cy.formSubmit()
+
+        let sel = 'a:contains("Test meeting #1")'
         cy.get(sel).click()
         cy.get('h3:contains("Test topic")').click()
 

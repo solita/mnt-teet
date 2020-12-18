@@ -254,6 +254,7 @@
                         :required required
                         :variant "outlined"
                         :full-width true
+                        :input-class ":date-input"
                         :on-change on-change-text}
                        (when-not read-only?
                          {:input-button-icon icons/action-calendar-today
@@ -340,6 +341,7 @@
                        :required required
                        :disabled (nil? @date)
                        ;:label (tr [:common :start-time])
+                       :input-class ":start-time"
                        :hide-label? true
                        :value @start-input-atom
                        :max @end-input-atom
@@ -359,6 +361,7 @@
                        :value @end-input-atom
                        :hide-label? true
                        ;:label (tr [:common-texts :end-time])
+                       :input-class ":end-time"
                        :min @start-input-atom
                        :on-blur (fn [_]
                                   (on-change [start (time-to-date @end-input-atom @date)]))
