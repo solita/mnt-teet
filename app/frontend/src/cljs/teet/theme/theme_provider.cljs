@@ -126,29 +126,6 @@
                            :paperAnchorDockedLeft {:border-right 0}}
                ;:MuiDivider {:root {:margin "1rem 0"}}
                :MuiTableHead {:root data-label-style}
-               :MuiTypography {:h1 {:fontFamily "Roboto"
-                                    :fontWeight 300
-                                    :fontSize "2rem"
-                                    :lineHeight "2.125rem"
-                                    :margin-bottom "1rem"}
-                               :h2 {:fontFamily "Roboto"
-                                    :fontWeight 400
-                                    :fontSize "1.5rem"
-                                    :lineHeight "1.75rem"}
-                               :h3 {:fontFamily "Roboto"
-                                    :fontWeight 500
-                                    :fontSize "1.125rem"
-                                    :lineHeight "1.25rem"}
-                               ;; SectionHeading
-                               :h6 section-heading-style
-                               ;; DataLabel
-                               :subtitle1 data-label-style
-                               :subtitle2 {:fontSize "0.875rem"
-                                           :font-weight 400
-                                           :color theme-colors/gray}
-                               :body1 {:fontWeight 400
-                                       :fontSize "1rem"
-                                       :lineHeight 1.5}}
 
                :MuiTableSortLabel {:root {:display "inline-block" :width "100%"}
                                    :icon {:float "right"}}

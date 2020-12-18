@@ -3,6 +3,141 @@
             [herb.core :refer [defglobal]]
             [garden.color :refer [darken]]))
 
+;; Typography styles
+(def h1-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "300"
+   :font-size "2rem"
+   :line-height "3rem"})
+
+(def h2-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.75rem"
+   :line-height "2.625rem"})
+
+(def h3-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.5rem"
+   :line-height "2.25rem"})
+
+(def h4-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.25rem"
+   :line-height "1.875rem"})
+
+(def h5-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.125rem"
+   :line-height "1.6875rem"})
+
+(def body-1-bold
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "1rem" ; 1rem
+   :line-height "1.5rem"}) ; 1.5rem
+
+(def body-1-regular
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1rem"
+   :line-height "1.5rem"})
+
+(def link-1
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1rem"
+   :line-height "1.5rem"})
+
+(def link-2
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
+
+(def body-2-bold
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
+
+(def body-3-bold
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "0.75rem"
+   :line-height "1.125rem"})
+
+(def body-3
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.75rem"
+   :line-height "1.125rem"})
+
+(def subtitle-1
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "1rem"
+   :line-height "1.5rem"})
+
+(def subtitle-2
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
+
+(def h1-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "300"
+   :font-size "1.5rem"
+   :line-height "36px"})
+
+(def h2-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.375rem"
+   :line-height "1.875rem"})
+
+(def h3-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.25rem"
+   :line-height "1.875rem"})
+
+(def h4-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.1875rem"
+   :line-height "1.75rem"})
+
+(def h5-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.125rem"
+   :line-height "1.6875rem"})
+
+
 (defn gray-light-border
   []
   {:display        :flex
@@ -75,28 +210,31 @@
    :box-shadow "none"})
 
 (defglobal global
-           [:body :html {:height "100vh"}]
-           [:p {:margin 0}]
-           ;; Richtexteditor styling
-           [:h1 {:margin-top 0}]
-           ;;
-           [:#teet-frontend {:height "100%"}]
-           [:.mention
-            [:textarea {:border :none}]
-            [:.comment-textarea__control {:background-color theme-colors/white
-                                          :border (str "1px solid " theme-colors/gray-light)}]]
-           [:.comment-textarea__highlighter {:padding "10px"
-                                             :border "1px solid transparent"}]
-           [:.comment-textarea__input {:padding "10px"}]
-           [:.comment-textarea__suggestions__list {:background-color theme-colors/white
-                                                   :border (str "1px solid " theme-colors/gray-light)
-                                                   :font-size "14px"
-                                                   :overflow :auto}]
-           [:.comment-textarea__suggestions__item {:padding "5px 15px"
-                                                    :border-bottom (str "1px solid " theme-colors/gray-light)}]
-           [:.comment-textarea__suggestions__item--focused {:background-color theme-colors/blue-lightest}]
-           [:input :select :textarea :button {:font-family :inherit}]
-           ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
+  [:body :html (merge body-1-regular {:height "100vh"})]
+  [:p {:margin 0}]
+  [:h1 (merge h1-desktop {:margin-top 0})]
+  [:h2 (merge h2-desktop {:margin-top 0})]
+  [:h3 (merge h3-desktop {:margin-top 0})]
+  [:h4 (merge h4-desktop {:margin-top 0})]
+  [:h5 (merge h5-desktop {:margin-top 0})]
+  ;;
+  [:#teet-frontend {:height "100%"}]
+  [:.mention
+   [:textarea {:border :none}]
+   [:.comment-textarea__control {:background-color theme-colors/white
+                                 :border (str "1px solid " theme-colors/gray-light)}]]
+  [:.comment-textarea__highlighter {:padding "10px"
+                                    :border "1px solid transparent"}]
+  [:.comment-textarea__input {:padding "10px"}]
+  [:.comment-textarea__suggestions__list {:background-color theme-colors/white
+                                          :border (str "1px solid " theme-colors/gray-light)
+                                          :font-size "14px"
+                                          :overflow :auto}]
+  [:.comment-textarea__suggestions__item {:padding "5px 15px"
+                                          :border-bottom (str "1px solid " theme-colors/gray-light)}]
+  [:.comment-textarea__suggestions__item--focused {:background-color theme-colors/blue-lightest}]
+  [:input :select :textarea :button {:font-family :inherit}]
+  ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
 
 (defn header-with-actions []
   {:justify-content :space-between
