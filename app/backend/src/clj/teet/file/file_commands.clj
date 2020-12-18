@@ -100,6 +100,11 @@
    :project-id nil
    :authorization {}}
   (let [previous-version (:file/previous-version (du/entity db id))
+        previous-links (when previous-version
+                         (map first (d/q '[:find ?l
+                                           :where [?l :link/to ?id]
+                                           :in $ ?id]
+                                         db (:db/id previous-version))))
         file-id (when previous-version
                   (:file/id previous-version))
         res (tx [{:db/id id
@@ -109,7 +114,12 @@
                 (when file-id
                   ;; If moving :file/id from previous version, retract it from
                   ;; previous file entity
-                  [[:db/retract (:db/id previous-version) :file/id file-id]]))]
+                  [[:db/retract (:db/id previous-version) :file/id file-id]])
+                ;; Move links to point to the new version the file
+                (when previous-links
+                  (for [link previous-links]
+                    {:db/id link
+                     :link/to id})))]
     (d/pull (:db-after res) '[:db/id :file/id] id)))
 
 (defn file-belong-to-task?
@@ -175,7 +185,10 @@
    :project-id (project-db/task-project-id db task-id)
    :pre [^{:error :invalid-previous-file}
          (or (nil? previous-version-id)
-             (file-belong-to-task? db task-id previous-version-id))]
+             (file-belong-to-task? db task-id previous-version-id))
+         ;;TODO: check that the task allows file uploading
+
+         ]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
   (or (file-model/validate-file file)
