@@ -10,5 +10,5 @@
 (def opinion-status-color
   {:cooperation.opinion.status/agreed "#308653"
    :cooperation.opinion.status/partially-rejected "#FFB511"
-   :cooperation.opinion.status/rejectected "#D73E3E"
+   :cooperation.opinion.status/rejected "#D73E3E"
    :cooperation.opinion.status/unanswered theme-colors/gray-light})

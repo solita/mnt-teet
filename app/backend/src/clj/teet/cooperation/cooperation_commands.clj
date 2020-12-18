@@ -97,11 +97,11 @@
    :authorization {:cooperation/application-approval {}}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
    :transact [{:db/id application-id
-               :cooperation.application/position
+               :cooperation.application/opinion
                (merge
                 {:db/id (or (:db/id opinion-form) "new-opinion")}
-                (select-keys opinion-form [:cooperation.position/opinion
-                                            :cooperation.position/comment])
+                (select-keys opinion-form [:cooperation.opinion/status
+                                           :cooperation.opinion/comment])
                 (if (:db/id opinion-form)
                   (meta-model/modification-meta user)
                   (meta-model/creation-meta user)))}]})

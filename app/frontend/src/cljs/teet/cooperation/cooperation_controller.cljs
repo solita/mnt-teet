@@ -46,7 +46,7 @@
 
 (defn prepare-opinion-form [form]
   (-> form
-      (update :cooperation.position/comment
+      (update :cooperation.opinion/comment
               #(when % (rich-text-editor/editor-state->markdown %)))
       cu/without-nils))
 

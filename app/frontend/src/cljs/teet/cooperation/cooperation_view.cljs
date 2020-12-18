@@ -94,9 +94,10 @@
                                (tr [:cooperation :applied]))]]))
 
 (defn- opinion-status [status]
-  [color-and-status
-   (cooperation-style/opinion-status-color (or status :cooperation.opinion.status/unanswered))
-   (tr [:enum status])])
+  (let [status (or status :cooperation.opinion.status/unanswered)]
+    [color-and-status
+     (cooperation-style/opinion-status-color status)
+     (tr-enum status)]))
 
 
 (defn- opinion-view [{:cooperation.application/keys [opinion] creator :meta/creator}]
