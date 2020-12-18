@@ -76,7 +76,8 @@
    :cooperation.application/type
    :cooperation.application/date
    {:cooperation.application/activity
-    [:activity/name {:activity/manager
+    [:db/id
+     :activity/name {:activity/manager
                      [:user/given-name :user/family-name]}]}
    :cooperation.application/response-type
    :cooperation.application/response-deadline
@@ -88,3 +89,11 @@
      :cooperation.response/content
      :cooperation.response/valid-until
      :cooperation.response/valid-months]}])
+
+(def response-application-keys
+  [:db/id
+   :cooperation.response/valid-months
+   :cooperation.response/valid-until
+   :cooperation.response/date
+   :cooperation.response/content
+   :cooperation.response/status])
