@@ -77,10 +77,11 @@
      :margin-top "1.5rem"
      :padding-bottom "1rem"})))
 
-(defn form-footer [{:keys [delete cancel validate disabled?]}]
+(defn form-footer [{:keys [delete delete-message cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
      [buttons/delete-button-with-confirm {:action delete
+                                          :modal-text delete-message
                                           :id "delete-button"}
       (tr [:buttons :delete])])
    [:div {:style {:margin-left :auto}}
@@ -366,6 +367,7 @@
            spec            ;; Spec for validating form fields
            id              ;; Id for the form element
            delete          ;; Delete function
+           delete-message  ;; message shown in delete confirmation dialog
            ]}
    & children]
   (r/with-let [invalid-attributes (r/atom #{})
@@ -400,7 +402,8 @@
                                           (fn [value]
                                             (validate value @current-fields)))
                              :delete (when delete           ;;TODO inconsistent with save-event and cancel event
-                                       #(e! delete))}}]
+                                       #(e! delete))
+                             :delete-message delete-message}}]
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
                            :display :flex
