@@ -47,6 +47,11 @@
      (:db/id user)))
 
 (defn authorized?
+  #?(:cljs
+     ([{:keys [user functionality] :as opts}]
+      (authorized? (or user @app-state/user)
+                   functionality
+                   opts)))
   ([user functionality]
    (authorized? user functionality nil))
   ([user functionality {:keys [access entity project-id link]
