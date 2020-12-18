@@ -2,8 +2,13 @@
   "Commands for cooperation entities"
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.cooperation.cooperation-db :as cooperation-db]
+            [teet.cooperation.cooperation-model :as cooperation-model]
             [teet.meta.meta-model :as meta-model]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
+            [datomic.client.api :as d]
+            [teet.link.link-db :as link-db]
+            [teet.project.project-db :as project-db]))
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -49,24 +54,37 @@
                (meta-model/creation-meta user))]}]
      (db-api/bad-request! "No such 3rd party"))})
 
-(defcommand :cooperation/create-application-response
+
+(defmethod link-db/link-from [:cooperation.response :file]
+  [db _user from _type to]
+  ;; Checks that the uploaded file is in the same project the cooperation response is in
+  (= (project-db/file-project-id db to)
+     (cooperation-db/response-project-id db from)))
+
+(defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
              application-id :application-id
              response-payload :form-data}
-   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :project-id (cooperation-db/application-project-id db application-id)
    :authorization {:cooperation/application-approval {}}
-   :pre []
+   :pre []                                                  ;; TODO add some checking
    :transact
-   [{:db/id application-id
-     :cooperation.application/response
-     (merge (cu/without-nils
-              (select-keys response-payload
-                           [:cooperation.response/valid-months
-                            :cooperation.response/valid-until
-                            :cooperation.response/date
-                            :cooperation.response/content
-                            :cooperation.response/status]))
-            {:db/id "new-application-response"}
-            (meta-model/creation-meta user))}]})
+   (let [existing-id (:db/id response-payload)
+         response-id (or existing-id "new-application-response")
+         old-response (if existing-id
+                        (d/pull db cooperation-model/response-application-keys
+                                existing-id)
+                        {:db/id "new-application-response"})]
+     (into [{:db/id application-id
+             :cooperation.application/response response-id}]
+           (du/modify-entity-tx
+             old-response
+             (merge (cu/without-nils
+                      (select-keys response-payload
+                                   cooperation-model/response-application-keys))
+                    {:db/id response-id}
+                    (if (:db/id response-payload)
+                      (meta-model/modification-meta user)
+                      (meta-model/creation-meta user))))))})
