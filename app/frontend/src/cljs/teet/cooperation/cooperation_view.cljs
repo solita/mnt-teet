@@ -26,7 +26,8 @@
             [teet.util.collection :as cu]
             [clojure.string :as str]
             [teet.ui.format :as fmt]
-            [teet.ui.authorization-context :as authorization-context]))
+            [teet.ui.authorization-context :as authorization-context]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -417,9 +418,6 @@
       (tr [:cooperation :add-files])]]))
 
 
-
-
-
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
   [form/form
    {:e! e!
@@ -436,23 +434,26 @@
    ^{:attribute :cooperation.opinion/comment}
    [rich-text-editor/rich-text-field {}]])
 
-(defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application
-                                   creator :meta/creator}]
+(defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
   [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
    [typography/Heading2 (tr [:cooperation :opinion-title])]
    [opinion-view application]
    (when (not opinion)
-     [form/form-modal-button
-      {:max-width "sm"
-       :modal-title (tr [:cooperation :create-opinion-title])
-       :form-component [opinion-form {:e! e! :application application}]
-       :button-component [buttons/button-primary {:class :create-opinion}
-                          (tr [:cooperation :create-opinion-button])]}])])
+     [authorization-check/when-authorized :cooperation/application-approval
+      application
+      [form/form-modal-button
+       {:max-width "sm"
+        :modal-title (tr [:cooperation :create-opinion-title])
+        :form-component [opinion-form {:e! e! :application application}]
+        :button-component [buttons/button-primary {:class :create-opinion}
+                           (tr [:cooperation :create-opinion-button])]}]])])
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
-     (if (cooperation-model/editable? application)
+     (if (and (authorization-check/authorized? {:functionality :cooperation/edit-application
+                                                :entity application})
+              (cooperation-model/editable? application))
        #{:edit-application}
        #{})
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
@@ -471,11 +472,12 @@
           [:<>
            [application-response e! application project]
            [application-conclusion e! application project]]
-          [form/form-modal-button
-           {:max-width "sm"
-            :modal-title (tr [:cooperation :add-application-response])
-            :form-component [application-response-form {:e! e!
-                                                        :project-id (:thk.project/id project)
-                                                        :application-id (:db/id application)}]
-            :button-component [buttons/button-primary {:class :enter-response}
-                               (tr [:cooperation :enter-response])]}])]]]]))
+          [authorization-context/when-authorized :edit-application
+           [form/form-modal-button
+            {:max-width "sm"
+             :modal-title (tr [:cooperation :add-application-response])
+             :form-component [application-response-form {:e! e!
+                                                         :project-id (:thk.project/id project)
+                                                         :application-id (:db/id application)}]
+             :button-component [buttons/button-primary {:class :enter-response}
+                                (tr [:cooperation :enter-response])]}]])]]]]))
