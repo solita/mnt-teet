@@ -9,134 +9,134 @@
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "300"
-   :font-size "32px"
-   :line-height "48px"})
+   :font-size "2rem"
+   :line-height "3rem"})
 
 (defn h2-desktop []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "28px"
-   :line-height "42px"})
+   :font-size "1.75rem"
+   :line-height "2.625rem"})
 
 (defn h3-desktop []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "24px"
-   :line-height "36px"})
+   :font-size "1.5rem"
+   :line-height "2.25rem"})
 
 (defn h4-desktop []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "20px"
-   :line-height "30px"})
+   :font-size "1.25rem"
+   :line-height "1.875rem"})
 
 (defn h5-desktop []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "18px"
-   :line-height "27px"})
+   :font-size "1.125rem"
+   :line-height "1.6875rem"})
 
 (defn body-1-bold []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "bold"
-   :font-size "16px"
-   :line-height "24px"})
+   :font-size "1rem" ; 1rem
+   :line-height "1.5rem"}) ; 1.5rem
 
 (defn body-1-regular []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "16px"
-   :line-height "24px"})
+   :font-size "1rem"
+   :line-height "1.5rem"})
 
 (defn link-1 []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "16px"
-   :line-height "24px"})
+   :font-size "1rem"
+   :line-height "1.5rem"})
 
 (defn link-2 []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "14px"
-   :line-height "21px"})
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
 
 (defn body-2-bold []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "bold"
-   :font-size "14px"
-   :line-height "21px"})
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
 
 (defn body-3-bold []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "bold"
-   :font-size "12px"
-   :line-height "18px"})
+   :font-size "0.75rem"
+   :line-height "1.125rem"})
 
 (defn body-3 []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "12px"
-   :line-height "18px"})
+   :font-size "0.75rem"
+   :line-height "1.125rem"})
 
 (defn subtitle-1 []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "bold"
-   :font-size "16px"
-   :line-height "24px"})
+   :font-size "1rem"
+   :line-height "1.5rem"})
 
 (defn subtitle-2 []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "14px"
-   :line-height "21px"})
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
 
 (defn h1-mobile []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "300"
-   :font-size "24px"
+   :font-size "1.5rem"
    :line-height "36px"})
 
 (defn h2-mobile []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "22px"
-   :line-height "30px"})
+   :font-size "1.375rem"
+   :line-height "1.875rem"})
 
 (defn h3-mobile []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "20px"
-   :line-height "30px"})
+   :font-size "1.25rem"
+   :line-height "1.875rem"})
 
 (defn h4-mobile []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "19px"
-   :line-height "28px"})
+   :font-size "1.1875rem"
+   :line-height "1.75rem"})
 
 (defn h5-mobile []
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :font-size "18px"
-   :line-height "27px"})
+   :font-size "1.125rem"
+   :line-height "1.6875rem"})
 
 
 ;; Old typography styles
