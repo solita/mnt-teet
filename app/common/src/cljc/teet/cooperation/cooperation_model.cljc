@@ -99,3 +99,7 @@
      {:meta/modifier user-model/user-display-attributes}
      :meta/created-at
      :meta/modified-at]}])
+
+
+(defn editable? [application]
+  (not (contains? application :cooperation.application/opinion)))

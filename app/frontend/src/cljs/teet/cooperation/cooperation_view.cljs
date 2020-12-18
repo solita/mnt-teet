@@ -25,7 +25,8 @@
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.ui.format :as fmt]))
+            [teet.ui.format :as fmt]
+            [teet.ui.authorization-context :as authorization-context]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -101,25 +102,32 @@
      (tr-enum status)]))
 
 
-(defn- opinion-view [{:cooperation.application/keys [opinion]
-                      application-creator :meta/creator}]
-  (let [{:meta/keys [creator modifier created-at modified-at]
-         comment :cooperation.opinion/comment} opinion]
-    [:<>
-     [:div {:class (<class common-styles/flex-row)}
-      [:div {:class (<class common-styles/flex-table-column-style 20)}
-       (tr [:cooperation :competent-authority-name])]
-      [:div {:class (<class common-styles/flex-table-column-style 30)}
-       ;; Show last modifier or creator of the opinion if present
-       ;; otherwise show creator of the application
-       (user-model/user-name (or modifier creator application-creator))]
-      [:div {:class (<class common-styles/flex-table-column-style 50)
-             :style {:flex-direction :column}}
-       (opinion-status (:cooperation.opinion/status opinion))
-       (when-let [date (or modified-at created-at)]
-         [:div (fmt/date date)])]]
-     (when comment
-       [:div [rich-text-editor/display-markdown comment]])]))
+(defn- opinion-view
+  ([opinion] (opinion-view {} opinion))
+  ([{:keys [on-edit]}
+    {:cooperation.application/keys [opinion]
+     application-creator :meta/creator}]
+   (let [{:meta/keys [creator modifier created-at modified-at]
+          comment :cooperation.opinion/comment} opinion]
+     [:<>
+      [:div {:class (<class common-styles/flex-row)}
+       [:div {:class (<class common-styles/flex-table-column-style 20)}
+        (tr [:cooperation :competent-authority-name])]
+       [:div {:class (<class common-styles/flex-table-column-style 30)}
+        ;; Show last modifier or creator of the opinion if present
+        ;; otherwise show creator of the application
+        (user-model/user-name (or modifier creator application-creator))]
+       [:div {:class (<class common-styles/flex-table-column-style 50)
+              :style {:flex-direction :column}}
+        [:div
+         (opinion-status (:cooperation.opinion/status opinion))
+         (when on-edit
+           [buttons/button-secondary {:on-click on-edit}
+            (tr [:buttons :edit])])]
+        (when-let [date (or modified-at created-at)]
+          [:div (fmt/date date)])]]
+      (when comment
+        [:div [rich-text-editor/display-markdown comment]])])))
 
 (defn cooperation-opinion
   [{:cooperation.application/keys [opinion]}]
@@ -390,16 +398,17 @@
                     (<class common-styles/margin-bottom 1)]}
       [typography/Heading2 (tr [:cooperation :response])]
 
-      [form/form-modal-button
-       {:max-width "sm"
-        :form-value response
-        :modal-title (tr [:cooperation :edit-response-title])
-        :form-component [application-response-form {:e! e!
-                                                    :project-id (:thk.project/id project)
-                                                    :application-id (:db/id application)}]
-        :button-component [buttons/button-secondary {:class :edit-response
-                                                     :size :small}
-                           (tr [:buttons :edit])]}]]
+      [authorization-context/when-authorized :edit-application
+       [form/form-modal-button
+        {:max-width "sm"
+         :form-value response
+         :modal-title (tr [:cooperation :edit-response-title])
+         :form-component [application-response-form {:e! e!
+                                                     :project-id (:thk.project/id project)
+                                                     :application-id (:db/id application)}]
+         :button-component [buttons/button-secondary {:class :edit-response
+                                                      :size :small}
+                            (tr [:buttons :edit])]}]]]
      [:div {:class (<class common-styles/margin-bottom 1)}
       [rich-text-editor/display-markdown
        (:cooperation.response/content response)]]
@@ -442,27 +451,31 @@
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
-    [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
-     [cooperation-page-structure
-      e! app project overview
-      [:<>
-       [:div {:class (<class common-styles/margin-bottom 1)}
-        [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-        [typography/Heading2
-         (tr-enum (:cooperation.application/type application)) " / "
-         (tr-enum (:cooperation.application/response-type application))]
-        [typography/SectionHeading {:style {:text-transform :uppercase}}
-         (tr-enum (get-in application [:cooperation.application/activity :activity/name]))]]
-       [application-information application]
-       (if (:cooperation.application/response application)
-         [:<>
-          [application-response e! application project]
-          [application-conclusion e! application project]]
-         [form/form-modal-button
-          {:max-width "sm"
-           :modal-title (tr [:cooperation :add-application-response])
-           :form-component [application-response-form {:e! e!
-                                                       :project-id (:thk.project/id project)
-                                                       :application-id (:db/id application)}]
-           :button-component [buttons/button-primary {:class :enter-response}
-                              (tr [:cooperation :enter-response])]}])]]]))
+    [authorization-context/with
+     (if (cooperation-model/editable? application)
+       #{:edit-application}
+       #{})
+     [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
+      [cooperation-page-structure
+       e! app project overview
+       [:<>
+        [:div {:class (<class common-styles/margin-bottom 1)}
+         [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+         [typography/Heading2
+          (tr-enum (:cooperation.application/type application)) " / "
+          (tr-enum (:cooperation.application/response-type application))]
+         [typography/SectionHeading {:style {:text-transform :uppercase}}
+          (tr-enum (get-in application [:cooperation.application/activity :activity/name]))]]
+        [application-information application]
+        (if (:cooperation.application/response application)
+          [:<>
+           [application-response e! application project]
+           [application-conclusion e! application project]]
+          [form/form-modal-button
+           {:max-width "sm"
+            :modal-title (tr [:cooperation :add-application-response])
+            :form-component [application-response-form {:e! e!
+                                                        :project-id (:thk.project/id project)
+                                                        :application-id (:db/id application)}]
+            :button-component [buttons/button-primary {:class :enter-response}
+                               (tr [:cooperation :enter-response])]}])]]]]))
