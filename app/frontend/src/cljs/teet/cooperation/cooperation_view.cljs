@@ -105,7 +105,7 @@
 
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
-  ([{:keys [on-edit]}
+  ([{:keys [edit-button]}
     {:cooperation.application/keys [opinion]
      application-creator :meta/creator}]
    (let [{:meta/keys [creator modifier created-at modified-at]
@@ -122,9 +122,7 @@
               :style {:flex-direction :column}}
         [:div
          (opinion-status (:cooperation.opinion/status opinion))
-         (when on-edit
-           [buttons/button-secondary {:on-click on-edit}
-            (tr [:buttons :edit])])]
+         edit-button]
         (when-let [date (or modified-at created-at)]
           [:div (fmt/date date)])]]
       (when comment
@@ -434,28 +432,35 @@
    ^{:attribute :cooperation.opinion/comment}
    [rich-text-editor/rich-text-field {}]])
 
+(defn- edit-opinion [e! application button-component]
+  [authorization-context/when-authorized :save-opinion
+   [form/form-modal-button
+    {:max-width "sm"
+     :modal-title (tr [:cooperation :create-opinion-title])
+     :form-component [opinion-form {:e! e! :application application}]
+     :button-component button-component}]])
+
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
   [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
    [typography/Heading2 (tr [:cooperation :opinion-title])]
-   [opinion-view application]
+   [opinion-view {:edit-button [edit-opinion e! application
+                                [buttons/button-secondary {:size "small"}
+                                 (tr [:buttons :edit])]]} application]
    (when (not opinion)
-     [authorization-check/when-authorized :cooperation/application-approval
-      application
-      [form/form-modal-button
-       {:max-width "sm"
-        :modal-title (tr [:cooperation :create-opinion-title])
-        :form-component [opinion-form {:e! e! :application application}]
-        :button-component [buttons/button-primary {:class :create-opinion}
-                           (tr [:cooperation :create-opinion-button])]}]])])
+     [edit-opinion e! application
+      [buttons/button-primary {:class :create-opinion}
+       (tr [:cooperation :create-opinion-button])]])])
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
-     (if (and (authorization-check/authorized? {:functionality :cooperation/edit-application
-                                                :entity application})
-              (cooperation-model/editable? application))
-       #{:edit-application}
-       #{})
+     {:edit-application (and (authorization-check/authorized?
+                              {:functionality :cooperation/edit-application
+                               :entity application})
+                             (cooperation-model/editable? application))
+      :save-opinion (authorization-check/authorized?
+                     {:functionality :cooperation/application-approval
+                      :entity application})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
       [cooperation-page-structure
        e! app project overview
