@@ -5,8 +5,7 @@
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.credentials :as aws-credentials]
-            [clojure.string :as str]
-            [teet.log :as log]))
+            [clojure.string :as str]))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 

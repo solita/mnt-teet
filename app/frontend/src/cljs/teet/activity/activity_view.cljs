@@ -6,7 +6,7 @@
             [teet.activity.activity-model :as activity-model]
             [teet.activity.activity-style :as activity-style]
             [teet.app-state]
-            [teet.authorization.authorization-check :refer [authorized?]]
+            [teet.authorization.authorization-check :refer [authorized? when-authorized]]
             [teet.common.common-styles :as common-styles]
             teet.file.file-spec
             [teet.localization :refer [tr tr-enum]]
@@ -27,8 +27,7 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :as util]
-            [teet.user.user-model :as user-model]
-            [teet.authorization.authorization-check :refer [when-authorized]]))
+            [teet.user.user-model :as user-model]))
 
 (defn- names-of-unfinished-activities [existing-activities]
   (->> existing-activities
@@ -165,7 +164,7 @@
      (tr-enum (:task/type task))]]])
 
 (defn task-row
-  [{:task/keys [type assignee status] :as task}]
+  [{:task/keys [assignee status] :as task}]
   [:div {:class (<class activity-style/task-row-style)}
    [task-name-and-status task]
    [:div {:class (<class activity-style/task-row-column-style :center)}

@@ -11,7 +11,6 @@
    :project-id nil
    :authorization {}
    :pre [(link-model/valid-from? from)]}
-
   (if-let [{wrap-tx :wrap-tx} (link-db/link-from db user from type to)]
     (select-keys
      (tx ((or wrap-tx identity)

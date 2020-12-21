@@ -1,7 +1,6 @@
 (ns teet.migration.thk-integration-id
   (:require [datomic.client.api :as d]
             [clojure.set :as set]
-            [teet.thk.thk-mapping :as thk-mapping]
             [teet.integration.integration-id :as integration-id]))
 
 (defn- entities-with-attr [db attr]

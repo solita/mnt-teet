@@ -8,7 +8,9 @@
             [teet.util.datomic :as du]
             [datomic.client.api :as d]
             [teet.link.link-db :as link-db]
-            [teet.project.project-db :as project-db]))
+            [teet.project.project-db :as project-db]
+            [clojure.spec.alpha :as s]))
+
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -56,10 +58,10 @@
 
 
 (defmethod link-db/link-from [:cooperation.response :file]
-  [db _user from _type to]
+  [db _user [_ response-id :as from] _type to]
   ;; Checks that the uploaded file is in the same project the cooperation response is in
   (= (project-db/file-project-id db to)
-     (cooperation-db/response-project-id db from)))
+     (cooperation-db/response-project-id db response-id)))
 
 (defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
@@ -80,11 +82,44 @@
      (into [{:db/id application-id
              :cooperation.application/response response-id}]
            (du/modify-entity-tx
-             old-response
-             (merge (cu/without-nils
-                      (select-keys response-payload
-                                   cooperation-model/response-application-keys))
-                    {:db/id response-id}
-                    (if (:db/id response-payload)
-                      (meta-model/modification-meta user)
-                      (meta-model/creation-meta user))))))})
+            old-response
+            (merge (cu/without-nils
+                    (select-keys response-payload
+                                 cooperation-model/response-application-keys))
+                   {:db/id response-id}
+                   (if (:db/id response-payload)
+                     (meta-model/modification-meta user)
+                     (meta-model/creation-meta user))))))})
+
+(s/def ::application-id integer?)
+(s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
+                              :opt [:cooperation.opinion/comment
+                                    :db/id]))
+
+(defn- opinion-id-matches
+  "Check that opinion id matches application's current opinion id.
+  Either both are nil or they are the same entity id."
+  [db application-id opinion-id]
+  (let [application (du/entity db application-id)
+        current-opinion-id (get-in application
+                                    [:cooperation.application/opinion :db/id])]
+    (= opinion-id current-opinion-id)))
+
+(defcommand :cooperation/save-opinion
+  {:doc "Save opinion for an application"
+   :spec (s/keys :req-un [::application-id
+                          ::opinion-form])
+   :context {:keys [user db]}
+   :payload {:keys [application-id opinion-form]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/application-approval {}}
+   :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
+   :transact [{:db/id application-id
+               :cooperation.application/opinion
+               (merge
+                {:db/id (or (:db/id opinion-form) "new-opinion")}
+                (select-keys opinion-form [:cooperation.opinion/status
+                                           :cooperation.opinion/comment])
+                (if (:db/id opinion-form)
+                  (meta-model/modification-meta user)
+                  (meta-model/creation-meta user)))}]})

@@ -1,6 +1,5 @@
 (ns teet.admin.admin-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
-            [taoensso.timbre :as log]
             [teet.meta.meta-model :as meta-model]
             [teet.user.user-db :as user-db]
             [teet.user.user-model :as user-model]

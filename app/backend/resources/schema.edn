@@ -1646,4 +1646,27 @@
   :txes [[{:db/ident :cooperation.application/activity
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Applications need to reference an existing activity."}]]}]
+           :db/doc "Applications need to reference an existing activity."}]]}
+
+
+ ;; Clarify cooperation terms
+ {:db/ident :migration/cooperation-opinion-terms
+  :txes [[{:db/id :cooperation.application/position
+           :db/ident :cooperation.application/opinion
+           :db/doc "Reference to the Opinion of Competent Authority -entity"}
+
+          {:db/id :cooperation.position/decision
+           :db/ident :cooperation.opinion/status
+           :db/doc "Enum ref to opinion status"}
+
+          {:db/id :cooperation.position/comment
+           :db/ident :cooperation.opinion/comment
+           :db/doc "Rich text comment for opinion"}
+
+          {:db/ident :cooperation.opinion.status/agreed
+           :enum/attribute :cooperation.opinion/status}
+          {:db/ident :cooperation.opinion.status/rejected
+           :enum/attribute :cooperation.opinion/status}
+          {:db/ident :cooperation.opinion.status/partially-rejected
+           :enum/attribute :cooperation.opinion/status}]]
+  }]

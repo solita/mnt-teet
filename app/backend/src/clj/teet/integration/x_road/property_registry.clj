@@ -6,7 +6,6 @@
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [teet.integration.x-road.core :as x-road]
-            [teet.auth.jwt-token :as jwt-token]
             [teet.integration.postgrest :as postgrest]
             [clojure.set :as set]))
 
@@ -62,9 +61,7 @@
         ;; _ (def *ox owner-xml-seq)
         oo-get (fn oo-get [ox & path]
                   (apply z/xml1-> (concat [ox] path)))
-        isikud-get (fn [ox & path] (apply oo-get ox (concat [:a:isikud] path [text])))
-        omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))
-        ]
+        omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))]
     {:omandiosad
      (mapv (fn [ox]
              (log/debug "ki count " (count  (z/xml-> ox :a:isikud :a:KinnistuIsik z/text)))

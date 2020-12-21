@@ -200,7 +200,7 @@ and the compensation info as the value."
   (count (file-db/land-files-by-project-and-sequence-number
           db user [:thk.project/id id] sequence-number)))
 
-(defmethod link-db/fetch-external-link-info :estate [user _ id]
+(defmethod link-db/fetch-external-link-info :estate [_user _ id]
   ;; PENDING: estates have no name, show just the id
   #_(property-registry/fetch-estate-info (property-registry-context user) id)
   {:estate-id id})

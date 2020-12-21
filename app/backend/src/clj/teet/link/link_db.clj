@@ -3,9 +3,7 @@
   (:require [clojure.walk :as walk]
             [datomic.client.api :as d]
             [teet.link.link-model :as link-model]
-            [teet.log :as log]
-            [teet.integration.postgrest :as postgrest]
-            [teet.environment :as environment]))
+            [teet.log :as log]))
 
 (defmulti link-from
   "Check permissions and preconditions for linking from an entity.

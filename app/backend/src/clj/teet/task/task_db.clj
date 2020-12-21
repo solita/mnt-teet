@@ -1,7 +1,6 @@
 (ns teet.task.task-db
   "Task related queries"
   (:require [datomic.client.api :as d]
-            [teet.activity.activity-model :as activity-model]
             [teet.util.datomic :as du]
             [teet.file.file-db :as file-db]
             [teet.activity.activity-db :as activity-db]
