@@ -23,6 +23,31 @@
                   {:db/id e
                    :integration/id (integration-id/number->uuid e)}))})))
 
+(defn entities-including-attr-and-missing-iid [db attr]
+  (into #{}
+        (map first)
+        (d/q [:find '?e
+              :where ['?e attr '_]
+              '[(missing? $ ?e :integration/id)]
+              ] db)))
+
+(defn migrate-2
+  "Migrate existing :db/id values to UUID :integration/id, for those lc/activity/task entities that are stillmissing integration id"
+  [conn]
+  (let [db (d/db conn)
+        lifecycles (entities-including-attr-and-missing-iid db :thk.lifecycle/id)
+        activities (entities-including-attr-and-missing-iid db :activity/name)
+        tasks (entities-including-attr-and-missing-iid db :task/send-to-thk?)
+        entities (set/union lifecycles activities tasks)]
+    
+    (d/transact
+     conn
+     {:tx-data (vec
+                (for [e entities
+                      :when (nil? (:integration/id e))]
+                  {:db/id e
+                   :integration/id (integration-id/number->uuid e)}))})))
+
 (defn check-uuids [db]
   (every?
    #(let [{db-id :db/id

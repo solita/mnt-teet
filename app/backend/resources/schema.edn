@@ -1668,5 +1668,11 @@
           {:db/ident :cooperation.opinion.status/rejected
            :enum/attribute :cooperation.opinion/status}
           {:db/ident :cooperation.opinion.status/partially-rejected
-           :enum/attribute :cooperation.opinion/status}]]
-  }]
+           :enum/attribute :cooperation.opinion/status}]]}
+ {:db/ident :migration/stable-integration-id-2
+  :txes [[{:db/ident :integration/id
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/uuid
+           :db/unique :db.unique/identity
+           :db/doc "UUID identifier for THK integration (dev env db didn't have integration ids on all)"}]
+         teet.migration.thk-integration-id/migrate-2]}]
