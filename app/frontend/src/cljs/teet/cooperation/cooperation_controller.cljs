@@ -10,7 +10,7 @@
 (defrecord ApplicationCreated [save-response])
 
 (defrecord ResponseCreated [response edit?])
-(defrecord OpinionCreated [response])
+(defrecord OpinionSaved [new? response])
 
 (extend-protocol t/Event
 
@@ -37,11 +37,11 @@
                                                     (tr [:cooperation :new-response-created])))
           common-controller/refresh-fx))
 
-  OpinionCreated
-  (process-event [{r :response} app]
+  OpinionSaved
+  (process-event [{new? :new? r :response} app]
     (t/fx (snackbar-controller/open-snack-bar
            app
-           (tr [:cooperation :opinion-created]))
+           (tr [:cooperation (if new? :opinion-created :opinion-saved)]))
           common-controller/refresh-fx)))
 
 (defn prepare-opinion-form [form]
@@ -58,4 +58,4 @@
    (fn [response]
      (fn [e!]
        (e! (close-event))
-       (e! (->OpinionCreated response))))))
+       (e! (->OpinionSaved (not (contains? form :db/id)) response))))))

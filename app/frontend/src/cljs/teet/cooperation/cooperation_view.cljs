@@ -438,13 +438,15 @@
     {:max-width "sm"
      :modal-title (tr [:cooperation :create-opinion-title])
      :form-component [opinion-form {:e! e! :application application}]
+     :form-value (:cooperation.application/opinion application {})
      :button-component button-component}]])
 
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
   [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
    [typography/Heading2 (tr [:cooperation :opinion-title])]
    [opinion-view {:edit-button [edit-opinion e! application
-                                [buttons/button-secondary {:size "small"}
+                                [buttons/button-secondary {:size "small"
+                                                           :disabled (boolean (not opinion))}
                                  (tr [:buttons :edit])]]} application]
    (when (not opinion)
      [edit-opinion e! application
