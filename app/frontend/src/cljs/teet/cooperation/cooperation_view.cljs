@@ -119,12 +119,20 @@
         ;; otherwise show creator of the application
         (user-model/user-name (or modifier creator application-creator))]
        [:div {:class (<class common-styles/flex-table-column-style 50)
-              :style {:flex-direction :column}}
-        [:div
+              ;; PENDING: somewhat ugly styling
+              :style {:flex-direction :column
+                      :align-self :start
+                      :place-items :flex-start}}
+        [:div {:class (<class common-styles/flex-row)
+               :style {:width "100%"
+                       :justify-content :space-between}}
          (opinion-status (:cooperation.opinion/status opinion))
          edit-button]
         (when-let [date (or modified-at created-at)]
-          [:div (fmt/date date)])]]
+          [:div
+           [typography/BoldGreyText {:style {:display :inline-block}}
+            (str (tr [:common :date]) ":")]
+           (str " " (fmt/date date))])]]
       (when comment
         [:div [rich-text-editor/display-markdown comment]])])))
 
