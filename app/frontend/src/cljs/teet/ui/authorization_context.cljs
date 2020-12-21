@@ -20,7 +20,6 @@
        (if (map? added-rights)
          ;; Disj/conj based on value
          (reduce-kv (fn [r k v]
-                      (println "with auth: " k " => " v)
                       (if v
                         (conj r k)
                         (disj r k)))
