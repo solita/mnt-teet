@@ -46,6 +46,10 @@ describe('Meeting Links', function () {
         cy.get("div.select-user-list div.select-user-entry:nth-child(4)").contains("16036950")
     }
 
+    function checkTasksSorted() {
+        // TODO:implement
+    }
+
     function createMeeting() {
         cy.get("button.project-menu").click()
         cy.get("li.project-menu-item-project-meetings").click()
@@ -73,21 +77,11 @@ describe('Meeting Links', function () {
         cy.get("button[type=submit]").click({"multiple": true, "force": true})
     }
 
-    function selectCadastralUnits() {
+    function selectSearchItems(itemType) {
         cy.get(".agenda-heading h3").contains(this.testtopic)
         cy.get(".agenda-heading h3").click()
         const select = "#links-type-select"
-        const option = `[data-item*=':cadastral-unit']`
-        cy.get(option).then(($opt) => {
-            cy.get(select).select($opt.attr("value"))
-        })
-    }
-
-    function selectEstates() {
-        cy.get(".agenda-heading h3").contains(this.testtopic)
-        cy.get(".agenda-heading h3").click()
-        const select = "#links-type-select"
-        const option = `[data-item*=':estate']`
+        const option = itemType
         cy.get(option).then(($opt) => {
             cy.get(select).select($opt.attr("value"))
         })
@@ -97,7 +91,7 @@ describe('Meeting Links', function () {
         cy.get("h1").contains("integration test project")
         createMeeting.call(this);
         createAgenda.call(this);
-        selectCadastralUnits.call(this);
+        selectSearchItems.call(this, `[data-item*=':cadastral-unit']`);
         cy.wait(1000)
         checkCadastralUnitsSorted();
         cy.wait(3000)
@@ -107,9 +101,19 @@ describe('Meeting Links', function () {
         cy.get("h1").contains("integration test project")
         createMeeting.call(this);
         createAgenda.call(this);
-        selectEstates.call(this);
+        selectSearchItems.call(this, `[data-item*=':estate']`);
         cy.wait(1000)
         checkEstatesSorted();
+        cy.wait(3000)
+    })
+
+    it('sort searched tasks', function () {
+        cy.get("h1").contains("integration test project")
+        createMeeting.call(this)
+        createAgenda.call(this)
+        selectSearchItems.call(this, `[data-item*=':task']`)
+        cy.wait(1000)
+        checkTasksSorted();
         cy.wait(3000)
     })
 })
