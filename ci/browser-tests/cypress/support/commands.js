@@ -57,6 +57,9 @@ Cypress.Commands.add("formInput", (...attrAndText) => {
                 cy.get(select).select($opt.attr("value"))
             })
 
+        } else if(text.startsWith("RTE:")) {
+            // Rich Text Editor field
+            cy.get(`div[data-form-attribute='${attr}'] [contenteditable]`).type(text.substr(4))
         } else {
             // Regular text, just type it in
             cy.get(`div[data-form-attribute='${attr}'] input`).type(text)

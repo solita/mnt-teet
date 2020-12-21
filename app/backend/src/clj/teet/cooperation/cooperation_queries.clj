@@ -2,7 +2,8 @@
   (:require [teet.db-api.core :refer [defquery] :as db-api]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.project.project-db :as project-db]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.collection :as cu]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
@@ -23,9 +24,10 @@
    :authorization {:cooperation/view-cooperation-page {}}}
   (let [p [:thk.project/id project-id]
         tp-id (cooperation-db/third-party-id-by-name db p name)]
-    {:project (project-db/project-by-id db p)
-     :overview (cooperation-db/overview db p
-                                        #(= tp-id %))}))
+    (du/idents->keywords
+     {:project (project-db/project-by-id db p)
+      :overview (cooperation-db/overview db p
+                                         #(= tp-id %))})))
 
 (defquery :cooperation/application
   {:doc "Fetch overview plus a single 3rd party appliation with all information"
@@ -37,6 +39,7 @@
    :authorization {:cooperation/view-cooperation-page {}}}
   (let [p [:thk.project/id project-id]
         tp-id (cooperation-db/third-party-id-by-name db p name)]
-    {:project (project-db/project-by-id db p)
-     :overview (cooperation-db/overview db p)
-     :third-party (cooperation-db/third-party-with-application db tp-id id)}))
+    (du/idents->keywords
+     {:project (project-db/project-by-id db p)
+      :overview (cooperation-db/overview db p)
+      :third-party (cooperation-db/third-party-with-application db tp-id id)})))

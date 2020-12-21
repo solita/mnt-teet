@@ -1,14 +1,16 @@
 (ns teet.cooperation.cooperation-controller
   (:require [tuck.core :as t]
-            [teet.log :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.util.collection :as cu]))
 
 (defrecord ThirdPartyCreated [name save-response])
 (defrecord ApplicationCreated [save-response])
 
 (defrecord ResponseCreated [response edit?])
+(defrecord OpinionSaved [new? response])
 
 (extend-protocol t/Event
 
@@ -33,4 +35,27 @@
     (t/fx (snackbar-controller/open-snack-bar app (if edit?
                                                     (tr [:cooperation :response-edited])
                                                     (tr [:cooperation :new-response-created])))
+          common-controller/refresh-fx))
+
+  OpinionSaved
+  (process-event [{new? :new? r :response} app]
+    (t/fx (snackbar-controller/open-snack-bar
+           app
+           (tr [:cooperation (if new? :opinion-created :opinion-saved)]))
           common-controller/refresh-fx)))
+
+(defn prepare-opinion-form [form]
+  (-> form
+      (update :cooperation.opinion/comment
+              #(when % (rich-text-editor/editor-state->markdown %)))
+      cu/without-nils))
+
+(defn save-opinion-event [application form close-event]
+  (common-controller/->SaveForm
+   :cooperation/save-opinion
+   {:application-id (:db/id application)
+    :opinion-form (prepare-opinion-form form)}
+   (fn [response]
+     (fn [e!]
+       (e! (close-event))
+       (e! (->OpinionSaved (not (contains? form :db/id)) response))))))

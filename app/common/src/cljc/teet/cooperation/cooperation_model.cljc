@@ -6,7 +6,8 @@
                :cljs [cljs-time.coerce :as tc])
             [clojure.spec.alpha :as s]
             [teet.util.datomic :as du]
-            [teet.util.spec :as su]))
+            [teet.util.spec :as su]
+            [teet.user.user-model :as user-model]))
 
 (s/def :cooperation.3rd-party/name ::su/non-empty-string)
 (s/def :cooperation.3rd-party/id-code string?)
@@ -81,10 +82,24 @@
    :cooperation.application/response-type
    :cooperation.application/response-deadline
    :cooperation.application/comment
+   {:meta/creator user-model/user-display-attributes}
    {:cooperation.application/response
     [:db/id
      :cooperation.response/date
      :cooperation.response/status
      :cooperation.response/content
      :cooperation.response/valid-until
-     :cooperation.response/valid-months]}])
+     :cooperation.response/valid-months
+     {:meta/creator user-model/user-display-attributes}]}
+   {:cooperation.application/opinion
+    [:db/id
+     :cooperation.opinion/comment
+     :cooperation.opinion/status
+     {:meta/creator user-model/user-display-attributes}
+     {:meta/modifier user-model/user-display-attributes}
+     :meta/created-at
+     :meta/modified-at]}])
+
+
+(defn editable? [application]
+  (not (contains? application :cooperation.application/opinion)))

@@ -3,7 +3,9 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.meta.meta-model :as meta-model]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.spec.alpha :as s]
+            [teet.util.datomic :as du]))
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -70,3 +72,36 @@
                             :cooperation.response/status]))
             {:db/id "new-application-response"}
             (meta-model/creation-meta user))}]})
+
+(s/def ::application-id integer?)
+(s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
+                              :opt [:cooperation.opinion/comment
+                                    :db/id]))
+
+(defn- opinion-id-matches
+  "Check that opinion id matches application's current opinion id.
+  Either both are nil or they are the same entity id."
+  [db application-id opinion-id]
+  (let [application (du/entity db application-id)
+        current-opinion-id (get-in application
+                                    [:cooperation.application/opinion :db/id])]
+    (= opinion-id current-opinion-id)))
+
+(defcommand :cooperation/save-opinion
+  {:doc "Save opinion for an application"
+   :spec (s/keys :req-un [::application-id
+                          ::opinion-form])
+   :context {:keys [user db]}
+   :payload {:keys [application-id opinion-form]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/application-approval {}}
+   :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
+   :transact [{:db/id application-id
+               :cooperation.application/opinion
+               (merge
+                {:db/id (or (:db/id opinion-form) "new-opinion")}
+                (select-keys opinion-form [:cooperation.opinion/status
+                                           :cooperation.opinion/comment])
+                (if (:db/id opinion-form)
+                  (meta-model/modification-meta user)
+                  (meta-model/creation-meta user)))}]})
