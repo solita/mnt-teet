@@ -1,6 +1,6 @@
 context('Cooperation', function() {
     before(() => {
-        cy.dummyLogin("Carla")
+        cy.dummyLogin("Danny")
         cy.randomName("thirdparty", "testcompany")
 
         const now = new Date()
@@ -87,6 +87,18 @@ context('Cooperation', function() {
 
         // Since we cleared the valid months field this valid until should no longer exist
         cy.get("div[data-cy-test='valid-until']").should('not.exist');
+
+        // Submitting competent authority opinion
+        cy.get(".create-opinion").click()
+
+        cy.formInput(
+            ":cooperation.opinion/status", "[:cooperation.opinion.status/partially-rejected]",
+            ":cooperation.opinion/comment", "RTE:this is my comment");
+
+        cy.formSubmit()
+
+        // opinion has been given, the initial button should be gone
+        cy.get(".create-opinion").should("not.exist")
 
     })
 
