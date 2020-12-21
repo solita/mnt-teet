@@ -2,8 +2,7 @@
   (:require [teet.db-api.core :refer [defquery] :as db-api]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.project.project-db :as project-db]
-            [teet.util.datomic :as du]
-            [teet.util.collection :as cu]))
+            [teet.util.datomic :as du]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"

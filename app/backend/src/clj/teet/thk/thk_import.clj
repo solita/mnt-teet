@@ -228,7 +228,7 @@
          (fn [prj]
            (when (teet-project? prj)
              (let [project-tx-maps (project-datomic-attributes db prj)
-                   {:thk.project/keys [id lifecycles] :as project}
+                   {:thk.project/keys [id lifecycles] :as _project}
                    (first project-tx-maps)]
                (log/info "THK project " id
                          "has" (count lifecycles) "lifecycles (ids: "

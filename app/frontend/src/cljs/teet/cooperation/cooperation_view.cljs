@@ -25,7 +25,6 @@
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.ui.format :as fmt]
             [teet.ui.authorization-context :as authorization-context]
             [teet.authorization.authorization-check :as authorization-check]))
 
@@ -132,7 +131,7 @@
           [:div
            [typography/BoldGreyText {:style {:display :inline-block}}
             (str (tr [:common :date]) ":")]
-           (str " " (fmt/date date))])]]
+           (str " " (format/date date))])]]
       (when comment
         [:div [rich-text-editor/display-markdown comment]])])))
 

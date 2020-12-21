@@ -1,7 +1,6 @@
 (ns teet.transit
   "Transit format utilities"
-  (:require [cognitect.transit :as t]
-            [teet.log :as log]))
+  (:require [cognitect.transit :as t]))
 
 (defn transit->clj
   "Parse transit+json `in` to Clojure data."
@@ -26,7 +25,7 @@
    :headers {"Content-Type" "application/json+transit"}
    :body (clj->transit data)})
 
-(defn transit-request [{:keys [body params request-method] :as req}]
+(defn transit-request [{:keys [body params request-method] :as _req}]
   (case request-method
     :get (transit->clj (get params "q"))
     :post (transit->clj body)))

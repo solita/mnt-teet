@@ -19,7 +19,6 @@
 
 (defn document-s3-ref
   "Returns an integration S3 file descriptor for a document."
-  [{id :db/id
-    key :file/s3-key}]
+  [{key :file/s3-key}]
   {:bucket (storage-bucket)
    :file-key key})

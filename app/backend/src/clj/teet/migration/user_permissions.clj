@@ -1,6 +1,5 @@
 (ns teet.migration.user-permissions
-  (:require [datomic.client.api :as d]
-            [teet.user.user-tx :as user-tx]))
+  (:require [datomic.client.api :as d]))
 
 
 ;; Pull users with global permissions that have no valid until

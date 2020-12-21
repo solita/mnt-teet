@@ -10,8 +10,7 @@
             [teet.project.task-model :as task-model]
             [teet.util.datomic :as du]
             [clojure.spec.alpha :as s]
-            [teet.task.task-db :as task-db]
-            [teet.file.file-db :as file-db]))
+            [teet.task.task-db :as task-db]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -86,12 +85,6 @@
                   {:db/id (get-in task* [:activity/_tasks 0 :db/id])
                    :activity/status :activity.status/in-progress}
                   {})])})
-
-(def ^:private task-create-keys
-  (into (concat always-selected-keys
-                thk-provided-keys)
-        [:task/group :task/type
-         :task/send-to-thk?]))
 
 (defcommand :task/submit
   {:doc "Submit task results for review."
