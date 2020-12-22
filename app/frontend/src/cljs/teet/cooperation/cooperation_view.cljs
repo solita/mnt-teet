@@ -433,29 +433,34 @@
                                     :drag-container-id "drag-container-id"
                                     :new-document new-document
                                     :files-form files-form}]
-       (if (empty? linked-files)
-         [buttons/button-primary {:size :small
-                                  :on-click #(upload! {})
-                                  :disabled (nil? related-task)
-                                  :end-icon (r/as-element [icons/content-add])}
-          (tr [:cooperation :add-files])]
-         [:div
-          [:div {:class (<class common-styles/header-with-actions)}
-           [typography/Heading2 (tr [:common :files])]
-           [buttons/button-primary {:size :small
-                                    :on-click #(upload! {})
-                                    :end-icon (r/as-element [icons/content-add])}
-            (tr [:cooperation :add-files])]]
-          [link-view/links
-           {:e! e!
-            :links linked-files
-            :editable? false
-            :link-entity-opts {:file
-                               {:column-widths [3 1]
-                                :allow-replacement-opts
-                                {:e! e!
-                                 :task related-task
-                                 :small true}}}}]])])))
+       (authorization-context/consume
+        (fn [authz]
+          (let [can-upload? (boolean (and (some? related-task)
+                                          (:edit-application authz)))]
+            (if (empty? linked-files)
+              [buttons/button-primary {:size :small
+                                       :on-click #(upload! {})
+                                       :disabled (not can-upload?)
+                                       :end-icon (r/as-element [icons/content-add])}
+               (tr [:cooperation :add-files])]
+              [:div
+               [:div {:class (<class common-styles/header-with-actions)}
+                [typography/Heading2 (tr [:common :files])]
+                [buttons/button-primary {:size :small
+                                         :on-click #(upload! {})
+                                         :disabled (not can-upload?)
+                                         :end-icon (r/as-element [icons/content-add])}
+                 (tr [:cooperation :add-files])]]
+               [link-view/links
+                {:e! e!
+                 :links linked-files
+                 :editable? false
+                 :link-entity-opts {:file
+                                    {:column-widths [3 1]
+                                     :allow-replacement-opts
+                                     {:e! e!
+                                      :task related-task
+                                      :small true}}}}]]))))])))
 
 
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
