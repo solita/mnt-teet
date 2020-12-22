@@ -137,6 +137,12 @@
    :font-size "1.125rem"
    :line-height "1.6875rem"})
 
+;; Legacy style
+(def section-heading-style
+  {:fontWeight    700
+   :fontSize      "1rem"
+   :lineHeight    1.375
+   :letterSpacing "0.25px"})
 
 (defn gray-light-border
   []
@@ -211,12 +217,14 @@
 
 (defglobal global
   [:body :html (merge body-1-regular {:height "100vh"})]
-  [:p {:margin 0}]
+  [:p {:margin 0 :margin-bottom "1rem"}]
   [:h1 (merge h1-desktop {:margin 0})]
   [:h2 (merge h2-desktop {:margin 0})]
   [:h3 (merge h3-desktop {:margin 0})]
   [:h4 (merge h4-desktop {:margin 0})]
   [:h5 (merge h5-desktop {:margin 0})]
+  [:h6 (merge section-heading-style {:margin 0})]
+  [:.text-bold body-1-bold]
   ;;
   [:#teet-frontend {:height "100%"}]
   [:.mention

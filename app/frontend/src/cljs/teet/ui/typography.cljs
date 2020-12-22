@@ -63,12 +63,14 @@
 (def Heading5 (util/make-component :h5 {}))
 
 (def Text (util/make-component :span {}))
+(def TextBold (util/make-component :span {:class "text-bold"}))
 
 (def Paragraph (util/make-component :p {}))
+(def ParagraphBold (util/make-component :p {:class "text-bold"}))
 
 (def SectionHeading (util/make-component :h6 {:class (<class section-heading-style)}))
 
-(def DataLabel (util/make-component :span {:class (<class data-label-style)}))
+(def DataLabel (util/make-component :div {:class (<class data-label-style)}))
 
 (def SmallGrayText (util/make-component :span {:class (<class small-gray-text-style)}))
 
