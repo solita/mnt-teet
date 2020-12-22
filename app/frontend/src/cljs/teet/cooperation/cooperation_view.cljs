@@ -436,6 +436,7 @@
        (if (empty? linked-files)
          [buttons/button-primary {:size :small
                                   :on-click #(upload! {})
+                                  :disabled (nil? related-task)
                                   :end-icon (r/as-element [icons/content-add])}
           (tr [:cooperation :add-files])]
          [:div
