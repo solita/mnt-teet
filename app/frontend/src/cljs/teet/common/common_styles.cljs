@@ -74,6 +74,13 @@
    :font-size "0.875rem"
    :line-height "1.3125rem"})
 
+(def body-2
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
+
 (def body-3-bold
   {:font-family "Roboto"
    :font-style "normal"
@@ -217,14 +224,19 @@
 
 (defglobal global
   [:body :html (merge body-1-regular {:height "100vh"})]
-  [:p {:margin 0 :margin-bottom "1rem"}]
+  [:p {:margin 0}]
+  [:p.paragraph {:margin-bottom "1rem"}]
   [:h1 (merge h1-desktop {:margin 0})]
   [:h2 (merge h2-desktop {:margin 0})]
   [:h3 (merge h3-desktop {:margin 0})]
   [:h4 (merge h4-desktop {:margin 0})]
   [:h5 (merge h5-desktop {:margin 0})]
   [:h6 (merge section-heading-style {:margin 0})]
-  [:.text-bold body-1-bold]
+  [:.body1-bold body-1-bold]
+  [:.body2 body-2]
+  [:.body2-bold body-2-bold]
+  [:.body3 body-3]
+  [:.body3-bold body-3-bold]
   ;;
   [:#teet-frontend {:height "100%"}]
   [:.mention

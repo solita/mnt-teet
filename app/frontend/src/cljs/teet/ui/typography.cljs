@@ -62,11 +62,19 @@
 
 (def Heading5 (util/make-component :h5 {}))
 
-(def Text (util/make-component :span {}))
-(def TextBold (util/make-component :span {:class "text-bold"}))
+(def Text (util/make-component :p {}))
+(def TextBold (util/make-component :p {:class "body1-bold"}))
+(def Text2 (util/make-component :p {:class "body2"}))
+(def Text2Bold (util/make-component :p {:class "body2-bold"}))
+(def Text3 (util/make-component :p {:class "body3"}))
+(def Text3Bold (util/make-component :p {:class "body3-bold"}))
 
-(def Paragraph (util/make-component :p {}))
-(def ParagraphBold (util/make-component :p {:class "text-bold"}))
+(def Paragraph (util/make-component :p {:class "paragraph"}))
+(def ParagraphBold (util/make-component :p {:class "paragraph body1-bold"}))
+(def Paragraph2 (util/make-component :p {:class "paragraph body2"}))
+(def Paragraph2Bold (util/make-component :p {:class "paragraph body2-bold"}))
+(def Paragraph3 (util/make-component :p {:class "paragraph body3"}))
+(def Paragraph3Bold (util/make-component :p {:class "paragraph body3-bold"}))
 
 (def SectionHeading (util/make-component :h6 {:class (<class section-heading-style)}))
 
