@@ -43,8 +43,7 @@
     (d/transact
      conn
      {:tx-data (vec
-                (for [e entities
-                      :when (nil? (:integration/id e))]
+                (for [e entities]
                   {:db/id e
                    :integration/id (integration-id/number->uuid e)}))})))
 
