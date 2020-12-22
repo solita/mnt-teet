@@ -4,7 +4,7 @@
             [datomic.client.api :as d]
             [teet.integration.postgrest :as postgrest]
             [teet.link.link-model :as link-model]
-            [teet.localization :refer [with-language tr-enum]]
+            [teet.localization :refer [with-language tr-enum tr]]
             [teet.util.string :as string]
             [teet.util.datomic :as du]
             [teet.link.link-db :as link-db]
@@ -23,27 +23,30 @@
                  [?a :activity/tasks ?t]
                  [(missing? $ ?t :meta/deleted?)]
                  :in $ ?p]
-               db project)
+            db project)
 
           matching-project-tasks
           (into []
-                (comp
-                 (map first)
-                 (map #(assoc % :searchable-text (tr-enum (:task/type %))))
-                 (filter #(string/contains-words? (:searchable-text %)
-                                                  text))
-                 (map :db/id))
-                all-project-tasks)]
+            (comp
+              (map first)
+              (map #(assoc % :searchable-text (tr-enum (:task/type %))))
+              (filter #(string/contains-words? (:searchable-text %)
+                         text))
+              (map :db/id))
+            all-project-tasks)
 
-      (mapv
-       first
-       (d/q '[:find (pull ?t [:db/id :task/type
-                              :task/estimated-start-date
-                              :task/estimated-end-date
-                              {:task/assignee [:user/given-name :user/family-name]}
-                              {:activity/_tasks [:activity/name]}])
-              :in $ [?t ...]]
-            db matching-project-tasks)))))
+          found-tasks (mapv
+                        first
+                        (d/q '[:find (pull ?t [:db/id :task/type
+                                               :task/estimated-start-date
+                                               :task/estimated-end-date
+                                               {:task/assignee [:user/given-name :user/family-name]}
+                                               {:activity/_tasks [:activity/name]}])
+                               :in $ [?t ...]]
+                          db matching-project-tasks))]
+      (sort-by
+        #(tr [:enum (get-in % [:task/type :db/ident])])
+        found-tasks))))
 
 (defn search-cadastral-unit [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
@@ -58,7 +61,8 @@
          (map (fn [[key properties]]
                 (assoc properties :link/external-id (name key))))
          (filterv #(or (string/contains-words? (:TUNNUS %) text)
-                       (string/contains-words? (:L_AADRESS %) text))))))
+                       (string/contains-words? (:L_AADRESS %) text)))
+         (sort-by :L_AADRESS))))
 
 (defn search-estate [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
@@ -74,7 +78,8 @@
          distinct
          (filterv #(and (not (str/blank? (:KINNISTU %)))
                         (string/contains-words? (:KINNISTU %) text)))
-         (map #(assoc % :link/external-id (:KINNISTU %))))))
+         (map #(assoc % :link/external-id (:KINNISTU %)))
+         (sort-by #(Integer/parseInt (:link/external-id %))))))
 
 ;; Estate id: fetch all units, distinct from properties
 

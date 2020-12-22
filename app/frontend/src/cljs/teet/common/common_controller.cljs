@@ -17,7 +17,8 @@
              :refer [fromString fromNumber]
              :rename {fromString string->long
                       fromNumber number->long}]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [clojure.tools.reader :as reader]))
 
 (defn ->long [x]
   (cond
@@ -631,3 +632,17 @@
            :command command
            :payload form-data
            :result-event (partial ->SaveFormResponse on-success-fx)})))
+
+(defn ^:export test-command
+  [command-name payload]
+  (let [e! (t/control app-state/app)]
+    (e! (reify t/Event
+          (process-event [_ app]
+            (t/fx app
+              {::tuck-effect/type :command!
+               :command (reader/read-string command-name)
+               :payload (reader/read-string payload)
+               :result-event #(reify t/Event
+                                (process-event [result app]
+                                  (println result)
+                                  app))} ))))))

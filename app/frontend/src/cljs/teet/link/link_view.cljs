@@ -6,6 +6,7 @@
             [teet.localization :as localization :refer [tr tr-enum]]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
+            [teet.ui.buttons :as buttons]
             [teet.common.common-styles :as common-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :refer [mapc]]
@@ -65,7 +66,8 @@
         [url/Link
          {:page :project
           :query {:tab "land"
-                  :unit-id external-id}}
+                  :unit-id external-id}
+          :target "_blank"}
          (str
            L_AADRESS
            " "
@@ -90,7 +92,8 @@
         [url/Link
          {:page :project
           :query {:tab "land"
-                  :estate-id external-id}}
+                  :estate-id external-id}
+          :target "_blank"}
          external-id]
         [:p external-id])
       [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]]
@@ -116,10 +119,11 @@
     [display (get link-entity-opts type) link]]
    (when editable?
      [:div {:style {:flex 0 :align-self :center}}
-      [IconButton
-       {:on-click #(e! (link-controller/->DeleteLink from to type id
-                                                     in-progress-atom))}
-       [icons/content-clear]]])])
+      [buttons/delete-button-with-confirm {:clear? true
+                                           :id (str "link-delete-button-" id)
+                                           :icon-position :start
+                                           :action #(e! (link-controller/->DeleteLink from to type id
+                                                                                      in-progress-atom))}]])])
 
 (def type-options [:task :file :cadastral-unit :estate])
 
@@ -196,4 +200,5 @@
                                            {:value opt :label (tr [:link :type-label opt])})
                                          type-options))
                               :on-change (fn [val]
-                                           (change-search-value (:value val)))}]]])]))
+                                           (change-search-value (:value val)))
+                              :data-item? true}]]])]))

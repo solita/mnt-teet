@@ -85,6 +85,12 @@ Cypress.Commands.add("projectByName", (projectName) => {
   cy.get("h1").contains(projectName)
 })
 
+Cypress.Commands.add("backendCommand", (commandName, payload) => {
+    cy.window().then((win) => {
+        win.teet.common.common_controller.test_command(commandName, payload)
+    })
+})
+
 // Opts must have:
 // - fixturePath: string path to file under fixtures
 // - mimeType: MIME type of the file

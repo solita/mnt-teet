@@ -15,6 +15,7 @@
             [teet.land.land-model :as land-model]
             [teet.ui.url :as url]
             [teet.land.land-specs]
+            [teet.ui.animate :as animate]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.ui.form :as form]
@@ -401,7 +402,8 @@
                                                     :bad "!!!"
                                                     :questionable "!"
                                                     "")]]
-     [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
+     [ButtonBase {:id (land-controller/cadastral-unit-dom-id teet-id)
+                  :on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                   :on-click (e! land-controller/->ToggleLandUnit unit)
                   :class (<class cadastral-unit-style selected?)}
@@ -490,7 +492,8 @@
       [:<>
        (if estate-id
          [ButtonBase {:class (<class group-style)
-                      :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+                      :on-click (e! land-controller/->ToggleOpenEstate estate-id)
+                      :id (land-controller/estate-dom-id estate-id)}
 
           [typography/SectionHeading (tr [:land :estate]) " " estate-id]
           [:span (count units) " " (if (= 1 (count units))
