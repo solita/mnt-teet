@@ -12,7 +12,8 @@
             [teet.util.datomic :as du]
             teet.file.file-tx
             [teet.util.collection :as cu]
-            [teet.file.filename-metadata :as filename-metadata]))
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.project.task-model :as task-model]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -186,9 +187,8 @@
    :pre [^{:error :invalid-previous-file}
          (or (nil? previous-version-id)
              (file-belong-to-task? db task-id previous-version-id))
-         ;;TODO: check that the task allows file uploading
-
-         ]
+         ^{:error :invalid-task-status}
+         (task-model/can-submit? (d/pull db [:task/status] task-id))]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
   (or (file-model/validate-file file)
