@@ -212,11 +212,11 @@
 (defglobal global
   [:body :html (merge body-1-regular {:height "100vh"})]
   [:p {:margin 0}]
-  [:h1 (merge h1-desktop {:margin-top 0})]
-  [:h2 (merge h2-desktop {:margin-top 0})]
-  [:h3 (merge h3-desktop {:margin-top 0})]
-  [:h4 (merge h4-desktop {:margin-top 0})]
-  [:h5 (merge h5-desktop {:margin-top 0})]
+  [:h1 (merge h1-desktop {:margin 0})]
+  [:h2 (merge h2-desktop {:margin 0})]
+  [:h3 (merge h3-desktop {:margin 0})]
+  [:h4 (merge h4-desktop {:margin 0})]
+  [:h5 (merge h5-desktop {:margin 0})]
   ;;
   [:#teet-frontend {:height "100%"}]
   [:.mention

@@ -58,6 +58,10 @@
 
 (def Heading3 (util/make-component :h3 {}))
 
+(def Heading4 (util/make-component :h4 {}))
+
+(def Heading5 (util/make-component :h5 {}))
+
 (def Text (util/make-component :span {}))
 
 (def Paragraph (util/make-component :p {}))
