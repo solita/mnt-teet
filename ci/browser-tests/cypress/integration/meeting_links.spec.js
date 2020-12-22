@@ -142,16 +142,6 @@ describe('Meeting Links', function () {
         cy.wait(3000)
     })
 
-    it('sort searched tasks', function () {
-        cy.get("h1").contains("integration test project")
-        createMeeting.call(this)
-        createAgenda.call(this)
-        openTestTopic.call(this)
-        selectSearchItems.call(this, `[data-item*=':task']`)
-        cy.wait(1000)
-        checkTasksSorted()
-        cy.wait(3000)
-    })
 
     it('sort searched files', function () {
         cy.get("li a").contains("Detailed design").click()
@@ -180,6 +170,7 @@ describe('Meeting Links', function () {
         checkFilesSorted.call(this)
         cy.wait(3000)
 
+        // Cleanup, should be removed as we get isolated test environment
         cy.projectByName("integration test project")
         cy.get("li a").contains("Detailed design").click()
         cy.get("li a").contains("Design requirements").click()
