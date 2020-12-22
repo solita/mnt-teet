@@ -17,7 +17,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge CircularProgress
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton CircularProgress
                                          DialogActions DialogContentText CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
