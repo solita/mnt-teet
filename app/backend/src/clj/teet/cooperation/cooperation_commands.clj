@@ -63,6 +63,15 @@
   (= (project-db/file-project-id db to)
      (cooperation-db/response-project-id db response-id)))
 
+(defn- response-id-matches
+  "Check that response id matches application's current response id.
+  Either both are nil or they are the same entity id."
+  [db application-id response-id]
+  (let [application (du/entity db application-id)
+        current-response-id (get-in application
+                                    [:cooperation.application/response :db/id])]
+    (= response-id current-response-id)))
+
 (defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
    :context {:keys [user db]}
@@ -71,7 +80,7 @@
              response-payload :form-data}
    :project-id (cooperation-db/application-project-id db application-id)
    :authorization {:cooperation/application-approval {}}
-   :pre []                                                  ;; TODO add some checking
+   :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
    (let [existing-id (:db/id response-payload)
          response-id (or existing-id "new-application-response")
