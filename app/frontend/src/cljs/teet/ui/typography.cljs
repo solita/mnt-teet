@@ -76,6 +76,9 @@
 (def Paragraph3 (util/make-component :p {:class "paragraph body3"}))
 (def Paragraph3Bold (util/make-component :p {:class "paragraph body3-bold"}))
 
+(def Link (util/make-component :a {}))
+(def Link2 (util/make-component :a {:class "link2"}))
+
 (def SectionHeading (util/make-component :h6 {:class (<class section-heading-style)}))
 
 (def DataLabel (util/make-component :div {:class (<class data-label-style)}))

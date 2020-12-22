@@ -1,21 +1,21 @@
 (ns teet.navigation.navigation-view
-  (:require [teet.routes :as routes]
-            [teet.ui.select :as select]
-            [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
-                                         ListItemText ListItemIcon Link LinearProgress]]
-            [teet.ui.icons :as icons]
-            [teet.ui.common :as ui-common]
+  (:require [herb.core :as herb :refer [<class]]
+            [teet.authorization.authorization-check :refer [authorized?]]
+            [teet.common.common-controller :as common-controller :refer [when-feature]]
             [teet.localization :as localization :refer [tr]]
+            [teet.login.login-controller :as login-controller]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
-            [teet.search.search-view :as search-view]
-            [teet.common.common-controller :as common-controller :refer [when-feature]]
-            [herb.core :as herb :refer [<class]]
-            [teet.authorization.authorization-check :refer [authorized?]]
-            [teet.login.login-controller :as login-controller]
             [teet.notification.notification-view :as notification-view]
-            [teet.ui.buttons :as buttons]))
+            [teet.routes :as routes]
+            [teet.search.search-view :as search-view]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
+                                         ListItemText ListItemIcon LinearProgress]]
+            [teet.ui.select :as select]))
 
 
 (def uri-quote (fnil js/encodeURIComponent "(nil)"))
@@ -59,10 +59,10 @@
                                               " (person code:" person-id ")\n\n")
                                          "User not logged in"))]
     [:div {:class (<class navigation-style/feedback-container-style)}
-     [Link {:class (<class navigation-style/feedback-style)
-            :href (str "mailto:teet-feedback@mnt.ee"
-                       "?Subject=" (uri-quote subject-text)
-                       "&body=" (uri-quote body-text))}
+     [common/Link {:class (<class navigation-style/feedback-style)
+                   :href (str "mailto:teet-feedback@mnt.ee"
+                              "?Subject=" (uri-quote subject-text)
+                              "&body=" (uri-quote body-text))}
       (tr [:common :send-feedback])]]))
 
 (defn- drawer-header
@@ -140,16 +140,16 @@
 
 
 (defn user-info [user]
-  [ui-common/labeled-data {:class (<class navigation-style/divider-style)
+  [common/labeled-data {:class (<class navigation-style/divider-style)
                            :label (tr [:user :role])
                            :data (:user/email user)}])
 
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
                            (<class navigation-style/divider-style))}
-   [Link {:class [:header-logout (<class navigation-style/logout-style)]
-          :href "/#/login"
-          :on-click (e! login-controller/->Logout)}
+   [common/Link {:class [:header-logout (<class navigation-style/logout-style)]
+                 :href "/#/login"
+                 :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])
 
 (defn navigation-header-links

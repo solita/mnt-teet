@@ -1,27 +1,28 @@
 (ns teet.project.project-navigator-view
-  (:require [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
-            [herb.core :refer [<class]]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.buttons :as buttons]
-            [teet.ui.icons :as icons]
-            [teet.ui.project-context :as project-context]
-            [teet.ui.url :as url]
-            [teet.ui.util :refer [mapc]]
-            [teet.activity.activity-model :as activity-model]
-            [teet.project.project-controller :as project-controller]
-            [teet.localization :refer [tr tr-enum]]
+  (:require [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.format :as format]
-            [teet.ui.typography :as typography]
-            [teet.task.task-style :as task-style]
-            [teet.project.project-map-view :as project-map-view]
+            [teet.activity.activity-model :as activity-model]
             [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.panels :as panels]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.navigation.navigation-style :as navigation-style]
+            [teet.project.project-controller :as project-controller]
+            [teet.project.project-map-view :as project-map-view]
+            [teet.project.project-menu :as project-menu]
             [teet.project.project-style :as project-style]
             [teet.project.task-model :as task-model]
             [teet.task.task-controller :as task-controller]
-            [teet.project.project-menu :as project-menu]
-            [teet.navigation.navigation-style :as navigation-style]))
+            [teet.task.task-style :as task-style]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Collapse Paper Grid]]
+            [teet.ui.panels :as panels]
+            [teet.ui.project-context :as project-context]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.ui.util :refer [mapc]]))
 
 (defn- svg-style
   [bottom?]
@@ -237,10 +238,10 @@
                   [:li.task-group-task {:class (<class custom-list-indicator dark-theme?)}
                    [:div
                     [:div
-                     [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
-                            :class (<class stepper-button-style {:size "16px"
-                                                                 :open? false
-                                                                 :dark-theme? dark-theme?})}
+                     [common/Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
+                                   :class (<class stepper-button-style {:size "16px"
+                                                                        :open? false
+                                                                        :dark-theme? dark-theme?})}
                       (tr [:enum (:db/ident type)])]]]]))]])
 
           ;; group tasks by the task group

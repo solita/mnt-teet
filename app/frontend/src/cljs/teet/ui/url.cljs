@@ -3,6 +3,7 @@
   (:require [clojure.string :as str]
             [teet.ui.context :as context]
             teet.ui.material-ui
+            [teet.ui.common :as common]
             [teet.log :as log])
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
 
@@ -97,7 +98,7 @@
 
 (defn- link-component
   [{:keys [page params query style class component target]
-    :or {component :a}}
+    :or {component common/Link}}
    content]
   (fn [{context-params :params}]
     (let [url-fn (route-url-fns page)]
@@ -125,4 +126,4 @@
 (defn Link2
   [opts content]
   [consume-navigation-info
-   (link-component (assoc opts :class "link2") content)])
+   (link-component (assoc opts :component common/Link2) content)])

@@ -22,9 +22,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link Badge Grid ButtonBase
-                                         Popper MenuList MenuItem ClickAwayListener
-                                         IconButton]]
+            [teet.ui.material-ui :refer [Paper Badge Grid ButtonBase]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -89,10 +87,10 @@
       [:div {:style {:display :flex
                      :align-items :center}}
        (when (project-model/has-related-info? project)
-         [Link {:target :_blank
-                :style {:margin-right "1rem"
-                        :display :flex
-                        :align-items :center}
+         [common/Link {:target :_blank
+                       :style {:margin-right "1rem"
+                               :display :flex
+                               :align-items :center}
                 :href (common-controller/query-url :thk.project/download-related-info
                                                    (select-keys project [:thk.project/id]))}
           [:span {:style {:margin-right "0.5rem"}}
@@ -387,8 +385,8 @@
       [typography/Heading2 (tr [:project :management])]
       [project-owner-and-managers owner lifecycles @show-history? (activities-with-no-manager project)]
       (when has-history?
-        [Link {:on-click #(swap! show-history? not)
-               :style {:cursor :pointer}}
+        [common/Link {:on-click #(swap! show-history? not)
+                      :style {:cursor :pointer}}
          (tr [:people-tab (if @show-history?
                             :hide-history
                             :show-history)])])]

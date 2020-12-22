@@ -1,36 +1,36 @@
 (ns teet.project.land-view
-  (:require [teet.ui.typography :as typography]
-            [herb.core :refer [<class]]
-            [teet.common.common-styles :as common-styles]
-            [teet.ui.buttons :as buttons]
-            [teet.localization :refer [tr tr-enum tr-or]]
-            [teet.ui.util :refer [mapc]]
-            [reagent.core :as r]
-            [teet.ui.panels :as panels]
-            [teet.ui.material-ui :refer [ButtonBase Collapse CircularProgress Grid Link Divider]]
-            [teet.ui.text-field :refer [TextField] :as text-field]
-            [teet.project.land-controller :as land-controller]
-            [teet.theme.theme-colors :as theme-colors]
+  (:require [cljs-time.format :as tf]
+            [clojure.string]
             [garden.color :refer [darken]]
+            [herb.core :refer [<class]]
+            [reagent.core :as r]
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.comments.comments-view :as comments-view]
+            [teet.common.common-styles :as common-styles]
+            [teet.file.file-view :as file-view]
             [teet.land.land-model :as land-model]
-            [teet.ui.url :as url]
             [teet.land.land-specs]
+            [teet.localization :refer [tr tr-enum tr-or]]
+            [teet.project.land-controller :as land-controller]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
-            [teet.ui.form :as form]
-            [teet.ui.select :as select]
-            [teet.ui.icons :as icons]
-            [teet.util.datomic :as du]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
-            [teet.comments.comments-view :as comments-view]
-            [teet.ui.table :as table]
+            [teet.ui.form :as form]
             [teet.ui.format :as format]
-            [cljs-time.format :as tf]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [ButtonBase Collapse CircularProgress Grid Divider]]
+            [teet.ui.panels :as panels]
             [teet.ui.query :as query]
-            [clojure.string]
-            [teet.file.file-view :as file-view]
-            [teet.authorization.authorization-check :as authorization-check]
-            [teet.comments.comments-controller :as comments-controller]))
+            [teet.ui.select :as select]
+            [teet.ui.table :as table]
+            [teet.ui.text-field :refer [TextField] :as text-field]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.ui.util :refer [mapc]]
+            [teet.util.datomic :as du]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -436,8 +436,8 @@
         (tr [:land :unit-info])]
        ;; add when the pos number exists
        (when saved-pos
-         [Link {:style {:display :block}
-                :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
+         [common/Link {:style {:display :block}
+                       :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
           [query/query {:e! e!
                         :query :land/file-count-by-sequence-number
                         :args {:thk.project/id (:thk.project/id project-info)
@@ -447,8 +447,8 @@
                         :loading-state "-"}]
           (tr [:land-modal-page :files])])
 
-       [Link {:style {:display :block}
-              :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
+       [common/Link {:style {:display :block}
+                     :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
         [query/query {:e! e! :query :comment/count
                       :state-path [:route :project :unit-comment-count teet-id]
                       :state (get-in project-info [:unit-comment-count teet-id])
@@ -513,8 +513,8 @@
           (tr [:land :estate-acquisition-cost])]
          [:div {:class (<class common-styles/flex-row-space-between)}
           [:span (str (tr [:common :total]) ": ") (common/readable-currency total-estate-cost)]
-          [Link {:style {:display :block}
-                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "costs")}
+          [common/Link {:style {:display :block}
+                        :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "costs")}
            (tr [:common :show-details])]]
          [Divider {:style {:margin "1rem 0"}}]
          [typography/BoldGreyText {:style {:text-transform :uppercase}}
@@ -526,8 +526,8 @@
                                   :style {:background-color theme-colors/gray-light
                                           :color theme-colors/gray-light}}]
               (tr [:land-modal-page :no-burdens])]
-             [Link {:style {:display :block}
-                    :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
+             [common/Link {:style {:display :block}
+                           :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
               [common/count-chip {:label burden-count}]
               (tr [:land-modal-page (if (= 1 burden-count) :burden :burdens)])]))
          (let [mortgage-count (count (:jagu4 estate))]
@@ -537,12 +537,12 @@
                                   :style {:background-color theme-colors/gray-light
                                           :color theme-colors/gray-light}}]
               (tr [:land-modal-page :no-mortgages])]
-             [Link {:style {:display :block}
-                    :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
+             [common/Link {:style {:display :block}
+                           :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
               [common/count-chip {:label mortgage-count}]
               (tr [:land-modal-page (if (= 1 mortgage-count) :mortgage :mortgages)])]))
-         [Link {:style {:display :block}
-                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
+         [common/Link {:style {:display :block}
+                       :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
           [query/query {:e! e! :query :comment/count
                         :state-path [:route :project :estate-comment-count estate-id]
                         :state (get-in project-info [:estate-comment-count estate-id])
@@ -703,9 +703,9 @@
      (fn [p]
        (if (= current (name p))
          [:strong {:style {:color :white}} (tr [:land-modal-page :modal-title p])]
-         [Link {:href (url/set-query-param :modal-page (name p))
-                :style {:display :block
-                        :color :white}}
+         [common/Link {:href (url/set-query-param :modal-page (name p))
+                       :style {:display :block
+                               :color :white}}
           (tr [:land-modal-page :modal-title p])]))
      pages)])
 
@@ -903,7 +903,7 @@
   [:div
    [:strong key ": "]
    (if (= key-type :email)
-     [Link {:underline :none :href (str "mailto:" value)} value]
+     [common/Link {:underline :none :href (str "mailto:" value)} value]
      [:span (if (and (some? (tf/parse value))
                      (date-keys key))
               (format/parse-date-string value)
