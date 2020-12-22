@@ -433,21 +433,29 @@
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
-                                          (:edit-application authz)))]
+                                          (:edit-application authz)))
+                error-msg (cond
+                            (nil? related-task)
+                            (tr [:cooperation :error :coordination-task-missing])
+
+                            (not (:edit-application authz))
+                            (tr [:cooperation :error :coordination-task-status-mismatch]))]
             (if (empty? linked-files)
-              [buttons/button-primary {:size :small
-                                       :on-click #(upload! {})
-                                       :disabled (not can-upload?)
-                                       :end-icon (r/as-element [icons/content-add])}
-               (tr [:cooperation :add-files])]
+              [common/error-tooltip error-msg
+               [buttons/button-primary {:size :small
+                                        :on-click #(upload! {})
+                                        :disabled (not can-upload?)
+                                        :end-icon (r/as-element [icons/content-add])}
+                (tr [:cooperation :add-files])]]
               [:div
                [:div {:class (<class common-styles/header-with-actions)}
                 [typography/Heading2 (tr [:common :files])]
-                [buttons/button-primary {:size :small
-                                         :on-click #(upload! {})
-                                         :disabled (not can-upload?)
-                                         :end-icon (r/as-element [icons/content-add])}
-                 (tr [:cooperation :add-files])]]
+                [common/error-tooltip error-msg
+                 [buttons/button-primary {:size :small
+                                          :on-click #(upload! {})
+                                          :disabled (not can-upload?)
+                                          :end-icon (r/as-element [icons/content-add])}
+                  (tr [:cooperation :add-files])]]]
                [link-view/links
                 {:e! e!
                  :links linked-files

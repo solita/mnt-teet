@@ -156,6 +156,11 @@
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
   :new-third-party-title "3nda osapoole lisamine",
+  :error
+  {:coordination-task-missing
+   "Üleslaadimine pole lubatud. Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-status-mismatch
+   "Üleslaadimine pole lubatud. Ülesanne ei ole failide üleslaadimist lubavas olekus."},
   :response-of-third-party "Kolmanda osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",

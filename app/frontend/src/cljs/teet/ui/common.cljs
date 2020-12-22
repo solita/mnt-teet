@@ -5,7 +5,7 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Link Chip Collapse]]
+            [teet.ui.material-ui :refer [ButtonBase Link Chip Collapse Popper]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
@@ -452,3 +452,26 @@
                     (<class common-styles/margin-bottom 0.5)]}
       icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]
      content]))
+
+(defn error-tooltip
+  "Wrap component in an error tooltip. When component is hovered, the
+  error message is displayed.
+
+  If msg is nil, the component is returned as is."
+  [msg component]
+  (r/with-let [hover? (r/atom false)
+               anchor-el (r/atom nil)
+               set-anchor-el! #(reset! anchor-el %)
+               enter! #(reset! hover? true)
+               leave! #(reset! hover? false)]
+    (if (nil? msg)
+      component
+      [:div {:on-mouse-enter enter!
+             :on-mouse-leave leave!
+             :on-click enter!
+             :ref set-anchor-el!}
+       component
+       [Popper {:open @hover?
+                :anchor-el @anchor-el}
+        [info-box {:variant :error
+                   :content msg}]]])))
