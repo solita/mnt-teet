@@ -34,7 +34,7 @@
       [:script {:type "text/javascript"}
        (str
         "window.teet_authz = \""
-        (-> "authorization.edn" io/resource slurp (str/replace #"\n" " "))
+        (-> "authorization.edn" io/resource slurp (str/replace #"\r?\n" " "))
         "\";\n"
 
         "new Promise((resolve, reject) => {
