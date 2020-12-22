@@ -2,9 +2,11 @@ describe('Meeting Links', function () {
     beforeEach(() => {
         cy.dummyLogin("Danny")
         cy.selectLanguage("ENG")
-        cy.projectByName("integration test project")
         cy.randomName("testmeeting", "testmeeting")
         cy.randomName("testtopic", "testtopic")
+        cy.randomName("testfileB", "testfileB")
+        cy.randomName("testfileA", "testfileA")
+        cy.randomName("testfileC", "testfileC")
         cy.backendCommand(":thk.project/update-cadastral-units", "{:project-id \"18463\" :cadastral-units " +
             "#{\"2:63801:001:0241\"" +
              "\"2:92901:001:0138\"" +
@@ -19,12 +21,7 @@ describe('Meeting Links', function () {
             "\"2:93001:001:0071\"" +
             "\"2:93001:001:0009\"" +
             "\"2:63801:001:0237\"}}")
-    })
-
-    afterEach(() => {
-        cy.get(".button-with-menu button").click({"multiple":true, "force":true})
-        cy.get("#delete-button").click()
-        cy.get("#confirm-delete").click()
+        cy.projectByName("integration test project")
     })
 
     function checkCadastralUnitsSorted() {
@@ -46,8 +43,41 @@ describe('Meeting Links', function () {
         cy.get("div.select-user-list div.select-user-entry:nth-child(4)").contains("16036950")
     }
 
+    function uploadFile(name, fixturePath) {
+        // Upload file
+        let fileNameWithSuffix = name + ".jpg"
+        cy.get("[data-cy=task-file-upload]").click()
+        cy.uploadFile({inputSelector: "input[id=files-field]",
+            fixturePath: fixturePath,
+            mimeType: "image/jpeg",
+            fileName: fileNameWithSuffix})
+        cy.get(`input[value=${name}]`)
+        cy.get("button[type=submit]").click()
+    }
+
+    function deleteFile(name) {
+        // File added to file list, open file view
+        cy.get("[data-cy=task-file-list] a").contains(name).click()
+        cy.get("[data-cy=edit-file-button]").click()
+        cy.get("#delete-button").click()
+
+        // We get warning about all versions of file being deleted
+        cy.get("p.MuiDialogContentText-root").contains("all the versions of this file")
+
+        // Delete file
+        cy.get("#confirm-delete").click()
+    }
+
     function checkTasksSorted() {
         // TODO:implement
+    }
+
+    function checkFilesSorted() {
+        const search = `input[placeholder='Link...']`
+        cy.get(search).type("test")
+        cy.get("div.select-user-list div.select-user-entry:nth-child(1)").contains(this.testfileA)
+        cy.get("div.select-user-list div.select-user-entry:nth-child(2)").contains(this.testfileB)
+        cy.get("div.select-user-list div.select-user-entry:nth-child(3)").contains(this.testfileC)
     }
 
     function createMeeting() {
@@ -77,9 +107,12 @@ describe('Meeting Links', function () {
         cy.get("button[type=submit]").click({"multiple": true, "force": true})
     }
 
-    function selectSearchItems(itemType) {
+    function openTestTopic() {
         cy.get(".agenda-heading h3").contains(this.testtopic)
         cy.get(".agenda-heading h3").click()
+    }
+
+    function selectSearchItems(itemType) {
         const select = "#links-type-select"
         const option = itemType
         cy.get(option).then(($opt) => {
@@ -89,21 +122,23 @@ describe('Meeting Links', function () {
 
     it('sort searched cadastral units', function () {
         cy.get("h1").contains("integration test project")
-        createMeeting.call(this);
-        createAgenda.call(this);
+        createMeeting.call(this)
+        createAgenda.call(this)
+        openTestTopic.call(this)
         selectSearchItems.call(this, `[data-item*=':cadastral-unit']`);
         cy.wait(1000)
-        checkCadastralUnitsSorted();
+        checkCadastralUnitsSorted()
         cy.wait(3000)
     })
 
     it('sort searched real estates', function () {
         cy.get("h1").contains("integration test project")
-        createMeeting.call(this);
-        createAgenda.call(this);
+        createMeeting.call(this)
+        createAgenda.call(this)
+        openTestTopic.call(this)
         selectSearchItems.call(this, `[data-item*=':estate']`);
         cy.wait(1000)
-        checkEstatesSorted();
+        checkEstatesSorted()
         cy.wait(3000)
     })
 
@@ -111,9 +146,48 @@ describe('Meeting Links', function () {
         cy.get("h1").contains("integration test project")
         createMeeting.call(this)
         createAgenda.call(this)
+        openTestTopic.call(this)
         selectSearchItems.call(this, `[data-item*=':task']`)
         cy.wait(1000)
-        checkTasksSorted();
+        checkTasksSorted()
         cy.wait(3000)
+    })
+
+    it('sort searched files', function () {
+        cy.get("li a").contains("Detailed design").click()
+        cy.wait(1000)
+        cy.get("li a").contains("Design requirements").click()
+        cy.wait(1000)
+
+        uploadFile(this.testfileA, "text_file.jpg")
+        cy.wait(3000)
+        uploadFile(this.testfileB, "text_file2.jpg")
+        cy.wait(3000)
+        uploadFile(this.testfileC, "text_file3.jpg")
+        cy.wait(3000)
+
+        cy.projectByName("integration test project")
+        cy.get("h1").contains("integration test project")
+        createMeeting.call(this)
+        createAgenda.call(this)
+
+        openTestTopic.call(this)
+        cy.wait(1000)
+
+        selectSearchItems.call(this, `[data-item*=':file']`)
+        cy.wait(3000)
+
+        checkFilesSorted.call(this)
+        cy.wait(3000)
+
+        cy.projectByName("integration test project")
+        cy.get("li a").contains("Detailed design").click()
+        cy.get("li a").contains("Design requirements").click()
+        deleteFile(this.testfileA)
+        cy.wait(1000)
+        deleteFile(this.testfileB)
+        cy.wait(1000)
+        deleteFile(this.testfileC)
+        cy.wait(1000)
     })
 })
