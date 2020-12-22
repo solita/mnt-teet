@@ -32,9 +32,11 @@
   ResponseCreated
   (process-event [{r :response
                    edit? :edit?} {params :params :as app}]
-    (t/fx (snackbar-controller/open-snack-bar app (if edit?
-                                                    (tr [:cooperation :response-edited])
-                                                    (tr [:cooperation :new-response-created])))
+    (t/fx (snackbar-controller/open-snack-bar
+           app
+           (if edit?
+             (tr [:cooperation :response-saved])
+             (tr [:cooperation :response-created])))
           common-controller/refresh-fx))
 
   OpinionSaved
