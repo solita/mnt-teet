@@ -58,7 +58,7 @@
 
 
 (defmethod link-db/link-from [:cooperation.response :file]
-  [db _user [_ response-id :as from] _type to]
+  [db _user [_ response-id] _type to]
   ;; Checks that the uploaded file is in the same project the cooperation response is in
   (= (project-db/file-project-id db to)
      (cooperation-db/response-project-id db response-id)))
