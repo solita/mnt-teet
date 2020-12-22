@@ -157,10 +157,11 @@
   :response-saved "Response saved successfully",
   :new-third-party-title "Add third party",
   :error
-  {:coordination-task-missing
-   "Upload not allowed. Coordination task does not exist for the activity.",
+  {:upload-not-allowed "Upload not allowed",
+   :coordination-task-missing
+   "Coordination task does not exist for the activity.",
    :coordination-task-status-mismatch
-   "Upload not allowed. Task is not in a state that allows file upload."},
+   "Task is not in a state that allows file upload."},
   :response-of-third-party "Response of 3rd party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",

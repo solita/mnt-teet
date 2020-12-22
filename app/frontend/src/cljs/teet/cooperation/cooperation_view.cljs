@@ -436,10 +436,12 @@
                                           (:edit-application authz)))
                 error-msg (cond
                             (nil? related-task)
-                            (tr [:cooperation :error :coordination-task-missing])
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :content (tr [:cooperation :error :coordination-task-missing])}
 
                             (not (:edit-application authz))
-                            (tr [:cooperation :error :coordination-task-status-mismatch]))]
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :content (tr [:cooperation :error :coordination-task-status-mismatch])})]
             (if (empty? linked-files)
               [common/error-tooltip error-msg
                [buttons/button-primary {:size :small

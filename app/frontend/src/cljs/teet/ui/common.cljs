@@ -457,8 +457,10 @@
   "Wrap component in an error tooltip. When component is hovered, the
   error message is displayed.
 
-  If msg is nil, the component is returned as is."
-  [msg component]
+  If msg is nil, the component is returned as is.
+  Otherwise msg must be a map containig :title and :content
+  for the error message."
+  [{:keys [title content] :as msg} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
                set-anchor-el! #(reset! anchor-el %)
@@ -474,4 +476,5 @@
        [Popper {:open @hover?
                 :anchor-el @anchor-el}
         [info-box {:variant :error
-                   :content msg}]]])))
+                   :title title
+                   :content content}]]])))
