@@ -134,7 +134,7 @@
    [Text2 "Text2: This text uses typography component 'Text2'."]
    [Text3Bold "Text3Bold: This text uses typography component 'Text3Bold'."]
    [Text3 "Text3: This text uses typography component 'Text3'."]
-   [Paragraph "This text uses typography component 'Paragraph' and thus has a bottom margin.  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."]
+   [Paragraph "This text uses the 'Paragraph' variant of 'Text' and thus has a bottom margin.  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."]
    [Paragraph "See? This is another paragraph."]])
 
 (defn buttons-demo []
