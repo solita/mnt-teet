@@ -53,100 +53,6 @@
                       (when version
                         (tr [:file :version] {:num version}))]))])
 
-(defn- file-row-icon-style
-  []
-  {:margin "0 0.25rem"
-   :display :flex
-   :justify-content :center})
-
-(defn- base-name-and-suffix [name]
-  (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
-    (if base-name
-      [base-name (str/upper-case suffix)]
-      [name ""])))
-
-(defn- file-row
-  [{:keys [link-download? no-link? attached-to actions? comment-action columns delete-action]
-    :or {link-download? false
-         actions? true
-         columns (constantly true)}}
-   {id :db/id :file/keys [number version status name] comments :comment/counts :as file}]
-  (let [[base-name suffix] (base-name-and-suffix name)
-        {:comment/keys [new-comments old-comments]} comments
-        seen (:file-seen/seen-at file)]
-    [:div {:class (<class common-styles/margin-bottom 0.5)}
-     [:div.file-row {:class (<class common-styles/flex-row)}
-      [:div.file-row-name {:class [(<class file-style/file-row-name seen)
-                                   (<class common-styles/flex-table-column-style 44)]}
-       (cond
-         ;; if no-link? specified, just show the name text
-         no-link?
-         base-name
-
-         ;; if link-download? specified, download file
-         link-download?
-         [Link {:target :_blank
-                :href (common-controller/query-url
-                       :file/download-file
-                       (merge {:file-id id
-                               :attached-to attached-to}))}
-          base-name]
-
-         ;;  Otherwise link to task file page
-         :else
-         [url/Link {:page :file :params {:file id}} base-name])]
-      (when (columns :number)
-        [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
-         [:span number]])
-      (when (columns :suffix)
-        [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
-         [:span suffix]])
-      (when (columns :version)
-        [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
-         [:span (str "V" version)]])
-      (when (columns :status)
-        [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
-         [:span (tr-enum status)]])
-      (when actions?
-        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-         (when (columns :comment)
-           [Badge {:badge-content (+ (or new-comments 0)
-                                     (or old-comments 0))
-                   :color (if (pos? new-comments)
-                            :error
-                            :primary)}
-            (if comment-action
-              [IconButton {:on-click #(comment-action file)}
-               [icons/communication-comment]]
-              [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
-                         :page :file
-                         :params {:file id}
-                         :query {:tab "comments"}}
-               [icons/communication-comment]])])
-         (when (columns :download)
-           [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
-                  :target :_blank
-                  :href (common-controller/query-url
-                         (if attached-to
-                           :file/download-attachment
-                           :file/download-file)
-                         (merge
-                          {:file-id id}
-                          (when attached-to
-                            {:attached-to attached-to})))}
-            [icons/file-cloud-download]])
-
-         (when (and (columns :delete) delete-action)
-           [buttons/delete-button-with-confirm
-            {:action #(delete-action file)
-             :modal-text (tr [:file :delete])
-             :trashcan? true}])])]
-     (when (columns :meta)
-       [:div.file-row-meta {:class (<class file-style/file-row-meta)}
-        (tr [:file :upload-info]
-            {:author (user-model/user-name (:meta/creator file))
-             :date (format/date-time (:meta/created-at file))})])]))
-
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
    "file/name"       [(comp str/lower-case :file/name) <]
@@ -439,7 +345,6 @@
    :top "6px"})
 
 (defn file-icon [{class :class
-                  :file/keys [type]
                   :as file}]
   [:div {:class (if class
                   [class (<class file-icon-style)]
