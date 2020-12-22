@@ -134,7 +134,7 @@
   :phone2 "Telefon"},
  :cooperation
  {:response "Vastus",
-  :competent-authority-name "Maanteeamet",
+  :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
   :edit-response-title "Muudan pöördumise vastust",
@@ -154,9 +154,11 @@
   :page-title "Koostöö",
   :unanswered "Vastuseta",
   :responsible-person "Vastutav : {user-name}",
+  :response-saved "Vastus edukalt salvestatud",
   :new-third-party-title "3nda osapoole lisamine",
   :response-of-third-party "Kolmanda osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
+  :response-created "Vastus edukalt loodud",
   :opinion-saved "Seisukoht edukalt salvestatud",
   :new-third-party "Lisan 3nda osapoole"},
  :dashboard
@@ -481,6 +483,7 @@
   :activity/manager "Projektijuht",
   :cooperation.response/valid-months "Kehtivus kuudes",
   :cooperation.response/valid-until "Aegumiskuupäev",
+  :cooperation.opinion/status "Ametliku seisukoht",
   :activity/status "Olek",
   :file.part/name "Ülesande osa nimi",
   :task/group "rro",
@@ -489,6 +492,7 @@
   :file/version "Versioon",
   :estate-procedure/pos "POS#",
   :user/global-role "Globaalne roll",
+  :cooperation.opinion/comment "Märkus",
   :validation-error
   #:file.part{:name
               "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},

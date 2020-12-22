@@ -232,7 +232,7 @@
     [:div {:class (<class files-field-style error)
            :id "files-field-drag-container"}
      [SectionHeading (tr [:common :files])]
-     [Table {}
+     [Table {:class (<class common-styles/margin-bottom 1)}
       [TableHead {}
        [TableRow {}
         [TableCell {}

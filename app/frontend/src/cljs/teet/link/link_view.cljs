@@ -15,15 +15,15 @@
             [teet.ui.url :as url]
             [teet.file.file-view :as file-view]))
 
-(defmulti display :link/type)
+(defmulti display (fn [_ link] (:link/type link)))
 
 (defmethod display :default
-  [link]
+  [_ link]
   [:div "Unknown link type: " (pr-str link)])
 
 
 (defmethod display :task
-  [{:link/keys [info to]}]
+  [_ {:link/keys [info to]}]
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
@@ -53,7 +53,7 @@
             :deadline (format/date estimated-end-date)})]]]))
 
 (defmethod display :cadastral-unit
-  [{:link/keys [info external-id]}]
+  [_ {:link/keys [info external-id]}]
   (let [{:keys [L_AADRESS TUNNUS]} info
         valid? (:link/valid? info)]
     [:div {:style {:display :flex
@@ -79,7 +79,7 @@
        [typography/SmallGrayText (tr [:link :land-unit-not-in-project])])]))
 
 (defmethod display :estate
-  [{:link/keys [external-id] :as link}]
+  [_ {:link/keys [external-id] :as link}]
   (let [valid? (get-in link [:link/info :link/valid?])]
     [:div {:style {:display :flex
                    :flex-direction :column
@@ -98,19 +98,22 @@
        [typography/SmallGrayText (tr [:link :no-units-in-estate-selected])])]))
 
 (defmethod display :file
-  [{file :link/info}]
-  [file-view/file-row2 {:comments-link? false
-                        :column-widths [10 1]} file])
+  [link-entity-opts {file :link/info}]
+  [file-view/file-row2 (merge {:comments-link? true
+                               :column-widths [10 1]}
+                              (when link-entity-opts
+                                link-entity-opts))
+   file])
 
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
+                     link-entity-opts
                      {id :db/id
                       :link/keys [to type] :as link}]
-  [:div {:class [(<class common-styles/flex-row-space-between)
-                 (<class common-styles/divider-border)]}
+  [:div {:class [(<class common-styles/flex-row-space-between)]}
    [:div {:style {:flex :auto
                   :min-width 0}}
-    [display link]]
+    [display (get link-entity-opts type) link]]
    (when editable?
      [:div {:style {:flex 0 :align-self :center}}
       [IconButton
@@ -148,7 +151,7 @@
 
   If editable? is true, links can be removed and added.
   Otherwise the view is read-only."
-  [{:keys [e! links from editable?]}]
+  [{:keys [e! links from editable? link-entity-opts]}]
   (r/with-let [in-progress (r/atom false)
                selected-type (r/atom (first type-options))
                change-search-value #(reset! selected-type %)
@@ -163,12 +166,13 @@
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
                                     :in-progress-atom in-progress
-                                    :editable? editable?})
+                                    :editable? editable?}
+                      link-entity-opts)
            links)
      (when (and editable? (not @in-progress))
        [:div {:style {:display :flex}}
         [:div {:style {:flex-grow 1}}
-         ^{:key (name @selected-type)} ; force remount if type changes
+         ^{:key (name @selected-type)}                      ; force remount if type changes
          [select/select-search
           {:e! e!
            :placeholder (tr [:link :search :placeholder])

@@ -25,6 +25,8 @@
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.util.collection :as cu]
             [clojure.string :as str]
+            [teet.task.task-view :as task-view]
+            [teet.link.link-view :as link-view]
             [teet.ui.authorization-context :as authorization-context]
             [teet.authorization.authorization-check :as authorization-check]))
 
@@ -344,7 +346,7 @@
                  :on-change-event (form/update-atom-event form-atom application-response-change-fn)
                  :cancel-event close-event
                  :save-event #(common-controller/->SaveForm
-                                :cooperation/create-application-response
+                                :cooperation/save-application-response
                                 {:thk.project/id project-id
                                  :application-id application-id
                                  :form-data (common-controller/prepare-form-data
@@ -396,31 +398,66 @@
       [form/footer2]]]))
 
 (defn application-response
-  [e! application project]
-  (let [response (:cooperation.application/response application)]
-    [:div {:class (<class common-styles/margin-bottom 1)}
-     [Divider {:style {:margin "1.5rem 0"}}]
-     [:div {:class [(<class common-styles/flex-row-space-between)
-                    (<class common-styles/margin-bottom 1)]}
-      [typography/Heading2 (tr [:cooperation :response])]
-
-      [authorization-context/when-authorized :edit-application
-       [form/form-modal-button
-        {:max-width "sm"
-         :form-value response
-         :modal-title (tr [:cooperation :edit-response-title])
-         :form-component [application-response-form {:e! e!
-                                                     :project-id (:thk.project/id project)
-                                                     :application-id (:db/id application)}]
-         :button-component [buttons/button-secondary {:class :edit-response
-                                                      :size :small}
-                            (tr [:buttons :edit])]}]]]
-     [:div {:class (<class common-styles/margin-bottom 1)}
-      [rich-text-editor/display-markdown
-       (:cooperation.response/content response)]]
-     [buttons/button-primary {:size :small
-                              :end-icon (r/as-element [icons/content-add])}
-      (tr [:cooperation :add-files])]]))
+  [e! new-document files-form application project related-task]
+  (r/with-let [{:keys [upload!] :as controls} (task-view/file-upload-controls e!)]
+    (let [response (:cooperation.application/response application)
+          linked-files (:link/_from response)]
+      [:div
+       [Divider {:style {:margin "1.5rem 0"}}]
+       [:div {:class [(<class common-styles/flex-row-space-between)
+                      (<class common-styles/margin-bottom 1)]}
+        [typography/Heading2 (tr [:cooperation :response])]
+        [authorization-context/when-authorized :edit-application
+         [form/form-modal-button
+          {:max-width "sm"
+           :form-value response
+           :modal-title (tr [:cooperation :edit-response-title])
+           :form-component [application-response-form {:e! e!
+                                                       :project-id (:thk.project/id project)
+                                                       :application-id (:db/id application)}]
+           :button-component [buttons/button-secondary {:class :edit-response
+                                                        :size :small}
+                              (tr [:buttons :edit])]}]]]
+       [:div {:class (<class common-styles/margin-bottom 1)}
+        [rich-text-editor/display-markdown
+         (:cooperation.response/content response)]]
+       [task-view/task-file-upload {:e! e!
+                                    :controls controls
+                                    :task related-task
+                                    :linked-from [:cooperation.response (:db/id response)]
+                                    :activity (:cooperation.application/activity application)
+                                    :project-id (:thk.project/id project)
+                                    :drag-container-id "drag-container-id"
+                                    :new-document new-document
+                                    :files-form files-form}]
+       (authorization-context/consume
+        (fn [authz]
+          (let [can-upload? (boolean (and (some? related-task)
+                                          (:edit-application authz)))]
+            (if (empty? linked-files)
+              [buttons/button-primary {:size :small
+                                       :on-click #(upload! {})
+                                       :disabled (not can-upload?)
+                                       :end-icon (r/as-element [icons/content-add])}
+               (tr [:cooperation :add-files])]
+              [:div
+               [:div {:class (<class common-styles/header-with-actions)}
+                [typography/Heading2 (tr [:common :files])]
+                [buttons/button-primary {:size :small
+                                         :on-click #(upload! {})
+                                         :disabled (not can-upload?)
+                                         :end-icon (r/as-element [icons/content-add])}
+                 (tr [:cooperation :add-files])]]
+               [link-view/links
+                {:e! e!
+                 :links linked-files
+                 :editable? false
+                 :link-entity-opts {:file
+                                    {:column-widths [3 1]
+                                     :allow-replacement-opts
+                                     {:e! e!
+                                      :task related-task
+                                      :small true}}}}]]))))])))
 
 
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
@@ -460,7 +497,7 @@
       [buttons/button-primary {:class :create-opinion}
        (tr [:cooperation :create-opinion-button])]])])
 
-(defn application-page [e! app {:keys [project overview third-party]}]
+(defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
      {:edit-application (and (authorization-check/authorized?
@@ -484,7 +521,7 @@
         [application-information application]
         (if (:cooperation.application/response application)
           [:<>
-           [application-response e! application project]
+           [application-response e! (:new-document app) files-form application project related-task]
            [application-conclusion e! application project]]
           [authorization-context/when-authorized :edit-application
            [form/form-modal-button

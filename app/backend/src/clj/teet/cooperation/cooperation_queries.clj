@@ -1,7 +1,8 @@
 (ns teet.cooperation.cooperation-queries
-  (:require [teet.db-api.core :refer [defquery] :as db-api]
+  (:require [teet.db-api.core :refer [defquery]]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.project.project-db :as project-db]
+            [teet.link.link-db :as link-db]
             [teet.util.datomic :as du]))
 
 (defquery :cooperation/overview
@@ -41,4 +42,9 @@
     (du/idents->keywords
      {:project (project-db/project-by-id db p)
       :overview (cooperation-db/overview db p)
-      :third-party (cooperation-db/third-party-with-application db tp-id id)})))
+      :third-party (link-db/fetch-links {:db db
+                                         :user user
+                                         :fetch-links-pred? #(contains? % :cooperation.response/status)
+                                         :return-links-to-deleted? false}
+                                        (cooperation-db/third-party-with-application db tp-id id))
+      :related-task (cooperation-db/third-party-application-task db tp-id id)})))

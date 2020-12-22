@@ -77,7 +77,8 @@
    :cooperation.application/type
    :cooperation.application/date
    {:cooperation.application/activity
-    [:activity/name {:activity/manager
+    [:db/id
+     :activity/name {:activity/manager
                      [:user/given-name :user/family-name]}]}
    :cooperation.application/response-type
    :cooperation.application/response-deadline
@@ -100,6 +101,13 @@
      :meta/created-at
      :meta/modified-at]}])
 
+(def response-application-keys
+  [:db/id
+   :cooperation.response/valid-months
+   :cooperation.response/valid-until
+   :cooperation.response/date
+   :cooperation.response/content
+   :cooperation.response/status])
 
 (defn editable? [application]
   (not (contains? application :cooperation.application/opinion)))

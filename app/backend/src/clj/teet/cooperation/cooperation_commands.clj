@@ -2,10 +2,15 @@
   "Commands for cooperation entities"
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.cooperation.cooperation-db :as cooperation-db]
+            [teet.cooperation.cooperation-model :as cooperation-model]
             [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as cu]
-            [clojure.spec.alpha :as s]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [datomic.client.api :as d]
+            [teet.link.link-db :as link-db]
+            [teet.project.project-db :as project-db]
+            [clojure.spec.alpha :as s]))
+
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -51,27 +56,49 @@
                (meta-model/creation-meta user))]}]
      (db-api/bad-request! "No such 3rd party"))})
 
-(defcommand :cooperation/create-application-response
+
+(defmethod link-db/link-from [:cooperation.response :file]
+  [db _user [_ response-id] _type to]
+  ;; Checks that the uploaded file is in the same project the cooperation response is in
+  (= (project-db/file-project-id db to)
+     (cooperation-db/response-project-id db response-id)))
+
+(defn- response-id-matches
+  "Check that response id matches application's current response id.
+  Either both are nil or they are the same entity id."
+  [db application-id response-id]
+  (let [application (du/entity db application-id)
+        current-response-id (get-in application
+                                    [:cooperation.application/response :db/id])]
+    (= response-id current-response-id)))
+
+(defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
              application-id :application-id
              response-payload :form-data}
-   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :project-id (cooperation-db/application-project-id db application-id)
    :authorization {:cooperation/application-approval {}}
-   :pre []
+   :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
-   [{:db/id application-id
-     :cooperation.application/response
-     (merge (cu/without-nils
-              (select-keys response-payload
-                           [:cooperation.response/valid-months
-                            :cooperation.response/valid-until
-                            :cooperation.response/date
-                            :cooperation.response/content
-                            :cooperation.response/status]))
-            {:db/id "new-application-response"}
-            (meta-model/creation-meta user))}]})
+   (let [existing-id (:db/id response-payload)
+         response-id (or existing-id "new-application-response")
+         old-response (if existing-id
+                        (d/pull db cooperation-model/response-application-keys
+                                existing-id)
+                        {:db/id "new-application-response"})]
+     (into [{:db/id application-id
+             :cooperation.application/response response-id}]
+           (du/modify-entity-tx
+            old-response
+            (merge (cu/without-nils
+                    (select-keys response-payload
+                                 cooperation-model/response-application-keys))
+                   {:db/id response-id}
+                   (if (:db/id response-payload)
+                     (meta-model/modification-meta user)
+                     (meta-model/creation-meta user))))))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
