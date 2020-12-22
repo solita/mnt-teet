@@ -156,6 +156,9 @@
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
   :new-third-party-title "3nda osapoole lisamine",
+  :error
+  {:coordination-task-missing nil,
+   :coordination-task-status-mismatch nil},
   :response-of-third-party "Kolmanda osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",

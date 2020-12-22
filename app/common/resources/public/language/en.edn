@@ -156,6 +156,9 @@
   :responsible-person "Responsible: {user-name}",
   :response-saved "Response saved successfully",
   :new-third-party-title "Add third party",
+  :error
+  {:coordination-task-missing nil,
+   :coordination-task-status-mismatch nil},
   :response-of-third-party "Response of 3rd party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
