@@ -15,3 +15,5 @@ phases:
   build:
     commands:
       - ./ci/scripts/build-and-deploy.bash
+      - sleep 60
+      - ./ci/codebuild teet-browser-tests $CODEBUILD_RESOLVED_SOURCE_VERSION
