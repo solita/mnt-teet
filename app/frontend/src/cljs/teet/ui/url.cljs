@@ -95,25 +95,34 @@
   (context/update-context :navigation-info #(update % :params merge params)
                           component))
 
+(defn- link-component
+  [{:keys [page params query style class component target]
+    :or {component :a}}
+   content]
+  (fn [{context-params :params}]
+    (let [url-fn (route-url-fns page)]
+      (when (nil? url-fn)
+        (log/error "No such page:" page))
+      [component
+       (merge {:href (url-fn (merge context-params params
+                                    (when query
+                                      {::query query})))}
+              (when class
+                {:class class})
+              (when target
+                {:target target})
+              (when style
+                {:style style}))
+       content])))
+
 (defn Link
   "Convenience component to create Material UI Link to given page with params.
   Missing path parameters are filled from navigation context."
-  [{:keys [page params query style class component target]
-    :or {component teet.ui.material-ui/Link}}
-   content]
+  [opts content]
   [consume-navigation-info
-   (fn [{context-params :params}]
-     (let [url-fn (route-url-fns page)]
-       (when (nil? url-fn)
-         (log/error "No such page:" page))
-       [component
-        (merge {:href (url-fn (merge context-params params
-                                     (when query
-                                       {::query query})))}
-               (when class
-                 {:class class})
-               (when target
-                 {:target target})
-               (when style
-                 {:style style}))
-        content]))])
+   (link-component opts content)])
+
+(defn Link2
+  [opts content]
+  [consume-navigation-info
+   (link-component (assoc opts :class "link2") content)])
