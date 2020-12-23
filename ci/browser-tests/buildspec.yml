@@ -9,12 +9,15 @@ phases:
     runtime-version:
       nodejs: latest
     commands:
+      - curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install -o install-babashka
+      - chmod +x install-babashka
+      - ./install-babashka
       - cd ci/browser-tests
       - npm install
   build:
     commands:
       - ./node_modules/cypress/bin/cypress run
-      . ./slackreporter.clj
+      - ./slackreporter.clj
 cache:
   paths:
     - '/root/.cache/**/*'
