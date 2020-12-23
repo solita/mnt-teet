@@ -247,6 +247,7 @@
 
   [:a link-1]
   [:a.link2 link-2]
+  [:a:hover {:text-decoration "none"}]
   [:#teet-frontend {:height "100%"}]
   [:.mention
    [:textarea {:border :none}]
