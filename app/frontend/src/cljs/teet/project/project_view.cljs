@@ -308,7 +308,7 @@
   {:primary-text (user-model/user-name manager)
    :secondary-text (tr [:roles :manager])
    :tertiary-text [:span (tr-enum name) ;; activity name
-                   [:div.activity-manager-active
+                   [:span.activity-manager-active
                     {:class [(<class common-styles/green-text)
                              (<class common-styles/inline-block)
                              (<class common-styles/margin-left 1)]}
