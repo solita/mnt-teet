@@ -24,7 +24,7 @@
 
 
 (defn- project-card-subheader-style []
-  {:margin-left "2rem"
+  {:margin-left "1.5rem"
    :display :flex})
 
 (defn- section-style []
@@ -32,7 +32,7 @@
 
 (defn- section [label content]
   [:div {:class (<class section-style)}
-   [typography/Heading2 {:style {:margin-bottom "1rem"
+   [typography/Heading2 {:style {:margin-bottom "0.5rem"
                                  :font-variant :all-petite-caps}} label]
    content])
 
@@ -80,13 +80,14 @@
 (defn- lifecycle-info
   [project {:thk.lifecycle/keys [type activities estimated-start-date estimated-end-date] :as _lifecycle}]
   [:div {:style {:margin-bottom "2rem"}}
-   [:div {:style {:margin-bottom "1rem"
-                  :display :flex}}
-    [typography/Heading3 (tr-enum type)]
-    [typography/GreyText {:style {:margin-left "0.5rem"}}
-     (str (fmt/date estimated-start-date)
-          "\u2013"
-          (fmt/date estimated-end-date))]]
+   [:div {:class (<class common-styles/margin-bottom 1)}
+    [typography/Heading3
+     (tr-enum type)
+     [:span {:class [(<class common-styles/gray-text)
+                     (<class common-styles/margin-left 0.5)]}
+      (str (fmt/date estimated-start-date)
+           "\u2013"
+           (fmt/date estimated-end-date))]]]
    (mapc (r/partial activity-info project) activities)])
 
 (defn project-card [{:keys [e! open-projects toggle-project]}
