@@ -441,7 +441,12 @@
  :environment
  {:build-time "Viimane versiooniuuendus toimus",
   :info-text
-  "Kasutad TEETu arenduskeskkonda. Siia salvestatud andmed võivad kustuda.",
+  {:dev
+   "Kasutad TEETu arenduskeskkonda. Aeg-ajalt andmeid keskkonnas kustutatakse.",
+   :test
+   "Kasutad TEETu testkeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad. ",
+   :prelive
+   "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad."},
   :version "Versioon"},
  :error
  {:part-has-files

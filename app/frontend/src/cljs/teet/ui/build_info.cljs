@@ -23,6 +23,20 @@
              {:padding-left 0
               :transition   "none"}))))
 
+(defn detect-env [hostname]
+  (cond
+    (str/includes? hostname "dev-teet")
+    :dev
+
+    (str/includes? hostname "teet-test")
+    :test
+
+    (str/includes? hostname "teet-prelive")
+    :prelive
+
+    :default
+    nil))
+
 (defn top-banner
   "Show build information at the top of the page"
   [nav-open? page]
@@ -32,14 +46,14 @@
                hostname (-> js/window
                             .-location
                             .-hostname)
-               test-or-dev? (or (str/includes? hostname "test-teet") (str/includes? hostname "dev-teet"))
-               open? (r/atom (and test-or-dev? (boolean (or branch git-hash))))
+               env-name (detect-env hostname)
+               open? (r/atom (and env-name (boolean (or branch git-hash))))
                close-fn #(swap! open? not)]
     [Collapse {:in @open?}
      [:div {:class (<class banner-style nav-open? page)}
       [:p {:style {:padding "0 1rem"
                    :margin  0}}
-       [:b (tr [:environment :info-text]) " "]
+       [:b (tr [:environment :info-text env-name]) " "]
        [:span (tr [:environment :build-time]) ": " [:strong build-time]]
        [:span {:style {:margin 0
                        :display :block}}
