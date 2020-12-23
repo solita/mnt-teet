@@ -1,6 +1,9 @@
 context('Login', () => {
     beforeEach(() => {
-      cy.visit("")
+        cy.visit("")
+
+        // wait for initial rendering
+        cy.get("header", {timeout: 30000})
     })
 
     it("dummy login as benjamin boss should work", () => {
