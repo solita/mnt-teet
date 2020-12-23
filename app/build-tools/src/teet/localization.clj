@@ -46,10 +46,13 @@
 
 (defn localization-edn-for-language [localizations lang]
   (reduce (fn [acc localization-entry]
-              (try (assoc-in acc
-                             (edn/read-string (:key localization-entry))
-                             (lang localization-entry))
-                   (catch Exception e
+            (try
+              (let [key-path (edn/read-string (:key localization-entry))
+                    val (lang localization-entry)]
+                (when (get-in acc key-path)
+                  (throw (ex-info (str "duplicate values for key " key-path) {:key-path key-path :value val})))
+                (assoc-in acc key-path val))                   
+              (catch Exception e
                      (println "error reading line " (pr-str localization-entry))
                      (throw e))))
           ;; Order keys alphabetically
