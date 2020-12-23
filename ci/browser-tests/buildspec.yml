@@ -13,8 +13,8 @@ phases:
       - npm install
   build:
     commands:
-      - pwd
       - ./node_modules/cypress/bin/cypress run
+      . ./slackreporter.clj
 cache:
   paths:
     - '/root/.cache/**/*'

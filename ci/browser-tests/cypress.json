@@ -1,1 +1,6 @@
-{"baseUrl": "https://dev-teet.solitacloud.fi/"}
+{"baseUrl": "https://dev-teet.solitacloud.fi/",
+ "reporter": "cypress-multi-reporters",
+ "reporterOptions": {
+     "configFile": "reporterOpts.json"
+ }
+}
