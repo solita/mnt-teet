@@ -17,6 +17,8 @@ phases:
   build:
     commands:
       - ./node_modules/cypress/bin/cypress run
+  post_build:
+    commands:
       - ./slackreporter.clj
 cache:
   paths:
