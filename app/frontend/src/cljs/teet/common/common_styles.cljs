@@ -1,7 +1,8 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
             [herb.core :refer [defglobal]]
-            [garden.color :refer [darken]]))
+            [garden.color :refer [darken]]
+            [garden.stylesheet :refer [at-media]]))
 
 ;; Typography styles
 (def h1-desktop
@@ -118,7 +119,7 @@
    :font-style "normal"
    :font-weight "300"
    :font-size "1.5rem"
-   :line-height "36px"})
+   :line-height "2.25rem"})
 
 (def h2-mobile
   {:font-family "Roboto"
@@ -226,7 +227,10 @@
    :border (str "1px solid " theme-colors/gray-lighter)
    :box-shadow "none"})
 
+(def ^:private mobile-cutoff "80rem")
+
 (defglobal global
+  ;; media queries
   [:body :html (merge body-1-regular {:height "100vh"})]
   [:p {:margin 0}]
   [:p.paragraph {:margin-bottom "1rem"}]
@@ -244,6 +248,14 @@
   [:h4 (merge h4-desktop {:margin 0})]
   [:h5 (merge h5-desktop {:margin 0})]
   [:h6 (merge section-heading-style {:margin 0})]
+
+  (at-media {:screen true
+             :max-width mobile-cutoff}
+            [:h1 h1-mobile]
+            [:h2 h2-mobile]
+            [:h3 h3-mobile]
+            [:h4 h4-mobile]
+            [:h5 h5-mobile])
 
   [:a link-1]
   [:a.link2 link-2]
