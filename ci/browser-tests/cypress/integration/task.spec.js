@@ -3,7 +3,7 @@ describe("Task view", function() {
     cy.randomName("filename", "myfile")
     cy.dummyLogin("benjamin")
     cy.selectLanguage("ENG")
-    cy.projectByName("cooperation test")
+    cy.projectByName("integration test project")
 
     // Navigate to Detailed design -> Design requirements
     cy.get("li a").contains("Detailed design").click()
