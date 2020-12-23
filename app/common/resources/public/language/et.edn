@@ -157,8 +157,10 @@
   :response-saved "Vastus edukalt salvestatud",
   :new-third-party-title "3nda osapoole lisamine",
   :error
-  {:coordination-task-missing nil,
-   :coordination-task-status-mismatch nil},
+  {:upload-not-allowed "Üleslaadimine pole lubatud",
+   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-status-mismatch
+   "Ülesanne ei ole failide üleslaadimist lubavas olekus."},
   :response-of-third-party "Kolmanda osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
@@ -439,7 +441,12 @@
  :environment
  {:build-time "Viimane versiooniuuendus toimus",
   :info-text
-  "Kasutad TEETu arenduskeskkonda. Siia salvestatud andmed võivad kustuda.",
+  {:dev
+   "Kasutad TEETu arenduskeskkonda. Aeg-ajalt andmeid keskkonnas kustutatakse.",
+   :test
+   "Kasutad TEETu testkeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad. ",
+   :prelive
+   "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad."},
   :version "Versioon"},
  :error
  {:part-has-files
