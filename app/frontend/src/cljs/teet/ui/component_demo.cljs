@@ -11,6 +11,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Heading4 Heading5 Paragraph SectionHeading
+                                        Subtitle1 Subtitle2
                                         Text TextBold Text2 Text2Bold Text3 Text3Bold]]
             [teet.ui.url :as url]
             [tuck.core :as t]
@@ -127,8 +128,12 @@
    [Heading3 "Heading 3"]
    [Heading4 "Heading 4"]
    [Heading5 "Heading 5"]
+   [Subtitle1 "Subtitle 1"]
+   [Subtitle2 "Subtitle 2"]
+   [:hr]
    [SectionHeading "Section Heading"]
    [DataLabel "Data Label / Table Heading"]
+   [:hr]
    [TextBold "TextBold: This text uses typography component 'TextBold'."]
    [Text "Text: This text uses typography component 'Text'."]
    [Text2Bold "Text2Bold: This text uses typography component 'Text2Bold'."]

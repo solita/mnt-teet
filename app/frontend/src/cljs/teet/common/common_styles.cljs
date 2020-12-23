@@ -102,14 +102,16 @@
    :font-style "normal"
    :font-weight "bold"
    :font-size "1rem"
-   :line-height "1.5rem"})
+   :line-height "1.5rem"
+   :text-transform "uppercase"})
 
 (def subtitle-2
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
    :font-size "0.875rem"
-   :line-height "1.3125rem"})
+   :line-height "1.3125rem"
+   :text-transform "uppercase"})
 
 (def h1-mobile
   {:font-family "Roboto"
@@ -233,6 +235,8 @@
   [:.body2-bold body-2-bold]
   [:.body3 body-3]
   [:.body3-bold body-3-bold]
+  [:.subtitle1 subtitle-1]
+  [:.subtitle2 subtitle-2]
 
   [:h1 (merge h1-desktop {:margin 0})]
   [:h2 (merge h2-desktop {:margin 0})]

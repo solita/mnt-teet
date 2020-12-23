@@ -53,14 +53,14 @@
 
 
 (def Heading1 (util/make-component :h1 {}))
-
 (def Heading2 (util/make-component :h2 {}))
-
 (def Heading3 (util/make-component :h3 {}))
-
 (def Heading4 (util/make-component :h4 {}))
-
 (def Heading5 (util/make-component :h5 {}))
+
+;; TODO: maybe some other element type?
+(def Subtitle1 (util/make-component :p {:class "subtitle1"}))
+(def Subtitle2 (util/make-component :p {:class "subtitle2"}))
 
 (def Text (util/make-component :p {}))
 (def TextBold (util/make-component :p {:class "body1-bold"}))
