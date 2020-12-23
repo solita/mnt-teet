@@ -267,7 +267,7 @@
   :activity.name/other "Other",
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
-  :cooperation.opinion.status/rejected "Rejected",
+  :cooperation.opinion.status/rejected "Ignore comments",
   :document.sub-category/no-objection-letters "No-objection letters",
   :task.group/working-design "Working Design",
   :task.status/waiting-for-review "Waiting for review",
@@ -321,7 +321,8 @@
   :land-acquisition.status/in-progress "In progress ",
   :activity.name/warranty "Warranty",
   :task.type/construction-general-part "General part",
-  :cooperation.opinion.status/partially-rejected "Partially agreed",
+  :cooperation.opinion.status/partially-rejected
+  "Comments partly taken into account",
   :participation.role/organizer "Organizer",
   :task.type/design-road-safety-audit "Road safety audit",
   :thk.task-type/third-party-review "3rd party review",
@@ -408,7 +409,8 @@
   :task.status/in-progress "In progress",
   :task.type/drainage "Drainage",
   :cooperation.application.type/ex-ante-eia "Ex-ante EIA",
-  :cooperation.opinion.status/agreed "Agreed",
+  :cooperation.opinion.status/agreed
+  "Comments to be taken into account",
   :task.type/design-requirements "Design requirements",
   :file.status/updated "Updated",
   :file.document-group/specifications "Specifications",
@@ -444,7 +446,12 @@
  :environment
  {:build-time "Last build happened at",
   :info-text
-  "You are using the development build of teet. Information saved here may be lost.",
+  {:dev
+   "You are using the development environment of teet. Information saved here may be lost.",
+   :test
+   "You are using the test environment of TEET. From time to time the data in the environment is updated and the manually added data disappears.",
+   :prelive
+   " are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
   :version "Version"},
  :error
  {:part-has-files
