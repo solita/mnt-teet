@@ -7,15 +7,10 @@ context('Cooperation', function() {
         cy.wrap(now.toLocaleDateString("et-EE")).as("today")
         cy.wrap(new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14).toLocaleDateString("et-EE")).as("twoWeeks")
 
+        cy.projectByName("integration test project")
     })
 
     it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
-        cy.get(".left-menu-projects-list").click()
-        cy.get("td").contains("cooperation test").click()
-
-        // check project page is rendered
-        cy.get("h1").contains("cooperation test")
-
         // open menu and select cooperation
         cy.get("button.project-menu").click()
         cy.get("li.project-menu-item-cooperation").click()
