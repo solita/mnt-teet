@@ -2,12 +2,13 @@
   "Login page"
   (:require [herb.core :refer [<class]]
             [teet.login.login-controller :as login-controller]
-            [teet.ui.material-ui :refer [Link Divider]]
+            [teet.ui.material-ui :refer [Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
             [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
             [teet.login.login-styles :as login-styles]
             [teet.log :as log]))
 
@@ -39,8 +40,8 @@
      (if (dummy-login?)
        [:section {:class (<class login-styles/login-container)}
         [login-logo]
-        [Link {:href "/oauth2/request"
-               :class (<class login-styles/tara-login)}
+        [common/Link {:href "/oauth2/request"
+                      :class (<class login-styles/tara-login)}
          "TARA login"]
         [:<>
          [Divider]

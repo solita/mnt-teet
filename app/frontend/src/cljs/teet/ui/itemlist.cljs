@@ -1,19 +1,20 @@
 (ns teet.ui.itemlist
-  (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [List ListItem ListItemIcon
-                                         ListItemSecondaryAction Divider Link
-                                         FormControlLabel Checkbox]]
-            [teet.ui.icons :as icons]
-            [teet.ui.progress :as progress]
+  (:require [herb.core :refer [<class]]
+            [reagent.core :as r]
+            [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr]]
-            [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel] :as typography]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-styles :as itemlist-styles]
-            [herb.core :refer [<class]]
-            [teet.ui.util :as util]
-            [teet.util.collection :as uc]
+            [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
-            [teet.common.common-styles :as common-styles]))
+            [teet.ui.common :as common]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [List ListItem ListItemIcon
+                                         ListItemSecondaryAction Divider
+                                         FormControlLabel Checkbox]]
+            [teet.ui.progress :as progress]
+            [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel] :as typography]
+            [teet.ui.util :as util]
+            [teet.util.collection :as uc]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]
@@ -98,8 +99,8 @@
      (for [item items]
        ^{:key (:name item)}
        [:li
-        [Link {:href    (:link item)
-               :onClick #(on-click-fn item)}
+        [common/Link {:href    (:link item)
+                      :onClick #(on-click-fn item)}
          (:name item)]])]]])
 
 (defn Item [{:keys [label]} value]

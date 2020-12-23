@@ -1,15 +1,14 @@
 (ns teet.ui.tabs
-  (:require [teet.ui.material-ui :refer [Link]]
-            [teet.ui.url :as url]
-            [teet.localization :refer [tr]]
-            [teet.comments.comments-view :as comments-view]
-            [teet.comments.comments-controller :as comments-controller]
+  (:require [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.typography :as typography]
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.comments.comments-view :as comments-view]
+            [teet.common.common-styles :as common-styles]
+            [teet.localization :refer [tr]]
             [teet.ui.common :as common]
-            [herb.core :refer [<class]]
             [teet.ui.panels :as panels]
-            [teet.common.common-styles :as common-styles]))
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]))
 
 (defn- comments-link-content
   [comment-counts]
@@ -52,7 +51,7 @@
               [:div {:style {:display :inline-block}} ;;TODO cleanup inline-styles and html structure
                [:div {:class (if (= (:tab query) "comments") "tab-inactive" "tab-active")}
                 (if (= (:tab query) "comments")
-                  [Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
+                  [common/Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
                   [typography/SectionHeading (tr [:project :tabs :details])])]]
               [:div {:style {:display :inline-block
                              :margin-left "2rem"}}
@@ -61,7 +60,7 @@
                   [typography/SectionHeading
                    [comments-link-content comment-counts]]
                   (or comment-link-comp
-                      [Link {:href (url/set-query-param :tab "comments")}
+                      [common/Link {:href (url/set-query-param :tab "comments")}
                        [comments-link-content comment-counts]]))]]]]
             (if (= (:tab query) "comments")
               comments-component
@@ -101,8 +100,8 @@
           (with-meta
             (if (= (keyword tab) selected-tab)
               [typography/SectionHeading {:class (<class tab-element-style)} (tr [:tab-names tab])]
-              [Link {:class (<class tab-element-style)
-                     :href (url/set-query-param :tab (name tab))}
+              [common/Link {:class (<class tab-element-style)
+                            :href (url/set-query-param :tab (name tab))}
                (tr [:tab-names tab])])
             {:key tab})))]
      [:div.tab-content

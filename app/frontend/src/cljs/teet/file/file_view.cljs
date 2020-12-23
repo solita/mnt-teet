@@ -1,23 +1,30 @@
 (ns teet.file.file-view
   (:require [clojure.string :as str]
+            [goog.string :as gstr]
             [herb.core :refer [<class]]
             [re-svg-icons.feather-icons :as fi]
             [re-svg-icons.tabler-icons :as ti]
             [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.comments.comments-view :as comments-view]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
             [teet.file.file-model :as file-model]
             [teet.file.file-style :as file-style]
+            [teet.file.filename-metadata :as filename-metadata]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-model :as project-model]
             [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.task-model :as task-model]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
             [teet.ui.file-upload :as file-upload]
+            [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton CircularProgress
+            [teet.ui.material-ui :refer [Grid LinearProgress IconButton CircularProgress
                                          DialogActions DialogContentText CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
@@ -26,15 +33,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
-            [teet.ui.form :as form]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]
-            [teet.project.task-model :as task-model]
-            [teet.file.filename-metadata :as filename-metadata]
-            [teet.ui.common :as common]
-            [goog.string :as gstr]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.comments.comments-view :as comments-view]))
+            [teet.util.datomic :as du]))
 
 
 
@@ -517,9 +517,9 @@
                           :style {:padding "0.5rem 0"
                                   :justify-content :space-between
                                   :border-top (str "1px solid " theme-colors/gray-lighter)}}
-                    [Link {:target :_blank
-                           :href (common-controller/query-url :file/download-file
-                                                              {:file-id (:db/id file)})}
+                    [common/Link {:target :_blank
+                                  :href (common-controller/query-url :file/download-file
+                                                                     {:file-id (:db/id file)})}
                      (tr [:file :version]
                          {:num (:file/version file)})]
                     [:div {:class (<class common-styles/flex-row)}

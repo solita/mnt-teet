@@ -15,9 +15,9 @@
             [teet.routes :as routes]
             [teet.search.search-interface :as search-interface]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.ui.common :as common]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Link]]
             [teet.ui.table :as table]
             [teet.ui.typography :as typography]
             [teet.ui.util :as util :refer [mapc]]
@@ -110,7 +110,7 @@
     [typography/Text {:display "inline"}
      (if (= my-filter current-filter)
        filter-text
-       [Link {:href (routes/url-for (assoc-in route [:query :row-filter] my-filter))}
+       [common/Link {:href (routes/url-for (assoc-in route [:query :row-filter] my-filter))}
         filter-text])]))
 
 (defn projects-listing [e! app all-projects]

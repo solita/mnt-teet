@@ -1,36 +1,30 @@
 (ns teet.dashboard.dashboard-view
-  (:require [teet.ui.itemlist :as itemlist]
-            [teet.user.user-model :as user-model]
-            [teet.project.task-model :as task-model]
-            [teet.ui.typography :as typography]
-            [teet.routes :as routes]
-            [teet.ui.material-ui :refer [Link Paper Card CardHeader CardContent
-                                         CardActionArea CardActions Divider Collapse
-                                         IconButton ButtonBase]]
-            [teet.localization :refer [tr tr-enum]]
-            [teet.ui.util :refer [mapc]]
-            [teet.ui.format :as fmt]
-            [teet.ui.url :as url]
-            [teet.project.project-model :as project-model]
+  (:require [alandipert.storage-atom :refer [local-storage]]
             [herb.core :refer [<class]]
-            [teet.project.land-view :as land-view]
-            [teet.notification.notification-controller :as notification-controller]
             [reagent.core :as r]
-            [teet.ui.buttons :as buttons]
-            [teet.ui.icons :as icons]
-            [teet.util.collection :as cu]
-            [teet.projects.projects-style :as projects-style]
+            [teet.activity.activity-view :as activity-view]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.common :as common]
-            [alandipert.storage-atom :refer [local-storage]]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.notification.notification-controller :as notification-controller]
+            [teet.project.land-view :as land-view]
+            [teet.project.project-model :as project-model]
+            [teet.project.task-model :as task-model]
+            [teet.projects.projects-style :as projects-style]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.activity.activity-view :as activity-view]))
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.format :as fmt]
+            [teet.ui.material-ui :refer [Paper Divider Collapse ButtonBase]]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.ui.util :refer [mapc]]
+            [teet.util.collection :as cu]))
 
 (defonce open-projects-atom (local-storage (r/atom #{}) "dashboard-open-projects"))
 
 
 (defn- project-card-subheader-style []
-  {:margin-left "2rem"
+  {:margin-left "1.5rem"
    :display :flex})
 
 (defn- section-style []
@@ -38,7 +32,7 @@
 
 (defn- section [label content]
   [:div {:class (<class section-style)}
-   [typography/Heading2 {:style {:margin-bottom "1rem"
+   [typography/Heading2 {:style {:margin-bottom "0.5rem"
                                  :font-variant :all-petite-caps}} label]
    content])
 
@@ -86,13 +80,14 @@
 (defn- lifecycle-info
   [project {:thk.lifecycle/keys [type activities estimated-start-date estimated-end-date] :as _lifecycle}]
   [:div {:style {:margin-bottom "2rem"}}
-   [:div {:style {:margin-bottom "1rem"
-                  :display :flex}}
-    [typography/Heading3 (tr-enum type)]
-    [typography/GreyText {:style {:margin-left "0.5rem"}}
-     (str (fmt/date estimated-start-date)
-          "\u2013"
-          (fmt/date estimated-end-date))]]
+   [:div {:class (<class common-styles/margin-bottom 1)}
+    [typography/Heading3
+     (tr-enum type)
+     [:span {:class [(<class common-styles/gray-text)
+                     (<class common-styles/margin-left 0.5)]}
+      (str (fmt/date estimated-start-date)
+           "\u2013"
+           (fmt/date estimated-end-date))]]]
    (mapc (r/partial activity-info project) activities)])
 
 (defn project-card [{:keys [e! open-projects toggle-project]}

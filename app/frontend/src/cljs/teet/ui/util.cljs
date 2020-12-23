@@ -18,10 +18,19 @@
                       {:key i})))
                 children-seq)))
 
+(defn merge-props
+  "Normal merge, except :class is merged by joining with space"
+  [a b]
+  (-> a
+      (merge (dissoc b :class))
+      (update :class #(if-let [b-class (:class b)]
+                        (str (when % (str % " ")) b-class)
+                        %))))
+
 (defn make-component [component props]
   (fn [& children]
     (if (map? (first children))
-      (into [component (merge props (first children))] (rest children))
+      (into [component (merge-props props (first children))] (rest children))
       (into [component (or props {})] children))))
 
 (defn mapc

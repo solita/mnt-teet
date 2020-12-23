@@ -1,9 +1,9 @@
 (ns teet.ui.typography
   (:require [herb.core :as herb :refer [<class]]
-            [teet.ui.material-ui :refer [Typography]]
             [teet.ui.util :as util]
             [teet.theme.theme-colors :as theme-colors]))
 
+;; Old typography styles
 (defn- small-gray-text-style
   []
   {:display :block
@@ -34,19 +34,54 @@
   {:font-weight 700
    :font-size "0.875rem"})
 
-(def Heading1 (util/make-component Typography {:variant "h1"}))
+;; Legacy style
+(defn- section-heading-style []
+  {:font-weight    700
+   :font-size      "1rem"
+   :line-height    1.375
+   :letter-spacing "0.25px"})
 
-(def Heading2 (util/make-component Typography {:variant "h2"}))
+(defn- data-label-style []
+  {:fontFamily    "Roboto Condensed"
+   :fontWeight    400
+   :fontSize      "0.875rem"
+   :lineHeight    1.375
+   :letterSpacing "0.25px"
+   :color         theme-colors/secondary-text
+   :border-bottom (str "2px solid " theme-colors/gray-light)
+   :textTransform :uppercase})
 
-(def Heading3 (util/make-component Typography {:variant "h3"}))
 
-(def Text (util/make-component Typography {:variant "body1"}))
+(def Heading1 (util/make-component :h1 {}))
+(def Heading2 (util/make-component :h2 {}))
+(def Heading3 (util/make-component :h3 {}))
+(def Heading4 (util/make-component :h4 {}))
+(def Heading5 (util/make-component :h5 {}))
 
-(def Paragraph (util/make-component Typography {:variant "body1" :paragraph true}))
+;; TODO: maybe some other element type?
+(def Subtitle1 (util/make-component :p {:class "subtitle1"}))
+(def Subtitle2 (util/make-component :p {:class "subtitle2"}))
 
-(def SectionHeading (util/make-component Typography {:variant "h6"}))
+(def Text (util/make-component :p {}))
+(def TextBold (util/make-component :p {:class "body1-bold"}))
+(def Text2 (util/make-component :p {:class "body2"}))
+(def Text2Bold (util/make-component :p {:class "body2-bold"}))
+(def Text3 (util/make-component :p {:class "body3"}))
+(def Text3Bold (util/make-component :p {:class "body3-bold"}))
 
-(def DataLabel (util/make-component Typography {:variant "subtitle1"}))
+(def Paragraph (util/make-component :p {:class "paragraph"}))
+(def ParagraphBold (util/make-component :p {:class "paragraph body1-bold"}))
+(def Paragraph2 (util/make-component :p {:class "paragraph body2"}))
+(def Paragraph2Bold (util/make-component :p {:class "paragraph body2-bold"}))
+(def Paragraph3 (util/make-component :p {:class "paragraph body3"}))
+(def Paragraph3Bold (util/make-component :p {:class "paragraph body3-bold"}))
+
+(def Link (util/make-component :a {}))
+(def Link2 (util/make-component :a {:class "link2"}))
+
+(def SectionHeading (util/make-component :h6 {:class (<class section-heading-style)}))
+
+(def DataLabel (util/make-component :div {:class (<class data-label-style)}))
 
 (def SmallGrayText (util/make-component :span {:class (<class small-gray-text-style)}))
 

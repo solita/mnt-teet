@@ -1,14 +1,15 @@
 (ns teet.map.map-overlay
   "Utility UI code for map overlays"
-  (:require [teet.map.map-styles :as map-styles]
-            [herb.core :refer [<class]]
+  (:require [clojure.string :as str]
             [goog.object :as gobj]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [IconButton Link]]
-            [clojure.string :as str]
+            [teet.common.common-styles :as common-styles]
+            [teet.map.map-styles :as map-styles]
+            [teet.ui.common :as common]
             [teet.ui.icons :as icons]
-            [teet.common.common-styles :as common-styles]))
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.material-ui :refer [IconButton]]))
 
 ;; Atom that on-select handlers can use to set overlay
 (defonce selected-item-overlay (r/atom nil))
@@ -45,9 +46,9 @@
          ^{:key key}
          [itemlist/Item {:label key}
           (if (= key "url")
-            [Link {:target :_blank
-                   :href val
-                   :class (<class common-styles/white-link-style false)} val]
+            [common/Link {:target :_blank
+                          :href val
+                          :class (<class common-styles/white-link-style false)} val]
             val)])]]]))
 
 (defn feature-info-on-select
