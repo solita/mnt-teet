@@ -1,23 +1,30 @@
 (ns teet.file.file-view
   (:require [clojure.string :as str]
+            [goog.string :as gstr]
             [herb.core :refer [<class]]
             [re-svg-icons.feather-icons :as fi]
             [re-svg-icons.tabler-icons :as ti]
             [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.comments.comments-view :as comments-view]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
             [teet.file.file-model :as file-model]
             [teet.file.file-style :as file-style]
+            [teet.file.filename-metadata :as filename-metadata]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-model :as project-model]
             [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.task-model :as task-model]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
             [teet.ui.file-upload :as file-upload]
+            [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge CircularProgress
+            [teet.ui.material-ui :refer [Grid LinearProgress IconButton CircularProgress
                                          DialogActions DialogContentText CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
@@ -26,15 +33,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
-            [teet.ui.form :as form]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]
-            [teet.project.task-model :as task-model]
-            [teet.file.filename-metadata :as filename-metadata]
-            [teet.ui.common :as common]
-            [goog.string :as gstr]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.comments.comments-view :as comments-view]))
+            [teet.util.datomic :as du]))
 
 
 
@@ -52,99 +52,6 @@
                                             :file/sequence-number)]) sequence-number))
                       (when version
                         (tr [:file :version] {:num version}))]))])
-
-(defn- file-row-icon-style
-  []
-  {:margin "0 0.25rem"
-   :display :flex
-   :justify-content :center})
-
-(defn- base-name-and-suffix [name]
-  (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
-    (if base-name
-      [base-name (str/upper-case suffix)]
-      [name ""])))
-
-(defn- file-row
-  [{:keys [link-download? no-link? attached-to actions? comment-action columns delete-action]
-    :or {link-download? false
-         actions? true
-         columns (constantly true)}}
-   {id :db/id :file/keys [number version status name] comments :comment/counts :as file}]
-  (let [[base-name suffix] (base-name-and-suffix name)
-        {:comment/keys [new-comments old-comments]} comments
-        seen (:file-seen/seen-at file)]
-    [:div {:class (<class common-styles/margin-bottom 0.5)}
-     [:div.file-row {:class (<class common-styles/flex-row)}
-      [:div.file-row-name {:class [(<class file-style/file-row-name seen)
-                                   (<class common-styles/flex-table-column-style 44)]}
-       (cond
-         ;; if no-link? specified, just show the name text
-         no-link?
-         base-name
-
-         ;; if link-download? specified, download file
-         link-download?
-         [Link {:target :_blank
-                :href (common-controller/query-url
-                       :file/download-file
-                       (merge {:file-id id
-                               :attached-to attached-to}))}
-          base-name]
-
-         ;;  Otherwise link to task file page
-         :else
-         [url/Link {:page :file :params {:file id}} base-name])]
-      (when (columns :number)
-        [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
-         [:span number]])
-      (when (columns :suffix)
-        [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
-         [:span suffix]])
-      (when (columns :version)
-        [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
-         [:span (str "V" version)]])
-      (when (columns :status)
-        [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
-         [:span (tr-enum status)]])
-      (when actions?
-        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-         (when (columns :comment)
-           [Badge {:badge-content (+ (or new-comments 0)
-                                     (or old-comments 0))
-                   :color (if (pos? new-comments)
-                            :error
-                            :primary)}
-            (if comment-action
-              [IconButton {:on-click #(comment-action file)}
-               [icons/communication-comment]]
-              [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
-                         :page :file
-                         :params {:file id}
-                         :query {:tab "comments"}}
-               [icons/communication-comment]])])
-         (when (columns :download)
-           [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
-                  :target :_blank
-                  :href (common-controller/query-url
-                         (if attached-to
-                           :file/download-attachment
-                           :file/download-file)
-                         (merge
-                          {:file-id id}
-                          (when attached-to
-                            {:attached-to attached-to})))}
-            [icons/file-cloud-download]])
-
-         (when (and (columns :delete) delete-action)
-           [buttons/delete-button-with-confirm
-            {:action #(delete-action file)
-             :trashcan? true}])])]
-     (when (columns :meta)
-       [:div.file-row-meta {:class (<class file-style/file-row-meta)}
-        (tr [:file :upload-info]
-            {:author (user-model/user-name (:meta/creator file))
-             :date (format/date-time (:meta/created-at file))})])]))
 
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
@@ -294,7 +201,9 @@
                               [buttons/button-primary
                                {:id (str "confirmation-confirm")
                                 :disabled @progress?
-                                :on-click #(do (e! (file-controller/->UploadNewVersion file @selected-file))
+                                :on-click #(do (e! (file-controller/->UploadNewVersion file
+                                                                                       @selected-file
+                                                                                       (:db/id task)))
                                                (reset! progress? true))}
                                (tr [:file-upload :replace-file-confirm])]]}
       (if @progress?
@@ -406,8 +315,10 @@
           [file-comments-link file])])]))
 
 (defn file-list2
-  [{:keys [sort-by-value] :as opts} files]
-  [:div {:class (<class common-styles/margin-bottom 1.5)}
+  [{:keys [sort-by-value data-cy] :as opts} files]
+  [:div (merge {:class (<class common-styles/margin-bottom 1.5)}
+               (when data-cy
+                 {:data-cy data-cy}))
    (mapc (r/partial file-row2 opts)
          (sorted-by
            sort-by-value
@@ -427,30 +338,6 @@
       (->> files
            (filtered-by @filter-atom))]]))
 
-(defn file-table
-  ([files] (file-table {} files))
-  ([{:keys [filtering?]
-     :or {filtering? true} :as opts} files]
-   (r/with-let [items-for-sort-select (sort-items)
-                filter-atom (r/atom "")
-                sort-by-atom (r/atom (first items-for-sort-select))]
-     [:<>
-      (when filtering?
-        [file-filter-and-sorter
-         filter-atom
-         sort-by-atom
-         items-for-sort-select])
-      [:div.file-table-files
-       (->> files
-            (filtered-by @filter-atom)
-            (sorted-by @sort-by-atom)
-            (mapc (r/partial file-row opts)))]])))
-
-(defn file-upload-button []
-  [buttons/button-primary {:start-icon (r/as-element
-                                        [icons/file-cloud-upload])}
-   (tr [:task :upload-files])])
-
 (defn- file-icon-style []
   {:display :inline-block
    :margin-right "0.25rem"
@@ -458,7 +345,6 @@
    :top "6px"})
 
 (defn file-icon [{class :class
-                  :file/keys [type]
                   :as file}]
   [:div {:class (if class
                   [class (<class file-icon-style)]
@@ -631,9 +517,9 @@
                           :style {:padding "0.5rem 0"
                                   :justify-content :space-between
                                   :border-top (str "1px solid " theme-colors/gray-lighter)}}
-                    [Link {:target :_blank
-                           :href (common-controller/query-url :file/download-file
-                                                              {:file-id (:db/id file)})}
+                    [common/Link {:target :_blank
+                                  :href (common-controller/query-url :file/download-file
+                                                                     {:file-id (:db/id file)})}
                      (tr [:file :version]
                          {:num (:file/version file)})]
                     [:div {:class (<class common-styles/flex-row)}
@@ -724,7 +610,8 @@
                   :on-change-event change-event
                   :save-event save-event
                   :cancel-event cancel-event
-                  :delete delete}
+                  :delete delete
+                  :delete-message (tr [:file :delete])}
        ^{:attribute :file/part}
        [select/form-select {:items parts
                             :format-item #(gstr/format "%s #%02d"
@@ -823,7 +710,8 @@
                      (str/upper-case extension)]]
                    [:div {:style {:flex-grow 1
                                   :text-align :end}}
-                    [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+                    [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                               :data-cy "edit-file-button"}
                      (tr [:buttons :edit])]]]
                   [file-identifying-info (du/enum= :activity.name/land-acquisition
                                                    (:activity/name activity))

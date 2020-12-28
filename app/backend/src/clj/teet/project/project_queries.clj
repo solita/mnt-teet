@@ -290,7 +290,7 @@
   {:where '[[?e :thk.project/owner ?owner]]
    :in {'?owner (user-model/user-ref owner)}})
 
-(defmethod search-clause :status [[_ status]]
+(defmethod search-clause :status [[_ _status]]
   ;; FIXME: status?
   {:where []
    :in {}})

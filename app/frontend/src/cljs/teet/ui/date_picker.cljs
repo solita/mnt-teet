@@ -5,6 +5,7 @@
             [cljs-time.coerce :as c]
             [teet.ui.icons :as icons]
             [cljs-time.format :as tf]
+            ["react" :as react]
             [teet.localization :as localization :refer [tr]]
             [teet.ui.material-ui :refer [IconButton Popover ClickAwayListener
                                          Button Grid]]
@@ -217,54 +218,66 @@
     :else
     true))
 
-(defn date-input
+(defn date-input*
   "Combined text field and date picker component"
-  [{:keys [label error value on-change selectable? required end start min-date max-date error-text]}]
-  (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
-               open? (r/atom false)
-               ref (atom nil)
-               close-input (fn []
-                             (reset! open? false))
-               open-input (fn [_]
-                            (reset! open? true))
-               set-ref (fn [el]
-                         (reset! ref el))]
-    (let [on-change-text (fn [e]
-                           (let [v (-> e .-target .-value)]
-                             (reset! txt v)
-                             (if-let [^goog.date.Date d (parse-opt v)]
-                               (if (and
-                                     (date-in-range? {:start min-date :end max-date :date d})
-                                     (date-in-range? {:start start :end end :date d}))
-                                 (on-change (.-date d))
-                                 (on-change nil))
-                               (on-change nil))))]
-      [:div
-       [TextField {:label label
-                   :value (or @txt "")
-                   :ref set-ref
-                   :error error
-                   :error-text error-text
-                   :required required
-                   :variant "outlined"
-                   :full-width true
-                   :on-change on-change-text
-                   :input-button-icon icons/action-calendar-today
-                   :input-button-click open-input}]
-       [Popover {:open @open?
-                 :anchorEl @ref
-                 :anchorOrigin {:vertical "bottom"
-                                :horizontal "left"}}
-        [ClickAwayListener {:on-click-away close-input}
-         [date-picker {:value (when value
-                                (goog.date.Date. value))
-                       :min-date min-date
-                       :on-change (fn [^goog.date.Date d]
-                                    (reset! txt (unparse-opt d))
-                                    (on-change (some-> d .-date))
-                                    (close-input))
-                       :selectable? selectable?}]]]])))
+  [{:keys [label error value on-change selectable? required read-only? end start min-date max-date error-text]}]
+  (let [[txt set-txt!] (react/useState "")
+        [open? set-open?] (react/useState false)
+        [ref set-ref!] (react/useState nil)
+        close-input #(set-open? false)
+        open-input #(set-open? true)
+        set-ref (fn [el]
+                  (set-ref! el))
+        on-change-text (fn [e]
+                         (let [v (-> e .-target .-value)]
+                           (set-txt! v)
+                           (if-let [^goog.date.Date d (parse-opt v)]
+                             (if (and
+                                   (date-in-range? {:start min-date :end max-date :date d})
+                                   (date-in-range? {:start start :end end :date d}))
+                               (on-change (.-date d))
+                               (on-change nil))
+                             (on-change nil))))]
+    (react/useEffect (fn []
+                       ;; If date is changed without editing from outside the component set text content to match value
+                       (if (not= (c/to-date (parse-opt txt)) value)
+                         (set-txt! (some-> value goog.date.Date. unparse-opt))
+                         identity))
+                    #js [value])                            ;; need to use a javascript array
+    [:div
+     [TextField (merge {:label label
+                        :read-only? read-only?
+                        :value (or txt "")
+                        :ref set-ref
+                        :error error
+                        :error-text error-text
+                        :required required
+                        :variant "outlined"
+                        :full-width true
+                        :input-class ":date-input"
+                        :on-change on-change-text}
+                       (when-not read-only?
+                         {:input-button-icon icons/action-calendar-today
+                          :input-button-click open-input}))]
+     [Popover {:open open?
+               :anchorEl ref
+               :anchorOrigin {:vertical "bottom"
+                              :horizontal "left"}}
+      [ClickAwayListener {:on-click-away close-input}
+       [date-picker {:value (when value
+                              (goog.date.Date. value))
+                     :min-date min-date
+                     :on-change (fn [^goog.date.Date d]
+                                  (set-txt! (unparse-opt d))
+                                  (on-change (some-> d .-date))
+                                  (close-input))
+                     :selectable? selectable?}]]]]))
 
+(defn date-input
+  "Wrapper for functional date-input component
+  :f> is used to inform reagent to create a functional component"
+  [opts]
+  [:f> date-input* opts])
 
 ;; Date picker clear & disable start and end
 ;; When first date picked enable start and end
@@ -328,6 +341,7 @@
                        :required required
                        :disabled (nil? @date)
                        ;:label (tr [:common :start-time])
+                       :input-class ":start-time"
                        :hide-label? true
                        :value @start-input-atom
                        :max @end-input-atom
@@ -347,6 +361,7 @@
                        :value @end-input-atom
                        :hide-label? true
                        ;:label (tr [:common-texts :end-time])
+                       :input-class ":end-time"
                        :min @start-input-atom
                        :on-blur (fn [_]
                                   (on-change [start (time-to-date @end-input-atom @date)]))

@@ -5,11 +5,14 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Link Chip Collapse]]
+            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
             [re-svg-icons.feather-icons :as fi]))
+
+(def Link typography/Link)
+(def Link2 typography/Link2)
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -424,11 +427,13 @@
   ([opts data]
    [:div {:class (<class common-styles/flex-row-wrap)}
     (doall
-      (for [[label data] data]
+      (for [[label data row-options] data]
         ^{:key label}
-        [:div {:class (<class info-row-item-style (:right-align-last? opts))}
+        [:div (merge row-options
+                     {:class [(<class info-row-item-style (:right-align-last? opts))
+                              (:class row-options)]})
          [typography/SectionHeading label]
-         [:p data]]))]))
+         [:div data]]))]))
 
 (defn column-with-space-between [space-between & children]
   (let [cls (<class common-styles/padding-bottom space-between)]
@@ -450,3 +455,29 @@
                     (<class common-styles/margin-bottom 0.5)]}
       icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]
      content]))
+
+(defn error-tooltip
+  "Wrap component in an error tooltip. When component is hovered, the
+  error message is displayed.
+
+  If msg is nil, the component is returned as is.
+  Otherwise msg must be a map containig :title and :content
+  for the error message."
+  [{:keys [title content] :as msg} component]
+  (r/with-let [hover? (r/atom false)
+               anchor-el (r/atom nil)
+               set-anchor-el! #(reset! anchor-el %)
+               enter! #(reset! hover? true)
+               leave! #(reset! hover? false)]
+    (if (nil? msg)
+      component
+      [:div {:on-mouse-enter enter!
+             :on-mouse-leave leave!
+             :on-click enter!
+             :ref set-anchor-el!}
+       component
+       [Popper {:open @hover?
+                :anchor-el @anchor-el}
+        [info-box {:variant :error
+                   :title title
+                   :content content}]]])))

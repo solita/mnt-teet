@@ -1,18 +1,18 @@
 (ns teet.ui.rich-text-editor
-  (:require [reagent.core :as r]
-            [herb.core :refer [<class]]
-            ["draft-js" :as draft-js]
+  (:require ["draft-js" :as draft-js]
             ["draft-js-export-markdown" :as export-markdown]
             ["draft-js-import-markdown" :as import-markdown]
             ["react" :as react]
             [alandipert.storage-atom :refer [local-storage]]
+            [clojure.string :as cljstr]
+            [herb.core :refer [<class]]
+            [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.util :as util]
             [teet.ui.buttons :as buttons]
-            [teet.ui.material-ui :refer [Divider Link]]
             [teet.ui.common :as common]
-            [teet.util.string :as string]
-            [clojure.string :as cljstr])
+            [teet.ui.material-ui :refer [Divider]]
+            [teet.ui.util :as util]
+            [teet.util.string :as string])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -93,9 +93,9 @@
 (defn link-comp
   [{:keys [children decoratedText]}]
   (js>
-    [Link {:href decoratedText
-           :target "_blank"
-           :rel "noopener noreferrer"}
+    [common/Link {:href decoratedText
+                  :target "_blank"
+                  :rel "noopener noreferrer"}
      children]))
 
 (defn findLinkEntities

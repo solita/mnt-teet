@@ -77,10 +77,11 @@
      :margin-top "1.5rem"
      :padding-bottom "1rem"})))
 
-(defn form-footer [{:keys [delete cancel validate disabled?]}]
+(defn form-footer [{:keys [delete delete-message cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
      [buttons/delete-button-with-confirm {:action delete
+                                          :modal-text delete-message
                                           :id "delete-button"}
       (tr [:buttons :delete])])
    [:div {:style {:margin-left :auto}}
@@ -219,35 +220,36 @@
                            field-info
                            {:attribute field-info})]
     (r/create-class
-     {:component-did-mount
-      (fn [_]
-        (swap! current-fields assoc attribute field-info))
-      :component-will-unmount
-      (fn [_]
-        (swap! current-fields dissoc attribute))
-      :reagent-render
-      (fn [_ field {:keys [update-attribute-fn value]}]
-        (let [value (attribute-value value attribute
-                                     (default-value (first field)))
-              error-text (and validate-field
-                              (validate-field value))
-              error? (boolean
-                      (or error-text
-                          (some @invalid-attributes
-                                (if (vector? attribute)
-                                  attribute
-                                  [attribute]))))
-              opts {:value value
-                    :on-change (r/partial update-attribute-fn attribute)
-                    :error error?
-                    :error-text error-text
-                    :required (required-field? attribute required-fields)}]
-          (add-validation
-           (update field 1 (fn [{label :label :as input-opts}]
-                             (merge input-opts opts
-                                    (when-not label
-                                      {:label (tr [:fields attribute])}))))
-           (partial validate-attribute-fn invalid-attributes validate-field) attribute)))})))
+      {:component-did-mount
+       (fn [_]
+         (swap! current-fields assoc attribute field-info))
+       :component-will-unmount
+       (fn [_]
+         (swap! current-fields dissoc attribute))
+       :reagent-render
+       (fn [_ field {:keys [update-attribute-fn value]}]
+         (let [value (attribute-value value attribute
+                                      (default-value (first field)))
+               error-text (and validate-field
+                               (validate-field value))
+               error? (boolean
+                        (or error-text
+                            (some @invalid-attributes
+                                  (if (vector? attribute)
+                                    attribute
+                                    [attribute]))))
+               opts {:value value
+                     :on-change (r/partial update-attribute-fn attribute)
+                     :error error?
+                     :error-text error-text
+                     :required (required-field? attribute required-fields)}]
+           [:div {:data-form-attribute (str attribute)}
+            (add-validation
+                   (update field 1 (fn [{label :label :as input-opts}]
+                                     (merge input-opts opts
+                                            (when-not label
+                                              {:label (tr [:fields attribute])}))))
+                   (partial validate-attribute-fn invalid-attributes validate-field) attribute)]))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute
@@ -365,6 +367,7 @@
            spec            ;; Spec for validating form fields
            id              ;; Id for the form element
            delete          ;; Delete function
+           delete-message  ;; message shown in delete confirmation dialog
            ]}
    & children]
   (r/with-let [invalid-attributes (r/atom #{})
@@ -399,7 +402,8 @@
                                           (fn [value]
                                             (validate value @current-fields)))
                              :delete (when delete           ;;TODO inconsistent with save-event and cancel event
-                                       #(e! delete))}}]
+                                       #(e! delete))
+                             :delete-message delete-message}}]
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
                            :display :flex
@@ -476,9 +480,7 @@
     :or {max-width "md"}}]
   (r/with-let [open-atom (r/atom (or open? false))
                form-atom (r/atom (or form-value {}))
-               close #(do
-                        (println "close form modal fn")
-                        (reset! open-atom false))
+               close #(reset! open-atom false)
                close-event (reset-atom-event open-atom false)]
     [:<>
      [panels/modal {:max-width max-width

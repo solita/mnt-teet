@@ -199,3 +199,22 @@
           ;; Run all verify-fns to check state after restore
           (doseq [verify @verify-fns]
             (verify)))))))
+
+
+;; use from repl as in (restore-dev-backup-to-local "/tmp/teet-dev-backup-2020-12-15.edn.zip")
+;; - after calling this, note the printed db name, and put that in your config.edn & restart
+(defn restore-dev-backup-to-local
+  [backup-file-path]
+  (let [with-empty-db (tu/with-db {:migrate? false
+                                   :mock-users? false
+                                   :skip-delete? true
+                                   :data-fixtures []})
+        verify-fns (atom nil)]        
+
+    (with-empty-db
+      (fn []
+        (assert (empty? (d/q '[:find ?p :where [?p :db/ident :thk.project/id]]
+                             (tu/db)))
+                "Database is empty before restore")
+        (#'backup-ion/restore-tx-file {:conn (tu/connection)
+                                       :file (clojure.java.io/file backup-file-path)})))))

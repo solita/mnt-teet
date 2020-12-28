@@ -9,7 +9,6 @@
             [teet.util.date :as du]
             [teet.util.string :as string]
             [teet.link.link-db :as link-db]
-            [teet.link.link-model :as link-model]
             [teet.util.datomic :as datomic-util]
             [teet.integration.postgrest :as postgrest]
             [teet.environment :as environment]

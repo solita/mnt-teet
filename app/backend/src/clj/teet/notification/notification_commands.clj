@@ -1,7 +1,6 @@
 (ns teet.notification.notification-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
-            [teet.notification.notification-db :as notification-db]
-            [datomic.client.api :as d]))
+            [teet.notification.notification-db :as notification-db]))
 
 (defcommand :notification/acknowledge
   {:doc "Acknowledge a notification"

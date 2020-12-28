@@ -47,6 +47,11 @@
      (:db/id user)))
 
 (defn authorized?
+  #?(:cljs
+     ([{:keys [user functionality] :as opts}]
+      (authorized? (or user @app-state/user)
+                   functionality
+                   opts)))
   ([user functionality]
    (authorized? user functionality nil))
   ([user functionality {:keys [access entity project-id link]
@@ -99,16 +104,26 @@
           (let [permissions @app-state/action-permissions
                 user @app-state/user
                 action-permissions (action permissions)]
-            (when (and permissions
-                       user
-                       action-permissions)
-              (when (every? (fn [[permission {:keys [link]}]]
-                              (authorized? @app-state/user permission (merge {:project-id project-id
-                                                                              :entity entity}
+            (if (and permissions user action-permissions)
+              (if (every? (fn [[permission {:keys [link]}]]
+                            (authorized? @app-state/user permission
+                                         (merge {:project-id project-id
+                                                 :entity entity}
+                                                (when link {:link link}))))
+                          (action permissions))
+                (do
+                  (log/debug "Action " action " authorized for " user)
+                  component)
+                (do
+                  (log/debug "Action " action " NOT authorized for " user)
+                  nil))
 
-                                                                             (when link {:link link}))))
-                            (action permissions))
-                component))))])))
+              (do
+                (log/debug "Can't determine permissions to check authorization"
+                           ", action: " action
+                           ", action-permissions: " action-permissions
+                           ", user: " user)
+                nil))))])))
 
 (defn authorization-rule-names []
   (into #{} (keys @authorization-rules)))

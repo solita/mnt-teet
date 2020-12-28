@@ -3,9 +3,7 @@
   (:require [clojure.walk :as walk]
             [datomic.client.api :as d]
             [teet.link.link-model :as link-model]
-            [teet.log :as log]
-            [teet.integration.postgrest :as postgrest]
-            [teet.environment :as environment]))
+            [teet.log :as log]))
 
 (defmulti link-from
   "Check permissions and preconditions for linking from an entity.
@@ -78,29 +76,47 @@
        x))
    form))
 
+(defn- link-info-for-entity
+  [db entity-id return-links-to-deleted?]
+  (mapv first (d/q (into '[:find (pull ?l [:db/id :link/to :link/external-id :link/type
+                                           :meta/created-at])
+                           :in $ ?e
+                           :where
+                           [?l :link/from ?e]]
+                         (when-not return-links-to-deleted?
+                           '[(or-join [?l]
+                                      [?l :link/external-id _]
+                                      (and [?l :link/to ?target]
+                                           [(missing? $ ?target :meta/deleted?)]))]))
+                   db entity-id)))
+
 (defn fetch-links
   "Fetch links for all entities in form that match fetch-links-pred?.
   Associates :link/_from with list of linked entities and expands the
   linked to entities."
-  [db user valid-external-ids-by-type fetch-links-pred? form]
-  (walk/prewalk
-   (fn [x]
-     (if (and (map? x)
-              (contains? x :db/id)
-              (fetch-links-pred? x))
-       (assoc x :link/_from
-              (expand-links
-               db user
-               valid-external-ids-by-type
-               (sort-by :meta/created-at
-                        (mapv first
-                              (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type
-                                                     :meta/created-at])
-                                     :where [?l :link/from ?e]
-                                     :in $ ?e]
-                                   db (:db/id x))))))
-       x))
-   form))
+  ([db user valid-external-ids-by-type fetch-links-pred? form]
+   (fetch-links {:db db
+                 :user user
+                 :valid-external-ids-by-type valid-external-ids-by-type
+                 :fetch-links-pred? fetch-links-pred?}
+                form))
+  ([{:keys [db user valid-external-ids-by-type fetch-links-pred? return-links-to-deleted?]
+     :or {valid-external-ids-by-type (constantly #{})
+          return-links-to-deleted? true}}
+    form]
+   (walk/prewalk
+     (fn [x]
+       (if (and (map? x)
+                (contains? x :db/id)
+                (fetch-links-pred? x))
+         (assoc x :link/_from
+                  (expand-links
+                    db user
+                    valid-external-ids-by-type
+                    (sort-by :meta/created-at
+                             (link-info-for-entity db (:db/id x) return-links-to-deleted?))))
+         x))
+     form)))
 
 (defn is-link?
   "Check that the given link has the type and from/to entities."

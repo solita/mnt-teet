@@ -1,7 +1,160 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
             [herb.core :refer [defglobal]]
-            [garden.color :refer [darken]]))
+            [garden.color :refer [darken]]
+            [garden.stylesheet :refer [at-media]]))
+
+;; Typography styles
+(def h1-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "300"
+   :font-size "2rem"
+   :line-height "3rem"})
+
+(def h2-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.75rem"
+   :line-height "2.625rem"})
+
+(def h3-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.5rem"
+   :line-height "2.25rem"})
+
+(def h4-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.25rem"
+   :line-height "1.875rem"})
+
+(def h5-desktop
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.125rem"
+   :line-height "1.6875rem"})
+
+(def body-1-bold
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "1rem" ; 1rem
+   :line-height "1.5rem"}) ; 1.5rem
+
+(def body-1-regular
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1rem"
+   :line-height "1.5rem"})
+
+(def link
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :color "#005AA3"})
+
+(def link-1
+  (merge link
+         {:font-size "1rem"
+          :line-height "1.5rem"}))
+
+(def link-2
+  (merge link
+         {:font-size "0.875rem"
+          :line-height "1.3125rem"}))
+
+(def body-2-bold
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
+
+(def body-2
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"})
+
+(def body-3-bold
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "0.75rem"
+   :line-height "1.125rem"})
+
+(def body-3
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.75rem"
+   :line-height "1.125rem"})
+
+(def subtitle-1
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "bold"
+   :font-size "1rem"
+   :line-height "1.5rem"
+   :text-transform "uppercase"})
+
+(def subtitle-2
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "0.875rem"
+   :line-height "1.3125rem"
+   :text-transform "uppercase"})
+
+(def h1-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "300"
+   :font-size "1.5rem"
+   :line-height "2.25rem"})
+
+(def h2-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.375rem"
+   :line-height "1.875rem"})
+
+(def h3-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.25rem"
+   :line-height "1.875rem"})
+
+(def h4-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.1875rem"
+   :line-height "1.75rem"})
+
+(def h5-mobile
+  {:font-family "Roboto"
+   :font-style "normal"
+   :font-weight "normal"
+   :font-size "1.125rem"
+   :line-height "1.6875rem"})
+
+;; Legacy style
+(def section-heading-style
+  {:fontWeight    700
+   :fontSize      "1rem"
+   :lineHeight    1.375
+   :letterSpacing "0.25px"})
 
 (defn gray-light-border
   []
@@ -74,29 +227,56 @@
    :border (str "1px solid " theme-colors/gray-lighter)
    :box-shadow "none"})
 
+(def ^:private mobile-cutoff "80rem")
+
 (defglobal global
-           [:body :html {:height "100vh"}]
-           [:p {:margin 0}]
-           ;; Richtexteditor styling
-           [:h1 {:margin-top 0}]
-           ;;
-           [:#teet-frontend {:height "100%"}]
-           [:.mention
-            [:textarea {:border :none}]
-            [:.comment-textarea__control {:background-color theme-colors/white
-                                          :border (str "1px solid " theme-colors/gray-light)}]]
-           [:.comment-textarea__highlighter {:padding "10px"
-                                             :border "1px solid transparent"}]
-           [:.comment-textarea__input {:padding "10px"}]
-           [:.comment-textarea__suggestions__list {:background-color theme-colors/white
-                                                   :border (str "1px solid " theme-colors/gray-light)
-                                                   :font-size "14px"
-                                                   :overflow :auto}]
-           [:.comment-textarea__suggestions__item {:padding "5px 15px"
-                                                    :border-bottom (str "1px solid " theme-colors/gray-light)}]
-           [:.comment-textarea__suggestions__item--focused {:background-color theme-colors/blue-lightest}]
-           [:input :select :textarea :button {:font-family :inherit}]
-           ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
+  ;; media queries
+  [:body :html (merge body-1-regular {:height "100vh"})]
+  [:p {:margin 0}]
+  [:p.paragraph {:margin-bottom "1rem"}]
+  [:.body1-bold body-1-bold]
+  [:.body2 body-2]
+  [:.body2-bold body-2-bold]
+  [:.body3 body-3]
+  [:.body3-bold body-3-bold]
+  [:.subtitle1 subtitle-1]
+  [:.subtitle2 subtitle-2]
+
+  [:h1 (merge h1-desktop {:margin 0})]
+  [:h2 (merge h2-desktop {:margin 0})]
+  [:h3 (merge h3-desktop {:margin 0})]
+  [:h4 (merge h4-desktop {:margin 0})]
+  [:h5 (merge h5-desktop {:margin 0})]
+  [:h6 (merge section-heading-style {:margin 0})]
+
+  (at-media {:screen true
+             :max-width mobile-cutoff}
+            [:h1 h1-mobile]
+            [:h2 h2-mobile]
+            [:h3 h3-mobile]
+            [:h4 h4-mobile]
+            [:h5 h5-mobile])
+
+  [:a link-1]
+  [:a.link2 link-2]
+  [:a:hover {:text-decoration "none"}]
+  [:#teet-frontend {:height "100%"}]
+  [:.mention
+   [:textarea {:border :none}]
+   [:.comment-textarea__control {:background-color theme-colors/white
+                                 :border (str "1px solid " theme-colors/gray-light)}]]
+  [:.comment-textarea__highlighter {:padding "10px"
+                                    :border "1px solid transparent"}]
+  [:.comment-textarea__input {:padding "10px"}]
+  [:.comment-textarea__suggestions__list {:background-color theme-colors/white
+                                          :border (str "1px solid " theme-colors/gray-light)
+                                          :font-size "14px"
+                                          :overflow :auto}]
+  [:.comment-textarea__suggestions__item {:padding "5px 15px"
+                                          :border-bottom (str "1px solid " theme-colors/gray-light)}]
+  [:.comment-textarea__suggestions__item--focused {:background-color theme-colors/blue-lightest}]
+  [:input :select :textarea :button {:font-family :inherit}]
+  ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
 
 (defn header-with-actions []
   {:justify-content :space-between

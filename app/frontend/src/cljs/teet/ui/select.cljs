@@ -33,7 +33,7 @@
    :border (if error
              (str "1px solid " theme-colors/error)
              (str "1px solid " theme-colors/gray-light))
-   :padding "10px 13px"
+   :padding "10px 30px 10px 13px"
    :width "100%"
    :cursor :pointer
    :max-height "41px"
@@ -72,7 +72,7 @@
         :name name
         :class (<class primary-select-style error)
         :required (boolean required)
-        :id id
+        :id (str "links-type-select" id)
         :on-change (fn [e]
                      (change-value e))}
        (when show-empty-selection?

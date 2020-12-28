@@ -1,12 +1,15 @@
 context('Login', () => {
     beforeEach(() => {
-      cy.visit("")
+        cy.visit("")
+
+        // wait for initial rendering
+        cy.get("header", {timeout: 30000})
     })
 
     it("dummy login as benjamin boss should work", () => {
 
         // let's make sure we're using the language we're asserting in?
-        cy.get("#language-select").select("ET")
+        cy.selectLanguage("ET")
 
         cy.get("#password-textfield").type(Cypress.env("SITE_PASSWORD"))
         cy.get("button").contains("Login as Benjamin Boss").click()

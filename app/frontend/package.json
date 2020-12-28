@@ -17,6 +17,6 @@
     "proj4": "^2.5.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-mentions": "^3.3.1"
+    "react-mentions": "^4.0.2"
   }
 }

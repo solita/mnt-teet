@@ -6,7 +6,8 @@
                :cljs [cljs-time.coerce :as tc])
             [clojure.spec.alpha :as s]
             [teet.util.datomic :as du]
-            [teet.util.spec :as su]))
+            [teet.util.spec :as su]
+            [teet.user.user-model :as user-model]))
 
 (s/def :cooperation.3rd-party/name ::su/non-empty-string)
 (s/def :cooperation.3rd-party/id-code string?)
@@ -31,6 +32,19 @@
           :opt [:cooperation.application/response-deadline
                 :cooperation.application/comment]))
 
+(s/def :cooperation.response/status ::du/enum)
+(s/def :cooperation.response/date inst?)
+(s/def :cooperation.response/valid-until inst?)
+
+#_(s/def :cooperation.response/valid-months (s/and integer? #(< % 120)))
+;; ^ commented out because touched empty form fields have value "" and not nil
+
+(s/def ::response-form
+  (s/keys :req [:cooperation.response/status
+                :cooperation.response/date]
+          :opt [:cooperation.response/valid-months
+                :cooperation.response/valid-until
+                :cooperation.response/content]))
 
 (defn valid-until
   "Calculate response valid-until date based on date and valid months."
@@ -44,7 +58,7 @@
   "Update valid-until value for cooperation response."
   [response]
   (if (and (contains? response :cooperation.response/date)
-           (contains? response :cooperation.response/valid-months))
+           (number? (:cooperation.response/valid-months response)))
     (assoc response :cooperation.response/valid-until (valid-until response))
     (dissoc response :cooperation.response/valid-until)))
 
@@ -63,11 +77,37 @@
    :cooperation.application/type
    :cooperation.application/date
    {:cooperation.application/activity
-    [:activity/name {:activity/manager
+    [:db/id
+     :activity/name {:activity/manager
                      [:user/given-name :user/family-name]}]}
    :cooperation.application/response-type
    :cooperation.application/response-deadline
    :cooperation.application/comment
+   {:meta/creator user-model/user-display-attributes}
    {:cooperation.application/response
-    [:cooperation.response/date
-     :cooperation.response/valid-until]}])
+    [:db/id
+     :cooperation.response/date
+     :cooperation.response/status
+     :cooperation.response/content
+     :cooperation.response/valid-until
+     :cooperation.response/valid-months
+     {:meta/creator user-model/user-display-attributes}]}
+   {:cooperation.application/opinion
+    [:db/id
+     :cooperation.opinion/comment
+     :cooperation.opinion/status
+     {:meta/creator user-model/user-display-attributes}
+     {:meta/modifier user-model/user-display-attributes}
+     :meta/created-at
+     :meta/modified-at]}])
+
+(def response-application-keys
+  [:db/id
+   :cooperation.response/valid-months
+   :cooperation.response/valid-until
+   :cooperation.response/date
+   :cooperation.response/content
+   :cooperation.response/status])
+
+(defn editable? [application]
+  (not (contains? application :cooperation.application/opinion)))

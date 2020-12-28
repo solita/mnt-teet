@@ -11,7 +11,9 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             teet.file.file-tx
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.project.task-model :as task-model]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -99,6 +101,11 @@
    :project-id nil
    :authorization {}}
   (let [previous-version (:file/previous-version (du/entity db id))
+        previous-links (when previous-version
+                         (map first (d/q '[:find ?l
+                                           :where [?l :link/to ?id]
+                                           :in $ ?id]
+                                         db (:db/id previous-version))))
         file-id (when previous-version
                   (:file/id previous-version))
         res (tx [{:db/id id
@@ -108,7 +115,12 @@
                 (when file-id
                   ;; If moving :file/id from previous version, retract it from
                   ;; previous file entity
-                  [[:db/retract (:db/id previous-version) :file/id file-id]]))]
+                  [[:db/retract (:db/id previous-version) :file/id file-id]])
+                ;; Move links to point to the new version the file
+                (when previous-links
+                  (for [link previous-links]
+                    {:db/id link
+                     :link/to id})))]
     (d/pull (:db-after res) '[:db/id :file/id] id)))
 
 (defn file-belong-to-task?
@@ -131,21 +143,32 @@
       (let [old-file (find-previous-version db task-id previous-version-id
                                             [:file/name :file/document-group])
             version (-> old-file :file/version inc)
+            ;; If filetype changes we need to change the extension in the filename, but keep the original name
+            file-name-with-extension (str
+                                       (:description
+                                         (filename-metadata/name->description-and-extension
+                                           (:file/name old-file)))
+                                       "."
+                                       (:extension
+                                         (filename-metadata/name->description-and-extension
+                                           (:file/name file))))
+
             key (new-file-key file)
             res (tx [(list 'teet.file.file-tx/upload-file-to-task
                            {:db/id task-id
                             :task/files
                             [(cu/without-nils
-                              (merge
-                               old-file
-                               (select-keys file [:file/size])
-                               {:db/id "new-file"
-                                :file/s3-key key
-                                :file/original-name (:file/name file)
-                                :file/version version
-                                :file/previous-version (:db/id old-file)
-                                :file/status :file.status/draft}
-                               (creation-meta user)))]})])
+                               (merge
+                                 old-file
+                                 (select-keys file [:file/size])
+                                 {:db/id "new-file"
+                                  :file/s3-key key
+                                  :file/original-name (:file/name file)
+                                  :file/version version
+                                  :file/previous-version (:db/id old-file)
+                                  :file/status :file.status/draft
+                                  :file/name file-name-with-extension}
+                                 (creation-meta user)))]})])
             file-id (get-in res [:tempids "new-file"])]
         (try
           {:url (file-storage/upload-url key)
@@ -163,7 +186,9 @@
    :project-id (project-db/task-project-id db task-id)
    :pre [^{:error :invalid-previous-file}
          (or (nil? previous-version-id)
-             (file-belong-to-task? db task-id previous-version-id))]
+             (file-belong-to-task? db task-id previous-version-id))
+         ^{:error :invalid-task-status}
+         (task-model/can-submit? (d/pull db [:task/status] task-id))]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
   (or (file-model/validate-file file)

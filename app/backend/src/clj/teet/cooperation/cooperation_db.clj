@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [teet.cooperation.cooperation-model :as cooperation-model]
             [clojure.string :as str]
-            [teet.util.date :as date]))
+            [teet.util.date :as date]
+            [teet.util.datomic :as du]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -80,6 +81,21 @@
                   db third-party-id application-id
                   cooperation-model/application-overview-attrs))]}))
 
+(defn third-party-application-task
+  [db third-party-id application-id]
+  (ffirst
+   (d/q '[:find (pull ?task [*]) ;; todo: add some param definitions
+          :in $ ?third-part ?application-id
+          :where
+          [?third-part :cooperation.3rd-party/applications ?applications]
+          [(missing? $ ?applications :meta/deleted?)]
+          [?applications :cooperation.application/activity ?activities]
+          [(missing? $ ?activities :meta/deleted?)]
+          [?activities :activity/tasks ?task]
+          [(missing? $ ?task :meta/deleted?)]
+          [?task :task/type :task.type/no-objection-coordination]]
+        db third-party-id application-id)))
+
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
   "Given project-id and an application with a date, return an activities id that is on going during the dates"
@@ -104,3 +120,12 @@
                               :activity.name/land-acquisition))
                activity)))
          :db/id)))
+
+(defn application-project-id [db application-id]
+  (get-in (du/entity db application-id)
+          [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
+
+(defn response-project-id [db response-id]
+  ;(def *args [db response-id])
+  (get-in (du/entity db response-id)
+          [:cooperation.application/_response 0 :cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))

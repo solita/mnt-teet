@@ -9,23 +9,24 @@
             [teet.file.file-model :as file-model]
             [clojure.string :as str]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.file.filename-metadata :as filename-metadata]))
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.link.link-controller :as link-controller]))
 
-(defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
+(defrecord UploadFiles [files project-id task-id on-success progress-increment file-results linked-from]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
-(defrecord UploadFileUrlReceived [file-data file document-id url on-success])
-(defrecord UploadNewVersion [file new-version])
+(defrecord UploadFileUrlReceived [file-data file document-id url on-success linked-from])
+(defrecord UploadNewVersion [file new-version task-id])
 (defrecord UploadSuccess [file-id])
 (defrecord AfterUploadRefresh [])
 
 (defrecord DeleteFile [file-id])
 
-(defrecord AddFilesToTask [files-form task on-success])
+(defrecord AddFilesToTask [files-form task on-success linked-from])
 (defrecord NavigateToFile [file])
 
 (defrecord DeleteAttachment [on-success-event file-id])
 
-(defrecord MarkUploadComplete [file-id on-success])
+(defrecord MarkUploadComplete [file-id on-success linked-from])
 (defrecord MarkUploadCompleteResponse [on-success response])
 
 (defrecord UpdateFileSeen [file-id])
@@ -64,7 +65,7 @@
            :success-message success-message}))
 
   AddFilesToTask
-  (process-event [{:keys [files-form task on-success]} app]
+  (process-event [{:keys [files-form task on-success linked-from]} app]
     (let [files (mapv (fn [file]
                         (merge file
 
@@ -78,10 +79,12 @@
           task-id (:db/id task)]
       (t/fx app
             (fn [e!]
-              (e! (map->UploadFiles {:files files
-                                     :task-id task-id
-                                     :progress-increment (int (/ 100 (count files)))
-                                     :on-success on-success}))))))
+              (e! (map->UploadFiles (merge {:files files
+                                            :task-id task-id
+                                            :progress-increment (int (/ 100 (count files)))
+                                            :on-success on-success}
+                                           (when linked-from
+                                             {:linked-from linked-from}))))))))
 
 
   UploadSuccess
@@ -101,12 +104,12 @@
           common-controller/refresh-fx))
 
   UploadNewVersion
-  (process-event [{:keys [file new-version]} app]
-    (log/info "STEP: UploadNewVersion file:" file ", new-version: " new-version)
+  (process-event [{:keys [file new-version task-id]} app]
+    (log/info "STEP: UploadNewVersion file:" file ", new-version: " new-version ", task-id: " task-id)
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/replace
-           :payload {:task-id (common-controller/page-state app :navigation :task)
+           :payload {:task-id task-id
                      :file (merge (file-model/file-info (:file-object new-version))
                                   (select-keys new-version
                                                [:file/description
@@ -124,7 +127,7 @@
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
                           attachment? attach-to
-                          file-results]
+                          file-results linked-from]
                    :as event} app]
     (log/info "FILES: " files)
     ;; Validate files
@@ -165,6 +168,7 @@
                                  (map->UploadFileUrlReceived
                                   (merge result
                                          {:file-data (:file-object file)
+                                          :linked-from linked-from
                                           :on-success (update event :files rest)})))}))
         (do
           (log/info "No more files to upload. Return on-success event: " on-success)
@@ -175,7 +179,7 @@
                     (e! evt))))))))
 
   UploadFileUrlReceived
-  (process-event [{:keys [file file-data document-id url on-success] :as args} app]
+  (process-event [{:keys [file file-data document-id url on-success linked-from] :as args} app]
     (t/fx (assoc-in app [:task (get-in app [:params :task]) :new-document :progress]
                     [:upload file])
           (fn [e!]
@@ -188,7 +192,8 @@
                                                        (update on-success
                                                                :file-results
                                                                (fnil conj [])
-                                                               file))))
+                                                               file)
+                                                       linked-from)))
                            ;; FIXME: notify somehow
                            (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))
                 (.catch (fn [error]
@@ -198,8 +203,12 @@
 
 
   MarkUploadComplete
-  (process-event [{:keys [file-id on-success]} app]
+  (process-event [{:keys [file-id on-success linked-from]} app]
     (t/fx app
+          (when linked-from
+            (fn [e!]
+              (e! (link-controller/map->AddLink
+                    {:from linked-from :to file-id :type :file}))))
           {:tuck.effect/type :command!
            :command :file/upload-complete
            :success-message (tr [:file :upload-success])

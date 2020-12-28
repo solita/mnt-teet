@@ -15,13 +15,20 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
+            [teet.ui.material-ui :refer [Grid Divider]]
             [teet.ui.select :as select]
             [teet.ui.text-field :as text-field]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.util.collection :as cu]
+            [clojure.string :as str]
+            [teet.task.task-view :as task-view]
+            [teet.link.link-view :as link-view]
+            [teet.ui.authorization-context :as authorization-context]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -79,60 +86,93 @@
 
 (defn response-status
   [response]
-  (let [color (case (:cooperation.response/status response)
+  (let [color (case (or (get-in response [:cooperation.response/status :db/ident]) (:cooperation.response/status response))
                 :cooperation.response.status/no-objection theme-colors/success
                 :cooperation.response.status/no-objection-with-terms theme-colors/warning
                 :cooperation.response.status/objection theme-colors/error
                 :cooperation.response.status/no-response theme-colors/error
                 theme-colors/black-coral-1)]
-    [color-and-status color (if response
-                              (tr-enum (:cooperation.response/status response))
-                              (tr [:cooperation :applied]))]))
+    [:div
+     [color-and-status color (if response
+                               (tr-enum (:cooperation.response/status response))
+                               (tr [:cooperation :applied]))]]))
 
-(defn position-status
-  [position]
-  (let [indicator-color (case (:cooperation.position/decision position)
-                          :cooperation.position.decision/agreed theme-colors/success
-                          :cooperation.position.decision/rejected theme-colors/error
-                          :cooperation.position.decision/partially-rejected theme-colors/warning
-                          theme-colors/black-coral-1)]
-    [color-and-status indicator-color (if position
-                                        (tr-enum (:cooperation.position/decision position))
-                                        (tr [:cooperation :unanswered]))]))
+(defn- opinion-status [status]
+  (let [status (or status :cooperation.opinion.status/unanswered)]
+    [color-and-status
+     (cooperation-style/opinion-status-color status)
+     (tr-enum status)]))
 
-(defn cooperation-position
-  [{:cooperation.application/keys [position]}]
+
+(defn- opinion-view
+  ([opinion] (opinion-view {} opinion))
+  ([{:keys [edit-button]}
+    {:cooperation.application/keys [opinion]
+     application-creator :meta/creator}]
+   (let [{:meta/keys [creator modifier created-at modified-at]
+          comment :cooperation.opinion/comment} opinion]
+     [:<>
+      [:div {:class (<class common-styles/flex-row)}
+       [:div {:class (<class common-styles/flex-table-column-style 20)}
+        (tr [:cooperation :competent-authority-name])]
+       [:div {:class (<class common-styles/flex-table-column-style 30)}
+        ;; Show last modifier or creator of the opinion if present
+        ;; otherwise show creator of the application
+        (user-model/user-name (or modifier creator application-creator))]
+       [:div {:class (<class common-styles/flex-table-column-style 50)
+              ;; PENDING: somewhat ugly styling
+              :style {:flex-direction :column
+                      :align-self :start
+                      :place-items :flex-start}}
+        [:div {:class (<class common-styles/flex-row)
+               :style {:width "100%"
+                       :justify-content :space-between}}
+         (opinion-status (:cooperation.opinion/status opinion))
+         edit-button]
+        (when-let [date (or modified-at created-at)]
+          [:div
+           [typography/BoldGreyText {:style {:display :inline-block}}
+            (str (tr [:common :date]) ":")]
+           (str " " (format/date date))])]]
+      (when comment
+        [:div [rich-text-editor/display-markdown comment]])])))
+
+(defn cooperation-opinion
+  [{:cooperation.application/keys [opinion]}]
   [common/basic-information-row
    {:right-align-last? false}
    [[(tr [:cooperation :conclusion])
      ;; colored circle based on status
-     [position-status position]]
-    (when-let [date (:meta/created-at position)]
+     [opinion-status (:cooperation.opinion/status opinion)]]
+    (when-let [date (:meta/created-at opinion)]
       [(tr [:common :date])
        date])]])
 
 (defn- application-information [{:cooperation.application/keys [response] :as application}]
-  (if response
-    (let [{:cooperation.response/keys [status date valid-until]} response]
-      [common/basic-information-row
-       {:right-align-last? false}
-       [[(tr [:cooperation :response-of-third-party])
-         ;; colored circle based on status
-         (tr-enum status)]
-        [(tr [:fields :cooperation.response/date])
-         (format/date date)]
-        [(tr [:fields :cooperation.response/valid-until])
-         (format/date valid-until) ]]])
-    (let [{:cooperation.application/keys [date response-deadline]} application]
-      [common/basic-information-row
-       {:right-align-last? false}
-       [[(tr [:cooperation :response-of-third-party])
-         ;; colored circle based on status
-         [response-status response]]
-        [(tr [:fields :cooperation.application/date])
-         (format/date date)]
-        [(tr [:fields :cooperation.application/response-deadline])
-         (or (format/date response-deadline) (tr [:cooperation :no-deadline]))]]])))
+  [:div {:class (common-styles/margin-bottom 1)}
+   (if response
+     (let [{:cooperation.response/keys [date valid-until]} response]
+       [common/basic-information-row
+        {:right-align-last? false}
+        [[(tr [:cooperation :response-of-third-party])
+          ;; colored circle based on status
+          [response-status response]]
+         [(tr [:fields :cooperation.response/date])
+          (format/date date)]
+         (when valid-until
+           [(tr [:fields :cooperation.response/valid-until])
+            (format/date valid-until)
+            {:data-cy-test "valid-until"}])]])
+     (let [{:cooperation.application/keys [date response-deadline]} application]
+       [common/basic-information-row
+        {:right-align-last? false}
+        [[(tr [:fields :cooperation.response/status])
+          ;; colored circle based on status
+          [response-status response]]
+         [(tr [:fields :cooperation.application/date])
+          (format/date date)]
+         [(tr [:fields :cooperation.application/response-deadline])
+          (or (format/date response-deadline) (tr [:cooperation :no-deadline]))]]]))])
 
 (defn application-list-item
   [{:keys [parent-link-comp]} {:cooperation.application/keys [activity] :as application}]
@@ -151,7 +191,7 @@
       [typography/Text {:class (<class common-styles/margin-bottom 1)}
        (tr [:cooperation :responsible-person]
            {:user-name (user-model/user-name (:activity/manager activity))})]
-      [cooperation-position application]])])
+      [opinion-view application]])])
 
 (defn- third-parties [e! project third-parties selected-third-party-name]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
@@ -160,8 +200,8 @@
     [:ul {:class (<class third-party-list)}
      (for [{id :db/id
             :cooperation.3rd-party/keys [name]} third-parties]
-       ^{:key (str id)}
        (let [currently-selected-third-party? (= name selected-third-party-name)]
+         ^{:key (str id)}
          [:li.project-third-party
           [url/Link {:page :cooperation-third-party
                      :class (<class common-styles/white-link-style
@@ -289,27 +329,216 @@
                              (tr [:cooperation :new-application])]}]]
        [applications third-party]]]]))
 
-(defn- application-response-form [_close-event _form-atom]
-  [:div "TODO: application response form"])
+(defn application-response-change-fn
+  [val change]
+  (-> (merge val change)
+       (update :cooperation.response/valid-months #(and (or (number? %)
+                                                            (not-empty %))
+                                                        (js/parseInt %)))
+       cu/without-empty-vals
+       cooperation-model/with-valid-until))
 
-(defn application-page [e! app {:keys [project overview third-party]}]
+(defn- application-response-form [{:keys [e! project-id application-id]} close-event form-atom]
+  (let [max-months 1200
+        min-months 0]
+    [form/form2 {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom application-response-change-fn)
+                 :cancel-event close-event
+                 :save-event #(common-controller/->SaveForm
+                                :cooperation/save-application-response
+                                {:thk.project/id project-id
+                                 :application-id application-id
+                                 :form-data (common-controller/prepare-form-data
+                                              (-> @form-atom
+                                                  (update :cooperation.response/content
+                                                          (fn [editor-state]
+                                                            (if (or (string? editor-state) (nil? editor-state))
+                                                              editor-state
+                                                              (rich-text-editor/editor-state->markdown editor-state))))))}
+                                (fn [response]
+                                  (fn [e!]
+                                    (e! (close-event))
+                                    (e! (cooperation-controller/->ResponseCreated response (boolean (:db/id @form-atom)))))))
+                 :spec ::cooperation-model/response-form}
+     [:div
+      [:div {:class (<class common-styles/gray-container-style)}
+       [Grid {:container true :spacing 3}
+        [Grid {:item true :xs 12}
+         [form/field :cooperation.response/status
+          [select/select-enum {:e! e!
+                               :attribute :cooperation.response/status}]]]
+
+        [Grid {:item true :xs 12}
+         [form/field :cooperation.response/date
+          [date-picker/date-input {}]]]
+
+        [Grid {:item true :xs 6
+               :style {:display :flex
+                       :align-items :flex-end}}
+         [form/field {:attribute :cooperation.response/valid-months
+                      :validate (fn [val]
+                                  (when (and (some? val) (not (str/blank? val)))
+                                    (let [val (js/parseInt val)]
+                                      (when (or (js/isNaN val) (>= val max-months) (>= min-months val))
+                                        true))))}
+          [text-field/TextField {:type :number
+                                 :max max-months
+                                 :min min-months}]]]
+
+        [Grid {:item true :xs 6
+               :style {:display :flex
+                       :align-items :flex-end}}
+         (when (:cooperation.response/valid-until @form-atom)
+           [form/field :cooperation.response/valid-until
+            [date-picker/date-input {:read-only? true}]])]
+        [Grid {:item true :xs 12}
+         [form/field :cooperation.response/content
+          [rich-text-editor/rich-text-field {}]]]]]
+      [form/footer2]]]))
+
+(defn application-response
+  [e! new-document files-form application project related-task]
+  (r/with-let [{:keys [upload!] :as controls} (task-view/file-upload-controls e!)]
+    (let [response (:cooperation.application/response application)
+          linked-files (:link/_from response)]
+      [:div
+       [Divider {:style {:margin "1.5rem 0"}}]
+       [:div {:class [(<class common-styles/flex-row-space-between)
+                      (<class common-styles/margin-bottom 1)]}
+        [typography/Heading2 (tr [:cooperation :response])]
+        [authorization-context/when-authorized :edit-application
+         [form/form-modal-button
+          {:max-width "sm"
+           :form-value response
+           :modal-title (tr [:cooperation :edit-response-title])
+           :form-component [application-response-form {:e! e!
+                                                       :project-id (:thk.project/id project)
+                                                       :application-id (:db/id application)}]
+           :button-component [buttons/button-secondary {:class :edit-response
+                                                        :size :small}
+                              (tr [:buttons :edit])]}]]]
+       [:div {:class (<class common-styles/margin-bottom 1)}
+        [rich-text-editor/display-markdown
+         (:cooperation.response/content response)]]
+       [task-view/task-file-upload {:e! e!
+                                    :controls controls
+                                    :task related-task
+                                    :linked-from [:cooperation.response (:db/id response)]
+                                    :activity (:cooperation.application/activity application)
+                                    :project-id (:thk.project/id project)
+                                    :drag-container-id "drag-container-id"
+                                    :new-document new-document
+                                    :files-form files-form}]
+       (authorization-context/consume
+        (fn [authz]
+          (let [can-upload? (boolean (and (some? related-task)
+                                          (:edit-application authz)))
+                error-msg (cond
+                            (nil? related-task)
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :content (tr [:cooperation :error :coordination-task-missing])}
+
+                            (not (:edit-application authz))
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :content (tr [:cooperation :error :coordination-task-status-mismatch])})]
+            (if (empty? linked-files)
+              [common/error-tooltip error-msg
+               [buttons/button-primary {:size :small
+                                        :on-click #(upload! {})
+                                        :disabled (not can-upload?)
+                                        :end-icon (r/as-element [icons/content-add])}
+                (tr [:cooperation :add-files])]]
+              [:div
+               [:div {:class (<class common-styles/header-with-actions)}
+                [typography/Heading2 (tr [:common :files])]
+                [common/error-tooltip error-msg
+                 [buttons/button-primary {:size :small
+                                          :on-click #(upload! {})
+                                          :disabled (not can-upload?)
+                                          :end-icon (r/as-element [icons/content-add])}
+                  (tr [:cooperation :add-files])]]]
+               [link-view/links
+                {:e! e!
+                 :links linked-files
+                 :editable? false
+                 :link-entity-opts {:file
+                                    {:column-widths [3 1]
+                                     :allow-replacement-opts
+                                     {:e! e!
+                                      :task related-task
+                                      :small true}}}}]]))))])))
+
+
+(defn- opinion-form [{:keys [e! application]} close-event form-atom]
+  [form/form
+   {:e! e!
+    :value @form-atom
+    :on-change-event (form/update-atom-event form-atom merge)
+    :cancel-event close-event
+    :save-event #(cooperation-controller/save-opinion-event
+                  application @form-atom close-event)}
+   ^{:attribute :cooperation.opinion/status :xs 10}
+   [select/select-enum {:e! e!
+                        :attribute :cooperation.opinion/status}]
+
+
+   ^{:attribute :cooperation.opinion/comment}
+   [rich-text-editor/rich-text-field {}]])
+
+(defn- edit-opinion [e! application button-component]
+  [authorization-context/when-authorized :save-opinion
+   [form/form-modal-button
+    {:max-width "sm"
+     :modal-title (tr [:cooperation :create-opinion-title])
+     :form-component [opinion-form {:e! e! :application application}]
+     :form-value (:cooperation.application/opinion application {})
+     :button-component button-component}]])
+
+(defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
+  [:div.application-conclusion {:style (common-styles/margin-bottom 1)}
+   [typography/Heading2 (tr [:cooperation :opinion-title])]
+   [opinion-view {:edit-button [edit-opinion e! application
+                                [buttons/button-secondary {:size "small"
+                                                           :disabled (boolean (not opinion))}
+                                 (tr [:buttons :edit])]]} application]
+   (when (not opinion)
+     [edit-opinion e! application
+      [buttons/button-primary {:class :create-opinion}
+       (tr [:cooperation :create-opinion-button])]])])
+
+(defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
-    [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
-     [cooperation-page-structure
-      e! app project overview
-      [:<>
-       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-       [typography/Heading2
-        (tr-enum (:cooperation.application/type application)) " / "
-        (tr-enum (:cooperation.application/response-type application))]
-       ;; FIXME: show activity name as subheading
-       [:br]
-       [form/form-modal-button
-        {:max-width "sm"
-         :form-component [application-response-form]
-         :button-component [buttons/button-primary {:class :enter-response}
-                            (tr [:cooperation :enter-response])]}]
-       [:br]
-       "3rd party:" (pr-str third-party)
-       [:br]
-       "application:" (pr-str application)]]]))
+    [authorization-context/with
+     {:edit-application (and (authorization-check/authorized?
+                              {:functionality :cooperation/edit-application
+                               :entity application})
+                             (cooperation-model/editable? application))
+      :save-opinion (authorization-check/authorized?
+                     {:functionality :cooperation/application-approval
+                      :entity application})}
+     [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
+      [cooperation-page-structure
+       e! app project overview
+       [:<>
+        [:div {:class (<class common-styles/margin-bottom 1)}
+         [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+         [typography/Heading2
+          (tr-enum (:cooperation.application/type application)) " / "
+          (tr-enum (:cooperation.application/response-type application))]
+         [typography/SectionHeading {:style {:text-transform :uppercase}}
+          (tr-enum (get-in application [:cooperation.application/activity :activity/name]))]]
+        [application-information application]
+        (if (:cooperation.application/response application)
+          [:<>
+           [application-response e! (:new-document app) files-form application project related-task]
+           [application-conclusion e! application project]]
+          [authorization-context/when-authorized :edit-application
+           [form/form-modal-button
+            {:max-width "sm"
+             :modal-title (tr [:cooperation :add-application-response])
+             :form-component [application-response-form {:e! e!
+                                                         :project-id (:thk.project/id project)
+                                                         :application-id (:db/id application)}]
+             :button-component [buttons/button-primary {:class :enter-response}
+                                (tr [:cooperation :enter-response])]}]])]]]]))

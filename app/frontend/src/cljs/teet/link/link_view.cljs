@@ -6,6 +6,7 @@
             [teet.localization :as localization :refer [tr tr-enum]]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
+            [teet.ui.buttons :as buttons]
             [teet.common.common-styles :as common-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :refer [mapc]]
@@ -15,15 +16,15 @@
             [teet.ui.url :as url]
             [teet.file.file-view :as file-view]))
 
-(defmulti display :link/type)
+(defmulti display (fn [_ link] (:link/type link)))
 
 (defmethod display :default
-  [link]
+  [_ link]
   [:div "Unknown link type: " (pr-str link)])
 
 
 (defmethod display :task
-  [{:link/keys [info to]}]
+  [_ {:link/keys [info to]}]
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
@@ -53,7 +54,7 @@
             :deadline (format/date estimated-end-date)})]]]))
 
 (defmethod display :cadastral-unit
-  [{:link/keys [info external-id]}]
+  [_ {:link/keys [info external-id]}]
   (let [{:keys [L_AADRESS TUNNUS]} info
         valid? (:link/valid? info)]
     [:div {:style {:display :flex
@@ -65,7 +66,8 @@
         [url/Link
          {:page :project
           :query {:tab "land"
-                  :unit-id external-id}}
+                  :unit-id external-id}
+          :target "_blank"}
          (str
            L_AADRESS
            " "
@@ -79,7 +81,7 @@
        [typography/SmallGrayText (tr [:link :land-unit-not-in-project])])]))
 
 (defmethod display :estate
-  [{:link/keys [external-id] :as link}]
+  [_ {:link/keys [external-id] :as link}]
   (let [valid? (get-in link [:link/info :link/valid?])]
     [:div {:style {:display :flex
                    :flex-direction :column
@@ -90,7 +92,8 @@
         [url/Link
          {:page :project
           :query {:tab "land"
-                  :estate-id external-id}}
+                  :estate-id external-id}
+          :target "_blank"}
          external-id]
         [:p external-id])
       [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]]
@@ -98,25 +101,29 @@
        [typography/SmallGrayText (tr [:link :no-units-in-estate-selected])])]))
 
 (defmethod display :file
-  [{file :link/info}]
-  [file-view/file-row2 {:comments-link? false
-                        :column-widths [10 1]} file])
+  [link-entity-opts {file :link/info}]
+  [file-view/file-row2 (merge {:comments-link? true
+                               :column-widths [10 1]}
+                              (when link-entity-opts
+                                link-entity-opts))
+   file])
 
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
+                     link-entity-opts
                      {id :db/id
                       :link/keys [to type] :as link}]
-  [:div {:class [(<class common-styles/flex-row-space-between)
-                 (<class common-styles/divider-border)]}
+  [:div {:class [(<class common-styles/flex-row-space-between)]}
    [:div {:style {:flex :auto
                   :min-width 0}}
-    [display link]]
+    [display (get link-entity-opts type) link]]
    (when editable?
      [:div {:style {:flex 0 :align-self :center}}
-      [IconButton
-       {:on-click #(e! (link-controller/->DeleteLink from to type id
-                                                     in-progress-atom))}
-       [icons/content-clear]]])])
+      [buttons/delete-button-with-confirm {:clear? true
+                                           :id (str "link-delete-button-" id)
+                                           :icon-position :start
+                                           :action #(e! (link-controller/->DeleteLink from to type id
+                                                                                      in-progress-atom))}]])])
 
 (def type-options [:task :file :cadastral-unit :estate])
 
@@ -148,7 +155,7 @@
 
   If editable? is true, links can be removed and added.
   Otherwise the view is read-only."
-  [{:keys [e! links from editable?]}]
+  [{:keys [e! links from editable? link-entity-opts]}]
   (r/with-let [in-progress (r/atom false)
                selected-type (r/atom (first type-options))
                change-search-value #(reset! selected-type %)
@@ -163,12 +170,13 @@
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
                                     :in-progress-atom in-progress
-                                    :editable? editable?})
+                                    :editable? editable?}
+                      link-entity-opts)
            links)
      (when (and editable? (not @in-progress))
        [:div {:style {:display :flex}}
         [:div {:style {:flex-grow 1}}
-         ^{:key (name @selected-type)} ; force remount if type changes
+         ^{:key (name @selected-type)}                      ; force remount if type changes
          [select/select-search
           {:e! e!
            :placeholder (tr [:link :search :placeholder])
@@ -192,4 +200,5 @@
                                            {:value opt :label (tr [:link :type-label opt])})
                                          type-options))
                               :on-change (fn [val]
-                                           (change-search-value (:value val)))}]]])]))
+                                           (change-search-value (:value val)))
+                              :data-item? true}]]])]))

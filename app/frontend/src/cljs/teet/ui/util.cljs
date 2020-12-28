@@ -1,5 +1,6 @@
 (ns teet.ui.util
-  "Small utilities for reagent")
+  "Small utilities for reagent"
+  (:require ["react" :as react]))
 
 (defn has-key? [component]
   (contains? (meta component) :key))
@@ -17,10 +18,19 @@
                       {:key i})))
                 children-seq)))
 
+(defn merge-props
+  "Normal merge, except :class is merged by joining with space"
+  [a b]
+  (-> a
+      (merge (dissoc b :class))
+      (update :class #(if-let [b-class (:class b)]
+                        (str (when % (str % " ")) b-class)
+                        %))))
+
 (defn make-component [component props]
   (fn [& children]
     (if (map? (first children))
-      (into [component (merge props (first children))] (rest children))
+      (into [component (merge-props props (first children))] (rest children))
       (into [component (or props {})] children))))
 
 (defn mapc
@@ -54,3 +64,27 @@
         (get-key k nil))
       (-lookup [_ k not-found]
         (get-key k not-found)))))
+
+(deftype UseStateAtom [state set-state!]
+  IAtom
+  IDeref
+  (-deref [_] state)
+
+  IReset
+  (-reset! [_ new-value]
+    (set-state! new-value))
+
+  ISwap
+  (-swap! [_ f] (set-state! (f state)))
+  (-swap! [_ f x] (set-state! (f state x)))
+  (-swap! [_ f x y] (set-state! (f state x y)))
+  (-swap! [_ f x y more] (set-state! (apply f state x y more))))
+
+(defn use-state-atom [val]
+  (let [[state set-state!] (react/useState val)]
+    (->UseStateAtom state set-state!)))
+
+(defn use-effect [effect-fn & deps]
+  (react/useEffect effect-fn (into-array deps)))
+
+(def no-cleanup (constantly nil))

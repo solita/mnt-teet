@@ -116,6 +116,46 @@
     {}
     file-ids))
 
+(defn file-metadata
+  "Return file metadata for a fetched file entity."
+  [{:file/keys [name sequence-number] :as file}]
+  (merge
+    (filename-metadata/name->description-and-extension name)
+    (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
+      {:thk.project/id p})
+    (when sequence-number
+      {:sequence-number sequence-number})
+    (when-let [dg (get-in file [:file/document-group :filename/code])]
+      {:document-group dg})
+    (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
+      {:activity act})
+    (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
+      {:task task})
+    {:part (or (some->> file :file/part :file.part/number
+                        (format "%02d"))
+               "00")}))
+
+(defn pull-file-metadata-by-id
+  "Recursively pull all information from file that is needed for determining file metadata."
+  [db file-id]
+  (d/pull db [:file/name
+              :file/sequence-number
+              {:file/document-group [:filename/code]}
+              {:task/_files [:db/id
+                             {:task/type [:filename/code]}
+                             {:activity/_tasks
+                              [{:activity/name [:filename/code]}
+                               {:thk.lifecycle/_activities
+                                [{:thk.project/_lifecycles
+                                  [:thk.project/id]}]}]}]}
+              {:file/part [:file.part/number]}] file-id))
+
+(defn file-metadata-by-id
+  "Return file metadata for a given file id."
+  [db file-id]
+  (file-metadata
+    (pull-file-metadata-by-id db file-id)))
+
 (defn file-listing-info
   "Fetch file listing info for the set of file ids, returns info for all
   files without grouping them by version."
@@ -127,10 +167,13 @@
         comment-counts-by-file
         (file-ids-with-comment-counts db file-ids user)]
 
+
     (mapv
      (comp #(merge %
                    (comment-counts-by-file (:db/id %))
-                   {:file-seen/seen-at (seen-at-by-file (:db/id %))})
+                   {:file-seen/seen-at (seen-at-by-file (:db/id %))
+                    :file/full-name (filename-metadata/metadata->filename
+                                      (file-metadata-by-id db (:db/id %)))})
            first)
      (d/q '[:find (pull ?f file-listing-attributes)
             :where
@@ -139,41 +182,6 @@
           db
           file-model/file-listing-attributes
           file-ids))))
-
-(defn file-metadata
-  "Return file metadata for a fetched file entity."
-  [{:file/keys [name sequence-number] :as file}]
-  (merge
-   (filename-metadata/name->description-and-extension name)
-   (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
-     {:thk.project/id p})
-   (when sequence-number
-     {:sequence-number sequence-number})
-   (when-let [dg (get-in file [:file/document-group :filename/code])]
-     {:document-group dg})
-   (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
-     {:activity act})
-   (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
-     {:task task})
-   {:part (or (some->> file :file/part :file.part/number
-                       (format "%02d"))
-              "00")}))
-
-(defn file-metadata-by-id
-  "Return file metadata for a given file id."
-  [db file-id]
-  (file-metadata
-   (d/pull db [:file/name
-               :file/sequence-number
-               {:file/document-group [:filename/code]}
-               {:task/_files [:db/id
-                              {:task/type [:filename/code]}
-                              {:activity/_tasks
-                               [{:activity/name [:filename/code]}
-                                {:thk.lifecycle/_activities
-                                 [{:thk.project/_lifecycles
-                                   [:thk.project/id]}]}]}]}
-               {:file/part [:file.part/number]}] file-id)))
 
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
@@ -185,7 +193,7 @@
   (let [files (file-listing-info db user file-ids)
 
         ;; Group files to first versions and next versions
-        {next-versions true
+        {next-versions  true
          first-versions false}
         (group-by (comp boolean :file/previous-version) files)
 
@@ -195,16 +203,17 @@
                                        (get-in % [:file/previous-version :db/id])) %)
                              next-versions))]
     (vec
-     (for [f first-versions
-           :let [versions (filter (complement :meta/deleted?)
-                                  (reverse
-                                   (take-while some? (iterate next-version f))))
-                 [latest-version & previous-versions] versions]
-           :when latest-version]
-       (assoc latest-version
-              :file/full-name (filename-metadata/metadata->filename
-                               (file-metadata-by-id db (:db/id latest-version)))
-              :versions previous-versions)))))
+      (sort-by :file/name
+               (for [f first-versions
+                     :let [versions (filter (complement :meta/deleted?)
+                                            (reverse
+                                              (take-while some? (iterate next-version f))))
+                           [latest-version & previous-versions] versions]
+                     :when latest-version]
+                 (assoc latest-version
+                   :file/full-name (filename-metadata/metadata->filename
+                                     (file-metadata-by-id db (:db/id latest-version)))
+                   :versions previous-versions))))))
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
   (file-listing
@@ -239,7 +248,9 @@
                               :where
                               [?project :thk.project/lifecycles ?lc]
                               [?lc :thk.lifecycle/activities ?act]
+                              [(missing? $ ?lc :meta/deleted?)]
                               [?act :activity/name ?name]
+                              [(missing? $ ?act :meta/deleted?)]
                               [?name :filename/code ?code]
                               :in $ ?project ?code]
                             db project-eid activity)))
@@ -248,6 +259,7 @@
                    (d/q '[:find ?task
                           :where
                           [?act :activity/tasks ?task]
+                          [(missing? $ ?task :meta/deleted?)]
                           [?task :task/type ?type]
                           [?type :filename/code ?code]
                           :in $ ?act ?code]
@@ -376,3 +388,4 @@
           [?p :thk.project/lifecycles ?l]
           :in $ ?uuid]
         db uuid)))
+

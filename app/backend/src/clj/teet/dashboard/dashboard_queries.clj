@@ -42,12 +42,6 @@
           :in $ ?user]
         db (user-model/user-ref user))))
 
-(defn- user-activities
-  "Fetch all activities the user is involved in."
-  [db user]
-  ;; FIXME: pull activities the user is managing
-  [])
-
 (defn user-projects
   "Fetch all projects the user is involved in.
   Returns all projects where the user is owner or manager of an activity

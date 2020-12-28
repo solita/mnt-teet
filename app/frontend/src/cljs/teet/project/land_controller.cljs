@@ -4,6 +4,7 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
+            [teet.ui.animate :as animate]
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
@@ -44,6 +45,11 @@
                                   (not (:selected? unit)))))
     cad-units))
 
+(defn cadastral-unit-dom-id [id]
+  (str "cadastral-unit-" id))
+
+(defn estate-dom-id [id]
+  (str "estate-" id))
 
 (defn unit-last-updated [unit]
   (let [timestamp-strs (-> unit
@@ -353,10 +359,19 @@
                 (assoc-in [:route :project :land/estate-info-failure] false))
             (when linked-unit
               (fn [e!]
-                (e! (->ToggleLandUnit linked-unit))))
+                (let [result (e! (->ToggleLandUnit linked-unit))]
+                  (js/setTimeout
+                    #(animate/scroll-into-view!
+                       (js/document.getElementById
+                         (cadastral-unit-dom-id (get-in app [:query :unit-id])))) 1000) result)))
             (when linked-estate
               (fn [e!]
-                (e! (->ToggleOpenEstate linked-estate)))))))
+                (let [result (e! (->ToggleOpenEstate linked-estate))]
+                  (js/setTimeout
+                    #(animate/scroll-into-view!
+                       (js/document.getElementById
+                         (estate-dom-id linked-estate))) 1000)
+                  result))))))
 
   RefreshEstateInfo
   (process-event [_ app]
