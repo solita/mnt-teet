@@ -1,1 +1,1 @@
-DROP FUNCTION teet.replace_entity_ids(TEXT);
+DROP FUNCTION IF EXISTS teet.replace_entity_ids(TEXT);

@@ -1,0 +1,1 @@
+docker run --rm -p 127.0.0.1:3000:3000 --name teetapi -e PGRST_DB_URI="postgres://teet@host.docker.internal:5432/teet" -e PGRST_DB_ANON_ROLE="teet" -e PGRST_DB_SCHEMA="teet" -e PGRST_JWT_SECRET="secret1234567890secret1234567890" postgrest/postgrest
