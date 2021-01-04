@@ -147,10 +147,11 @@
 
 (defn with-db
   ([] (with-db {}))
-  ([{:keys [data-fixtures migrate? mock-users?]
+  ([{:keys [data-fixtures migrate? mock-users? skip-delete?]
      :or {data-fixtures [:projects]
           migrate? true
-          mock-users? true} :as _opts}]
+          mock-users? true
+          skip-delete? false} :as _opts}]
    (fn with-db-fixture [f]
      (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
        (run-with-config
@@ -183,8 +184,9 @@
                                (merge current-tempids tempids))))))
                 (f)))
             (finally
-              (log/info "Deleting database " test-db-name)
-              (d/delete-database client db-name)))))))))
+              (when-not skip-delete?
+                (log/info "Deleting database " test-db-name)
+                (d/delete-database client db-name))))))))))
 
 (defn with-global-data [f]
   (binding [*global-test-data* (atom {})]
