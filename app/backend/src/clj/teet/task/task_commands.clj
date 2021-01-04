@@ -12,9 +12,6 @@
             [clojure.spec.alpha :as s]
             [teet.task.task-db :as task-db]))
 
-(defn- send-to-thk? [db task-id]
-  (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
-
 (defcommand :task/delete
   {:doc "Mark a task as deleted"
    :context {db :db
@@ -22,7 +19,7 @@
    :payload {task-id :db/id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/delete-task {}}
-   :pre [(not (send-to-thk? db task-id))]
+   :pre [(not (task-db/send-to-thk? db task-id))]
    :transact [(meta-model/deletion-tx user task-id)]})
 
 (def ^:private always-selected-keys
@@ -74,7 +71,7 @@
                              new-assignee-id)
                     {:task/status :task.status/in-progress})
                   (-> task
-                      (select-update-keys (send-to-thk? db id))
+                      (select-update-keys (task-db/send-to-thk? db id))
                       uc/without-nils)
                   (meta-model/modification-meta user))
                 (if assign?

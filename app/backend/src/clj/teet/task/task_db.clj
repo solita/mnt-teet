@@ -47,3 +47,6 @@
                    :in $ [?t ...]]
                  db task-types))
      (count task-types)))
+
+(defn send-to-thk? [db task-id]
+  (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
