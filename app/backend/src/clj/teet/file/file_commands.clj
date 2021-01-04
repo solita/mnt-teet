@@ -231,7 +231,7 @@
 (defcommand :file/delete
   {:doc "Delete file and all its versions."
    :context {:keys [user db]}
-   :payload {:keys [file-id status]}
+   :payload {:keys [file-id]}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
    :transact (vec

@@ -11,7 +11,10 @@
   the task as deleted."
   [db user task-id]
   (cond
-    ;; FIXME: check that task has no undeleted files
+    (task-db/task-has-files? db task-id)
+    (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
+                 :cognitect.anomalies/message "Task has files"
+                 :teet/error :task-has-files})
 
     :else
     [(meta-model/deletion-tx user task-id)]))

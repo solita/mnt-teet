@@ -10,7 +10,10 @@
             [teet.user.user-db :as user-db]
             [clojure.java.io :as io]
             [clojure.set :as set]
-            [teet.util.datomic :as du])
+            [teet.util.datomic :as du]
+            [teet.file.file-storage :as file-storage]
+            [clojure.string :as str]
+            [clojure.test :refer [is]])
   (:import (java.util Date)))
 
 ;; Convenient shortcuts
@@ -324,3 +327,47 @@
        :user/permissions [{:db/id                 "new-permission"
                            :permission/role       :admin
                            :permission/valid-from (Date.)}]}))
+
+(defn fake-upload
+  "Upload (or replace) file.
+  Doesn't really upload anything to S3, just invokes the backend commands."
+  ([upload-to-task-id file-info]
+   (fake-upload upload-to-task-id file-info nil))
+  ([upload-to-task-id file-info previous-version-id]
+   (with-redefs [file-storage/upload-url (fn [name]
+                                           (str "UPLOAD:" name))]
+     (let [{:keys [url task-id file]}
+           (local-command (if previous-version-id
+                            :file/replace
+                            :file/upload)
+                          (merge
+                           {:task-id upload-to-task-id
+                            :file file-info}
+                           (when previous-version-id
+                             {:previous-version-id previous-version-id})))]
+       (is (str/starts-with? url "UPLOAD:"))
+       (is (str/ends-with? url (:file/name file-info)))
+       (when-not previous-version-id
+         (is (= task-id upload-to-task-id)))
+       (is (:db/id file))
+       (is (not (contains? file :file/id)))
+
+       ;; Mark upload as complete
+       (let [{id :db/id file-id :file/id :as uploaded}
+             (local-command :file/upload-complete
+                            {:db/id (:db/id file)})]
+         (is (= id (:db/id uploaded)))
+         (is (uuid? file-id))
+         uploaded)))))
+
+(defmacro is-thrown-with-data?
+  "Check that body throws given exception data."
+  [thrown-ex-data & body]
+  `(try
+     ~@body
+     (is false "No exception was thrown")
+     (catch Exception ex#
+       (let [d# (ex-data ex#)]
+         (is (= (select-keys d# (keys ~thrown-ex-data))
+                ~thrown-ex-data)
+             "Exception data matches specified data")))))

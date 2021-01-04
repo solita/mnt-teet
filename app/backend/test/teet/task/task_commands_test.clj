@@ -146,3 +146,32 @@
         (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id-thk)}))
         (is (:meta/deleted? (du/entity (tu/db) (tu/get-data :task-id-thk)))
             "task is marked as deleted")))))
+
+(deftest deleting-task-with-files
+  (let [act-id (tu/->db-id "p1-lc1-act1")
+        act (du/entity (tu/db) act-id)]
+    (tu/create-task
+     {:activity act-id
+      :task {:task/group :task.group/land-purchase
+             :task/type :task.type/plot-allocation-plan
+             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+             :task/estimated-start-date (:activity/estimated-start-date act)
+             :task/estimated-end-date (:activity/estimated-end-date act)}}
+     :task-id)
+
+    (tu/store-data!
+     :file
+     (tu/fake-upload (tu/get-data :task-id)
+                     {:file/name "image.png"
+                      :file/size 666}))
+
+    (testing "Deleting task with file fails"
+      (tu/is-thrown-with-data?
+       {:teet/error :task-has-files}
+       (tu/local-command :task/delete {:db/id (tu/get-data :task-id)})))
+
+    (testing "Deleting file before task works"
+      (tu/local-command :file/delete
+                        {:file-id (:db/id (tu/get-data :file))})
+
+      (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id)})))))
