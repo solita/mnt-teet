@@ -11,10 +11,7 @@
   the task as deleted."
   [db user task-id]
   (cond
-    (task-db/send-to-thk? db task-id)
-    (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/incorrect
-                 :cognitect.anomalies/message "Can't delete task sent to THK"
-                 :teet/error :task-is-sent-to-thk})
+    ;; FIXME: check that task has no undeleted files
 
     :else
     [(meta-model/deletion-tx user task-id)]))

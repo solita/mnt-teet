@@ -106,17 +106,43 @@
                             :task/estimated-start-date (:activity/estimated-start-date activity-entity)
                             :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}))))))
 
-(deftest deletion
+(deftest delete-regular-task
   (tu/local-login tu/mock-user-boss)
   (let [act-id (tu/->db-id "p1-lc1-act1")
         act (du/entity (tu/db) act-id)]
-    (tu/create-task
-     {:activity act-id
-      :task {:task/group :task.group/land-purchase
-             :task/type :task.type/plot-allocation-plan
-             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
-             :task/estimated-start-date (:activity/estimated-start-date act)
-             :task/estimated-end-date (:activity/estimated-end-date act)}}
-     :task-id)
 
-    (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id)}))))
+    (testing "Regular task deletion works"
+      (tu/create-task
+       {:activity act-id
+        :task {:task/group :task.group/land-purchase
+               :task/type :task.type/plot-allocation-plan
+               :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+               :task/estimated-start-date (:activity/estimated-start-date act)
+               :task/estimated-end-date (:activity/estimated-end-date act)}}
+       :task-id)
+      (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id)})))))
+
+(deftest delete-task-sent-to-thk
+  (tu/local-login tu/mock-user-boss)
+  (let [act-id (tu/->db-id "p1-lc1-act2")
+        act (du/entity (tu/db) act-id)]
+    (testing "Send to THK task can only be deleted by admin"
+      (tu/create-task
+       {:activity act-id
+        :task {:task/group :task.group/design
+               :task/type :task.type/design-road-safety-audit
+               :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+               :task/estimated-start-date (:activity/estimated-start-date act)
+               :task/estimated-end-date (:activity/estimated-end-date act)
+               :task/send-to-thk? true}}
+       :task-id-thk)
+
+      (is (thrown-with-msg?
+           Exception #"Pre check failed"
+           (tu/local-command :task/delete {:db/id (tu/get-data :task-id-thk)})))
+
+      (testing "Deletion works after giving admin permission"
+        (tu/give-admin-permission tu/mock-user-boss)
+        (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id-thk)}))
+        (is (:meta/deleted? (du/entity (tu/db) (tu/get-data :task-id-thk)))
+            "task is marked as deleted")))))

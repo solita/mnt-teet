@@ -10,7 +10,16 @@
             [teet.project.task-model :as task-model]
             [teet.util.datomic :as du]
             [clojure.spec.alpha :as s]
-            [teet.task.task-db :as task-db]))
+            [teet.task.task-db :as task-db]
+            [teet.authorization.authorization-check :as authorization-check]))
+
+(defn allow-delete?
+  "Check extra access for deleting task that has been sent to THK"
+  [db user task-id]
+  (if (and (task-db/send-to-thk? db task-id)
+           (not (authorization-check/authorized? user :task/delete-task-sent-to-thk)))
+    false
+    true))
 
 (defcommand :task/delete
   {:doc "Mark a task as deleted"
@@ -19,7 +28,7 @@
    :payload {task-id :db/id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/delete-task {}}
-   :pre [(not (task-db/send-to-thk? db task-id))]
+   :pre [(allow-delete? db user task-id)]
    :transact [(list 'teet.task.task-tx/delete-task user task-id)]})
 
 (def ^:private always-selected-keys
