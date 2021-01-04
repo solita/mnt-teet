@@ -180,26 +180,30 @@
    (migrate conn false))
   ([conn force?]
    (log/info "Migrate, db: " (:db-name conn))
-   (let [schema @schema
-         applied-migrations (into #{}
-                                  (map first)
-                                  (d/q '[:find ?ident
-                                         :where [_ :db/ident ?ident]
-                                         :in $ [?ident ...]]
-                                       (d/db conn)
-                                       (map :db/ident schema)))]
-     (log/info (count applied-migrations) "/" (count schema) "migrations already applied.")
-     (doseq [{ident :db/ident txes :txes} schema
-             :when (or force?
-                       (not (applied-migrations ident)))]
-       (log/info "Applying migration " ident)
-       (doseq [tx txes]
-         (if (symbol? tx)
-           (do
-             (require (symbol (namespace tx)))
-             ((resolve tx) conn))
-           (d/transact conn {:tx-data tx})))
-       (d/transact conn {:tx-data [{:db/ident ident}]})))
+   (try
+     (let [schema @schema
+           applied-migrations (into #{}
+                                    (map first)
+                                    (d/q '[:find ?ident
+                                           :where [_ :db/ident ?ident]
+                                           :in $ [?ident ...]]
+                                         (d/db conn)
+                                         (map :db/ident schema)))]
+       (log/info (count applied-migrations) "/" (count schema) "migrations already applied.")
+       (doseq [{ident :db/ident txes :txes} schema
+               :when (or force?
+                         (not (applied-migrations ident)))]
+         (log/info "Applying migration " ident)
+         (doseq [tx txes]
+           (if (symbol? tx)
+             (do
+               (require (symbol (namespace tx)))
+               ((resolve tx) conn))
+             (d/transact conn {:tx-data tx})))
+         (d/transact conn {:tx-data [{:db/ident ident}]})))
+     (catch Exception e
+       (log/error e "Uncaught exception in migration")
+       (throw e)))
    (log/info "Migrations finished.")))
 
 (def ^:private db-migrated? (atom false))
