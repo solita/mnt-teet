@@ -1,7 +1,6 @@
 (ns teet.task.task-tx
   "Transaction functions for tasks."
-  (:require [datomic.client.api :as d]
-            [teet.task.task-db :as task-db]
+  (:require [teet.task.task-db :as task-db]
             [teet.meta.meta-model :as meta-model]
             [datomic.ion :as ion]))
 
