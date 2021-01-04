@@ -9,6 +9,7 @@
 (t/use-fixtures
   :each
   tu/with-environment
+  tu/with-global-data
   (tu/with-db))
 
 (deftest creating-task-possible-within-activity-dates
@@ -104,3 +105,18 @@
                             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                             :task/estimated-start-date (:activity/estimated-start-date activity-entity)
                             :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}))))))
+
+(deftest deletion
+  (tu/local-login tu/mock-user-boss)
+  (let [act-id (tu/->db-id "p1-lc1-act1")
+        act (du/entity (tu/db) act-id)]
+    (tu/create-task
+     {:activity act-id
+      :task {:task/group :task.group/land-purchase
+             :task/type :task.type/plot-allocation-plan
+             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+             :task/estimated-start-date (:activity/estimated-start-date act)
+             :task/estimated-end-date (:activity/estimated-end-date act)}}
+     :task-id)
+
+    (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id)}))))

@@ -20,7 +20,7 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/delete-task {}}
    :pre [(not (task-db/send-to-thk? db task-id))]
-   :transact [(meta-model/deletion-tx user task-id)]})
+   :transact [(list 'teet.task.task-tx/delete-task user task-id)]})
 
 (def ^:private always-selected-keys
   [:db/id :task/description :task/assignee
