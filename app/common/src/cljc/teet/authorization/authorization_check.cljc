@@ -127,7 +127,7 @@
 
 #?(:cljs
    (defn with-authorization-check
-     "Call compoment (hiccup vector) with the result of an authorization
+     "Call component (hiccup vector) with the result of an authorization
 check as the last argument (true/false)."
      [functionality entity component]
      [project-context/consume
