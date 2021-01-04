@@ -8,6 +8,8 @@
 
 (t/use-fixtures
   :each
+  (tu/with-config {:file {:allowed-suffixes #{"png" "doc" "xls"}
+                          :image-suffixes #{"png" "jpg" "gif"}}})
   tu/with-environment
   tu/with-global-data
   (tu/with-db))
@@ -150,6 +152,7 @@
 (deftest deleting-task-with-files
   (let [act-id (tu/->db-id "p1-lc1-act1")
         act (du/entity (tu/db) act-id)]
+    (tu/local-login tu/mock-user-boss)
     (tu/create-task
      {:activity act-id
       :task {:task/group :task.group/land-purchase
