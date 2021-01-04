@@ -959,6 +959,7 @@
  :task
  {:task-overview "Task overview",
   :edit-part-modal-title "Edit task part",
+  :confirm-delete-confirm "Yes, delete the task",
   :upload-files "Upload files",
   :part-added-succesfully "Task part added successfully",
   :edit-document "Edit document",
@@ -967,6 +968,7 @@
   :start-review-success "Review started",
   :add-part "Add part",
   :accept-review "Accept review",
+  :confirm-delete-cancel "No",
   :reject-review "Reject review",
   :documents "Documents",
   :add-part-modal-title "Add task part",
@@ -974,6 +976,8 @@
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
   :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
+  :confirm-delete-task-sent-to-thk
+  "This task is marked as \"Separate contract (in THK)\" are sure you want to delete it?",
   :submit-results-confirm
   "Are you sure you want to submit the results to {task}?",
   :no-documents "No documents",

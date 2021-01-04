@@ -959,6 +959,7 @@
  :task
  {:task-overview "Ülesande ülevaade",
   :edit-part-modal-title "Muudan ülesande osa",
+  :confirm-delete-confirm "Jah, kustuta ülesanne",
   :upload-files "Laen failid üles",
   :part-added-succesfully "Ülesande osa edukalt lisatud",
   :edit-document "Muudan dokumenti",
@@ -967,6 +968,7 @@
   :start-review-success "Ülevaatus algas",
   :add-part "Lisan osa",
   :accept-review "Aktsepteerin ülesande",
+  :confirm-delete-cancel "Ei",
   :reject-review "Lükkan tagasi",
   :documents "Dokumendid",
   :add-part-modal-title "Lisan ülesande osa",
@@ -974,6 +976,8 @@
   :submit-results "Esitan tulemused",
   :submit-results-success "Tulemused edukalt esitatud",
   :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
+  :confirm-delete-task-sent-to-thk
+  "Sellele ülesandele on märgitud \"Eraldi leping (THKs)\", kas olete selles kindel, et soovite seda kustutada?",
   :submit-results-confirm
   "Oled kindel, et soovid {task} vastused saata?",
   :no-documents "Dokumente ei ole",
