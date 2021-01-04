@@ -99,7 +99,8 @@
   [db user _config project _ _lang text]
   (file-db/file-listing
    db user
-   (file-db/search-files-in-project db project text)))
+   (file-db/search-files-in-project db project text)
+    true))
 
 (defquery :link/search
   {:doc "Search for items that can be linked"

@@ -186,10 +186,10 @@
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
   and owner info. Returns only the latest version of each file with previous versions
-  as :versions key.
+  as :versions key unless latest-only? provided as true.
 
   Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
-  [db user file-ids]
+  [db user file-ids latest-only?]
   (let [files (file-listing-info db user file-ids)
 
         ;; Group files to first versions and next versions
@@ -213,7 +213,8 @@
                  (assoc latest-version
                    :file/full-name (filename-metadata/metadata->filename
                                      (file-metadata-by-id db (:db/id latest-version)))
-                   :versions previous-versions))))))
+                   :versions (if (not latest-only?) previous-versions)))))))
+
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
   (file-listing
@@ -232,7 +233,8 @@
                 [?project :thk.project/lifecycles ?lc]
 
                 :in $ ?project ?seqno]
-              db project-id sequence-number))))
+              db project-id sequence-number))
+    false))
 
 (defn resolve-metadata
   "Given metadata parsed from a file name, resolve the coded references to
