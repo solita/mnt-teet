@@ -125,5 +125,19 @@
                            ", user: " user)
                 nil))))])))
 
+#?(:cljs
+   (defn with-authorization-check
+     "Call compoment (hiccup vector) with the result of an authorization
+check as the last argument (true/false)."
+     [functionality entity component]
+     [project-context/consume
+      (fn [{project-id :db/id}]
+        (let [user @app-state/user]
+          (conj component
+                (boolean
+                 (and user
+                      (authorized? user functionality
+                                   (merge {:project-id project-id
+                                           :entity entity})))))))]))
 (defn authorization-rule-names []
   (into #{} (keys @authorization-rules)))
