@@ -426,36 +426,38 @@
   (when initialization-fn
     (initialization-fn))
   (fn [e! {id :db/id send-to-thk? :task/send-to-thk? :as task}]
-    [form/form {:e! e!
-                :value task
-                :on-change-event task-controller/->UpdateEditTaskForm
-                :cancel-event task-controller/->CancelTaskEdit
-                :save-event task-controller/->SaveTaskForm
-                :delete (when allow-delete?
-                          (task-controller/->DeleteTask id))
-                :delete-message (when send-to-thk?
-                                  (tr [:task :confirm-delete-task-sent-to-thk]))
-                :delete-confirm-button-text (tr [:task :confirm-delete-confirm])
-                :delete-cancel-button-text (tr [:task :confirm-delete-cancel])
-                :spec :task/edit-task-form}
+    [:div.edit-task-form
+     [form/form {:e! e!
+                 :value task
+                 :on-change-event task-controller/->UpdateEditTaskForm
+                 :cancel-event task-controller/->CancelTaskEdit
+                 :save-event task-controller/->SaveTaskForm
+                 :delete (when (and allow-delete?
+                                    (empty? (:task/files task)))
+                           (task-controller/->DeleteTask id))
+                 :delete-message (when send-to-thk?
+                                   (tr [:task :confirm-delete-task-sent-to-thk]))
+                 :delete-confirm-button-text (tr [:task :confirm-delete-confirm])
+                 :delete-cancel-button-text (tr [:task :confirm-delete-cancel])
+                 :spec :task/edit-task-form}
 
-     ^{:attribute :task/description}
-     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+      ^{:attribute :task/description}
+      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
-     ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
-     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
-                                    :min-date min-date
-                                    :max-date max-date
-                                    :end-label (tr [:fields :task/estimated-end-date])}]
+      ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
+      [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
+                                     :min-date min-date
+                                     :max-date max-date
+                                     :end-label (tr [:fields :task/estimated-end-date])}]
 
-     (when (not send-to-thk?)
-       ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
-       [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
-                                      :min-date min-date
-                                      :max-date max-date
-                                      :end-label (tr [:fields :task/actual-end-date])}])
-     ^{:attribute :task/assignee}
-     [select/select-user {:e! e! :attribute :task/assignee}]]))
+      (when (not send-to-thk?)
+        ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
+        [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
+                                       :min-date min-date
+                                       :max-date max-date
+                                       :end-label (tr [:fields :task/actual-end-date])}])
+      ^{:attribute :task/assignee}
+      [select/select-user {:e! e! :attribute :task/assignee}]]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
