@@ -14,7 +14,8 @@
   (let [string (str/trim string)
         ext-pos (str/last-index-of string ".")]
     {:description (subs string 0 ext-pos)
-     :extension (subs string (inc ext-pos))}))
+     :extension (subs string (inc ext-pos))})
+  )
 
 (def filename-part-parser
   "Parser functions for filename parts. Functions return a map of parsed values."
@@ -38,7 +39,7 @@
                                                      :clj Long/parseLong) sequence))})))
    :description-and-extension (fn [filename-parts]
                                 (name->description-and-extension
-                                 (str/join "_" filename-parts)))})
+                                  (last filename-parts)))})
 
 (defn number-string? [s]
   (and (string? s)
