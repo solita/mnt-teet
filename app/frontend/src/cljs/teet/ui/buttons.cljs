@@ -31,7 +31,8 @@
   "The styles are with !important because material ui css loading order makes it hard to override them normally"
   []
   ^{:pseudo {:hover {:background-color (str theme-colors/red-dark " !important")}
-             :focus (str theme-colors/button-focus-style " !important")}}
+             :focus (str theme-colors/button-focus-style " !important")
+             :disabled {:background-color (str theme-colors/red-lightest " !important")}}}
   {:background-color (str theme-colors/error " !important")
    :color            (str theme-colors/white " !important")})
 
@@ -45,7 +46,8 @@
 
 (defn- button-text-warning-style
   []
-  ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
+  ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")
+             :disabled {:background-color (str theme-colors/red-lightest " !important")}}}
   {:color (str theme-colors/red " !important")})
 
 (defn- button-text-green-style
@@ -140,7 +142,8 @@
 
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style trashcan? small? clear? icon-position close-on-action? id
+  [{:keys [action modal-title modal-text style trashcan? small? clear? icon-position close-on-action?
+           id disabled
            confirm-button-text cancel-button-text]
     :or {icon-position :end
          confirm-button-text (tr [:buttons :delete])
@@ -186,7 +189,8 @@
        small?
        [button-text-warning (merge {:on-click open
                                     :id id
-                                    :size :small}
+                                    :size :small
+                                    :disabled (boolean disabled)}
                                    (case icon-position
                                      :end {:end-icon (r/as-element [icons/action-delete-outline])}
                                      :start {:start-icon (r/as-element [icons/action-delete-outline])}))
@@ -195,7 +199,9 @@
        :else
        [button-warning {:on-click open
                         :style    style
-                        :id id}
+                        :id id
+                        :disabled (boolean disabled)}
+
         button-content])]))
 
 (defn- add-button-style
