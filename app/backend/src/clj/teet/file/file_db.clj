@@ -213,7 +213,7 @@
                  (assoc latest-version
                    :file/full-name (filename-metadata/metadata->filename
                                      (file-metadata-by-id db (:db/id latest-version)))
-                   :versions (if (not latest-only?) previous-versions)))))))
+                   :versions (when-not latest-only? previous-versions)))))))
 
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
