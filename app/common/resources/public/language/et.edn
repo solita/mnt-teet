@@ -964,6 +964,8 @@
   :part-added-succesfully "Ülesande osa edukalt lisatud",
   :edit-document "Muudan dokumenti",
   :part-edited-succesfully "Ülesande osa edukalt muudetud",
+  :delete-task-has-files
+  "Selle ülesande alla on laetud faile, ülesannet ei saa kustutada seni kuni failid on kustutatud!",
   :create-success-notification "Ülesanne edukalt loodud",
   :start-review-success "Ülevaatus algas",
   :add-part "Lisan osa",
@@ -977,7 +979,7 @@
   :submit-results-success "Tulemused edukalt esitatud",
   :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
   :confirm-delete-task-sent-to-thk
-  "Sellele ülesandele on märgitud \"Eraldi leping (THKs)\", kas olete selle kindel, et soovite seda kustutada?",
+  "Sellele ülesandele on märgitud \"Eraldi leping (THKs)\", kas olete selles kindel, et soovite seda kustutada?",
   :submit-results-confirm
   "Oled kindel, et soovid {task} vastused saata?",
   :no-documents "Dokumente ei ole",

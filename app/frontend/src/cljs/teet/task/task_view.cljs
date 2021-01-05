@@ -432,13 +432,14 @@
                  :on-change-event task-controller/->UpdateEditTaskForm
                  :cancel-event task-controller/->CancelTaskEdit
                  :save-event task-controller/->SaveTaskForm
-                 :delete (when (and allow-delete?
-                                    (empty? (:task/files task)))
+                 :delete (when allow-delete?
                            (task-controller/->DeleteTask id))
                  :delete-message (when send-to-thk?
                                    (tr [:task :confirm-delete-task-sent-to-thk]))
                  :delete-confirm-button-text (tr [:task :confirm-delete-confirm])
                  :delete-cancel-button-text (tr [:task :confirm-delete-cancel])
+                 :delete-disabled-error-text (when (seq (:task/files task))
+                                               (tr [:task :delete-task-has-files]))
                  :spec :task/edit-task-form}
 
       ^{:attribute :task/description}

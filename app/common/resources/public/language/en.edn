@@ -964,6 +964,8 @@
   :part-added-succesfully "Task part added successfully",
   :edit-document "Edit document",
   :part-edited-succesfully "Task part edited successfully",
+  :delete-task-has-files
+  "This task has files uploaded to it, it can't be deleted before the files have been deleted!",
   :create-success-notification "Task created successfully",
   :start-review-success "Review started",
   :add-part "Add part",
