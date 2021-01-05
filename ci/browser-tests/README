@@ -7,3 +7,14 @@ or use the run-in-docker.sh script.
 The docker script will also pass any args to cypress so you can eg use:
 
   ./run-in-docker.sh --spec cypress/integration/login.spec.js # this runs just one spec
+
+# Smoke tests vs CI tests
+
+Some tests require elaborate setup and use controller only available in CI
+environment to do setup.
+
+Setup may include creating new projects/tasks that can't be used in an
+environment that has integrations.
+
+Tests ending with ".ci.spec.js" should only be run in CI or local test runs.
+Other tests can be run in real cloud deployed environment.

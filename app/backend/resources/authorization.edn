@@ -42,7 +42,6 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :full},
- :task/delete-task-that-is-sent-to-thk {:admin :full},
  :document/upload-document
  {:admin :full,
   :manager :full,
@@ -87,8 +86,6 @@
   :external-consultant :link,
   :authenticated-guest :link},
  :activity/delete-activity-with-files {},
- :task/delete-task-with-no-files-and-not-sent-to-thk
- {:admin :full, :manager :full},
  :land/create-land-acquisition {:admin :full, :manager :full},
  :project/edit-permissions
  {:admin :full, :manager :full, :external-consultant :link},
@@ -281,4 +278,5 @@
   :internal-consultant :read,
   :external-consultant :read,
   :authenticated-guest :read,
-  :guest :read}}
+  :guest :read},
+ :task/delete-task-sent-to-thk {:admin :full}}

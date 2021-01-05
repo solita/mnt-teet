@@ -10,10 +10,16 @@
             [teet.project.task-model :as task-model]
             [teet.util.datomic :as du]
             [clojure.spec.alpha :as s]
-            [teet.task.task-db :as task-db]))
+            [teet.task.task-db :as task-db]
+            [teet.authorization.authorization-check :as authorization-check]))
 
-(defn- send-to-thk? [db task-id]
-  (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
+(defn allow-delete?
+  "Check extra access for deleting task that has been sent to THK"
+  [db user task-id]
+  (if (and (task-db/send-to-thk? db task-id)
+           (not (authorization-check/authorized? user :task/delete-task-sent-to-thk)))
+    false
+    true))
 
 (defcommand :task/delete
   {:doc "Mark a task as deleted"
@@ -22,8 +28,8 @@
    :payload {task-id :db/id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/delete-task {}}
-   :pre [(not (send-to-thk? db task-id))]
-   :transact [(meta-model/deletion-tx user task-id)]})
+   :pre [(allow-delete? db user task-id)]
+   :transact [(list 'teet.task.task-tx/delete-task user task-id)]})
 
 (def ^:private always-selected-keys
   [:db/id :task/description :task/assignee
@@ -74,7 +80,7 @@
                              new-assignee-id)
                     {:task/status :task.status/in-progress})
                   (-> task
-                      (select-update-keys (send-to-thk? db id))
+                      (select-update-keys (task-db/send-to-thk? db id))
                       uc/without-nils)
                   (meta-model/modification-meta user))
                 (if assign?

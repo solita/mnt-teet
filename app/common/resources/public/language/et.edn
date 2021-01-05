@@ -964,6 +964,8 @@
   :part-added-succesfully "Ülesande osa edukalt lisatud",
   :edit-document "Muudan dokumenti",
   :part-edited-succesfully "Ülesande osa edukalt muudetud",
+  :delete-task-has-files
+  "Selle ülesande alla on laetud faile, ülesannet ei saa kustutada seni kuni failid on kustutatud!",
   :create-success-notification "Ülesanne edukalt loodud",
   :start-review-success "Ülevaatus algas",
   :add-part "Lisan osa",

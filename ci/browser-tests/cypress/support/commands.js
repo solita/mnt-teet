@@ -11,15 +11,16 @@
 //
 // -- This is a parent command --
 Cypress.Commands.add("dummyLogin", (name) => {
-    cy.visit("#/")
+    cy.visit("#/login")
     cy.window().then((win) => {
         win.teet.login.login_controller.test_login(
             Cypress.env("SITE_PASSWORD"),
             name)
     })
 
-    // check that the dashboard page is loaded
-    cy.get("[data-cy=dashboard-header]")
+    // Redirects to map page
+    cy.location("hash").should("eq", "#/projects/map")
+
 })
 
 // Select language

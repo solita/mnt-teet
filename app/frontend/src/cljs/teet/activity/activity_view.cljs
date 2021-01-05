@@ -228,7 +228,7 @@
         not-reviewed-status? (complement activity-model/reviewed-statuses)
         status (-> activity :activity/status :db/ident)
         tasks-complete? (activity-model/all-tasks-completed? activity)]
-    [:<>
+    [:div.activity-content
      [activity-header e! activity]
      [project-management-and-status
       (:thk.project/owner project)

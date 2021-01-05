@@ -10,7 +10,8 @@
          teet.cooperation.cooperation-tx/create-3rd-party
          teet.util.string/contains-words?
          teet.user.user-tx/set-global-role
-         clojure.string/includes?]
+         clojure.string/includes?
+         teet.task.task-tx/delete-task]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy

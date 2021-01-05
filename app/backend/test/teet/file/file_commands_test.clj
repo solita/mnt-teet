@@ -29,37 +29,7 @@
                {:file/name (str "myfile." (rand-nth (seq (file-model/upload-allowed-file-suffixes))))
                 :file/size (rand (inc file-model/upload-max-file-size))})))))
 
-(defn fake-upload
-  "Upload (or replace) file.
-  Doesn't really upload anything to S3, just invokes the backend commands."
-  ([upload-to-task-id file-info]
-   (fake-upload upload-to-task-id file-info nil))
-  ([upload-to-task-id file-info previous-version-id]
-   (with-redefs [file-storage/upload-url (fn [name]
-                                           (str "UPLOAD:" name))]
-     (let [{:keys [url task-id file]}
-           (tu/local-command (if previous-version-id
-                               :file/replace
-                               :file/upload)
-                             (merge
-                              {:task-id upload-to-task-id
-                               :file file-info}
-                              (when previous-version-id
-                                {:previous-version-id previous-version-id})))]
-       (is (str/starts-with? url "UPLOAD:"))
-       (is (str/ends-with? url (:file/name file-info)))
-       (when-not previous-version-id
-         (is (= task-id upload-to-task-id)))
-       (is (:db/id file))
-       (is (not (contains? file :file/id)))
-
-       ;; Mark upload as complete
-       (let [{id :db/id file-id :file/id :as uploaded}
-             (tu/local-command :file/upload-complete
-                               {:db/id (:db/id file)})]
-         (is (= id (:db/id uploaded)))
-         (is (uuid? file-id))
-         uploaded)))))
+(def fake-upload tu/fake-upload)
 
 (deftest file-uuid
   (tu/local-login tu/mock-user-boss)

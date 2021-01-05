@@ -6,7 +6,6 @@
             [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
-            [teet.file.file-model :as file-model]
             [teet.file.file-view :as file-view]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-controller :as project-controller]
@@ -34,8 +33,8 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [teet.ui.drag :as drag]
-            [teet.common.common-controller :as common-controller]
-            [goog.string :as gstr]))
+            [goog.string :as gstr]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 
 (defn- task-groups-for-activity [activity-name task-groups]
@@ -423,36 +422,43 @@
      activity task files-form]]])
 
 
-(defn- edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
+(defn- edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]} allow-delete?]
   (when initialization-fn
     (initialization-fn))
   (fn [e! {id :db/id send-to-thk? :task/send-to-thk? :as task}]
-    [form/form {:e! e!
-                :value task
-                :on-change-event task-controller/->UpdateEditTaskForm
-                :cancel-event task-controller/->CancelTaskEdit
-                :save-event task-controller/->SaveTaskForm
-                :delete (when (and id (not send-to-thk?))
-                          (task-controller/->DeleteTask id))
-                :spec :task/edit-task-form}
+    [:div.edit-task-form
+     [form/form {:e! e!
+                 :value task
+                 :on-change-event task-controller/->UpdateEditTaskForm
+                 :cancel-event task-controller/->CancelTaskEdit
+                 :save-event task-controller/->SaveTaskForm
+                 :delete (when allow-delete?
+                           (task-controller/->DeleteTask id))
+                 :delete-message (when send-to-thk?
+                                   (tr [:task :confirm-delete-task-sent-to-thk]))
+                 :delete-confirm-button-text (tr [:task :confirm-delete-confirm])
+                 :delete-cancel-button-text (tr [:task :confirm-delete-cancel])
+                 :delete-disabled-error-text (when (seq (:task/files task))
+                                               (tr [:task :delete-task-has-files]))
+                 :spec :task/edit-task-form}
 
-     ^{:attribute :task/description}
-     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+      ^{:attribute :task/description}
+      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
-     ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
-     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
-                                    :min-date min-date
-                                    :max-date max-date
-                                    :end-label (tr [:fields :task/estimated-end-date])}]
+      ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
+      [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
+                                     :min-date min-date
+                                     :max-date max-date
+                                     :end-label (tr [:fields :task/estimated-end-date])}]
 
-     (when (not send-to-thk?)
-       ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
-       [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
-                                      :min-date min-date
-                                      :max-date max-date
-                                      :end-label (tr [:fields :task/actual-end-date])}])
-     ^{:attribute :task/assignee}
-     [select/select-user {:e! e! :attribute :task/assignee}]]))
+      (when (not send-to-thk?)
+        ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
+        [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
+                                       :min-date min-date
+                                       :max-date max-date
+                                       :end-label (tr [:fields :task/actual-end-date])}])
+      ^{:attribute :task/assignee}
+      [select/select-user {:e! e! :attribute :task/assignee}]]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
@@ -467,9 +473,16 @@
 (defmethod project-navigator-view/project-navigator-dialog :edit-task
   [{:keys [e! app project] :as _opts}  _dialog]
   (let [activity-id (get-in app [:params :activity])
-        activity (project-model/activity-by-id project activity-id)]
-    [edit-task-form e! (:edit-task-data app) {:max-date (:activity/estimated-end-date activity)
-                                              :min-date (:activity/estimated-start-date activity)}]))
+        activity (project-model/activity-by-id project activity-id)
+        task (:edit-task-data app)]
+    [authorization-check/with-authorization-check
+     (if (:task/send-to-thk? task)
+       :task/delete-task-sent-to-thk
+       :task/delete-task)
+     task
+     [edit-task-form e! task
+      {:max-date (:activity/estimated-end-date activity)
+       :min-date (:activity/estimated-start-date activity)}]]))
 
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
