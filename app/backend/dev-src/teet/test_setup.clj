@@ -5,7 +5,9 @@
             [compojure.core :refer [routes POST]]
             [cheshire.core :as cheshire]
             [clojure.java.io :as io]
-            [clojure.core.async :refer [thread timeout <!!]]))
+            [clojure.core.async :refer [thread timeout <!!]]
+            [teet.util.collection :as cu]
+            [teet.auth.jwt-token :as jwt-token]))
 
 (defn- read-json-body [req]
   (-> req :body io/reader
@@ -81,7 +83,41 @@
                                    "/" (tempids "activity")
                                    "/" (tempids "task"))}))}))
 
+(defn- user [{:keys [given-name family-name person-id email role]}]
+  (cu/without-nils
+   {:db/id "user"
+    :user/id (java.util.UUID/randomUUID)
+    :user/email email
+    :user/given-name given-name
+    :user/family-name family-name
+    :user/person-id person-id
+    :user/permissions [{:db/id "permission"
+                        :permission/role (keyword role)
+                        :permission/valid-from (java.util.Date.)}]}))
+
+(defn- setup-user [req]
+  (let [u (user (read-json-body req))
+        {tempids :tempids}
+        (d/transact (environment/datomic-connection)
+                    {:tx-data [u]})]
+    (retract-all tempids)
+
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (cheshire/encode
+            (merge tempids
+                   {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret)
+                                                   "teet_user"
+                                                   {:given-name (:user/given-name u)
+                                                    :family-name (:user/family-name u)
+                                                    :person-id (:user/person-id u)
+                                                    :email (:user/email u)
+                                                    :id (:user/id u)})}))}))
+
 (defn test-setup-routes []
   (routes
    (POST "/testsetup/task" req
-         (#'setup-task req))))
+         (#'setup-task req))
+
+   (POST "/testsetup/user" req
+         (#'setup-user req))))

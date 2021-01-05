@@ -130,7 +130,9 @@
 
 (def mock-users user-info/mock-users)
 
-(defn ^:export test-login [site-password mock-user-name]
+(defn ^:export test-login
+  "Login with existing mock user"
+  [site-password mock-user-name]
   (swap! app-state/app assoc-in [:login :password] site-password)
   (let [e! (t/control app-state/app)
         user (first
@@ -142,3 +144,18 @@
     (when user
       (e! (->Login user))
       (str "Login as " user))))
+
+(defn ^:export test-login-with-token
+  "Login with existing JWT token"
+  [token]
+  (swap! app-state/app assoc-in [:query :token] token)
+  (let [e! (t/control app-state/app)]
+    (e! (reify t/Event
+          (process-event [_ app]
+            (t/fx app
+                  {:tuck.effect/type :set-api-token
+                   :token token}
+                  {:tuck.effect/type :command!
+                   :command :login/refresh-token
+                   :payload {}
+                   :result-event (partial ->SetSessionInfo false)}))))))
