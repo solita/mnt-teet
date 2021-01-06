@@ -181,3 +181,10 @@
        (-> (du/entity db activity-id)
            :activity/name :db/ident)
        #{}))
+
+(defn activity-task-has-files?
+  "Check a task under a activity has undeleted files."
+  [db activity-id]
+  ;;TODO: implement
+  (println "Checked - activity-task-has-files!!!")
+  (boolean true))
