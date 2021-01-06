@@ -60,7 +60,7 @@
                                          "User not logged in"))]
     [:div {:class (<class navigation-style/feedback-container-style)}
      [common/Link {:class (<class navigation-style/feedback-style)
-                   :href (str "mailto:teet-feedback@mnt.ee"
+                   :href (str "mailto:teet-feedback@transpordiamet.ee"
                               "?Subject=" (uri-quote subject-text)
                               "&body=" (uri-quote body-text))}
       (tr [:common :send-feedback])]]))
