@@ -142,9 +142,9 @@
   :add-files "Lisan faile",
   :applied "Rakendatud",
   :opinion-title "Seisukoht",
-  :enter-response "Sisestan 3nda osapoole vastuse",
-  :new-third-party-created "3s osapool edukalt lisatud",
-  :all-third-parties "Kõik kolmandad osapooled",
+  :enter-response "Sisestan kaasatud osapoole vastuse",
+  :new-third-party-created "Kaasatud osapool edukalt lisatud",
+  :all-third-parties "Kõik kaasatud osapooled",
   :add-application-response "Lisan pöördumise vastuse",
   :create-opinion-title "Seisukoha lisamine",
   :create-opinion-button "Lisan ametliku seisukoha",
@@ -155,17 +155,17 @@
   :unanswered "Vastuseta",
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
-  :new-third-party-title "3nda osapoole lisamine",
+  :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
    :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus."},
-  :response-of-third-party "Kolmanda osapoole vastus",
+  :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
   :opinion-saved "Seisukoht edukalt salvestatud",
-  :new-third-party "Lisan 3nda osapoole"},
+  :new-third-party "Lisan kaasatud osapoole"},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
@@ -461,6 +461,8 @@
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :meeting-is-locked
   "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
+  :activity-task-has-files
+  "Selle tegevuse ülesande alla on laetud faile, tegevust ei saa kustutada seni kuni failid on kustutatud!",
   :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",
   :application-outside-activities
   "Taotlus kuupäev väljaspool projekti tegevuste aega.",
@@ -498,7 +500,7 @@
   :file.part/name "Ülesande osa nimi",
   :task/group "rro",
   :file/part "Osa",
-  :cooperation.3rd-party/name "Kolmanda osapoole nimi",
+  :cooperation.3rd-party/name "Kaasatud osapoole nimi",
   :file/version "Versioon",
   :estate-procedure/pos "POS#",
   :user/global-role "Globaalne roll",
@@ -534,7 +536,7 @@
   :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",
   :cooperation.3rd-party/id-code
-  "Kolmanda osapoole registrikood/isikukood",
+  "Kaasatud osapoole registrikood/isikukood",
   :user/phone-number "Telefoni number",
   :thk.project/carriageway "SO",
   :participation/participant "Kasutaja",
