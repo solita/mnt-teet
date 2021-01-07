@@ -184,7 +184,7 @@
        #{}))
 
 (defn activity-task-has-files?
-  "Check a task under a activity has undeleted files."
+  "Check a task under activity has undeleted files."
   [db activity-id]
   (seq
     (filter boolean
