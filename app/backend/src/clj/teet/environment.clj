@@ -179,7 +179,6 @@
   ([conn]
    (migrate conn false))
   ([conn force?]
-   (log/info "Migrate, db: " (:db-name conn))
    (try
      (let [schema @schema
            applied-migrations (into #{}
@@ -240,7 +239,7 @@
       (let [db (db-name)
             client (datomic-client)
             db-status (ensure-database client db)
-            conn (d/connect client {:db-name db})]
+            conn (d/connect client {:db-name db})]        
         (log/info "Using database: " db db-status)
         (when-not @db-migrated?
           (migrate conn)
