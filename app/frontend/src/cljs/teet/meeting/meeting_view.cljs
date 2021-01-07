@@ -538,12 +538,7 @@
                       :spec :meeting/agenda-form
                       :save-event #(meeting-controller/->SubmitAgendaForm
                                      meeting
-                                     (-> @form-atom
-                                         (update :meeting.agenda/body
-                                                 (fn [editor-state]
-                                                   (if (or (string? editor-state) (nil? editor-state))
-                                                     editor-state
-                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     (rich-text-editor/form-data-with-rich-text :meeting.agenda/body @form-atom)
                                      close-event)}
                      (when-let [agenda-id (:db/id @form-atom)]
                        {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
@@ -748,12 +743,7 @@
                       :spec :meeting/decision-form
                       :save-event #(meeting-controller/->SubmitDecisionForm
                                      agenda-eid
-                                     (-> @form-atom
-                                         (update :meeting.decision/body
-                                                 (fn [editor-state]
-                                                   (if (or (string? editor-state) (nil? editor-state))
-                                                     editor-state
-                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     (rich-text-editor/form-data-with-rich-text :meeting.decision/body @form-atom)
                                      close-event)}
                      (when (:db/id @form-atom)
                        {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))

@@ -350,12 +350,9 @@
                                 {:thk.project/id project-id
                                  :application-id application-id
                                  :form-data (common-controller/prepare-form-data
-                                              (-> @form-atom
-                                                  (update :cooperation.response/content
-                                                          (fn [editor-state]
-                                                            (if (or (string? editor-state) (nil? editor-state))
-                                                              editor-state
-                                                              (rich-text-editor/editor-state->markdown editor-state))))))}
+                                              (rich-text-editor/form-data-with-rich-text
+                                                :cooperation.response/content
+                                                @form-atom))}
                                 (fn [response]
                                   (fn [e!]
                                     (e! (close-event))
@@ -477,7 +474,9 @@
     :on-change-event (form/update-atom-event form-atom merge)
     :cancel-event close-event
     :save-event #(cooperation-controller/save-opinion-event
-                  application @form-atom close-event)}
+                  application
+                  (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
+                  close-event)}
    ^{:attribute :cooperation.opinion/status :xs 10}
    [select/select-enum {:e! e!
                         :attribute :cooperation.opinion/status}]
