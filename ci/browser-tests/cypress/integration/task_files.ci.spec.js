@@ -59,7 +59,6 @@ describe("Task files", function() {
             })
 
         cy.get("@filename").then((filename) => {
-            console.log("tiedoston nimi: ", filename)
             // upload again to get new version
             cy.get("[data-cy=task-file-upload]").click()
             cy.uploadFile({inputSelector: "input[id=files-field]",
