@@ -102,9 +102,10 @@
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
 (defn validate-name [{:file/keys [description extension] :as _file-row}]
-  (when (or (str/blank? description)
-            (str/blank? extension))
-    {:error :description-and-extension-required}))
+  (when (str/blank? description)
+    {:error :description-and-extension-required})
+  (when (str/blank? extension)
+    {:error :file-type-not-allowed}))
 
 (defn validate-seq-number [{:file/keys [sequence-number]}]
   (when (and sequence-number

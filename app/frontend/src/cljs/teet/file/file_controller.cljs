@@ -311,7 +311,7 @@
                     {:file/description (:description metadata)
                      :file/extension (:extension metadata)}
                     (let [{:keys [description extension]}
-                          (filename-metadata/name->description-and-extension filename)]
+                          (filename-metadata/name->description-and-extension (last (str/split filename #"_")))]
                       {:file/description description
                        :file/extension extension})))
                  file))
