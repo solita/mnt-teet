@@ -3,7 +3,8 @@
             [teet.activity.activity-model :as activity-model]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.db-api.core :as db-api])
+            [teet.db-api.core :as db-api]
+            [teet.file.file-db :as file-db])
   (:import (java.util Date)))
 
 (defn activity-date-range
@@ -187,7 +188,7 @@
   [db activity-id]
   (seq
     (filter boolean
-      (map (partial teet.file.file-db/task-has-files? db)
+      (map (partial file-db/task-has-files? db)
         (mapv
           (comp :db/id first)
           ;; Find all Tasks that belong to Activity
