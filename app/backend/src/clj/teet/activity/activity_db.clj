@@ -188,7 +188,7 @@
   (println (str "activity-id is checked for tasks files " activity-id))
   [db activity-id]
   (seq (filter boolean
-            (map (partial teet.task.task-db/task-has-files? db)
+            (map (partial teet.file.file-db/task-has-files? db)
               (mapv :db/id (map first (d/q '[:find (pull ?t [:db/id])
                                              :in $ ?a
                                              :where
