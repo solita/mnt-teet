@@ -70,5 +70,18 @@ describe("Task files", function() {
 
         // verify that there's an info message about replacing
         cy.get("[data-cy=new-version]")
+
+        // submit to upload new version
+        cy.get("button[type=submit]").click()
+
+
+        // wait for dialog to close
+        cy.get("button[type=submit").should("not.exist")
+
+        // verify there is still only one
+        cy.get(".file-info").its("length").should("equal", 1)
+
+        cy.get(".file-identifying-info[data-version=1]").should("not.exist")
+        cy.get(".file-identifying-info[data-version=2]").should("exist")
     })
 })

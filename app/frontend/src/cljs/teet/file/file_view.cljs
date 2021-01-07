@@ -41,7 +41,7 @@
 (defn file-identifying-info
   "Show file identifying info: document group, seq# and version."
   [land-acquisition? {:file/keys [document-group sequence-number version]}]
-  [:strong.file-identifying-info
+  [:strong.file-identifying-info {:data-version version}
    (str/join " / "
              (remove nil?
                      [(when document-group
