@@ -12,8 +12,9 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/view-cooperation-page {}}}
   (let [p [:thk.project/id project-id]]
-    {:project (project-db/project-by-id db p)
-     :overview (cooperation-db/overview db p)}))
+    (du/idents->keywords
+      {:project (project-db/project-by-id db p)
+       :overview (cooperation-db/overview db p)})))
 
 (defquery :cooperation/third-party
   {:doc "Fetches overview plus a given 3rd party and all its applications"
