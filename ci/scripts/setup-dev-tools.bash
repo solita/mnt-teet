@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [ -f "~/.m2/settings.xmlX" ]; then
+if [ -f "~/.m2/settings.xml" ]; then
     echo "Maven settings already exists";
     exit 1;
 fi
 
-if [ -f "~/.clojure/deps.ednX" ]; then
+if [ -f "~/.clojure/deps.edn" ]; then
     echo "Clojure deps.edn already exists";
     exit 1;
 fi
@@ -17,5 +17,5 @@ M2_SETTINGS="<settings>\n<servers>\n<server>\n<id>cognitect-dev-tools</id>\n<use
 
 DEPS_EDN="{:mvn/repos {\"cognitect-dev-tools\" {:url \"https://dev-tools.cognitect.com/maven/releases/\"}}}"
 
-echo -e "$M2_SETTINGS" > ~/.m2/settings.xmlX
-echo -e "$DEPS_EDN" > ~/.clojure/deps.ednX
+echo -e "$M2_SETTINGS" > ~/.m2/settings.xml
+echo -e "$DEPS_EDN" > ~/.clojure/deps.edn
