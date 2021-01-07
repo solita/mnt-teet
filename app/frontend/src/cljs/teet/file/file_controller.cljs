@@ -151,7 +151,15 @@
                              + progress-increment)
                   app)
                 {:tuck.effect/type :command!
-                 :command (if attachment? :file/upload-attachment :file/upload)
+                 :command (cond
+                            attachment?
+                            :file/upload-attachment
+
+                            (get-in file [:metadata :file-id])
+                            :file/replace
+
+                            :else
+                            :file/upload)
                  :payload (merge {:file (merge (file-model/file-info (:file-object file))
                                                (select-keys file [:file/description
                                                                   :file/extension
