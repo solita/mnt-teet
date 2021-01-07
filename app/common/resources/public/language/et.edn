@@ -142,6 +142,7 @@
   :add-files "Lisan faile",
   :applied "Rakendatud",
   :opinion-title "Seisukoht",
+  :opinion nil,
   :enter-response "Sisestan kaasatud osapoole vastuse",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
@@ -164,6 +165,7 @@
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
+  :application-terms-expire-warning nil,
   :opinion-saved "Seisukoht edukalt salvestatud",
   :new-third-party "Lisan kaasatud osapoole"},
  :dashboard
@@ -360,7 +362,8 @@
   :task.type/geology "Geoloogia",
   :notification.type/task-review-rejected
   "Ülesande ülevaatamine tagasi lükatud",
-  :cooperation.response.status/no-response "Kooskõlastustus vastuseta",
+  :cooperation.response.status/no-response
+  "Kooskõlastustusele ei vastanud",
   :land-acquisition.status/completed "Lõpetatud",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
