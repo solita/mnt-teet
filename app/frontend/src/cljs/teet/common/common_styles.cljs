@@ -459,18 +459,30 @@
   []
   {:border-top (str "solid 1px " theme-colors/gray-light)})
 
+(defn variant->background&border
+  [variant]
+  (case variant
+    :success [theme-colors/sea-green theme-colors/mint-cream]
+    :warning [theme-colors/dark-tangerine-11 theme-colors/dark-tangerine-1]
+    :error [theme-colors/red theme-colors/red-lightest]
+    :info [theme-colors/blue theme-colors/blue-lightest]))
+
 (defn info-box [variant]
-  (let [[border background] (case variant
-                              :success [theme-colors/sea-green theme-colors/mint-cream]
-                              :warning [theme-colors/dark-tangerine-11 theme-colors/dark-tangerine-1]
-                              :error [theme-colors/red theme-colors/red-lightest]
-                              :info [theme-colors/blue theme-colors/blue-lightest])]
+  (let [[border background] (variant->background&border variant)]
     {:border (str "solid 2px " border)
      :border-radius "3px"
      :background-color background
      :padding "1rem"
      :display :flex
      :flex-direction :column}))
+
+(defn popper-tooltip [variant]
+  (let [[_ background] (variant->background&border variant)]
+    {:margin-top "4px"
+     :border-radius "3px"
+     :line-height 1
+     :background-color background
+     :padding "0.5rem"}))
 
 (defn text-ellipsis [max-width]
   {:text-overflow :ellipsis
