@@ -46,17 +46,11 @@
            (tr [:cooperation (if new? :opinion-created :opinion-saved)]))
           common-controller/refresh-fx)))
 
-(defn prepare-opinion-form [form]
-  (-> form
-      (update :cooperation.opinion/comment
-              #(when % (rich-text-editor/editor-state->markdown %)))
-      cu/without-nils))
-
 (defn save-opinion-event [application form close-event]
   (common-controller/->SaveForm
    :cooperation/save-opinion
    {:application-id (:db/id application)
-    :opinion-form (prepare-opinion-form form)}
+    :opinion-form form}
    (fn [response]
      (fn [e!]
        (e! (close-event))
