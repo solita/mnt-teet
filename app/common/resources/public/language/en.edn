@@ -142,9 +142,9 @@
   :add-files "Add files",
   :applied "Applied",
   :opinion-title "Opinion",
-  :enter-response "Enter 3rd party response",
-  :new-third-party-created "Third party created successfully",
-  :all-third-parties "All third parties",
+  :enter-response "Enter involved party response",
+  :new-third-party-created "Involved party created successfully",
+  :all-third-parties "All involved parties",
   :add-application-response "Add application response",
   :create-opinion-title "Add opinion",
   :create-opinion-button "Opinion of Competent Authority",
@@ -155,18 +155,18 @@
   :unanswered "Unanswered",
   :responsible-person "Responsible: {user-name}",
   :response-saved "Response saved successfully",
-  :new-third-party-title "Add third party",
+  :new-third-party-title "Add involved party",
   :error
   {:upload-not-allowed "Upload not allowed",
    :coordination-task-missing
    "Coordination task does not exist for the activity.",
    :coordination-task-status-mismatch
    "Task is not in a state that allows file upload."},
-  :response-of-third-party "Response of 3rd party",
+  :response-of-third-party "Response of involved party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
   :opinion-saved "Opinion saved successfully",
-  :new-third-party "Add third party"},
+  :new-third-party "Add involved party"},
  :dashboard
  {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",
@@ -458,7 +458,8 @@
   "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",
-  :user-is-already-participant "User is already participant",
+  :user-is-already-participant
+  "The email address of the participant is already in the participant list!",
   :server-error "Server error.",
   :invalid-x-road-response "Invalid response from X-road",
   :permission-already-granted
@@ -467,6 +468,8 @@
   "Only one activity of a type can be active at the same time.",
   :meeting-is-locked
   "The meeting is accepted and can no longer be changed",
+  :activity-task-has-files
+  "This activity has tasks with files uploaded to it, the activity can't be deleted before the files have been deleted!",
   :user-already-exists "User with the given person id already exists",
   :application-outside-activities
   "Applied date not within any project activity.",
@@ -505,7 +508,7 @@
   :file.part/name "Part name",
   :task/group "Task group",
   :file/part "Part",
-  :cooperation.3rd-party/name "3rd party name",
+  :cooperation.3rd-party/name "Involved party name",
   :file/version "Version",
   :estate-procedure/pos "POS#",
   :user/global-role "Global role",
@@ -539,7 +542,8 @@
   :file/position-number "POS#",
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
-  :cooperation.3rd-party/id-code "3rd party registry/personal ID code",
+  :cooperation.3rd-party/id-code
+  "Involved party registry/personal ID code",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
   :participation/participant "User",
@@ -959,14 +963,18 @@
  :task
  {:task-overview "Task overview",
   :edit-part-modal-title "Edit task part",
+  :confirm-delete-confirm "Yes, delete the task",
   :upload-files "Upload files",
   :part-added-succesfully "Task part added successfully",
   :edit-document "Edit document",
   :part-edited-succesfully "Task part edited successfully",
+  :delete-task-has-files
+  "This task has files uploaded to it, it can't be deleted before the files have been deleted!",
   :create-success-notification "Task created successfully",
   :start-review-success "Review started",
   :add-part "Add part",
   :accept-review "Accept review",
+  :confirm-delete-cancel "No",
   :reject-review "Reject review",
   :documents "Documents",
   :add-part-modal-title "Add task part",
@@ -974,6 +982,8 @@
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
   :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
+  :confirm-delete-task-sent-to-thk
+  "This task is marked as \"Separate contract (in THK)\" are sure you want to delete it?",
   :submit-results-confirm
   "Are you sure you want to submit the results to {task}?",
   :no-documents "No documents",

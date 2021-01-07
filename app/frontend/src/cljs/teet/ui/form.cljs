@@ -14,7 +14,8 @@
             [teet.ui.context :as context]
             [clojure.set :as set]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.ui.common :as common]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -77,13 +78,26 @@
      :margin-top "1.5rem"
      :padding-bottom "1rem"})))
 
-(defn form-footer [{:keys [delete delete-message cancel validate disabled?]}]
+(defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
+                           delete-disabled-error-text
+                           cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
-     [buttons/delete-button-with-confirm {:action delete
-                                          :modal-text delete-message
-                                          :id "delete-button"}
-      (tr [:buttons :delete])])
+     [common/error-tooltip
+      (when delete-disabled-error-text
+        {:title delete-disabled-error-text})
+      [buttons/delete-button-with-confirm
+       (merge
+        {:action delete
+         :modal-text delete-message
+         :id "delete-button"}
+        (when delete-confirm-button-text
+          {:confirm-button-text delete-confirm-button-text})
+        (when delete-cancel-button-text
+          {:cancel-button-text delete-cancel-button-text})
+        (when delete-disabled-error-text
+          {:disabled true}))
+       (tr [:buttons :delete])]])
    [:div {:style {:margin-left :auto}}
     (when cancel
       [buttons/button-secondary {:style    {:margin-right "1rem"}
@@ -368,6 +382,9 @@
            id              ;; Id for the form element
            delete          ;; Delete function
            delete-message  ;; message shown in delete confirmation dialog
+           delete-confirm-button-text ;; label for confirm delete button
+           delete-cancel-button-text ;; label form cancel delete button
+           delete-disabled-error-text ;; if specified, show delete as disabled with this text as tooltip
            ]}
    & children]
   (r/with-let [invalid-attributes (r/atom #{})
@@ -403,7 +420,10 @@
                                             (validate value @current-fields)))
                              :delete (when delete           ;;TODO inconsistent with save-event and cancel event
                                        #(e! delete))
-                             :delete-message delete-message}}]
+                             :delete-message delete-message
+                             :delete-confirm-button-text delete-confirm-button-text
+                             :delete-cancel-button-text delete-cancel-button-text
+                             :delete-disabled-error-text delete-disabled-error-text}}]
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
                            :display :flex

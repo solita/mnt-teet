@@ -154,3 +154,13 @@ SELECT ST_AsGML(ST_FlipCoordinates(ST_Collect(x.geometry)))
 $$ LANGUAGE SQL SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION teet.gml_entity_search_area(BIGINT,INTEGER) TO teet_backend;
+
+-- unneeded function, but since a checksummed non-repeatable function tries to DROP it, have to leave this stub here:
+CREATE OR REPLACE FUNCTION teet.replace_entity_ids(idlist TEXT)
+RETURNS BOOLEAN
+AS $$
+DECLARE
+BEGIN
+  RETURN false;
+END;
+$$ LANGUAGE PLPGSQL SECURITY DEFINER;

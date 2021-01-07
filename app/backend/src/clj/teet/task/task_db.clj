@@ -26,7 +26,8 @@
                                       (d/q '[:find ?f
                                              :where [?t :task/files ?f]
                                              :in $ ?t]
-                                           db task-eid))))
+                                           db task-eid))
+    false))
 
 
 
@@ -47,3 +48,20 @@
                    :in $ [?t ...]]
                  db task-types))
      (count task-types)))
+
+(defn send-to-thk? [db task-id]
+  (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
+
+(defn task-has-files?
+  "Check if task currently has files. Doesn't include deleted files."
+  [db task-id]
+  (boolean
+   (seq
+    (d/q '[:find ?f
+           :where
+           [?t :task/files ?f]
+           [(missing? $ ?f :meta/deleted?)]
+           (not-join [?f]
+                     [?replacement :file/previous-version ?f])
+           :in $ ?t]
+         db task-id))))

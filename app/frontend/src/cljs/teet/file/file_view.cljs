@@ -461,8 +461,8 @@
                   (edited first-version)))]
           [:<>
            [:div.file-details-upload-info
-            (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
-                                      :date (format/date-time (:meta/created-at first-version))})]
+            (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                      :date (format/date-time (:meta/created-at file))})]
 
            (when edited?
              [:div.file-details-edit-info
