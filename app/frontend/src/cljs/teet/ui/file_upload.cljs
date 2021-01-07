@@ -41,40 +41,40 @@
   (let [current-on-drop (atom on-drop)
         remove-upload-zone!
         (drag/register-drop-zone! {:element-id drag-container-id
-                                   :on-drop #(let [on-drop @current-on-drop]
-                                               (on-drop (drag/dropped-files %)))
-                                   :label (or drop-message "")})]
+                                   :on-drop    #(let [on-drop @current-on-drop]
+                                                  (on-drop (drag/dropped-files %)))
+                                   :label      (or drop-message "")})]
     (r/create-class
-     {:component-will-receive-props
-      (fn [_this [_ {on-drop :on-drop} & _]]
-        (reset! current-on-drop on-drop))
+      {:component-will-receive-props
+       (fn [_this [_ {on-drop :on-drop} & _]]
+         (reset! current-on-drop on-drop))
 
-      :component-will-unmount
-      (fn [_this]
-        (remove-upload-zone!))
+       :component-will-unmount
+       (fn [_this]
+         (remove-upload-zone!))
 
-      :reagent-render
-      (fn [{:keys [id on-drop multiple?]} & children]
-        (into [:label
-               {:htmlFor id}
-               [:input {:style {:display "none"}
-                        :id id
-                        :multiple multiple?
-                        :droppable "true"
-                        :type "file"
-                        :on-change #(on-drop (file-vector %))}]]
-              children))})))
+       :reagent-render
+       (fn [{:keys [id on-drop multiple?]} & children]
+         (into [:label
+                {:htmlFor id}
+                [:input {:style     {:display "none"}
+                         :id        id
+                         :multiple  multiple?
+                         :droppable "true"
+                         :type      "file"
+                         :on-change #(on-drop (file-vector %))}]]
+               children))})))
 
 (defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes
                                 drag-container-id]
-                         :or {multiple? true}} & children]
-  [FileUpload {:id id
+                         :or   {multiple? true}} & children]
+  [FileUpload {:id                id
                :drag-container-id drag-container-id
-               :on-drop on-drop
-               :drop-message drop-message
-               :multiple? multiple?}
+               :on-drop           on-drop
+               :drop-message      drop-message
+               :multiple?         multiple?}
    (into [buttons/link-button (merge {:component :span
-                                      :style {:cursor :pointer}}
+                                      :style     {:cursor :pointer}}
                                      button-attributes)]
          children)])
 
@@ -87,7 +87,7 @@
           :border-radius "3px"
           :padding       "1rem"}
          (when error
-           {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
+           {:border (str "solid 1px " theme-colors/error)}))) ;;This should also use material ui theme.error
 
 
 (defn files-field-entry [file-entry]
@@ -102,10 +102,9 @@
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
 (defn validate-name [{:file/keys [description extension] :as _file-row}]
-  (when (str/blank? description)
-    {:error :description-and-extension-required})
-  (when (str/blank? extension)
-    {:error :file-type-not-allowed}))
+  (cond
+    (str/blank? description) {:error :description-and-extension-required}
+    (str/blank? extension) {:error :file-type-not-allowed}))
 
 (defn validate-seq-number [{:file/keys [sequence-number]}]
   (when (and sequence-number
@@ -121,41 +120,41 @@
                          (file-model/validate-file-metadata project-id task metadata))]
       (case (:error error)
         :file-type-not-allowed
-        {:title (tr [:document :invalid-file-type])
+        {:title       (tr [:document :invalid-file-type])
          :description [:<>
                        (str/upper-case (file-model/filename->suffix (:file/name file-info)))
                        " "
                        [:a {:target "_blank"
-                            :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                            :href   "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
                         (tr [:document :invalid-file-type])]]}
 
         :file-too-large
-        {:title (tr [:document :file-too-large])
+        {:title       (tr [:document :file-too-large])
          :description ""}
 
         ;; Check for wrong project
         :wrong-project
-        {:title (tr [:file-upload :wrong-project])
+        {:title       (tr [:file-upload :wrong-project])
          :description ""}
 
         ;; Check for wrong task (if metadata can be parsed)
         :wrong-task
-        {:title (tr [:file-upload :wrong-task])
+        {:title       (tr [:file-upload :wrong-task])
          :description [select/with-enum-values
-                       {:e! e!
+                       {:e!        e!
                         :attribute :task/type}
                        [wrong-task-error (:task metadata)]]}
 
         :description-and-extension-required
-        {:title (tr [:file-upload :description-required])
+        {:title       (tr [:file-upload :description-required])
          :description ""}
 
         :invalid-sequence-number
-        {:title (tr [:file-upload :invalid-sequence-number])
+        {:title       (tr [:file-upload :invalid-sequence-number])
          :description ""}
 
         :file-empty
-        {:title (tr [:file-upload :empty-file])
+        {:title       (tr [:file-upload :empty-file])
          :description ""}
         ;; All validations ok
         :else nil))))
@@ -165,40 +164,40 @@
   [:<>
    [TableRow {}
     [TableCell {:style {:border :none}}
-     [TextField {:value (:file/description file-row)
+     [TextField {:value     (:file/description file-row)
                  :on-change #(update-file {:file/description
                                            (-> % .-target .-value)})
-                 :end-icon [text-field/file-end-icon (:file/extension file-row)]}]]
+                 :end-icon  [text-field/file-end-icon (:file/extension file-row)]}]]
     [TableCell {:style {:border :none}}
-     [select/select-enum {:e! e!
+     [select/select-enum {:e!          e!
                           :show-label? false
-                          :attribute :file/document-group
-                          :value (:file/document-group file-row)
-                          :on-change #(update-file {:file/document-group %})}]]
+                          :attribute   :file/document-group
+                          :value       (:file/document-group file-row)
+                          :on-change   #(update-file {:file/document-group %})}]]
     [TableCell {:style {:border :none}}
-     [TextField {:value (or (:file/sequence-number file-row) "")
-                 :disabled (nil? (:file/document-group file-row))
-                 :type :number
+     [TextField {:value       (or (:file/sequence-number file-row) "")
+                 :disabled    (nil? (:file/document-group file-row))
+                 :type        :number
                  :placeholder "0000"
-                 :inline? true
-                 :on-change #(let [n (-> % .-target .-value)]
-                               (update-file
-                                {:file/sequence-number (if (str/blank? n)
-                                                         nil
-                                                         (js/parseInt n))}))}]]
+                 :inline?     true
+                 :on-change   #(let [n (-> % .-target .-value)]
+                                 (update-file
+                                   {:file/sequence-number (if (str/blank? n)
+                                                            nil
+                                                            (js/parseInt n))}))}]]
     [TableCell {:style {:border :none}}
-     [IconButton {:edge "end"
+     [IconButton {:edge     "end"
                   :on-click delete-file}
       [icons/action-delete]]]]
    [TableRow {}
     [TableCell {:colSpan 4}
      (if-let [{:keys [title description] :as error} (validate-file e! project-id task file-row)]
        [common-ui/info-box {:variant :error
-                            :title title
+                            :title   title
                             :content description}]
        [:<>
         (when (get-in file-row [:metadata :file-id])
-          [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
+          [common-ui/info-box {:title   (tr [:file-upload :already-uploaded])
                                :content (tr [:file-upload :new-version-will-be-created])}])
         (when-let [part-number (some-> file-row :metadata :part js/parseInt)]
           (when (not (zero? part-number))
@@ -207,12 +206,12 @@
                                             %)
                                          (:file.part/_task task))]
               ;; Existing file part
-              [common-ui/info-box {:title (tr [:file-upload :file-will-be-added-to-part]
-                                              {:part (:file.part/name existing-part)})
+              [common-ui/info-box {:title   (tr [:file-upload :file-will-be-added-to-part]
+                                                {:part (:file.part/name existing-part)})
                                    :content (tr [:file-upload :file-will-be-added-to-part-text])}]
 
               ;; New file part
-              [common-ui/info-box {:title (tr [:file-upload :file-new-part])
+              [common-ui/info-box {:title   (tr [:file-upload :file-new-part])
                                    :content (tr [:file-upload :file-new-part-text])}])))
         (let [{:file/keys [name size]} (files-field-entry file-row)]
           [:<>
@@ -231,7 +230,7 @@
                       (on-change (into (subvec value 0 i)
                                        (subvec value (inc i)))))]
     [:div {:class (<class files-field-style error)
-           :id "files-field-drag-container"}
+           :id    "files-field-drag-container"}
      [SectionHeading (tr [:common :files])]
      [Table {:class (<class common-styles/margin-bottom 1)}
       [TableHead {}
@@ -247,19 +246,19 @@
 
       [TableBody {}
        (doall
-        (map-indexed
-         (fn [i file-row]
-           ^{:key i}
-           [files-field-row {:e! e!
-                             :project-id project-id
-                             :task task
-                             :update-file (r/partial update-file i)
-                             :delete-file (r/partial delete-file i)}
-            file-row])
-         value))]]
+         (map-indexed
+           (fn [i file-row]
+             ^{:key i}
+             [files-field-row {:e!          e!
+                               :project-id  project-id
+                               :task        task
+                               :update-file (r/partial update-file i)
+                               :delete-file (r/partial delete-file i)}
+              file-row])
+           value))]]
      (when (not (and single? (pos? (count value))))
-       [FileUploadButton {:id "files-field"
+       [FileUploadButton {:id                "files-field"
                           :drag-container-id "files-field-drag-container"
-                          :on-drop #(on-change (into (or value []) %))}
+                          :on-drop           #(on-change (into (or value []) %))}
         [icons/content-file-copy]
         (tr [:common :select-files])])]))
