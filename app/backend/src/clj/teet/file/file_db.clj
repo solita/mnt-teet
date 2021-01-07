@@ -288,6 +288,8 @@
                           [?f :file/original-name ?n]
                           [?t :task/files ?f]
                           [(missing? $ ?f :meta/deleted?)]
+                          (not-join [?f]
+                                    [?replacement :file/previous-version ?f])
                           :in $ ?t ?n]
                         db task-id original-name)))]
     (merge metadata
@@ -390,4 +392,3 @@
           [?p :thk.project/lifecycles ?l]
           :in $ ?uuid]
         db uuid)))
-
