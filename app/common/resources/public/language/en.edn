@@ -458,7 +458,8 @@
   "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",
-  :user-is-already-participant "User is already participant",
+  :user-is-already-participant
+  "The email address of the participant is already in the participant list!",
   :server-error "Server error.",
   :invalid-x-road-response "Invalid response from X-road",
   :permission-already-granted

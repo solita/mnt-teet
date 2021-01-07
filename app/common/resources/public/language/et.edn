@@ -453,7 +453,8 @@
   "Ülesande osale on lisatud faile. Kui soovid ülesande osa kustutada, siis tõsta enne failid teise osa külge või kustuta failid.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :invalid-task-dates "Kontrollige ülesande kuupäevi",
-  :user-is-already-participant "Kasutaja on juba osaleja",
+  :user-is-already-participant
+  "Lisatava kasutaja e-posti aadress on juba osalejate nimekirjas!",
   :server-error "Serveri viga.",
   :invalid-x-road-response "Vale vastus X-teelt",
   :permission-already-granted "Selle kasutaja luba on juba antud",
