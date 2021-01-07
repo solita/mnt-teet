@@ -142,6 +142,7 @@
   :add-files "Add files",
   :applied "Applied",
   :opinion-title "Opinion",
+  :opinion "Opinion",
   :enter-response "Enter involved party response",
   :new-third-party-created "Involved party created successfully",
   :all-third-parties "All involved parties",
@@ -165,6 +166,8 @@
   :response-of-third-party "Response of involved party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
+  :application-terms-expire-warning
+  "The application terms will expire soon/have expired!",
   :opinion-saved "Opinion saved successfully",
   :new-third-party "Add involved party"},
  :dashboard
