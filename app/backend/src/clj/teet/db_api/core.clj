@@ -298,7 +298,7 @@
   (assert (some? args) "Must specify :args binding")
   `(defrequest* :query ~query-name ~options ~@body))
 
-(defn- patch-with-for-dev-local
+(defmacro patch-with-for-dev-local
   "Run body with patched d/with when using :dev-local connection.
   Otherwise runs body as is.
 
@@ -311,7 +311,7 @@
            orig-with# d/with]
        (with-redefs [d/with (fn [_db# arg-map#]
                               (println "USING d/with PATCHED FOR dev-local")
-                              (orig-with with-db# arg-map#))]
+                              (orig-with# with-db# arg-map#))]
          ~@body))
      (do ~@body)))
 
