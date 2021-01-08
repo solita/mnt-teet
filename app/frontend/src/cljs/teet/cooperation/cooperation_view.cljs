@@ -24,7 +24,6 @@
             [teet.user.user-model :as user-model]
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.util.collection :as cu]
-            [teet.util.date :as du]
             [clojure.string :as str]
             [teet.task.task-view :as task-view]
             [teet.link.link-view :as link-view]
