@@ -161,18 +161,24 @@
          (+ 2 (tu/get-data :old-activity-count)))
       "Two tasks were added"))
 
+(defn create-new-activity
+  []
+  "Create new test Activity"
+  (tu/store-data! :new-activity-id
+    (-> (tu/local-command tu/mock-user-boss
+          :activity/create
+          {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
+                      :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
+                      :activity/name :activity.name/land-acquisition}
+           :tasks [[:task.group/land-purchase :task.type/third-party-review false]]
+           :lifecycle-id (tu/->db-id "p3-lc1")})
+      :tempids
+      (get "new-activity"))))
+
 (deftest delete-activity
   (testing "Activity can be deleted if doesn't have a procurement number"
-    (tu/store-data! :new-activity-id
-                    (-> (tu/local-command tu/mock-user-boss
-                                          :activity/create
-                                          {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
-                                                      :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
-                                                      :activity/name :activity.name/land-acquisition}
-                                           :tasks [[:task.group/land-purchase :task.type/third-party-review false]]
-                                           :lifecycle-id (tu/->db-id "p3-lc1")})
-                        :tempids
-                        (get "new-activity")))
+    (tu/give-admin-permission tu/mock-user-boss)
+    (create-new-activity)
 
     ;; Let's give the activity a procurement number. In reality this would come from THK.
     (tu/tx {:db/id (tu/get-data :new-activity-id)
@@ -196,6 +202,42 @@
 
     (is (:meta/deleted? (du/entity (tu/db)
                                    (tu/get-data :new-activity-id))))))
+
+(deftest delete-activity-only-by-admin
+  (testing "Activity delete fails without Admin authorization"
+    (create-new-activity)
+    (is (thrown? Exception
+          (tu/local-command tu/mock-user-boss
+            :activity/delete
+            {:db/id (tu/get-data :new-activity-id)})))
+    (is (not (:meta/deleted?
+               (du/entity (tu/db)
+                 (tu/get-data :new-activity-id)))))
+    (is (thrown-with-msg?
+          Exception #"Request authorization failed"
+          (tu/local-command tu/mock-user-boss
+            :activity/delete
+            {:db/id (tu/get-data :new-activity-id)})))
+    (testing "With Admin permission given delete command successful"
+      (tu/give-admin-permission tu/mock-user-boss)
+      (tu/local-command tu/mock-user-boss
+        :activity/delete
+        {:db/id (tu/get-data :new-activity-id)})
+      (is (:meta/deleted?
+            (du/entity (tu/db)
+              (tu/get-data :new-activity-id)))))))
+
+;; TODO: add fake file upload to Activity's Task
+(deftest delete-activity-only-without-files-in-tasks
+  (testing "Activity can only be deleted without files attached to Tasks"
+    (create-new-activity)
+    (tu/give-admin-permission tu/mock-user-boss)
+    (tu/local-command tu/mock-user-boss
+      :activity/delete
+      {:db/id (tu/get-data :new-activity-id)})
+    (is (:meta/deleted?
+          (du/entity (tu/db)
+            (tu/get-data :new-activity-id))))))
 
 
 (deftest assigning-pm-gives-permission
