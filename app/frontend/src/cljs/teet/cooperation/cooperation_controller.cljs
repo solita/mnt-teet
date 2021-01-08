@@ -2,9 +2,7 @@
   (:require [tuck.core :as t]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
-            [teet.common.common-controller :as common-controller]
-            [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.util.collection :as cu]))
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord ThirdPartyCreated [name save-response])
 (defrecord ApplicationCreated [save-response])

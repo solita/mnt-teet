@@ -142,7 +142,7 @@
   :add-files "Lisan faile",
   :applied "Rakendatud",
   :opinion-title "Seisukoht",
-  :opinion nil,
+  :opinion "Seisukoht",
   :enter-response "Sisestan kaasatud osapoole vastuse",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
@@ -165,7 +165,8 @@
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
-  :application-terms-expire-warning nil,
+  :application-terms-expire-warning
+  "Esitatud tingimused aeguvad peagi / on aegunud!",
   :opinion-saved "Seisukoht edukalt salvestatud",
   :new-third-party "Lisan kaasatud osapoole"},
  :dashboard
@@ -452,7 +453,8 @@
    "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad."},
   :version "Versioon"},
  :error
- {:part-has-files
+ {:file-metadata-not-unique nil,
+  :part-has-files
   "Ülesande osale on lisatud faile. Kui soovid ülesande osa kustutada, siis tõsta enne failid teise osa külge või kustuta failid.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :invalid-task-dates "Kontrollige ülesande kuupäevi",
