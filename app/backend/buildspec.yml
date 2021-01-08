@@ -22,11 +22,10 @@ phases:
       - cd $BACKEND
       - clojure -A:test
       - codebuild-breakpoint
-      - bash -x build.sh $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - bash -x build.sh
   post_build:
     commands:
       - NOTIFY_ON_SUCCESS=0 && bash ../../ci/scripts/slack.bash Backend $CODEBUILD_RESOLVED_SOURCE_VERSION
 cache:
   paths:
     - '/root/.m2/**/*'
-  
