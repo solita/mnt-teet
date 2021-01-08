@@ -71,7 +71,7 @@ context('Cooperation', function() {
         cy.formSubmit();
 
         // test that the value generated based on valid-months actually made it to the frontend
-        cy.get("div[data-cy-test='valid-until']");
+        cy.get("div[data-cy='valid-until']");
 
         // EDIT THE response and remove the valid months so the valid-until should be removed
         cy.get(".edit-response").click();
@@ -81,19 +81,29 @@ context('Cooperation', function() {
         cy.formSubmit();
 
         // Since we cleared the valid months field this valid until should no longer exist
-        cy.get("div[data-cy-test='valid-until']").should('not.exist');
+        cy.get("div[data-cy='valid-until']").should('not.exist');
 
         // Submitting competent authority opinion
-        cy.get(".create-opinion").click()
+        cy.get(".create-opinion").click();
 
         cy.formInput(
             ":cooperation.opinion/status", "[:cooperation.opinion.status/partially-rejected]",
             ":cooperation.opinion/comment", "RTE:this is my comment");
 
-        cy.formSubmit()
+        cy.formSubmit();
 
         // opinion has been given, the initial button should be gone
-        cy.get(".create-opinion").should("not.exist")
+        cy.get(".create-opinion").should("not.exist");
+
+        cy.get(".edit-opinion").click();
+
+        cy.formInput(
+            ":cooperation.opinion/status", "[:cooperation.opinion.status/rejected]");
+
+        cy.formSubmit();
+
+
+        cy.get("div[data-cy='rejected']"); // check that the opinion was changed
 
     })
 

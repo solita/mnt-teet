@@ -6,6 +6,7 @@
                :cljs [cljs-time.coerce :as tc])
             [clojure.spec.alpha :as s]
             [teet.util.datomic :as du]
+            [teet.util.date :as dateu]
             [teet.util.spec :as su]
             [teet.user.user-model :as user-model]))
 
@@ -61,6 +62,15 @@
            (number? (:cooperation.response/valid-months response)))
     (assoc response :cooperation.response/valid-until (valid-until response))
     (dissoc response :cooperation.response/valid-until)))
+
+(def ^:const days-until-application-expiration-warning 45)
+
+(defn application-expiration-warning?
+  [{:cooperation.response/keys [valid-until]}]
+  (and
+    valid-until
+    (> days-until-application-expiration-warning
+       (dateu/days-until-date valid-until))))
 
 (def third-party-display-attrs
   "Attributes to pull for showing a 3rd party"
