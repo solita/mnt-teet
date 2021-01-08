@@ -401,8 +401,8 @@
    (doall
     (for [{:keys [tx changes]} txs]
       ^{:key (str (:db/id tx))}
-      [:<>
-       [:div {:style {:font-weight :bold}}
+      [:div {:style {:margin-top "1.5rem"}}
+       [typography/Heading3
         (format/date-time (:db/txInstant tx))
         " "
         (when-let [author (:tx/author tx)]
@@ -429,7 +429,8 @@
   (r/with-let [show? (r/atom false)]
     [:<>
      (if-not @show?
-       [:button {:on-click #(reset! show? true)} "Show change history"]
+       [buttons/button-primary {:on-click #(reset! show? true)}
+        "Show change history"]
        [query/query {:e! e!
                      :query :admin/entity-history
                      :args {:id id}
