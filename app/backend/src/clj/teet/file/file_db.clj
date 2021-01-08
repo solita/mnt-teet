@@ -189,7 +189,7 @@
   as :versions key unless latest-only? provided as true.
 
   Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
-  [db user file-ids latest-only?]
+  [db user file-ids]
   (let [files (file-listing-info db user file-ids)
 
         ;; Group files to first versions and next versions
@@ -213,7 +213,30 @@
                  (assoc latest-version
                    :file/full-name (filename-metadata/metadata->filename
                                      (file-metadata-by-id db (:db/id latest-version)))
-                   :versions (when-not latest-only? previous-versions)))))))
+                   :versions (previous-versions)))))))
+
+(defn latest-file-listing
+  "Fetch file information suitable for file listing. Returns all file attributes
+  and owner info. Assumes only the latest version of each file are given in parameters.
+  Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
+  [db user latest-file-ids]
+  (let [files (file-listing-info db user latest-file-ids)
+
+        ;; Find next version for given file
+        next-version (fn [file]
+                       (some #(when (= (:db/id file)
+                                      (get-in % [:file/previous-version :db/id])) %)
+                         files))]
+    (vec
+      (sort-by :file/name
+        (for [f files
+              :let [versions (iterate next-version f)
+                    [latest-version & _] versions]
+              :when latest-version]
+          (assoc latest-version
+            :file/full-name (filename-metadata/metadata->filename
+                              (file-metadata-by-id db (:db/id latest-version)))
+            :versions []))))))
 
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
@@ -233,8 +256,7 @@
                 [?project :thk.project/lifecycles ?lc]
 
                 :in $ ?project ?seqno]
-              db project-id sequence-number))
-    false))
+              db project-id sequence-number))))
 
 (defn resolve-metadata
   "Given metadata parsed from a file name, resolve the coded references to
@@ -373,6 +395,25 @@
                [?f :file/name ?file-name]
                [(teet.util.string/contains-words? ?file-name ?text)]]
              db project text)))
+
+(defn search-latest-files-in-project
+  "Search only for the latest files in project that contain given text in their name.
+  Returns list of file ids."
+  [db project text]
+  (mapv first
+    (d/q '[:find ?f
+           :in $ ?p ?text
+           :where
+           [?p :thk.project/lifecycles ?lc]
+           [?lc :thk.lifecycle/activities ?a]
+           [?a :activity/tasks ?t]
+           [?t :task/files ?f]
+           [(missing? $ ?f :meta/deleted?)]
+           [?f :file/name ?file-name]
+           [(teet.util.string/contains-words? ?file-name ?text)]
+           (not-join [?f]
+             [?replacement :file/previous-version ?f])]
+      db project text)))
 
 (defn file-by-uuid
   "Return file :db/id based on the :file/id UUID."

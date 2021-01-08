@@ -97,10 +97,9 @@
 
 (defmethod search-link :file
   [db user _config project _ _lang text]
-  (file-db/file-listing
+  (file-db/latest-file-listing
    db user
-   (file-db/search-files-in-project db project text)
-    true))
+   (file-db/search-latest-files-in-project db project text)))
 
 (defquery :link/search
   {:doc "Search for items that can be linked"

@@ -26,8 +26,7 @@
                                       (d/q '[:find ?f
                                              :where [?t :task/files ?f]
                                              :in $ ?t]
-                                           db task-eid))
-    false))
+                                           db task-eid))))
 
 
 
