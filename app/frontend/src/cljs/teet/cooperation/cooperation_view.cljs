@@ -99,7 +99,7 @@
 
 (defn- opinion-status [status]
   (let [status (or status :cooperation.opinion.status/unanswered)]
-    [:div {:data-cy-test (name status)}
+    [:div {:data-cy (name status)}
      [color-and-status
       (cooperation-style/opinion-status-color status)
       (tr-enum status)]]))
@@ -170,7 +170,7 @@
                 [icons/alert-warning-outlined {:style {:color theme-colors/dark-tangerine-11
                                                        :margin-right "0.25rem"}}]])
              [:span (format/date valid-until)]]
-            {:data-cy-test "valid-until"}])]])
+            {:data-cy "valid-until"}])]])
      (let [{:cooperation.application/keys [date response-deadline]} application]
        [common/basic-information-row
         {:right-align-last? false
