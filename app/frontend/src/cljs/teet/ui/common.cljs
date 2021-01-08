@@ -443,14 +443,16 @@
                   child]))
           children)))
 
-(defn info-box [{:keys [variant title content icon]
+(defn info-box [{:keys [variant title content icon cy]
                  :or {variant :info}}]
   (let [icon (or icon
                  (case variant
                    :success [icons/action-check-circle-outline]
                    :error [icons/alert-error-outline]
                    [fi/info]))]
-    [:div {:class (<class common-styles/info-box variant)}
+    [:div (merge {:class (<class common-styles/info-box variant)}
+                 (when cy
+                   {:data-cy cy}))
      [:div {:class [(<class common-styles/flex-align-center)
                     (<class common-styles/margin-bottom 0.5)]}
       icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]

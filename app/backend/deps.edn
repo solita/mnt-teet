@@ -46,8 +46,7 @@
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              ;;"teet-dev-files" {:url "s3://teet-dev-files/maven"}
              "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
-
-             }
+             "cognitect-dev-tools" {:url "https://dev-tools.cognitect.com/maven/releases/"}}
  :paths ["src/clj"
          "resources"
          "common/src/cljc"
@@ -58,7 +57,7 @@
            :dev {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                  :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
-                              com.datomic/dev-local {:mvn/version "0.9.225"}}
+                              com.datomic/dev-local {:mvn/version "0.9.229"}}
                  :extra-paths ["dev-src" "test"]}
            :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                                      org.clojure/tools.namespace {:mvn/version "0.3.1"}}
@@ -81,12 +80,12 @@
                                  "--no-color" ;; No ANSI codes in CI
                                  "--reporter" "teet.test.slack/report"]
                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
-                                  com.datomic/dev-local {:mvn/version "0.9.225"}}
+                                  com.datomic/dev-local {:mvn/version "0.9.229"}}
                      :extra-paths ["test"]}
            :test-all {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                       :main-opts ["-m" "kaocha.runner"]
                       :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
-                                   com.datomic/dev-local {:mvn/version "0.9.225"}}
+                                   com.datomic/dev-local {:mvn/version "0.9.229"}}
                       :extra-paths ["test"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]

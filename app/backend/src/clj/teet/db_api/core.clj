@@ -4,7 +4,8 @@
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.environment :as environment]))
 
 (defmulti query
   "Execute a given named query.
@@ -297,6 +298,23 @@
   (assert (some? args) "Must specify :args binding")
   `(defrequest* :query ~query-name ~options ~@body))
 
+(defmacro patch-with-for-dev-local
+  "Run body with patched d/with when using :dev-local connection.
+  Otherwise runs body as is.
+
+  Dev-local throws exception if using d/with inside tx function.
+  We need to patch it for now, this can be removed once dev-local
+  supports d/with properly."
+  [conn & body]
+  `(if (= :dev-local (environment/config-value :datomic :client :server-type))
+     (let [with-db# (d/with-db ~conn)
+           orig-with# d/with]
+       (with-redefs [d/with (fn [_db# arg-map#]
+                              (println "USING d/with PATCHED FOR dev-local")
+                              (orig-with# with-db# arg-map#))]
+         ~@body))
+     (do ~@body)))
+
 (defn tx
   "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data.
 
@@ -311,10 +329,13 @@
         command *request-name*]
     (assert *request-name* "tx can only be called within defcommand")
     (log/info "tx  command: " command ", user: " user)
-    (d/transact conn {:tx-data (conj (into tx-data
-                                           (mapcat #(remove nil? %) more-tx-data))
-                                     {:db/id "datomic.tx"
-                                      :tx/author (:user/id user)})})))
+
+    (patch-with-for-dev-local
+     conn
+     (d/transact conn {:tx-data (conj (into tx-data
+                                            (mapcat #(remove nil? %) more-tx-data))
+                                      {:db/id "datomic.tx"
+                                       :tx/author (:user/id user)})}))))
 
 (defn tx-ret
   "Call tx and return :tempids as command response."

@@ -102,9 +102,10 @@
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
 (defn validate-name [{:file/keys [description extension] :as _file-row}]
-  (when (or (str/blank? description)
-            (str/blank? extension))
-    {:error :description-and-extension-required}))
+  (when (str/blank? description)
+    {:error :description-and-extension-required})
+  (when (str/blank? extension)
+    {:error :file-type-not-allowed}))
 
 (defn validate-seq-number [{:file/keys [sequence-number]}]
   (when (and sequence-number
@@ -197,7 +198,8 @@
                             :content description}]
        [:<>
         (when (get-in file-row [:metadata :file-id])
-          [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
+          [common-ui/info-box {:cy :new-version
+                               :title (tr [:file-upload :already-uploaded])
                                :content (tr [:file-upload :new-version-will-be-created])}])
         (when-let [part-number (some-> file-row :metadata :part js/parseInt)]
           (when (not (zero? part-number))

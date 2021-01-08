@@ -41,7 +41,7 @@
 (defn file-identifying-info
   "Show file identifying info: document group, seq# and version."
   [land-acquisition? {:file/keys [document-group sequence-number version]}]
-  [:strong.file-identifying-info
+  [:strong.file-identifying-info {:data-version version}
    (str/join " / "
              (remove nil?
                      [(when document-group
@@ -461,8 +461,8 @@
                   (edited first-version)))]
           [:<>
            [:div.file-details-upload-info
-            (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
-                                      :date (format/date-time (:meta/created-at first-version))})]
+            (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                      :date (format/date-time (:meta/created-at file))})]
 
            (when edited?
              [:div.file-details-edit-info
