@@ -46,8 +46,7 @@
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              ;;"teet-dev-files" {:url "s3://teet-dev-files/maven"}
              "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
-
-             }
+             "cognitect-dev-tools" {:url "https://dev-tools.cognitect.com/maven/releases/"}}
  :paths ["src/clj"
          "resources"
          "common/src/cljc"
