@@ -133,7 +133,7 @@
           [:div
            [typography/BoldGreyText {:style {:display :inline-block}}
             (str (tr [:common :date]) ":")]
-           (str " " (format/date date))])]]
+           (str " " (format/date-time date))])]]
       (when comment
         [:div [rich-text-editor/display-markdown comment]])])))
 
