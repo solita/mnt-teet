@@ -504,7 +504,8 @@
     :save-event #(cooperation-controller/save-opinion-event
                   application
                   (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
-                  close-event)}
+                  close-event)
+    :spec ::cooperation-model/opinion-form}
    ^{:attribute :cooperation.opinion/status :xs 10}
    [select/select-enum {:e! e!
                         :attribute :cooperation.opinion/status}]

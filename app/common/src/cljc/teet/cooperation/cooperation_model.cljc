@@ -47,6 +47,10 @@
                 :cooperation.response/valid-until
                 :cooperation.response/content]))
 
+(s/def ::opinion-form
+  (s/keys :req [:cooperation.opinion/status]
+          :opt [:cooperation.opinion/comment]))
+
 (defn valid-until
   "Calculate response valid-until date based on date and valid months."
   [{:cooperation.response/keys [date valid-months]}]
