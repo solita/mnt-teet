@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [teet.util.datomic :as du]
             [teet.environment :as environment]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.util.collection :as cu]))
 
 (defmulti search-clause (fn [[field _value]] field))
 
@@ -199,3 +200,54 @@
     {:entity (expand-extra-attrs db entity)
      :ref-attrs (ref-attrs db entity)
      :linked-from (linked-from db id)}))
+
+
+(defn entity-tx-log
+  "Return list in chronological order of transactions that touched the given
+  entity specified by entity-id (:db/id).
+
+  Returns information about the transaction (id, time and author info)
+  and all the changes to attributes (both added and removed)."
+  [db entity-id]
+  (->>
+   ;; Pull all datoms affecting entity
+   (d/q '[:find ?tx ?e ?a ?v ?add
+          :where
+          [?e ?a ?v ?tx ?add]
+          :in $ ?e]
+        (d/history db) entity-id)
+
+   ;; Group by transaction
+   (group-by first)
+
+   (map
+    (fn [[_ tx-changes]]
+      (let [tx-id (ffirst tx-changes)]
+        ;; Fetch all information added to tx and the user information
+        ;; of the :tx/author (if any)
+        {:tx (update (d/pull db '[*] tx-id)
+                     :tx/author (fn [author]
+                                  (when author
+                                    (d/pull db user-info [:user/id author]))))
+
+         ;; group all changes by attribute
+         :changes (reduce (fn [m [_tx _e a v add]]
+                            (let [attr (:db/ident (d/pull db [:db/ident] a))]
+                              (update m attr (fnil conj [])
+                                      [add v])))
+                          {}
+                          tx-changes)})))
+
+   ;; Sort transactions by time
+   (sort-by (comp :db/txInstant :tx))))
+
+(defquery :admin/entity-history
+  {:doc "Pull information about an entity transaction history."
+   :context {:keys [user db]}
+   :args {string-id :id}
+   :project-id nil
+   :authorization {:admin/inspector {}}
+   :pre [^{:error :not-found}
+         (inspector-enabled?)]}
+  (let [id (:db/id (du/entity db (->eid string-id)))]
+    (entity-tx-log db id)))
