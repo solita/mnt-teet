@@ -83,7 +83,7 @@
                            cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
-     [common/error-tooltip
+     [common/popper-tooltip
       (when delete-disabled-error-text
         {:title delete-disabled-error-text})
       [buttons/delete-button-with-confirm

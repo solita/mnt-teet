@@ -428,7 +428,7 @@
    [:div {:class (<class common-styles/flex-row-wrap)}
     (doall
       (for [[label data row-options] data]
-        ^{:key label}
+        ^{:key (str (:key opts) "-" label)}
         [:div (merge row-options
                      {:class [(<class info-row-item-style (:right-align-last? opts))
                               (:class row-options)]})
@@ -448,6 +448,7 @@
   (let [icon (or icon
                  (case variant
                    :success [icons/action-check-circle-outline]
+                   :warning [icons/alert-warning-outlined]
                    :error [icons/alert-error-outline]
                    [fi/info]))]
     [:div (merge {:class (<class common-styles/info-box variant)}
@@ -458,14 +459,34 @@
       icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]
      content]))
 
-(defn error-tooltip
+(defn popper-tooltip-content [{:keys [variant title body icon]
+                        :or {variant :info}}]
+  (let [icon (or icon
+                 (case variant
+                   :success [icons/action-check-circle-outline]
+                   :warning [icons/alert-warning-outlined]
+                   :error [icons/alert-error-outline]
+                   [fi/info]))]
+    [:div {:class (<class common-styles/popper-tooltip variant)}
+     [:div {:style {:display :flex
+                    :justify-content :center
+                    :align-items :center}}
+      [:div {:style {:margin-right "0.5rem"}}
+       icon]
+      [:div
+       [typography/TextBold title]
+       [typography/Text body]]]]))
+
+
+(defn popper-tooltip
   "Wrap component in an error tooltip. When component is hovered, the
   error message is displayed.
 
   If msg is nil, the component is returned as is.
   Otherwise msg must be a map containig :title and :content
   for the error message."
-  [{:keys [title content] :as msg} component]
+  [{:keys [title body variant icon] :as msg
+    :or {variant :error}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
                set-anchor-el! #(reset! anchor-el %)
@@ -476,10 +497,14 @@
       [:div {:on-mouse-enter enter!
              :on-mouse-leave leave!
              :on-click enter!
-             :ref set-anchor-el!}
+             :ref set-anchor-el!
+             :style {:display :inline-block}}
        component
-       [Popper {:open @hover?
-                :anchor-el @anchor-el}
-        [info-box {:variant :error
-                   :title title
-                   :content content}]]])))
+       [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
+                :open @hover?
+                :anchor-el @anchor-el
+                :placement "bottom-start"}
+        [popper-tooltip-content {:variant variant
+                                 :title title
+                                 :body body
+                                 :icon icon}]]])))

@@ -2,9 +2,7 @@
   (:require [tuck.core :as t]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
-            [teet.common.common-controller :as common-controller]
-            [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.util.collection :as cu]))
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord ThirdPartyCreated [name save-response])
 (defrecord ApplicationCreated [save-response])
@@ -46,17 +44,11 @@
            (tr [:cooperation (if new? :opinion-created :opinion-saved)]))
           common-controller/refresh-fx)))
 
-(defn prepare-opinion-form [form]
-  (-> form
-      (update :cooperation.opinion/comment
-              #(when % (rich-text-editor/editor-state->markdown %)))
-      cu/without-nils))
-
 (defn save-opinion-event [application form close-event]
   (common-controller/->SaveForm
    :cooperation/save-opinion
    {:application-id (:db/id application)
-    :opinion-form (prepare-opinion-form form)}
+    :opinion-form form}
    (fn [response]
      (fn [e!]
        (e! (close-event))
