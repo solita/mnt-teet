@@ -102,21 +102,6 @@
                                                          [user-save-form-button*]]
                                        :children [[user-form-fields]]}]]])
 
-(defn- user-permissions [permissions]
-  [:ul
-   (doall
-    (for [{:permission/keys [role valid-from valid-until projects]} (sort-by (juxt :permission/role
-                                                                                   :permission/valid-from)
-                                                                             permissions)]
-      [:li (str (name role)
-                (when-not projects " (global)")
-                ": "
-                (format/date valid-from) "-" (format/date valid-until))
-       (when projects
-         [:ul
-          (doall (for [{:thk.project/keys [id name]} (sort-by :thk.project/id projects)]
-                   [:li (str id " " name)]))])]))])
-
 (defn user-row-heading
   [{:user/keys [company email phone-number global-role] :as user} open? toggle-open]
   (let [contact-info (str/join " / "
