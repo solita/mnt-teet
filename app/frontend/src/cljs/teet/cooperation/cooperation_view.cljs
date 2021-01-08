@@ -100,9 +100,10 @@
 
 (defn- opinion-status [status]
   (let [status (or status :cooperation.opinion.status/unanswered)]
-    [color-and-status
-     (cooperation-style/opinion-status-color status)
-     (tr-enum status)]))
+    [:div {:data-cy-test (name status)}
+     [color-and-status
+      (cooperation-style/opinion-status-color status)
+      (tr-enum status)]]))
 
 
 (defn- opinion-view
@@ -353,7 +354,7 @@
                                              :project-id (:thk.project/id project)
                                              :third-party third-party-name}]
           :modal-title (tr [:cooperation :new-application-title])
-          :button-component [buttons/button-primary {:class :new-application}
+          :button-component [buttons/button-primary {:class "new-application"}
                              (tr [:cooperation :new-application])]}]]
        [applications third-party]]]]))
 
@@ -440,7 +441,7 @@
            :form-component [application-response-form {:e! e!
                                                        :project-id (:thk.project/id project)
                                                        :application-id (:db/id application)}]
-           :button-component [buttons/button-secondary {:class :edit-response
+           :button-component [buttons/button-secondary {:class "edit-response"
                                                         :size :small}
                               (tr [:buttons :edit])]}]]]
        [:div {:class (<class common-styles/margin-bottom 1)}
@@ -529,11 +530,12 @@
      (tr [:cooperation :opinion-title])]
     [opinion-view {:edit-button [edit-opinion e! application
                                  [buttons/button-secondary {:size "small"
+                                                            :class "edit-opinion"
                                                             :disabled (boolean (not opinion))}
                                   (tr [:buttons :edit])]]} application]]
    (when (not opinion)
      [edit-opinion e! application
-      [buttons/button-primary {:class :create-opinion}
+      [buttons/button-primary {:class "create-opinion"}
        (tr [:cooperation :create-opinion-button])]])])
 
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
@@ -569,5 +571,5 @@
              :form-component [application-response-form {:e! e!
                                                          :project-id (:thk.project/id project)
                                                          :application-id (:db/id application)}]
-             :button-component [buttons/button-primary {:class :enter-response}
+             :button-component [buttons/button-primary {:class "enter-response"}
                                 (tr [:cooperation :enter-response])]}]])]]]]))
