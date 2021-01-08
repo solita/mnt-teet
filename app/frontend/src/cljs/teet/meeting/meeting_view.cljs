@@ -945,14 +945,14 @@
 (defn meeting-duplicate [e! activity-id meeting close! duplicate-open?]
   (r/with-let [form (r/atom meeting)
                close-event (form/callback-event close!)]
-    [panels/modal {:title (tr [:meeting :duplicate-meeting-modal-title])
-                   :max-width "md"
-                   :open-atom duplicate-open?}
-     [meeting-form {:e! e!
-                    :activity-id activity-id
-                    :duplicate? true}
-      close-event
-      form]]))
+              [panels/modal {:title     (tr [:meeting :duplicate-meeting-modal-title])
+                             :max-width "md"
+                             :open-atom duplicate-open?}
+               [meeting-form {:e!          e!
+                              :activity-id activity-id
+                              :duplicate?  true}
+                close-event
+                form]]))
 
 (def ^:private comment-count-path
   [:route :meeting :meeting :comment/counts :comment/old-comments])
@@ -962,21 +962,21 @@
   (r/with-let [duplicate-open? (r/atom false)
                open-duplicate! #(reset! duplicate-open? true)
                close-duplicate! #(reset! duplicate-open? false)]
-    (let [{:meeting/keys [title number locked?]} meeting]
-      [:div
-       [:div {:class (<class common-styles/heading-and-action-style)}
-        [typography/Heading2 {:class (<class common-styles/flex-align-center)}
-         title (when number (str " #" number)) (when locked? [icons/action-lock])]
-        [:div {:class (<class common-styles/flex-align-end)}
-        [authorization-context/when-authorized :edit-meeting
-         [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
-                                  :form-value meeting
-                                  :modal-title (tr [:meeting :edit-meeting-modal-title])
-                                  :id "edit-meeting"
-                                  :button-component
-                                  [buttons/button-primary {:on-click meeting} (tr [:buttons :edit])]}]]
-        [buttons/button-secondary {:style {:margin-left "0.25rem"}
-                                   :on-click open-duplicate!} (tr [:buttons :duplicate])]]]
+              (let [{:meeting/keys [title number locked?]} meeting]
+                [:div
+                 [:div {:class (<class common-styles/heading-and-action-style)}
+                  [typography/Heading2 {:class (<class common-styles/flex-align-center)}
+                   title (when number (str " #" number)) (when locked? [icons/action-lock])]
+                  [:div {:class (<class common-styles/flex-align-end)}
+                   [authorization-context/when-authorized :edit-meeting
+                    [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
+                                             :form-value     meeting
+                                             :modal-title    (tr [:meeting :edit-meeting-modal-title])
+                                             :id             "edit-meeting"
+                                             :button-component
+                                                             [buttons/button-primary {:on-click meeting} (tr [:buttons :edit])]}]]
+                   [buttons/button-secondary {:style    {:margin-left "0.25rem"}
+                                              :on-click open-duplicate!} (tr [:buttons :duplicate])]]]
 
        (when @duplicate-open?
          [meeting-duplicate e! (:activity params) meeting close-duplicate! duplicate-open?])
