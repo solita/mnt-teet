@@ -945,12 +945,12 @@
 (defn meeting-duplicate [e! activity-id meeting close! duplicate-open?]
   (r/with-let [form (r/atom meeting)
                close-event (form/callback-event close!)]
-              [panels/modal {:title     (tr [:meeting :duplicate-meeting-modal-title])
+              [panels/modal {:title (tr [:meeting :duplicate-meeting-modal-title])
                              :max-width "md"
                              :open-atom duplicate-open?}
-               [meeting-form {:e!          e!
+               [meeting-form {:e! e!
                               :activity-id activity-id
-                              :duplicate?  true}
+                              :duplicate? true}
                 close-event
                 form]]))
 
@@ -970,12 +970,12 @@
                   [:div {:class (<class common-styles/flex-align-end)}
                    [authorization-context/when-authorized :edit-meeting
                     [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
-                                             :form-value     meeting
-                                             :modal-title    (tr [:meeting :edit-meeting-modal-title])
-                                             :id             "edit-meeting"
+                                             :form-value meeting
+                                             :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                             :id "edit-meeting"
                                              :button-component
-                                                             [buttons/button-primary {:on-click meeting} (tr [:buttons :edit])]}]]
-                   [buttons/button-secondary {:style    {:margin-left "0.25rem"}
+                                             [buttons/button-primary {:on-click meeting} (tr [:buttons :edit])]}]]
+                   [buttons/button-secondary {:style {:margin-left "0.25rem"}
                                               :on-click open-duplicate!} (tr [:buttons :duplicate])]]]
 
        (when @duplicate-open?
