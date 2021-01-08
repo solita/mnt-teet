@@ -231,3 +231,11 @@
                                [:thk.project/id "11111"]
                                (java.util.Date.))]
           (is (seq permissions) "permission is present"))))))
+
+(deftest two-thk-tasks-is-valid
+  (is 
+   (teet.activity.activity-commands/valid-tasks?
+    (tu/db)
+    :activity.name/preliminary-design
+    '([:task.group/study :task.type/archeological-study true]
+     [:task.group/study :task.type/topogeodesy true]))))
