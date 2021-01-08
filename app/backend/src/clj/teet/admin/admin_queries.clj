@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [teet.util.datomic :as du]
             [teet.environment :as environment]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk])
+  (:import (java.util UUID)))
 
 (defmulti search-clause (fn [[field _value]] field))
 
@@ -141,6 +142,9 @@
 
     (str/starts-with? id "user-")
     [:user/person-id (subs id 5)]
+
+    (str/starts-with? id "file-")
+    [:file/id (UUID/fromString (subs id 5))]
 
     (re-matches #"^\d+$" id)
     (Long/parseLong id)
