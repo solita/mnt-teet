@@ -198,7 +198,8 @@
                             :content description}]
        [:<>
         (when (get-in file-row [:metadata :file-id])
-          [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
+          [common-ui/info-box {:cy :new-version
+                               :title (tr [:file-upload :already-uploaded])
                                :content (tr [:file-upload :new-version-will-be-created])}])
         (when-let [part-number (some-> file-row :metadata :part js/parseInt)]
           (when (not (zero? part-number))

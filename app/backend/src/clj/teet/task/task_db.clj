@@ -65,3 +65,16 @@
                      [?replacement :file/previous-version ?f])
            :in $ ?t]
          db task-id))))
+
+(defn latest-task-files
+  "Return latest versions of all files in task."
+  [db task-id]
+  (mapv first
+        (d/q '[:find ?f
+               :where
+               [?t :task/files ?f]
+               [(missing? $ ?f :meta/deleted?)]
+               (not-join [?f]
+                         [?replacement :file/previous-version ?f])
+               :in $ ?t]
+             db task-id)))

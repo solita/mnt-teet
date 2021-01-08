@@ -281,15 +281,26 @@
                                    [?dg :db/ident ?ident]
                                    :in $ ?code]
                                  db document-group)))
+
         file-id (when (and task-id original-name)
-                  (ffirst
-                   (d/q '[:find ?f
-                          :where
-                          [?f :file/original-name ?n]
-                          [?t :task/files ?f]
-                          [(missing? $ ?f :meta/deleted?)]
-                          :in $ ?t ?n]
-                        db task-id original-name)))]
+                  ;; Find file that has same metadata, we need to pull
+                  ;; each latest file in the task and fetch their metadata
+                  ;; to compare to as we don't store the full metadata filename
+                  ;; and the original filename could be just a description
+                  ;; without metadata
+                  (some (fn [[file-id]]
+                          (when (= (filename-metadata/metadata->filename
+                                    (file-metadata-by-id db file-id))
+                                   original-name)
+                            file-id))
+                        (d/q '[:find ?f
+                               :where
+                               [?t :task/files ?f]
+                               [(missing? $ ?f :meta/deleted?)]
+                               (not-join [?f]
+                                         [?replacement :file/previous-version ?f])
+                               :in $ ?t]
+                             db task-id)))]
     (merge metadata
            {:project-eid project-eid
             :activity-id activity-id
@@ -390,4 +401,3 @@
           [?p :thk.project/lifecycles ?l]
           :in $ ?uuid]
         db uuid)))
-
