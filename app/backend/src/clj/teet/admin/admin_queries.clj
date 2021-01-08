@@ -4,8 +4,7 @@
             [clojure.string :as str]
             [teet.util.datomic :as du]
             [teet.environment :as environment]
-            [clojure.walk :as walk]
-            [teet.util.collection :as cu]))
+            [clojure.walk :as walk]))
 
 (defmulti search-clause (fn [[field _value]] field))
 
