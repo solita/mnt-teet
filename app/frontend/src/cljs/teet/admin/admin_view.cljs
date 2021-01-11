@@ -102,21 +102,6 @@
                                                          [user-save-form-button*]]
                                        :children [[user-form-fields]]}]]])
 
-(defn- user-permissions [permissions]
-  [:ul
-   (doall
-    (for [{:permission/keys [role valid-from valid-until projects]} (sort-by (juxt :permission/role
-                                                                                   :permission/valid-from)
-                                                                             permissions)]
-      [:li (str (name role)
-                (when-not projects " (global)")
-                ": "
-                (format/date valid-from) "-" (format/date valid-until))
-       (when projects
-         [:ul
-          (doall (for [{:thk.project/keys [id name]} (sort-by :thk.project/id projects)]
-                   [:li (str id " " name)]))])]))])
-
 (defn user-row-heading
   [{:user/keys [company email phone-number global-role] :as user} open? toggle-open]
   (let [contact-info (str/join " / "
@@ -293,7 +278,7 @@
 
 
 (defn user-list
-  [e! admin users]
+  [e! _admin users]
   [:div
    (doall
      (for [{:user/keys [id] :as user}
@@ -330,7 +315,7 @@
    :project])
 
 (defn search-inputs
-  [e! values on-change]
+  [_e! values on-change]
   [:div
    (doall
      (for [field user-filters]
@@ -401,30 +386,76 @@
                           v)))]
     (str value)))
 
-(defn inspector-page [_e! _app {:keys [entity ref-attrs linked-from]}]
+(defn inspector-attribute-table [content]
+  [Table {}
+   [TableHead {}
+    [TableRow
+     [TableCell {} "Attribute"]
+     [TableCell {} "Value"]]]
+   [TableBody {}
+    content]])
+
+(defn inspector-history-view [ref-attrs txs]
+  [:div.inspector-history
+   [typography/Heading2 "Change history"]
+   (doall
+    (for [{:keys [tx changes]} txs]
+      ^{:key (str (:db/id tx))}
+      [:div {:style {:margin-top "1.5rem"}}
+       [typography/Heading3
+        (format/date-time (:db/txInstant tx))
+        " "
+        (when-let [author (:tx/author tx)]
+          (user-model/user-name author))]
+       [inspector-attribute-table
+        (for [[k values] (sort-by first changes)]
+          ^{:key (str k)}
+          [TableRow {}
+           [TableCell {} (str k)]
+           [TableCell {}
+            (doall
+             (map-indexed
+              (fn [i [add? v]]
+                ^{:key (str i)}
+                [:span {:style {:text-decoration (if add? :none :line-through)
+                                :padding "0 1rem 0 1rem"}}
+                 [inspector-value (ref-attrs k)
+                  (if (ref-attrs k)
+                    {:db/id v}
+                    v)]])
+              (sort-by first values)))]])]]))])
+
+(defn inspector-history [e! ref-attrs id]
+  (r/with-let [show? (r/atom false)]
+    [:<>
+     (if-not @show?
+       [buttons/button-primary {:on-click #(reset! show? true)}
+        "Show change history"]
+       [query/query {:e! e!
+                     :query :admin/entity-history
+                     :args {:id id}
+                     :simple-view [inspector-history-view ref-attrs]}])]))
+
+(defn inspector-page [e! {{id :id} :params :as _app} {:keys [entity ref-attrs linked-from]}]
+  ^{:key id}
   [:div
    [typography/Heading2 "Attribute values for entity"]
-   [Table {}
-    [TableHead {}
-     [TableRow
-      [TableCell {} "Attribute"]
-      [TableCell {} "Value"]]]
-    [TableBody {}
-     (doall
-      (for [[k v] (sort-by first (seq entity))
-            :let [link? (ref-attrs k)]]
-        ^{:key (str k)}
-        [TableRow {}
-         [TableCell {} (str k)]
-         [TableCell {}
-          (if (vector? v)
-            [:ul
-             (doall
-              (map-indexed
-               (fn [i v]
-                 ^{:key (str i)}
-                 [:li [inspector-value link? v]]) v))]
-            [inspector-value link? v])]]))]]
+   [inspector-attribute-table
+    (doall
+     (for [[k v] (sort-by first (seq entity))
+           :let [link? (ref-attrs k)]]
+       ^{:key (str k)}
+       [TableRow {}
+        [TableCell {} (str k)]
+        [TableCell {}
+         (if (vector? v)
+           [:ul
+            (doall
+             (map-indexed
+              (fn [i v]
+                ^{:key (str i)}
+                [:li [inspector-value link? v]]) v))]
+           [inspector-value link? v])]]))]
 
    (when (seq linked-from)
      [:<>
@@ -446,4 +477,6 @@
                (map-indexed
                 (fn [i v]
                   ^{:key (str i)}
-                  [:li [inspector-value true {:db/id v}]]) v))]]]))]]])])
+                  [:li [inspector-value true {:db/id v}]]) v))]]]))]]])
+
+   [inspector-history e! ref-attrs id]])
