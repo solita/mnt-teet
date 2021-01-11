@@ -193,27 +193,28 @@
   (let [files (file-listing-info db user file-ids)
 
         ;; Group files to first versions and next versions
-        {next-versions  true
+        {next-versions true
          first-versions false}
         (group-by (comp boolean :file/previous-version) files)
 
         ;; Find next version for given file
         next-version (fn [file]
                        (some #(when (= (:db/id file)
-                                       (get-in % [:file/previous-version :db/id])) %)
-                             next-versions))]
+                                      (get-in % [:file/previous-version :db/id])) %)
+                         next-versions))]
     (vec
       (sort-by :file/name
-               (for [f first-versions
-                     :let [versions (filter (complement :meta/deleted?)
-                                            (reverse
-                                              (take-while some? (iterate next-version f))))
-                           [latest-version & previous-versions] versions]
-                     :when latest-version]
-                 (assoc latest-version
-                   :file/full-name (filename-metadata/metadata->filename
-                                     (file-metadata-by-id db (:db/id latest-version)))
-                   :versions (when (seq previous-versions) previous-versions)))))))
+        (for [f first-versions
+              :let [versions (filter (complement :meta/deleted?)
+                               (reverse
+                                 (take-while some? (iterate next-version f))))
+                    [latest-version & previous-versions] versions]
+              :when latest-version]
+          (when (seq previous-versions)
+                (assoc latest-version
+                  :file/full-name (filename-metadata/metadata->filename
+                                    (file-metadata-by-id db (:db/id latest-version)))
+                  :versions previous-versions)))))))
 
 (defn latest-file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
