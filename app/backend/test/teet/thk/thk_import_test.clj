@@ -6,12 +6,9 @@
             [datomic.client.api :as d]
             [teet.thk.thk-export :as thk-export]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]
             [teet.thk.thk-integration-ion :as thk-integration-ion]
-            [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
             [clojure.java.io :as io]
-            [teet.meta.meta-query :as meta-query]
             [teet.meta.meta-model :as meta-model]
             [teet.integration.integration-id :as integration-id]))
 
@@ -141,7 +138,7 @@
      (get-in (tu/tx {:db/id act-id
                      :integration/id (tu/get-data :act-uuid)
                      :activity/tasks [{:db/id "new-task"
-                                       :task/type :task.type/design-requirements
+                                       :task/type :task.type/equipment
                                        :task/send-to-thk? true
                                        :integration/id (tu/get-data :task-uuid)
                                        :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
@@ -154,7 +151,7 @@
                                            (export-csv))]
       (is (= 1 (count task-rows)) "there's exactly one task row")
       (is task-row "There is a row for the task")
-      (is (= (get task-row "activity_taskdescr") "Projekteerimistingimused")
+      (is (= (get task-row "activity_taskdescr") "Seadmed")
           "task description is the estonian translation of task type")
       (is (str/blank? (get task-row "activity_id")) "task has no activity_id yet")
       (is (= (get task-row "activity_taskid")
@@ -320,7 +317,6 @@
 
   (testing "Exported row has deletion timestamp"
     (export-csv)
-    (def *export (tu/get-data :export-rows))
     (let [{:strs [activity_teetdelstamp] :as row} (cu/find-first #(= (get % "activity_id") "6594")
                                                                  (tu/get-data :export-rows))]
       (println "activity teet del stamp: " row)
