@@ -75,7 +75,7 @@ describe("Task files", function() {
 
 
         // wait for dialog to close
-        cy.get("button[type=submit").should("not.exist")
+        cy.get("button[type=submit]").should("not.exist")
 
         // verify there is still only one
         cy.get(".file-info").its("length").should("equal", 1)

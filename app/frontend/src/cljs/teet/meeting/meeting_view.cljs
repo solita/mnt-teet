@@ -538,12 +538,7 @@
                       :spec :meeting/agenda-form
                       :save-event #(meeting-controller/->SubmitAgendaForm
                                      meeting
-                                     (-> @form-atom
-                                         (update :meeting.agenda/body
-                                                 (fn [editor-state]
-                                                   (if (or (string? editor-state) (nil? editor-state))
-                                                     editor-state
-                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     (rich-text-editor/form-data-with-rich-text :meeting.agenda/body @form-atom)
                                      close-event)}
                      (when-let [agenda-id (:db/id @form-atom)]
                        {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
@@ -748,12 +743,7 @@
                       :spec :meeting/decision-form
                       :save-event #(meeting-controller/->SubmitDecisionForm
                                      agenda-eid
-                                     (-> @form-atom
-                                         (update :meeting.decision/body
-                                                 (fn [editor-state]
-                                                   (if (or (string? editor-state) (nil? editor-state))
-                                                     editor-state
-                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     (rich-text-editor/form-data-with-rich-text :meeting.decision/body @form-atom)
                                      close-event)}
                      (when (:db/id @form-atom)
                        {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))
@@ -942,16 +932,17 @@
   [authorization-context/consume
    [meeting-details* e! user meeting]])
 
-(defn meeting-duplicate [e! activity-id meeting close!]
+(defn meeting-duplicate [e! activity-id meeting close! duplicate-open?]
   (r/with-let [form (r/atom meeting)
                close-event (form/callback-event close!)]
-    [panels/modal {:title (tr [:meeting :duplicate-meeting-modal-title])
-                   :max-width "md"}
-     [meeting-form {:e! e!
-                    :activity-id activity-id
-                    :duplicate? true}
-      close-event
-      form]]))
+              [panels/modal {:title (tr [:meeting :duplicate-meeting-modal-title])
+                             :max-width "md"
+                             :open-atom duplicate-open?}
+               [meeting-form {:e! e!
+                              :activity-id activity-id
+                              :duplicate? true}
+                close-event
+                form]]))
 
 (def ^:private comment-count-path
   [:route :meeting :meeting :comment/counts :comment/old-comments])
@@ -961,23 +952,24 @@
   (r/with-let [duplicate-open? (r/atom false)
                open-duplicate! #(reset! duplicate-open? true)
                close-duplicate! #(reset! duplicate-open? false)]
-    (let [{:meeting/keys [title number locked?]} meeting]
-      [:div
-       [:div {:class (<class common-styles/heading-and-action-style)}
-        [typography/Heading2 {:class (<class common-styles/flex-align-center)}
-         title (when number (str " #" number)) (when locked? [icons/action-lock])]
-        [authorization-context/when-authorized :edit-meeting
-         [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
-                                  :form-value meeting
-                                  :modal-title (tr [:meeting :edit-meeting-modal-title])
-                                  :id "edit-meeting"
-                                  :button-component
-                                  [buttons/button-with-menu
-                                   {:items [{:label (tr [:buttons :duplicate])
-                                             :on-click open-duplicate!}]}
-                                   (tr [:buttons :edit])]}]]]
+              (let [{:meeting/keys [title number locked?]} meeting]
+                [:div
+                 [:div {:class (<class common-styles/heading-and-action-style)}
+                  [typography/Heading2 {:class (<class common-styles/flex-align-center)}
+                   title (when number (str " #" number)) (when locked? [icons/action-lock])]
+                  [:div {:class (<class common-styles/flex-align-end)}
+                   [authorization-context/when-authorized :edit-meeting
+                    [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
+                                             :form-value meeting
+                                             :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                             :id "edit-meeting"
+                                             :button-component
+                                             [buttons/button-primary {:on-click meeting} (tr [:buttons :edit])]}]]
+                   [buttons/button-secondary {:style {:margin-left "0.25rem"}
+                                              :on-click open-duplicate!} (tr [:buttons :duplicate])]]]
+
        (when @duplicate-open?
-         [meeting-duplicate e! (:activity params) meeting close-duplicate!])
+         [meeting-duplicate e! (:activity params) meeting close-duplicate! duplicate-open?])
        [tabs/details-and-comments-tabs
            {:e! e!
             :app app

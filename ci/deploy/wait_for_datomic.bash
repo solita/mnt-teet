@@ -8,12 +8,11 @@ while true
 do
     read -r CURRENT_COMMIT STATUS < <(curl -s -L -w ' %{http_code}\n' "$BASEURL/$ENDPOINT")
 
-    #if [ "$STATUS" == "200" ] && [ "$CODEBUILD_RESOLVED_SOURCE_VERSION" == "$CURRENT_COMMIT" ]; then
-    if [ "$STATUS" == "200" ]; then
+    if [ "$STATUS" == "200" ] && [ "$CODEBUILD_RESOLVED_SOURCE_VERSION" == "$CURRENT_COMMIT" ]; then
         echo "Matching versions, deploy finished"
         break;
     else
-        echo "Waiting..."
+        echo "Waiting, deployed: $CURRENT_COMMIT, expected: $CODEBUILD_RESOLVED_SOURCE_VERSION"
         # TODO: remove this break once
     fi
     sleep 5

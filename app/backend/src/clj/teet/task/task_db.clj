@@ -26,8 +26,7 @@
                                       (d/q '[:find ?f
                                              :where [?t :task/files ?f]
                                              :in $ ?t]
-                                           db task-eid))
-    false))
+                                           db task-eid))))
 
 
 
@@ -43,7 +42,7 @@
                db task-type)))
 
 (defn task-types-can-be-sent-to-thk? [db task-types]
-  (= (count (d/q '[:find ?thk-type
+  (= (count (d/q '[:find ?t ?thk-type
                    :where [?t :thk/task-type ?thk-type]
                    :in $ [?t ...]]
                  db task-types))

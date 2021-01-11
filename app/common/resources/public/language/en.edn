@@ -142,6 +142,7 @@
   :add-files "Add files",
   :applied "Applied",
   :opinion-title "Opinion",
+  :opinion "Opinion",
   :enter-response "Enter involved party response",
   :new-third-party-created "Involved party created successfully",
   :all-third-parties "All involved parties",
@@ -165,6 +166,8 @@
   :response-of-third-party "Response of involved party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
+  :application-terms-expire-warning
+  "The application terms will expire soon/have expired!",
   :opinion-saved "Opinion saved successfully",
   :new-third-party "Add involved party"},
  :dashboard
@@ -454,7 +457,9 @@
    " are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
   :version "Version"},
  :error
- {:part-has-files
+ {:file-metadata-not-unique
+  "A file with the same metadata already exists",
+  :part-has-files
   "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",

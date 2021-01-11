@@ -1,7 +1,7 @@
 (ns ^:db teet.activity-commands-test
   (:require [clojure.test :refer :all]
             [datomic.client.api :as d]
-            teet.activity.activity-commands
+            [teet.activity.activity-commands :as activity-commands]
             [teet.test.utils :as tu]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]))
@@ -273,3 +273,11 @@
                                [:thk.project/id "11111"]
                                (java.util.Date.))]
           (is (seq permissions) "permission is present"))))))
+
+(deftest two-thk-tasks-with-same-type-is-valid
+  (is 
+   (activity-commands/valid-tasks?
+    (tu/db)
+    :activity.name/preliminary-design
+    '([:task.group/study :task.type/archeological-study true]
+     [:task.group/study :task.type/topogeodesy true]))))
