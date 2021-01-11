@@ -3,7 +3,8 @@
             [goog.object :as gobj]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
-            ["@material-ui/core/styles" :as styles]))
+            ["@material-ui/core/styles" :as styles]
+            [teet.common.common-styles :as common-styles]))
 
 ;;To target disabled buttons :MuiButton {:root {:&$disabled {//css here//}}
 
@@ -83,6 +84,7 @@
                :MuiIconButton {:root {:border-radius "2px"
                                       "&:focus" theme-colors/button-focus-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
+               :MuiLink {:root common-styles/link-1}
                :MuiButton {:sizeSmall {:padding "0 10px"
                                        :font-size "0.875rem"}
 
