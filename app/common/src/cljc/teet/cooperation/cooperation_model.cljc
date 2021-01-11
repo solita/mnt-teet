@@ -73,7 +73,7 @@
   [{:cooperation.response/keys [valid-until]}]
   (and
     valid-until
-    (> days-until-application-expiration-warning
+    (>= days-until-application-expiration-warning
        (dateu/days-until-date valid-until))))
 
 (def third-party-display-attrs

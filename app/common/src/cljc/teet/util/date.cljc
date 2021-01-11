@@ -71,9 +71,9 @@
 (defn days-until-date
   [date]
   #?(:clj
-     (Math/floor (/ (- (.getTime date) (.getTime (Date.))) (* 1000 60 60 24)))
+     (Math/ceil (/ (- (.getTime date) (.getTime (Date.))) (* 1000 60 60 24)))
      :cljs
-     (js/Math.floor (/ (- (.getTime date) (.getTime (js/Date.))) (* 1000 60 60 24)))))
+     (js/Math.ceil (/ (- (.getTime date) (.getTime (js/Date.))) (* 1000 60 60 24)))))
 
 (defn ->date [year month day]
   #?(:clj (.getTime
