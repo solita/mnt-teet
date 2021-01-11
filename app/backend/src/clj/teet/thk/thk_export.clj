@@ -17,16 +17,26 @@
          :where [?e :thk.project/id _]]
        db))
 
+(def ^:private skip-tasks
+  "Tasks that should never be sent to THK"
+  #{:task.type/design-requirements
+    :task.type/building-permit})
+
 (defn- tasks-to-send [db activity-id]
-  (mapv first
-        (d/q '[:find (pull ?e [*
-                               {:task/type [*
-                                            {:thk/task-type [:thk/code]}]}])
-               :where
-               [?activity :activity/tasks ?e]
-               [?e :task/send-to-thk? true]
-               :in $ ?activity]
-             db activity-id)))
+  (into
+   []
+   (comp
+    (map first)
+    (remove (fn [{type :task/type}]
+              (contains? skip-tasks (:db/ident type)))))
+   (d/q '[:find (pull ?e [*
+                          {:task/type [*
+                                       {:thk/task-type [:thk/code]}]}])
+          :where
+          [?activity :activity/tasks ?e]
+          [?e :task/send-to-thk? true]
+          :in $ ?activity]
+        db activity-id)))
 
 (defn read-integration-info [info-str]
   (when info-str
