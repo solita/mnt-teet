@@ -396,7 +396,7 @@
     content]])
 
 (defn inspector-history-view [ref-attrs txs]
-  [:div
+  [:div.inspector-history
    [typography/Heading2 "Change history"]
    (doall
     (for [{:keys [tx changes]} txs]
