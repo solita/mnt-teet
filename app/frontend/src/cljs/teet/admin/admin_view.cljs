@@ -278,7 +278,7 @@
 
 
 (defn user-list
-  [e! admin users]
+  [e! _admin users]
   [:div
    (doall
      (for [{:user/keys [id] :as user}
@@ -315,7 +315,7 @@
    :project])
 
 (defn search-inputs
-  [e! values on-change]
+  [_e! values on-change]
   [:div
    (doall
      (for [field user-filters]
