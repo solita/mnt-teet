@@ -213,7 +213,7 @@
                  (assoc latest-version
                    :file/full-name (filename-metadata/metadata->filename
                                      (file-metadata-by-id db (:db/id latest-version)))
-                   :versions (when (seq previous-versions) (previous-versions))))))))
+                   :versions (when (seq previous-versions) previous-versions)))))))
 
 (defn latest-file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
