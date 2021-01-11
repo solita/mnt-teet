@@ -60,10 +60,11 @@
 
 (defn type-control-button
   [{:keys [label style]} click active]
-  [buttons/button-text {:on-click (fn [e]
-                        (.stopPropagation e)
-                        (click style))
-            :class (<class type-control-button-style active)}
+  [buttons/button-text {:on-mouse-down (fn [e]
+                                         (.preventDefault e)
+                                         (.stopPropagation e)
+                                         (click style))
+                        :class (<class type-control-button-style active)}
    label])
 
 (defn block-style-controls
@@ -194,9 +195,7 @@
          focus-editor #(.focus editor-ref)
          inlineToggle (fn [style]
                         (on-change (.toggleInlineStyle draft-js/RichUtils editorState style))
-                        (r/after-render focus-editor)       ;; TODO: might break when in empty editor
-
-                        )
+                        (r/after-render focus-editor))
          blockToggle (fn [type]
                        (on-change (.toggleBlockType draft-js/RichUtils editorState type))
                        (r/after-render focus-editor))]
