@@ -338,7 +338,9 @@
   (tx-ret (update-meeting-tx
             user
             meeting-id
-            [(meta-model/deletion-tx user meeting-id)])))
+            ;; Can't use deletion-tx because update-meeting-tx also adds modification timestamp to the tx
+            [{:db/id meeting-id
+              :meta/deleted? true}])))
 
 (defcommand :meeting/create-decision
   {:doc "Create a new decision under a topic"
