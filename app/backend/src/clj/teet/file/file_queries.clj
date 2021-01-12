@@ -11,7 +11,8 @@
             [datomic.client.api :as d]
             [ring.util.io :as ring-io]
             [teet.integration.integration-s3 :as integration-s3]
-            [teet.log :as log])
+            [teet.log :as log]
+            [clojure.string :as str])
   (:import (java.net URLEncoder)
            (net.coobird.thumbnailator Thumbnailator)))
 
@@ -21,14 +22,15 @@
     ^{:format :raw}
     {:status 302
      :headers {"Location" (file-storage/download-url
-                           (when with-metadata?
-                             ;; Get file metadata for downloads
-                             (str "attachment; filename="
-                                  (->> file-id
-                                       (file-db/file-metadata-by-id db)
-                                       filename-metadata/metadata->filename
-                                       URLEncoder/encode)))
-                           s3-file-name)}}))
+                            (when with-metadata?
+                              ;; Get file metadata for downloads
+                              (str "attachment; filename="
+                                   (str/replace (->> file-id
+                                                     (file-db/file-metadata-by-id db)
+                                                     filename-metadata/metadata->filename
+                                                     URLEncoder/encode)
+                                                "+" "%20")))
+                            s3-file-name)}}))
 
 (defquery :file/download-file
   {:doc "Get a download link to the given file"
