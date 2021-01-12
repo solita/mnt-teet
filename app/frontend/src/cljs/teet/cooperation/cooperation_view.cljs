@@ -511,7 +511,8 @@
                         :attribute :cooperation.opinion/status}]
 
 
-   ^{:attribute :cooperation.opinion/comment}
+   ^{:attribute :cooperation.opinion/comment
+     :validate rich-text-editor/validate-rich-text-form-field-not-empty}
    [rich-text-editor/rich-text-field {}]])
 
 (defn- edit-opinion [e! application button-component]

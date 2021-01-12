@@ -4,7 +4,6 @@
             ["draft-js-import-markdown" :as import-markdown]
             ["react" :as react]
             [alandipert.storage-atom :refer [local-storage]]
-            [clojure.string :as cljstr]
             [herb.core :refer [<class]]
             [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
@@ -12,7 +11,8 @@
             [teet.ui.common :as common]
             [teet.ui.material-ui :refer [Divider]]
             [teet.ui.util :as util]
-            [teet.util.string :as string])
+            [teet.util.string :as string]
+            [clojure.string :as str])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -158,7 +158,7 @@
           (and (not (string? value))
                (every?
                  empty?
-                 (string/words (cljstr/replace (editor-state->markdown value) #"\u200b" "")))))
+                 (string/words (str/replace (editor-state->markdown value) #"\u200b" "")))))
     "Rich text editor can't be empty"))
 
 (def ^:private decorator
