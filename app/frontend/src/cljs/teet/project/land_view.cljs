@@ -1132,7 +1132,7 @@
      :component-did-update (fn [this [_ _ _ _]]
                              (let [[_ _ _ project] (r/argv this)]
                                (when (nil? (:land/related-estate-ids project))
-                                 (e! (land-controller/->FetchRelatedEstates 3))) ;; 3 retries
+                                 (e! (land-controller/->FetchRelatedEstates land-controller/estate-fetch-retries)))
                                (when (nil? (:land/estate-forms project))
                                  (e! (land-controller/->FetchEstateCompensations (:thk.project/id project))))
                                (when (nil? (:land-acquisitions project))
@@ -1152,7 +1152,7 @@
           (if (:land/estate-info-failure project)
             [:div
              [:p (tr [:land :estate-info-fetch-failure])]
-             [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates 3)} ;; 3 retries
+             [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates land-controller/estate-fetch-retries)}
               "Try again"]]
             (if fetching?
               [:div

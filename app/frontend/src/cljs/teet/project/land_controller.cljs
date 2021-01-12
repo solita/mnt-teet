@@ -34,6 +34,8 @@
 (defrecord IncrementUnitCommentCount [unit-id])
 (defrecord DecrementUnitCommentCount [unit-id])
 
+(def estate-fetch-retries 6)
+
 (defn toggle-selected-unit
   [id cad-units]
   (map
@@ -296,25 +298,6 @@
                              :estate-procedure/estate-id estate-id})
                           format-process-fees)
              :result-event (partial ->FetchEstateCompensations project-id)})))
-
-  ;; XXX for reference - deleted code from vc history w retry logic
-  ;; FetchEstateInfos  
-  ;; (process-event [{estate-ids :estate-ids
-  ;;                  retry-count :retry-count} {:keys [params] :as app}]
-  ;;   (let [project-id (:project params)]
-  ;;     (apply t/fx app
-  ;;            (for [estate-id estate-ids]
-  ;;              (merge {:tuck.effect/type :query
-  ;;                      :query :land/estate-info
-  ;;                      :args {:estate-id estate-id
-  ;;                             :thk.project/id project-id}
-  ;;                      :result-event ->FetchEstateResponse
-  ;;                      :error-event (fn [error]
-  ;;                                     (if (= (:error (ex-data error)) :request-timeout)
-  ;;                                       (if (pos? retry-count)
-  ;;                                         (->FetchEstateInfos [estate-id] (dec retry-count))
-  ;;                                         (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
-  ;;                                       (common-controller/->ResponseError error)))})))))
 
 FetchEstateCompensations
   (process-event [{project-id :project-id} app]
