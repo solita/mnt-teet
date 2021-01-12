@@ -81,7 +81,7 @@
 
 (defn edit-activity-form [e! activity project {:keys [max-date min-date]}]
   (let [deletable? (activity-model/deletable? activity)
-        user-authorized? (authorized? @teet.app-state/user :activity/delete
+        user-authorized? (authorized? @teet.app-state/user :activity/delete-activity
                            {:project-id (:db/id project)
                             :entity activity})]
     [form/form {:e! e!
