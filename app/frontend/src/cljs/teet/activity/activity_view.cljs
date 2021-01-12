@@ -79,14 +79,17 @@
        [:div {:style {:display :flex :justify-content :flex-end}}
         [form/footer2]]]]]))
 
-(defn edit-activity-form [e! activity {:keys [max-date min-date]}]
-  (let [deletable? (activity-model/deletable? activity)]
+(defn edit-activity-form [e! activity project {:keys [max-date min-date]}]
+  (let [deletable? (activity-model/deletable? activity)
+        user-authorized? (authorized? @teet.app-state/user :activity/delete
+                           {:project-id (:db/id project)
+                            :entity activity})]
     [form/form {:e! e!
                 :value activity
                 :on-change-event activity-controller/->UpdateActivityForm
                 :save-event activity-controller/->SaveActivityForm
                 :cancel-event project-controller/->CloseDialog
-                :delete (when deletable?
+                :delete (when (and deletable? user-authorized?)
                           (activity-controller/->DeleteActivity (:db/id activity)))
                 :spec :activity/new-activity-form}
 
@@ -103,7 +106,7 @@
   [{:keys [e! app project]} _dialog]
   (let [lifecycle-id (get-in app [:stepper :lifecycle])
         lifecycle (project-model/lifecycle-by-id project lifecycle-id)]
-    [edit-activity-form e! (:edit-activity-data app) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
+    [edit-activity-form e! (:edit-activity-data app) project {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
                                                       :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
 (defmethod project-navigator-view/project-navigator-dialog :new-activity
