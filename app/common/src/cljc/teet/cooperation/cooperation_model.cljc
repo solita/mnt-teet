@@ -89,6 +89,7 @@
   [:db/id
    :cooperation.application/type
    :cooperation.application/date
+   :cooperation.application/contact
    {:cooperation.application/activity
     [:db/id
      :activity/name {:activity/manager

@@ -1682,5 +1682,29 @@
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/ref
            :db/isComponent true
-           :db/doc "User contact info for application"}]]
-  }]
+           :db/doc "Contact info for application"}
+
+          {:db/ident :cooperation.contact/name
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Name of contact person"}
+
+          {:db/ident :cooperation.contact/company
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Company info of contact"}
+
+          {:db/ident :cooperation.contact/business-id
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Company business registry number"}
+
+          {:db/ident :cooperation.contact/email
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Email address"}
+
+          {:db/ident :cooperation.contact/phone
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Phone number"}]]}]
