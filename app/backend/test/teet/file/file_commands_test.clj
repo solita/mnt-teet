@@ -115,15 +115,14 @@
                                         (:db/id (tu/get-data :second-file))))))
 
   (testing "Changing first file to have same metadata as second"
-    (is
-     (thrown-with-msg?
-      Exception #"Two files with same metadata"
-      (tu/local-command :file/modify
-                        {:db/id (:db/id (tu/get-data :second-file))
-                         :file/name "first file.png"
-                         :file/sequence-number 666
-                         :file/document-group :file.document-group/general
-                         :file/part nil}))))
+    (tu/is-thrown-with-data?
+     {:teet/error :file-metadata-not-unique}
+     (tu/local-command :file/modify
+                       {:db/id (:db/id (tu/get-data :second-file))
+                        :file/name "first file.png"
+                        :file/sequence-number 666
+                        :file/document-group :file.document-group/general
+                        :file/part nil})))
 
   (testing "Changing group/seq# metadata to empty"
     (tu/local-command :file/modify
@@ -137,14 +136,13 @@
       (is (not (contains? after :file/sequence-number)) "seq# no longer exists"))
 
     (testing "Changing other file to empty as well"
-      (is
-       (thrown-with-msg?
-        Exception #"Two files with same metadata"
-        (tu/local-command :file/modify
-                          {:db/id (:db/id (tu/get-data :second-file))
-                           :file/name "first file.png"
-                           :file/document-group nil
-                           :file/sequence-number nil}))))))
+      (tu/is-thrown-with-data?
+       {:teet/error :file-metadata-not-unique}
+       (tu/local-command :file/modify
+                         {:db/id (:db/id (tu/get-data :second-file))
+                          :file/name "first file.png"
+                          :file/document-group nil
+                          :file/sequence-number nil})))))
 
 (deftest delete-part
   (tu/local-login tu/mock-user-boss)
