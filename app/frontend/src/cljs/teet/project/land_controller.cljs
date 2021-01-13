@@ -16,10 +16,8 @@
 (defrecord SubmitLandAcquisitionForm [form-data cadastral-id estate-procedure-type estate-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
-(defrecord FetchEstateInfos [estate-ids retry-count])
-(defrecord FetchEstateResponse [response])
 (defrecord FetchRelatedEstatesResponse [response])
-(defrecord FetchRelatedEstates [])
+(defrecord FetchRelatedEstates [retry-count])
 (defrecord ToggleOpenEstate [estate-id])
 (defrecord SubmitEstateCompensationForm [form-data estate-id])
 (defrecord FetchEstateCompensations [project-id])
@@ -35,6 +33,8 @@
 (defrecord DecrementEstateCommentCount [estate-id])
 (defrecord IncrementUnitCommentCount [unit-id])
 (defrecord DecrementUnitCommentCount [unit-id])
+
+(def estate-fetch-retries 6)
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -299,7 +299,7 @@
                           format-process-fees)
              :result-event (partial ->FetchEstateCompensations project-id)})))
 
-  FetchEstateCompensations
+FetchEstateCompensations
   (process-event [{project-id :project-id} app]
     (t/fx app
           {:tuck.effect/type :query
@@ -329,7 +329,7 @@
                           value)
                         response))))
   FetchRelatedEstates
-  (process-event [_ {:keys [params] :as app}]
+  (process-event [{retry-count :retry-count} {:keys [params] :as app}]
     (let [project-id (:project params)
           fetched (get-in app [:route :project :fetched-estates-count])
           estates-count (count (get-in app [:route :project :land/related-estate-ids]))]
@@ -341,8 +341,13 @@
          {:tuck.effect/type :query
           :query :land/related-project-estates
           :args {:thk.project/id project-id}
-
-          :result-event ->FetchRelatedEstatesResponse}))))
+          :result-event ->FetchRelatedEstatesResponse
+          :error-event (fn [error]
+                         (if (= (:error (ex-data error)) :request-timeout)
+                           (if (pos? retry-count)
+                             (->FetchRelatedEstates (dec retry-count))
+                             (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
+                           (common-controller/->ResponseError error)))}))))
 
   FetchRelatedEstatesResponse
   (process-event [{{:keys [estates units estate-info]} :response} app]
