@@ -220,7 +220,7 @@
   :cooperation.application.response-type/consent "Nõusolek",
   :task.type/noise-study "Müra uuring",
   :cooperation.application.type/design "Projekt",
-  :cooperation.opinion.status/unanswered "Vastuseta",
+  :cooperation.opinion.status/unanswered "Ei esitanud arvamust",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
   :document.category/project-doc "Projektdokumentatsioon",
@@ -295,7 +295,7 @@
   :task.type/instructions "Juhised",
   :thk.task-type/road-safety-audit
   "Liiklusohutuse audit (eelprojekt, põhiprojekt)",
-  :task.type/calculation-of-pavement "Kattendiarvutus",
+  :task.type/calculation-of-pavement "Katendiarvutus",
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/cost-list "Kululoend",
   :task.type/eia-pre-assessment "Keskkonnamõju eelhinnang",
@@ -707,7 +707,7 @@
   :no-burdens "Koormatisi pole",
   :no-comments "Märkusi pole",
   :burdens "Koormatist",
-  :comments "Märkust",
+  :comments "Märkused",
   :mortgages "Hüpoteeki",
   :modal-title
   {:burdens "Koormatised",

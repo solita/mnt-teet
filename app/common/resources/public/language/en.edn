@@ -222,7 +222,7 @@
   :cooperation.application.response-type/consent "Consent",
   :task.type/noise-study "Noise study",
   :cooperation.application.type/design "Design",
-  :cooperation.opinion.status/unanswered "Unanswered",
+  :cooperation.opinion.status/unanswered "No opinion was submitted",
   :task.status/rejected "Rejected",
   :task.status/reviewing "Reviewing",
   :document.category/project-doc "Project documentation",
