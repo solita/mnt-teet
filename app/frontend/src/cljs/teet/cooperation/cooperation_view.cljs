@@ -250,12 +250,13 @@
 (defn- selected-third-party-name [{:keys [params] :as _app}]
   (-> params :third-party js/decodeURIComponent))
 
-(defn- cooperation-page-structure [e! app project third-parties-list main-content]
+(defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   [project-view/project-full-page-structure
    {:e! e!
     :app app
     :project project
     :left-panel [third-parties e! project third-parties-list (selected-third-party-name app)]
+    :right-panel right-content
     :main main-content}])
 
 (defn overview-page [e! app {:keys [project overview]}]
@@ -539,6 +540,17 @@
       [buttons/button-primary {:class "create-opinion"}
        (tr [:cooperation :create-opinion-button])]])])
 
+(defn application-people-panel [e! {activity :cooperation.application/activity :as _application}]
+  [:div.application-people
+   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
+    (tr [:project :tabs :people])]
+
+   [:div {:class (<class common-styles/flex-row)}
+    [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
+     [user-model/user-name (:activity/manager activity)]]
+    [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+     (tr [:fields :activity/manager])]]])
+
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
@@ -573,4 +585,7 @@
                                                          :project-id (:thk.project/id project)
                                                          :application-id (:db/id application)}]
              :button-component [buttons/button-primary {:class "enter-response"}
-                                (tr [:cooperation :enter-response])]}]])]]]]))
+                                (tr [:cooperation :enter-response])]}]])]
+
+       ;; The people panel
+       [application-people-panel e! application]]]]))
