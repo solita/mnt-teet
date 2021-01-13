@@ -1,4 +1,4 @@
-(ns teet.activity.activity_tx
+(ns teet.activity.activity-tx
   "Transaction functions for activity"
   (:require
     [teet.activity.activity-db :as activity-db]
@@ -17,4 +17,6 @@
                  :teet/error :activity-task-has-files})
 
     :else
-    [(meta-model/deletion-tx user activity-id)]))
+    (into [(meta-model/deletion-tx user activity-id)]
+      (map (partial meta-model/deletion-tx user))
+      (activity-db/activity-tasks db activity-id))))
