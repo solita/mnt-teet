@@ -7,7 +7,7 @@ describe('Meeting Links', function () {
         cy.randomName("testfileB", "testfileB")
         cy.randomName("testfileA", "testfileA")
         cy.randomName("testfileC", "testfileC")
-        cy.backendCommand(":thk.project/update-cadastral-units", "{:project-id \"18463\" :cadastral-units " +
+        cy.backendCommand(":thk.project/update-cadastral-units", "{:project-id \"17546\" :cadastral-units " +
             "#{\"2:63801:001:0241\"" +
              "\"2:92901:001:0138\"" +
             " \"2:93001:001:0019\"" +
