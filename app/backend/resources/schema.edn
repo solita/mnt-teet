@@ -1675,4 +1675,12 @@
            :db/valueType :db.type/uuid
            :db/unique :db.unique/identity
            :db/doc "UUID identifier for THK integration (dev env db didn't have integration ids on all)"}]
-         teet.migration.thk-integration-id/migrate-2]}]
+         teet.migration.thk-integration-id/migrate-2]}
+
+ {:db/ident :migration/application-contact
+  :txes [[{:db/ident :cooperation.application/contact
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/ref
+           :db/isComponent true
+           :db/doc "User contact info for application"}]]
+  }]
