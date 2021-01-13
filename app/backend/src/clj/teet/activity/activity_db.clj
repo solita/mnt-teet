@@ -186,21 +186,21 @@
 (defn find-tasks-from-db
   "Finds all Tasks related to the given Activity"
   [db activity-id]
-  (d/q '[:find (pull ?t [:db/id])
-         :in $ ?a
-         :where
-         [?a :activity/tasks ?t]
-         [(missing? $ ?t :meta/deleted?)]]
-    db activity-id))
+  (println activity-id)
+  (mapv first (d/q '[:find ?t
+                     :in $ ?a
+                     :where
+                     [?a :activity/tasks ?t]
+                     [(missing? $ ?t :meta/deleted?)]]
+                db activity-id)))
 
 (defn activity-task-has-files?
   "Check a task under activity has undeleted files."
   [db activity-id]
-  (boolean
-    (seq
-      (filter boolean
-        (map (partial file-db/task-has-files? db)
-          (mapv
-            (comp :db/id first)
-            (find-tasks-from-db db activity-id)))))))
+  (->> activity-id
+    (find-tasks-from-db db)
+    (map (partial file-db/task-has-files? db))
+    (filter boolean)
+    seq
+    boolean))
 
