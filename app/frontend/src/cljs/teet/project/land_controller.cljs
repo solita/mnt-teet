@@ -329,10 +329,11 @@ FetchEstateCompensations
                           value)
                         response))))
   FetchRelatedEstates
-  (process-event [{retry-count :retry-count} {:keys [params] :as app}]
+  (process-event [{retry-count :retry-count} {:keys [params] :as app}]    
     (let [project-id (:project params)
           fetched (get-in app [:route :project :fetched-estates-count])
           estates-count (count (get-in app [:route :project :land/related-estate-ids]))]
+      (log/info "FetchRelatedEstates: retry-count" retry-count "all-fetched" (= fetched estates-count))
       (if (= fetched estates-count)
         app
         (t/fx
@@ -343,6 +344,7 @@ FetchEstateCompensations
           :args {:thk.project/id project-id}
           :result-event ->FetchRelatedEstatesResponse
           :error-event (fn [error]
+                         (log/info "FetchRelatedEstates error-event callback: retries-left?" (pos? retry-count) "error-is-timeout?" (= (:error (ex-data error)) :request-timeout))
                          (if (= (:error (ex-data error)) :request-timeout)
                            (if (pos? retry-count)
                              (->FetchRelatedEstates (dec retry-count))
@@ -358,6 +360,7 @@ FetchEstateCompensations
                             (when (= (:teet-id unit) unit-id)
                               unit))
                           units))]
+      (log/info "in FetchRelatedEstatesResponse")
       (t/fx (-> app
                 (assoc-in [:route :project :land/related-estate-ids] estates)
                 (assoc-in [:route :project :land/units] units)
