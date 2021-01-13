@@ -105,15 +105,20 @@
         :else
         all-projects))
 
+;; Override needed due to how mui Card is used in table/table implementation
+(defn- selected-filter []
+  {:font-size "1rem"
+   :line-height "1.5rem"})
+
 (defn filter-link [route my-filter current-filter]
   (let [filter-text (tr [:projects :filters (keyword my-filter)])]
-    [typography/Text {:display "inline"}
-     (if (= my-filter current-filter)
-       filter-text
-       [common/Link {:href (routes/url-for (assoc-in route [:query :row-filter] my-filter))}
-        filter-text])]))
+    (if (= my-filter current-filter)
+      [typography/Text {:class (<class selected-filter)}
+       filter-text]
+      [common/Link {:href (routes/url-for (assoc-in route [:query :row-filter] my-filter))}
+       filter-text])))
 
-(defn projects-listing [e! app all-projects]
+(defn- projects-listing [e! app all-projects]
   (let [row-filter (or (-> app :query :row-filter)
                        "my-projects")
         current-route (select-keys app [:page :params :query])]
