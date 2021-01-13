@@ -186,7 +186,6 @@
 (defn activity-tasks
   "Finds all Tasks related to the given Activity"
   [db activity-id]
-  (println activity-id)
   (mapv first (d/q '[:find ?t
                      :in $ ?a
                      :where

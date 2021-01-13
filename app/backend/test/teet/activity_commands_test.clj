@@ -175,6 +175,16 @@
       :tempids
       (get "new-activity"))))
 
+(defn create-task-to-activity
+  []
+  "Create new task to activity with :new-activity-id and store new task id as :task-id"
+  (tu/store-data!
+    :task-id
+    (tu/create-task {:user tu/mock-user-boss
+                     :activity (tu/get-data :new-activity-id)
+                     :task {:task/type :task.type/third-party-review
+                            :task/group :task.group/land-purchase}})))
+
 (deftest delete-activity
   (testing "Activity can be deleted if doesn't have a procurement number"
     (tu/give-admin-permission tu/mock-user-boss)
@@ -204,7 +214,7 @@
                                    (tu/get-data :new-activity-id))))))
 
 (deftest delete-activity-only-by-admin
-  (testing "Activity delete fails without Admin authorization"
+  (testing "Activity delete fails without Admin role authorization"
     (create-new-activity)
     (is (thrown? Exception
           (tu/local-command tu/mock-user-boss
@@ -218,14 +228,31 @@
           (tu/local-command tu/mock-user-boss
             :activity/delete
             {:db/id (tu/get-data :new-activity-id)})))
-    (testing "With Admin permission given delete command successful"
+
+    (create-task-to-activity)
+
+    (testing "Activity delete successful for Admin role authorized"
       (tu/give-admin-permission tu/mock-user-boss)
+
+      (testing " Activity Task in not deleted initially"
+        (is (not (:meta/deleted?
+                   (du/entity (tu/db)
+                     (tu/get-data :task-id))))))
+
       (tu/local-command tu/mock-user-boss
         :activity/delete
         {:db/id (tu/get-data :new-activity-id)})
-      (is (:meta/deleted?
-            (du/entity (tu/db)
-              (tu/get-data :new-activity-id)))))))
+
+      (testing "Check Activity marked as deleted"
+        (is (:meta/deleted?
+              (du/entity (tu/db)
+                (tu/get-data :new-activity-id)))))
+
+      (testing "Activity Task also marked for deletion"
+        (is (:meta/deleted?
+              (du/entity (tu/db)
+                (tu/get-data :task-id))))))))
+
 
 ;; TODO: add fake file upload to Activity's Task
 (deftest delete-activity-only-without-files-in-tasks
@@ -242,19 +269,19 @@
 
 (deftest assigning-pm-gives-permission
   (let [current-manager #(get-in (tu/entity (act1-id))
-                                 [:activity/manager :user/id] :no-manager)]
+                           [:activity/manager :user/id] :no-manager)]
     (testing "Initially p1 doesn't have a manager"
       (is (= :no-manager (current-manager))))
 
     (testing "Assigning p1 lc1 act1 manager"
       (tu/local-command tu/mock-user-boss
-                        :activity/update
-                        {:activity {:db/id (act1-id)
-                                    :activity/manager {:user/id (second tu/mock-user-edna-consultant)}}})
+        :activity/update
+        {:activity {:db/id (act1-id)
+                    :activity/manager {:user/id (second tu/mock-user-edna-consultant)}}})
 
       (testing "sets the new manager"
         (is (= (second tu/mock-user-edna-consultant)
-               (current-manager))))
+              (current-manager))))
 
 
       (testing "gives the new pm permission"
@@ -268,10 +295,10 @@
                                  [(missing? $ ?p :permission/valid-until)]
                                  :in
                                  $ ?user ?project ?now]
-                               (tu/db)
-                               tu/mock-user-edna-consultant
-                               [:thk.project/id "11111"]
-                               (java.util.Date.))]
+                            (tu/db)
+                            tu/mock-user-edna-consultant
+                            [:thk.project/id "11111"]
+                            (java.util.Date.))]
           (is (seq permissions) "permission is present"))))))
 
 (deftest two-thk-tasks-with-same-type-is-valid
