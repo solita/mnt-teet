@@ -51,6 +51,7 @@ context('Cooperation', function() {
         // Navigated to application page:
 
         cy.get(".cooperation-application-page")
+        cy.get(".application-people") // page has people panel
 
         // check we have button for entering response
 
