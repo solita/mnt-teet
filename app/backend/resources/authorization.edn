@@ -73,7 +73,7 @@
   :manager :full,
   :internal-consultant :link,
   :external-consultant :link},
- :activity/delete-activity {:admin :full, :manager :full},
+ :activity/delete-activity {:admin :full},
  :project/write-comments
  {:admin :full,
   :manager :full,

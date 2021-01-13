@@ -3,7 +3,8 @@
             [teet.activity.activity-model :as activity-model]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.db-api.core :as db-api])
+            [teet.db-api.core :as db-api]
+            [teet.file.file-db :as file-db])
   (:import (java.util Date)))
 
 (defn activity-date-range
@@ -181,3 +182,25 @@
        (-> (du/entity db activity-id)
            :activity/name :db/ident)
        #{}))
+
+(defn find-tasks-from-db
+  "Finds all Tasks related to the given Activity"
+  [db activity-id]
+  (println activity-id)
+  (mapv first (d/q '[:find ?t
+                     :in $ ?a
+                     :where
+                     [?a :activity/tasks ?t]
+                     [(missing? $ ?t :meta/deleted?)]]
+                db activity-id)))
+
+(defn activity-task-has-files?
+  "Check a task under activity has undeleted files."
+  [db activity-id]
+  (->> activity-id
+    (find-tasks-from-db db)
+    (map (partial file-db/task-has-files? db))
+    (filter boolean)
+    seq
+    boolean))
+

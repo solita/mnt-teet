@@ -1,6 +1,6 @@
 (ns teet.task.task-tx
   "Transaction functions for tasks."
-  (:require [teet.task.task-db :as task-db]
+  (:require [teet.file.file-db :as file-db]
             [teet.meta.meta-model :as meta-model]
             [datomic.ion :as ion]))
 
@@ -10,7 +10,7 @@
   the task as deleted."
   [db user task-id]
   (cond
-    (task-db/task-has-files? db task-id)
+    (file-db/task-has-files? db task-id)
     (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
                  :cognitect.anomalies/message "Task has files"
                  :teet/error :task-has-files})
