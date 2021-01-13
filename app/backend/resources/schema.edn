@@ -1694,7 +1694,7 @@
            :db/valueType :db.type/string
            :db/doc "Company info of contact"}
 
-          {:db/ident :cooperation.contact/business-id
+          {:db/ident :cooperation.contact/id-code
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/string
            :db/doc "Company business registry number"}

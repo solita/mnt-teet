@@ -540,16 +540,44 @@
       [buttons/button-primary {:class "create-opinion"}
        (tr [:cooperation :create-opinion-button])]])])
 
-(defn application-people-panel [e! {activity :cooperation.application/activity :as _application}]
-  [:div.application-people
-   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
-    (tr [:project :tabs :people])]
+(defn application-people-panel [e! {:cooperation.application/keys [activity contact]}]
+  (r/with-let [edit-contact? (r/atom false)
+               edit-contact! #(reset! edit-contact? true)]
+    [:div.application-people
+     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
+      (tr [:project :tabs :people])]
 
-   [:div {:class (<class common-styles/flex-row)}
-    [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
-     [user-model/user-name (:activity/manager activity)]]
-    [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
-     (tr [:fields :activity/manager])]]])
+     [:div {:class (<class common-styles/flex-row)}
+      [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
+       [user-model/user-name (:activity/manager activity)]]
+      [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+       (tr [:fields :activity/manager])]]
+
+     (if @edit-contact?
+       [form/form {:e! e!
+                   :save-event :D
+                   :value contact}
+        ^{:attribute :cooperation.contact/name}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/company}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/id-code}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/email}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/phone}
+        [text-field/TextField {}]]
+
+       ;; "Add contact" or "edit" button
+       (if contact
+         [buttons/button-secondary {:on-click edit-contact!}
+          (tr [:buttons :edit])]
+         [buttons/button-primary {:on-click edit-contact!}
+          (tr [:cooperation :add-application-contact])]))]))
 
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
