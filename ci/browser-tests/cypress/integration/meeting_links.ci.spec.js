@@ -114,8 +114,7 @@ describe('Meeting Links', function () {
 
     function selectSearchItems(itemType) {
         const select = "#links-type-select"
-        const option = itemType
-        cy.get(option).then(($opt) => {
+        cy.get(itemType).then(($opt) => {
             cy.get(select).select($opt.attr("value"))
         })
     }

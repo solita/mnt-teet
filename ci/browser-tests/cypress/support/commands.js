@@ -26,7 +26,7 @@ Cypress.Commands.add("dummyLogin", (name) => {
 // Select language
 Cypress.Commands.add("selectLanguage", (lang) => {
   cy.get("#language-select")
-    .should((select) => {
+    .then((select) => {
       Cypress.dom.isAttached(select)
     })
     .select(lang);
