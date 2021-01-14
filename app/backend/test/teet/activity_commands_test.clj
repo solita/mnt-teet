@@ -173,8 +173,8 @@
       "Two tasks were added"))
 
 (defn create-new-activity
-  []
   "Create new test Activity"
+  []
   (tu/store-data! :new-activity-id
     (-> (tu/local-command tu/mock-user-boss
           :activity/create
@@ -187,13 +187,13 @@
       (get "new-activity"))))
 
 (defn create-task-to-activity
-  []
   "Create new task to activity with :new-activity-id and store new task id as :task-id"
+  []
   (tu/store-data!
     :task-id
     (tu/create-task {:user tu/mock-user-boss
                      :activity (tu/get-data :new-activity-id)
-                     :task {:task/type :task.type/third-party-review
+                     :task {:task/type :task.type/cadastral-works
                             :task/group :task.group/land-purchase}})))
 
 (deftest delete-activity
