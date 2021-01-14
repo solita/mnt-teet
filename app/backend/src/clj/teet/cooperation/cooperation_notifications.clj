@@ -2,7 +2,7 @@
   "Notifications functions for Cooperations")
 
 (defn send-notification-comment-added
-  "Send email to Activity Project Manager if comment has added to Cooperation Application"
+  "Send notification to Activity Project Manager if comment has added to Cooperation Application"
   [db activity-id application-id]
   ;; TODO: implement
   (println
@@ -11,7 +11,7 @@
       application-id)))
 
 (defn send-notification-application-expired-in-45-days
-  "Sending email about third party cooperation application expiration to Project Manager of Activity"
+  "Sending notification about third party cooperation application expiration to Project Manager of Activity"
   [db activity-id application-id]
   ;; TODO: implement
   (println
