@@ -133,11 +133,7 @@
                   (meta-model/modification-meta user)
                   (meta-model/creation-meta user)))}]})
 
-(s/def ::contact-form (s/keys :req [:cooperation.contact/name]
-                              :opt [:cooperation.contact/company
-                                    :cooperation.contact/id-code
-                                    :cooperation.contact/email
-                                    :cooperation.contact/phone]))
+(s/def ::contact-form ::cooperation-model/contact-form)
 
 (defn- contact-id-matches
   "Check that contact id matches application's current contact id.
