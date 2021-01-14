@@ -114,3 +114,7 @@
     (= (:activity/name a1) (:activity/name a2))
 
     (conflicting-schedules? a1 a2))))
+
+(defn valid-task-groups-for-activity? [activity-name tasks]
+  (every? (get activity-name->task-groups activity-name #{})
+          (map first tasks)))

@@ -4,7 +4,8 @@
             [teet.util.datomic :as du]
             [teet.file.file-db :as file-db]
             [teet.activity.activity-db :as activity-db]
-            [teet.meta.meta-query :as meta-query]))
+            [teet.meta.meta-query :as meta-query]
+            [teet.activity.activity-model :as activity-model]))
 
 (defn activity-for-task-id
   [db task-id]
@@ -77,3 +78,35 @@
                          [?replacement :file/previous-version ?f])
                :in $ ?t]
              db task-id)))
+
+(defn valid-task-types? [db tasks]
+  (let [task-keywords (into #{}
+                            (map first)
+                            (d/q '[:find ?id
+                                   :where
+                                   [?kw :enum/attribute :task/type]
+                                   [?kw :db/ident ?id]]
+                                 db))]
+    (every? task-keywords
+            (map second tasks))))
+
+
+(defn valid-tasks-sent-to-thk? [db tasks]
+  (->> tasks
+       (filter (fn [[_ _ sent-to-thk?]]
+                 sent-to-thk?))
+       (map second)
+       (task-types-can-be-sent-to-thk? db)))
+
+(defn- valid-task-triple? [[t-group t-type send-to-thk? :as task-triple]]
+  (and (= (count task-triple) 3)
+       (keyword? t-group)
+       (keyword? t-type)
+       (boolean? send-to-thk?)))
+
+(defn valid-tasks? [db activity-name tasks]
+  (or (empty? tasks)
+      (and (every? valid-task-triple? tasks)
+           (valid-task-types? db tasks)
+           (activity-model/valid-task-groups-for-activity? activity-name tasks)
+           (valid-tasks-sent-to-thk? db tasks))))
