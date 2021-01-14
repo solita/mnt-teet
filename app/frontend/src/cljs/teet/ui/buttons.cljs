@@ -179,7 +179,8 @@
        trashcan?
        [IconButton {:on-click open
                     :size :small}
-        [icons/action-delete-outlined]]
+        [icons/action-delete-outlined]
+        button-content]
 
        clear?
        [IconButton {:on-click open

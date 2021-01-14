@@ -165,3 +165,19 @@
                 (if (:db/id contact-form)
                   (meta-model/modification-meta user)
                   (meta-model/creation-meta user)))}]})
+
+(defcommand :cooperation/delete-contact-info
+  {:doc "Delete contact info from the application"
+   :spec (s/keys :req-un [::application-id])
+   :context {:keys [user db]}
+   :payload {:keys [application-id]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/edit-application {}}
+   :transact (if-let [contact-id (:db/id
+                                    (:cooperation.application/contact
+                                     (du/entity db application-id)))]
+               [(merge {:db/id application-id}
+                       (meta-model/modification-meta user))
+                [:db/retractEntity contact-id]]
+               (throw (ex-info "Application has no contact info"
+                               {:error :no-contact-info})))})
