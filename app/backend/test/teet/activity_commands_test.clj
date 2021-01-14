@@ -1,9 +1,9 @@
 (ns ^:db teet.activity-commands-test
   (:require [clojure.test :refer :all]
             [datomic.client.api :as d]
-            [teet.activity.activity-commands :as activity-commands]
             [teet.test.utils :as tu]
             [teet.util.collection :as cu]
+            [teet.task.task-db :as task-db]
             [teet.util.datomic :as du]))
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
@@ -122,7 +122,7 @@
                                   :task/estimated-start-date #inst "2020-04-11T21:00:00.000-00:00" ;; Oops, too early
                                   :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                   :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
-                                                          [:task.group/land-purchase :task.type/third-party-review false]]}))
+                                                          [:task.group/land-purchase :task.type/property-valuation false]]}))
       "Tasks can only be added to an existing activity")
 
   (tu/store-data! :new-activity-id
@@ -135,6 +135,7 @@
                                          :lifecycle-id (tu/->db-id "p3-lc1")})
                       :tempids
                       (get "new-activity")))
+
   (tu/store-data! :old-activity-count (-> (du/entity (tu/db) (tu/get-data :new-activity-id))
                                           :activity/tasks
                                           count))
@@ -142,19 +143,29 @@
                (tu/local-command tu/mock-user-boss
                                  :activity/add-tasks
                                  {:db/id (tu/get-data :new-activity-id)
+                                  :task/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
+                                  :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
+                                  :activity/tasks-to-add [[:task.group/design :task.type/buildings false]
+                                                          [:task.group/base-data :task.type/technical-conditions false]]}))
+      "Tasks' estimated start and end dates need to occur within acitivity's start and end dates")
+
+
+  (is (thrown? Exception
+               (tu/local-command tu/mock-user-boss
+                                 :activity/add-tasks
+                                 {:db/id (tu/get-data :new-activity-id)
                                   :task/estimated-start-date #inst "2020-04-11T21:00:00.000-00:00" ;; Oops, too early
                                   :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
-                                  :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
-                                                          [:task.group/land-purchase :task.type/third-party-review false]]}))
-      "Tasks' estimated start and end dates need to occur within acitivity's start and end dates")
+                                  :activity/tasks-to-add [[:task.group/land-purchase :task.type/third-party-review false]]}))
+      "Can't create a task with the same type as a not-finished existing task")
 
   (is (tu/local-command tu/mock-user-boss
                         :activity/add-tasks
                         {:db/id (tu/get-data :new-activity-id)
                          :task/estimated-start-date #inst "2020-04-12T22:00:00.000-00:00"
                          :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
-                         :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
-                                                 [:task.group/land-purchase :task.type/third-party-review false]]})
+                         :activity/tasks-to-add [[:task.group/land-purchase :task.type/state-estate-registry false]
+                                                 [:task.group/land-purchase :task.type/plot-allocation-plan false]]})
       "New tasks are added")
 
   (is (= (-> (du/entity (tu/db) (tu/get-data :new-activity-id)) :activity/tasks count)
@@ -162,8 +173,8 @@
       "Two tasks were added"))
 
 (defn create-new-activity
-  []
   "Create new test Activity"
+  []
   (tu/store-data! :new-activity-id
     (-> (tu/local-command tu/mock-user-boss
           :activity/create
@@ -176,13 +187,13 @@
       (get "new-activity"))))
 
 (defn create-task-to-activity
-  []
   "Create new task to activity with :new-activity-id and store new task id as :task-id"
+  []
   (tu/store-data!
     :task-id
     (tu/create-task {:user tu/mock-user-boss
                      :activity (tu/get-data :new-activity-id)
-                     :task {:task/type :task.type/third-party-review
+                     :task {:task/type :task.type/cadastral-works
                             :task/group :task.group/land-purchase}})))
 
 (deftest delete-activity
@@ -301,9 +312,9 @@
                             (java.util.Date.))]
           (is (seq permissions) "permission is present"))))))
 
-(deftest two-thk-tasks-with-same-type-is-valid
-  (is 
-   (activity-commands/valid-tasks?
+(deftest two-thk-tasks-with-same-group-is-valid
+  (is
+   (task-db/valid-tasks?
     (tu/db)
     :activity.name/preliminary-design
     '([:task.group/study :task.type/archeological-study true]

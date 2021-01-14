@@ -50,6 +50,13 @@
 (s/def ::opinion-form
   (s/keys :req [:cooperation.opinion/status :cooperation.opinion/comment]))
 
+(s/def ::contact-form
+  (s/keys :req [:cooperation.contact/name]
+          :opt [:cooperation.contact/company
+                :cooperation.contact/id-code
+                :cooperation.contact/email
+                :cooperation.contact/phone]))
+
 (defn valid-until
   "Calculate response valid-until date based on date and valid months."
   [{:cooperation.response/keys [date valid-months]}]
@@ -89,6 +96,7 @@
   [:db/id
    :cooperation.application/type
    :cooperation.application/date
+   :cooperation.application/contact
    {:cooperation.application/activity
     [:db/id
      :activity/name {:activity/manager

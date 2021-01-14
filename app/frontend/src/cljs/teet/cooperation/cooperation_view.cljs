@@ -540,16 +540,89 @@
       [buttons/button-primary {:class "create-opinion"}
        (tr [:cooperation :create-opinion-button])]])])
 
-(defn application-people-panel [e! {activity :cooperation.application/activity :as _application}]
-  [:div.application-people
-   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
-    (tr [:project :tabs :people])]
+(defn application-people-panel [e! {id :db/id :cooperation.application/keys [activity contact]}]
+  (r/with-let [edit-contact? (r/atom false)
+               edit-contact! #(reset! edit-contact? true)
+               contact-form (r/atom contact)]
+    [:div.application-people
+     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
+      (tr [:project :tabs :people])]
 
-   [:div {:class (<class common-styles/flex-row)}
-    [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
-     [user-model/user-name (:activity/manager activity)]]
-    [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
-     (tr [:fields :activity/manager])]]])
+     [:div {:class (<class common-styles/flex-row)}
+      [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
+       [user-model/user-name (:activity/manager activity)]]
+      [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+       (tr [:fields :activity/manager])]]
+
+     (if @edit-contact?
+       [form/form {:e! e!
+                   :on-change-event (form/update-atom-event contact-form merge)
+                   :spec ::cooperation-model/contact-form
+                   :save-event #(common-controller/->SaveForm
+                                 :cooperation/save-contact-info
+                                 {:application-id id
+                                  :contact-form (merge (select-keys contact [:db/id])
+                                                       @contact-form)}
+                                 (fn [_response]
+                                   (reset! edit-contact? false)
+                                   common-controller/refresh-fx))
+                   :cancel-event (form/update-atom-event edit-contact? (constantly false))
+                   :delete (when (:db/id contact)
+                             (common-controller/->SaveForm
+                              :cooperation/delete-contact-info
+                              {:application-id id}
+                              (fn [_response]
+                                (reset! edit-contact? false)
+                                (reset! contact-form {})
+                                common-controller/refresh-fx)))
+                   :delete-link? true
+                   :value @contact-form}
+        ^{:attribute :cooperation.contact/name}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/company}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/id-code}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/email}
+        [text-field/TextField {}]
+
+        ^{:attribute :cooperation.contact/phone}
+        [text-field/TextField {}]]
+
+       [:<>
+        ;; Show contact info (if any)
+        (when (seq contact)
+          [:div.application-contact-info
+           [typography/Heading3 (tr [:cooperation :application-contact-person])]
+           (doall
+            (for [k [:cooperation.contact/name
+                     :cooperation.contact/company
+                     :cooperation.contact/id-code
+                     :cooperation.contact/email
+                     :cooperation.contact/phone]
+                  :let [v (get contact k)]
+                  :when v]
+              ^{:key (str k)}
+              [:div {:class (<class common-styles/flex-row)}
+               [:div {:class (<class common-styles/flex-table-column-style 45)}
+                (tr [:fields k])]
+               [:div {:class (<class common-styles/flex-table-column-style 55)}
+                v]]))])
+        ;; "Add contact" or "edit" button
+        [:div {:style {:float :right}}
+         (if contact
+           [buttons/button-secondary {:on-click edit-contact!
+                                      :data-cy "edit-contact"}
+            (tr [:buttons :edit])]
+           [buttons/button-primary {:on-click edit-contact!
+                                    :size "small"
+                                    :end-icon (r/as-element
+                                               [icons/content-add])
+                                    :data-cy "add-contact"}
+            (tr [:cooperation :add-application-contact])])]])]))
 
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]

@@ -29,41 +29,6 @@
            lifecycle-id
            activity-name))))
 
-(defn- valid-task-triple? [[t-group t-type send-to-thk? :as task-triple]]
-  (and (= (count task-triple) 3)
-       (keyword? t-group)
-       (keyword? t-type)
-       (boolean? send-to-thk?)))
-
-(defn- valid-task-types? [db tasks]
-  (let [task-keywords (into #{}
-                            (map first)
-                            (d/q '[:find ?id
-                                   :where
-                                   [?kw :enum/attribute :task/type]
-                                   [?kw :db/ident ?id]]
-                                 db))]
-    (every? task-keywords
-            (map second tasks))))
-
-(defn- valid-task-groups-for-activity? [activity-name tasks]
-  (every? (get activity-model/activity-name->task-groups activity-name #{})
-          (map first tasks)))
-
-(defn- valid-tasks-sent-to-thk? [db tasks]
-  (->> tasks
-       (filter (fn [[_ _ sent-to-thk?]]
-                 sent-to-thk?))
-       (map second)
-       (task-db/task-types-can-be-sent-to-thk? db)))
-
-(defn valid-tasks? [db activity-name tasks]
-  (or (empty? tasks)
-      (and (every? valid-task-triple? tasks)
-           (valid-task-types? db tasks)
-           (valid-task-groups-for-activity? activity-name tasks)
-           (valid-tasks-sent-to-thk? db tasks))))
-
 (defn valid-activity-dates?
   [db lifecycle-id {:activity/keys [estimated-start-date estimated-end-date]}]
   (let [lifecycle-dates (project-db/lifecycle-dates db lifecycle-id)
@@ -110,45 +75,43 @@
          ^{:error :invalid-activity-dates}
          (valid-activity-dates? db lifecycle-id activity)
 
-         ^{:error :conflicting-activities}
-         (not (activity-db/conflicting-activities? db activity lifecycle-id))
-
          ^{:error :invalid-tasks}
-         (valid-tasks? db (:activity/name activity) tasks)]
+         (task-db/valid-tasks? db (:activity/name activity) tasks)]
    ;; Audited as the command can grant privileges
    :audit? true}
-
   (let [manager (:activity/manager activity)
         project-id (project-db/lifecycle-project-id db lifecycle-id)]
-    (tx-ret [(merge
-              {:db/id "new-activity"
-               :integration/id (integration-id/unused-random-small-uuid db)
-               :activity/status :activity.status/in-preparation}
-              (-> activity
-                  (select-keys [:activity/name
-                                :activity/estimated-start-date
-                                :activity/estimated-end-date
-                                :activity/manager])
-                  (cu/update-in-if-exists [:activity/manager] user-model/user-ref))
-              (when (seq tasks)
-                {:activity/tasks
-                 (vec
-                  (for [[task-group task-type send-to-thk?] tasks]
-                    (merge {:db/id (str "NEW-TASK-"
-                                        (name task-group) "-"
-                                        (name task-type))
-                            :task/estimated-end-date (:activity/estimated-end-date activity)
-                            :task/estimated-start-date (:activity/estimated-start-date activity)
-                            :task/status :task.status/not-started
-                            :task/group task-group
-                            :task/type task-type
-                            :task/send-to-thk? send-to-thk?}
-                           (when send-to-thk?
-                             {:integration/id (integration-id/unused-random-small-uuid db)})
-                           (meta-model/creation-meta user))))})
-              (meta-model/creation-meta user))
-             {:db/id lifecycle-id
-              :thk.lifecycle/activities ["new-activity"]}]
+    (tx-ret [(list 'teet.activity.activity-tx/ensure-activity-validity
+                   lifecycle-id
+                   [{:db/id lifecycle-id
+                     :thk.lifecycle/activities
+                     [(merge
+                        {:db/id "new-activity"
+                         :integration/id (integration-id/unused-random-small-uuid db)
+                         :activity/status :activity.status/in-preparation}
+                        (-> activity
+                            (select-keys [:activity/name
+                                          :activity/estimated-start-date
+                                          :activity/estimated-end-date
+                                          :activity/manager])
+                            (cu/update-in-if-exists [:activity/manager] user-model/user-ref))
+                        (when (seq tasks)
+                          {:activity/tasks
+                           (vec
+                             (for [[task-group task-type send-to-thk?] tasks]
+                               (merge {:db/id (str "NEW-TASK-"
+                                                   (name task-group) "-"
+                                                   (name task-type))
+                                       :task/estimated-end-date (:activity/estimated-end-date activity)
+                                       :task/estimated-start-date (:activity/estimated-start-date activity)
+                                       :task/status :task.status/not-started
+                                       :task/group task-group
+                                       :task/type task-type
+                                       :task/send-to-thk? send-to-thk?}
+                                      (when send-to-thk?
+                                        {:integration/id (integration-id/unused-random-small-uuid db)})
+                                      (meta-model/creation-meta user))))})
+                        (meta-model/creation-meta user))]}])]
             (when manager
               [(ensure-manager-permission-tx db
                                              project-id
@@ -167,34 +130,38 @@
                    :activity/edit-activity {:db/id id}}
    :pre [^{:error :invalid-tasks}
          (let [activity-name (-> (du/entity db id) :activity/name :db/ident)]
-           (valid-tasks? db activity-name tasks-to-add))
+           (task-db/valid-tasks? db activity-name tasks-to-add))
 
          ^{:error :invalid-task-dates}
          (activity-db/valid-task-dates? db id {:task/estimated-start-date estimated-start-date
                                                :task/estimated-end-date estimated-end-date})]
    :transact
-   (let [status (get-in (du/entity db id) [:activity/status :db/ident])]
-     (into [(merge
-             {:db/id id}
-             (when (= status :activity.status/completed)
-               {:activity/status :activity.status/in-progress})
-             (meta-model/modification-meta user))]
-           (mapcat identity
-                   (for [[task-group task-type send-to-thk?] tasks-to-add]
-                     (let [id-placeholder (str "NEW-TASK-"
-                                               (name task-group) "-"
-                                               (name task-type))]
-                       [(merge {:db/id id-placeholder
-                                :task/estimated-end-date estimated-end-date
-                                :task/estimated-start-date estimated-start-date
-                                :task/status :task.status/not-started
-                                :task/group task-group
-                                :task/type task-type
-                                :task/send-to-thk? send-to-thk?}
-                               (when send-to-thk?
-                                 {:integration/id (integration-id/unused-random-small-uuid db)})
-                               (meta-model/creation-meta user))
-                        [:db/add id :activity/tasks id-placeholder]])))))})
+   (let [activity-entity (du/entity db id)
+         status (get-in activity-entity [:activity/status :db/ident])
+         lifecycle-id (get-in activity-entity [:thk.lifecycle/_activities 0 :db/id])]
+     [(list 'teet.activity.activity-tx/ensure-activity-validity
+            lifecycle-id
+            (into [(merge
+                     {:db/id id}
+                     (when (= status :activity.status/completed)
+                       {:activity/status :activity.status/in-progress})
+                     (meta-model/modification-meta user))]
+                  (mapcat identity
+                          (for [[task-group task-type send-to-thk?] tasks-to-add]
+                            (let [id-placeholder (str "NEW-TASK-"
+                                                      (name task-group) "-"
+                                                      (name task-type))]
+                              [(merge {:db/id id-placeholder
+                                       :task/estimated-end-date estimated-end-date
+                                       :task/estimated-start-date estimated-start-date
+                                       :task/status :task.status/not-started
+                                       :task/group task-group
+                                       :task/type task-type
+                                       :task/send-to-thk? send-to-thk?}
+                                      (when send-to-thk?
+                                        {:integration/id (integration-id/unused-random-small-uuid db)})
+                                      (meta-model/creation-meta user))
+                               [:db/add id :activity/tasks id-placeholder]])))))])})
 
 
 (defcommand :activity/update
@@ -206,25 +173,25 @@
    :pre [^{:error :invalid-activity-dates}
          (valid-activity-dates? db
                                 (activity-db/lifecycle-id-for-activity-id db (:db/id activity))
-                                activity)
-
-         ^{:error :conflicting-activities}
-         (not (activity-db/conflicting-activities? db activity (activity-db/lifecycle-id-for-activity-id db (:db/id activity))))]}
+                                activity)]}
   (let [project-id (project-db/activity-project-id db (:db/id activity))
         new-manager (:activity/manager activity)
-        current-manager-id (get-in (du/entity db project-id) [:activity/manager :user/id])]
-    (tx-ret [(merge (-> activity
-                        (select-keys [:activity/estimated-start-date
-                                      :activity/estimated-end-date
-                                      :activity/manager
-                                      :db/id])
-                        (cu/update-in-if-exists [:activity/manager] user-model/user-ref))
-                    (meta-model/modification-meta user))]
-            (when new-manager
+        current-manager-id (get-in (du/entity db (:db/id activity)) [:activity/manager :user/id])
+        lifecycle-id (activity-db/lifecycle-id-for-activity-id db (:db/id activity))]
+    (tx-ret [(list 'teet.activity.activity-tx/ensure-activity-validity
+                   lifecycle-id
+                   [(merge (-> activity
+                               (select-keys [:activity/estimated-start-date
+                                             :activity/estimated-end-date
+                                             :activity/manager
+                                             :db/id])
+                               (cu/update-in-if-exists [:activity/manager] user-model/user-ref))
+                           (meta-model/modification-meta user))])]
+            (when (and new-manager
+                       (not= (:user/id new-manager)
+                             current-manager-id))
               [(ensure-manager-permission-tx db project-id user new-manager)
-               (when (not= (:user/id new-manager)
-                           current-manager-id)
-                 (manager-notification-tx db project-id user new-manager))]))))
+               (manager-notification-tx db project-id user new-manager)]))))
 
 (defn user-can-delete-activity?
   "A user can delete an activity if it has no procurement number"

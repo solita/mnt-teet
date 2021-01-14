@@ -9,6 +9,7 @@
          :where
          [?e :user/id _]
          [?e :user/given-name ?given]
+         [(missing? $ ?e :user/deactivated?)]
          [?e :user/family-name ?family]
          [(str ?given " " ?family) ?full-name]
          [(.toLowerCase ?full-name) ?full-name-lower]

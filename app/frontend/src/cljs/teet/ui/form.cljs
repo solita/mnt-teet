@@ -75,42 +75,52 @@
     (when justify
       {:justify-content justify})
     {:display :flex
+     :flex-wrap :wrap
+     :justify-content :center
      :margin-top "1.5rem"
      :padding-bottom "1rem"})))
 
 (defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
-                           delete-disabled-error-text
+                           delete-disabled-error-text delete-link?
                            cancel validate disabled?]}]
-  [:div {:class (<class form-buttons)}
-   (when delete
-     [common/popper-tooltip
-      (when delete-disabled-error-text
-        {:title delete-disabled-error-text})
-      [buttons/delete-button-with-confirm
-       (merge
-        {:action delete
-         :modal-text delete-message
-         :id "delete-button"}
-        (when delete-confirm-button-text
-          {:confirm-button-text delete-confirm-button-text})
-        (when delete-cancel-button-text
-          {:cancel-button-text delete-cancel-button-text})
-        (when delete-disabled-error-text
-          {:disabled true}))
-       (tr [:buttons :delete])]])
-   [:div {:style {:margin-left :auto}}
-    (when cancel
-      [buttons/button-secondary {:style    {:margin-right "1rem"}
-                                 :disabled disabled?
-                                 :class "cancel"
-                                 :on-click cancel}
-       (tr [:buttons :cancel])])]
-   (when validate
-     [buttons/button-primary {:disabled disabled?
-                              :type :submit
-                              :class "submit"
-                              :on-click validate}
-      (tr [:buttons :save])])])
+  (let [delete-element
+        (when delete
+          [common/popper-tooltip
+           (when delete-disabled-error-text
+             {:title delete-disabled-error-text})
+           [buttons/delete-button-with-confirm
+            (merge
+             {:action delete
+              :modal-text delete-message
+              :id "delete-button"}
+             (when delete-link?
+               {:trashcan? true})
+             (when delete-confirm-button-text
+               {:confirm-button-text delete-confirm-button-text})
+             (when delete-cancel-button-text
+               {:cancel-button-text delete-cancel-button-text})
+             (when delete-disabled-error-text
+               {:disabled true}))
+            (tr [:buttons :delete])]])]
+    [:<>
+     [:div {:class (<class form-buttons)}
+      (when-not delete-link?
+        delete-element)
+      [:div {:style {:margin-left :auto}}
+       (when cancel
+         [buttons/button-secondary {:style    {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])]
+      (when validate
+        [buttons/button-primary {:disabled disabled?
+                                 :type :submit
+                                 :class "submit"
+                                 :on-click validate}
+         (tr [:buttons :save])])]
+     (when (and delete-link? delete-element)
+       [:div {:style {:text-align :center}} delete-element])]))
 
 (defn- hide-field?
   "Returns true if field is nil or if it has `:step` in its metadata and
@@ -385,6 +395,7 @@
            delete-confirm-button-text ;; label for confirm delete button
            delete-cancel-button-text ;; label form cancel delete button
            delete-disabled-error-text ;; if specified, show delete as disabled with this text as tooltip
+           delete-link? ;; if added, delete will be shown as link below other footer buttons
            ]}
    & children]
   (r/with-let [invalid-attributes (r/atom #{})
@@ -423,7 +434,8 @@
                              :delete-message delete-message
                              :delete-confirm-button-text delete-confirm-button-text
                              :delete-cancel-button-text delete-cancel-button-text
-                             :delete-disabled-error-text delete-disabled-error-text}}]
+                             :delete-disabled-error-text delete-disabled-error-text
+                             :delete-link? delete-link?}}]
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
                            :display :flex
