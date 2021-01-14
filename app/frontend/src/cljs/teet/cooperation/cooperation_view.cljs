@@ -560,11 +560,22 @@
                    :spec ::cooperation-model/contact-form
                    :save-event #(common-controller/->SaveForm
                                  :cooperation/save-contact-info
-                                 {:application-id id :contact-form @contact-form}
+                                 {:application-id id
+                                  :contact-form (merge (select-keys contact [:db/id])
+                                                       @contact-form)}
                                  (fn [_response]
                                    (reset! edit-contact? false)
                                    common-controller/refresh-fx))
                    :cancel-event (form/update-atom-event edit-contact? (constantly false))
+                   :delete (when (:db/id contact)
+                             (common-controller/->SaveForm
+                              :cooperation/delete-contact-info
+                              {:application-id id}
+                              (fn [_response]
+                                (reset! edit-contact? false)
+                                (reset! contact-form {})
+                                common-controller/refresh-fx)))
+                   :delete-link? true
                    :value @contact-form}
         ^{:attribute :cooperation.contact/name}
         [text-field/TextField {}]
