@@ -183,10 +183,9 @@
            :activity/name :db/ident)
        #{}))
 
-(defn find-tasks-from-db
+(defn activity-tasks
   "Finds all Tasks related to the given Activity"
   [db activity-id]
-  (println activity-id)
   (mapv first (d/q '[:find ?t
                      :in $ ?a
                      :where
@@ -198,7 +197,7 @@
   "Check a task under activity has undeleted files."
   [db activity-id]
   (->> activity-id
-    (find-tasks-from-db db)
+    (activity-tasks db)
     (map (partial file-db/task-has-files? db))
     (filter boolean)
     seq

@@ -240,7 +240,7 @@
          (user-can-delete-activity? db activity-id)]
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
-   :transact [(list 'teet.activity.activity_tx/delete-activity user activity-id)]})
+   :transact [(list 'teet.activity.activity-tx/delete-activity user activity-id)]})
 
 
 (defn check-tasks-are-complete [db activity-eid]
