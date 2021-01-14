@@ -557,6 +557,7 @@
      (if @edit-contact?
        [form/form {:e! e!
                    :on-change-event (form/update-atom-event contact-form merge)
+                   :spec ::cooperation-model/contact-form
                    :save-event #(common-controller/->SaveForm
                                  :cooperation/save-contact-info
                                  {:application-id id :contact-form @contact-form}
