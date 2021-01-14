@@ -143,7 +143,7 @@
                (tu/local-command tu/mock-user-boss
                                  :activity/add-tasks
                                  {:db/id (tu/get-data :new-activity-id)
-                                  :task/estimated-start-date #inst "2020-04-11T21:00:00.000-00:00" ;; Oops, too early
+                                  :task/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                   :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                   :activity/tasks-to-add [[:task.group/design :task.type/buildings false]
                                                           [:task.group/base-data :task.type/technical-conditions false]]}))

@@ -86,7 +86,7 @@
                    [{:db/id lifecycle-id
                      :thk.lifecycle/activities
                      [(merge
-                        {:db/id "new-activity-id"
+                        {:db/id "new-activity"
                          :integration/id (integration-id/unused-random-small-uuid db)
                          :activity/status :activity.status/in-preparation}
                         (-> activity
