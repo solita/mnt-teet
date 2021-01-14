@@ -1675,4 +1675,36 @@
            :db/valueType :db.type/uuid
            :db/unique :db.unique/identity
            :db/doc "UUID identifier for THK integration (dev env db didn't have integration ids on all)"}]
-         teet.migration.thk-integration-id/migrate-2]}]
+         teet.migration.thk-integration-id/migrate-2]}
+
+ {:db/ident :migration/application-contact
+  :txes [[{:db/ident :cooperation.application/contact
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/ref
+           :db/isComponent true
+           :db/doc "Contact info for application"}
+
+          {:db/ident :cooperation.contact/name
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Name of contact person"}
+
+          {:db/ident :cooperation.contact/company
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Company info of contact"}
+
+          {:db/ident :cooperation.contact/id-code
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Company business registry number"}
+
+          {:db/ident :cooperation.contact/email
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Email address"}
+
+          {:db/ident :cooperation.contact/phone
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Phone number"}]]}]

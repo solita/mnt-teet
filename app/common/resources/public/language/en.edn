@@ -148,6 +148,7 @@
   :all-third-parties "All involved parties",
   :add-application-response "Add application response",
   :create-opinion-title "Add opinion",
+  :add-application-contact "Add contact",
   :create-opinion-button "Opinion of Competent Authority",
   :new-application-created "Application created successfully",
   :no-deadline "No deadline",
@@ -156,6 +157,7 @@
   :unanswered "Unanswered",
   :responsible-person "Responsible: {user-name}",
   :response-saved "Response saved successfully",
+  :application-contact-person "Application contact person",
   :new-third-party-title "Add involved party",
   :error
   {:upload-not-allowed "Upload not allowed",
@@ -481,6 +483,8 @@
   :two-files-with-same-metadata
   "Another file with the same metadata already exists.",
   :request-timeout "The server did not respond.",
+  :conflicting-tasks
+  "The tasks you are trying to create conflict with existing tasks.",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
   :replaced-file-not-latest
@@ -510,6 +514,7 @@
   :cooperation.response/valid-until "Expiration date",
   :cooperation.opinion/status "Opinion of Competent Authority",
   :activity/status "Status",
+  :cooperation.contact/id-code "Business reg / personal ID code",
   :file.part/name "Part name",
   :task/group "Task group",
   :file/part "Part",
@@ -559,6 +564,7 @@
   :document/sub-category "Document subtype",
   :user/add-global-permission
   "Add global role (applies to all projects)",
+  :cooperation.contact/company "Company",
   :land-exchange/cadastral-unit-id "Cadastral unit id",
   :activity/estimated-end-date "Estimated end date",
   :user/given-name "Given name",
@@ -573,11 +579,13 @@
   :user/roles "Roles",
   :document/author "Author",
   :file/name "Name",
+  :cooperation.contact/email "Email",
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
   :thk.project/region-name "Region",
   :cooperation.response/date "Date of response",
   :estate-procedure/urgent-bonus "Urgent fee",
+  :cooperation.contact/phone "Phone",
   :comment/comment "Comment",
   :file/timestamp "Upload date",
   :cooperation.3rd-party/email "E-mail address",
@@ -598,6 +606,7 @@
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :file/description "Description",
+  :cooperation.contact/name "Name",
   :file/document-group "Group",
   :meeting.agenda/body "Body",
   :estate-procedure/type "Procedure type",
