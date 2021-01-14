@@ -187,8 +187,9 @@
                                              :db/id])
                                (cu/update-in-if-exists [:activity/manager] user-model/user-ref))
                            (meta-model/modification-meta user))])]
-            (when (not= (:user/id new-manager)
-                        current-manager-id)
+            (when (and new-manager
+                       (not= (:user/id new-manager)
+                             current-manager-id))
               [(ensure-manager-permission-tx db project-id user new-manager)
                (manager-notification-tx db project-id user new-manager)]))))
 
