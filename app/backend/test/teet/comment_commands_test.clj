@@ -152,7 +152,7 @@
     ;; Create a new task for multi resolve
     (let [task-id (tu/create-task {:user tu/mock-user-manager
                                    :activity (tu/->db-id "p1-lc1-act1")
-                                   :task {:task/type :task.type/plot-allocation-plan
+                                   :task {:task/type :task.type/state-estate-registry
                                           :task/group :task.group/land-purchase}}
                                   :multi-resolve-task-id)]
       (is (some? task-id)))
@@ -199,7 +199,7 @@
     ;; Create a new task for multi resolve
     (let [task-id (tu/create-task {:user tu/mock-user-manager
                                    :activity (tu/->db-id "p1-lc1-act1")
-                                   :task {:task/type :task.type/plot-allocation-plan
+                                   :task {:task/type :task.type/cadastral-works
                                           :task/group :task.group/land-purchase}}
                                   :external-multi-resolve-task-id)]
       (is (some? task-id)))
