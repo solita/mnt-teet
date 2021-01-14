@@ -148,7 +148,7 @@
   :all-third-parties "Kõik kaasatud osapooled",
   :add-application-response "Lisan pöördumise vastuse",
   :create-opinion-title "Seisukoha lisamine",
-  :add-application-contact nil,
+  :add-application-contact "Lisan kontakti",
   :create-opinion-button "Lisan ametliku seisukoha",
   :new-application-created "Taotlus edukalt loodud",
   :no-deadline "Tähtaega pole",
@@ -157,6 +157,7 @@
   :unanswered "Vastuseta",
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
+  :application-contact-person "Pöördumise kontaktisik",
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",

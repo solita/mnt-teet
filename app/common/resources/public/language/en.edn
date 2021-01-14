@@ -157,6 +157,7 @@
   :unanswered "Unanswered",
   :responsible-person "Responsible: {user-name}",
   :response-saved "Response saved successfully",
+  :application-contact-person "Application contact person",
   :new-third-party-title "Add involved party",
   :error
   {:upload-not-allowed "Upload not allowed",
