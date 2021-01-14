@@ -53,6 +53,23 @@ context('Cooperation', function() {
         cy.get(".cooperation-application-page")
         cy.get(".application-people") // page has people panel
 
+
+        // Fill contact information
+        cy.get("[data-cy=add-contact]").click()
+        cy.formInput(
+            ":cooperation.contact/name", "Sir Testy Testington, esq.",
+            ":cooperation.contact/company", "Test & Associates Ltd",
+            ":cooperation.contact/id-code", "55667788989-0",
+            ":cooperation.contact/email", "foo@example.com",
+            ":cooperation.contact/phone", "123456")
+        cy.formSubmit()
+
+        // contact info is filled
+        cy.get("[data-cy=add-contact]").should("not.exist")
+        cy.get("[data-cy=edit-contact]")
+        cy.get(".application-contact-info")
+
+
         // check we have button for entering response
 
         cy.get("button.enter-response").click()

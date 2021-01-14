@@ -132,3 +132,40 @@
                 (if (:db/id opinion-form)
                   (meta-model/modification-meta user)
                   (meta-model/creation-meta user)))}]})
+
+(s/def ::contact-form (s/keys :req [:cooperation.contact/name]
+                              :opt [:cooperation.contact/company
+                                    :cooperation.contact/id-code
+                                    :cooperation.contact/email
+                                    :cooperation.contact/phone]))
+
+(defn- contact-id-matches
+  "Check that contact id matches application's current contact id.
+  Either both are nil or they are the same entity id."
+  [db application-id opinion-id]
+  (let [application (du/entity db application-id)
+        current-contact-id (get-in application
+                                   [:cooperation.application/contact :db/id])]
+    (= opinion-id current-contact-id)))
+
+(defcommand :cooperation/save-contact-info
+  {:doc "Save contact info for an application"
+   :spec (s/keys :req-un [::application-id
+                          ::contact-form])
+   :context {:keys [user db]}
+   :payload {:keys [application-id contact-form]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/edit-application {}}
+   :pre [(contact-id-matches db application-id (:db/id contact-form))]
+   :transact [{:db/id application-id
+               :cooperation.application/contact
+               (merge
+                {:db/id (or (:db/id contact-form) "new-contact")}
+                (select-keys contact-form [:cooperation.contact/name
+                                           :cooperation.contact/company
+                                           :cooperation.contact/id-code
+                                           :cooperation.contact/email
+                                           :cooperation.contact/phone])
+                (if (:db/id contact-form)
+                  (meta-model/modification-meta user)
+                  (meta-model/creation-meta user)))}]})

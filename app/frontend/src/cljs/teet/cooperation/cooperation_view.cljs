@@ -540,9 +540,10 @@
       [buttons/button-primary {:class "create-opinion"}
        (tr [:cooperation :create-opinion-button])]])])
 
-(defn application-people-panel [e! {:cooperation.application/keys [activity contact]}]
+(defn application-people-panel [e! {id :db/id :cooperation.application/keys [activity contact]}]
   (r/with-let [edit-contact? (r/atom false)
-               edit-contact! #(reset! edit-contact? true)]
+               edit-contact! #(reset! edit-contact? true)
+               contact-form (r/atom contact)]
     [:div.application-people
      [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
       (tr [:project :tabs :people])]
@@ -555,8 +556,15 @@
 
      (if @edit-contact?
        [form/form {:e! e!
-                   :save-event :D
-                   :value contact}
+                   :on-change-event (form/update-atom-event contact-form merge)
+                   :save-event #(common-controller/->SaveForm
+                                 :cooperation/save-contact-info
+                                 {:application-id id :contact-form @contact-form}
+                                 (fn [_response]
+                                   (reset! edit-contact? false)
+                                   common-controller/refresh-fx))
+                   :cancel-event (form/update-atom-event edit-contact? (constantly false))
+                   :value @contact-form}
         ^{:attribute :cooperation.contact/name}
         [text-field/TextField {}]
 
@@ -572,12 +580,37 @@
         ^{:attribute :cooperation.contact/phone}
         [text-field/TextField {}]]
 
-       ;; "Add contact" or "edit" button
-       (if contact
-         [buttons/button-secondary {:on-click edit-contact!}
-          (tr [:buttons :edit])]
-         [buttons/button-primary {:on-click edit-contact!}
-          (tr [:cooperation :add-application-contact])]))]))
+       [:<>
+        ;; Show contact info (if any)
+        (when (seq contact)
+          [:div.application-contact-info
+           [typography/Heading3 (tr [:cooperation :application-contact-person])]
+           (doall
+            (for [k [:cooperation.contact/name
+                     :cooperation.contact/company
+                     :cooperation.contact/id-code
+                     :cooperation.contact/email
+                     :cooperation.contact/phone]
+                  :let [v (get contact k)]
+                  :when v]
+              ^{:key (str k)}
+              [:div {:class (<class common-styles/flex-row)}
+               [:div {:class (<class common-styles/flex-table-column-style 45)}
+                (tr [:fields k])]
+               [:div {:class (<class common-styles/flex-table-column-style 55)}
+                v]]))])
+        ;; "Add contact" or "edit" button
+        [:div {:style {:float :right}}
+         (if contact
+           [buttons/button-secondary {:on-click edit-contact!
+                                      :data-cy "edit-contact"}
+            (tr [:buttons :edit])]
+           [buttons/button-primary {:on-click edit-contact!
+                                    :size "small"
+                                    :end-icon (r/as-element
+                                               [icons/content-add])
+                                    :data-cy "add-contact"}
+            (tr [:cooperation :add-application-contact])])]])]))
 
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
