@@ -50,6 +50,7 @@
 (defrecord OpenAddTasksDialog [activity-id])
 (defrecord UpdateAddTasksForm [form-data])
 (defrecord SaveAddTasksForm [activity-name])
+(defrecord SaveAddTaskError [error])
 (defrecord SaveAddTasksResponse [response])
 (defrecord CloseAddTasksDialog [])
 (defrecord SavePartForm [close-event task-id form-data])
@@ -243,13 +244,23 @@
                                                    (:sent-tasks add-tasks-data))]
       (t/fx (assoc-in app [:add-tasks-data :in-progress?] true)
             {:tuck.effect/type :command!
-             :command          :activity/add-tasks
-             :payload          {:db/id (:db/id add-tasks-data)
-                                :activity/tasks-to-add tasks-to-create
-                                :task/estimated-start-date (:task/estimated-start-date add-tasks-data)
-                                :task/estimated-end-date (:task/estimated-end-date add-tasks-data)}
-             :success-message  (tr [:notifications :tasks-created])
-             :result-event     ->SaveAddTasksResponse})))
+             :command :activity/add-tasks
+             :payload {:db/id (:db/id add-tasks-data)
+                       :activity/tasks-to-add tasks-to-create
+                       :task/estimated-start-date (:task/estimated-start-date add-tasks-data)
+                       :task/estimated-end-date (:task/estimated-end-date add-tasks-data)}
+             :success-message (tr [:notifications :tasks-created])
+             :error-event ->SaveAddTaskError
+             :result-event ->SaveAddTasksResponse})))
+
+  SaveAddTaskError
+  (process-event [{error :error} app]
+    (let [error (-> error ex-data :error)]
+      (t/fx
+        (snackbar-controller/open-snack-bar
+          (assoc-in app [:add-tasks-data :in-progress?] false)
+          (tr [:error error])
+          :warning))))
 
   SaveAddTasksResponse
   (process-event [{response :response} {:keys [page params query] :as app}]

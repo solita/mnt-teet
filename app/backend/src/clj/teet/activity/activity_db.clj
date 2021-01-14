@@ -83,6 +83,16 @@
                           manager-transactions->manager-periods
                           (partial sort-by :modified-at)))))
 
+(defn get-activity-ids-of-lifecycle
+  [db lifecycle-id]
+  (->> (d/q '[:find ?a
+             :in $ ?lc
+             :where
+             [?lc :thk.lifecycle/activities ?a]
+             [(missing? $ ?a :meta/deleted?)]]
+           db lifecycle-id)
+      (mapv first)))
+
 (defn get-activity-ids-of-project
   "get db ids of nondeleted activities belonging to project"
   [db project-id]
@@ -137,6 +147,59 @@
   (project-with-manager-histories project
                                   (get-manager-histories db
                                                          (:db/id project))))
+
+(def task-pull-attributes
+  [:db/id
+   :integration/id
+   :task/name :task/description
+   :task/status :task/type :task/group
+   :task/estimated-start-date :task/estimated-end-date
+   :task/actual-start-date :task/actual-end-date
+   :task/send-to-thk?
+   {:task/assignee [:user/given-name
+                    :user/email
+                    :user/id
+                    :db/id
+                    :user/family-name]}])
+
+(defn activitys-active-tasks
+  "Return all given activities tasks that are not deleted or completed"
+  [db activity-id]
+  (mapv
+    first
+    (d/q '[:find (pull ?t task-pull-attributes)
+           :where
+           [?activity :activity/tasks ?t]
+           [(missing? $ ?t :meta/deleted?)]
+           (not
+             [?t :task/status :task.status/completed])
+           :in $ ?activity task-pull-attributes]
+         db activity-id task-pull-attributes)))
+
+(defn current-lifecycle-activities
+  "Returns all currently active activities (not ended or deleted)"
+  [db lifecycle-id]
+  (mapv
+    first
+    (d/q '[:find (pull ?a [:activity/actual-start-date
+                           :activity/actual-end-date
+                           :db/id
+                           :activity/estimated-start-date
+                           :activity/estimated-end-date
+                           :activity/name
+                           :activity/status])
+           :in $ ?lc ?time
+           :where
+           [?lc :thk.lifecycle/activities ?a]
+           ;; Ignore deleted activities
+           [(missing? $ ?a :meta/deleted?)]
+           ;; Ignore activities that have ended
+           [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
+           [(>= ?end-date ?time)]]
+         db
+         lifecycle-id
+         (Date.))))
+
 
 (defn conflicting-activities?
   "Check if the lifecycle contains any activies that conflict with the given activity."
