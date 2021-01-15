@@ -28,6 +28,7 @@ jobs:
         run: |
           mkdir ~/.datomic
           mkdir /tmp/datomic-storage
+          export CYPRESS_SITE_PASSWORD=#{{ secrets.CYPRESS_SITE_PASSWORD }}
           echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
       - name: run backend build
         run: clojure -A:dev
