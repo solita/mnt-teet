@@ -3,7 +3,7 @@
 echo runnit frontend test script
 npm install
 
-clojure -A:dev
+clojure -A:prod
 
 npx cypress run --config-file /ci/browser-tests/cypress-localdev.json
 
