@@ -68,4 +68,4 @@
                             "dxf"
                             "docx"}}
 
- :document-storage {:bucket-name "teet-ci-test-documents"}}
+ :document-storage {:bucket-name "teet-browser-test-documents"}}
