@@ -48,16 +48,19 @@
 (defn stop []
   (server))
 
-(defn restart []
-  (environment/load-local-config!)
-  (when server
-    (stop))
-  ;; Dummy config for local testing use
-  (start {:mode :dev
-          :port 4000
-          :api {:shared-secret "secret1234567890secret1234567890"
-                :role "teet_user"
-                :url "http://localhost:3000"}}))
+(defn restart
+  ([]
+   (restart (io/file ".." ".." ".." "mnt-teet-private" "config.edn")))
+  ([config-file]
+   (environment/load-local-config! config-file)
+   (when server
+     (stop))
+   ;; Dummy config for local testing use
+   (start {:mode :dev
+           :port 4000
+           :api {:shared-secret "secret1234567890secret1234567890"
+                 :role "teet_user"
+                 :url "http://localhost:3000"}})))
 
-(defn -main [& _]
-  (restart))
+(defn -main [& args]
+  (restart (io/file (first args))))

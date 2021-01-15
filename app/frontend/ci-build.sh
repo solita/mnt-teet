@@ -3,6 +3,6 @@
 echo running frontend test script
 npm install
 
-clojure -A:prod
+clojure -A:dev-build
 
 echo frontend prod build ran

@@ -1,0 +1,71 @@
+{:datomic
+
+ ;; Use dev-local https://docs.datomic.com/cloud/dev-local.html
+ {:db-name "teet-local-dev"
+  :client {:server-type :dev-local
+           :system "teet"}}
+
+ :auth {:jwt-secret "secret1234567890secret1234567890"
+        :basic-auth-password "testing123"}
+ :env :dev
+ :base-url "http://localhost:4000"
+ :api-url "http://localhost:3000"
+ :enabled-features #{:road-information-view
+                     :component-view
+                     :data-frisk
+                     :cooperation
+                     :my-role-display
+                     :dummy-login
+                     :meetings
+                     :admin-inspector}
+ :email {:from "test@example.com"}
+
+ :file {:image-suffixes #{"tiff"
+                          "jpeg"
+                          "ecw"
+                          "tif"
+                          "png"
+                          "jpg"}
+        :allowed-suffixes #{"shp"
+                            "mp4"
+                            "rvt"
+                            "tiff"
+                            "odf"
+                            "xml"
+                            "ogg"
+                            "pdf"
+                            "ifc"
+                            "bcf"
+                            "mp3"
+                            "wav"
+                            "jpeg"
+                            "gpx"
+                            "lin"
+                            "skp"
+                            "3dm"
+                            "dwf"
+                            "ags"
+                            "ecw"
+                            "avi"
+                            "tif"
+                            "dwg"
+                            "xls"
+                            "ppt"
+                            "pptx"
+                            "m4v"
+                            "shx"
+                            "mov"
+                            "kml"
+                            "xlsx"
+                            "png"
+                            "aac"
+                            "kmz"
+                            "dbf"
+                            "jpg"
+                            "doc"
+                            "dgn"
+                            "rtf"
+                            "dxf"
+                            "docx"}}
+
+ :document-storage {:bucket-name "teet-ci-test-documents"}}
