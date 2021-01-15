@@ -60,13 +60,4 @@
                 :url "http://localhost:3000"}}))
 
 (defn -main [& _]
-  (start {:mode :prod
-          :port 3000
-          :api {:shared-secret (System/getenv "API_SHARED_SECRET")
-                :role "teet_user"
-                :url (System/getenv "API_URL")}
-          :tara {:endpoint-url "https://tara-test.ria.ee/oidc" ; FIXME: parameterize for prod use
-                 :client-id (System/getenv "TARA_CLIENT_ID")
-                 :client-secret (System/getenv "TARA_CLIENT_SECRET")
-                 :base-url (System/getenv "BASE_URL")}
-          :documents {:bucket-name (System/getenv "DOCUMENTS_BUCKET_NAME")}}))
+  (restart))
