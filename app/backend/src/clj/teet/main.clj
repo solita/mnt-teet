@@ -62,6 +62,3 @@
            :api {:shared-secret "secret1234567890secret1234567890"
                  :role "teet_user"
                  :url "http://localhost:3000"}})))
-
-(defn -main [& args]
-  (restart (io/file (first args))))
