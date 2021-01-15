@@ -12,4 +12,4 @@ while ! nc -z localhost 4000; do
   sleep 1
 done
 
-npx cypress run --config-file cypress-localdev.json
+CYPRESS_SITE_PASSWORD=testing123 npx cypress run --config-file cypress-localdev.json
