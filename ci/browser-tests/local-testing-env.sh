@@ -21,3 +21,5 @@ while ! nc -z localhost 4000; do
 done
 
 CYPRESS_SITE_PASSWORD=testing123 npx cypress run --config-file cypress-localdev.json
+
+aws s3 cp /cypress/videos/*.mp4 s3://teet-browser-test-documents/videos/
