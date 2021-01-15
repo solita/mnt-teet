@@ -36,3 +36,6 @@ jobs:
       - name: run frontend build
         run: ./ci-build.sh
         working-directory: app/frontend/
+      - name: run cypress
+        run: npx cypress run --config-file /ci/browser-tests/cypress-localdev.json
+        working-directory: ci/browser-tests/
