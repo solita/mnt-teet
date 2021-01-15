@@ -12,7 +12,8 @@
             [teet.login.login-fake-routes :as login-fake-routes]
             [teet.db-api.db-api-dev :as db-api-dev]
             [teet.log :as log]
-            [teet.environment :as environment])
+            [teet.environment :as environment]
+            [clojure.java.io :as io])
   (:gen-class))
 
 (def server nil)
