@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir ~/.datomic
           mkdir /tmp/datomic-storage
-          export CYPRESS_SITE_PASSWORD=${{ secrets.CYPRESS_SITE_PASSWORD }}
+          export CYPRESS_SITE_PASSWORD=testing123
           echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
       - name: run frontend build
         run: ./ci-build.sh
