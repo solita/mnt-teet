@@ -406,6 +406,8 @@
   :notification.type/comment-unresolved "Comment unresolved",
   :task.type/construction-other-facilities "Other facilities",
   :task.type/general-part "General part",
+  :notification.type/cooperation-application-responded
+  "Application is waiting for authority position",
   :cooperation.application.response-type/opinion "Opinion",
   :activity.status/completed "Completed",
   :activity.name/preliminary-design "Preliminary design",
@@ -759,7 +761,7 @@
   :clear-selections "Clear selections",
   :display "Map display",
   :layers
-  {:no-filters "No filters available.",
+  {:no-filters "No filters available",
    :projects "Projects",
    :restrictions "Restrictions",
    :teeregister "Road registry layers",

@@ -96,6 +96,10 @@
               :focus-on (str comment-id)}})
     (db-api/bad-request! "No such comment")))
 
+(defn- cooperation-application-navigation-info [db cooperation-id]
+  ;;TODO: implement finding Cooperation Application details page nav info
+  )
+
 (defn notification-navigation-info [db user notification-id]
   (when-let [{:notification/keys [type target]}
              (notification-db/navigation-info db user notification-id)]
@@ -119,7 +123,10 @@
       (project-navigation-info db (:db/id target))
 
       :notification.type/meeting-updated
-      (meeting-navigation-info db (:db/id target)))))
+      (meeting-navigation-info db (:db/id target))
+
+      :notification.type/cooperation-application-responded
+      (cooperation-application-navigation-info db (:db/id target)))))
 
 (defquery :notification/navigate
   {:doc "Fetch navigation info for notification."

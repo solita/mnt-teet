@@ -403,6 +403,8 @@
   :notification.type/comment-unresolved "Lahendamata",
   :task.type/construction-other-facilities "Muud rajatised",
   :task.type/general-part "Ülddokumendid",
+  :notification.type/cooperation-application-responded
+  "Taotlus ootab asutuse seisukohta",
   :cooperation.application.response-type/opinion "Arvamus",
   :activity.status/completed "Valmis",
   :activity.name/preliminary-design "Eelprojekt",
@@ -506,7 +508,7 @@
   :cooperation.response/valid-until "Aegumiskuupäev",
   :cooperation.opinion/status "Ametliku seisukoht",
   :activity/status "Olek",
-  :cooperation.contact/id-code "Registrikood/isikukkood",
+  :cooperation.contact/id-code "Registrikood/ isikukood",
   :file.part/name "Ülesande osa nimi",
   :task/group "rro",
   :file/part "Osa",
@@ -753,7 +755,7 @@
   :clear-selections "Tühjendan valikud",
   :display "Kaardi tüüp",
   :layers
-  {:no-filters "Filtrid puuduvad",
+  {:no-filters "Filtrid või lisakihid puuduvad",
    :projects "Projektid",
    :restrictions "Kitsendused",
    :teeregister "Teeregistri kaardikihid",
