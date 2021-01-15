@@ -2,7 +2,7 @@
 
 cd ../../app/backend/
 
-clojure -A:run-local &
+clojure -A:run-browser-test &
 
 cd ../../ci/browser-tests
 

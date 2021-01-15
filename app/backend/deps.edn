@@ -76,7 +76,7 @@
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
 
-           :run-local {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
+           :run-browser-test {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                        :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                                     org.clojure/tools.namespace {:mvn/version "0.3.1"}
                                     com.datomic/dev-local {:mvn/version "0.9.229"}}
