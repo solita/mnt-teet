@@ -1,0 +1,37 @@
+name: cypress
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          tools-deps: '1.10.1.510'
+      - name: setup dev tools
+        run: |
+          export DEV_TOOLS_REPO_USER=${{ secrets.DEV_TOOLS_REPO_USER }}
+          export DEV_TOOLS_REPO_PASS=${{ secrets.DEV_TOOLS_REPO_PASS }}
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ./ci/scripts/setup-dev-tools.bash
+      - name: configure datomic local
+        run: |
+          mkdir ~/.datomic
+          mkdir /tmp/datomic-storage
+          echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
+      - name: run backend build
+        run: clojure -A:prod
+        working-directory: app/backend/
+      - name: run frontend build
+        run: clojure -A:prod
+        working-directory: app/frontend/
