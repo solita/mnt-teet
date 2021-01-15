@@ -30,8 +30,8 @@ jobs:
           mkdir /tmp/datomic-storage
           echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
       - name: run backend build
-        run: clojure -A:prod
+        run: clojure -A:dev
         working-directory: app/backend/
       - name: run frontend build
-        run: clojure -A:prod
+        run: ./ci-build.sh
         working-directory: app/frontend/
