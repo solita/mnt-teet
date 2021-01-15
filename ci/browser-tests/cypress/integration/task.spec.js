@@ -16,15 +16,21 @@ describe("Task view", function() {
       // Upload file
       let fileNameWithSuffix = this.filename + ".jpg"
       cy.get("[data-cy=task-file-upload]").click()
-      cy.uploadFile({inputSelector: "input[type=file]",
+      cy.uploadFile({inputSelector: "#files-field",
                      fixturePath: "text_file.jpg",
                      mimeType: "image/jpeg",
                      fileName: fileNameWithSuffix})
       cy.get(`input[value=${this.filename}]`)
       cy.get("button[type=submit]").click({force: true})
 
+        // wait for submit to not exist
+        cy.get("div[role=dialog] button[type=submit]").should("not.exist")
+
+        // wait for snackbar message
+        cy.get(".MuiSnackbar-root")
+
       // File added to file list, open file view
-      cy.get("[data-cy=task-file-list] a").contains(this.filename).click()
+        cy.get(`[data-cy=task-file-list] [data-file-description=${this.filename}] a`).contains(this.filename).click()
       cy.get("[data-cy=edit-file-button]").click()
       cy.get("#delete-button").click()
 
