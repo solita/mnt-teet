@@ -22,4 +22,8 @@ done
 
 CYPRESS_SITE_PASSWORD=testing123 npx cypress run --config-file cypress-localdev.json
 
+CYPRESS_EXIT_CODE=$?
+
 aws s3 sync cypress/videos s3://teet-browser-test-documents/videos
+
+exit CYPRESS_EXIT_CODE
