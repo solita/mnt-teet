@@ -856,20 +856,20 @@
   :comment-deleted "Comment deleted successfully",
   :activity-created "Activity created succesfully",
   :decision-deleted "Decision deleted successfully",
+  :cooperation-application-expired-soon
+  "Application terms will expire soon",
   :permission-revoked "Permission revoked successfully",
   :decision-created "Decision created successfully",
   :task-created "Task created successfully",
   :comment-status-changed "Comment status changed successfully",
-  :cooperation-responded
-  "Application is waiting for authority position",
   :restrictions-updated "Restrictions updated succesfully",
   :task-updated "Task edited successfully",
   :tasks-created "Tasks created successfully",
-  :cooperation-response-expired-soon
-  "Application terms will expire soon",
   :activity-deleted "Activity deleted successfully",
   :mark-all-read "Mark all read",
   :activity-updated "Activity updated successfully",
+  :cooperation-response-to-application-added
+  "Application is waiting for authority position",
   :cadastral-units-updated "Cadastral units updated successfully",
   :topic-created "Topic created succesfully"},
  :page-title {:project-list "{name} project"},

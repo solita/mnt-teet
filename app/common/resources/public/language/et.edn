@@ -852,19 +852,20 @@
   :comment-deleted "Märkus edukalt kustutatud",
   :activity-created "Tegevus edukalt loodud",
   :decision-deleted "Otsus edukalt kustutatud",
+  :cooperation-application-expired-soon
+  "Taotluse tingimused aeguvad peagi",
   :permission-revoked "Luba tühistati edukalt",
   :decision-created "Otsus edukalt lisatud",
   :task-created "Ülesanne edukalt lisatud",
   :comment-status-changed "Märkuse staatus edukalt muudetud",
-  :cooperation-responded "Taotlus ootab asutuse seisukohta",
   :restrictions-updated "Kitsendused edukalt värskendatud",
   :task-updated "Ülesanne edukalt värskendatud",
   :tasks-created "Ülesanded edukalt lisatud",
-  :cooperation-response-expired-soon
-  "Taotluse tingimused aeguvad peagi",
   :activity-deleted "Tegevus edukalt kustutatud",
   :mark-all-read "Märgin kõik loetuks",
   :activity-updated "Tegevus edukalt värskendatud",
+  :cooperation-response-to-application-added
+  "Taotlus ootab asutuse seisukohta",
   :cadastral-units-updated "Katastriüksused edukalt värskendatud",
   :topic-created "Päevakavapunkt edukalt lisatud"},
  :page-title {:project-list "{name} projekt"},
