@@ -1707,4 +1707,8 @@
           {:db/ident :cooperation.contact/phone
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/string
-           :db/doc "Phone number"}]]}]
+           :db/doc "Phone number"}]]}
+
+ {:db/ident :migration/add-missing-unanswered
+  :txes [[{:db/ident :cooperation.opinion.status/unanswered
+           :enum/attribute :cooperation.opinion/status}]]}]
