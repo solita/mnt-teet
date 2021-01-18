@@ -248,7 +248,8 @@
    {:file/keys [status] :as file}]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))
         [base-column-width action-column-width] column-widths]
-    [:div {:class (<class file-style/file-row-style)}
+    [:div {:class (<class file-style/file-row-style)
+           :data-file-description description}
      [:div {:class (<class file-style/file-base-column-style
                            base-column-width actions?)}
       [:div {:class (<class file-style/file-icon-container-style)}
