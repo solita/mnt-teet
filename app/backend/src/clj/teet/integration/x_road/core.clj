@@ -88,12 +88,8 @@
     (xml/emit-element (zip/node zipped-xml))))
 
 (defn maybe-log-request [req]
-  (when (environment/feature-enabled? :log-x-road-payloads)
+  (when (environment/feature-enabled? :log-x-road-requests)
     (log/info "X-road request payload:" req)))
-
-(defn maybe-log-response [resp]
-  (when (environment/feature-enabled? :log-x-road-payloads)
-    (log/info "X-road response payload:" resp)))
 
 (defn parse-response
   "Parse XML in HTTP response and return XML zipper.
@@ -101,7 +97,6 @@
   [{:keys [status error] :as http-response}]
   (if (= 200 status)
     (let [response-string (unpeel-multipart http-response)]
-      (maybe-log-response response-string)
       (string->zipped-xml response-string))
     (do
       (log/error "HTTP error communicating with X-road, error:" error ", status:" status)
