@@ -1612,6 +1612,12 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Rich text content of the response"}
 
+          ;; Cooperation notifications
+          {:db/ident :cooperation.response/notification
+           :txes [[{:db/ident
+                    :notification.type/cooperation-responded
+                    :enum/attribute :notification/type}]]}
+
 
           ;; Cooperation position decisions
           {:db/ident :cooperation.position.decision/agreed
