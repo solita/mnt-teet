@@ -5,7 +5,8 @@
             [teet.log :as log]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [clojure.walk :as walk]))
 
 (defmulti query
   "Execute a given named query.
@@ -315,6 +316,20 @@
          ~@body))
      (do ~@body)))
 
+(defn- ensure-string-length
+  "Ensure that no strings in tx-data exceed Datomics 4096 character limit."
+  [tx-data]
+  (walk/prewalk
+   (fn [x]
+     (if (and (string? x)
+              (> (count x) 4096))
+       (throw (ex-info "Too long string in transaction. All strings must be at most 4096 characters."
+                       {:value x
+                        :length (count x)
+                        :teet/error :too-long-string}))
+       x))
+   tx-data))
+
 (defn tx
   "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data.
 
@@ -332,10 +347,11 @@
 
     (patch-with-for-dev-local
      conn
-     (d/transact conn {:tx-data (conj (into tx-data
-                                            (mapcat #(remove nil? %) more-tx-data))
-                                      {:db/id "datomic.tx"
-                                       :tx/author (:user/id user)})}))))
+     (d/transact conn {:tx-data (ensure-string-length
+                                 (conj (into tx-data
+                                             (mapcat #(remove nil? %) more-tx-data))
+                                       {:db/id "datomic.tx"
+                                        :tx/author (:user/id user)}))}))))
 
 (defn tx-ret
   "Call tx and return :tempids as command response."
