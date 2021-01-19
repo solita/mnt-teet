@@ -108,8 +108,7 @@
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
   ([{:keys [edit-button]}
-    {:cooperation.application/keys [opinion]
-     application-creator :meta/creator}]
+    {:cooperation.application/keys [opinion]}]
    (let [{:meta/keys [creator modifier created-at modified-at]
           comment :cooperation.opinion/comment} opinion]
      [:<>
@@ -119,7 +118,7 @@
        [:div {:class (<class common-styles/flex-table-column-style 30)}
         ;; Show last modifier or creator of the opinion if present
         ;; otherwise show creator of the application
-        (user-model/user-name (or modifier creator application-creator))]
+        (user-model/user-name (or modifier creator))]
        [:div {:class (<class common-styles/flex-table-column-style 50)}
         [:div {:class (<class common-styles/flex-column-1)}
          [:div {:class (<class common-styles/flex-row)
