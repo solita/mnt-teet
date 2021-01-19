@@ -3,6 +3,7 @@
          teet.meeting.meeting-tx/update-meeting
          teet.meeting.meeting-tx/review-meeting
          teet.activity.activity-tx/ensure-activity-validity
+         teet.activity.activity-tx/delete-activity
          teet.file.file-model/image-suffix?
          teet.file.file-tx/upload-file-to-task
          teet.file.file-tx/create-task-file-part
