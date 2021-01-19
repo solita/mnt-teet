@@ -1612,13 +1612,6 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Rich text content of the response"}
 
-          ;; Cooperation notifications
-          {:db/ident :cooperation.response/notification
-           :txes [[{:db/ident
-                    :notification.type/cooperation-response-to-application-added
-                    :enum/attribute :notification/type}]]}
-
-
           ;; Cooperation position decisions
           {:db/ident :cooperation.position.decision/agreed
            :enum/attribute :cooperation.position/decision}
@@ -1717,4 +1710,10 @@
 
  {:db/ident :migration/add-missing-unanswered
   :txes [[{:db/ident :cooperation.opinion.status/unanswered
-           :enum/attribute :cooperation.opinion/status}]]}]
+           :enum/attribute :cooperation.opinion/status}]]}
+
+ ;; Cooperation notifications
+ {:db/ident :cooperation.response/notification
+  :txes [[{:db/ident
+           :notification.type/cooperation-response-to-application-added
+           :enum/attribute :notification/type}]]}]
