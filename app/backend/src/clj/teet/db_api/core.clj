@@ -322,10 +322,10 @@
   (walk/prewalk
    (fn [x]
      (if (and (string? x)
-              (> (.length x) 4096))
+              (> (count x) 4096))
        (throw (ex-info "Too long string in transaction. All strings must be at most 4096 characters."
                        {:value x
-                        :length (.length x)
+                        :length (count x)
                         :teet/error :too-long-string}))
        x))
    tx-data))
