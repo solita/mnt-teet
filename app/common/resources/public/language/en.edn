@@ -477,6 +477,8 @@
   "Only one activity of a type can be active at the same time.",
   :meeting-is-locked
   "The meeting is accepted and can no longer be changed",
+  :too-long-string
+  "Text you entered is too long. Up to 4096 characters are allowed.",
   :activity-task-has-files
   "This activity has tasks with files uploaded to it, the activity can't be deleted before the files have been deleted!",
   :user-already-exists "User with the given person id already exists",
@@ -856,6 +858,8 @@
   :comment-deleted "Comment deleted successfully",
   :activity-created "Activity created succesfully",
   :decision-deleted "Decision deleted successfully",
+  :cooperation-application-expired-soon
+  "Application terms will expire soon",
   :permission-revoked "Permission revoked successfully",
   :decision-created "Decision created successfully",
   :task-created "Task created successfully",
@@ -866,6 +870,8 @@
   :activity-deleted "Activity deleted successfully",
   :mark-all-read "Mark all read",
   :activity-updated "Activity updated successfully",
+  :cooperation-response-to-application-added
+  "Application is waiting for authority position",
   :cadastral-units-updated "Cadastral units updated successfully",
   :topic-created "Topic created succesfully"},
  :page-title {:project-list "{name} project"},
