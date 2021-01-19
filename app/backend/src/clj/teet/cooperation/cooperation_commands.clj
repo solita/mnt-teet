@@ -74,15 +74,16 @@
     (= response-id current-response-id)))
 
 (defn application-response-notification-tx
-  [db user-id project-id application-id]
-  (println "Application response notification TX!")
+  [db user activity-user project application-id]
+  (println
+    (str "Application response notification TX from " (:db/id user) " to " (:db/id activity-user)))
   (notification-db/notification-tx
     db
-    {:from user-id
-     :to user-id
+    {:from user
+     :to activity-user
      :target application-id
      :type :notification.type/cooperation-response-to-application-added
-     :project project-id}))
+     :project project}))
 
 (defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
@@ -98,20 +99,23 @@
          response-id (or existing-id "new-application-response")
          old-response (if existing-id
                         (d/pull db cooperation-model/response-application-keys
-                                existing-id)
-                        {:db/id "new-application-response"})]
-     (application-response-notification-tx db user project-id application-id)
+                          existing-id)
+                        {:db/id "new-application-response"})
+         project-id (cooperation-db/application-project-id db application-id)
+         activity-user (:thk.project/owner (project-db/project-by-id db project-id))]
+     (application-response-notification-tx db user activity-user
+       project-id application-id)
      (into [{:db/id application-id
              :cooperation.application/response response-id}]
-           (du/modify-entity-tx
-            old-response
-            (merge (cu/without-nils
-                    (select-keys response-payload
-                                 cooperation-model/response-application-keys))
-                   {:db/id response-id}
-                   (if (:db/id response-payload)
-                     (meta-model/modification-meta user)
-                     (meta-model/creation-meta user))))))})
+       (du/modify-entity-tx
+         old-response
+         (merge (cu/without-nils
+                  (select-keys response-payload
+                    cooperation-model/response-application-keys))
+           {:db/id response-id}
+           (if (:db/id response-payload)
+             (meta-model/modification-meta user)
+             (meta-model/creation-meta user))))))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
