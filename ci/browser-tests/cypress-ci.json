@@ -1,3 +1,3 @@
 {"baseUrl": "http://localhost:4000/",
-  "ignoreTestFiles": ["**/land_section.spec.js", "**/meeting_links.ci.spec.js", "**/task.ci.spec.js", "**/task.spec.js"]
+  "ignoreTestFiles": ["**/land_section.spec.js", "**/task.ci.spec.js", "**/task.spec.js"]
 }
