@@ -9,7 +9,8 @@
             [datomic.client.api :as d]
             [teet.link.link-db :as link-db]
             [teet.project.project-db :as project-db]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [teet.notification.notification-db :as notification-db]))
 
 
 (defcommand :cooperation/create-3rd-party
@@ -72,6 +73,17 @@
                                     [:cooperation.application/response :db/id])]
     (= response-id current-response-id)))
 
+(defn application-response-notification-tx
+  [db user-id project-id application-id]
+  (println "Application response notification TX!")
+  (notification-db/notification-tx
+    db
+    {:from user-id
+     :to user-id
+     :target application-id
+     :type :notification.type/cooperation-response-to-application-added
+     :project project-id}))
+
 (defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
    :context {:keys [user db]}
@@ -88,6 +100,7 @@
                         (d/pull db cooperation-model/response-application-keys
                                 existing-id)
                         {:db/id "new-application-response"})]
+     (application-response-notification-tx db user project-id application-id)
      (into [{:db/id application-id
              :cooperation.application/response response-id}]
            (du/modify-entity-tx
