@@ -554,7 +554,7 @@
          [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
           (tr [:fields :activity/manager])]]
         [:div
-         [typography/GreyText "No manager for the related activity exists"]])]
+         [typography/GreyText (tr [:cooperation :no-activity-manager])]])]
 
      (if @edit-contact?
        [form/form {:e! e!
