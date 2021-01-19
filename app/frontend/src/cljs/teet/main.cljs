@@ -58,7 +58,8 @@
        [navigation-view/header e!
         {:open?        nav-open?
          :page         (:page app)
-         :quick-search (:quick-search app)}
+         :quick-search (:quick-search app)
+         :url (:url app)}
         (:user app)]
        [navigation-view/main-container
         nav-open?
