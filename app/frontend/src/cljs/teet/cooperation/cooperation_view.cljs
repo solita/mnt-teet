@@ -544,15 +544,18 @@
   (r/with-let [edit-contact? (r/atom false)
                edit-contact! #(reset! edit-contact? true)
                contact-form (r/atom contact)]
-    [:div.application-people
+    [:div.application-people {:class (<class common-styles/flex-column-1)}
      [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
       (tr [:project :tabs :people])]
-
-     [:div {:class (<class common-styles/flex-row)}
-      [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
-       [user-model/user-name (:activity/manager activity)]]
-      [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
-       (tr [:fields :activity/manager])]]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      (if-let [manager (:activity/manager activity)]
+        [:div {:class (<class common-styles/flex-row)}
+         [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
+          [user-model/user-name manager]]
+         [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+          (tr [:fields :activity/manager])]]
+        [:div
+         [typography/GreyText "No manager for the related activity exists"]])]
 
      (if @edit-contact?
        [form/form {:e! e!
@@ -596,7 +599,8 @@
         ;; Show contact info (if any)
         (when (seq contact)
           [:div.application-contact-info
-           [typography/Heading3 (tr [:cooperation :application-contact-person])]
+           [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+            (tr [:cooperation :application-contact-person])]
            (doall
             (for [k [:cooperation.contact/name
                      :cooperation.contact/company
@@ -612,7 +616,7 @@
                [:div {:class (<class common-styles/flex-table-column-style 55)}
                 v]]))])
         ;; "Add contact" or "edit" button
-        [:div {:style {:float :right}}
+        [:div {:style {:align-self :flex-end}}
          (if contact
            [buttons/button-secondary {:on-click edit-contact!
                                       :data-cy "edit-contact"}
