@@ -2,7 +2,8 @@
   (:require teet.meeting.meeting-commands
             [teet.test.utils :as tu]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [clojure.string :as str]))
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
@@ -25,6 +26,18 @@
                       (merge {:activity-eid activity-eid
                               :meeting meeting}
                              (select-keys response [:status :body])))))))
+
+(deftest too-long-text-in-meeting
+  (tu/local-login tu/mock-user-boss)
+  (tu/is-thrown-with-data?
+   {:teet/error :too-long-string}
+   (create-meeting! (tu/->db-id "p1-lc1-act1")
+                    (merge (test-meeting)
+                           {:meeting/title (str/join (repeat 5000 "x"))})))
+  (is (create-meeting! (tu/->db-id "p1-lc1-act1")
+                       (merge (test-meeting)
+                              {:meeting/title (str/join (repeat 4096 "x"))}))))
+
 (deftest create-meeting
   (tu/local-login tu/mock-user-boss)
   (testing "Invalid meeting isn't created"
