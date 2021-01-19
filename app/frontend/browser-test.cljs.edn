@@ -1,0 +1,8 @@
+^{:auto-testing false}
+{:main teet.dev-main
+ :target :bundle
+ :output-to "out/index.js"
+ :output-dir "out"
+ :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
+              :default ["npx" "webpack"]}
+ :open-url false}

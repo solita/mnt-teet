@@ -75,6 +75,14 @@
                   :jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
+
+           :run-browser-test {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
+                       :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
+                                    org.clojure/tools.namespace {:mvn/version "0.3.1"}
+                                    com.datomic/dev-local {:mvn/version "0.9.229"}}
+                       :extra-paths ["dev-src" "test"]
+                       :main-opts ["-m" "teet.browser-test" "../../ci/browser-tests/browser-test-config.edn"]}
+
            :ci-test {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                      :main-opts ["-m" "kaocha.runner"
                                  "--no-color" ;; No ANSI codes in CI
