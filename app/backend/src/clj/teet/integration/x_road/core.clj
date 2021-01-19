@@ -6,6 +6,7 @@
             [clojure.java.io :as io]
             [clojure.zip :as zip]
             [teet.log :as log]
+            [teet.environment :as environment]
             [org.httpkit.client :as client])
   (:import (java.util UUID)))
 
@@ -86,12 +87,17 @@
   (with-out-str
     (xml/emit-element (zip/node zipped-xml))))
 
+(defn maybe-log-request [req]
+  (when (environment/feature-enabled? :log-x-road-requests)
+    (log/info "X-road request payload:" req)))
+
 (defn parse-response
   "Parse XML in HTTP response and return XML zipper.
   If response status is not 200 OK, throws exception."
   [{:keys [status error] :as http-response}]
   (if (= 200 status)
-    (string->zipped-xml (unpeel-multipart http-response))
+    (let [response-string (unpeel-multipart http-response)]
+      (string->zipped-xml response-string))
     (do
       (log/error "HTTP error communicating with X-road, error:" error ", status:" status)
       (throw (ex-info "SOAP response returned non OK status."
@@ -101,6 +107,7 @@
                        :response http-response})))))
 
 (defn perform-request [url request-xml]
+  (maybe-log-request request-xml)
   (-> url
       (client/post {:body request-xml
                     :as :stream

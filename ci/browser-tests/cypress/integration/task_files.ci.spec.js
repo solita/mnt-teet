@@ -33,7 +33,7 @@ describe("Task files", function() {
 
         // verify file is in the list
 
-        cy.get("[data-cy=task-file-list] a").contains("testpicture")
+        cy.get("[data-cy=task-file-list] a", {timeout: 30000}).contains("testpicture")
         cy.get("[data-cy=task-file-list] .file-identifying-info").contains("#420")
 
         // download file and store the filename

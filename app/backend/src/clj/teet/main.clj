@@ -12,7 +12,8 @@
             [teet.login.login-fake-routes :as login-fake-routes]
             [teet.db-api.db-api-dev :as db-api-dev]
             [teet.log :as log]
-            [teet.environment :as environment])
+            [teet.environment :as environment]
+            [clojure.java.io :as io])
   (:gen-class))
 
 (def server nil)
@@ -48,25 +49,16 @@
 (defn stop []
   (server))
 
-(defn restart []
-  (environment/load-local-config!)
-  (when server
-    (stop))
-  ;; Dummy config for local testing use
-  (start {:mode :dev
-          :port 4000
-          :api {:shared-secret "secret1234567890secret1234567890"
-                :role "teet_user"
-                :url "http://localhost:3000"}}))
-
-(defn -main [& _]
-  (start {:mode :prod
-          :port 3000
-          :api {:shared-secret (System/getenv "API_SHARED_SECRET")
-                :role "teet_user"
-                :url (System/getenv "API_URL")}
-          :tara {:endpoint-url "https://tara-test.ria.ee/oidc" ; FIXME: parameterize for prod use
-                 :client-id (System/getenv "TARA_CLIENT_ID")
-                 :client-secret (System/getenv "TARA_CLIENT_SECRET")
-                 :base-url (System/getenv "BASE_URL")}
-          :documents {:bucket-name (System/getenv "DOCUMENTS_BUCKET_NAME")}}))
+(defn restart
+  ([]
+   (restart (io/file ".." ".." ".." "mnt-teet-private" "config.edn")))
+  ([config-file]
+   (environment/load-local-config! config-file)
+   (when server
+     (stop))
+   ;; Dummy config for local testing use
+   (start {:mode :dev
+           :port 4000
+           :api {:shared-secret "secret1234567890secret1234567890"
+                 :role "teet_user"
+                 :url "http://localhost:3000"}})))

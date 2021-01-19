@@ -471,6 +471,8 @@
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :meeting-is-locked
   "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
+  :too-long-string
+  "Sisestatud tekst on välja jaoks liiga pikk. Lubatud on kuni 4096 tähemärki.",
   :activity-task-has-files
   "Selle tegevuse ülesande alla on laetud faile, tegevust ei saa kustutada seni kuni failid on kustutatud!",
   :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",

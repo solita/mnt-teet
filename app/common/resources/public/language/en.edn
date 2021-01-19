@@ -477,6 +477,8 @@
   "Only one activity of a type can be active at the same time.",
   :meeting-is-locked
   "The meeting is accepted and can no longer be changed",
+  :too-long-string
+  "Text you entered is too long. Up to 4096 characters are allowed.",
   :activity-task-has-files
   "This activity has tasks with files uploaded to it, the activity can't be deleted before the files have been deleted!",
   :user-already-exists "User with the given person id already exists",
