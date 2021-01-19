@@ -1,5 +1,13 @@
 context('Cooperation', function() {
     before(() => {
+
+        cy.request({method: "POST",
+                    url: "/testsetup/task",
+                    body: {"project-name": "COOPERATION TESTING"}})
+            .then((response) => {
+                cy.wrap(response.body["project-id"]).as("projectID")
+            })
+
         cy.dummyLogin("Danny")
         cy.randomName("thirdparty", "testcompany")
 
@@ -7,10 +15,13 @@ context('Cooperation', function() {
         cy.wrap(now.toLocaleDateString("et-EE")).as("today")
         cy.wrap(new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14).toLocaleDateString("et-EE")).as("twoWeeks")
 
-        cy.projectByName("integration test project")
     })
 
     it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
+
+        // visit project page
+        cy.visit("#/projects/"+this.projectID)
+
         // open menu and select cooperation
         cy.get("button.project-menu").click()
         cy.get("li.project-menu-item-cooperation").click()
