@@ -48,7 +48,8 @@
                                 (tr [:notifications :meeting-updated])
                                 (tr [:notifications :meeting-created]))
              :result-event (if editing?
-                             (partial common-controller/->ModalFormResult close-event)
+                             (partial common-controller/->ModalFormResult
+                                      close-event)
                              (partial ->CreateMeetingResult activity-id close-event))})))
 
   SubmitReview

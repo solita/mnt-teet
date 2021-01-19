@@ -527,27 +527,40 @@
    nil])
 
 
-(defn agenda-form [e! meeting close-event form-atom]
+(defn agenda-form [e! meeting cancel-fn form-atom]
   [:<>
    [context/consume :reviews?
     [update-meeting-warning?]]
-   [form/form (merge {:e! e!
-                      :value @form-atom
-                      :on-change-event (form/update-atom-event form-atom merge)
-                      :cancel-event close-event
-                      :spec :meeting/agenda-form
-                      :save-event #(meeting-controller/->SubmitAgendaForm
-                                     meeting
-                                     (rich-text-editor/form-data-with-rich-text :meeting.agenda/body @form-atom)
-                                     close-event)}
-                     (when-let [agenda-id (:db/id @form-atom)]
-                       {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
-    ^{:attribute :meeting.agenda/topic}
-    [TextField {:id "agenda-title"}]
-    ^{:attribute :meeting.agenda/responsible}
-    [select/select-user {:e! e!}]
-    ^{:attribute :meeting.agenda/body}
-    [rich-text-editor/rich-text-field {}]]])
+   (let [close-event (fn [_]
+                       (cancel-fn)
+                       (common-controller/->Refresh))]
+     [form/form (merge {:e! e!
+                        :value @form-atom
+                        :on-change-event (form/update-atom-event form-atom merge)
+                        :spec :meeting/agenda-form
+                        :cancel-fn cancel-fn
+                        :save-event #(meeting-controller/->SubmitAgendaForm
+                                      meeting
+                                      (rich-text-editor/form-data-with-rich-text :meeting.agenda/body @form-atom)
+                                      close-event)}
+                       (when-let [agenda-id (:db/id @form-atom)]
+                         {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
+      ^{:attribute :meeting.agenda/topic :xs 6}
+      [TextField {:id "agenda-title"}]
+      ^{:attribute :meeting.agenda/responsible :xs 6}
+      [select/select-user {:e! e!}]
+      ^{:attribute :meeting.agenda/body :xs 12}
+      [rich-text-editor/rich-text-field {}]])])
+
+(defn agenda-form-button [{:keys [e! id meeting value button-component] :as opts}]
+  (r/with-let [show? (r/atom false)
+               form-atom (r/atom value)]
+    [:<>
+     (update button-component 1 merge
+             {:on-click #(reset! show? true)
+              :disabled @show?})
+     (when @show?
+       [agenda-form e! meeting #(reset! show? false) form-atom])]))
 
 (defn meeting-user-row [{:keys [actions] :as _opts} {:participation/keys [role participant] :as participation}]
   [:div.participant {:class (<class common-styles/flex-row)}
@@ -890,13 +903,16 @@
           {:heading [:div.agenda-heading
                      [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]
                      [:span (user-model/user-name responsible)]]
-           :heading-button (when edit?
-                             [form/form-modal-button {:form-component [agenda-form e! meeting]
-                                                      :id (str "edit-agenda-" id)
-                                                      :form-value agenda-topic
-                                                      :modal-title (tr [:meeting :edit-agenda-modal-title])
-                                                      :button-component [buttons/button-secondary {}
-                                                                         (tr [:buttons :edit])]}])
+           :heading-button
+           (when edit?
+             [agenda-form-button
+              {:e! e!
+               :meeting meeting
+               :value agenda-topic
+               :id (str "edit-agenda-" id)
+               ;;:modal-title (tr [:meeting :edit-agenda-modal-title])
+               :button-component [buttons/button-secondary {}
+                                  (tr [:buttons :edit])]}])
            :content [meeting-agenda-content e! agenda-topic edit?]
            :children (for [d decisions]
                        {:key (:db/id d)
@@ -914,16 +930,19 @@
                                        [add-decision-component e! meeting agenda-topic])}
           theme-colors/gray-lighter]))]
      (when edit?
-       [form/form-modal-button {:form-component [agenda-form e! meeting]
-                                :id "add-agenda"
-                                :form-value {:meeting.agenda/responsible (select-keys user [:db/id
-                                                                                            :user/id
-                                                                                            :user/given-name
-                                                                                            :user/family-name
-                                                                                            :user/email
-                                                                                            :user/person-id])}
-                                :modal-title (tr [:meeting :new-agenda-modal-title])
-                                :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
+       [agenda-form-button
+        {:e! e!
+         :meeting meeting
+         :id "add-agenda"
+         :value {:meeting.agenda/responsible
+                 (select-keys user [:db/id
+                                    :user/id
+                                    :user/given-name
+                                    :user/family-name
+                                    :user/email
+                                    :user/person-id])}
+         :modal-title (tr [:meeting :new-agenda-modal-title])
+         :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
      [reviews meeting]
      (when review?
        [review-actions e! meeting])]))
