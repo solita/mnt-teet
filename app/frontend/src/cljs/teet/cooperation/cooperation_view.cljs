@@ -558,6 +558,7 @@
 
      (if @edit-contact?
        [form/form {:e! e!
+                   :class "edit-contract-form"              ;; Give a simple class to override the form/form default
                    :on-change-event (form/update-atom-event contact-form merge)
                    :spec ::cooperation-model/contact-form
                    :save-event #(common-controller/->SaveForm

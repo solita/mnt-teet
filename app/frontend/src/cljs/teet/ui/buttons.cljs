@@ -158,7 +158,7 @@
                                  modal-title
                                  (tr [:common :confirm-deletion]))
                     :open-atom open-atom
-                    :actions   [DialogActions
+                    :actions   [DialogActions {:class (<class common-styles/margin-bottom 1)}
                                 [button-secondary
                                  {:on-click close
                                   :id (str "cancel-delete")}
