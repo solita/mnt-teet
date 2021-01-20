@@ -70,7 +70,7 @@ Cypress.Commands.add("formInput", (...attrAndText) => {
 })
 
 Cypress.Commands.add("formSubmit", () => {
-    cy.get("form button.submit").click()
+    cy.get("form button.submit").click({force: true})
 })
 
 Cypress.Commands.add("formCancel", () => {
