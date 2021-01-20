@@ -63,8 +63,8 @@ describe('Meeting Links', function () {
     }
 
     function createMeeting() {
-        cy.get("button.project-menu").click()
-        cy.get("li.project-menu-item-project-meetings").click()
+        cy.get("button.project-menu").click({force: true})
+        cy.get("li.project-menu-item-project-meetings").click({force: true})
         cy.wait(1000)
 
         cy.contains('Preliminary design').click()
