@@ -25,12 +25,7 @@ Cypress.Commands.add("dummyLogin", (name) => {
 
 // Select language
 Cypress.Commands.add("selectLanguage", (lang) => {
-    cy.wait(100)
-    cy.get("#language-select")
-    .then((select) => {
-      Cypress.dom.isAttached(select)
-    })
-    .select(lang);
+    cy.get("#language-select").select(lang, {force: true})
 })
 
 // Create random name with prefix and assign it
