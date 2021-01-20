@@ -63,8 +63,8 @@ describe('Meeting Links', function () {
     }
 
     function createMeeting() {
-        cy.get("button.project-menu").click({force: true})
-        cy.get("li.project-menu-item-project-meetings").click({force: true})
+        cy.get("button.project-menu").should("exist").click({force: true})
+        cy.get("li.project-menu-item-project-meetings").should("exist").click({force: true})
         cy.wait(1000)
 
         cy.contains('Eelprojekt').click()
