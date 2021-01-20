@@ -141,6 +141,8 @@
   :new-application "Lisan uue taotluse",
   :add-files "Lisan faile",
   :applied "Rakendatud",
+  :no-activity-manager
+  "Seotud tegevusele ei ole määratud projektijuhti.",
   :opinion-title "Seisukoht",
   :opinion "Seisukoht",
   :enter-response "Sisestan kaasatud osapoole vastuse",

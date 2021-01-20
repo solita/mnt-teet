@@ -141,6 +141,8 @@
   :new-application "Add new application",
   :add-files "Add files",
   :applied "Applied",
+  :no-activity-manager
+  "No project manager has been assigned to the related activity.",
   :opinion-title "Opinion",
   :opinion "Opinion",
   :enter-response "Enter involved party response",
