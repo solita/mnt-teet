@@ -244,8 +244,8 @@
           (doall
            (for [type layer-types]
              ^{:key (name type)}
-             [typography/Heading3 {:class (<class map-styles/edit-layer-type-heading
-                                                  (= type (:type edit-layer)))
+             [typography/Text {:class (<class map-styles/edit-layer-type-heading
+                                              (= type (:type edit-layer)))
                                    :on-click (e! map-controller/->UpdateLayer {:type type})}
               (tr [:map :layers type])]))]]
         [Grid {:item true
