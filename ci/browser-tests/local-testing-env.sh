@@ -16,7 +16,11 @@ cd ../../ci/browser-tests
 
 npm install
 
-timeout 30s bash -c 'while ! nc -z localhost 4000; do sleep 1; done'
+timeout 30s bash -c 'while ! nc -z localhost 4000; do sleep 1; done; echo Backend started ok'
+if [ $? -eq 124]; then
+    echo "Backend failed to start in 30 seconds"
+    exit 1;
+fi
 
 CYPRESS_SITE_PASSWORD=testing123 npx cypress run --config-file cypress-ci.json
 
