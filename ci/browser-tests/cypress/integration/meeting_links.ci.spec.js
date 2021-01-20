@@ -121,8 +121,8 @@ describe('Meeting Links', function () {
 
     it('sort searched files', function () {
         cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
-        cy.get("li a").contains("Eelprojekt").click()
-        cy.get("li a").contains("Teostatavusuuring").click()
+        cy.get("li a").contains("Eelprojekt").click({force: true})
+        cy.get("li a").contains("Teostatavusuuring").click({force: true})
 
         uploadFile(this.testfileA, "text_file.jpg")
         uploadFile(this.testfileB, "text_file2.jpg")
