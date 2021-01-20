@@ -61,10 +61,10 @@ Cypress.Commands.add("formInput", (...attrAndText) => {
 
         } else if(text.startsWith("RTE:")) {
             // Rich Text Editor field
-            cy.get(`div[data-form-attribute='${attr}'] [contenteditable]`).type(text.substr(4))
+            cy.get(`div[data-form-attribute='${attr}'] [contenteditable]`).type(text.substr(4), {force: true})
         } else {
             // Regular text, just type it in
-            cy.get(`div[data-form-attribute='${attr}'] input`).type(text)
+            cy.get(`div[data-form-attribute='${attr}'] input`).type(text, {force: true})
         }
     }
 })
