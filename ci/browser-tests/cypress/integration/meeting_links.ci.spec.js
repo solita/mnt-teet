@@ -121,7 +121,6 @@ describe('Meeting Links', function () {
         selectSearchItems.call(this, `[data-item*=':estate']`);
         cy.wait(1000)
         checkEstatesSorted()
-        cy.wait(3000)
     })
 
     it('sort searched files', function () {
