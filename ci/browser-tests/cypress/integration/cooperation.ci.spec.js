@@ -23,8 +23,8 @@ context('Cooperation', function() {
         cy.visit("#/projects/"+this.projectID)
 
         // open menu and select cooperation
-        cy.get("button.project-menu").click()
-        cy.get("li.project-menu-item-cooperation").click()
+        cy.get("button.project-menu").click({force: true})
+        cy.get("li.project-menu-item-cooperation").click({force: true})
 
         cy.get(".cooperation-overview-page")
 
