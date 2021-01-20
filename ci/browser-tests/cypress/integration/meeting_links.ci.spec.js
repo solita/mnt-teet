@@ -120,6 +120,7 @@ describe('Meeting Links', function () {
     })
 
     it('sort searched files', function () {
+        cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
         cy.get("li a").contains("Eelprojekt").click()
         cy.get("li a").contains("Teostatavusuuring").click()
 
