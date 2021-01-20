@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v2
         id: frontend
         with:
-          path: **/app/frontend/out
+          path: app/frontend/out
           key: frontend-${{ hashFiles('**/*.cljs') }}-${{ hashFiles('**/*.cljc') }}
       - name: setup clojure
         uses: DeLaGuardo/setup-clojure@master
