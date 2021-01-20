@@ -25,7 +25,9 @@ Cypress.Commands.add("dummyLogin", (name) => {
 
 // Select language
 Cypress.Commands.add("selectLanguage", (lang) => {
+    cy.intercept(/.*\/language\/.*\.edn/).as("loadLanguage")
     cy.get("#language-select").select(lang, {force: true})
+    cy.wait("@loadLanguage")
 })
 
 // Create random name with prefix and assign it

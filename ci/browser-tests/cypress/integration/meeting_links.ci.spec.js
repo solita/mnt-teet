@@ -12,13 +12,13 @@ describe('Meeting Links', function () {
                           "activity": "preliminary-design"})
         cy.setup("mock-cadastral-unit-link-search", {})
 
-        cy.selectLanguage("ENG")
+        //cy.selectLanguage("ENG")
 
         cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
     })
 
     function checkCadastralUnitsSorted() {
-        const search = `input[placeholder='Link...']`
+        const search = `input[placeholder='Lisan viite...']`
         cy.get(search).type("Tee")
         cy.get("div.select-user-list div.select-user-entry:nth-child(1)").contains("58 Aluste-Kergu tee")
         cy.get("div.select-user-list div.select-user-entry:nth-child(2)").contains("58 Aluste-Kergu tee")
@@ -28,7 +28,7 @@ describe('Meeting Links', function () {
     }
 
     function checkEstatesSorted() {
-        const search = `input[placeholder='Link...']`
+        const search = `input[placeholder='Lisan viite...']`
         cy.get(search).type("54")
         cy.get("div.select-user-list div.select-user-entry:nth-child(1)").contains("5453150")
         cy.get("div.select-user-list div.select-user-entry:nth-child(2)").contains("5477850")
@@ -55,7 +55,7 @@ describe('Meeting Links', function () {
     }
 
     function checkFilesSorted() {
-        const search = `input[placeholder='Link...']`
+        const search = `input[placeholder='Lisan viite...']`
         cy.get(search).type("test")
         cy.get("div.select-user-list div.select-user-entry:nth-child(1)").contains(this.testfileA)
         cy.get("div.select-user-list div.select-user-entry:nth-child(2)").contains(this.testfileB)
@@ -67,10 +67,10 @@ describe('Meeting Links', function () {
         cy.get("li.project-menu-item-project-meetings").click({force: true})
         cy.wait(1000)
 
-        cy.contains('Preliminary design').click()
+        cy.contains('Eelprojekt').click()
         cy.wait(1000)
 
-        cy.contains('Create meeting').click()
+        cy.get(".project-navigator-add-meeting button").click()
         cy.get(`input[class*=':date-input']`).type(new Date().toLocaleDateString("et-EE"))
         cy.get("[class*=start-time]").type("10:00")
         cy.get("[class*=end-time]").type("11:00")
@@ -124,8 +124,8 @@ describe('Meeting Links', function () {
     })
 
     it('sort searched files', function () {
-        cy.get("li a").contains("Preliminary design").click()
-        cy.get("li a").contains("Feasibility Study").click()
+        cy.get("li a").contains("Eelprojekt").click()
+        cy.get("li a").contains("Teostatavusuuring").click()
 
         uploadFile(this.testfileA, "text_file.jpg")
         uploadFile(this.testfileB, "text_file2.jpg")
