@@ -10,7 +10,8 @@
             [teet.auth.jwt-token :as jwt-token]
             [teet.link.link-queries :as link-queries]
             [teet.util.string :as string]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [clojure.string :as str]))
 
 (defn- read-json-body [req]
   (-> req :body io/reader
@@ -144,12 +145,12 @@
     :TUNNUS "12601:001:0093",
     :link/external-id "2:12601:001:0093",
     :link/type :cadastral-unit}
-   {:KINNISTU "3515450",
+   {:KINNISTU "3515550",
     :L_AADRESS "Rapla-Pärnu raudtee 471",
     :TUNNUS "12601:001:0050",
     :link/external-id "2:12601:001:0050",
     :link/type :cadastral-unit}
-   {:KINNISTU "12814150",
+   {:KINNISTU "54128140",
     :L_AADRESS "Tartu maantee",
     :TUNNUS "12601:001:0193",
     :link/external-id "2:12601:001:0193",
@@ -163,6 +164,15 @@
     (filterv #(or (string/contains-words? (:TUNNUS %) text)
                     (string/contains-words? (:L_AADRESS %) text))
              cadastral-unit-results))
+
+  (defmethod link-queries/search-link :estate
+    [_db _user _config _project _ _lang text]
+    (log/debug "Mock estate search, text: " text)
+    (->> cadastral-unit-results
+         (filterv #(and (not (str/blank? (:KINNISTU %)))
+                        (string/contains-words? (:KINNISTU %) text)))
+         (map #(assoc % :link/external-id (:KINNISTU %)))
+         (sort-by #(Integer/parseInt (:link/external-id %)))))
 
   {:status 200 :body "ok"})
 
