@@ -163,7 +163,8 @@
                [:fo:block {:font-size "28px" :font-weight "400" :space-after "2"}
                 (:meeting.agenda/topic topic)]
                [:fo:block {:font-size "14px" :font-weight "700" :space-after "24"}
-                [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
+                [:fo:inline
+                 (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
                [:fo:block {:font-size "16px"} (md/render-md (:meeting.agenda/body topic))]
                [:fo:block {:space-after "16"} (map link-list-item (:link/_from topic))]
@@ -257,7 +258,7 @@
   [reviews]
   (for [{reviewer :review/reviewer} reviews]
      [:fo:block reviewers-look-and-feel
-      (str (:user/family-name reviewer) " " (:user/given-name reviewer) " ")]))
+      (str (:user/given-name reviewer) " " (:user/family-name reviewer) " ")]))
 
 (defn- reviewers-decisions
   "Formatted decisions of reviewers"
@@ -297,7 +298,7 @@
                 is-absent?
                 (not is-absent?)))]
     [:fo:block
-     [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
+     [:fo:inline {:font-weight 900} (:user/given-name user) " " (:user/family-name user)]
      [:fo:inline ", " (tr+ [:enum (:db/ident role)])]]))
 
 (defn- fetch-project-id
