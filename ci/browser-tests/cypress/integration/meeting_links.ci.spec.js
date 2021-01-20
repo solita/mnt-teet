@@ -44,7 +44,7 @@ describe('Meeting Links', function () {
             mimeType: "image/jpeg",
             fileName: fileNameWithSuffix})
         cy.get(`input[value=${name}]`)
-        cy.get("button[type=submit]").click()
+        cy.get("button[type=submit]").click({force: true})
 
         // wait for dialog to close
         cy.get("button[type=submit]").should("not.exist")
