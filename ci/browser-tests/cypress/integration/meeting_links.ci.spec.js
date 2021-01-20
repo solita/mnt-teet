@@ -14,7 +14,7 @@ describe('Meeting Links', function () {
 
         //cy.selectLanguage("ENG")
 
-        cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
+
     })
 
     function checkCadastralUnitsSorted() {
@@ -63,9 +63,7 @@ describe('Meeting Links', function () {
     }
 
     function createMeeting() {
-        cy.get("button.project-menu").should("exist").click({force: true})
-        cy.get("li.project-menu-item-project-meetings").should("exist").click({force: true})
-        cy.wait(1000)
+        cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]+"/meetings"))
 
         cy.contains('Eelprojekt').click()
         cy.wait(1000)
@@ -104,7 +102,6 @@ describe('Meeting Links', function () {
     }
 
     it('sort searched cadastral units', function () {
-        cy.get("h1").contains("MEETING TESTING")
         createMeeting.call(this)
         createAgenda.call(this)
         openTestTopic.call(this)
@@ -114,7 +111,6 @@ describe('Meeting Links', function () {
     })
 
     it('sort searched real estates', function () {
-        cy.get("h1").contains("MEETING TESTING")
         createMeeting.call(this)
         createAgenda.call(this)
         openTestTopic.call(this)
@@ -130,9 +126,6 @@ describe('Meeting Links', function () {
         uploadFile(this.testfileA, "text_file.jpg")
         uploadFile(this.testfileB, "text_file2.jpg")
         uploadFile(this.testfileC, "text_file3.jpg")
-
-        cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
-        cy.get("h1").contains("MEETING TESTING")
 
         createMeeting.call(this)
         createAgenda.call(this)
