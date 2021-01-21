@@ -25,12 +25,9 @@ Cypress.Commands.add("dummyLogin", (name) => {
 
 // Select language
 Cypress.Commands.add("selectLanguage", (lang) => {
-    cy.wait(0)
-    cy.get("#language-select")
-    .then((select) => {
-      Cypress.dom.isAttached(select)
-    })
-    .select(lang);
+    //cy.intercept(/.*\/language\/.*\.edn/).as("loadLanguage")
+    cy.get("#language-select").select(lang, {force: true})
+    //cy.wait("@loadLanguage")
 })
 
 // Create random name with prefix and assign it
@@ -61,16 +58,16 @@ Cypress.Commands.add("formInput", (...attrAndText) => {
 
         } else if(text.startsWith("RTE:")) {
             // Rich Text Editor field
-            cy.get(`div[data-form-attribute='${attr}'] [contenteditable]`).type(text.substr(4))
+            cy.get(`div[data-form-attribute='${attr}'] [contenteditable]`).type(text.substr(4), {force: true})
         } else {
             // Regular text, just type it in
-            cy.get(`div[data-form-attribute='${attr}'] input`).type(text)
+            cy.get(`div[data-form-attribute='${attr}'] input`).type(text, {force: true})
         }
     }
 })
 
 Cypress.Commands.add("formSubmit", () => {
-    cy.get("form button.submit").click()
+    cy.get("form button.submit").click({force: true})
 })
 
 Cypress.Commands.add("formCancel", () => {
@@ -116,6 +113,17 @@ Cypress.Commands.add("uploadFile", (opts) => {
     })
   })
 })
+
+
+Cypress.Commands.add("setup", (name, payload) => {
+    cy.request({method: "POST",
+                url: "/testsetup/"+name,
+                body: payload})
+        .then((response) => {
+            cy.wrap(response.body).as(name)
+        })
+})
+
 //
 //
 // -- This is a child command --
