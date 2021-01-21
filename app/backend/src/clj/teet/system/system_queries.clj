@@ -10,14 +10,19 @@
      :body (build-info/git-commit)}
     {:format :raw}))
 
-;; Return db stats datom counts for teet and asset (if enabled) databases
+;; The actual query here is irrelevant. This provides an endpoint for
+;; checking whether the db is alive.
 (defquery :teet.system/db
   {:doc "Check database status"
    :context {db :db}
    :spec empty?
    :args _
    :unauthenticated? true}
-  (merge
-   {:teet (:datoms (d/db-stats db))}
-   (when (environment/feature-enabled? :asset-db)
-     {:asset (:datoms (d/db-stats (environment/asset-db)))})))
+  (db-state-response
+   (merge
+    {:teet (d/q '[:find ?e
+                  :where
+                  [?e :thk.project/project-name "non-existent"]]
+                db)}
+    (when (environment/feature-enabled? :asset-db)
+      {:asset (d/pull (environment/asset-db) [:db/doc] :tx/schema-hash)}))))
