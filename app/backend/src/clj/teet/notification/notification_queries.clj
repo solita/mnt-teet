@@ -5,7 +5,8 @@
             [datomic.client.api :as d]
             [teet.util.datomic :as du]
             [teet.log :as log]
-            [teet.comment.comment-db :as comment-db]))
+            [teet.comment.comment-db :as comment-db]
+            [teet.cooperation.cooperation-db :as cooperation-db]))
 
 (defquery :notification/unread-notifications
   {:doc "Fetch unread notifications for user, sorted by most recent first."
@@ -96,9 +97,12 @@
               :focus-on (str comment-id)}})
     (db-api/bad-request! "No such comment")))
 
-(defn- cooperation-application-navigation-info [db cooperation-id]
-  ;;TODO: implement finding Cooperation Application details page nav info
-  )
+(defn- cooperation-application-navigation-info [db application-id]
+  (let [project-id (cooperation-db/application-project-id db application-id)
+        thk-project-id (:thk.project/id (project-db/project-by-id db project-id))]
+    {:page :cooperation
+     :params {:project (str thk-project-id)
+              :application (str application-id)}}))
 
 (defn notification-navigation-info [db user notification-id]
   (when-let [{:notification/keys [type target]}
@@ -125,7 +129,7 @@
       :notification.type/meeting-updated
       (meeting-navigation-info db (:db/id target))
 
-      :notification.type/cooperation-application-responded
+      :notification.type/cooperation-response-to-application-added
       (cooperation-application-navigation-info db (:db/id target)))))
 
 (defquery :notification/navigate

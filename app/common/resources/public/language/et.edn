@@ -141,6 +141,8 @@
   :new-application "Lisan uue taotluse",
   :add-files "Lisan faile",
   :applied "Rakendatud",
+  :no-activity-manager
+  "Seotud tegevusele ei ole määratud projektijuhti.",
   :opinion-title "Seisukoht",
   :opinion "Seisukoht",
   :enter-response "Sisestan kaasatud osapoole vastuse",
@@ -210,6 +212,8 @@
   :task.type/study-other "Muu",
   :document.category/maintenance-doc "Hooldedokumentatsioon",
   :document.category/source-doc "Lähtedokumentatsioon",
+  :notification.type/cooperation-response-to-application-added
+  "Taotlus ootab asutuse seisukohta",
   :task.status/canceled "Tühistatud",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
@@ -403,8 +407,6 @@
   :notification.type/comment-unresolved "Lahendamata",
   :task.type/construction-other-facilities "Muud rajatised",
   :task.type/general-part "Ülddokumendid",
-  :notification.type/cooperation-application-responded
-  "Taotlus ootab asutuse seisukohta",
   :cooperation.application.response-type/opinion "Arvamus",
   :activity.status/completed "Valmis",
   :activity.name/preliminary-design "Eelprojekt",
@@ -475,13 +477,18 @@
   "Sisestatud tekst on välja jaoks liiga pikk. Lubatud on kuni 4096 tähemärki.",
   :activity-task-has-files
   "Selle tegevuse ülesande alla on laetud faile, tegevust ei saa kustutada seni kuni failid on kustutatud!",
+  :description-too-long
+  "Faili kirjeldus on liiga pikk. Maksimaalne pikkus on {limit} tähemäki.",
   :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",
   :application-outside-activities
   "Taotlus kuupäev väljaspool projekti tegevuste aega.",
+  :invalid-chars-in-description
+  "Faili kirjeldus sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}",
   :two-files-with-same-metadata
   "Teine sama metaandmetega fail on juba olemas.",
   :request-timeout "Ei saanud serveriga ühendust",
-  :conflicting-tasks nil,
+  :conflicting-tasks
+  "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
   :replaced-file-not-latest
@@ -648,6 +655,7 @@
   "Valige osa, kuhu üleslaaditud failid lisatakse",
   :file-will-be-added-to-part-text
   "TEET tuvastas ülesande osa automaatselt failinimest",
+  :invalid-description nil,
   :file-belongs-to-task "See fail kuulub ülesandele {task}",
   :wrong-project "See fail ei kuulu selle projekti alla",
   :file-new-part

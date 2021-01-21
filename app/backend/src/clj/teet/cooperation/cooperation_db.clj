@@ -125,6 +125,10 @@
   (get-in (du/entity db application-id)
           [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
 
+(defn application-activity-id [db application-id]
+  (get-in (du/entity db application-id)
+    [:cooperation.application/activity :db/id]))
+
 (defn response-project-id [db response-id]
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
