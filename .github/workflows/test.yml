@@ -18,6 +18,8 @@ jobs:
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
     - name: setup clojure
       uses: DeLaGuardo/setup-clojure@master
       with:
