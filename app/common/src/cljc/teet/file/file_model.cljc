@@ -45,8 +45,10 @@
 (defn validate-file
   "Validate allowed file type and max size. Returns map with error description
   or nil if there are no problems."
-  [{:file/keys [size name description] :as file}]
-  (let [description (or description (:description (filename-metadata/name->description-and-extension name)))]
+  [{:file/keys [size name description]}]
+  (let [description (or description (some-> name
+                                            filename-metadata/name->description-and-extension
+                                            :description))]
     (cond
       (> size upload-max-file-size)
       {:error :file-too-large :max-allowed-size upload-max-file-size}

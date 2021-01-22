@@ -262,13 +262,17 @@
    :project-id (project-db/file-project-id db id)
    :authorization {:document/overwrite-document {:db/id id}}
    :pre [^{:error :description-too-long}
-         (not (file-model/valid-description-length?
-                (filename-metadata/name->description-and-extension
-                  (:file/name file))))
+         (-> file
+             :file/name
+             filename-metadata/name->description-and-extension
+             :description
+             file-model/valid-description-length?)
          ^{:error :invalid-chars-in-description}
-         (not (file-model/valid-chars-in-description?
-                (filename-metadata/name->description-and-extension
-                  (:file/name file))))]
+         (-> file
+             :file/name
+             filename-metadata/name->description-and-extension
+             :description
+             file-model/valid-chars-in-description?)]
    :transact [(list 'teet.file.file-tx/modify-file
                     (merge file
                            (meta-model/modification-meta user)))]})
