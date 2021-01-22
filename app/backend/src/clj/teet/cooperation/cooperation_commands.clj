@@ -10,7 +10,7 @@
             [teet.link.link-db :as link-db]
             [teet.project.project-db :as project-db]
             [clojure.spec.alpha :as s]
-            [teet.notification.notification-db :as notification-db]
+            [teet.cooperation.cooperation-notifications :as cooperation-notifications]
             [teet.activity.activity-db :as activity-db]))
 
 
@@ -74,21 +74,6 @@
                                     [:cooperation.application/response :db/id])]
     (= response-id current-response-id)))
 
-(defn application-response-notification-tx
-  "Add notification about new Application response,
-  return a notification transaction map or empty map if receiver or sender is empty"
-  [db user activity-user project application-id]
-  (if
-    (and
-      (some? user)
-      (some? activity-user))
-    (notification-db/notification-tx
-      db {:from user
-          :to activity-user
-          :target application-id
-          :type :notification.type/cooperation-response-to-application-added
-          :project project}) {}))
-
 (defcommand :cooperation/save-application-response
   {:doc "Create a new response to the application"
    :context {:keys [user db]}
@@ -119,7 +104,7 @@
                    (if (:db/id response-payload)
                      (meta-model/modification-meta user)
                      (meta-model/creation-meta user))))
-         (vector (application-response-notification-tx db user activity-manager-user-id
+         (vector (cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
                    project-id application-id)))))})
 
 (s/def ::application-id integer?)
