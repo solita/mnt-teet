@@ -68,7 +68,7 @@ describe('Meeting Links', function () {
         cy.contains('Eelprojekt').click({force: true})
         cy.wait(1000)
 
-        cy.get(".project-navigator-add-meeting button").click()
+        cy.get(".project-navigator-add-meeting button").click({force: true})
         cy.get(`input[class*=':date-input']`).type(new Date().toLocaleDateString("et-EE"))
         cy.get("[class*=start-time]").type("10:00")
         cy.get("[class*=end-time]").type("11:00")
