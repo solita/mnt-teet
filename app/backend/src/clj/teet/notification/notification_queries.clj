@@ -102,6 +102,7 @@
         thk-project-id (:thk.project/id (project-db/project-by-id db project-id))]
     {:page :cooperation
      :params {:project (str thk-project-id)
+              :third-party (cooperation-db/applicaiton-3rd-party db application-id)
               :application (str application-id)}}))
 
 (defn notification-navigation-info [db user notification-id]
