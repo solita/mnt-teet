@@ -13,7 +13,7 @@ describe('Meeting Links', function () {
         cy.setup("mock-cadastral-unit-link-search", {})
 
         //cy.selectLanguage("ENG")
-
+        cy.mockPostgREST()
 
     })
 
