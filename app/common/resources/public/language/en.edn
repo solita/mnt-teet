@@ -214,6 +214,8 @@
   :task.type/study-other "Other",
   :document.category/maintenance-doc "Maintenance documentation",
   :document.category/source-doc "Source documentation",
+  :notification.type/cooperation-response-to-application-added
+  "Application is waiting for authority position",
   :task.status/canceled "Canceled",
   :land-acquisition.impact/purchase-not-needed
   "Acquisition not needed",
@@ -408,8 +410,6 @@
   :notification.type/comment-unresolved "Comment unresolved",
   :task.type/construction-other-facilities "Other facilities",
   :task.type/general-part "General part",
-  :notification.type/cooperation-application-responded
-  "Application is waiting for authority position",
   :cooperation.application.response-type/opinion "Opinion",
   :activity.status/completed "Completed",
   :activity.name/preliminary-design "Preliminary design",
@@ -483,9 +483,13 @@
   "Text you entered is too long. Up to 4096 characters are allowed.",
   :activity-task-has-files
   "This activity has tasks with files uploaded to it, the activity can't be deleted before the files have been deleted!",
+  :description-too-long
+  "The file description is too long. Allowed character limit is {limit} characters.",
   :user-already-exists "User with the given person id already exists",
   :application-outside-activities
   "Applied date not within any project activity.",
+  :invalid-chars-in-description
+  "The file description contains illegal characters. List of allowed characters: {characters}",
   :two-files-with-same-metadata
   "Another file with the same metadata already exists.",
   :request-timeout "The server did not respond.",
@@ -657,6 +661,8 @@
   "Select part where uploaded files will be added to",
   :file-will-be-added-to-part-text
   "TEET has automatically detected the file part based on the name",
+  :invalid-description
+  "File description contains illegal characters or is too long.",
   :file-belongs-to-task "This file belongs to {task} task",
   :wrong-project "This file can't be added to this project",
   :file-new-part
