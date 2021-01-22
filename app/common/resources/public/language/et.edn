@@ -466,6 +466,7 @@
   :invalid-task-dates "Kontrollige ülesande kuupäevi",
   :user-is-already-participant
   "Lisatava kasutaja e-posti aadress on juba osalejate nimekirjas!",
+  :file-type-not-allowed "Failitüüp ei ole toetatud",
   :server-error "Serveri viga.",
   :invalid-x-road-response "Vale vastus X-teelt",
   :permission-already-granted "Selle kasutaja luba on juba antud",
@@ -486,9 +487,11 @@
   "Faili kirjeldus sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}",
   :two-files-with-same-metadata
   "Teine sama metaandmetega fail on juba olemas.",
+  :file-empty "Ei saa laadida tühje fail",
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :file-too-large "Fail on liiga suur",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
   :replaced-file-not-latest

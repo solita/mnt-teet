@@ -471,6 +471,7 @@
   :invalid-task-dates "Check task dates",
   :user-is-already-participant
   "The email address of the participant is already in the participant list!",
+  :file-type-not-allowed "File type is not valid",
   :server-error "Server error.",
   :invalid-x-road-response "Invalid response from X-road",
   :permission-already-granted
@@ -492,9 +493,11 @@
   "The file description contains illegal characters. List of allowed characters: {characters}",
   :two-files-with-same-metadata
   "Another file with the same metadata already exists.",
+  :file-empty "Can't upload empty files",
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
   :replaced-file-not-latest
