@@ -108,8 +108,7 @@
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
   ([{:keys [edit-button]}
-    {:cooperation.application/keys [opinion]
-     application-creator :meta/creator}]
+    {:cooperation.application/keys [opinion]}]
    (let [{:meta/keys [creator modifier created-at modified-at]
           comment :cooperation.opinion/comment} opinion]
      [:<>
@@ -119,7 +118,7 @@
        [:div {:class (<class common-styles/flex-table-column-style 30)}
         ;; Show last modifier or creator of the opinion if present
         ;; otherwise show creator of the application
-        (user-model/user-name (or modifier creator application-creator))]
+        (user-model/user-name (or modifier creator))]
        [:div {:class (<class common-styles/flex-table-column-style 50)}
         [:div {:class (<class common-styles/flex-column-1)}
          [:div {:class (<class common-styles/flex-row)
@@ -544,18 +543,22 @@
   (r/with-let [edit-contact? (r/atom false)
                edit-contact! #(reset! edit-contact? true)
                contact-form (r/atom contact)]
-    [:div.application-people
+    [:div.application-people {:class (<class common-styles/flex-column-1)}
      [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
       (tr [:project :tabs :people])]
-
-     [:div {:class (<class common-styles/flex-row)}
-      [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
-       [user-model/user-name (:activity/manager activity)]]
-      [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
-       (tr [:fields :activity/manager])]]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      (if-let [manager (:activity/manager activity)]
+        [:div {:class (<class common-styles/flex-row)}
+         [:div.activity-manager-name {:class (<class common-styles/flex-table-column-style 45)}
+          [user-model/user-name manager]]
+         [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+          (tr [:fields :activity/manager])]]
+        [:div
+         [typography/GreyText (tr [:cooperation :no-activity-manager])]])]
 
      (if @edit-contact?
        [form/form {:e! e!
+                   :class "edit-contract-form"              ;; Give a simple class to override the form/form default
                    :on-change-event (form/update-atom-event contact-form merge)
                    :spec ::cooperation-model/contact-form
                    :save-event #(common-controller/->SaveForm
@@ -596,7 +599,8 @@
         ;; Show contact info (if any)
         (when (seq contact)
           [:div.application-contact-info
-           [typography/Heading3 (tr [:cooperation :application-contact-person])]
+           [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+            (tr [:cooperation :application-contact-person])]
            (doall
             (for [k [:cooperation.contact/name
                      :cooperation.contact/company
@@ -612,7 +616,7 @@
                [:div {:class (<class common-styles/flex-table-column-style 55)}
                 v]]))])
         ;; "Add contact" or "edit" button
-        [:div {:style {:float :right}}
+        [:div {:style {:align-self :flex-end}}
          (if contact
            [buttons/button-secondary {:on-click edit-contact!
                                       :data-cy "edit-contact"}

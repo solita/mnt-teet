@@ -102,25 +102,28 @@
              (when delete-disabled-error-text
                {:disabled true}))
             (tr [:buttons :delete])]])]
-    [:<>
+    [:div
      [:div {:class (<class form-buttons)}
       (when-not delete-link?
         delete-element)
-      [:div {:style {:margin-left :auto}}
-       (when cancel
-         [buttons/button-secondary {:style    {:margin-right "1rem"}
-                                    :disabled disabled?
-                                    :class "cancel"
-                                    :on-click cancel}
-          (tr [:buttons :cancel])])]
-      (when validate
-        [buttons/button-primary {:disabled disabled?
-                                 :type :submit
-                                 :class "submit"
-                                 :on-click validate}
-         (tr [:buttons :save])])]
-     (when (and delete-link? delete-element)
-       [:div {:style {:text-align :center}} delete-element])]))
+      [:div {:style {:margin-left :auto
+                     :text-align :center}}
+       [:div {:class (<class common-styles/margin-bottom 1)}
+        (when cancel
+          [buttons/button-secondary {:style {:margin-right "1rem"}
+                                     :disabled disabled?
+                                     :class "cancel"
+                                     :on-click cancel}
+           (tr [:buttons :cancel])])
+        (when validate
+          [buttons/button-primary {:disabled disabled?
+                                   :type :submit
+                                   :class "submit"
+                                   :on-click validate}
+           (tr [:buttons :save])])]
+       (when (and delete-link? delete-element)
+         [:div
+          delete-element])]]]))
 
 (defn- hide-field?
   "Returns true if field is nil or if it has `:step` in its metadata and
@@ -439,8 +442,7 @@
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
                            :display :flex
-                           :flex-direction :column
-                           :justify-content :space-between}}
+                           :flex-direction :column}}
                   (when id
                     {:id id}))
      (context/provide
