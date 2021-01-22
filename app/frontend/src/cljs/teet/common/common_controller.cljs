@@ -247,9 +247,9 @@
       403
       (throw (ex-info "Unauthorized to access this resource" {:error :forbidden-resource}))
 
-      504 
+      504
       (throw (ex-info "Gateway timeout" {:error :request-timeout}))
-      
+
       200
       (do
         (swap! in-flight-requests dec)
