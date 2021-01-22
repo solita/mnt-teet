@@ -65,7 +65,7 @@ describe('Meeting Links', function () {
     function createMeeting() {
         cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]+"/meetings"))
 
-        cy.contains('Eelprojekt').click()
+        cy.contains('Eelprojekt').click({force: true})
         cy.wait(1000)
 
         cy.get(".project-navigator-add-meeting button").click()
