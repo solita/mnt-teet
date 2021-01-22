@@ -158,7 +158,8 @@
    (fn with-db-fixture [f]
      (let [now (System/currentTimeMillis)
            test-db-name (str "test-db-" now)
-           test-asset-db-name (str "test-asset-db-")]
+           test-asset-db-name (str "test-asset-db-" now)]
+       (reset! @#'environment/asset-db-migrated? false)
        (run-with-config
         {:datomic {:db-name test-db-name
                    :asset-db-name test-asset-db-name}}
