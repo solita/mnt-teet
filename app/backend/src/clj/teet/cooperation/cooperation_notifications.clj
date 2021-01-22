@@ -16,12 +16,3 @@
           :target application-id
           :type :notification.type/cooperation-response-to-application-added
           :project project}) {}))
-
-(defn send-notification-application-expired-in-45-days
-  "Sending notification about third party cooperation application expiration to Project Manager of Activity"
-  [db activity-id application-id]
-  ;; TODO: implement
-  (println
-    (str "send-notification-application-expired-in-45-days called with "
-      activity-id
-      application-id)))
