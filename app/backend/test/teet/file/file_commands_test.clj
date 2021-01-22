@@ -27,7 +27,12 @@
   (testing "other files are valid"
     (is (nil? (file-model/validate-file
                {:file/name (str "myfile." (rand-nth (seq (file-model/upload-allowed-file-suffixes))))
-                :file/size (rand (inc file-model/upload-max-file-size))})))))
+                :file/size (rand (inc file-model/upload-max-file-size))}))))
+
+  (testing "File name contains illegal characters"
+    (is (= (:error (file-model/validate-file {:file/name "myfileäöä.png"
+                                              :file/size 1024}))
+           :invalid-chars-in-description))))
 
 (def fake-upload tu/fake-upload)
 
