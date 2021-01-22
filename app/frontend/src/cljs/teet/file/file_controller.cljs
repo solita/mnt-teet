@@ -13,9 +13,10 @@
             [teet.link.link-controller :as link-controller]))
 
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results linked-from]) ; Upload files (one at a time) to document
+(defrecord FileUploadError [error])
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success linked-from])
-(defrecord UploadNewVersion [file new-version task-id])
+(defrecord UploadNewVersion [file new-version progress-atom task-id])
 (defrecord UploadSuccess [file-id])
 (defrecord AfterUploadRefresh [])
 
@@ -34,9 +35,30 @@
 
 (defrecord UpdateFilesForm [new-value])
 (defrecord FilesFormMetadataReceived [filename metadata])
+(defrecord UploadNewVersionError [progress-atom err])
 
 ;; Modify file info
 (defrecord ModifyFile [file callback])
+
+(defmethod common-controller/on-server-error :invalid-chars-in-description
+  [err app]
+  (snackbar-controller/open-snack-bar app
+                                      (tr [:error (-> err ex-data :error)] {:characters file-model/allowed-chars-string})
+                                      :error))
+
+(defmethod common-controller/on-server-error :description-too-long
+  [err app]
+  (snackbar-controller/open-snack-bar app
+                                      (tr [:error (-> err ex-data :error)] {:limit file-model/max-description-length})
+                                      :error))
+
+
+(defmethod common-controller/on-server-error :file-type-not-allowed
+  [err app]
+  (t/fx (snackbar-controller/open-snack-bar app
+                                            (tr [:error (-> err ex-data :error)])
+                                            :error)
+    common-controller/refresh-fx))
 
 (extend-protocol t/Event
 
@@ -104,7 +126,7 @@
           common-controller/refresh-fx))
 
   UploadNewVersion
-  (process-event [{:keys [file new-version task-id]} app]
+  (process-event [{:keys [file new-version progress-atom task-id]} app]
     (log/info "STEP: UploadNewVersion file:" file ", new-version: " new-version ", task-id: " task-id)
     (t/fx app
           {:tuck.effect/type :command!
@@ -118,11 +140,29 @@
                                                 :file/sequence-number
                                                 :file/original-name]))
                      :previous-version-id (:db/id file)}
+           :error-event (partial ->UploadNewVersionError progress-atom)
            :result-event (fn [result]
                            (map->UploadFileUrlReceived
                              (merge result
                                     {:file-data (:file-object new-version)
                                      :on-success (common-controller/->Refresh)})))}))
+
+  UploadNewVersionError
+  (process-event [{:keys [progress-atom err]} app]
+    (let [error (-> err ex-data :error)
+          tr-option (case error
+                      :invalid-chars-in-description {:characters file-model/allowed-chars-string}
+                      :description-too-long {:limit file-model/max-description-length}
+                      nil)]
+      (reset! progress-atom false)
+      (t/fx
+        (snackbar-controller/open-snack-bar
+          (assoc-in app [:new-document :in-progress?] false)
+          (if tr-option
+            (tr [:error error] tr-option)
+            (tr [:error error]))
+          :error)
+        common-controller/refresh-fx)))
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
@@ -131,60 +171,65 @@
                    :as event} app]
     (log/info "FILES: " files)
     ;; Validate files
-    (if-let [error (some (comp file-model/validate-file
-                               file-model/file-info
-                               :file-object)
-                         files)]
-      (snackbar-controller/open-snack-bar
-       app
-       (case (:error error)
-         :file-too-large (tr [:document :file-too-large])
-         :file-type-not-allowed (tr [:document :invalid-file-type])
-         "Error")
-       :error)
-      (if-let [file (first files)]
-        ;; More files to upload
-        (do
-          (log/info "More files to upload. Uploading: " file)
-          (t/fx (if progress-increment
-                  (update-in app [:new-document :in-progress?]
-                             + progress-increment)
-                  app)
-                {:tuck.effect/type :command!
-                 :command (cond
-                            attachment?
-                            :file/upload-attachment
+    (if-let [file (first files)]
+      ;; More files to upload
+      (do
+        (log/info "More files to upload. Uploading: " file)
+        (t/fx (if progress-increment
+                (update-in app [:new-document :in-progress?]
+                           + progress-increment)
+                app)
+              {:tuck.effect/type :command!
+               :command (cond
+                          attachment?
+                          :file/upload-attachment
 
-                            (get-in file [:metadata :file-id])
-                            :file/replace
+                          (get-in file [:metadata :file-id])
+                          :file/replace
 
-                            :else
-                            :file/upload)
-                 :payload (merge {:file (merge (file-model/file-info (:file-object file))
-                                               (select-keys file [:file/description
-                                                                  :file/extension
-                                                                  :file/sequence-number
-                                                                  :file/document-group
-                                                                  :file/part]))}
-                                 (when-let [prev-file-id (get-in file [:metadata :file-id])]
-                                   {:previous-version-id prev-file-id})
-                                 (if attachment?
-                                   {:project-id project-id
-                                    :attach-to attach-to}
-                                   {:task-id task-id}))
-                 :result-event (fn [result]
-                                 (map->UploadFileUrlReceived
-                                  (merge result
-                                         {:file-data (:file-object file)
-                                          :linked-from linked-from
-                                          :on-success (update event :files rest)})))}))
-        (do
-          (log/info "No more files to upload. Return on-success event: " on-success)
-          (t/fx app
-                (fn [e!]
-                  ;; Invoke on-success and if it returns an event, apply it
-                  (when-let [evt (on-success file-results)]
-                    (e! evt))))))))
+                          :else
+                          :file/upload)
+               :payload (merge {:file (merge (file-model/file-info (:file-object file))
+                                             (select-keys file [:file/description
+                                                                :file/extension
+                                                                :file/sequence-number
+                                                                :file/document-group
+                                                                :file/part]))}
+                               (when-let [prev-file-id (get-in file [:metadata :file-id])]
+                                 {:previous-version-id prev-file-id})
+                               (if attachment?
+                                 {:project-id project-id
+                                  :attach-to attach-to}
+                                 {:task-id task-id}))
+               :error-event ->FileUploadError
+               :result-event (fn [result]
+                               (map->UploadFileUrlReceived
+                                 (merge result
+                                        {:file-data (:file-object file)
+                                         :linked-from linked-from
+                                         :on-success (update event :files rest)})))}))
+      (do
+        (log/info "No more files to upload. Return on-success event: " on-success)
+        (t/fx app
+              (fn [e!]
+                ;; Invoke on-success and if it returns an event, apply it
+                (when-let [evt (on-success file-results)]
+                  (e! evt)))))))
+
+  FileUploadError
+  (process-event [{:keys [error]} app]
+    (let [error (-> error ex-data :error)
+          tr-option (case error
+                      :invalid-chars-in-description {:characters file-model/allowed-chars-string}
+                      :description-too-long {:limit file-model/max-description-length}
+                      :else nil)]
+      (t/fx
+        (snackbar-controller/open-snack-bar
+          (assoc-in app [:new-document :in-progress?] false)
+          (if tr-option
+            (tr [:error error] tr-option)
+            (tr [:error error]))
+          :warning))))
 
   UploadFileUrlReceived
   (process-event [{:keys [file file-data document-id url on-success linked-from] :as args} app]

@@ -21,9 +21,6 @@
             [teet.ui.common :as common-ui]
             [teet.util.datomic :as du]))
 
-
-
-
 (defn ->vector [file-list]
   (mapv (fn [i]
           {:file-object (.item file-list i)})
@@ -31,8 +28,6 @@
 
 (defn- file-vector [e]
   (-> e .-target .-files ->vector))
-
-
 
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
@@ -103,6 +98,8 @@
 
 (defn validate-name [{:file/keys [description extension] :as _file-row}]
   (cond
+    (not (file-model/valid-description-length? description)) {:error :description-too-long}
+    (not (file-model/valid-chars-in-description? description)) {:error :invalid-chars-in-description}
     (str/blank? description) {:error :description-and-extension-required}
     (str/blank? extension) {:error :file-type-not-allowed}))
 
@@ -130,6 +127,14 @@
 
         :file-too-large
         {:title (tr [:document :file-too-large])
+         :description ""}
+
+        :description-too-long
+        {:title (tr [:error :description-too-long] {:limit file-model/max-description-length})
+         :description ""}
+
+        :invalid-chars-in-description
+        {:title (tr [:error :invalid-chars-in-description] {:characters file-model/allowed-chars-string})
          :description ""}
 
         ;; Check for wrong project
