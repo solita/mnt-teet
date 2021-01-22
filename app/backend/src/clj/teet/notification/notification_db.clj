@@ -34,7 +34,7 @@
              (when project
                {:notification/project (project-model/project-ref project)})
              (meta-model/creation-meta from))
-       (comp {} (println "Notification skipped due to from-id is equal to to-id")))))
+      {})))
 
 (def notification-keys [:db/id :notification/status
                         :notification/target :notification/type
