@@ -104,8 +104,8 @@
                    (if (:db/id response-payload)
                      (meta-model/modification-meta user)
                      (meta-model/creation-meta user))))
-         (vector (cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
-                   project-id application-id)))))})
+         [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
+            project-id application-id)])))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]

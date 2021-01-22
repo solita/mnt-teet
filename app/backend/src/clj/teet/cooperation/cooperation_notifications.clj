@@ -15,4 +15,5 @@
           :to activity-user
           :target application-id
           :type :notification.type/cooperation-response-to-application-added
-          :project project}) {}))
+          :project project})
+    {}))
