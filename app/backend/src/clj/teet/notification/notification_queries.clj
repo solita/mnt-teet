@@ -100,7 +100,7 @@
 (defn- cooperation-application-navigation-info [db application-id]
   (let [project-id (cooperation-db/application-project-id db application-id)
         thk-project-id (:thk.project/id (project-db/project-by-id db project-id))]
-    {:page :cooperation
+    {:page :cooperation-application
      :params {:project (str thk-project-id)
               :third-party (cooperation-db/applicaiton-3rd-party db application-id)
               :application (str application-id)}}))
