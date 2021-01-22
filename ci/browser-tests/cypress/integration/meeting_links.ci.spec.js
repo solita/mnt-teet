@@ -121,6 +121,7 @@ describe('Meeting Links', function () {
 
     it('sort searched files', function () {
         cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
+        cy.wait(1000)
         cy.get("li a").contains("Eelprojekt").click({force: true})
         cy.get("li a").contains("Teostatavusuuring").click({force: true})
 
