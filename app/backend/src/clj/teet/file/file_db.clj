@@ -252,7 +252,7 @@
                 [?task :task/files ?f]
                 ;; Earlier it was possible to delete a task without deleting the files first.
                 ;; We don't want to list the files whose task has been deleted.
-                (not [?task :meta/deleted? true])
+                [(missing? $ ?task :meta/deleted?)]
                 [?act :activity/tasks ?task]
                 [?act :activity/name :activity.name/land-acquisition]
                 [?lc :thk.lifecycle/activities ?act]
