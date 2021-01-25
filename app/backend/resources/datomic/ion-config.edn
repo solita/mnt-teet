@@ -55,8 +55,9 @@
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
             :description "Cleanup unreferenced deleted features"}
 
-           :notify
-           {:fn teet.notification.ion/notify
-            :description "Scheduled notifications"}}
+           ;;:notify
+           ;; {:fn teet.notification.ion/notify
+           ;;  :description "Scheduled notifications"}
+           }
 
  :app-name "teet-datomic"}
