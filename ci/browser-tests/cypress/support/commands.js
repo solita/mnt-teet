@@ -30,6 +30,19 @@ Cypress.Commands.add("selectLanguage", (lang) => {
     //cy.wait("@loadLanguage")
 })
 
+/* We don't have PostgREST running in CI as we don't really
+ * test the map stuff, add calls to mock here to avoid
+ * "server error" snackbars.
+ */
+Cypress.Commands.add("mockPostgREST", () => {
+    let emptyFC = {body: {"type":"FeatureCollection",
+                          "features": []}}
+    cy.intercept("/rpc/datasources", {body: []})
+    cy.intercept("/rpc/geojson_features_by_id", emptyFC)
+    cy.intercept("/rpc/geojson_entity_pins", emptyFC)
+
+})
+
 // Create random name with prefix and assign it
 Cypress.Commands.add("randomName", (contextName, prefix) => {
     const r = Math.floor(Math.random() * 100000)
