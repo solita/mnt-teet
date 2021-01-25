@@ -1,6 +1,8 @@
 (ns teet.system.system-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [teet.util.build-info :as build-info]))
+            [teet.util.build-info :as build-info]
+            [teet.environment :as environment]
+            [datomic.client.api :as d]))
 
 (defn db-state-response [_db-result]
   (with-meta
@@ -16,8 +18,11 @@
    :spec empty?
    :args _
    :unauthenticated? true}
-  {:query '[:find ?e
-            :where
-            [?e :thk.project/project-name "non-existent"]]
-   :args [db]
-   :result-fn db-state-response})
+  (db-state-response
+   (merge
+    {:teet (d/q '[:find ?e
+                  :where
+                  [?e :thk.project/project-name "non-existent"]]
+                db)}
+    (when (environment/feature-enabled? :asset-db)
+      {:asset (d/pull (environment/asset-db) [:db/doc] :tx/schema-hash)}))))

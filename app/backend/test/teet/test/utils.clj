@@ -156,12 +156,17 @@
           mock-users? true
           skip-delete? false} :as _opts}]
    (fn with-db-fixture [f]
-     (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
+     (let [now (System/currentTimeMillis)
+           test-db-name (str "test-db-" now)
+           test-asset-db-name (str "test-asset-db-" now)]
+       (reset! @#'environment/asset-db-migrated? false)
        (run-with-config
-        {:datomic {:db-name test-db-name}}
+        {:datomic {:db-name test-db-name
+                   :asset-db-name test-asset-db-name}}
         (log/redirect-ion-casts! :stderr)
         (let [client (d/client (environment/config-value :datomic :client))
-              db-name {:db-name test-db-name}]
+              db-name {:db-name test-db-name}
+              asset-db-name {:db-name test-asset-db-name}]
           (try
             (log/info "Creating database " test-db-name)
             (d/create-database client db-name)
@@ -188,8 +193,9 @@
                 (f)))
             (finally
               (when-not skip-delete?
-                (log/info "Deleting database " test-db-name)
-                (d/delete-database client db-name))))))))))
+                (log/info "Deleting databases: " test-db-name ", " test-asset-db-name)
+                (d/delete-database client db-name)
+                (d/delete-database client asset-db-name))))))))))
 
 (defn with-global-data [f]
   (binding [*global-test-data* (atom {})]

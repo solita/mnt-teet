@@ -100,6 +100,7 @@
 
 (def teet-ssm-config
   {:datomic {:db-name (->ssm [:datomic :db-name] "teet")
+             :asset-db-name (->ssm [:datomic :asset-db-name] "asset")
              :client {:server-type :ion}}
    :env (->ssm [:env])
    :backup {:bucket-name (->ssm [:s3 :backup-bucket])}
@@ -162,13 +163,24 @@
       (get-in [:datomic :db-name])
       (str/replace "$USER" (System/getProperty "user.name"))))
 
+
 (defn config-value [& path]
   (get-in @config (vec path)))
+
+(defn asset-db-name []
+  (config-value :datomic :asset-db-name))
 
 (defn config-map [key-path-map]
   (reduce-kv (fn [acc key path]
                (assoc acc key (apply config-value path)))
              {} key-path-map))
+
+(defn feature-enabled? [feature]
+  (config-value :enabled-features feature))
+
+(defmacro when-feature [feature & body]
+  `(when (feature-enabled? ~feature)
+     ~@body))
 
 (def datomic-client
   (memoize #(d/client (config-value :datomic :client))))
@@ -205,7 +217,51 @@
        (throw e)))
    (log/info "Migrations finished.")))
 
+(defn- sha-256 [string]
+  (str/join
+   (map #(format "%x" %)
+        (.digest (java.security.MessageDigest/getInstance "SHA-256")
+                 (.getBytes string "UTF-8")))))
+
+(defn migrate-asset-db
+  "Migrate asset databse. The whole schema is transacted in one go
+  if the hash of the schema file has changed."
+  [conn]
+  (try
+    (let [schema-source (-> "asset-schema.edn" io/resource slurp)
+          hash (sha-256 schema-source)
+          db (d/db conn)
+          exists? (boolean
+                   (seq
+                    (d/q '[:find ?hash-attr
+                           :where [?hash-attr :db/ident :tx/schema-hash]] db)))
+          db (if exists?
+               db
+               (:db-after
+                (d/transact conn {:tx-data [{:db/ident :tx/schema-hash
+                                             :db/valueType :db.type/string
+                                             :db/cardinality :db.cardinality/one
+                                             :db/doc "SHA-256 hash of asset schema file"}]})))
+          last-hash (->>
+                     (d/q '[:find ?hash ?txi
+                            :where
+                            [?tx :tx/schema-hash ?hash]
+                            [?tx :db/txInstant ?txi]] db)
+                     (sort-by second)
+                     last first)]
+
+      (when (not= hash last-hash)
+        (d/transact
+         conn
+         {:tx-data (into [{:db/id "datomic.tx" :tx/schema-hash hash}]
+                         (read-string schema-source))})))
+    (catch Exception e
+      (log/error e "Uncaught exception in migration")
+      (throw e)))
+  (log/info "Asset database migrated."))
+
 (def ^:private db-migrated? (atom false))
+(def ^:private asset-db-migrated? (atom false))
 
 (defn- ensure-database [client db-name]
   (let [existing-databases
@@ -217,6 +273,7 @@
         :created))))
 
 (def ^:dynamic *connection* nil)
+(def ^:dynamic *asset-connection* nil)
 
 (defn connection
   "Gets a Datomic connection to the named database, creating it if necessary.
@@ -227,7 +284,7 @@
         client (datomic-client)
         db-status (ensure-database client db)
         conn (d/connect client {:db-name db})]
-    (log/info "Using database: " db db-status)
+    (log/debug "Using database: " db db-status)
     (when migrate?
       (migrate conn))
     conn))
@@ -239,24 +296,38 @@
       (let [db (db-name)
             client (datomic-client)
             db-status (ensure-database client db)
-            conn (d/connect client {:db-name db})]        
+            conn (d/connect client {:db-name db})]
         (log/info "Using database: " db db-status)
         (when-not @db-migrated?
           (migrate conn)
           (reset! db-migrated? true))
         conn)))
 
+(defn asset-connection
+  "Returns thread bound asset db connection or creates a new one."
+  []
+  (if-not (feature-enabled? :asset-db)
+    (throw (ex-info "Asset database is not enabled" {:missing-feature-flag :asset-db}))
+    (or *asset-connection*
+        (let [db (asset-db-name)
+              client (datomic-client)
+              db-status (ensure-database client db)
+              conn (d/connect client {:db-name db})]
+          (log/debug "Using database: " db db-status)
+          (when-not @asset-db-migrated?
+            (migrate-asset-db conn)
+            (reset! asset-db-migrated? true))
+          conn))))
+
+(defn asset-db
+  "Return an asset db handled."
+  []
+  (d/db (asset-connection)))
+
 (defn check-site-password [given-password]
   (let [actual-pw (config-value :auth :basic-auth-password)]
     (or (nil? actual-pw)
         (= given-password actual-pw))))
-
-(defn feature-enabled? [feature]
-  (config-value :enabled-features feature))
-
-(defmacro when-feature [feature & body]
-  `(when (feature-enabled? ~feature)
-     ~@body))
 
 (defn api-context
   "Convenience for getting a PostgREST API context map."
