@@ -109,60 +109,71 @@
              (not (< 0 sequence-number 10000)))
     {:error :invalid-sequence-number}))
 
+(defn common-file-validation
+  [file]
+  (println "file: " file)
+  (let [error (file-model/validate-file file)]
+    (case (:error error)
+      :file-type-not-allowed
+      {:title (tr [:document :invalid-file-type])
+       :description [:<>
+                     (str/upper-case (file-model/filename->suffix (:file/name file)))
+                     " "
+                     [:a {:target "_blank"
+                          :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                      (tr [:document :invalid-file-type])]]}
+
+      :file-too-large
+      {:title (tr [:document :file-too-large])
+       :description ""}
+
+      :description-too-long
+      {:title (tr [:error :description-too-long] {:limit file-model/max-description-length})
+       :description ""}
+
+      :invalid-chars-in-description
+      {:title (tr [:error :invalid-chars-in-description] {:characters file-model/allowed-chars-string})
+       :description ""}
+
+      :file-empty
+      {:title (tr [:file-upload :empty-file])
+       :description ""}
+      ;; All validations ok
+      nil)))
+
 (defn validate-file [e! project-id task {:keys [metadata] :as file-row}]
   (let [file-info (files-field-entry file-row)]
-    (when-let [error (or (and metadata (validate-name file-row))
-                         (validate-seq-number file-row)
-                         (file-model/validate-file file-info)
-                         (file-model/validate-file-metadata project-id task metadata))]
-      (case (:error error)
-        :file-type-not-allowed
-        {:title (tr [:document :invalid-file-type])
-         :description [:<>
-                       (str/upper-case (file-model/filename->suffix (:file/name file-info)))
-                       " "
-                       [:a {:target "_blank"
-                            :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-                        (tr [:document :invalid-file-type])]]}
+    (or (common-file-validation (merge file-row file-info))
+        (when-let [error (or (and metadata (validate-name file-row))
+                             (validate-seq-number file-row)
+                             (file-model/validate-file file-info)
+                             (file-model/validate-file-metadata project-id task metadata))]
 
-        :file-too-large
-        {:title (tr [:document :file-too-large])
-         :description ""}
+          (case (:error error)
 
-        :description-too-long
-        {:title (tr [:error :description-too-long] {:limit file-model/max-description-length})
-         :description ""}
+            ;; Check for wrong project
+            :wrong-project
+            {:title (tr [:file-upload :wrong-project])
+             :description ""}
 
-        :invalid-chars-in-description
-        {:title (tr [:error :invalid-chars-in-description] {:characters file-model/allowed-chars-string})
-         :description ""}
+            ;; Check for wrong task (if metadata can be parsed)
+            :wrong-task
+            {:title (tr [:file-upload :wrong-task])
+             :description [select/with-enum-values
+                           {:e! e!
+                            :attribute :task/type}
+                           [wrong-task-error (:task metadata)]]}
 
-        ;; Check for wrong project
-        :wrong-project
-        {:title (tr [:file-upload :wrong-project])
-         :description ""}
+            :description-and-extension-required
+            {:title (tr [:file-upload :description-required])
+             :description ""}
 
-        ;; Check for wrong task (if metadata can be parsed)
-        :wrong-task
-        {:title (tr [:file-upload :wrong-task])
-         :description [select/with-enum-values
-                       {:e! e!
-                        :attribute :task/type}
-                       [wrong-task-error (:task metadata)]]}
+            :invalid-sequence-number
+            {:title (tr [:file-upload :invalid-sequence-number])
+             :description ""}
 
-        :description-and-extension-required
-        {:title (tr [:file-upload :description-required])
-         :description ""}
-
-        :invalid-sequence-number
-        {:title (tr [:file-upload :invalid-sequence-number])
-         :description ""}
-
-        :file-empty
-        {:title (tr [:file-upload :empty-file])
-         :description ""}
-        ;; All validations ok
-        :else nil))))
+            ;; All validations ok
+            nil)))))
 
 (defn files-field-row [{:keys [e! update-file delete-file
                                project-id task]} file-row]
@@ -196,7 +207,7 @@
       [icons/action-delete]]]]
    [TableRow {}
     [TableCell {:colSpan 4}
-     (if-let [{:keys [title description] :as error} (validate-file e! project-id task file-row)]
+     (if-let [{:keys [title description]} (validate-file e! project-id task file-row)]
        [common-ui/info-box {:variant :error
                             :title title
                             :content description}]

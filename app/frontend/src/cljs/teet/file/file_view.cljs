@@ -178,37 +178,6 @@
              :query {:tab "comments"}}
    [file-comments-text file]])
 
-(defn file-replacement-validation
-  [file]
-  (let [error (file-model/validate-file file)]
-    (case (:error error)
-      :file-type-not-allowed
-      {:title (tr [:document :invalid-file-type])
-       :description [:<>
-                     (str/upper-case (file-model/filename->suffix (:file/name file)))
-                     " "
-                     [:a {:target "_blank"
-                          :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-                      (tr [:document :invalid-file-type])]]}
-
-      :file-too-large
-      {:title (tr [:document :file-too-large])
-       :description ""}
-
-      :description-too-long
-      {:title (tr [:error :description-too-long] {:limit file-model/max-description-length})
-       :description ""}
-
-      :invalid-chars-in-description
-      {:title (tr [:error :invalid-chars-in-description] {:characters file-model/allowed-chars-string})
-       :description ""}
-
-      :file-empty
-      {:title (tr [:file-upload :empty-file])
-       :description ""}
-      ;; All validations ok
-      nil)))
-
 (defn file-replacement-modal-button
   [{:keys [e! task file small?]}]
   ;; The progress? and open-atom atoms are expected to go false automatically after uploading happens
@@ -234,7 +203,7 @@
                                             (filename-metadata/name->description-and-extension (:file/name selected-file-info)))))
                       (assoc :file/size (:file/size selected-file-info)))
                   file)
-           {:keys [title description] :as error} (or (file-replacement-validation file))]
+           {:keys [title description] :as error} (or (file-upload/common-file-validation file))]
        [panels/modal {:title (tr [:file-upload :replace-file-modal-title])
                       :open-atom open-atom
                       :actions [DialogActions {:style {:padding-bottom "1rem"}}

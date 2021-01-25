@@ -140,8 +140,8 @@
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
   (let [{description :description} (filename-metadata/name->description-and-extension (:file/name (du/entity db previous-version-id)))]
-    (if-let [error (file-model/validate-file (merge {:file/description description}
-                                                    file))]
+    (if-let [error (file-model/validate-file (merge file
+                                                    {:file/description description}))]
       (throw (ex-info "invalid file"
                       error))
       (let [old-file (find-previous-version db task-id previous-version-id
