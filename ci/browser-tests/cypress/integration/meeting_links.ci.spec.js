@@ -13,7 +13,7 @@ describe('Meeting Links', function () {
         cy.setup("mock-cadastral-unit-link-search", {})
 
         //cy.selectLanguage("ENG")
-
+        cy.mockPostgREST()
 
     })
 
@@ -66,7 +66,7 @@ describe('Meeting Links', function () {
         cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]+"/meetings"))
 
         cy.wait(3000)
-        cy.contains('Eelprojekt').click({force: true})
+        cy.get(".project-navigator a").contains('Eelprojekt').click({force: true})
         cy.wait(1000)
 
         cy.get(".project-navigator-add-meeting button").click({force: true})
@@ -122,6 +122,7 @@ describe('Meeting Links', function () {
 
     it('sort searched files', function () {
         cy.get("@task").then((t) => cy.visit("#/projects/"+t["project-id"]))
+        cy.wait(1000)
         cy.get("li a").contains("Eelprojekt").click({force: true})
         cy.get("li a").contains("Teostatavusuuring").click({force: true})
 
