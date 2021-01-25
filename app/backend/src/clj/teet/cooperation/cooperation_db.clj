@@ -3,7 +3,8 @@
             [teet.cooperation.cooperation-model :as cooperation-model]
             [clojure.string :as str]
             [teet.util.date :as date]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [clj-time.core :as t]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -137,3 +138,29 @@
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
           [:cooperation.application/_response 0 :cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
+
+(defn- is-date-after
+  "Check if the given date after number of days"
+  [deadline days]
+  (let [date-days-after (java.util.Date.
+                          (+ (System/currentTimeMillis)
+                            (* 1000 60 60 24 days)))]
+    (> 0 (. deadline compareTo date-days-after))))
+
+(defn responses-to-be-expired
+  "Returns all Applications with Responses to be expired
+  in the given number of days"
+  [db project-id days]
+  (let [
+        third-parties
+        (mapv first
+          (d/q '[:find (pull ?e [:db/id :cooperation.3rd-party/name])
+                 :where [?e :cooperation.3rd-party/project ?project]
+                 :in $ ?project] db project-id))]
+    (filter #(is-date-after (nth % 3) days)
+      (d/q '[:find ?third-party ?application ?date ?response-deadline
+             :where [?third-party :cooperation.3rd-party/applications ?application]
+             [?application :cooperation.application/date ?date]
+             [?application :cooperation.application/response-deadline ?response-deadline]
+             :in $ [?third-party ...]]
+        db (map :db/id third-parties)))))
