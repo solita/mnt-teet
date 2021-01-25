@@ -458,15 +458,15 @@
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
-                                          (:edit-application authz)))
+                                          (:application-editable authz)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :coordination-task-missing])}
 
-                            (not (:edit-application authz))
+                            (not (:application-editable authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])
-                             :body (tr [:cooperation :error :coordination-task-status-mismatch])})]
+                             :body (tr [:cooperation :error :response-not-editable])})]
             (if (empty? linked-files)
               [common/popper-tooltip error-msg
                [buttons/button-primary {:size :small
@@ -632,12 +632,16 @@
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
      {:edit-application (and (authorization-check/authorized?
-                              {:functionality :cooperation/edit-application
-                               :entity application})
+                               {:functionality :cooperation/edit-application
+                                :entity application})
                              (cooperation-model/editable? application))
+      :edit-application-right (authorization-check/authorized?
+                                {:functionality :cooperation/edit-application
+                                 :entity application})
+      :application-editable (cooperation-model/editable? application)
       :save-opinion (authorization-check/authorized?
-                     {:functionality :cooperation/application-approval
-                      :entity application})}
+                      {:functionality :cooperation/application-approval
+                       :entity application})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
       [cooperation-page-structure
        e! app project overview
