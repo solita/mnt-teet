@@ -9,7 +9,9 @@
             [datomic.client.api :as d]
             [teet.link.link-db :as link-db]
             [teet.project.project-db :as project-db]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [teet.cooperation.cooperation-notifications :as cooperation-notifications]
+            [teet.activity.activity-db :as activity-db]))
 
 
 (defcommand :cooperation/create-3rd-party
@@ -86,19 +88,24 @@
          response-id (or existing-id "new-application-response")
          old-response (if existing-id
                         (d/pull db cooperation-model/response-application-keys
-                                existing-id)
-                        {:db/id "new-application-response"})]
+                          existing-id)
+                        {:db/id "new-application-response"})
+         project-id (cooperation-db/application-project-id db application-id)
+         activity-id (cooperation-db/application-activity-id db application-id)
+         activity-manager-user-id (activity-db/activity-manager db activity-id)]
      (into [{:db/id application-id
              :cooperation.application/response response-id}]
-           (du/modify-entity-tx
-            old-response
-            (merge (cu/without-nils
-                    (select-keys response-payload
-                                 cooperation-model/response-application-keys))
+       (concat (du/modify-entity-tx
+                 old-response
+                 (merge (cu/without-nils
+                          (select-keys response-payload
+                            cooperation-model/response-application-keys))
                    {:db/id response-id}
                    (if (:db/id response-payload)
                      (meta-model/modification-meta user)
-                     (meta-model/creation-meta user))))))})
+                     (meta-model/creation-meta user))))
+         [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
+            project-id application-id)])))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]

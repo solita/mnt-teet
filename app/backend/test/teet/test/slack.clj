@@ -54,10 +54,17 @@
           (cheshire/decode keyword)
           (get-in [:Parameters 0 :Value]))))
 
+(defn enabled? []
+  (let [lines (-> (sh "git" "branch") :out (str/split #"\n"))
+        branch (some #(when (str/starts-with? % "* ")
+                        (subs % 2)) lines)]
+    (= branch "master")))
+
 (defmethod slack :summary [_]
   (let [{:keys [success fail error failures errors]} @results]
-    (when (or (pos? fail)
-              (pos? error))
+    (when (and (enabled?)
+               (or (pos? fail)
+                   (pos? error)))
       @(client/post (webhook-url)
                     {:headers {"Content-Type" "application/json"}
                      :body

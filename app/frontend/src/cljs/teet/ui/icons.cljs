@@ -137,6 +137,7 @@
   "pageview"
   "pan_tool"
   "payment"
+  "pending_actions"
   "perm_camera_mic"
   "perm_contact_calendar"
   "perm_data_setting"

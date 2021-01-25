@@ -3,6 +3,7 @@
          teet.meeting.meeting-tx/update-meeting
          teet.meeting.meeting-tx/review-meeting
          teet.activity.activity-tx/ensure-activity-validity
+         teet.activity.activity-tx/delete-activity
          teet.file.file-model/image-suffix?
          teet.file.file-tx/upload-file-to-task
          teet.file.file-tx/create-task-file-part
@@ -52,6 +53,11 @@
 
            :datasource-cleanup
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
-            :description "Cleanup unreferenced deleted features"}}
+            :description "Cleanup unreferenced deleted features"}
+
+           ;;:notify
+           ;; {:fn teet.notification.ion/notify
+           ;;  :description "Scheduled notifications"}
+           }
 
  :app-name "teet-datomic"}
