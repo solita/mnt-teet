@@ -130,7 +130,7 @@
   (get-in (du/entity db application-id)
     [:cooperation.application/activity :db/id]))
 
-(defn applicaiton-3rd-party [db application-id]
+(defn application-3rd-party [db application-id]
   (get-in (du/entity db application-id)
     [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/name]))
 
@@ -138,13 +138,6 @@
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
           [:cooperation.application/_response 0 :cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
-
-(defn- date-after
-  "Date after number of days"
-  [days]
-  (java.util.Date.
-       (+ (System/currentTimeMillis)
-         (* 1000 60 60 24 days))))
 
 (defn responses-to-be-expired
   "Returns all Applications with Responses to be expired
@@ -156,4 +149,4 @@
          [?application :cooperation.application/response-deadline ?response-deadline]
          [(< ?response-deadline ?deadline)]
          :in $ ?deadline]
-    db (date-after days)))
+    db (date/inc-days (date/now) days)))
