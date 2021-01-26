@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [teet.environment :as environment]
             [teet.util.datomic :as du]
+            [teet.file.filename-metadata :as filename-metadata]
+            [clojure.set :as set]
             #?(:cljs [teet.file.file-spec :as file-spec])))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
@@ -9,6 +11,12 @@
 (def ^:const upload-max-file-size (* 1024 1024 3000))
 
 (def ^:const image-thumbnail-size-threshold (* 1024 250))
+
+(def ^:const allowed-chars-string "0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz -_+()")
+
+(def ^:const allowed-chars (set allowed-chars-string))
+
+(def ^:const max-description-length 200)
 
 ;; See confluence page: TEET File format list
 (defn upload-allowed-file-suffixes []
@@ -26,23 +34,40 @@
 
 (def valid-suffix? (partial has-suffix? upload-allowed-file-suffixes))
 
+(defn valid-chars-in-description?
+  [description]
+  (every? allowed-chars description))
+
+(defn valid-description-length?
+  [description]
+  (>= max-description-length (count description)))
+
 (defn validate-file
-  "Validate allowed file type and max size. Returns map with error description
+  "Validate allowed file type, legal chars + max length in description and max size. Returns map with error description
   or nil if there are no problems."
-  [{:file/keys [size name]}]
-  (cond
-    (> size upload-max-file-size)
-    {:error :file-too-large :max-allowed-size upload-max-file-size}
+  [{:file/keys [size name description]}]
+  (let [description (or description (some-> name
+                                            filename-metadata/name->description-and-extension
+                                            :description))]
+    (cond
+      (> size upload-max-file-size)
+      {:error :file-too-large :max-allowed-size upload-max-file-size}
 
-    (<= size 0)
-    {:error :file-empty}
+      (not (valid-chars-in-description? description))
+      {:error :invalid-chars-in-description}
 
-    (not (valid-suffix? name))
-    {:error :file-type-not-allowed :allowed-suffixes (upload-allowed-file-suffixes)}
+      (not (valid-description-length? description))
+      {:error :description-too-long}
 
-    ;; No problems, upload can proceed
-    :else
-    nil))
+      (<= size 0)
+      {:error :file-empty}
+
+      (not (valid-suffix? name))
+      {:error :file-type-not-allowed :allowed-suffixes (upload-allowed-file-suffixes)}
+
+      ;; No problems, upload can proceed
+      :else
+      nil)))
 
 (defn validate-file-metadata
   "Validate the metadata extracted from filename against project and task.

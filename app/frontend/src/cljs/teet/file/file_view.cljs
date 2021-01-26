@@ -34,7 +34,8 @@
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.common :as common-ui]))
 
 
 
@@ -189,33 +190,52 @@
                close #(do (reset! open-atom false)
                           (reset! selected-file nil))]
     [:div#file-details-upload-replacement
-
-     [panels/modal {:title (tr [:file-upload :replace-file-modal-title])
-                    :open-atom open-atom
-                    :actions [DialogActions
-                              [buttons/button-secondary
-                               {:on-click close
-                                :disabled @progress?
-                                :id (str "confirmation-cancel")}
-                               (tr [:buttons :cancel])]
-                              [buttons/button-primary
-                               {:id (str "confirmation-confirm")
-                                :disabled @progress?
-                                :on-click #(do (e! (file-controller/->UploadNewVersion file
-                                                                                       @selected-file
-                                                                                       (:db/id task)))
-                                               (reset! progress? true))}
-                               (tr [:file-upload :replace-file-confirm])]]}
-      (if @progress?
-        [:div {:style {:display :flex
-                       :justify-content :center}}
-         [CircularProgress]]
-        [DialogContentText
-         (tr [:file-upload :replace-file-modal-body] {:file-full-name (:file/full-name file)
-                                                      :selected-file-name (some-> @selected-file
-                                                                                  :file-object
-                                                                                  file-model/file-info
-                                                                                  :file/name)})])]
+     (let [selected-file-info (some-> @selected-file
+                                      :file-object
+                                      file-model/file-info)
+           file (if selected-file-info
+                  (-> file
+                      (assoc :file/name (str
+                                          (:description
+                                            (filename-metadata/name->description-and-extension (:file/name file)))
+                                          "."
+                                          (:extension
+                                            (filename-metadata/name->description-and-extension (:file/name selected-file-info)))))
+                      (assoc :file/size (:file/size selected-file-info)))
+                  file)
+           {:keys [title description] :as error} (or (file-upload/common-file-validation file))]
+       [panels/modal {:title (tr [:file-upload :replace-file-modal-title])
+                      :open-atom open-atom
+                      :actions [DialogActions {:style {:padding-bottom "1rem"}}
+                                [buttons/button-secondary
+                                 {:on-click close
+                                  :disabled @progress?
+                                  :id (str "confirmation-cancel")}
+                                 (tr [:buttons :cancel])]
+                                [buttons/button-primary
+                                 {:id (str "confirmation-confirm")
+                                  :disabled (or @progress? error)
+                                  :on-click #(do (e! (file-controller/->UploadNewVersion file
+                                                                                         @selected-file
+                                                                                         progress?
+                                                                                         (:db/id task)))
+                                                 (reset! progress? true))}
+                                 (tr [:file-upload :replace-file-confirm])]]}
+        (if @progress?
+          [:div {:style {:display :flex
+                         :justify-content :center}}
+           [CircularProgress]]
+          (if error
+            [:div {:style {:padding "2rem 1rem"
+                           :background-color theme-colors/gray-lightest}}
+             [common-ui/info-box {:variant :error
+                                  :title [:span {:style {:word-break :break-word}}
+                                          title]
+                                  :content description}]]
+            [DialogContentText
+             (tr [:file-upload :replace-file-modal-body]
+                 {:file-full-name (:file/full-name file)
+                  :selected-file-name (:file/name selected-file-info)})]))])
      [when-authorized
       :file/upload task
       [file-upload/FileUpload
@@ -572,12 +592,14 @@
    [ti/file {:style {:margin-right "0.5rem"}}]
    [:span (tr [:file :no-files])]])
 
-(defn- file-edit-name [{:keys [value on-change]}]
+(defn- file-edit-name [{:keys [value on-change error error-text] :as opts}]
   (let [[name original-name] value
         {:keys [description extension]} (filename-metadata/name->description-and-extension name)]
     [:<>
      [TextField {:label (tr [:file-upload :description])
                  :value description
+                 :error error
+                 :error-text error-text
                  :on-change (fn [e]
                               (let [descr (-> e .-target .-value)]
                                 (on-change [(str descr "." extension)
@@ -636,7 +658,17 @@
                             (tr [:fields :file/sequence-number]))
                    :disabled (nil? (:file/document-group @form-data))}]
 
-       ^{:attribute [:file/name :file/original-name]}
+       ^{:attribute [:file/name :file/original-name]
+         :validate (fn [[name _orig-name]]
+                     (let [{:keys [description]} (filename-metadata/name->description-and-extension name)]
+                       (cond
+                         (not (file-model/valid-chars-in-description? description))
+                         [:span {:style {:word-break :break-word}}
+                          (tr [:error :invalid-chars-in-description] {:characters file-model/allowed-chars-string})]
+                         (not (file-model/valid-description-length? description))
+                         (tr [:error :description-too-long] {:limit file-model/max-description-length})
+                         :else
+                         nil)))}
        [file-edit-name {}]]]]))
 
 (defn- file-tab-wrapper [{:file.part/keys [name number]} tab-links]

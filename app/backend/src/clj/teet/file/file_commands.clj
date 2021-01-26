@@ -139,7 +139,11 @@
          (= (latest-file-version-id db previous-version-id) previous-version-id)]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
-  (or (file-model/validate-file file)
+  (let [{description :description} (filename-metadata/name->description-and-extension (:file/name (du/entity db previous-version-id)))]
+    (if-let [error (file-model/validate-file (merge file
+                                                    {:file/description description}))]
+      (throw (ex-info "invalid file"
+                      error))
       (let [old-file (find-previous-version db task-id previous-version-id
                                             [:file/name :file/document-group])
             version (-> old-file :file/version inc)
@@ -175,9 +179,7 @@
            :file (d/pull (:db-after res) '[*] file-id)}
           (catch Exception e
             (log/warn e "Unable to create S3 presigned URL")
-            (throw e))))))
-
-
+            (throw e)))))))
 
 (defcommand :file/upload
   {:doc "Upload new file to task."
@@ -191,42 +193,44 @@
          (task-model/can-submit? (d/pull db [:task/status] task-id))]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
-  (or (file-model/validate-file file)
-      (let [old-file (when previous-version-id
-                       (find-previous-version db task-id previous-version-id))
-            version (or (some-> old-file :file/version inc) 1)
+  (if-let [error (file-model/validate-file file)]
+    (throw (ex-info "invalid file"
+                    error))
+    (let [old-file (when previous-version-id
+                     (find-previous-version db task-id previous-version-id))
+          version (or (some-> old-file :file/version inc) 1)
 
-            key (new-file-key file)
-            tx-data [(list 'teet.file.file-tx/upload-file-to-task
-                           {:db/id (or task-id "new-task")
-                            :task/files [(cu/without-nils
-                                          (merge (select-keys file file-keys)
-                                                 {:db/id "new-file"
-                                                  :file/s3-key key
-                                                  :file/status :file.status/draft
-                                                  :file/version version
-                                                  :file/original-name (:file/name file)}
-                                                 (when (:file/description file)
-                                                   {:file/name (str (:file/description file) "." (:file/extension file))})
-                                                 (when old-file
-                                                   {:file/previous-version (:db/id old-file)})
+          key (new-file-key file)
+          tx-data [(list 'teet.file.file-tx/upload-file-to-task
+                         {:db/id (or task-id "new-task")
+                          :task/files [(cu/without-nils
+                                         (merge (select-keys file file-keys)
+                                                {:db/id "new-file"
+                                                 :file/s3-key key
+                                                 :file/status :file.status/draft
+                                                 :file/version version
+                                                 :file/original-name (:file/name file)}
+                                                (when (:file/description file)
+                                                  {:file/name (str (:file/description file) "." (:file/extension file))})
+                                                (when old-file
+                                                  {:file/previous-version (:db/id old-file)})
 
-                                                 ;; Replacement version is uploaded to the same part
-                                                 (when-let [old-part (:file/part old-file)]
-                                                   {:file/part old-part})
-                                                 (when-let [old-seq-number (:file/sequence-number old-file)]
-                                                   {:file/sequence-number old-seq-number})
-                                                 (creation-meta user)))]})]
-            res (tx tx-data)
-            t-id (or task-id (get-in res [:tempids "new-task"]))
-            file-id (get-in res [:tempids "new-file"])]
-        (try
-          {:url (file-storage/upload-url key)
-           :task-id t-id
-           :file (d/pull (:db-after res) '[*] file-id)}
-          (catch Exception e
-            (log/warn e "Unable to create S3 presigned URL")
-            (throw e))))))
+                                                ;; Replacement version is uploaded to the same part
+                                                (when-let [old-part (:file/part old-file)]
+                                                  {:file/part old-part})
+                                                (when-let [old-seq-number (:file/sequence-number old-file)]
+                                                  {:file/sequence-number old-seq-number})
+                                                (creation-meta user)))]})]
+          res (tx tx-data)
+          t-id (or task-id (get-in res [:tempids "new-task"]))
+          file-id (get-in res [:tempids "new-file"])]
+      (try
+        {:url (file-storage/upload-url key)
+         :task-id t-id
+         :file (d/pull (:db-after res) '[*] file-id)}
+        (catch Exception e
+          (log/warn e "Unable to create S3 presigned URL")
+          (throw e))))))
 
 (defcommand :file/delete
   {:doc "Delete file and all its versions."
@@ -257,6 +261,18 @@
    :payload {id :db/id :as file}
    :project-id (project-db/file-project-id db id)
    :authorization {:document/overwrite-document {:db/id id}}
+   :pre [^{:error :description-too-long}
+         (-> file
+             :file/name
+             filename-metadata/name->description-and-extension
+             :description
+             file-model/valid-description-length?)
+         ^{:error :invalid-chars-in-description}
+         (-> file
+             :file/name
+             filename-metadata/name->description-and-extension
+             :description
+             file-model/valid-chars-in-description?)]
    :transact [(list 'teet.file.file-tx/modify-file
                     (merge file
                            (meta-model/modification-meta user)))]})
