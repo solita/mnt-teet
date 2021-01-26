@@ -5,7 +5,9 @@
             [clojure.java.io :as io]))
 
 
-(defn- parse-name [s]
+(defn- parse-name
+  "Turn string name like \"[property:size]\" into keyword :property/size"
+  [s]
   (when s
     (when-let [[_ pfx name] (re-matches #"\[([^:]+):([^]]+)\]" s)]
       (keyword pfx name))))
