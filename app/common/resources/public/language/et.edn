@@ -137,7 +137,7 @@
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
-  :edit-response-title "Muudan pöördumise vastust",
+  :edit-response-title "Muudan kaasatud osapoole vastust",
   :new-application "Lisan uue taotluse",
   :add-files "Lisan faile",
   :applied "Rakendatud",
@@ -148,7 +148,7 @@
   :enter-response "Sisestan kaasatud osapoole vastuse",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
-  :add-application-response "Lisan pöördumise vastuse",
+  :add-application-response "Lisan kaasatud osapoole vastuse",
   :create-opinion-title "Seisukoha lisamine",
   :add-application-contact "Lisan kontakti",
   :create-opinion-button "Lisan ametliku seisukoha",
@@ -165,7 +165,9 @@
   {:upload-not-allowed "Üleslaadimine pole lubatud",
    :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
    :coordination-task-status-mismatch
-   "Ülesanne ei ole failide üleslaadimist lubavas olekus."},
+   "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
+   :response-not-editable
+   "Vastusele on seisukoht lisatud ja vastust ei saa enam muuta. "},
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
