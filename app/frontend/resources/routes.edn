@@ -177,4 +177,12 @@
   :crumb (tr [:admin :inspector-title])
   :parent :admin
   :state {:query :admin/entity-info
-          :args {:id id}}}}
+          :args {:id id}}}
+
+ :asset-type-library
+ {:path "/asset/type-library"
+  :view teet.asset.asset-library-view/asset-library-page
+  :crumb (tr [:asset :type-library-label])
+  :state {:query :asset/type-library
+          :args {}}}
+ }
