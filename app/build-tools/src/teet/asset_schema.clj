@@ -136,7 +136,8 @@
             :db/valueType (case (:datatype p)
                             ("text" "alphanumeric") :db.type/string
                             "listitem" :db.type/ref
-                            "number" :db.type/bigdec ; FIXME: separate int from decimal
+                            "integer" :db.type/long
+                            "number" :db.type/bigdec
                             "datetime" :db.type/instant)}))
 
         ;; Output enum values
