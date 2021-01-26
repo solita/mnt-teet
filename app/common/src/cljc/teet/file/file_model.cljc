@@ -43,7 +43,7 @@
   (>= max-description-length (count description)))
 
 (defn validate-file
-  "Validate allowed file type and max size. Returns map with error description
+  "Validate allowed file type, legal chars + max length in description and max size. Returns map with error description
   or nil if there are no problems."
   [{:file/keys [size name description]}]
   (let [description (or description (some-> name
