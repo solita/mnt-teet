@@ -105,7 +105,10 @@
                         (when (and n ctype datatype)
                           [n
                            (assoc attr :name (keyword (name ctype) (name n)))])))
-                pset)]
+                pset)
+          exists? (into #{}
+                        (map :name)
+                        (concat fgroup fclass ctype pset list-items))]
 
       (vec
        (concat
@@ -123,7 +126,8 @@
 
         ;; Output component types
         (for [ct ctype
-              :when (:name ct)]
+              :when (and (:name ct)
+                         (exists? (:part-of ct)))]
           (merge
            (common-attrs ct)
            {:ctype/parent (str (:part-of ct))}))
@@ -142,7 +146,8 @@
 
         ;; Output enum values
         (for [item list-items
-              :when (:name item)]
+              :when (and (:name item)
+                         (exists? (:property item)))]
           (merge
            (common-attrs item)
            {:enum/attribute (str (get-in attrs-by-name [(:property item) :name]))})))))))
