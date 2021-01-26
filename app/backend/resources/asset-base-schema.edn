@@ -1,0 +1,35 @@
+[{:db/ident :tx/schema-hash
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "SHA-256 hash of asset schema file"}
+
+ {:db/ident :asset-schema/label
+  :db/valueType :db.type/tuple
+  :db/tupleType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "Labels in estonian and english"}
+ {:db/ident :asset-schema/description
+  :db/valueType :db.type/tuple
+  :db/tupleType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "Description in estonian and english"}
+
+ {:db/ident :fclass/fgroup
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The feature group this feature class belongs to."}
+
+ {:db/ident :ctype/parent
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "Ref to feature class or parent ctype this belongs to."}
+
+ {:db/ident :enum/attribute
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "Reference to attribute this list item belongs to."}
+
+ {:db/ident :asset-schema/unit
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "SI unit for an attribute"}]

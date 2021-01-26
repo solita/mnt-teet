@@ -223,6 +223,23 @@
         (.digest (java.security.MessageDigest/getInstance "SHA-256")
                  (.getBytes string "UTF-8")))))
 
+(defn- migrate-asset-base-schema
+  "Base schema for asset-db, must be transacted before the loaded schema."
+  [conn]
+  (let [schema (-> "asset-base-schema.edn" io/resource slurp read-string)
+        db (d/db conn)
+        attrs (map :db/ident schema)
+        exists? (= (count attrs)
+                   (ffirst
+                    (d/q '[:find (count ?e)
+                           :where [?e :db/ident ?id]
+                           :in $ [?id ...]]
+                         db attrs)))]
+    (if exists?
+      db
+      (:db-after
+       (d/transact conn {:tx-data schema})))))
+
 (defn migrate-asset-db
   "Migrate asset databse. The whole schema is transacted in one go
   if the hash of the schema file has changed."
@@ -230,18 +247,7 @@
   (try
     (let [schema-source (-> "asset-schema.edn" io/resource slurp)
           hash (sha-256 schema-source)
-          db (d/db conn)
-          exists? (boolean
-                   (seq
-                    (d/q '[:find ?hash-attr
-                           :where [?hash-attr :db/ident :tx/schema-hash]] db)))
-          db (if exists?
-               db
-               (:db-after
-                (d/transact conn {:tx-data [{:db/ident :tx/schema-hash
-                                             :db/valueType :db.type/string
-                                             :db/cardinality :db.cardinality/one
-                                             :db/doc "SHA-256 hash of asset schema file"}]})))
+          db (migrate-asset-base-schema conn)
           last-hash (->>
                      (d/q '[:find ?hash ?txi
                             :where
