@@ -111,7 +111,6 @@
 
 (defn common-file-validation
   [file]
-  (println "file: " file)
   (let [error (file-model/validate-file file)]
     (case (:error error)
       :file-type-not-allowed
