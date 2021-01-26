@@ -136,7 +136,8 @@
            {:ctype/parent (str (:part-of ct))}))
 
         ;; Output attributes namespaced by ctype
-        (for [p (vals attrs-by-name)]
+        (for [p (vals attrs-by-name)
+              :when (exists? (:ctype p))]
           (without-empty
            (merge
             (common-attrs :asset-schema.type/attribute p)
@@ -147,15 +148,18 @@
                              "integer" :db.type/long
                              "number" :db.type/bigdec
                              "datetime" :db.type/instant)
-             :asset-schema/unit (:unit p)})))
+             :asset-schema/unit (:unit p)
+             :attribute/ctype (str (:ctype p))})))
 
         ;; Output enum values
         (for [item list-items
+              :let [attr (get-in attrs-by-name [(:property item) :name])]
               :when (and (:name item)
-                         (exists? (:property item)))]
+                         (exists? (:property item))
+                         (exists? attr))]
           (merge
            (common-attrs :asset-schema.type/enum item)
-           {:enum/attribute (str (get-in attrs-by-name [(:property item) :name]))})))))))
+           {:enum/attribute (str attr)})))))))
 
 (defn -main [& [sheet-path]]
   (let [sheet-file (some-> sheet-path io/file)]

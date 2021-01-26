@@ -430,209 +430,159 @@
   :asset-schema/label ["Märgi kood" "Sign code"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
+  :db/valueType :db.type/string,
+  :attribute/ctype ":ctype/trafficsign"}
  {:db/id ":barrierterminal/barrierterminaltype",
   :db/ident :barrierterminal/barrierterminaltype,
   :asset-schema/label ["Terminali tüüp" "Terminal type"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
- {:db/id ":general/OID",
-  :db/ident :general/OID,
-  :db/doc "ID is given by the system using specified syntax",
-  :asset-schema/label ["Objekti ID" "Object ID"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrierterminal"}
  {:db/id ":barrier/barrierheight",
   :db/ident :barrier/barrierheight,
   :asset-schema/label ["Piirde kõrgus, m" "Barrier height, m"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m"}
+  :asset-schema/unit "m",
+  :attribute/ctype ":ctype/barrier"}
  {:db/id ":trafficsign/signsizeclass",
   :db/ident :trafficsign/signsizeclass,
   :asset-schema/label ["Liiklumärgi suurusgrupp" "Size group"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/trafficsign"}
  {:db/id ":pavinglayer/pavingmaterial",
   :db/ident :pavinglayer/pavingmaterial,
   :asset-schema/label ["Kattekihi materjal" "Paving material"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":fclass/pavinglayer"}
  {:db/id ":barrierterminal/terminalvehicleredirectionclass",
   :db/ident :barrierterminal/terminalvehicleredirectionclass,
   :asset-schema/label
   ["Külgnihke klass" "Permanent lateral displacement"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrierterminal"}
  {:db/id ":barrier/barriercontainmentlevel",
   :db/ident :barrier/barriercontainmentlevel,
   :asset-schema/label ["Ohjeldamise tase" "Containment level"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrier"}
  {:db/id ":girder/structuralmaterial",
   :db/ident :girder/structuralmaterial,
   :asset-schema/label
   ["Konstruktsioonimaterjal" "Structural material"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/girder"}
  {:db/id ":trafficsign/signgroup",
   :db/ident :trafficsign/signgroup,
   :asset-schema/label ["Märgi tüüp" "Sign type"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/trafficsign"}
  {:db/id ":girder/steelgrade",
   :db/ident :girder/steelgrade,
   :asset-schema/label ["Terase tugevusklass" "Steel grade"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
- {:db/id ":general/quantity",
-  :db/ident :general/quantity,
-  :asset-schema/label ["Kogus" "Quantity"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/long}
- {:db/id ":general/sourcefileID",
-  :db/ident :general/sourcefileID,
-  :db/doc
-  "If imported from the model file, the file ID in S3 bucket is saved.",
-  :asset-schema/label ["Lähtemudeli faili ID" "Source model file ID"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/girder"}
  {:db/id ":barrier/barriertype",
   :db/ident :barrier/barriertype,
   :asset-schema/label ["Piirde tüüp" "Barrier type"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
+  :db/valueType :db.type/string,
+  :attribute/ctype ":ctype/barrier"}
  {:db/id ":bridgespan/spanwidth",
   :db/ident :bridgespan/spanwidth,
   :asset-schema/label ["Teki laius, m" "Deck width, m"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m"}
- {:db/id ":general/createdby",
-  :db/ident :general/createdby,
-  :asset-schema/label ["Looja" "Creator"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
+  :asset-schema/unit "m",
+  :attribute/ctype ":ctype/bridgespan"}
  {:db/id ":barrier/barrierworkingwidth",
   :db/ident :barrier/barrierworkingwidth,
   :asset-schema/label ["Töötav laius" "Working width"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrier"}
  {:db/id ":barrierterminal/terminalimpactseverity",
   :db/ident :barrierterminal/terminalimpactseverity,
   :asset-schema/label ["Kokkupõrke tagajärje klass" "Impact severity"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
- {:db/id ":general/updatedby",
-  :db/ident :general/updatedby,
-  :asset-schema/label ["Muutja" "Chenged by"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
- {:db/id ":general/name",
-  :db/ident :general/name,
-  :asset-schema/label ["Nimi" "Name"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
- {:db/id ":general/unit",
-  :db/ident :general/unit,
-  :asset-schema/label ["Ühik" "Unit"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrierterminal"}
  {:db/id ":barrierterminal/terminallateraldisplacementclass",
   :db/ident :barrierterminal/terminallateraldisplacementclass,
   :asset-schema/label
   ["Külgnihke klass" "Permanent lateral displacement"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
- {:db/id ":pavinglayer/stonesize",
-  :db/ident :pavinglayer/stonesize,
-  :db/doc "maybe from a standard list instead of number",
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrierterminal"}
+ {:asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Täitematerjali tera suurus, mm" "Material size, mm"],
-  :asset-schema/type :asset-schema.type/attribute,
+  :attribute/ctype ":fclass/pavinglayer",
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm"}
- {:db/id ":general/modelID",
-  :db/ident :general/modelID,
-  :db/doc
-  "If the feature or component has been imported from the  IFC file, the corresponding ID is saved for backlinking",
-  :asset-schema/label ["Objekti ID mudelis" "Object ID in BIM"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
+  :db/doc "maybe from a standard list instead of number",
+  :db/id ":pavinglayer/stonesize",
+  :db/ident :pavinglayer/stonesize}
  {:db/id ":girder/concreteclass",
   :db/ident :girder/concreteclass,
   :asset-schema/label ["Betooni klass" "Concrete class"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/girder"}
  {:db/id ":girder/sectiontype",
   :db/ident :girder/sectiontype,
   :asset-schema/label ["Tala ristlõike tüüp" "Girder section type"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
- {:db/id ":general/status",
-  :db/ident :general/status,
-  :asset-schema/label ["Seisund" "Status"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
- {:db/id ":general/source",
-  :db/ident :general/source,
-  :asset-schema/label ["Andmeallikas" "Data source"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/girder"}
  {:db/id ":barrierterminal/terminalperformanceclass",
   :db/ident :barrierterminal/terminalperformanceclass,
   :asset-schema/label
   ["Terminali toimivusklass" "Terminal performance class"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref}
+  :db/valueType :db.type/ref,
+  :attribute/ctype ":ctype/barrierterminal"}
  {:db/id ":pavinglayer/thickness",
   :db/ident :pavinglayer/thickness,
   :asset-schema/label ["Kihi paksus, mm" "Layer thickness, mm"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm"}
+  :asset-schema/unit "mm",
+  :attribute/ctype ":fclass/pavinglayer"}
  {:db/id ":bridgespan/spanlength",
   :db/ident :bridgespan/spanlength,
   :asset-schema/label ["Ava pikkus, m" "Span length, m"],
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m"}
- {:db/id ":general/updatedate",
-  :db/ident :general/updatedate,
-  :asset-schema/label ["Viimase muudatuse aeg" "Last update time"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/instant}
+  :asset-schema/unit "m",
+  :attribute/ctype ":ctype/bridgespan"}
  {:db/id ":barrier/barrierelementlength",
   :db/ident :barrier/barrierelementlength,
   :asset-schema/label
@@ -640,296 +590,5 @@
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m"}
- {:db/id ":general/cci_class",
-  :db/ident :general/cci_class,
-  :asset-schema/label ["CCI klassifikatsioon" "CCI classification"],
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string}
- {:db/id ":item/C25",
-  :db/ident :item/C25,
-  :asset-schema/label ["C25" "C25"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/concreteclass"}
- {:db/id ":item/C35",
-  :db/ident :item/C35,
-  :asset-schema/label ["C35" "C35"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/concreteclass"}
- {:db/id ":item/C45",
-  :db/ident :item/C45,
-  :asset-schema/label ["C45" "C45"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/concreteclass"}
- {:db/id ":item/C55",
-  :db/ident :item/C55,
-  :asset-schema/label ["C55" "C55"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/concreteclass"}
- {:db/id ":item/concrete",
-  :db/ident :item/concrete,
-  :asset-schema/label ["Betoon" "Concrete"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/structuralmaterial"}
- {:db/id ":item/steel",
-  :db/ident :item/steel,
-  :asset-schema/label ["Teras" "Steel"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/structuralmaterial"}
- {:db/id ":item/aluminium",
-  :db/ident :item/aluminium,
-  :asset-schema/label ["Alumiinium" "Aluminium"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/structuralmaterial"}
- {:db/id ":item/wood",
-  :db/ident :item/wood,
-  :asset-schema/label ["Puit" "Wood"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/structuralmaterial"}
- {:db/id ":item/plastic",
-  :db/ident :item/plastic,
-  :asset-schema/label ["Plastik" "Plastic"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":girder/structuralmaterial"}
- {:db/id ":item/pc",
-  :db/ident :item/pc,
-  :asset-schema/label ["tk" "pcs"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/unit"}
- {:db/id ":item/planned",
-  :db/ident :item/planned,
-  :asset-schema/label ["Planeeritud" "Planned"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/asdesigned",
-  :db/ident :item/asdesigned,
-  :asset-schema/label ["Projekteeritud" "As-designed"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/workinprogress",
-  :db/ident :item/workinprogress,
-  :asset-schema/label ["Ehitamisel" "Work in progress"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/created",
-  :db/ident :item/created,
-  :asset-schema/label ["Ehitatud" "As-built"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/approved",
-  :db/ident :item/approved,
-  :asset-schema/label ["Heakskiidetud" "Approved"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/inuse",
-  :db/ident :item/inuse,
-  :asset-schema/label ["Kasutusel" "In use"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/removed",
-  :db/ident :item/removed,
-  :asset-schema/label ["Lammutatud" "Demolished"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/abandoned",
-  :db/ident :item/abandoned,
-  :db/doc "Not in use, but still exists",
-  :asset-schema/label ["Maha jäetud " "Abandoned"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":general/status"}
- {:db/id ":item/wwc1",
-  :db/ident :item/wwc1,
-  :asset-schema/label ["W1 (0.6m)" "W1 (0.6m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc2",
-  :db/ident :item/wwc2,
-  :asset-schema/label ["W2 (0.8m)" "W2 (0.8m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc3",
-  :db/ident :item/wwc3,
-  :asset-schema/label ["W3 (1.0m)" "W3 (1.0m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc4",
-  :db/ident :item/wwc4,
-  :asset-schema/label ["W4 (1.3m)" "W4 (1.3m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc5",
-  :db/ident :item/wwc5,
-  :asset-schema/label ["W5 (1.7m)" "W5 (1.7m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc6",
-  :db/ident :item/wwc6,
-  :asset-schema/label ["W6 (2.1m)" "W6 (2.1m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc7",
-  :db/ident :item/wwc7,
-  :asset-schema/label ["W7 (2.5m)" "W7 (2.5m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/wwc8",
-  :db/ident :item/wwc8,
-  :asset-schema/label ["W8 (3.5m)" "W8 (3.5m)"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/bcl_t1",
-  :db/ident :item/bcl_t1,
-  :asset-schema/label ["T1" "T1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_t2",
-  :db/ident :item/bcl_t2,
-  :asset-schema/label ["T2" "T2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_t3",
-  :db/ident :item/bcl_t3,
-  :asset-schema/label ["T3" "T3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_n1",
-  :db/ident :item/bcl_n1,
-  :asset-schema/label ["N1" "N1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_n2",
-  :db/ident :item/bcl_n2,
-  :asset-schema/label ["N2" "N2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_h1",
-  :db/ident :item/bcl_h1,
-  :asset-schema/label ["H1" "H1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_l1",
-  :db/ident :item/bcl_l1,
-  :asset-schema/label ["L1" "L1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_h2",
-  :db/ident :item/bcl_h2,
-  :asset-schema/label ["H2" "H2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_l2",
-  :db/ident :item/bcl_l2,
-  :asset-schema/label ["L2" "L2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_h3",
-  :db/ident :item/bcl_h3,
-  :asset-schema/label ["H3" "H3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_l3",
-  :db/ident :item/bcl_l3,
-  :asset-schema/label ["L3" "L3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_h4a",
-  :db/ident :item/bcl_h4a,
-  :asset-schema/label ["H4a" "H4a"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_h4b",
-  :db/ident :item/bcl_h4b,
-  :asset-schema/label ["H4b" "H4b"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_l4a",
-  :db/ident :item/bcl_l4a,
-  :asset-schema/label ["L4a" "L4a"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/bcl_l4b",
-  :db/ident :item/bcl_l4b,
-  :asset-schema/label ["L4b" "L4b"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrier/barriercontainmentlevel"}
- {:db/id ":item/tpc1",
-  :db/ident :item/tpc1,
-  :asset-schema/label ["P1" "P1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalperformanceclass"}
- {:db/id ":item/tpc2",
-  :db/ident :item/tpc2,
-  :asset-schema/label ["P2" "P2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalperformanceclass"}
- {:db/id ":item/tpc3",
-  :db/ident :item/tpc3,
-  :asset-schema/label ["P3" "P3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalperformanceclass"}
- {:db/id ":item/tpc4",
-  :db/ident :item/tpc4,
-  :asset-schema/label ["P4" "P4"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalperformanceclass"}
- {:db/id ":item/tisa",
-  :db/ident :item/tisa,
-  :asset-schema/label ["A" "A"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalimpactseverity"}
- {:db/id ":item/tisb",
-  :db/ident :item/tisb,
-  :asset-schema/label ["B" "B"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalimpactseverity"}
- {:db/id ":item/tldx1",
-  :db/ident :item/tldx1,
-  :asset-schema/label ["x1" "x1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
- {:db/id ":item/tldx2",
-  :db/ident :item/tldx2,
-  :asset-schema/label ["x2" "x2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
- {:db/id ":item/tldx3",
-  :db/ident :item/tldx3,
-  :asset-schema/label ["x3" "x3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
- {:db/id ":item/tldy1",
-  :db/ident :item/tldy1,
-  :asset-schema/label ["y1" "y1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
- {:db/id ":item/tldy2",
-  :db/ident :item/tldy2,
-  :asset-schema/label ["y2" "y2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
- {:db/id ":item/tldy3",
-  :db/ident :item/tldy3,
-  :asset-schema/label ["y3" "y3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
- {:db/id ":item/tvrcz1",
-  :db/ident :item/tvrcz1,
-  :asset-schema/label ["z1" "z1"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
- {:db/id ":item/tvrcz2",
-  :db/ident :item/tvrcz2,
-  :asset-schema/label ["z2" "z2"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
- {:db/id ":item/tvrcz3",
-  :db/ident :item/tvrcz3,
-  :asset-schema/label ["z3" "z3"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
- {:db/id ":item/tvrcz4",
-  :db/ident :item/tvrcz4,
-  :asset-schema/label ["z4" "z4"],
-  :asset-schema/type :asset-schema.type/enum,
-  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}]
+  :asset-schema/unit "m",
+  :attribute/ctype ":ctype/barrier"}]

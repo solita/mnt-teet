@@ -43,4 +43,9 @@
  {:db/ident :asset-schema.type/fclass :db/doc "Feature class type"}
  {:db/ident :asset-schema.type/ctype :db/doc "Component type"}
  {:db/ident :asset-schema.type/attribute :db/doc "Attribute type"}
- {:db/ident :asset-schema.type/enum :db/doc "Enum (list item) type"}]
+ {:db/ident :asset-schema.type/enum :db/doc "Enum (list item) type"}
+
+ {:db/ident :attribute/ctype
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The ctype this attribute belongs to"}]
