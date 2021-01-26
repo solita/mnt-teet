@@ -8,7 +8,7 @@
 
 (def application-response-expired-soon
   "Type of notification when the Application response expired in number of days"
-  :notification.type/cooperation-response-expired-soon)
+  :notification.type/cooperation-application-expired-soon)
 
 (defn application-response-notification-tx
   "Add notification of given type,

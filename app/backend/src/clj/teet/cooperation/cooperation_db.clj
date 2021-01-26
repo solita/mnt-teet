@@ -140,13 +140,13 @@
           [:cooperation.application/_response 0 :cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
 
 (defn responses-to-be-expired
-  "Returns all Applications with Responses to be expired
-  in the given number of days"
+  "Returns all Applications to be expired in the given number of days"
   [db days]
-  (d/q '[:find ?third-party ?application ?date ?response-deadline
+  (d/q '[:find ?third-party ?application ?date ?application-expiration-date
          :where [?third-party :cooperation.3rd-party/applications ?application]
          [?application :cooperation.application/date ?date]
-         [?application :cooperation.application/response-deadline ?response-deadline]
-         [(< ?response-deadline ?deadline)]
+         [?application :cooperation.application/response ?response]
+         [?response :cooperation.response/valid-until ?application-expiration-date]
+         [(< ?application-expiration-date ?deadline)]
          :in $ ?deadline]
     db (date/inc-days (date/now) days)))
