@@ -65,7 +65,7 @@
             :label-et :label-en
             :description-et :description-en
             :comment]
-           #{:name :ctype :unit}))
+           #{:name :ctype}))
 
 (def read-list-items
   (partial read-sheet
@@ -134,15 +134,17 @@
 
         ;; Output attributes namespaced by ctype
         (for [p (vals attrs-by-name)]
-          (merge
-           (common-attrs p)
-           {:db/cardinality :db.cardinality/one ; PENDING: can be many?
-            :db/valueType (case (:datatype p)
-                            ("text" "alphanumeric") :db.type/string
-                            "listitem" :db.type/ref
-                            "integer" :db.type/long
-                            "number" :db.type/bigdec
-                            "datetime" :db.type/instant)}))
+          (without-empty
+           (merge
+            (common-attrs p)
+            {:db/cardinality :db.cardinality/one ; PENDING: can be many?
+             :db/valueType (case (:datatype p)
+                             ("text" "alphanumeric") :db.type/string
+                             "listitem" :db.type/ref
+                             "integer" :db.type/long
+                             "number" :db.type/bigdec
+                             "datetime" :db.type/instant)
+             :asset-schema/unit (:unit p)})))
 
         ;; Output enum values
         (for [item list-items
