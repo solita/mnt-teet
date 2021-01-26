@@ -32,4 +32,15 @@
  {:db/ident :asset-schema/unit
   :db/valueType :db.type/string
   :db/cardinality :db.cardinality/one
-  :db/doc "SI unit for an attribute"}]
+  :db/doc "SI unit for an attribute"}
+
+ {:db/ident :asset-schema/type
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "Schema item type of this entity"}
+
+ {:db/ident :asset-schema.type/fgroup :db/doc "Feature group type"}
+ {:db/ident :asset-schema.type/fclass :db/doc "Feature class type"}
+ {:db/ident :asset-schema.type/ctype :db/doc "Component type"}
+ {:db/ident :asset-schema.type/attribute :db/doc "Attribute type"}
+ {:db/ident :asset-schema.type/enum :db/doc "Enum (list item) type"}]

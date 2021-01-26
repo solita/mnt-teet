@@ -84,12 +84,13 @@
                       second))
         m))
 
-(defn common-attrs [{:keys [name comment label-et label-en]}]
+(defn common-attrs [type {:keys [name comment label-et label-en]}]
   (without-empty
    {:db/id (str name)
     :db/ident name
     :db/doc comment
-    :asset-schema/label [(or label-et "") (or label-en "")]}))
+    :asset-schema/label [(or label-et "") (or label-en "")]
+    :asset-schema/type type}))
 
 
 
@@ -117,13 +118,13 @@
         ;; Output feature groups
         (for [fg fgroup
               :when (:name fg)]
-          (common-attrs fg))
+          (common-attrs :asset-schema.type/fgroup fg))
 
         ;; Output feature classes
         (for [fc fclass
               :when (:name fc)]
           (merge
-           (common-attrs fc)
+           (common-attrs :asset-schema.type/fclass fc)
            {:fclass/fgroup (str (:fgroup fc))}))
 
         ;; Output component types
@@ -131,14 +132,14 @@
               :when (and (:name ct)
                          (exists? (:part-of ct)))]
           (merge
-           (common-attrs ct)
+           (common-attrs :asset-schema.type/ctype ct)
            {:ctype/parent (str (:part-of ct))}))
 
         ;; Output attributes namespaced by ctype
         (for [p (vals attrs-by-name)]
           (without-empty
            (merge
-            (common-attrs p)
+            (common-attrs :asset-schema.type/attribute p)
             {:db/cardinality :db.cardinality/one ; PENDING: can be many?
              :db/valueType (case (:datatype p)
                              ("text" "alphanumeric") :db.type/string
@@ -153,7 +154,7 @@
               :when (and (:name item)
                          (exists? (:property item)))]
           (merge
-           (common-attrs item)
+           (common-attrs :asset-schema.type/enum item)
            {:enum/attribute (str (get-in attrs-by-name [(:property item) :name]))})))))))
 
 (defn -main [& [sheet-path]]
