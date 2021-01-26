@@ -223,38 +223,22 @@
         (.digest (java.security.MessageDigest/getInstance "SHA-256")
                  (.getBytes string "UTF-8")))))
 
-(def ^:private asset-base-schema
+(defn- migrate-asset-base-schema
   "Base schema for asset-db, must be transacted before the loaded schema."
-  [{:db/ident :tx/schema-hash
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :db/doc "SHA-256 hash of asset schema file"}
-
-   {:db/ident :asset-schema/label
-    :db/valueType :db.type/tuple
-    :db/tupleType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :db/doc "Labels in estonian and english"}
-   {:db/ident :asset-schema/description
-    :db/valueType :db.type/tuple
-    :db/tupleType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :db/doc "Description in estonian and english"}
-
-   {:db/ident :fclass/fgroup
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
-    :db/doc "The feature group this feature class belongs to."}
-
-   {:db/ident :ctype/parent
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
-    :db/doc "Ref to feature class or parent ctype this belongs to."}
-
-   {:db/ident :enum/attribute
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
-    :db/doc "Reference to attribute this list item belongs to."}])
+  [conn]
+  (let [schema (-> "asset-base-schema.edn" io/resource slurp read-string)
+        db (d/db conn)
+        attrs (map :db/ident schema)
+        exists? (= (count attrs)
+                   (ffirst
+                    (d/q '[:find (count ?e)
+                           :where [?e :db/ident ?id]
+                           :in $ [?id ...]]
+                         db attrs)))]
+    (if exists?
+      db
+      (:db-after
+       (d/transact conn {:tx-data schema})))))
 
 (defn migrate-asset-db
   "Migrate asset databse. The whole schema is transacted in one go
@@ -263,18 +247,7 @@
   (try
     (let [schema-source (-> "asset-schema.edn" io/resource slurp)
           hash (sha-256 schema-source)
-          db (d/db conn)
-          base-schema-attrs (map :db/ident asset-base-schema)
-          exists? (= (count base-schema-attrs)
-                     (ffirst
-                      (d/q '[:find (count ?e)
-                             :where [?e :db/ident ?id]
-                             :in $ [?id ...]]
-                           db base-schema-attrs)))
-          db (if exists?
-               db
-               (:db-after
-                (d/transact conn {:tx-data asset-base-schema})))
+          db (migrate-asset-base-schema conn)
           last-hash (->>
                      (d/q '[:find ?hash ?txi
                             :where
