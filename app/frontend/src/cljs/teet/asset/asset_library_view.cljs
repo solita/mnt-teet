@@ -21,7 +21,8 @@
 
 (defn- collapsible [open item header content]
   (let [open? (@open (:db/ident item))]
-    [Card {:variant :outlined}
+    [Card {:variant :outlined
+           :data-ident (str (:db/ident item))}
      [CardHeader {:disableTypography true
                   :title (r/as-element
                           (condp du/enum= (:asset-schema/type item)
@@ -53,7 +54,7 @@
                     child-ctypes :ctype/_parent :as ct}]
   [collapsible open ct
    (str (tr [:asset :type-library :ctype]) " " (tr* ct))
-   [:<>
+   [:div
     (when (seq attributes)
       [:<>
        [typography/BoldGreyText (tr [:asset :type-library :attributes])]
@@ -78,18 +79,20 @@
 (defn- fclass [open fclass]
   [collapsible open fclass
    (str (tr [:asset :type-library :fclass]) " " (tr* fclass))
-   (doall
-    (for [ct (:ctype/_parent fclass)]
-      ^{:key (str (:db/id ct))}
-      [ctype open ct]))])
+   [:div
+    (doall
+     (for [ct (:ctype/_parent fclass)]
+       ^{:key (str (:db/id ct))}
+       [ctype open ct]))]])
 
 (defn- fgroup [open fgroup]
   [collapsible open fgroup
    (str (tr [:asset :type-library :fgroup]) " " (tr* fgroup))
-   (doall
-    (for [fc (:fclass/_fgroup fgroup)]
-      ^{:key (str (:db/id fc))}
-      [fclass open fc]))
+   [:div
+    (doall
+     (for [fc (:fclass/_fgroup fgroup)]
+       ^{:key (str (:db/id fc))}
+       [fclass open fc]))]
    #_[:div (pr-str fgroup)]])
 
 (defn asset-library-page [e! app fgroups]
