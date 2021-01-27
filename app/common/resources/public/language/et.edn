@@ -46,6 +46,19 @@
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
+ :asset
+ {:type-library
+  {:description "Kirjeldus",
+   :fclass "Vara klass",
+   :unit "Ühik",
+   :name "Nimi",
+   :fgroup "Vara liik",
+   :header "Tee olemi tüübiteek (TOTT) ",
+   :link "TOTT",
+   :label "Silt",
+   :values "Väärtused",
+   :ctype "Komponent",
+   :attributes "Omadused"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -137,7 +150,7 @@
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
-  :edit-response-title "Muudan pöördumise vastust",
+  :edit-response-title "Muudan kaasatud osapoole vastust",
   :new-application "Lisan uue taotluse",
   :add-files "Lisan faile",
   :applied "Rakendatud",
@@ -148,7 +161,7 @@
   :enter-response "Sisestan kaasatud osapoole vastuse",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
-  :add-application-response "Lisan pöördumise vastuse",
+  :add-application-response "Lisan kaasatud osapoole vastuse",
   :create-opinion-title "Seisukoha lisamine",
   :add-application-contact "Lisan kontakti",
   :create-opinion-button "Lisan ametliku seisukoha",
@@ -165,7 +178,9 @@
   {:upload-not-allowed "Üleslaadimine pole lubatud",
    :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
    :coordination-task-status-mismatch
-   "Ülesanne ei ole failide üleslaadimist lubavas olekus."},
+   "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
+   :response-not-editable
+   "Vastusele on seisukoht lisatud ja vastust ei saa enam muuta. "},
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
@@ -199,6 +214,9 @@
   :drop-to-comment "Lisan märkusele pilte",
   :drop-to-meeting-agenda "Lisan päevakavapunktile faile",
   :drop-to-meeting-decision "Lisan koosoleku otsusele faile"},
+ :email
+ {:footer
+  "\n---------\nIsikuandmete kaitsega seoses on teil õigus näha ja parandada oma kontaktandmeid ja paluda meil teie kasutajakonto kustutada. Kui Teil on küsimusi teie kontaktandmete töötlemise või teie isikuandmete kasutamise kohta, võtke meiega ühendust e-posti aadressiga {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
