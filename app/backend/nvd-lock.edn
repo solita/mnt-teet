@@ -40,4 +40,8 @@
 
   ;; Apache HttpClient misinterpret malformed authority, not using URLs like that or
   ;; doing requests to user specified URLs
-  "CVE-2020-13956"}
+  "CVE-2020-13956"
+
+  ;; Apache xmlbeans are not used to parse user provided xml anywhere
+  ;; Apache POi is not used for parsing user provided microsoft office files.
+  "CVE-2021-23926"}
