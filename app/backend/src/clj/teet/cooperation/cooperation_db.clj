@@ -139,10 +139,10 @@
   (get-in (du/entity db response-id)
           [:cooperation.application/_response 0 :cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
 
-(defn responses-to-be-expired
+(defn applications-to-be-expired
   "Returns all Applications to be expired in the given number of days"
   [db days]
-  (d/q '[:find ?third-party ?application ?date ?application-expiration-date
+  (d/q '[:find ?application ?third-party ?date ?application-expiration-date
          :where [?third-party :cooperation.3rd-party/applications ?application]
          [?application :cooperation.application/date ?date]
          [?application :cooperation.application/response ?response]
