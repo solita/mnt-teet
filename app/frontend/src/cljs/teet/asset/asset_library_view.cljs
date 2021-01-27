@@ -92,16 +92,13 @@
     (doall
      (for [fc (:fclass/_fgroup fgroup)]
        ^{:key (str (:db/id fc))}
-       [fclass open fc]))]
-   #_[:div (pr-str fgroup)]])
+       [fclass open fc]))]])
 
-(defn asset-library-page [e! app fgroups]
+(defn asset-library-page [_e! _app fgroups]
   (r/with-let [open (r/atom #{})]
     [:<>
      [typography/Heading1 (tr [:asset :type-library :header])]
      (doall
       (for [fg fgroups]
         ^{:key (str (:db/id fg))}
-        [fgroup open fg]))])
-
-  )
+        [fgroup open fg]))]))
