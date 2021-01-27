@@ -260,20 +260,22 @@
   [{:keys [link-to-new-tab? no-link?
            allow-replacement-opts delete-action
            attached-to land-acquisition?
-           comments-link? actions?
-           column-widths]
+           comments-link? actions? title-downloads?
+           link-icon? column-widths]
     :or {comments-link? true
          actions? true
-         column-widths [3 1]}}
+         column-widths [10 1]}}
    {:file/keys [status] :as file}]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))
         [base-column-width action-column-width] column-widths]
-    [:div {:class (<class file-style/file-row-style)
+    [:div {:class (<class (if link-icon? common-styles/flex-align-center file-style/file-row-style))
            :data-file-description description}
      [:div {:class (<class file-style/file-base-column-style
-                           base-column-width actions?)}
+                           base-column-width (if link-icon? false actions?))}
       [:div {:class (<class file-style/file-icon-container-style)}
-       [fi/file {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
+       [(if link-icon?
+          icons/content-link
+          icons/action-description)  {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
       [:div {:style {:min-width 0}}
        [:div {:class [(<class common-styles/flex-align-center)
                       (<class common-styles/margin-bottom 0.5)]}
@@ -281,14 +283,20 @@
           [:p {:class (<class file-style/file-list-entity-name-style)
                :title description}
            description]
-          [url/Link (merge
+          (if title-downloads?
+            [common/Link {:target "_blank"
+                          :class (<class file-style/file-list-entity-name-style)
+                          :href (common-controller/query-url :file/download-file
+                                                             {:file-id (:db/id file)})}
+             description]
+            [url/Link (merge
                      {:title description
                       :class (<class file-style/file-list-entity-name-style)
                       :page :file
                       :params {:file (:file/id file)}}
                       (when link-to-new-tab?
-                        {:target :_blank}))
-           description])
+                        {:target "_blank"}))
+           description]))
         [typography/SmallGrayText {:style {:text-transform :uppercase
                                            :white-space :nowrap}}
          extension]]
@@ -304,8 +312,11 @@
                  {:date (format/date-time (:meta/created-at file))
                   :author (user-model/user-name
                             (:meta/creator file))}))]
-        (when status
-          [typography/SmallBoldText (tr-enum status)])]]]
+        [:div {:class [(<class common-styles/flex-align-center)]}
+         (when status
+          [typography/SmallBoldText (tr-enum status)])
+        (when (and comments-link? (:comment/counts file))
+          [:div {:style {:margin-left "1rem"}}[file-comments-link file]])]]]]
      (when actions?
        [:div {:class (<class file-style/file-actions-column-style action-column-width)}
         [:div {:style {:display :flex}}
@@ -332,8 +343,7 @@
            [buttons/delete-button-with-confirm
             {:action #(delete-action file)
              :trashcan? true}])]
-        (when (and comments-link? (:comment/counts file))
-          [file-comments-link file])])]))
+        ])]))
 
 (defn file-list2
   [{:keys [sort-by-value data-cy] :as opts} files]

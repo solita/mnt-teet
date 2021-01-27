@@ -561,6 +561,7 @@
   :file/position-number "POS#",
   :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",
+  :meeting/links "Lingid",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
   :user/phone-number "Telefoni number",

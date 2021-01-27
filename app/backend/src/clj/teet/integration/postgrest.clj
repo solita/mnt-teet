@@ -75,4 +75,13 @@
                            {:headers (merge {"Content-Type" "application/json"}
                                             (auth-header ctx))
                             :body (cheshire/encode params)})]
-    (cheshire/decode (:body resp) keyword)))
+    (if
+      (or
+        (= (:status resp) 401)
+        (= (:status resp) 503))
+      (throw (ex-info "Error posting a PostgREST request"
+                      {:rpc-name rpc-name
+                       :request-params params
+                       :error-response (cheshire/decode (:body resp))
+                       }))
+      (cheshire/decode (:body resp) keyword))))

@@ -567,6 +567,7 @@
   :file/position-number "POS#",
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
+  :meeting/links "Links",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
   :user/phone-number "Phone number",
