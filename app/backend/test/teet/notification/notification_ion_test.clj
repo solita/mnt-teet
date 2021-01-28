@@ -13,13 +13,13 @@
   tu/with-environment
   (tu/with-db))
 
-(defn project-id [db] (:thk.project/id (du/entity db (tu/->db-id "p1"))))
+(defn project-id [db] (:thk.project/id (du/entity db (tu/->db-id "p6"))))
 
 (def cooperation-3rd-party-name "Notification Test")
 
 (defn valid-date-for-application [db]
   (-> (du/entity db
-        (tu/->db-id "p1-lc1-act2"))
+        (tu/->db-id "p1-lc1-act20"))
     :activity/estimated-start-date
     (dateu/inc-days 1)))
 
