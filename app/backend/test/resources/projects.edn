@@ -10,6 +10,7 @@
       :activity/estimated-start-date #inst "2021-04-11T21:00:00.000-00:00"
       :activity/estimated-end-date #inst "2022-06-24T21:00:00.000-00:00"
       :activity/name :activity.name/land-acquisition
+      :activity/manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]
       :thk.activity/id "15906"
       :activity/integration-info "#:activity{:contract \"false\", :shortname \"Maaost\", :cost \"0.00\", :thkupdstamp \"2020-03-02 17:57:15.0\", :statusname \"Ettevalmistamisel\"}"}
      {:db/id "p1-lc1-act2"
@@ -17,6 +18,7 @@
       :activity/estimated-start-date #inst "2020-06-30T22:00:00.000-00:00"
       :activity/estimated-end-date #inst "2020-12-11T21:00:00.000-00:00"
       :activity/name :activity.name/detailed-design
+      :activity/manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]
       :activity/status :activity.status/in-progress
       :thk.activity/id "6594"
       :activity/integration-info "#:activity{:contract \"true\", :procurementid \"666\", :shortname \"P?hiprojekt\", :cost \"111000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"T??s\", :procurementno \"666666\"}"}]
@@ -33,6 +35,7 @@
       :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
       :activity/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
       :activity/name :activity.name/construction
+      :activity/manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]
       :thk.activity/id "5455"
       :activity/integration-info "#:activity{:contract \"false\", :procurementid \"777\", :shortname \"Teostus\", :cost \"640000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"Hankeplaanis\"}"}]
     :thk.lifecycle/type :thk.lifecycle-type/construction
