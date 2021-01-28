@@ -114,6 +114,12 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
+   (when-feature :asset-db
+     [view-link {:open? open?
+                 :current-page page
+                 :link {:page :asset-type-library}
+                 :icon icons/editor-schema
+                 :name (tr [:asset :type-library :link])}])
    (when-feature :road-information-view
      [view-link {:open? open?
                  :current-page page

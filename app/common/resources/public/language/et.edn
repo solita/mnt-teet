@@ -46,6 +46,19 @@
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
+ :asset
+ {:type-library
+  {:description "Kirjeldus",
+   :fclass "Vara klass",
+   :unit "Ühik",
+   :name "Nimi",
+   :fgroup "Vara liik",
+   :header "Tee olemi tüübiteek (TOTT) ",
+   :link "TOTT",
+   :label "Silt",
+   :values "Väärtused",
+   :ctype "Komponent",
+   :attributes "Omadused"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -201,6 +214,9 @@
   :drop-to-comment "Lisan märkusele pilte",
   :drop-to-meeting-agenda "Lisan päevakavapunktile faile",
   :drop-to-meeting-decision "Lisan koosoleku otsusele faile"},
+ :email
+ {:footer
+  "\n---------\nIsikuandmete kaitsega seoses on teil õigus näha ja parandada oma kontaktandmeid ja paluda meil teie kasutajakonto kustutada. Kui Teil on küsimusi teie kontaktandmete töötlemise või teie isikuandmete kasutamise kohta, võtke meiega ühendust e-posti aadressiga {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",

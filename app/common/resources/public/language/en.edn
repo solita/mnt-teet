@@ -46,6 +46,19 @@
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
+ :asset
+ {:type-library
+  {:description "Description",
+   :fclass "Feature class",
+   :unit "Unit",
+   :name "Name",
+   :fgroup "Asset Features",
+   :header "Road Object Type Library (ROTL)",
+   :link "ROTL",
+   :label "Label",
+   :values "Values",
+   :ctype "Component",
+   :attributes "Attributes"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -202,6 +215,9 @@
   :drop-to-comment "Add images to comment",
   :drop-to-meeting-agenda "Attach file to meeting agenda",
   :drop-to-meeting-decision "Attach file to meeting decision"},
+ :email
+ {:footer
+  "\n--------\nIn connection with the processing of personal data, you have the right to see and change your contact information and ask us to delete your user account. If you have any questions about the processing of your contact information or the use of your personal data, please contact us at the e-mail address {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition based on evaluation",
