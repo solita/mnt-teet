@@ -30,6 +30,7 @@
                          :cooperation.3rd-party/email
                          :cooperation.3rd-party/phone])
            {:db/id "new-third-party"
+            :teet/id (java.util.UUID/randomUUID)
             :cooperation.3rd-party/project [:thk.project/id project-id]}))]})
 
 (defcommand :cooperation/create-application
@@ -44,7 +45,7 @@
          (cooperation-db/application-matched-activity-id db project-id application)]
    :transact
    (if-let [tp-id (cooperation-db/third-party-id-by-name
-                    db [:thk.project/id project-id] third-party-name)]
+                   db [:thk.project/id project-id] third-party-name)]
      [{:db/id tp-id
        :cooperation.3rd-party/applications
        [(merge (select-keys application
@@ -54,6 +55,7 @@
                              :cooperation.application/response-deadline
                              :cooperation.application/comment])
                {:db/id "new-application"
+                :teet/id (java.util.UUID/randomUUID)
                 :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
                (meta-model/creation-meta user))]}]
      (db-api/bad-request! "No such 3rd party"))})
