@@ -1,4 +1,4 @@
-(ns teet.notification.ion
+(ns teet.notification.notification-ion
   (:require [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.cooperation.cooperation-notifications :as cooperation-notifications]
             [teet.activity.activity-db :as activity-db]
@@ -25,10 +25,10 @@
   providing the Activity is not finished"
   ([days]
    (let [conn (environment/datomic-connection) db (d/db conn)]
-     (map #(let [app-id (first %)
-                 current-tx-data ['(teet.notification.ion/notify-tx-data app-id)]]
-             (d/transact conn {:tx-data current-tx-data}))
-       (cooperation-db/applications-to-be-expired db days))))
+     (d/transact conn
+       {:tx-data
+        (map (comp (partial notify-tx-data db) :application-id)
+          (cooperation-db/applications-to-be-expired db days))})))
   (;; default 45 days
    []
    (notify 45)))

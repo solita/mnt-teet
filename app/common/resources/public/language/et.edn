@@ -46,6 +46,19 @@
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
+ :asset
+ {:type-library
+  {:description "Kirjeldus",
+   :fclass "Vara klass",
+   :unit "Ühik",
+   :name "Nimi",
+   :fgroup "Vara liik",
+   :header "Tee olemi tüübiteek (TOTT) ",
+   :link "TOTT",
+   :label "Silt",
+   :values "Väärtused",
+   :ctype "Komponent",
+   :attributes "Omadused"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -137,7 +150,7 @@
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
-  :edit-response-title "Muudan pöördumise vastust",
+  :edit-response-title "Muudan kaasatud osapoole vastust",
   :new-application "Lisan uue taotluse",
   :add-files "Lisan faile",
   :applied "Rakendatud",
@@ -148,7 +161,7 @@
   :enter-response "Sisestan kaasatud osapoole vastuse",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
-  :add-application-response "Lisan pöördumise vastuse",
+  :add-application-response "Lisan kaasatud osapoole vastuse",
   :create-opinion-title "Seisukoha lisamine",
   :add-application-contact "Lisan kontakti",
   :create-opinion-button "Lisan ametliku seisukoha",
@@ -165,7 +178,9 @@
   {:upload-not-allowed "Üleslaadimine pole lubatud",
    :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
    :coordination-task-status-mismatch
-   "Ülesanne ei ole failide üleslaadimist lubavas olekus."},
+   "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
+   :response-not-editable
+   "Vastusele on seisukoht lisatud ja vastust ei saa enam muuta. "},
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
@@ -199,6 +214,9 @@
   :drop-to-comment "Lisan märkusele pilte",
   :drop-to-meeting-agenda "Lisan päevakavapunktile faile",
   :drop-to-meeting-decision "Lisan koosoleku otsusele faile"},
+ :email
+ {:footer
+  "\n---------\nIsikuandmete kaitsega seoses on teil õigus näha ja parandada oma kontaktandmeid ja paluda meil teie kasutajakonto kustutada. Kui Teil on küsimusi teie kontaktandmete töötlemise või teie isikuandmete kasutamise kohta, võtke meiega ühendust e-posti aadressiga {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
@@ -226,6 +244,8 @@
   :cooperation.application.response-type/consent "Nõusolek",
   :task.type/noise-study "Müra uuring",
   :cooperation.application.type/design "Projekt",
+  :notification.type/cooperation-application-expired-soon
+  "Taotluse tingimused aeguvad peagi",
   :cooperation.opinion.status/unanswered "Ei esitanud arvamust",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
@@ -459,13 +479,15 @@
    "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad."},
   :version "Versioon"},
  :error
- {:file-metadata-not-unique "Samade metaandmetega fail on juba olemas",
+ {:file-metadata-not-unique
+  "Selle faili üleslaadimine antud metaandmetega tekitaks ülesandesse duplikaat faili või ülesandes on juba duplikaat failid.",
   :part-has-files
   "Ülesande osale on lisatud faile. Kui soovid ülesande osa kustutada, siis tõsta enne failid teise osa külge või kustuta failid.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :invalid-task-dates "Kontrollige ülesande kuupäevi",
   :user-is-already-participant
   "Lisatava kasutaja e-posti aadress on juba osalejate nimekirjas!",
+  :file-type-not-allowed "Failitüüp ei ole toetatud",
   :server-error "Serveri viga.",
   :invalid-x-road-response "Vale vastus X-teelt",
   :permission-already-granted "Selle kasutaja luba on juba antud",
@@ -486,9 +508,11 @@
   "Faili kirjeldus sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}",
   :two-files-with-same-metadata
   "Teine sama metaandmetega fail on juba olemas.",
+  :file-empty "Ei saa laadida tühje fail",
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :file-too-large "Fail on liiga suur",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
   :replaced-file-not-latest

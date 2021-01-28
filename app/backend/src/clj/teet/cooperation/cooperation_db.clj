@@ -143,10 +143,14 @@
   "Returns all Applications to be expired in the given number of days"
   [db days]
   (d/q '[:find ?application ?third-party ?date ?application-expiration-date
+         :keys application-id third-party-id date application-expiration-date
          :where [?third-party :cooperation.3rd-party/applications ?application]
          [?application :cooperation.application/date ?date]
          [?application :cooperation.application/response ?response]
          [?response :cooperation.response/valid-until ?application-expiration-date]
          [(< ?application-expiration-date ?deadline)]
+         (not-join [?application]
+           [?notification :notification/target ?application]
+           [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
     db (date/inc-days (date/now) days)))

@@ -46,6 +46,19 @@
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
+ :asset
+ {:type-library
+  {:description "Description",
+   :fclass "Feature class",
+   :unit "Unit",
+   :name "Name",
+   :fgroup "Asset Features",
+   :header "Road Object Type Library (ROTL)",
+   :link "ROTL",
+   :label "Label",
+   :values "Values",
+   :ctype "Component",
+   :attributes "Attributes"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -137,7 +150,7 @@
   :competent-authority-name "Transport Administration ",
   :conclusion "Conclusion",
   :applications "APPLICATIONS",
-  :edit-response-title "Edit application response",
+  :edit-response-title "Edit involved party response",
   :new-application "Add new application",
   :add-files "Add files",
   :applied "Applied",
@@ -148,7 +161,7 @@
   :enter-response "Enter involved party response",
   :new-third-party-created "Involved party created successfully",
   :all-third-parties "All involved parties",
-  :add-application-response "Add application response",
+  :add-application-response "Add involved party response",
   :create-opinion-title "Add opinion",
   :add-application-contact "Add contact",
   :create-opinion-button "Opinion of Competent Authority",
@@ -166,7 +179,9 @@
    :coordination-task-missing
    "Coordination task does not exist for the activity.",
    :coordination-task-status-mismatch
-   "Task is not in a state that allows file upload."},
+   "Task is not in a state that allows file upload.",
+   :response-not-editable
+   "Response has an opinion added and can't be edited."},
   :response-of-third-party "Response of involved party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
@@ -200,6 +215,9 @@
   :drop-to-comment "Add images to comment",
   :drop-to-meeting-agenda "Attach file to meeting agenda",
   :drop-to-meeting-decision "Attach file to meeting decision"},
+ :email
+ {:footer
+  "\n--------\nIn connection with the processing of personal data, you have the right to see and change your contact information and ask us to delete your user account. If you have any questions about the processing of your contact information or the use of your personal data, please contact us at the e-mail address {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition based on evaluation",
@@ -228,6 +246,8 @@
   :cooperation.application.response-type/consent "Consent",
   :task.type/noise-study "Noise study",
   :cooperation.application.type/design "Design",
+  :notification.type/cooperation-application-expired-soon
+  "Application terms will expire soon",
   :cooperation.opinion.status/unanswered "No opinion was submitted",
   :task.status/rejected "Rejected",
   :task.status/reviewing "Reviewing",
@@ -464,13 +484,14 @@
   :version "Version"},
  :error
  {:file-metadata-not-unique
-  "A file with the same metadata already exists",
+  "Uploading this file with the given metadata would create a duplicate file under the task or duplicate files already exist for this task",
   :part-has-files
   "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",
   :user-is-already-participant
   "The email address of the participant is already in the participant list!",
+  :file-type-not-allowed "File type is not valid",
   :server-error "Server error.",
   :invalid-x-road-response "Invalid response from X-road",
   :permission-already-granted
@@ -492,9 +513,11 @@
   "The file description contains illegal characters. List of allowed characters: {characters}",
   :two-files-with-same-metadata
   "Another file with the same metadata already exists.",
+  :file-empty "Can't upload empty files",
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
   :replaced-file-not-latest

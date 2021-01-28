@@ -1716,4 +1716,7 @@
  {:db/ident :cooperation.response/notification
   :txes [[{:db/ident
            :notification.type/cooperation-response-to-application-added
+           :enum/attribute :notification/type}
+          {:db/ident
+           :notification.type/cooperation-application-expired-soon
            :enum/attribute :notification/type}]]}]

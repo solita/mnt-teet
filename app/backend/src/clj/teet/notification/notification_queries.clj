@@ -131,6 +131,9 @@
       (meeting-navigation-info db (:db/id target))
 
       :notification.type/cooperation-response-to-application-added
+      (cooperation-application-navigation-info db (:db/id target))
+
+      :notification.type/cooperation-application-expired-soon
       (cooperation-application-navigation-info db (:db/id target)))))
 
 (defquery :notification/navigate
