@@ -1716,4 +1716,14 @@
  {:db/ident :cooperation.response/notification
   :txes [[{:db/ident
            :notification.type/cooperation-response-to-application-added
-           :enum/attribute :notification/type}]]}]
+           :enum/attribute :notification/type}]]}
+
+ ;; Generic :teet/id UUID for things that don't need stable ids
+ {:db/ident :migration/generic-teet-id
+  :txes [[{:db/ident :teet/id
+           :db/valueType :db.type/uuid
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Generic UUID for entities that need a stable id"}]
+         teet.migration.teet-id/cooperation-teet-ids]}
+ ]
