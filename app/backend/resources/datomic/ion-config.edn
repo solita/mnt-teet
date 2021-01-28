@@ -56,7 +56,7 @@
             :description "Cleanup unreferenced deleted features"}
 
            :notify
-            {:fn teet.notification.ion/notify
+            {:fn teet.notification.notification-ion/notify
              :description "Scheduled notifications"}
            }
 
