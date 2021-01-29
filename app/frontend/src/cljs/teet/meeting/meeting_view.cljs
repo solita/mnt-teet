@@ -230,7 +230,7 @@
                              agenda-links (:link/_from meeting)]
                             (if (or (seq agenda-files) (seq agenda-links))
                               [:div {:class (<class file-style/file-icon-container-style)
-                                     :title "This agenda has files or links attached."} [icons/content-link
+                                     :title (tr [:meeting :agenda-has-attachments])} [icons/content-link
                                                                                          {:size :small
                                                                                           :style {:color theme-colors/primary}}]]))
                           [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
@@ -259,7 +259,7 @@
                                   decision-links (:link/_from d)]
                                  (if (or (seq decision-files) (seq decision-links))
                                    [:div {:class (<class file-style/file-icon-container-style)
-                                          :title "This decision has files or links attached."} [icons/content-link
+                                          :title (tr [:meeting :decision-has-attachments])} [icons/content-link
                                                                                                 {:style {:color theme-colors/primary}}]]))
                                [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
                                 (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
@@ -969,7 +969,7 @@
      [:div {:style {:margin-bottom "1rem"}}
       (doall
        (for [{id :db/id
-              :meeting.agenda/keys [topic responsible body decisions file/_attached-to] :as agenda-topic} agenda]
+              :meeting.agenda/keys [topic responsible body decisions] :as agenda-topic} agenda]
          ^{:key id}
          [meeting-view-container
           {:heading [:div.agenda-heading
@@ -1002,7 +1002,7 @@
                                      decision-links (:link/_from d)]
                                     (if (or (seq decision-files) (seq decision-links))
                                       [:div {:class (<class file-style/file-icon-container-style)
-                                             :title (tr [:meeting :agenda-has-attachments])} [icons/content-link
+                                             :title (tr [:meeting :decision-has-attachments])} [icons/content-link
                                                                                                  {:style {:color theme-colors/primary}}]]))
                         [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
                                                                                       :num (:meeting.decision/number d)})]]
