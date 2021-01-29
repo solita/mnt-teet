@@ -17,7 +17,7 @@
   ([db project-eid all-applications-pred]
    (let [third-parties
          (mapv first
-               (d/q '[:find (pull ?e [:db/id :cooperation.3rd-party/name])
+               (d/q '[:find (pull ?e [:db/id :teet/id :cooperation.3rd-party/name])
                       :where [?e :cooperation.3rd-party/project ?project]
                       :in $ ?project]
                     db project-eid))
@@ -70,6 +70,16 @@
                  [?e :cooperation.3rd-party/name ?name]
                  :in $ ?project ?name]
                db project-eid third-party-name)))
+
+(def third-party-by-teet-id
+  "Find 3rd party by :teet/id. Returns entity :db/id or nil."
+  (partial du/entity-by-teet-id :cooperation.3rd-party/name))
+
+(def application-by-teet-id
+  (partial du/entity-by-teet-id :cooperation.application/type))
+
+
+
 
 (defn third-party-with-application [db third-party-id application-id]
   (merge
