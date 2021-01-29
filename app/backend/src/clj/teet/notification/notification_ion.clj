@@ -8,7 +8,10 @@
 
 (defn days-param
   []
-  (Integer/parseInt (environment/config-value :notify :application-expire-days)))
+  (let [param (environment/config-value :notify :application-expire-days)]
+    (if (nil? param)
+      45
+      (Integer/parseInt param))))
 
 (defn notify-tx-data
   "Transaction data for notification"
