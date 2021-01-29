@@ -35,7 +35,7 @@
                     :save-event #(account-controller/->UpdateUser @form-state)
                     :disable-buttons? (= initial-state @form-state)
                     :value @form-state
-                    :spec :user/update}
+                    :spec :account/update}
         [form/field :user/phone-number
          [TextField {:placeholder (tr [:fields :user/phone-number])}]]
         [form/field {:attribute :user/email
