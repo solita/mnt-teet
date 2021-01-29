@@ -54,20 +54,22 @@
          (third-party-belongs-to-project? db third-party-teet-id
                                           [:thk.project/id project-id])]}
   (if-let [tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)]
-    (let [teet-id (java.util.UUID/randomUUID)]
-      (tx [{:db/id tp-id
-            :cooperation.3rd-party/applications
-            [(merge (select-keys application
-                                 [:cooperation.application/type
-                                  :cooperation.application/response-type
-                                  :cooperation.application/date
-                                  :cooperation.application/response-deadline
-                                  :cooperation.application/comment])
-                    {:db/id "new-application"
-                     :teet/id teet-id
-                     :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
-                    (meta-model/creation-meta user))]}])
-      {:third-party-teet-id third-party-teet-id
+    (let [teet-id (java.util.UUID/randomUUID)
+          {tempids :tempids}
+          (tx [{:db/id tp-id
+                :cooperation.3rd-party/applications
+                [(merge (select-keys application
+                                     [:cooperation.application/type
+                                      :cooperation.application/response-type
+                                      :cooperation.application/date
+                                      :cooperation.application/response-deadline
+                                      :cooperation.application/comment])
+                        {:db/id "new-application"
+                         :teet/id teet-id
+                         :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
+                        (meta-model/creation-meta user))]}])]
+      {:tempids tempids
+       :third-party-teet-id third-party-teet-id
        :application-teet-id teet-id})
     (db-api/bad-request! "No such 3rd party")))
 
