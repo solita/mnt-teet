@@ -6,10 +6,10 @@
    conn
    {:tx-data (for [[id] (d/q '[:find ?e
                                :where
-                               (not [?e :teet/id _])
                                (or
                                 [?e :cooperation.3rd-party/name _]
-                                [?e :cooperation.application/type _])]
+                                [?e :cooperation.application/type _])
+                               (not [?e :teet/id _])]
                              (d/db conn))]
                {:db/id id
                 :teet/id (java.util.UUID/randomUUID)})}))

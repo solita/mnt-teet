@@ -93,7 +93,7 @@
 (def application-overview-attrs
   "Attributes to pull for displaying an application overview.
   Includes fields from response and position."
-  [:db/id
+  [:db/id :teet/id
    :cooperation.application/type
    :cooperation.application/date
    :cooperation.application/contact

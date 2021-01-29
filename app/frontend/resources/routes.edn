@@ -140,11 +140,11 @@
  :cooperation-third-party
  {:path "/projects/:project/cooperation/:third-party"
   :parent :cooperation
-  :crumb (js/decodeURIComponent third-party)
+  :crumb (get-in state [:third-party :cooperation.3rd-party/name])
   :view teet.cooperation.cooperation-view/third-party-page
   :state {:query :cooperation/third-party
           :args {:thk.project/id project
-                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)}}}
+                 :teet/id (uuid third-party)}}}
 
  :cooperation-application
  {:path "/projects/:project/cooperation/:third-party/:application"
@@ -153,8 +153,8 @@
   :view teet.cooperation.cooperation-view/application-page
   :state {:query :cooperation/application
           :args {:thk.project/id project
-                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)
-                 :db/id (->long application)}}}
+                 :third-party-teet-id (uuid third-party)
+                 :application-teet-id (uuid application)}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
