@@ -17,6 +17,8 @@
             teet.admin.admin-queries
             teet.admin.admin-commands
             teet.user.user-queries
+            teet.account.account-commands
+            teet.account.account-queries
             teet.logging.logging-commands
             teet.project.project-queries
             teet.project.project-commands
