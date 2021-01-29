@@ -1,4 +1,9 @@
-{:activity
+{:account
+ {:my-account "My account",
+  :logout "Logout",
+  :save-information "Save information",
+  :my-details "MY DETAILS"},
+ :activity
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",
   :status "Status",
@@ -46,6 +51,19 @@
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
+ :asset
+ {:type-library
+  {:description "Description",
+   :fclass "Feature class",
+   :unit "Unit",
+   :name "Name",
+   :fgroup "Asset Features",
+   :header "Road Object Type Library (ROTL)",
+   :link "ROTL",
+   :label "Label",
+   :values "Values",
+   :ctype "Component",
+   :attributes "Attributes"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -202,6 +220,9 @@
   :drop-to-comment "Add images to comment",
   :drop-to-meeting-agenda "Attach file to meeting agenda",
   :drop-to-meeting-decision "Attach file to meeting decision"},
+ :email
+ {:footer
+  "\n--------\nIn connection with the processing of personal data, you have the right to see and change your contact information and ask us to delete your user account. If you have any questions about the processing of your contact information or the use of your personal data, please contact us at the e-mail address {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition based on evaluation",
@@ -230,6 +251,8 @@
   :cooperation.application.response-type/consent "Consent",
   :task.type/noise-study "Noise study",
   :cooperation.application.type/design "Design",
+  :notification.type/cooperation-application-expired-soon
+  "Application terms will expire soon",
   :cooperation.opinion.status/unanswered "No opinion was submitted",
   :task.status/rejected "Rejected",
   :task.status/reviewing "Reviewing",
@@ -466,7 +489,7 @@
   :version "Version"},
  :error
  {:file-metadata-not-unique
-  "A file with the same metadata already exists",
+  "Uploading this file with the given metadata would create a duplicate file under the task or duplicate files already exist for this task",
   :part-has-files
   "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",
@@ -617,6 +640,7 @@
   :meeting/organizer "Organizer",
   :thk.project/road-nr "Road number",
   :task/estimated-end-date "Estimated end date",
+  :meeting/links "Links",
   :activity/name "Activity name",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
@@ -849,11 +873,14 @@
   :moved-to-absentees-successfully "User moved to absentees",
   :edit-agenda-modal-title "Edit topic",
   :email-title "TEET: meeting updated: {meeting-title}",
+  :decision-has-attachments
+  "This decision has files or links attached.",
   :new-agenda-modal-title "New topic",
   :reject-meeting-button "Reject decisions",
   :add-person "Add person",
   :approved-by "Approved by {approvers}",
   :notifications-sent "Notifications sent",
+  :agenda-has-attachments "This agenda has files or links attached.",
   :decision-topic "{topic} decision #{num}"},
  :notifications
  {:no-unread-notifications "No unread notifications",
