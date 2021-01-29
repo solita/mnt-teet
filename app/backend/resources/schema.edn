@@ -1714,8 +1714,9 @@
 
  ;; Cooperation notifications
  {:db/ident :cooperation.response/notification
-  :txes [[{:db/ident
-           :notification.type/cooperation-response-to-application-added
+  :txes [[{:db/ident :notification.type/cooperation-response-to-application-added
+           :enum/attribute :notification/type}
+          {:db/ident :notification.type/cooperation-application-expired-soon
            :enum/attribute :notification/type}]]}
 
  ;; Generic :teet/id UUID for things that don't need stable ids
@@ -1726,4 +1727,4 @@
            :db/unique :db.unique/identity
            :db/doc "Generic UUID for entities that need a stable id"}]
          teet.migration.teet-id/cooperation-teet-ids]}
- ]
+]

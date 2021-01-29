@@ -161,4 +161,36 @@
   :thk.project/road-nr 6
   :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1803\", :groupfk \"1104\", :groupshortname \"REK\", :thkupdstamp \"2019-11-01 09:37:44.915\"}"
   :thk.project/end-m 72162
-  :thk.project/owner [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"]}]
+  :thk.project/owner [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"]}
+
+ {:thk.project/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00",
+  :thk.project/lifecycles
+  [{:db/id "p1-lc20"
+    :integration/id #uuid "44571708-496B-404E-97DC-3BDFF8F5892F"
+    :thk.lifecycle/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
+    :thk.lifecycle/activities
+    [{:db/id "p1-lc1-act20"
+      :integration/id #uuid "8717803b-187a-4727-bf72-3394a1f5bac9"
+      :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
+      :activity/name :activity.name/construction
+      :activity/manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]
+      :thk.activity/id "5455"
+      :activity/integration-info "#:activity{:contract \"false\", :procurementid \"777\", :shortname \"Teostus\", :cost \"640000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"Hankeplaanis\"}"}]
+    :thk.lifecycle/type :thk.lifecycle-type/construction
+    :thk.lifecycle/id "13905"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4098\", :cost \"685000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\"}"}]
+  :thk.project/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
+  :thk.project/start-m 19057
+  :thk.project/name "test notificatioons"
+  :thk.project/carriageway 1
+  :thk.project/id "111110000"
+  :thk.project/region-name "Ida"
+  :db/id "p6"
+  :thk.project/repair-method "silla remont"
+  :thk.project/bridge-nr 176
+  :thk.project/road-nr 15128
+  :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1801\", :groupfk \"1107\", :groupshortname \"SILD\", :thkupdstamp \"2020-04-07 12:25:54.166\"}"
+  :thk.project/end-m 19117
+  :thk.project/owner [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]}]
