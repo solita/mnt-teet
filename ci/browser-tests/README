@@ -18,3 +18,6 @@ environment that has integrations.
 
 Tests ending with ".ci.spec.js" should only be run in CI or local test runs.
 Other tests can be run in real cloud deployed environment.
+
+There exists three different config files for running cypress: "cypress-ci" is used to run in Github actions,
+"cypress-localdev.json" is used to run in a locally run environment and "cypress.json" is used to run against the dev env.

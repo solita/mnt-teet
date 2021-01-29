@@ -37,6 +37,7 @@
             teet.meeting.meeting-view
             teet.cooperation.cooperation-view
             teet.asset.asset-library-view
+            teet.account.account-view
 
             teet.ui.query
             [teet.ui.url :as url]
@@ -57,10 +58,12 @@
       [:<>
        [drag/drag-handler e!]
        [navigation-view/header e!
-        {:open?        nav-open?
-         :page         (:page app)
+        {:open? nav-open?
+         :page (:page app)
          :quick-search (:quick-search app)
-         :url (:url app)}
+         :url (:url app)
+         :extra-panel (get-in app [:navigation :extra-panel])
+         :extra-panel-open? (get-in app [:navigation :extra-panel-open?])}
         (:user app)]
        [navigation-view/main-container
         nav-open?

@@ -1,4 +1,10 @@
-{:activity
+{:account
+ {:my-account "Minu konto",
+  :logout "Logout",
+  :save-information "Salvestan andmed",
+  :account-edited "Konto muudetud",
+  :my-details "MINU ANDMED"},
+ :activity
  {:note-all-tasks-need-to-be-completed
   "Kõik ülesanded peavad olema lõpetatud enne kui tegevuse saab ülevaatamiseks saata",
   :status "Olek",
@@ -630,6 +636,7 @@
   :meeting/organizer "Korraldaja",
   :thk.project/road-nr "Tee number",
   :task/estimated-end-date "Eeldatav lõppkuupäev",
+  :meeting/links "Lingid",
   :activity/name "Tegevuse nimi",
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
@@ -864,11 +871,13 @@
   :moved-to-absentees-successfully "Lisatud puudujate nimekirja",
   :edit-agenda-modal-title "Päevakavapunkti muutmine",
   :email-title "TEET: koosolek uuendatud: {meeting-title}",
+  :decision-has-attachments "Otsusele on lisatud manuseid või linke.",
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
   :add-person "Osaleja lisamine",
   :approved-by "Kinnitatud {approvers} poolt",
   :notifications-sent "Teavitused saadetud",
+  :agenda-has-attachments "Teemale on lisatud manuseid või linke.",
   :decision-topic "{topic} otsus #{num}"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
@@ -1048,6 +1057,7 @@
    :placeholder "Sisestan nime..."},
   :role "Roll",
   :unregistered "Kasutaja"},
+ :validation {:invalid-email "Vale emaili aadress"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
