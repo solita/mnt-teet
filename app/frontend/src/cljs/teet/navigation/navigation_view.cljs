@@ -133,6 +133,29 @@
   [_ _ _]
   "")
 
+(defn language-selector
+  []
+  [select/select-with-action
+   {:container-class (herb/join (<class navigation-style/language-select-container-style)
+                                (<class navigation-style/divider-style))
+    :label (str (tr [:common :language]))
+    :class (<class navigation-style/language-select-style)
+    :id "language-select"
+    :name "language"
+    :value (case @localization/selected-language
+             :et
+             {:value "et" :label (get localization/language-names "et")}
+             :en
+             {:value "en" :label (get localization/language-names "en")})
+    :items [{:value "et" :label (get localization/language-names "et")}
+            {:value "en" :label (get localization/language-names "en")}]
+    :on-change (fn [val]
+                 (localization/load-language!
+                   (keyword (:value val))
+                   (fn [language _]
+                     (reset! localization/selected-language
+                             language))))}])
+
 (defn language-options
   []
   (r/with-let [change-lan-fn (fn [val]
@@ -207,7 +230,10 @@
                   :justify-content :flex-end}}
     (when logged-in?
       [notification-view/notifications e!])
+
     [feedback-link user url]
+    (when (not logged-in?)
+      [language-selector])
     (if logged-in?
       [open-account-navigation e!]
       [buttons/button-primary {:style {:margin "0 1rem"}
