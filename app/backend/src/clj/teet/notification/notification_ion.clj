@@ -6,6 +6,8 @@
             [datomic.client.api :as d]
             [teet.notification.notification-db :as notification-db]))
 
+(def days-param (environment/config-value :notify :application-expire-days))
+
 (defn notify-tx-data
   "Transaction data for notification"
   [db application-id]
@@ -29,6 +31,6 @@
        {:tx-data
         (map (comp (partial notify-tx-data db) :application-id)
           (cooperation-db/applications-to-be-expired db days))})))
-  (;; default 45 days
+  (;; default read from env config
    []
-   (notify 45)))
+   (notify days-param)))
