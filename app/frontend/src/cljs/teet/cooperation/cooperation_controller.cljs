@@ -19,13 +19,13 @@
 
   ApplicationCreated
   (process-event [{r :save-response} {params :params :as app}]
-    (let [application-id (get-in r [:tempids "new-application"])]
+    (let [{:keys [third-party-teet-id application-teet-id]} r]
       (t/fx (snackbar-controller/open-snack-bar app (tr [:cooperation :new-application-created]))
             {:tuck.effect/type :navigate
              :page :cooperation-application
              :params {:project (:project params)
-                      :third-party (js/decodeURIComponent (:third-party params))
-                      :application (str application-id)}})))
+                      :third-party third-party-teet-id
+                      :application application-teet-id}})))
 
   ResponseCreated
   (process-event [{r :response
