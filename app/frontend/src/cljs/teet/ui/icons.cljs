@@ -11,6 +11,8 @@
   "accessibility"
   "accessibility_new"
   "accessible"
+  "login"
+  "logout"
   "accessible_forward"
   "account_balance"
   "account_balance_wallet"
