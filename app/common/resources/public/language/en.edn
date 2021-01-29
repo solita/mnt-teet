@@ -3,6 +3,7 @@
   :logout "Logout",
   :save-information "Save information",
   :my-details "MY DETAILS"},
+ :accoutn {:account-edited "Account information edited."},
  :activity
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",
@@ -1058,6 +1059,7 @@
    :placeholder "Type name..."},
   :role "Role",
   :unregistered "User"},
+ :validation {:invalid-email "Invalid email address"},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",
