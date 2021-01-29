@@ -3,7 +3,8 @@
             [teet.cooperation.cooperation-model :as cooperation-model]
             [clojure.string :as str]
             [teet.util.date :as date]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [clj-time.core :as t]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -129,7 +130,27 @@
   (get-in (du/entity db application-id)
     [:cooperation.application/activity :db/id]))
 
+(defn application-3rd-party [db application-id]
+  (get-in (du/entity db application-id)
+    [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/name]))
+
 (defn response-project-id [db response-id]
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
           [:cooperation.application/_response 0 :cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :db/id]))
+
+(defn applications-to-be-expired
+  "Returns all Applications to be expired in the given number of days"
+  [db days]
+  (d/q '[:find ?application ?third-party ?date ?application-expiration-date
+         :keys application-id third-party-id date application-expiration-date
+         :where [?third-party :cooperation.3rd-party/applications ?application]
+         [?application :cooperation.application/date ?date]
+         [?application :cooperation.application/response ?response]
+         [?response :cooperation.response/valid-until ?application-expiration-date]
+         [(< ?application-expiration-date ?deadline)]
+         (not-join [?application]
+           [?notification :notification/target ?application]
+           [?notification :notification/type :notification.type/cooperation-application-expired-soon])
+         :in $ ?deadline]
+    db (date/inc-days (date/now) days)))

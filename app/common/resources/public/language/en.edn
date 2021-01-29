@@ -246,6 +246,8 @@
   :cooperation.application.response-type/consent "Consent",
   :task.type/noise-study "Noise study",
   :cooperation.application.type/design "Design",
+  :notification.type/cooperation-application-expired-soon
+  "Application terms will expire soon",
   :cooperation.opinion.status/unanswered "No opinion was submitted",
   :task.status/rejected "Rejected",
   :task.status/reviewing "Reviewing",
@@ -482,7 +484,7 @@
   :version "Version"},
  :error
  {:file-metadata-not-unique
-  "A file with the same metadata already exists",
+  "Uploading this file with the given metadata would create a duplicate file under the task or duplicate files already exist for this task",
   :part-has-files
   "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",

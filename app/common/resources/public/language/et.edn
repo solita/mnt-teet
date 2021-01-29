@@ -244,6 +244,8 @@
   :cooperation.application.response-type/consent "Nõusolek",
   :task.type/noise-study "Müra uuring",
   :cooperation.application.type/design "Projekt",
+  :notification.type/cooperation-application-expired-soon
+  "Taotluse tingimused aeguvad peagi",
   :cooperation.opinion.status/unanswered "Ei esitanud arvamust",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
@@ -477,7 +479,8 @@
    "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad."},
   :version "Versioon"},
  :error
- {:file-metadata-not-unique "Samade metaandmetega fail on juba olemas",
+ {:file-metadata-not-unique
+  "Selle faili üleslaadimine antud metaandmetega tekitaks ülesandesse duplikaat faili või ülesandes on juba duplikaat failid.",
   :part-has-files
   "Ülesande osale on lisatud faile. Kui soovid ülesande osa kustutada, siis tõsta enne failid teise osa külge või kustuta failid.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
