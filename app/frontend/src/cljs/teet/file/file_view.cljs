@@ -342,8 +342,7 @@
          (when delete-action
            [buttons/delete-button-with-confirm
             {:action #(delete-action file)
-             :trashcan? true}])]
-        ])]))
+             :trashcan? true}])]])]))
 
 (defn file-list2
   [{:keys [sort-by-value data-cy] :as opts} files]

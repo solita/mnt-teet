@@ -47,7 +47,8 @@
             [teet.ui.panels :as panels]
             [teet.util.date :as dateu]
             [teet.comments.comments-controller :as comments-controller]
-            [teet.file.file-style :as file-style]))
+            [teet.file.file-style :as file-style]
+            [teet.meeting.meeting-style :as meeting-style]))
 
 (def milliseconds-when-resent (* 1000 5))                  ;; 5 seconds
 
@@ -164,17 +165,12 @@
                 toggle-open! #(do
                                 (.stopPropagation %)
                                 (swap! open? not))]
-               [:div {:style {:border-bottom (str "1px solid " theme-colors/gray-lighter)
-                              :padding-bottom "1rem"
-                              :padding-top "1rem"}}
+               [:div {:class [(<class meeting-style/meeting-container-heading)]}
                 [:div {:class (<class common/hierarchical-heading-container2 bg-color text-color (and
                                                                                                    (or (seq children) after-children-component)
                                                                                                    @open?))}
                  [:div
-                  [:div {:style {:width "100%"
-                                 :display :flex
-                                 :justify-content :space-between
-                                 :align-items :center}}
+                  [:div {:class [(<class meeting-style/meeting-container-heading-box)]}
                    [:div {:style {:flex-grow 1
                                   :text-align :start}}
                     heading]
@@ -983,7 +979,7 @@
                         agenda-links (:link/_from agenda-topic)]
                        (if (or (seq agenda-files) (seq agenda-links))
                                [:div {:class (<class file-style/file-icon-container-style)
-                                      :title "This agenda has files or links attached."} [icons/content-link
+                                      :title (tr [:meeting :agenda-has-attachments])} [icons/content-link
                                                              {:style {:color theme-colors/primary}}]]))
                      [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]]
                      [:span (user-model/user-name responsible)]]
@@ -1006,7 +1002,7 @@
                                      decision-links (:link/_from d)]
                                     (if (or (seq decision-files) (seq decision-links))
                                       [:div {:class (<class file-style/file-icon-container-style)
-                                             :title "This decision has files or links attached."} [icons/content-link
+                                             :title (tr [:meeting :agenda-has-attachments])} [icons/content-link
                                                                                                  {:style {:color theme-colors/primary}}]]))
                         [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
                                                                                       :num (:meeting.decision/number d)})]]

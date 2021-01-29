@@ -16,7 +16,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.file.file-view :as file-view]
-            [teet.file.file-style :as file-style]))
+            [teet.file.file-style :as file-style]
+            [teet.link.link-style :as link-style]))
 
 (defmulti display (fn [_ link] (:link/type link)))
 
@@ -30,8 +31,8 @@
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
-    [:div {:style {:display :flex}}
-     [:div {:style {:padding-right "0.5rem"}}
+    [:div {:class [(<class link-style/link-row-heading-line)]}
+     [:div {:class [(<class link-style/link-row-icon)]}
       [icons/content-link {:style {:color theme-colors/primary}}]]
      [:div
       [:div
@@ -64,12 +65,9 @@
   [_ {:link/keys [info external-id]}]
   (let [{:keys [L_AADRESS TUNNUS]} info
         valid? (:link/valid? info)]
-    [:div {:style {:display :flex
-                   :flex-direction :column
-                   :justify-content :center}}
-     [:div {:style {:display :flex
-                    :align-items :center}}
-      [:div {:style {:padding-right "0.5rem"}}
+    [:div {:class [(<class link-style/link-row)]}
+     [:div {:class [(<class link-style/link-row-heading-line)]}
+      [:div {:class [(<class link-style/link-row-icon)]}
        [icons/content-link {:style {:color theme-colors/primary}}]]
       (if valid?
         [url/Link
@@ -93,9 +91,9 @@
 (defmethod display :estate
   [_ {:link/keys [external-id] :as link}]
   (let [valid? (get-in link [:link/info :link/valid?])]
-    [:div
-     [:div {:style {:display :flex}}
-      [:div {:style {:padding-right "0.5rem"}}
+    [:div {:class [(<class link-style/link-row)]}
+     [:div {:class [(<class link-style/link-row-heading-line)]}
+      [:div {:class [(<class link-style/link-row-icon)]}
        [icons/content-link {:style {:color theme-colors/primary}}]]
       (if valid?
         [url/Link
@@ -128,13 +126,10 @@
                       :link/keys [to type] :as link}]
   [:div {:class [(<class common-styles/flex-row-space-between)]
          :style {:border-top (str "solid " theme-colors/gray-lighter " 2px")}}
-   [:div {:style (merge {:flex :auto
-                  :padding "0.5rem 0.5rem 0.5rem 0"
-                  :min-width 0}
-                   (when editable? {:border-right (str "solid " theme-colors/gray-lighter " 2px")}))}
+   [:div {:class [(<class link-style/link-row-style editable?)]}
     [display (get link-entity-opts type) link]]
    (when editable?
-     [:div {:style {:flex 0 :align-self :center :padding-left "0.5rem"}}
+     [:div {:class [(<class link-style/link-row-editable-box)]}
       [buttons/delete-button-with-confirm {:clear? true
                                            :id (str "link-delete-button-" id)
                                            :icon-position :start

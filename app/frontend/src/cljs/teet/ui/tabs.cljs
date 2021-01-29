@@ -38,7 +38,7 @@
    :color theme-colors/white
    :align-items "center"
    :padding "13.5px 8px"
-   :background "#005AA3"
+   :background theme-colors/blue-tab
    :border-radius "3px 3px 0px 0px"})
 
 (defn tab-links-container-style
@@ -46,7 +46,7 @@
   {:display :flex
    :margin-bottom "2rem"
    :padding-bottom "0"
-   :border-bottom "solid #005AA3 1px"})
+   :border-bottom (str "solid " theme-colors/blue-tab " 1px")})
 
 (defn details-and-comments-tabs
   [{:keys [e!]}]

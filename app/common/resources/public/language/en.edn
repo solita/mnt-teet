@@ -855,7 +855,9 @@
   :add-person "Add person",
   :approved-by "Approved by {approvers}",
   :notifications-sent "Notifications sent",
-  :decision-topic "{topic} decision #{num}"},
+  :decision-topic "{topic} decision #{num}",
+  :agenda-has-attachments "This agenda has files or links attached.",
+  :decision-has-attachments "This decision has files or links attached."},
  :notifications
  {:no-unread-notifications "No unread notifications",
   :topic-deleted "Topic deleted successfully",

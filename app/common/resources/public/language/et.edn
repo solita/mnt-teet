@@ -851,7 +851,9 @@
   :add-person "Osaleja lisamine",
   :approved-by "Kinnitatud {approvers} poolt",
   :notifications-sent "Teavitused saadetud",
-  :decision-topic "{topic} otsus #{num}"},
+  :decision-topic "{topic} otsus #{num}",
+  :agenda-has-attachments "Teemale on lisatud manuseid või linke.",
+  :decision-has-attachments "Otsusele on lisatud manuseid või linke."},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
   :topic-deleted "Päevakavapunkt edukalt kustutatud",
