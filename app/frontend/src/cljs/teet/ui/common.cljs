@@ -427,7 +427,8 @@
   ([opts data]
    [:div {:class (<class common-styles/flex-row-wrap)}
     (doall
-      (for [[label data row-options] data]
+     (for [[label data row-options :as row] data
+           :when row]
         ^{:key (str (:key opts) "-" label)}
         [:div (merge row-options
                      {:class [(<class info-row-item-style (:right-align-last? opts))

@@ -38,6 +38,7 @@
             teet.link.link-commands
             teet.cooperation.cooperation-queries
             teet.cooperation.cooperation-commands
+            teet.asset.asset-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

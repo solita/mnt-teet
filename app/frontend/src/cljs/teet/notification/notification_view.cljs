@@ -49,6 +49,7 @@
     :notification.type/comment-mention [icons/communication-chat-bubble]
     :notification.type/meeting-updated [icons/action-calendar-today]
     :notification.type/cooperation-response-to-application-added  [icons/action-pending-actions]
+    :notification.type/cooperation-application-expired-soon [icons/action-assignment-late]
     [icons/navigation-more-horiz]))
 
 (defn notification-menu-style

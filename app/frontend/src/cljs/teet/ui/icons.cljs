@@ -625,7 +625,8 @@
   "vertical_align_bottom"
   "vertical_align_center"
   "vertical_align_top"
-  "wrap_text")
+  "wrap_text"
+  "schema")
 
 ;; File icons
 (define-font-icons {:prefix "file" :component Icon}

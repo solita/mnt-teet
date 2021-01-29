@@ -149,11 +149,11 @@
  :cooperation-third-party
  {:path "/projects/:project/cooperation/:third-party"
   :parent :cooperation
-  :crumb (js/decodeURIComponent third-party)
+  :crumb (get-in state [:third-party :cooperation.3rd-party/name])
   :view teet.cooperation.cooperation-view/third-party-page
   :state {:query :cooperation/third-party
           :args {:thk.project/id project
-                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)}}}
+                 :teet/id (uuid third-party)}}}
 
  :cooperation-application
  {:path "/projects/:project/cooperation/:third-party/:application"
@@ -162,8 +162,8 @@
   :view teet.cooperation.cooperation-view/application-page
   :state {:query :cooperation/application
           :args {:thk.project/id project
-                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)
-                 :db/id (->long application)}}}
+                 :third-party-teet-id (uuid third-party)
+                 :application-teet-id (uuid application)}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
@@ -186,4 +186,12 @@
   :crumb (tr [:admin :inspector-title])
   :parent :admin
   :state {:query :admin/entity-info
-          :args {:id id}}}}
+          :args {:id id}}}
+
+ :asset-type-library
+ {:path "/asset/type-library"
+  :view teet.asset.asset-library-view/asset-library-page
+  :crumb (tr [:asset :type-library-label])
+  :state {:query :asset/type-library
+          :args {}}}
+ }

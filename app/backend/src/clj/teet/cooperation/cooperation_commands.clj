@@ -1,6 +1,6 @@
 (ns teet.cooperation.cooperation-commands
   "Commands for cooperation entities"
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.cooperation.cooperation-model :as cooperation-model]
             [teet.meta.meta-model :as meta-model]
@@ -30,33 +30,48 @@
                          :cooperation.3rd-party/email
                          :cooperation.3rd-party/phone])
            {:db/id "new-third-party"
+            :teet/id (java.util.UUID/randomUUID)
             :cooperation.3rd-party/project [:thk.project/id project-id]}))]})
+
+(defn- third-party-belongs-to-project? [db third-party-teet-id project-eid]
+  (seq (d/q '[:find ?tp :in $ ?id ?project
+              :where
+              [?tp :teet/id ?id]
+              [?tp :cooperation.3rd-party/project ?project]]
+            db third-party-teet-id project-eid)))
 
 (defcommand :cooperation/create-application
   {:doc "Create new application in project for the given 3rd party."
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
-             third-party-name :cooperation.3rd-party/name
+             third-party-teet-id :third-party-teet-id
              application :application}
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
    :pre [^{:error :application-outside-activities}
-         (cooperation-db/application-matched-activity-id db project-id application)]
-   :transact
-   (if-let [tp-id (cooperation-db/third-party-id-by-name
-                    db [:thk.project/id project-id] third-party-name)]
-     [{:db/id tp-id
-       :cooperation.3rd-party/applications
-       [(merge (select-keys application
-                            [:cooperation.application/type
-                             :cooperation.application/response-type
-                             :cooperation.application/date
-                             :cooperation.application/response-deadline
-                             :cooperation.application/comment])
-               {:db/id "new-application"
-                :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
-               (meta-model/creation-meta user))]}]
-     (db-api/bad-request! "No such 3rd party"))})
+         (cooperation-db/application-matched-activity-id db project-id application)
+
+         (third-party-belongs-to-project? db third-party-teet-id
+                                          [:thk.project/id project-id])]}
+  (if-let [tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)]
+    (let [teet-id (java.util.UUID/randomUUID)
+          {tempids :tempids}
+          (tx [{:db/id tp-id
+                :cooperation.3rd-party/applications
+                [(merge (select-keys application
+                                     [:cooperation.application/type
+                                      :cooperation.application/response-type
+                                      :cooperation.application/date
+                                      :cooperation.application/response-deadline
+                                      :cooperation.application/comment])
+                        {:db/id "new-application"
+                         :teet/id teet-id
+                         :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
+                        (meta-model/creation-meta user))]}])]
+      {:tempids tempids
+       :third-party-teet-id third-party-teet-id
+       :application-teet-id teet-id})
+    (db-api/bad-request! "No such 3rd party")))
 
 
 (defmethod link-db/link-from [:cooperation.response :file]
@@ -105,7 +120,7 @@
                      (meta-model/modification-meta user)
                      (meta-model/creation-meta user))))
          [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
-            project-id application-id)])))})
+            project-id application-id cooperation-notifications/new-response-type)])))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]

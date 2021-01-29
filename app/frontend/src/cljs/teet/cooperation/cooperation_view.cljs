@@ -71,9 +71,9 @@
    :padding-left 0
    :list-style-type :none})
 
-(defn- application-link [{id :db/id :cooperation.application/keys [type response-type]}]
+(defn- application-link [{teet-id :teet/id :cooperation.application/keys [type response-type]}]
   [url/Link {:page :cooperation-application
-             :params {:application (str id)}}
+             :params {:application teet-id}}
    (str
      (tr-enum type) " / " (tr-enum response-type))])
 
@@ -220,21 +220,22 @@
              :lg 4}
        [application-list-opinion application]]])])
 
-(defn- third-parties [e! project third-parties selected-third-party-name]
+(defn- third-parties [e! project third-parties selected-third-party-teet-id]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
    [:div.project-third-parties-list
     {:class (<class third-parties-navigator)}
     [:ul {:class (<class third-party-list)}
      (for [{id :db/id
+            teet-id :teet/id
             :cooperation.3rd-party/keys [name]} third-parties]
-       (let [currently-selected-third-party? (= name selected-third-party-name)]
+       (let [currently-selected-third-party? (= teet-id selected-third-party-teet-id)]
          ^{:key (str id)}
          [:li.project-third-party
           [url/Link {:page :cooperation-third-party
                      :class (<class common-styles/white-link-style
                                     currently-selected-third-party?)
                      :params
-                     {:third-party (js/encodeURIComponent name)}}
+                     {:third-party teet-id}}
            name]]))]
     [form/form-modal-button
      {:max-width "sm"
@@ -246,15 +247,15 @@
                                                           [icons/content-add])}
                          (tr [:cooperation :new-third-party])]}]]])
 
-(defn- selected-third-party-name [{:keys [params] :as _app}]
-  (-> params :third-party js/decodeURIComponent))
+(defn- selected-third-party-teet-id [{:keys [params] :as _app}]
+  (some-> params :third-party uuid))
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   [project-view/project-full-page-structure
    {:e! e!
     :app app
     :project project
-    :left-panel [third-parties e! project third-parties-list (selected-third-party-name app)]
+    :left-panel [third-parties e! project third-parties-list (selected-third-party-teet-id app)]
     :right-panel right-content
     :main main-content}])
 
@@ -275,9 +276,9 @@
         :modal-title (tr [:cooperation :new-third-party-title])
         :button-component [buttons/button-primary {:class "new-third-party"}
                            (tr [:cooperation :new-third-party])]}]]
-     (for [{:cooperation.3rd-party/keys [name applications]} overview]
+     (for [{teet-id :teet/id :cooperation.3rd-party/keys [name applications]} overview]
        [url/with-navigation-params
-        {:third-party (js/encodeURIComponent name)}
+        {:third-party (str teet-id)}
         (let [application (first applications)]
           [:div {:data-third-party name}
            [application-list-item
@@ -285,7 +286,7 @@
                                                   :display :block}
                                           :class (<class common-styles/margin-bottom 1.5)
                                           :page :cooperation-third-party
-                                          :params {:third-party (js/encodeURIComponent name)}}
+                                          :params {:third-party teet-id}}
                                 name]}
             application]])])]]])
 
@@ -295,7 +296,7 @@
      ^{:key (str id)}
      [application-list-item {} application])])
 
-(defn- application-form [{:keys [e! project-id third-party]} close-event form-atom]
+(defn- application-form [{:keys [e! project-id third-party-teet-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
@@ -303,7 +304,7 @@
               :save-event #(common-controller/->SaveForm
                              :cooperation/create-application
                              {:thk.project/id project-id
-                              :cooperation.3rd-party/name third-party
+                              :third-party-teet-id third-party-teet-id
                               :application (common-controller/prepare-form-data @form-atom)}
                              (fn [response]
                                (fn [e!]
@@ -329,9 +330,9 @@
                           :rows 5}]])
 
 (defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
-  (let [third-party-name (js/decodeURIComponent (:third-party params))
-        third-party (some #(when (= third-party-name
-                                    (:cooperation.3rd-party/name %)) %)
+  (let [third-party-teet-id (uuid (:third-party params))
+        third-party (some #(when (= third-party-teet-id
+                                    (:teet/id %)) %)
                           overview)]
     [:div.cooperation-third-party-page {:class (<class common-styles/flex-column-1)}
      [cooperation-page-structure
@@ -351,7 +352,7 @@
          {:max-width "sm"
           :form-component [application-form {:e! e!
                                              :project-id (:thk.project/id project)
-                                             :third-party third-party-name}]
+                                             :third-party-teet-id third-party-teet-id}]
           :modal-title (tr [:cooperation :new-application-title])
           :button-component [buttons/button-primary {:class "new-application"}
                              (tr [:cooperation :new-application])]}]]
