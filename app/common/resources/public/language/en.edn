@@ -2,8 +2,8 @@
  {:my-account "My account",
   :logout "Logout",
   :save-information "Save information",
+  :account-edited "Account information edited.",
   :my-details "MY DETAILS"},
- :accoutn {:account-edited "Account information edited."},
  :activity
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",

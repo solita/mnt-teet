@@ -2,8 +2,8 @@
  {:my-account "Minu konto",
   :logout "Logout",
   :save-information "Salvestan andmed",
+  :account-edited "Konto muudetud",
   :my-details "MINU ANDMED"},
- :accoutn {:account-edited "Konto muudetud"},
  :activity
  {:note-all-tasks-need-to-be-completed
   "Kõik ülesanded peavad olema lõpetatud enne kui tegevuse saab ülevaatamiseks saata",
