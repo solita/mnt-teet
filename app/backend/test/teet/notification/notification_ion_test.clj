@@ -1,4 +1,4 @@
-(ns teet.notification.notification-ion-test
+(ns ^:db teet.notification.notification-ion-test
   (:require [clojure.test :refer :all]
             [teet.test.utils :as tu]
             [clojure.test :as t]
@@ -17,7 +17,8 @@
 
 (def cooperation-3rd-party-name "Notification Test")
 
-(defn valid-date-for-application [db]
+(defn valid-date-for-application
+  [db]
   (-> (du/entity db
         (tu/->db-id "p1-lc1-act20"))
     :activity/estimated-start-date
@@ -33,13 +34,17 @@
     (tu/local-command :cooperation/create-3rd-party {:thk.project/id (project-id db)
                                                      :third-party cooperation-3rd-party})))
 
-(defn application [db] {:cooperation.application/type :cooperation.application.type/building-permit-draft
-                  :cooperation.application/response-type :cooperation.application.response-type/consent
-                  :cooperation.application/date (valid-date-for-application db)})
+(defn application
+  [db]
+  {:cooperation.application/type :cooperation.application.type/building-permit-draft
+   :cooperation.application/response-type :cooperation.application.response-type/consent
+   :cooperation.application/date (valid-date-for-application db)})
 
-(defn application-payload [db]  {:thk.project/id (project-id db)
-                                :cooperation.3rd-party/name cooperation-3rd-party-name
-                                :application (application db)})
+(defn application-payload
+  [db]
+  {:thk.project/id (project-id db)
+   :cooperation.3rd-party/name cooperation-3rd-party-name
+   :application (application db)})
 
 (defn response-payload
   [db application-id]
@@ -72,26 +77,17 @@
         create-application-result (create-cooperation-application (tu/db))]
     (is (some? cooperation-3rd-party-id))
     (is (some? create-application-result))
-
     ;; Run notify ion and check - no notifications created
     (notification-ion/notify)
-
     (testing "No notification before"
       (is (empty? (fetch-application-to-expire-notifications (tu/db)))))
-
-    (println (str "application-id " (get (:tempids create-application-result) "new-application")))
-
     ;; Create response with validity 1 month
     (create-application-response (tu/db) (get (:tempids create-application-result) "new-application"))
-
     ;; Run notify ion and verify there is new notification
     (notification-ion/notify)
-
     (testing "Notification created"
       (is (not (empty? (fetch-application-to-expire-notifications (tu/db))))))
-
     ;; Run notify ion once again and verify no new notifications created
     (notification-ion/notify)
-
     (testing "No additional notifications created"
       (is (= 1 (count (fetch-application-to-expire-notifications (tu/db))))))))
