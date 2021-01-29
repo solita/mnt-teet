@@ -26,7 +26,11 @@ Cypress.Commands.add("dummyLogin", (name) => {
 // Select language
 Cypress.Commands.add("selectLanguage", (lang) => {
     //cy.intercept(/.*\/language\/.*\.edn/).as("loadLanguage")
-    cy.get("#language-select").select(lang, {force: true})
+    cy.get("#open-account-navigation").click({force: true});
+    cy.wait(100);
+    cy.get(lang).click({force: true});
+    cy.wait(100);
+    cy.get("#open-account-navigation").click({force: true});
     //cy.wait("@loadLanguage")
 })
 
