@@ -296,7 +296,7 @@
      ^{:key (str id)}
      [application-list-item {} application])])
 
-(defn- application-form [{:keys [e! project-id third-party]} close-event form-atom]
+(defn- application-form [{:keys [e! project-id third-party-teet-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
@@ -304,7 +304,7 @@
               :save-event #(common-controller/->SaveForm
                              :cooperation/create-application
                              {:thk.project/id project-id
-                              :cooperation.3rd-party/name third-party
+                              :third-party-teet-id third-party-teet-id
                               :application (common-controller/prepare-form-data @form-atom)}
                              (fn [response]
                                (fn [e!]
@@ -330,9 +330,9 @@
                           :rows 5}]])
 
 (defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
-  (let [third-party-name (js/decodeURIComponent (:third-party params))
-        third-party (some #(when (= third-party-name
-                                    (:cooperation.3rd-party/name %)) %)
+  (let [third-party-teet-id (uuid (:third-party params))
+        third-party (some #(when (= third-party-teet-id
+                                    (:teet/id %)) %)
                           overview)]
     [:div.cooperation-third-party-page {:class (<class common-styles/flex-column-1)}
      [cooperation-page-structure
@@ -352,7 +352,7 @@
          {:max-width "sm"
           :form-component [application-form {:e! e!
                                              :project-id (:thk.project/id project)
-                                             :third-party third-party-name}]
+                                             :third-party-teet-id third-party-teet-id}]
           :modal-title (tr [:cooperation :new-application-title])
           :button-component [buttons/button-primary {:class "new-application"}
                              (tr [:cooperation :new-application])]}]]
