@@ -1,5 +1,6 @@
 (ns teet.navigation.navigation-view
-  (:require [herb.core :as herb :refer [<class]]
+  (:require [reagent.core :as r]
+            [herb.core :as herb :refer [<class]]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.common.common-controller :as common-controller :refer [when-feature]]
             [teet.localization :as localization :refer [tr]]
@@ -13,37 +14,17 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
-                                         ListItemText ListItemIcon LinearProgress]]
+            [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem IconButton Portal
+                                         ListItemText ClickAwayListener ClickAwayListener ListItemIcon LinearProgress Collapse]]
             [teet.ui.select :as select]
-            [taoensso.timbre :as log]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.typography :as typography]
+            [teet.user.user-model :as user-model]
+            [teet.ui.events :as events]
+            [teet.common.common-styles :as common-styles]))
 
 
 (def uri-quote (fnil js/encodeURIComponent "(nil)"))
-
-(defn language-selector
-  []
-  [select/select-with-action
-   {:container-class (herb/join (<class navigation-style/language-select-container-style)
-                                (<class navigation-style/divider-style))
-    :label (str (tr [:common :language]))
-    :class (<class navigation-style/language-select-style)
-    :id "language-select"
-    :name "language"
-    :value (case @localization/selected-language
-             :et
-             {:value "et" :label (get localization/language-names "et")}
-             :en
-             {:value "en" :label (get localization/language-names "en")})
-    :items [{:value "et" :label (get localization/language-names "et")}
-            {:value "en" :label (get localization/language-names "en")}]
-    :on-change (fn [val]
-                 (localization/load-language!
-                  (keyword (:value val))
-                  (fn [language _]
-                    (reset! localization/selected-language
-                            language))))}])
-
 
 (defn feedback-link
   [{:user/keys [given-name family-name person-id] :as user} url]
@@ -63,6 +44,8 @@
                    :href (str "mailto:teet-feedback@transpordiamet.ee"
                               "?Subject=" (uri-quote subject-text)
                               "&body=" (uri-quote body-text))}
+      [icons/action-feedback-outlined {:style {:margin-right "0.5rem"}
+                                       :color :primary}]
       (tr [:common :send-feedback])]]))
 
 (defn- drawer-header
@@ -137,6 +120,63 @@
                  :icon icons/action-settings
                  :name (tr [:admin :title])}])])
 
+(defmulti header-extra-panel (fn [_e! _user extra-panel]
+                               extra-panel))
+
+(defmethod header-extra-panel :default
+  [_ _ _]
+  "")
+
+(defn language-options
+  []
+  (r/with-let [change-lan-fn (fn [val]
+                               (localization/load-language!
+                                 (keyword val)
+                                 (fn [language _]
+                                   (reset! localization/selected-language
+                                           language))))]
+    [:div {:class (<class common-styles/flex-row)}
+     [:div {:style {:padding-right "0.5rem"
+                    :border-right (str "1px solid " theme-colors/border-dark)}}
+      (if (= @localization/selected-language :et)
+        [typography/TextBold "EST"]
+        [buttons/link-button {:id "ET"
+                              :on-click #(change-lan-fn "et")}
+         "EST"])]
+     [:div {:style {:padding-left "0.5rem"}}
+      (if (= @localization/selected-language :en)
+        [typography/TextBold "ENG"]
+        [buttons/link-button {:id "EN"
+                              :on-click #(change-lan-fn "en")}
+         "ENG"])]]))
+
+(defmethod header-extra-panel :account-control
+  [e! user _]
+  [:div {:style {:min-width "300px"}}
+   [:div {:class (<class navigation-style/extran-nav-heading-element-style)}
+    [typography/Text2
+     (user-model/user-name user)]]
+   [:div {:class (<class navigation-style/extra-nav-element-style)}
+    [common/Link {:href "#/account"
+                  :on-click (e! navigation-controller/->CloseExtraPanel)
+                  :class (<class common-styles/flex-row-center)
+                  :id "account-page-link"}
+     [icons/social-person-outlined {:color :primary
+                                    :style {:margin-right "1rem"}}]
+     (tr [:account :my-account])]]
+   [:div {:class (<class navigation-style/extra-nav-element-style)}
+    [:div {:class (<class common-styles/flex-row-center)}
+     [icons/action-language {:color :primary
+                             :style {:margin-right "1rem"}}]
+     [language-options]]]
+   [:div {:class (<class navigation-style/extra-nav-element-style)}
+    [:div {:class (<class common-styles/flex-row-center)}
+     [common/Link {:href "/#/login"
+                   :on-click (e! login-controller/->Logout)
+                   :class (<class common-styles/flex-align-center)}
+      [icons/action-logout {:color :primary
+                            :style {:margin-right "1rem"}}]
+      (tr [:account :logout])]]]])
 
 
 (defn user-info [user]
@@ -144,47 +184,52 @@
                            :label (tr [:user :role])
                            :data (:user/email user)}])
 
-(defn logout [e!]
-  [:div {:class (herb/join (<class navigation-style/logout-container-style)
-                           (<class navigation-style/divider-style))}
-   [common/Link {:class [:header-logout (<class navigation-style/logout-style)]
-                 :href "/#/login"
-                 :on-click (e! login-controller/->Logout)}
-    (tr [:common :log-out])]])
+(defn open-account-navigation
+  [e!]
+  [:div {:class (<class common-styles/flex-row-center)}
+   [IconButton {:size :small
+                :id "open-account-navigation"
+                :style {:margin-left "1rem"}
+                :on-click #(e! (navigation-controller/->ToggleExtraPanel :account-control))}
+    [icons/social-person-outlined {:color :primary}]]])
 
 (defn navigation-header-links
-  ([user url e!]
-   [navigation-header-links user url e! true])
-  ([user url e! logged-in?]
+  ([e! user url]
+   [navigation-header-links e! user url true])
+  ([e! user url logged-in?]
    [:div {:style {:display :flex
                   :justify-content :flex-end}}
-    [feedback-link user url]
     (when logged-in?
       [notification-view/notifications e!])
-    [language-selector]
-    (when logged-in?
-      (when-feature :my-role-display
-                    [user-info user]))
+    [feedback-link user url]
     (if logged-in?
-      [logout e!]
+      [open-account-navigation e!]
       [buttons/button-primary {:style {:margin "0 1rem"}
                                :href "/oauth2/request"}
        (tr [:login :login])])]))
 
-(defn header
-  [e! {:keys [open? page quick-search url]} user]
-  [:<>
-   [AppBar {:position "sticky"
-            :className (herb/join (<class navigation-style/appbar)
-                                  (<class navigation-style/appbar-position open?))}
-    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
-     [:div {:class (<class navigation-style/logo-style)}
-      [navigation-logo/maanteeamet-logo false]]
-     [search-view/quick-search e! quick-search]
-     [navigation-header-links user url e!]]]
+(defn header-extra-panel-container
+  [e! user extra-panel extra-panel-open?]
+  [:div {:style {:align-self :flex-end}}
+   [Collapse {:in (boolean extra-panel-open?)}
+    [:div {:class (<class navigation-style/extra-nav-style)}
+     [header-extra-panel e! user extra-panel]]]])
 
-   [Drawer {;:class-name (<class navigation-style/drawer open?)
-            :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
+(defn header
+  [e! {:keys [open? page quick-search url extra-panel extra-panel-open?]} user]
+  [:<>
+   [ClickAwayListener {:on-click-away (e! navigation-controller/->CloseExtraPanel)}
+    [AppBar {:position "sticky"
+             :className (herb/join (<class navigation-style/appbar)
+                                   (<class navigation-style/appbar-position open?))}
+     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
+      [:div {:class (<class navigation-style/logo-style)}
+       [navigation-logo/maanteeamet-logo false]]
+      [search-view/quick-search e! quick-search]
+      [navigation-header-links e! user url]]
+     [header-extra-panel-container e! user extra-panel extra-panel-open?]]]
+
+   [Drawer {:classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
             :variant "permanent"
             :anchor "left"
             :open open?}
