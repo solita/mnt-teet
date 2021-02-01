@@ -1,0 +1,10 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - ci/drift-detect/drift-detect.bash
+
+  # post_build:
+  #   commands:
+  #     - NOTIFY_ON_SUCCESS=1 bash $CODEBUILD_SRC_DIR/ci/scripts/slack.bash Drift-detect $CODEBUILD_RESOLVED_SOURCE_VERSION
