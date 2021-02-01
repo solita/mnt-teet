@@ -144,6 +144,20 @@
   (get-in (du/entity db application-id)
     [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/name]))
 
+(defn application-3rd-party-uuid [db application-id]
+  (let [name-of-3rd-party (application-3rd-party db application-id)]
+    (d/q '[:find ?id
+           :in $ ?name
+           :keys uuid
+           :where [?cooperation :cooperation.3rd-party/name ?name]
+           [?cooperation :teet/id ?id]]
+       db name-of-3rd-party)))
+
+(defn application-uuid
+  [db application-id]
+  (let [application-uuid (get-in (du/entity db application-id) [:teet/id])]
+    {:uuid application-uuid}))
+
 (defn response-project-id [db response-id]
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
