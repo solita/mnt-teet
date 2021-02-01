@@ -101,11 +101,11 @@
   (let [project-id (cooperation-db/application-project-id db application-id)
         thk-project-id (:thk.project/id (project-db/project-by-id db project-id))
         application-uuid (cooperation-db/application-uuid db application-id)
-        third-party-uuid (cooperation-db/application-3rd-party-uuid db application-id)]
+        third-party-uuid (first (cooperation-db/application-3rd-party-uuid db application-id))]
     {:page :cooperation-application
      :params {:project (str thk-project-id)
-              :third-party (str (:uuid third-party-uuid))
-              :application (str (:uuid application-uuid))}}))
+              :third-party (:uuid third-party-uuid)
+              :application (:uuid application-uuid)}}))
 
 (defn notification-navigation-info [db user notification-id]
   (when-let [{:notification/keys [type target]}
