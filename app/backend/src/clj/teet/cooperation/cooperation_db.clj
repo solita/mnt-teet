@@ -177,4 +177,4 @@
            [?notification :notification/target ?application]
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
-    db (date/inc-days (date/now) days)))
+    db (date/inc-days (date/now) (Integer/valueOf days))))
