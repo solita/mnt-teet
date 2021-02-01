@@ -178,7 +178,6 @@
       (is (seq items-before)
           "There are asset db items")
       (fn []
-        (println "ITEMS: " (list-items))
         (is (= items-before (list-items)))))))
 
 ;; Add any new test setup/verify functions here
