@@ -827,9 +827,12 @@
 (defn add-decision-component
   [e! meeting agenda-topic]
   [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/gray-lighter 5)))}
-   [form/form-modal-button {:form-component [decision-form e! (:db/id agenda-topic)]
-                            :modal-title (tr [:meeting :new-decision-modal-title])
-                            :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
+   [form/form-portal-button
+    {:form-component [decision-form e! (:db/id agenda-topic)]
+     :modal-title (tr [:meeting :new-decision-modal-title])
+     :container "add-decision-form-container"
+     :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]
+   [:div#add-decision-form-container]])
 
 
 (defn- meeting-agenda-content [e! {id :db/id
@@ -954,18 +957,22 @@
              :target "_blank" } "Download"]]]]
      [:div {:class (<class common-styles/heading-and-action-style) :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0" :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
       [typography/Heading2 (tr [:fields :meeting/agenda])]
-       (when edit?
-         [form/form-modal-button {:form-component   [agenda-form e! meeting]
-                                  :id               "add-agenda"
-                                  :form-value       {:meeting.agenda/responsible (select-keys user [:db/id
-                                                                                                    :user/id
-                                                                                                    :user/given-name
-                                                                                                    :user/family-name
-                                                                                                    :user/email
-                                                                                                    :user/person-id])}
-                                  :modal-title      (tr [:meeting :new-agenda-modal-title])
-                                  :button-component [buttons/button-primary {:start-icon (r/as-element
-                                                                                           [icons/content-add])} (tr [:meeting :add-agenda-button])]}])]
+      (when edit?
+        [form/form-portal-button
+         {:form-component   [agenda-form e! meeting]
+          :container "agenda-form-container"
+          :id "add-agenda"
+          :form-value {:meeting.agenda/responsible (select-keys user [:db/id
+                                                                      :user/id
+                                                                      :user/given-name
+                                                                      :user/family-name
+                                                                      :user/email
+                                                                      :user/person-id])}
+          :modal-title (tr [:meeting :new-agenda-modal-title])
+          :button-component [buttons/button-primary {:start-icon (r/as-element
+                                                                  [icons/content-add])}
+                             (tr [:meeting :add-agenda-button])]}])]
+     [:div#agenda-form-container]
      [:div {:style {:margin-bottom "1rem"}}
       (doall
        (for [{id :db/id
@@ -985,13 +992,18 @@
                      [:span (user-model/user-name responsible)]]
            :open? true
            :heading-button (when edit?
-                             [form/form-modal-button {:form-component [agenda-form e! meeting]
-                                                      :id (str "edit-agenda-" id)
-                                                      :form-value agenda-topic
-                                                      :modal-title (tr [:meeting :edit-agenda-modal-title])
-                                                      :button-component [buttons/button-secondary {:size :small}
-                                                                         (tr [:buttons :edit])]}])
-           :content [meeting-agenda-content e! agenda-topic edit?]
+                             [form/form-portal-button
+                              {:form-component [agenda-form e! meeting]
+                               :container (str "edit-agenda-" id "-container")
+                               :id (str "edit-agenda-" id)
+                               :form-value agenda-topic
+                               :modal-title (tr [:meeting :edit-agenda-modal-title])
+                               :button-component [buttons/button-secondary {:size :small}
+                                                  (tr [:buttons :edit])]}])
+           :content
+           [:<>
+            [:div {:id (str "edit-agenda-" id "-container")}]
+            [meeting-agenda-content e! agenda-topic edit?]]
            :children (for [d decisions]
                        {:key (:db/id d)
                         :open? true
@@ -1007,13 +1019,17 @@
                         [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
                                                                                       :num (:meeting.decision/number d)})]]
                         :heading-button (when edit?
-                                          [form/form-modal-button
+                                          [form/form-portal-button
                                            {:form-component [decision-form e! (:db/id agenda-topic)]
+                                            :container (str "edit-decision-" (:db/id agenda-topic) "-container")
                                             :form-value d
                                             :modal-title (tr [:meeting :edit-decision-modal-title])
                                             :button-component [buttons/button-secondary {:size :small}
                                                                (tr [:buttons :edit])]}])
-                        :content [meeting-decision-content e! d edit?]})
+                        :content
+                        [:<>
+                         [:div {:id (str "edit-decision-" (:db/id agenda-topic) "-container")}]
+                         [meeting-decision-content e! d edit?]]})
            :after-children-component (when edit?
                                        [add-decision-component e! meeting agenda-topic])}
           theme-colors/white]))]
