@@ -1,4 +1,10 @@
-{:activity
+{:account
+ {:my-account "Minu konto",
+  :logout "Logout",
+  :save-information "Salvestan andmed",
+  :account-edited "Konto muudetud",
+  :my-details "MINU ANDMED"},
+ :activity
  {:note-all-tasks-need-to-be-completed
   "Kõik ülesanded peavad olema lõpetatud enne kui tegevuse saab ülevaatamiseks saata",
   :status "Olek",
@@ -46,6 +52,19 @@
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
+ :asset
+ {:type-library
+  {:description "Kirjeldus",
+   :fclass "Vara klass",
+   :unit "Ühik",
+   :name "Nimi",
+   :fgroup "Vara liik",
+   :header "Tee olemi tüübiteek (TOTT) ",
+   :link "TOTT",
+   :label "Silt",
+   :values "Väärtused",
+   :ctype "Komponent",
+   :attributes "Omadused"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -201,6 +220,9 @@
   :drop-to-comment "Lisan märkusele pilte",
   :drop-to-meeting-agenda "Lisan päevakavapunktile faile",
   :drop-to-meeting-decision "Lisan koosoleku otsusele faile"},
+ :email
+ {:footer
+  "\n---------\nIsikuandmete kaitsega seoses on teil õigus näha ja parandada oma kontaktandmeid ja paluda meil teie kasutajakonto kustutada. Kui Teil on küsimusi teie kontaktandmete töötlemise või teie isikuandmete kasutamise kohta, võtke meiega ühendust e-posti aadressiga {contact-mailto}"},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
@@ -228,6 +250,8 @@
   :cooperation.application.response-type/consent "Nõusolek",
   :task.type/noise-study "Müra uuring",
   :cooperation.application.type/design "Projekt",
+  :notification.type/cooperation-application-expired-soon
+  "Taotluse tingimused aeguvad peagi",
   :cooperation.opinion.status/unanswered "Ei esitanud arvamust",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
@@ -461,7 +485,8 @@
    "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad."},
   :version "Versioon"},
  :error
- {:file-metadata-not-unique "Samade metaandmetega fail on juba olemas",
+ {:file-metadata-not-unique
+  "Selle faili üleslaadimine antud metaandmetega tekitaks ülesandesse duplikaat faili või ülesandes on juba duplikaat failid.",
   :part-has-files
   "Ülesande osale on lisatud faile. Kui soovid ülesande osa kustutada, siis tõsta enne failid teise osa külge või kustuta failid.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
@@ -561,7 +586,6 @@
   :file/position-number "POS#",
   :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",
-  :meeting/links "Lingid",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
   :user/phone-number "Telefoni number",
@@ -612,6 +636,7 @@
   :meeting/organizer "Korraldaja",
   :thk.project/road-nr "Tee number",
   :task/estimated-end-date "Eeldatav lõppkuupäev",
+  :meeting/links "Lingid",
   :activity/name "Tegevuse nimi",
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
@@ -846,14 +871,14 @@
   :moved-to-absentees-successfully "Lisatud puudujate nimekirja",
   :edit-agenda-modal-title "Päevakavapunkti muutmine",
   :email-title "TEET: koosolek uuendatud: {meeting-title}",
+  :decision-has-attachments "Otsusele on lisatud manuseid või linke.",
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
   :add-person "Osaleja lisamine",
   :approved-by "Kinnitatud {approvers} poolt",
   :notifications-sent "Teavitused saadetud",
-  :decision-topic "{topic} otsus #{num}",
   :agenda-has-attachments "Teemale on lisatud manuseid või linke.",
-  :decision-has-attachments "Otsusele on lisatud manuseid või linke."},
+  :decision-topic "{topic} otsus #{num}"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
   :topic-deleted "Päevakavapunkt edukalt kustutatud",
@@ -1032,6 +1057,7 @@
    :placeholder "Sisestan nime..."},
   :role "Roll",
   :unregistered "Kasutaja"},
+ :validation {:invalid-email "Vale emaili aadress"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
