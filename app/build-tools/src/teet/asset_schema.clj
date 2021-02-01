@@ -74,6 +74,7 @@
            "ListItems"
            [:name :property
             :label-et :label-en
+            :agreed?
             :comment]
            #{:name :property}))
 
@@ -99,7 +100,9 @@
     (let [workbook (sheet/load-workbook in)
           fgroup (read-feature-groups workbook)
           fclass (read-feature-classes workbook)
-          ctype (read-ctypes workbook)
+          ctype (into [{:name :ctype/general
+                        :comment "Attributes general to all assets"}]
+                      (read-ctypes workbook))
           pset (read-pset workbook)
           list-items (read-list-items workbook)
           attrs-by-name
@@ -112,7 +115,6 @@
           exists? (into #{}
                         (map :name)
                         (concat fgroup fclass ctype pset list-items))]
-
       (vec
        (concat
         ;; Output feature groups
@@ -130,10 +132,12 @@
         ;; Output component types
         (for [ct ctype
               :when (and (:name ct)
-                         (exists? (:part-of ct)))]
+                         (or (not (contains? ct :part-of))
+                             (exists? (:part-of ct))))]
           (merge
            (common-attrs :asset-schema.type/ctype ct)
-           {:ctype/parent (str (:part-of ct))}))
+           (when (contains? ct :part-of)
+             {:ctype/parent (str (:part-of ct))})))
 
         ;; Output attributes namespaced by ctype
         (for [p (vals attrs-by-name)
@@ -155,8 +159,7 @@
         (for [item list-items
               :let [attr (get-in attrs-by-name [(:property item) :name])]
               :when (and (:name item)
-                         (exists? (:property item))
-                         (exists? attr))]
+                         (exists? (:property item)))]
           (merge
            (common-attrs :asset-schema.type/enum item)
            {:enum/attribute (str attr)})))))))

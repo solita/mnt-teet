@@ -65,25 +65,43 @@
   (d/tx-range conn {:start backup-start
                     :limit -1}))
 
-(defn- prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
-  (if-let [create-database (:create-database config)]
+(defn- prepare-database-for-restore* [{:keys [datomic-client conn] :as ctx}
+                                      connection-key
+                                      create-database
+                                      db-name clear-database?]
+  (if create-database
     (do
       (log/info "CREATING NEW DATABASE: " create-database)
       (d/create-database datomic-client {:db-name create-database})
-      (assoc ctx :conn (d/connect datomic-client {:db-name create-database})))
-    (let [db-name (environment/db-name)]
-      (if (:clear-database? config)
-        (do
-          (log/info "DELETING AND RECREATING " db-name " DATOMIC DATABASE.")
-          (d/delete-database datomic-client {:db-name db-name})
-          (d/create-database datomic-client {:db-name db-name})
-          (assoc ctx :conn (d/connect datomic-client {:db-name db-name})))
-        (do
-          (log/info "Using existing " db-name " database, checking that it is empty.")
-          (when-not (empty? (all-transactions conn))
-            (throw (ex-info "Database is not empty!"
-                            {:transaction-count (count (all-transactions conn))})))
-          ctx)))))
+      (assoc ctx connection-key (d/connect datomic-client {:db-name create-database})))
+    (if clear-database?
+      (do
+        (log/info "DELETING AND RECREATING " db-name " DATOMIC DATABASE.")
+        (d/delete-database datomic-client {:db-name db-name})
+        (d/create-database datomic-client {:db-name db-name})
+        (assoc ctx connection-key (d/connect datomic-client {:db-name db-name})))
+      (do
+        (log/info "Using existing " db-name " database, checking that it is empty.")
+        (when-not (empty? (all-transactions conn))
+          (throw (ex-info "Database is not empty!"
+                          {:transaction-count (count (all-transactions conn))})))
+        ctx))))
+
+(defn- prepare-database-for-restore [{:keys [config] :as ctx}]
+  (prepare-database-for-restore* ctx
+                                 :conn
+                                 (:create-database config)
+                                 (environment/db-name)
+                                 (:clear-database? config)))
+
+(defn- prepare-asset-db-for-restore [{:keys [config] :as ctx}]
+  (if (environment/feature-enabled? :asset-db)
+    (prepare-database-for-restore* ctx
+                                   :asset-conn
+                                   (:create-asset-database config)
+                                   (environment/asset-db-name)
+                                   (:clear-database? config))
+    ctx))
 
 (defn- read-restore-config [{event :event :as ctx}]
   (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
@@ -136,39 +154,44 @@
                           (= e tx-id))
                         datoms))}))
 
-(defn- output-all-tx [conn ostream]
-  (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
-                        (.putNextEntry (java.util.zip.ZipEntry. "transactions.edn")))
+(defn- output-zip [ostream & entries]
+  (with-open [zip-out (java.util.zip.ZipOutputStream. ostream)
               out (io/writer zip-out)]
-    (let [db (d/db conn)
-          attr-ident-cache (atom {})
-          out! #(pprint/pprint % out)
-          ref-attrs (into #{}
-                          (comp
-                           (map first)
-                           (remove #(str/starts-with? (str %) ":db")))
-                          (d/q '[:find ?id
+    (doseq [[entry-name generate-entry-fn :as entry] entries
+            :when entry]
+      (.putNextEntry zip-out (java.util.zip.ZipEntry. entry-name))
+      (generate-entry-fn out))))
+
+(defn- output-all-tx [conn out]
+  (let [db (d/db conn)
+        attr-ident-cache (atom {})
+        out! #(pprint/pprint % out)
+        ref-attrs (into #{}
+                        (comp
+                         (map first)
+                         (remove #(str/starts-with? (str %) ":db")))
+                        (d/q '[:find ?id
+                               :where
+                               [?attr :db/ident ?id]
+                               [?attr :db/valueType :db.type/ref]]
+                             db))
+        tuple-attrs (into {}
+                          (d/q '[:find ?id ?ta
                                  :where
                                  [?attr :db/ident ?id]
-                                 [?attr :db/valueType :db.type/ref]]
+                                 [?attr :db/tupleAttrs ?ta]]
                                db))
-          tuple-attrs (into {}
-                            (d/q '[:find ?id ?ta
-                                   :where
-                                   [?attr :db/ident ?id]
-                                   [?attr :db/tupleAttrs ?ta]]
-                                 db))
-          ignore-attributes (into ignore-attributes
-                                  (keys tuple-attrs))]
+        ignore-attributes (into ignore-attributes
+                                (keys tuple-attrs))]
 
-      (out! {:ref-attrs ref-attrs
-             :tuple-attrs tuple-attrs
-             :backup-timestamp (java.util.Date.)})
-      (doseq [tx (all-transactions conn)
-              :let [tx-map (output-tx db attr-ident-cache tx
-                                      ignore-attributes)]
-              :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
-        (out! tx-map)))))
+    (out! {:ref-attrs ref-attrs
+           :tuple-attrs tuple-attrs
+           :backup-timestamp (java.util.Date.)})
+    (doseq [tx (all-transactions conn)
+            :let [tx-map (output-tx db attr-ident-cache tx
+                                    ignore-attributes)]
+            :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
+      (out! tx-map))))
 
 (defn- prepare-restore-tx
   "Prepare transaction for restore.
@@ -189,51 +212,79 @@
       [(if add? :db/add :db/retract) e a v])))
 
 
+(defn- restore-tx-file*
+  "Restore a backup by running the transactions in from the reader
+  to the database pointed to by `conn`. It is assumed that
+  the given database is empty.
+
+  Returns the old->new id mapping."
+  [conn rdr]
+  ;; Read first form which is the mapping containing info about the backup
+  (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)]
+    (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
+    (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
+    (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")
+    (log/info "Restoring from tx log backup generated at: " backup-timestamp)
+    (loop [old->new {}
+
+           ;; Read rest of the forms (tx data) without retaining head
+           txs (read-seq rdr)]
+      (if-let [tx (first txs)]
+        (let [tx-data (into [(merge (:tx tx)
+                                    {:db/id "datomic.tx"})]
+                            (prepare-restore-tx (:data tx)
+                                                old->new
+                                                ref-attrs))
+              {tempids :tempids}
+              (d/transact
+               conn
+               {:tx-data tx-data})]
+
+          ;; Update old->new mapping with entity ids created in this tx
+          (recur (merge old->new tempids)
+                 (rest txs)))
+        (do
+          (log/info "All transactions applied.")
+          old->new)))))
+
+(defn- input-zip [file & entries]
+  (with-open [istream (io/input-stream (io/file file))
+              zip-in (java.util.zip.ZipInputStream. istream)
+              zip-reader (io/reader zip-in)]
+
+    (reduce
+     (fn [result [entry-name process-entry-fn :as entry]]
+       (if-not entry
+         result
+         (let [e (.getNextEntry zip-in)
+               read-entry-name (some-> e .getName)
+               rdr (java.io.PushbackReader. zip-reader)]
+           (assert (= entry-name read-entry-name)
+                   (str "Wrong zip entry, expected: " entry-name
+                        ", got: " read-entry-name))
+           (assoc result
+                  entry-name
+                  (process-entry-fn rdr)))))
+     {} entries)))
+
 (defn- restore-tx-file
-  "Restore a TEET backup zip from `file` by running the transactions in
-  the file to the database pointed to by `conn`. It is assumed that
-  the given database is empty."
-  [{:keys [conn file] :as ctx}]
+  "Restore a TEET backups from zip `file`.
+  Reads transactions.edn (TEET backup) and assets.edn (asset db backup
+  if enabled).
+  "
+  [{:keys [conn asset-conn file] :as ctx}]
 
   (log/info "Restoring backup from file: " file)
   ;; read all users and transact them in one go
-  (with-open [istream (io/input-stream (io/file file))
-              zip-in (doto (java.util.zip.ZipInputStream. istream)
-                       (.getNextEntry))
-              zip-reader (io/reader zip-in)
-              rdr (java.io.PushbackReader. zip-reader)]
-    ;; Read first form which is the mapping containing info about the backup
-    (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)]
-      (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
-      (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
-      (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")
-      (log/info "Restoring from tx log backup generated at: " backup-timestamp)
-      (loop [old->new {}
+  (let [result
+        (input-zip file
+                   ["transactions.edn" #(restore-tx-file* conn %)]
+                   (when (environment/feature-enabled? :asset-db)
+                     ["assets.edn" #(restore-tx-file* asset-conn %)]))]
+    (assoc ctx
+           :old->new (result "transactions.edn")
+           :asset-old->new (result "assets.edn"))))
 
-             ;; Read rest of the forms (tx data) without retaining head
-             txs (read-seq rdr)]
-        (if-let [tx (first txs)]
-          (let [tx-data (into [(merge (:tx tx)
-                                      {:db/id "datomic.tx"})]
-                              (prepare-restore-tx (:data tx)
-                                                  old->new
-                                                  ref-attrs))
-                {tempids :tempids}
-                (d/transact
-                 conn
-                 {:tx-data tx-data})]
-
-            ;; Update old->new mapping with entity ids created in this tx
-            (recur (merge old->new tempids)
-                   (rest txs)))
-          (do
-            (log/info "All transactions applied.")
-            (assoc ctx :old->new old->new)))))))
-
-(comment
-  (output-all-tx (environment/datomic-connection)
-                 (io/output-stream
-                  (io/file "backup-tx.edn.zip"))))
 
 (defn- backup* [_event]
   (let [bucket (environment/config-value :backup :bucket-name)
@@ -248,7 +299,13 @@
       (s3/write-file-to-s3 {:to {:bucket bucket
                                  :file-key file-key}
                             :contents (ring-io/piped-input-stream
-                                       (partial output-all-tx conn))})
+                                       (fn [out]
+                                         (output-zip
+                                          out
+                                          ["transactions.edn" (partial output-all-tx conn)]
+                                          (when (environment/feature-enabled? :asset-db)
+                                            ["assets.edn" (partial output-all-tx
+                                                                   (environment/asset-connection))]))))})
       (log/info "TEET backup finished.")
       (catch Exception e
         (log/error e "TEET backup failed")))))
@@ -276,6 +333,7 @@
              download-backup-file
              check-backup-format
              prepare-database-for-restore
+             prepare-asset-db-for-restore
              restore-tx-file
              migrate
              delete-backup-file)
