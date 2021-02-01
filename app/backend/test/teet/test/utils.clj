@@ -79,6 +79,7 @@
 ;;
 
 (def ^:dynamic *connection* "Datomic connection during tests" nil)
+(def ^:dynamic *asset-connection* "Asset db Datomic connection during tests" nil)
 (def ^:dynamic *data-fixture-ids* ":db/id values for entities created in data fixtures" nil)
 (def ^:dynamic *global-test-data* "Test specific data that can be stored and retrieved within a single test." nil)
 
@@ -87,10 +88,20 @@
   []
   *connection*)
 
+(defn asset-connection
+  "Returns the current asset db connection. Can only be called within tests using with-db fixture."
+  []
+  *asset-connection*)
+
 (defn db
   "Returns the current database. Can only be called within tests using with-db fixture."
   []
   (d/db (connection)))
+
+(defn asset-db
+  "Returns the current asset database. Can only be called within tests using with-db fixture."
+  []
+  (d/db (asset-connection)))
 
 (defn entity
   "Returns navigable entity from the current db."
@@ -171,6 +182,7 @@
             (log/info "Creating database " test-db-name)
             (d/create-database client db-name)
             (binding [*connection* (d/connect client db-name)
+                      *asset-connection* (d/connect client asset-db-name)
                       *data-fixture-ids* (atom {})]
               (binding [environment/*connection* *connection*]
                 (when migrate?

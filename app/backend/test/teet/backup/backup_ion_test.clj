@@ -160,10 +160,23 @@
           (is (integer? (:db/id restored-project)))
           (is (integer? (:db/id @project))))))))
 
+(defn asset-db-schema []
+  (let [list-items #(into #{}
+                          (map first)
+                          (d/q '[:find ?id
+                                 :where
+                                 [?e :enum/attribute _]
+                                 [?e :db/ident ?id]]
+                               (tu/asset-db)))
+        items-before (list-items)]
+    (fn []
+      (is (= items-before (list-items))))))
+
 ;; Add any new test setup/verify functions here
 (def test-parts [#'file-user-seen
                  #'task-and-comment
-                 #'compare-project-pull])
+                 #'compare-project-pull
+                 #'asset-db-schema])
 
 (deftest restore-tx-backup
   (let [with-populated-db (tu/with-db)
@@ -179,9 +192,9 @@
                   (doall
                    (for [setup test-parts]
                      (setup))))
-
-          (#'backup-ion/output-all-tx (tu/connection)
-                                      (io/output-stream backup-file)))))
+          (with-open [out (io/output-stream backup-file)]
+            (#'backup-ion/output-zip out
+                                     ["transactions.edn" (partial #'backup-ion/output-all-tx (tu/connection))])))))
 
     (testing "Backup file has been created"
       (is (.canRead backup-file) "Backup file exists")
@@ -209,7 +222,7 @@
                                    :mock-users? false
                                    :skip-delete? true
                                    :data-fixtures []})
-        verify-fns (atom nil)]        
+        verify-fns (atom nil)]
 
     (with-empty-db
       (fn []
