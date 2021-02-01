@@ -1,7 +1,7 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Portal]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
@@ -528,3 +528,36 @@
                    (fn []
                      (reset! form-atom (or form-value {}))
                      (reset! open-atom true))))]))
+
+(defn- to-portal-container [c]
+  (cond
+    (fn? c) (to-portal-container (c))
+    (string? c) (js/document.getElementById c)
+    (instance? js/HTMLElement c) c
+    :else (throw (ex-info "Invalid portal container, expected fn, string or element."
+                          {:invalid-container c}))))
+
+(defn form-portal-button
+  "Like form-modal-button but renders form in a portal.
+
+  Container must be a DOM node, a string (element id) or a
+  function that returns either."
+  [{:keys [container
+           form-component button-component
+           form-value
+           open? id]}]
+  (r/with-let [open-atom (r/atom (or open? false))
+               form-atom (r/atom (or form-value {}))
+               close #(reset! open-atom false)
+               close-event (reset-atom-event open-atom false)]
+    [:<>
+     (when @open-atom
+       [Portal {:container (to-portal-container container)}
+        (into form-component [close-event form-atom])])
+     (-> button-component
+         (assoc-in [1 :id] id)
+         (assoc-in [1 :on-click]
+                   (fn []
+                     (reset! form-atom (or form-value {}))
+                     (reset! open-atom true)))
+         (assoc-in [1 :disabled] @open-atom))]))
