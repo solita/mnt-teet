@@ -428,6 +428,7 @@
   "create"
   "delete_sweep"
   "drafts"
+  "content_copy"
   "file_copy"
   "filter_list"
   "flag"

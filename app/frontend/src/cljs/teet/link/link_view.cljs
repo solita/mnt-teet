@@ -8,13 +8,16 @@
             [teet.ui.format :as format]
             [teet.ui.buttons :as buttons]
             [teet.common.common-styles :as common-styles]
+            [teet.theme.theme-colors :as theme-colors]
             [herb.core :refer [<class]]
             [teet.ui.util :refer [mapc]]
             [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
-            [teet.file.file-view :as file-view]))
+            [teet.file.file-view :as file-view]
+            [teet.file.file-style :as file-style]
+            [teet.link.link-style :as link-style]))
 
 (defmulti display (fn [_ link] (:link/type link)))
 
@@ -28,8 +31,11 @@
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
-    [:div
+    [:div {:class [(<class link-style/link-row-heading-line)]}
+     [:div {:class [(<class link-style/link-row-icon)]}
+      [icons/content-link {:style {:color theme-colors/primary}}]]
      [:div
+      [:div
       (if deleted?
         [:<>
          [typography/GreyText
@@ -42,6 +48,8 @@
                        :align-items :center}}
          [url/Link
           {:page :activity-task
+           :target "_blank"
+           :class (<class file-style/file-list-entity-name-style)
            :params {:activity activity
                     :task (:db/id to)}}
           (tr-enum type)]
@@ -51,20 +59,20 @@
       [typography/SmallGrayText
        (tr [:task :link-info]
            {:assignee (user-model/user-name assignee)
-            :deadline (format/date estimated-end-date)})]]]))
+            :deadline (format/date estimated-end-date)})]]]]))
 
 (defmethod display :cadastral-unit
   [_ {:link/keys [info external-id]}]
   (let [{:keys [L_AADRESS TUNNUS]} info
         valid? (:link/valid? info)]
-    [:div {:style {:display :flex
-                   :flex-direction :column
-                   :justify-content :center}}
-     [:div {:style {:display :flex
-                    :align-items :center}}
+    [:div {:class [(<class link-style/link-row)]}
+     [:div {:class [(<class link-style/link-row-heading-line)]}
+      [:div {:class [(<class link-style/link-row-icon)]}
+       [icons/content-link {:style {:color theme-colors/primary}}]]
       (if valid?
         [url/Link
          {:page :project
+          :class (<class file-style/file-list-entity-name-style)
           :query {:tab "land"
                   :unit-id external-id}
           :target "_blank"}
@@ -83,26 +91,29 @@
 (defmethod display :estate
   [_ {:link/keys [external-id] :as link}]
   (let [valid? (get-in link [:link/info :link/valid?])]
-    [:div {:style {:display :flex
-                   :flex-direction :column
-                   :justify-content :center}}
-     [:div {:style {:display :flex
-                    :align-items :center}}
+    [:div {:class [(<class link-style/link-row)]}
+     [:div {:class [(<class link-style/link-row-heading-line)]}
+      [:div {:class [(<class link-style/link-row-icon)]}
+       [icons/content-link {:style {:color theme-colors/primary}}]]
       (if valid?
         [url/Link
          {:page :project
+          :class (<class file-style/file-list-entity-name-style)
           :query {:tab "land"
                   :estate-id external-id}
           :target "_blank"}
          external-id]
         [:p external-id])
       [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]]
+
      (when (not valid?)
        [typography/SmallGrayText (tr [:link :no-units-in-estate-selected])])]))
 
 (defmethod display :file
   [link-entity-opts {file :link/info}]
   [file-view/file-row2 (merge {:comments-link? true
+                               :link-icon? true
+                               :link-to-new-tab? true
                                :column-widths [10 1]}
                               (when link-entity-opts
                                 link-entity-opts))
@@ -113,15 +124,16 @@
                      link-entity-opts
                      {id :db/id
                       :link/keys [to type] :as link}]
-  [:div {:class [(<class common-styles/flex-row-space-between)]}
-   [:div {:style {:flex :auto
-                  :min-width 0}}
+  [:div {:class [(<class common-styles/flex-row-space-between)]
+         :style {:border-top (str "solid " theme-colors/gray-lighter " 2px")}}
+   [:div {:class [(<class link-style/link-row-style editable?)]}
     [display (get link-entity-opts type) link]]
    (when editable?
-     [:div {:style {:flex 0 :align-self :center}}
+     [:div {:class [(<class link-style/link-row-editable-box)]}
       [buttons/delete-button-with-confirm {:clear? true
                                            :id (str "link-delete-button-" id)
                                            :icon-position :start
+                                           :trashcan? true
                                            :action #(e! (link-controller/->DeleteLink from to type id
                                                                                       in-progress-atom))}]])])
 
@@ -167,6 +179,9 @@
                                                             @selected-type
                                                             in-progress))))]
     [:div.links {:style {:margin "1rem 0"}}
+     [typography/Subtitle1
+      {:style {:margin "1rem 0"}}
+      (tr [:fields :meeting/links])]
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
                                     :in-progress-atom in-progress

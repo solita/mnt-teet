@@ -8,7 +8,8 @@
             [teet.ui.common :as common]
             [teet.ui.panels :as panels]
             [teet.ui.typography :as typography]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn- comments-link-content
   [comment-counts]
@@ -20,6 +21,32 @@
     [:span {:style {:text-transform :lowercase}}
      [common/comment-count-chip {:comment/counts comment-counts}]
      (tr [:document :comments])]))
+
+(defn tab-element-style
+  []
+  ^{:pseudo {:last-child {:margin-right 0}}}
+  {:margin-right "1rem"
+   :border-radius "3px 3px 0px 0px"
+   :align-items "center"
+   :padding "13.5px 8px"
+   })
+
+(defn tab-element-style-selected
+  []
+  ^{:pseudo {:last-child {:margin-right 0}}}
+  {:margin-right "1rem"
+   :color theme-colors/white
+   :align-items "center"
+   :padding "13.5px 8px"
+   :background theme-colors/blue-tab
+   :border-radius "3px 3px 0px 0px"})
+
+(defn tab-links-container-style
+  []
+  {:display :flex
+   :margin-bottom "2rem"
+   :padding-bottom "0"
+   :border-bottom (str "solid " theme-colors/blue-tab " 1px")})
 
 (defn details-and-comments-tabs
   [{:keys [e!]}]
@@ -47,36 +74,27 @@
            ;; Not a wide display, show tabbed interface
            [:div.page-content-tabs
             [tab-wrapper
-             [:div.tab-links {:style {:margin "1rem 0 1rem 0"}}
-              [:div {:style {:display :inline-block}} ;;TODO cleanup inline-styles and html structure
-               [:div {:class (if (= (:tab query) "comments") "tab-inactive" "tab-active")}
+             [:div.tab-links {:class (<class tab-links-container-style)}
+
+               [:div {:class (<class (if (= (:tab query) "comments") tab-element-style tab-element-style-selected))}
                 (if (= (:tab query) "comments")
                   [common/Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
-                  [typography/SectionHeading (tr [:project :tabs :details])])]]
-              [:div {:style {:display :inline-block
-                             :margin-left "2rem"}}
-               [:div {:class (if (= (:tab query) "comments") "tab-active" "tab-inactive")}
+                  [typography/SectionHeading (tr [:project :tabs :details])])]
+
+               [:div {:class (<class (if (= (:tab query) "comments") tab-element-style-selected tab-element-style))}
                 (if (= (:tab query) "comments")
                   [typography/SectionHeading
                    [comments-link-content comment-counts]]
                   (or comment-link-comp
                       [common/Link {:href (url/set-query-param :tab "comments")}
-                       [comments-link-content comment-counts]]))]]]]
+                       [comments-link-content comment-counts]]))]]]
             (if (= (:tab query) "comments")
               comments-component
               (with-meta
                 details
                 {:key "details"}))])))}))
 
-(defn tab-element-style
-  []
-  ^{:pseudo {:last-child {:margin-right 0}}}
-  {:margin-right "1rem"})
 
-(defn tab-links-container-style
-  []
-  {:display :flex
-   :margin-bottom "2rem"})
 
 (defn tabs
   "Given as [[:tab-name tab-component]...[...]] first being the default
@@ -99,7 +117,7 @@
         (for [tab tab-names]
           (with-meta
             (if (= (keyword tab) selected-tab)
-              [typography/SectionHeading {:class (<class tab-element-style)} (tr [:tab-names tab])]
+              [typography/SectionHeading {:class (<class tab-element-style-selected)} (tr [:tab-names tab])]
               [common/Link {:class (<class tab-element-style)
                             :href (url/set-query-param :tab (name tab))}
                (tr [:tab-names tab])])
