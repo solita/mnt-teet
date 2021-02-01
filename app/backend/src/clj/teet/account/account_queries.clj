@@ -8,6 +8,6 @@
              user :user}
    :unauthenticated? true
    :args {}}
-  (d/pull db '[:user/phone-number :user/email
+  (d/pull db '[:user/phone-number :user/email :user/person-id
                :user/given-name :user/family-name]
           (:db/id user)))
