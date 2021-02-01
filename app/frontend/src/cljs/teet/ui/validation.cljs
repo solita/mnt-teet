@@ -10,7 +10,8 @@
   (:require [clojure.string :as str]
             [cljs-time.core :as t]
             [teet.localization :refer [tr]]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [teet.user.user-spec :as user-spec]))
 
 ;; max length 16 chars (optional plus followed by digits)
 (def phone-number-regex #"^((\+?\d{0,15})|(\d{0,16}))$")
@@ -27,6 +28,18 @@
 (defn empty-enum-dropdown? [value]
   (or (nil? (first value))
     (str/blank? (first value))))
+
+
+(defn validate-email
+  [value]
+  (when-not (user-spec/email? value)
+    (tr [:validation :invalid-email])))
+
+(defn validate-email-optional
+  [value]
+  (if (empty-value? value)
+    nil
+    (validate-email value)))
 
 ;; validate-rule multimethod implements validation rule checking by keyword name
 ;; Parameters:

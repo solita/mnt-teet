@@ -3,14 +3,14 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.common :as common]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.typography :as typography]))
 
 (defn- input-field-style
   [error multiline read-only? start-icon? end-icon? type]
   (merge
     ^{:pseudo {:invalid {:box-shadow "inherit"
                          :outline "inherit"}
-               :focus theme-colors/focus-style
                "-webkit-outer-spin-button" {"-webkit-appearance" "none"}}}
     {:border-radius "2px"
      :border (if error
@@ -91,8 +91,8 @@
   [{:keys [label id type error style input-button-icon read-only? inline?
            input-button-click required input-style
            multiline error-text input-class start-icon
-           maxrows rows hide-label? end-icon label-element
-           ] :as props
+           maxrows rows hide-label? end-icon label-element]
+    :as props
     :or {rows 2}} & _children]
   (let [element (if multiline
                   :textarea
@@ -103,7 +103,7 @@
      (when-not hide-label?
        (if label-element
          [label-element label (when required [common/required-astrix])]
-         [:span {:class (<class common-styles/label-text-style)}
+         [typography/Text2Bold
           label (when required
                   [common/required-astrix])]))
      [:div {:style {:position :relative

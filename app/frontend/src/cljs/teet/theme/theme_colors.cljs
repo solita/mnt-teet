@@ -24,7 +24,6 @@
 (def gray-lightest "#F2F3F3")
 (def white "#FFFFFF")
 
-
 (def black-coral-1 "#D2D3D8")                               ;;not sure how these should be used, straight from the design
 
 (def dark-tangerine-11 "#E8A510")
@@ -61,3 +60,9 @@
 (def focus-style
   {:outline (str "2px solid " blue-light)
    :outline-offset "3px"})
+
+;; Component colors
+
+(def card-background-extra-light "#F9F9F9")
+(def page-background-dark "#E1E2E5")
+(def border-dark "#D2D3D8")

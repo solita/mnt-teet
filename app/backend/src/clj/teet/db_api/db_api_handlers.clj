@@ -17,6 +17,8 @@
             teet.admin.admin-queries
             teet.admin.admin-commands
             teet.user.user-queries
+            teet.account.account-commands
+            teet.account.account-queries
             teet.logging.logging-commands
             teet.project.project-queries
             teet.project.project-commands
@@ -36,6 +38,7 @@
             teet.link.link-commands
             teet.cooperation.cooperation-queries
             teet.cooperation.cooperation-commands
+            teet.asset.asset-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

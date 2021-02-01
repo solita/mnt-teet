@@ -36,6 +36,27 @@
              (meta-model/creation-meta from))
       {})))
 
+(defn system-notification-tx
+  "System notification returns transaction map when the target of notification is
+  not the cause of the notification"
+  [db
+   {:keys [to         ; user who receives the notification
+           target     ; id of the entity targeted by the notification
+           type       ; notification type
+           project]}] ; project this notification is in context of
+  {:pre [(user-model/user-ref to)
+         (keyword? type)
+         (some? target)
+         (or (nil? project) (project-model/project-ref project))]}
+  (let [to-id (user-db/resolve-user db to)]
+    (merge {:db/id (str "new-notification-" (str (UUID/randomUUID)))
+               :notification/receiver to-id
+               :notification/status :notification.status/unread
+               :notification/target target
+               :notification/type type}
+      (when project {:notification/project (project-model/project-ref project)})
+      (meta-model/system-created))))
+
 (def notification-keys [:db/id :notification/status
                         :notification/target :notification/type
                         :meta/created-at :meta/creator

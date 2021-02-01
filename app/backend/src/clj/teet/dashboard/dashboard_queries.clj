@@ -38,7 +38,7 @@
                                [:db/id :thk.project/id]}]}]}])
           :where
           [?e :task/assignee ?user]
-          [(missing? $ ?e :meta/deleted)]
+          [(missing? $ ?e :meta/deleted?)]
           :in $ ?user]
         db (user-model/user-ref user))))
 

@@ -17,7 +17,8 @@
                      :my-role-display
                      :dummy-login
                      :meetings
-                     :admin-inspector}
+                     :admin-inspector
+                     :asset-db}
  :email {:from "test@example.com"}
 
  :file {:image-suffixes #{"tiff"

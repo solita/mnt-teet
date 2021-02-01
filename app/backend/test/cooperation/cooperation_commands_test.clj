@@ -18,9 +18,11 @@
                      :cooperation.3rd-party/id-code "123"
                      :cooperation.3rd-party/email "party@example.om"
                      :cooperation.3rd-party/phone "2222"}
-        third-party-id (tu/local-command :cooperation/create-3rd-party
-                                         {:thk.project/id project-id
-                                          :third-party third-party})
+        third-party-id (get-in (tu/local-command :cooperation/create-3rd-party
+                                                 {:thk.project/id project-id
+                                                  :third-party third-party})
+                               [:tempids "new-third-party"])
+        third-party-teet-id (:teet/id (du/entity (tu/db) third-party-id))
         valid-date-for-application (-> (du/entity (tu/db) (tu/->db-id "p1-lc1-act2"))
                                        :activity/estimated-start-date
                                        (dateu/inc-days 1))
@@ -32,7 +34,7 @@
                      :cooperation.application/date valid-date-for-application}
         invalid-date-application (assoc application :cooperation.application/date invalid-date-for-application)
         application-payload {:thk.project/id project-id
-                             :cooperation.3rd-party/name third-party-name
+                             :third-party-teet-id third-party-teet-id
                              :application application}
         invalid-third-party-application-payload {:thk.project/id project-id
                                                  :cooperation.3rd-party/name "No such third party exists"

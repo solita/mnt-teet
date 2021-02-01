@@ -222,7 +222,7 @@
           tr-option (case error
                       :invalid-chars-in-description {:characters file-model/allowed-chars-string}
                       :description-too-long {:limit file-model/max-description-length}
-                      :else nil)]
+                      nil)]
       (t/fx
         (snackbar-controller/open-snack-bar
           (assoc-in app [:new-document :in-progress?] false)

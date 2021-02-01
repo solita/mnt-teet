@@ -260,11 +260,11 @@
         (d/transact
          conn
          {:tx-data (into [{:db/id "datomic.tx" :tx/schema-hash hash}]
-                         (read-string schema-source))})))
+                         (read-string schema-source))})
+        (log/info "Asset database migrated, previous hash: " last-hash ", current hash: " hash)))
     (catch Exception e
-      (log/error e "Uncaught exception in migration")
-      (throw e)))
-  (log/info "Asset database migrated."))
+      (log/error e "Uncaught exception in asset db migration")
+      (throw e))))
 
 (def ^:private db-migrated? (atom false))
 (def ^:private asset-db-migrated? (atom false))

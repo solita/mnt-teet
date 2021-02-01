@@ -31,7 +31,8 @@
   {:padding "0"})
 
 (defn appbar []
-  {:background-color theme-colors/white
+  {:display :flex
+   :background-color theme-colors/white
    :color theme-colors/gray-dark
    :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
    :transition "all 0.2s ease-in-out"})
@@ -123,17 +124,13 @@
 
 (defn logout-style
   []
-  {:white-space :nowrap
-   :margin "22px 0 0 0"
-   :line-height "19px"
+  {:white-space :nowra
    :position :relative
    :font-size "16px"})
 
 (defn feedback-container-style []
-  (merge {:display :inline-flex
-          :position :relative
-          :flex-direction :column
-          :vertical-align :top}
+  (merge {:display :flex
+          :justify-content :center}
          (divider-style)))
 
 (defn navigator-left-panel-style
@@ -142,4 +139,23 @@
    :display :flex
    :flex-direction :column})
 
-(def feedback-style logout-style)
+(defn feedback-style
+  []
+  {:display :flex
+   :align-items :center})
+
+(defn extra-nav-style
+  []
+  {:box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
+   :background-color theme-colors/white})
+
+(defn extra-nav-element-style
+  []
+  {:border-bottom (str "1px solid " theme-colors/border-dark)
+   :padding "1rem"})
+
+(defn extran-nav-heading-element-style
+  []
+  {:background-color theme-colors/card-background-extra-light
+   :padding "0.5rem"
+   :border-bottom (str "1px solid " theme-colors/border-dark)})

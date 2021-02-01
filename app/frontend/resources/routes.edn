@@ -30,6 +30,15 @@
   :view teet.dashboard.dashboard-view/dashboard-page
   :state {:query :dashboard/user-dashboard
           :args {}}}
+
+ :account
+ {:path "/account"
+  :crumb (tr [:account :my-account])
+  :title (tr [:account :my-account])
+  :state {:query :account/account-page
+          :args {}}
+  :view teet.account.account-view/account-page}
+
  :projects
  {:path "/projects/map"
   :crumb (tr [:projects :map-view])
@@ -50,8 +59,8 @@
   :parent :projects-list
   :title (:thk.project/name state)
   :crumb (teet.project.project-model/get-column (or (some-> state :project)
-                                                    state)
-                                                :thk.project/project-name)
+                                                  state)
+           :thk.project/project-name)
   :view teet.project.project-view/project-page
   :state {:query :thk.project/fetch-project
           :args {:thk.project/id project}}}
@@ -60,11 +69,11 @@
  {:path "/projects/:project/:activity(\\d+)"
   :parent :project
   :crumb (-> state
-             (teet.project.project-model/activity-by-id activity)
-             :activity/name tr-enum)
+           (teet.project.project-model/activity-by-id activity)
+           :activity/name tr-enum)
   :title (-> state
-             (teet.project.project-model/activity-by-id activity)
-             :activity/name tr-enum)
+           (teet.project.project-model/activity-by-id activity)
+           :activity/name tr-enum)
   :view teet.activity.activity-view/activity-page
   :state {:query :thk.project/fetch-project
           :args {:thk.project/id project
@@ -74,13 +83,13 @@
  {:path "/projects/:project/:activity(\\d+)/:task(\\d+)"
   :parent :activity
   :crumb (-> state
-             (teet.project.project-model/task-by-id task)
-             :task/type
-             tr-enum)
-  :title  (-> state
-              (teet.project.project-model/task-by-id task)
-              :task/type
-              tr-enum)
+           (teet.project.project-model/task-by-id task)
+           :task/type
+           tr-enum)
+  :title (-> state
+           (teet.project.project-model/task-by-id task)
+           :task/type
+           tr-enum)
   :view teet.task.task-view/task-page
   :state {:query :thk.project/fetch-project
           :args {:thk.project/id project
@@ -99,13 +108,13 @@
  {:path "/projects/:project/meetings/:activity/"
   :view teet.meeting.meeting-view/activity-meetings-view
   :title (tr [:meeting :activity-meetings-title]
-             {:activity-name
-              (-> (or (:project state)
-                      state)
-                  (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)})
+           {:activity-name
+            (-> (or (:project state)
+                  state)
+              (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)})
   :crumb (-> (or (:project state)
-                 state)
-             (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)
+               state)
+           (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)
   :parent :project-meetings
   :state {:query :meeting/project-with-meetings
           :args {:thk.project/id project}}}
@@ -140,11 +149,11 @@
  :cooperation-third-party
  {:path "/projects/:project/cooperation/:third-party"
   :parent :cooperation
-  :crumb (js/decodeURIComponent third-party)
+  :crumb (get-in state [:third-party :cooperation.3rd-party/name])
   :view teet.cooperation.cooperation-view/third-party-page
   :state {:query :cooperation/third-party
           :args {:thk.project/id project
-                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)}}}
+                 :teet/id (uuid third-party)}}}
 
  :cooperation-application
  {:path "/projects/:project/cooperation/:third-party/:application"
@@ -153,8 +162,8 @@
   :view teet.cooperation.cooperation-view/application-page
   :state {:query :cooperation/application
           :args {:thk.project/id project
-                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)
-                 :db/id (->long application)}}}
+                 :third-party-teet-id (uuid third-party)
+                 :application-teet-id (uuid application)}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
@@ -177,4 +186,12 @@
   :crumb (tr [:admin :inspector-title])
   :parent :admin
   :state {:query :admin/entity-info
-          :args {:id id}}}}
+          :args {:id id}}}
+
+ :asset-type-library
+ {:path "/asset/type-library"
+  :view teet.asset.asset-library-view/asset-library-page
+  :crumb (tr [:asset :type-library-label])
+  :state {:query :asset/type-library
+          :args {}}}
+ }
