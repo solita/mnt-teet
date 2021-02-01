@@ -177,16 +177,23 @@
         (log/redirect-ion-casts! :stderr)
         (let [client (d/client (environment/config-value :datomic :client))
               db-name {:db-name test-db-name}
-              asset-db-name {:db-name test-asset-db-name}]
+              asset-db-name {:db-name test-asset-db-name}
+              asset-db? (environment/feature-enabled? :asset-db)]
           (try
             (log/info "Creating database " test-db-name)
             (d/create-database client db-name)
+            (when asset-db?
+              (d/create-database client asset-db-name))
             (binding [*connection* (d/connect client db-name)
-                      *asset-connection* (d/connect client asset-db-name)
+                      *asset-connection* (when asset-db?
+                                           (d/connect client asset-db-name))
                       *data-fixture-ids* (atom {})]
               (binding [environment/*connection* *connection*]
                 (when migrate?
-                  (environment/migrate *connection*))
+                  (environment/migrate *connection*)
+                  (when asset-db?
+                    (environment/migrate-asset-db *asset-connection*)))
+
                 (when mock-users?
                   (d/transact *connection* {:tx-data mock-users}))
                 (doseq [df data-fixtures
