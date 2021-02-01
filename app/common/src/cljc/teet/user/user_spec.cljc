@@ -53,3 +53,5 @@
 (s/def :user/given-name non-empty-string?)
 (s/def :user/family-name non-empty-string?)
 (s/def :user/email email?)
+
+(s/def :account/update (s/keys :req [:user/email]))

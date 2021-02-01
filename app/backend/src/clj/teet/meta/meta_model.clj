@@ -9,6 +9,10 @@
   {:meta/creator    (user-model/user-ref user)
    :meta/created-at (Date.)})
 
+(defn system-created
+  []
+  {:meta/created-at (Date.)})
+
 (defn modification-meta
   [user]
   {:pre [(user-model/user-ref user)]}

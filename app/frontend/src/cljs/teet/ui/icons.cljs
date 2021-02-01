@@ -11,6 +11,8 @@
   "accessibility"
   "accessibility_new"
   "accessible"
+  "login"
+  "logout"
   "accessible_forward"
   "account_balance"
   "account_balance_wallet"
@@ -624,7 +626,8 @@
   "vertical_align_bottom"
   "vertical_align_center"
   "vertical_align_top"
-  "wrap_text")
+  "wrap_text"
+  "schema")
 
 ;; File icons
 (define-font-icons {:prefix "file" :component Icon}

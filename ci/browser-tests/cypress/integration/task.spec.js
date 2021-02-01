@@ -2,7 +2,7 @@ describe("Task view", function() {
   before(() => {
     cy.randomName("filename", "myfile")
     cy.dummyLogin("benjamin")
-    cy.selectLanguage("ENG")
+    cy.selectLanguage("#EN")
     cy.projectByName("integration test project")
 
     // Navigate to Detailed design -> Design requirements
