@@ -52,6 +52,7 @@
             ["@material-ui/core/Grid" :as mui-Grid]
             ["@material-ui/core/Chip" :as mui-Chip]
             ["@material-ui/core/Avatar" :as mui-Avatar]
+            ["@material-ui/core/Portal" :as mui-Portal]
             ["@material-ui/core/Icon" :as mui-Icon]
             ["@material-ui/core/Tabs" :as mui-Tabs]
             ["@material-ui/core/Tab" :as mui-Tab]
@@ -131,6 +132,9 @@
 
 ;; Badge
 (define-mui-components Badge)
+
+;; Portal
+(define-mui-components Portal)
 
 ;; Labs components
 (define-mui-components Autocomplete)

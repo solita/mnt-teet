@@ -5,6 +5,8 @@
 
 (defrecord ToggleDrawer [])
 (defrecord GoToLogin [])
+(defrecord ToggleExtraPanel [extra-panel])
+(defrecord CloseExtraPanel [])
 
 (extend-protocol t/Event
   ToggleDrawer
@@ -16,4 +18,20 @@
     (log/info "GoToLogin event")
     (t/fx app
           {::tuck-effect/type :navigate
-           :page :login})))
+           :page :login}))
+
+  CloseExtraPanel
+  (process-event [_ app]
+    (println "closeextrapanel")
+    (assoc-in app [:navigation :extra-panel-open?] false))
+
+  ToggleExtraPanel
+  (process-event [{extra-panel :extra-panel} app]
+    (println "toggle panel")
+    (let [open? (get-in app [:navigation :extra-panel-open?])]
+      (if (= (get-in app [:navigation :extra-panel]) extra-panel)
+        (assoc-in app [:navigation :extra-panel-open?] (not open?))
+        (-> app
+            (assoc-in [:navigation :extra-panel] extra-panel)
+            (assoc-in [:navigation :extra-panel-open?] true))))))
+

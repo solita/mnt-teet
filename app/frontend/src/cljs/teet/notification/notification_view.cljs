@@ -96,7 +96,7 @@
         :size "small"
         :component "span"
         :on-click handle-click!}
-       [icons/social-notifications {:color "primary"}]]]
+       [icons/social-notifications-outlined {:color "primary"}]]]
      [Menu {:anchor-el @selected-item
             :anchor-origin {:vertical :bottom
                             :horizontal :center}

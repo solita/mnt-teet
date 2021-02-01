@@ -188,7 +188,6 @@
        (zipmap field value)
        {field value}))))
 
-
 (defn attribute-value
   "Return the value of the attribute in the form."
   ([form-value attribute] (attribute-value form-value attribute nil))
@@ -270,7 +269,8 @@
                      :error error?
                      :error-text error-text
                      :required (required-field? attribute required-fields)}]
-           [:div {:data-form-attribute (str attribute)}
+           [:div {:data-form-attribute (str attribute)
+                  :class (<class common-styles/margin-bottom 1)}
             (add-validation
                    (update field 1 (fn [{label :label :as input-opts}]
                                      (merge input-opts opts

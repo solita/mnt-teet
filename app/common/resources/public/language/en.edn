@@ -1,4 +1,10 @@
-{:activity
+{:account
+ {:my-account "My account",
+  :logout "Logout",
+  :save-information "Save information",
+  :account-edited "Account information edited.",
+  :my-details "MY DETAILS"},
+ :activity
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",
   :status "Status",
@@ -635,6 +641,7 @@
   :meeting/organizer "Organizer",
   :thk.project/road-nr "Road number",
   :task/estimated-end-date "Estimated end date",
+  :meeting/links "Links",
   :activity/name "Activity name",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
@@ -867,11 +874,14 @@
   :moved-to-absentees-successfully "User moved to absentees",
   :edit-agenda-modal-title "Edit topic",
   :email-title "TEET: meeting updated: {meeting-title}",
+  :decision-has-attachments
+  "This decision has files or links attached.",
   :new-agenda-modal-title "New topic",
   :reject-meeting-button "Reject decisions",
   :add-person "Add person",
   :approved-by "Approved by {approvers}",
   :notifications-sent "Notifications sent",
+  :agenda-has-attachments "This agenda has files or links attached.",
   :decision-topic "{topic} decision #{num}"},
  :notifications
  {:no-unread-notifications "No unread notifications",
@@ -1049,6 +1059,7 @@
    :placeholder "Type name..."},
   :role "Role",
   :unregistered "User"},
+ :validation {:invalid-email "Invalid email address"},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",
