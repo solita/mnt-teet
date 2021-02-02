@@ -25,7 +25,6 @@
   consultant who entered the application into system
   providing the Activity is not finished"
   ([days]
-   (println (str "days:" days))
    (let [conn (environment/datomic-connection) db (d/db conn)]
      (d/transact conn
        {:tx-data

@@ -145,13 +145,12 @@
     [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/name]))
 
 (defn application-3rd-party-uuid [db application-id]
-  (let [name-of-3rd-party (application-3rd-party db application-id)]
-    (d/q '[:find ?id
-           :in $ ?name
-           :keys uuid
-           :where [?cooperation :cooperation.3rd-party/name ?name]
-           [?cooperation :teet/id ?id]]
-       db name-of-3rd-party)))
+  (first (d/q '[:find ?id
+                :in $ ?application-id
+                :keys uuid
+                :where [?cooperation :cooperation.3rd-party/applications ?application-id]
+                [?cooperation :teet/id ?id]]
+           db application-id)))
 
 (defn application-uuid
   [db application-id]
