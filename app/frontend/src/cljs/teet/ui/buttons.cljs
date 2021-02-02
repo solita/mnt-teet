@@ -7,6 +7,7 @@
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
+            [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
             [teet.common.common-styles :as common-styles]))
@@ -167,6 +168,7 @@
                                  {:id (str "confirm-delete")
                                   :on-click (if close-on-action?
                                               #(do (action)
+                                                   (log/debug "delete-button: invoked action after confirm")
                                                    (close))
                                               action)}
                                  confirm-button-text]]

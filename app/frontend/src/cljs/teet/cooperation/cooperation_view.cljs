@@ -1,5 +1,6 @@
 (ns teet.cooperation.cooperation-view
   (:require [herb.core :as herb :refer [<class]]
+            [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
@@ -107,7 +108,7 @@
 
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
-  ([{:keys [edit-button]}
+  ([{:keys [edit-button delete-button]}
     {:cooperation.application/keys [opinion]}]
    (let [{:meta/keys [creator modifier created-at modified-at]
           comment :cooperation.opinion/comment} opinion]
@@ -125,7 +126,8 @@
                 :style {:flex 1
                         :justify-content :space-between}}
           (opinion-status (:cooperation.opinion/status opinion))
-          edit-button]
+          edit-button
+          delete-button]
          (when-let [date (or modified-at created-at)]
            [:div
             [typography/BoldGreyText {:style {:display :inline-block}}
@@ -525,16 +527,39 @@
      :form-value (:cooperation.application/opinion application {})
      :button-component button-component}]])
 
+(defn- delete-opinion [e! application button-component]
+  ;; todo: identical with edit-opinion? just change the name and pass different button comps?
+  [authorization-context/when-authorized :save-opinion
+   [form/form-modal-button
+    {:max-width "sm"
+     :modal-title (tr [:cooperation :delete-opinion-title])
+     :form-component [opinion-form {:e! e! :application application}]
+     :form-value (:cooperation.application/opinion application {})
+     :button-component button-component}]])
+
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
   [:<>
    [:div.application-conclusion {:class (<class common-styles/margin-bottom 1)}
     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
      (tr [:cooperation :opinion-title])]
+    (log/debug "opinion data:" (pr-str opinion))
     [opinion-view {:edit-button [edit-opinion e! application
                                  [buttons/button-secondary {:size "small"
                                                             :class "edit-opinion"
                                                             :disabled (boolean (not opinion))}
-                                  (tr [:buttons :edit])]]} application]]
+                                  (tr [:buttons :edit])]]
+                   ;; :delete-button [buttons/delete-button-with-confirm {:id (str "opinion-delete-button-" (:db/id opinion))
+                   ;;                                                     :clear? true
+                   ;;                                                     ;; :action #(e! (cooperation-controller/->DeleteOpinion opinion))
+                   ;;                                                     :action #(cooperation-controller/delete-opinion-action opinion)
+                   ;;                                                     }]
+                   :delete-button [delete-opinion e! application
+                                   [buttons/button-secondary {:size "small"
+                                                              :class "delete-opinion"
+                                                              :disabled (boolean (not opinion))}
+                                    (tr [:buttons :delete])]]
+                   }
+     application]]
    (when (not opinion)
      [edit-opinion e! application
       [buttons/button-primary {:class "create-opinion"}
@@ -660,6 +685,17 @@
            [application-response e! (:new-document app) files-form application project related-task]
            [application-conclusion e! application project]]
           [authorization-context/when-authorized :edit-application
+           [form/form-modal-button
+            {:max-width "sm"
+             :modal-title (tr [:cooperation :add-application-response])
+             :form-component [application-response-form {:e! e!
+                                                         :project-id (:thk.project/id project)
+                                                         :application-id (:db/id application)}]
+             :button-component [buttons/button-primary {:class "enter-response"}
+                                (tr [:cooperation :enter-response])]}]])
+        ;; wrong place for delete button? should it be in opinion-form?
+        #_(when (= (:cooperation.application/type application) :cooperation.application.response-type/opinion)
+          [authorization-context/when-authorized :save-opinion
            [form/form-modal-button
             {:max-width "sm"
              :modal-title (tr [:cooperation :add-application-response])
