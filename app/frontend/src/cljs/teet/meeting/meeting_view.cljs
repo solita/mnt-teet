@@ -972,6 +972,51 @@
                                                             [icons/content-add])}
                        (tr [:meeting :add-agenda-button])]}])
 
+(defn- meeting-agenda-heading [{:meeting.agenda/keys [topic responsible] :as agenda-topic}]
+  [:div.agenda-heading
+   [:div {:style {:display :flex}}
+    (let
+        [agenda-files (:file/_attached-to agenda-topic)
+         agenda-links (:link/_from agenda-topic)]
+      (when (or (seq agenda-files) (seq agenda-links))
+        [:div {:class (<class file-style/file-icon-container-style)
+               :title (tr [:meeting :agenda-has-attachments])}
+         [icons/content-link
+          {:style {:color theme-colors/primary}}]]))
+    [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]]
+   [:span (user-model/user-name responsible)]])
+
+(defn- meeting-agenda-decisions [e! edit? {:meeting.agenda/keys [topic decisions] :as agenda-topic}]
+  (for [d decisions
+        :let [[pfrom pto] (common/portal)]]
+    {:key (:db/id d)
+     :open? true
+     :heading [:div
+               {:style {:display :flex}}
+               (let [decision-files (:file/_attached-to d)
+                     decision-links (:link/_from d)]
+                 (when (or (seq decision-files) (seq decision-links))
+                   [:div {:class (<class file-style/file-icon-container-style)
+                          :title (tr [:meeting :decision-has-attachments])}
+                    [icons/content-link
+                     {:style {:color theme-colors/primary}}]]))
+               [typography/Heading3
+                (tr [:meeting :decision-topic]
+                    {:topic topic
+                     :num (:meeting.decision/number d)})]]
+     :heading-button (when edit?
+                       [form/form-container-button
+                        {:form-component [decision-form e! (:db/id agenda-topic)]
+                         :container pfrom
+                         :form-value d
+                         :modal-title (tr [:meeting :edit-decision-modal-title])
+                         :button-component [buttons/button-secondary {:size :small}
+                                            (tr [:buttons :edit])]}])
+     :content
+     [:<>
+      [pto]
+      [meeting-decision-content e! d edit?]]}))
+
 (defn meeting-details*
   [e! user {:meeting/keys [agenda] :as meeting} rights]
   (r/with-let [[pfrom pto] (common/portal)]
@@ -986,22 +1031,11 @@
        [pto]
        [:div {:style {:margin-bottom "1rem"}}
         (doall
-         (for [{id :db/id
-                :meeting.agenda/keys [topic responsible body decisions] :as agenda-topic} agenda
+         (for [{id :db/id :as agenda-topic} agenda
                :let [[pfrom pto] (common/portal)]]
            ^{:key id}
            [meeting-view-container
-            {:heading [:div.agenda-heading
-                       [:div {:style {:display :flex}}
-                        (let
-                            [agenda-files (:file/_attached-to agenda-topic)
-                             agenda-links (:link/_from agenda-topic)]
-                          (if (or (seq agenda-files) (seq agenda-links))
-                            [:div {:class (<class file-style/file-icon-container-style)
-                                   :title (tr [:meeting :agenda-has-attachments])} [icons/content-link
-                                                                                    {:style {:color theme-colors/primary}}]]))
-                        [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]]
-                       [:span (user-model/user-name responsible)]]
+            {:heading [meeting-agenda-heading agenda-topic]
              :open? true
              :heading-button (when edit?
                                [form/form-container-button
@@ -1016,33 +1050,7 @@
              [:<>
               [pto]
               [meeting-agenda-content e! agenda-topic edit?]]
-             :children (for [d decisions
-                             :let [[pfrom pto] (common/portal)]]
-                         {:key (:db/id d)
-                          :open? true
-                          :heading [:div
-                                    {:style {:display :flex}}
-                                    (let
-                                        [decision-files (:file/_attached-to d)
-                                         decision-links (:link/_from d)]
-                                      (if (or (seq decision-files) (seq decision-links))
-                                        [:div {:class (<class file-style/file-icon-container-style)
-                                               :title (tr [:meeting :decision-has-attachments])} [icons/content-link
-                                                                                                  {:style {:color theme-colors/primary}}]]))
-                                    [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
-                                                                                         :num (:meeting.decision/number d)})]]
-                          :heading-button (when edit?
-                                            [form/form-container-button
-                                             {:form-component [decision-form e! (:db/id agenda-topic)]
-                                              :container pfrom
-                                              :form-value d
-                                              :modal-title (tr [:meeting :edit-decision-modal-title])
-                                              :button-component [buttons/button-secondary {:size :small}
-                                                                 (tr [:buttons :edit])]}])
-                          :content
-                          [:<>
-                           [pto]
-                           [meeting-decision-content e! d edit?]]})
+             :children (meeting-agenda-decisions e! edit? agenda-topic)
              :after-children-component (when edit?
                                          [add-decision-component e! meeting agenda-topic])}
             theme-colors/white]))]
