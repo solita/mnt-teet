@@ -942,7 +942,7 @@
   (r/with-let [[pfrom pto] (common/portal)]
     (let [edit? (get rights :edit-meeting)
           review? (get rights :review-meeting)]
-      [:div
+      [:div {:data-cy "meeting-details"}
        [common/basic-information-row
         {:right-align-last? true}
         [[(tr [:fields :meeting/date-and-time])
