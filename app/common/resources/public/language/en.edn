@@ -55,15 +55,21 @@
  :asset
  {:type-library
   {:description "Description",
+   :db.type/instant "Timestamp",
    :fclass "Feature class",
    :unit "Unit",
+   :datatype "Type",
+   :db.type/string "Text",
    :name "Name",
+   :db.type/ref "Reference",
+   :db.type/bigdec "Decimal number",
    :fgroup "Asset Features",
    :header "Road Object Type Library (ROTL)",
    :link "ROTL",
    :label "Label",
    :values "Values",
    :ctype "Component",
+   :db.type/long "Integer",
    :attributes "Attributes"}},
  :buttons
  {:confirm "Confirm",
@@ -486,7 +492,7 @@
    :test
    "You are using the test environment of TEET. From time to time the data in the environment is updated and the manually added data disappears.",
    :prelive
-   " are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
+   "You are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
   :version "Version"},
  :error
  {:file-metadata-not-unique

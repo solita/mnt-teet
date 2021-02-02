@@ -55,15 +55,21 @@
  :asset
  {:type-library
   {:description "Kirjeldus",
+   :db.type/instant "Ajatempel",
    :fclass "Vara klass",
    :unit "Ühik",
+   :datatype "Tüüp",
+   :db.type/string "Tekst",
    :name "Nimi",
+   :db.type/ref "Viide",
+   :db.type/bigdec "Kümnendmurd",
    :fgroup "Vara liik",
    :header "Tee olemi tüübiteek (TOTT) ",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
    :ctype "Komponent",
+   :db.type/long "Täisarv",
    :attributes "Omadused"}},
  :buttons
  {:confirm "Kinnitan",
