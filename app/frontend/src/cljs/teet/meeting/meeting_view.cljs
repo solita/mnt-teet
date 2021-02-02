@@ -937,43 +937,52 @@
                               :button-component [buttons/button-warning {}
                                                  (tr [:meeting :reject-meeting-button])]}]]))
 
+(defn- meeting-details-info
+  "Display meeting info: location, date/time and download link."
+  [{:meeting/keys [start end location] :as meeting}]
+  [common/basic-information-row
+   {:right-align-last? true}
+   [[(tr [:fields :meeting/date-and-time])
+     (str (format/date start)
+          " "
+          (format/time* start)
+          " - "
+          (format/time* end))]
+    [(tr [:fields :meeting/location])
+     location]
+    [(tr "PDF")
+     [:a {:href (common-controller/query-url :meeting/download-pdf
+                                             {:db/id (:db/id meeting)})
+          :target "_blank" } "Download"]]]])
+
+(defn meeting-details-add-agenda [e! user meeting pfrom]
+  [form/form-container-button
+   {:form-component   [agenda-form e! meeting]
+    :container pfrom
+    :id "add-agenda"
+    :form-value {:meeting.agenda/responsible
+                 (select-keys user [:db/id
+                                    :user/id
+                                    :user/given-name
+                                    :user/family-name
+                                    :user/email
+                                    :user/person-id])}
+    :modal-title (tr [:meeting :new-agenda-modal-title])
+    :button-component [buttons/button-primary {:start-icon (r/as-element
+                                                            [icons/content-add])}
+                       (tr [:meeting :add-agenda-button])]}])
+
 (defn meeting-details*
-  [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
+  [e! user {:meeting/keys [agenda] :as meeting} rights]
   (r/with-let [[pfrom pto] (common/portal)]
     (let [edit? (get rights :edit-meeting)
           review? (get rights :review-meeting)]
       [:div {:data-cy "meeting-details"}
-       [common/basic-information-row
-        {:right-align-last? true}
-        [[(tr [:fields :meeting/date-and-time])
-          (str (format/date start)
-               " "
-               (format/time* start)
-               " - "
-               (format/time* end))]
-         [(tr [:fields :meeting/location])
-          location]
-         [(tr "PDF")
-          [:a {:href (common-controller/query-url :meeting/download-pdf
-                                                  {:db/id (:db/id meeting)})
-               :target "_blank" } "Download"]]]]
+       [meeting-details-info meeting]
        [:div {:class (<class common-styles/heading-and-action-style) :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0" :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
         [typography/Heading2 (tr [:fields :meeting/agenda])]
         (when edit?
-          [form/form-container-button
-           {:form-component   [agenda-form e! meeting]
-            :container pfrom
-            :id "add-agenda"
-            :form-value {:meeting.agenda/responsible (select-keys user [:db/id
-                                                                        :user/id
-                                                                        :user/given-name
-                                                                        :user/family-name
-                                                                        :user/email
-                                                                        :user/person-id])}
-            :modal-title (tr [:meeting :new-agenda-modal-title])
-            :button-component [buttons/button-primary {:start-icon (r/as-element
-                                                                    [icons/content-add])}
-                               (tr [:meeting :add-agenda-button])]}])]
+          [meeting-details-add-agenda e! user meeting pfrom])]
        [pto]
        [:div {:style {:margin-bottom "1rem"}}
         (doall
