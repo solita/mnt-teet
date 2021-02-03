@@ -696,13 +696,12 @@
                        :save-event save-participant!
                        :spec :meeting/add-non-teet-user-form
                        :cancel-fn #(reset! form initial-form)}
-           [common/column-with-space-between 0.5
-            [form/field :user/given-name
-             [TextField {:placeholder (tr [:fields :user/given-name])}]]
-            [form/field :user/family-name
-             [TextField {:placeholder (tr [:fields :user/family-name])}]]
-            [form/field :user/email
-             [TextField {:placeholder (tr [:fields :user/email])}]]]
+           [form/field :user/given-name
+            [TextField {:placeholder (tr [:fields :user/given-name])}]]
+           [form/field :user/family-name
+            [TextField {:placeholder (tr [:fields :user/family-name])}]]
+           [form/field :user/email
+            [TextField {:placeholder (tr [:fields :user/email])}]]
            [form/footer2]]
           ^{:key "teet-user"}
           [form/form2 {:e! e!
