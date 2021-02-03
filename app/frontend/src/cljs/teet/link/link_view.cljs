@@ -179,9 +179,10 @@
                                                             @selected-type
                                                             in-progress))))]
     [:div.links {:style {:margin "1rem 0"}}
+     (if (seq links)
      [typography/Subtitle1
       {:style {:margin "1rem 0"}}
-      (tr [:fields :meeting/links])]
+      (tr [:fields :meeting/links])])
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
                                     :in-progress-atom in-progress

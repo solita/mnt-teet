@@ -286,8 +286,14 @@
           (if title-downloads?
             [common/Link {:target "_blank"
                           :class (<class file-style/file-list-entity-name-style)
-                          :href (common-controller/query-url :file/download-file
-                                                             {:file-id (:db/id file)})}
+                          :href (common-controller/query-url
+                                  (if attached-to
+                                    :file/download-attachment
+                                    :file/download-file)
+                                  (merge
+                                    {:file-id (:db/id file)}
+                                    (when attached-to
+                                      {:attached-to attached-to})))}
              description]
             [url/Link (merge
                      {:title description
