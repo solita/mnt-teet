@@ -144,6 +144,19 @@
   (get-in (du/entity db application-id)
     [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/name]))
 
+(defn application-3rd-party-uuid [db application-id]
+  (first (d/q '[:find ?id
+                :in $ ?application-id
+                :keys uuid
+                :where [?cooperation :cooperation.3rd-party/applications ?application-id]
+                [?cooperation :teet/id ?id]]
+           db application-id)))
+
+(defn application-uuid
+  [db application-id]
+  (let [application-uuid (get-in (du/entity db application-id) [:teet/id])]
+    {:uuid application-uuid}))
+
 (defn response-project-id [db response-id]
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
@@ -163,4 +176,4 @@
            [?notification :notification/target ?application]
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
-    db (date/inc-days (date/now) days)))
+    db (date/inc-days (date/now) (Integer/valueOf days))))
