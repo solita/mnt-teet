@@ -60,11 +60,13 @@
        [typography/BoldGreyText (tr [:asset :type-library :attributes])]
        [table/simple-table
         [[(tr [:asset :type-library :name])]
+         [(tr [:asset :type-library :datatype])]
          [(tr [:asset :type-library :label])]
          [(str (tr [:asset :type-library :unit]) " / "
                (tr [:asset :type-library :values]))]]
         (for [a attributes]
           [[(str (:db/ident a))]
+           [(tr [:asset :type-library (-> a :db/valueType :db/ident)])]
            [(tr* a)]
            [[:<>
              (:asset-schema/unit a)
