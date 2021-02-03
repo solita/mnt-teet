@@ -11,7 +11,7 @@ context("ROTL", () => {
         cy.get("[data-ident=':fclass/bridge'] .MuiCardHeader-action button").click()
 
         cy.get("[data-ident=':ctype/bridgespan'] .MuiCardHeader-action button").click()
-        cy.get("td").contains(":bridgespan/spanwidth")
+        cy.get("td").contains(":bridgespan/spannumber")
 
     })
 })
