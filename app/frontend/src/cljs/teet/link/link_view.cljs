@@ -179,7 +179,7 @@
                                                             @selected-type
                                                             in-progress))))]
     [:div.links {:style {:margin "1rem 0"}}
-     (if (seq links)
+     (when (seq links)
      [typography/Subtitle1
       {:style {:margin "1rem 0"}}
       (tr [:fields :meeting/links])])
