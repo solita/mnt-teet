@@ -64,12 +64,12 @@
                                      org.clojure/tools.namespace {:mvn/version "0.3.1"}}
                         :extra-paths ["dev-src" "test"]}
 
-           :rebl {:extra-deps {com.cognitect/rebl {:mvn/version "0.9.240"}
-                               org.openjfx/javafx-fxml {:mvn/version "15-ea+6"}
+           :rebl {:extra-deps {com.cognitect/rebl          {:mvn/version "0.9.240"}
+                               org.openjfx/javafx-fxml     {:mvn/version "15-ea+6"}
                                org.openjfx/javafx-controls {:mvn/version "15-ea+6"}
-                               org.openjfx/javafx-swing {:mvn/version "15-ea+6"}
-                               org.openjfx/javafx-base {:mvn/version "15-ea+6"}
-                               org.openjfx/javafx-web {:mvn/version "15-ea+6"}}}
+                               org.openjfx/javafx-swing    {:mvn/version "15-ea+6"}
+                               org.openjfx/javafx-base     {:mvn/version "15-ea+6"}
+                               org.openjfx/javafx-web      {:mvn/version "15-ea+6"}}}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
            :test {:main-opts ["-m" "kaocha.runner" "--skip-meta" "db"]
@@ -78,11 +78,11 @@
                   :extra-paths ["test"]}
 
            :run-browser-test {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
-                              :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
-                                           org.clojure/tools.namespace {:mvn/version "0.3.1"}
-                                           com.datomic/dev-local {:mvn/version "0.9.229"}}
-                              :extra-paths ["dev-src" "test"]
-                              :main-opts ["-m" "teet.browser-test" "../../ci/browser-tests/browser-test-config.edn"]}
+                       :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
+                                    org.clojure/tools.namespace {:mvn/version "0.3.1"}
+                                    com.datomic/dev-local {:mvn/version "0.9.229"}}
+                       :extra-paths ["dev-src" "test"]
+                       :main-opts ["-m" "teet.browser-test" "../../ci/browser-tests/browser-test-config.edn"]}
 
            :ci-test {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                      :main-opts ["-m" "kaocha.runner"
@@ -99,6 +99,6 @@
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]
                             :extra-deps {:dk.ative/docjure {:mvn/version "1.12.0"}}}
-           :clj-nvd {:extra-deps {clj-nvd {:git/url "https://github.com/miikka/clj-nvd.git"
-                                           :sha "a6fd635e2f9bc61e786d7182fa68f1e19598e325"}}
-                     :main-opts ["-m" "clj-nvd.core"]}}}
+           :clj-nvd  {:extra-deps {clj-nvd {:git/url "https://github.com/miikka/clj-nvd.git"
+                                            :sha "a6fd635e2f9bc61e786d7182fa68f1e19598e325"}}
+                      :main-opts ["-m" "clj-nvd.core"]}}}
