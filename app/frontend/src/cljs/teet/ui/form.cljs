@@ -272,11 +272,12 @@
            [:div {:data-form-attribute (str attribute)
                   :class (<class common-styles/margin-bottom 1)}
             (add-validation
-                   (update field 1 (fn [{label :label :as input-opts}]
-                                     (merge input-opts opts
-                                            (when-not label
-                                              {:label (tr [:fields attribute])}))))
-                   (partial validate-attribute-fn invalid-attributes validate-field) attribute)]))})))
+              (update field 1 (fn [{label :label :as input-opts}]
+                                (merge opts                 ;;input-opts' required overrides the computed required value because it's more specific
+                                       (dissoc input-opts :value :on-change)
+                                       (when-not label
+                                         {:label (tr [:fields attribute])}))))
+              (partial validate-attribute-fn invalid-attributes validate-field) attribute)]))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute

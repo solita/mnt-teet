@@ -90,7 +90,7 @@
     (= response-id current-response-id)))
 
 (defcommand :cooperation/save-application-response
-  {:doc "Create a new response to the application"
+  {:doc "Save an application response form. Will edit existing response or create a new one."
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
              application-id :application-id
@@ -103,7 +103,7 @@
          response-id (or existing-id "new-application-response")
          old-response (if existing-id
                         (d/pull db cooperation-model/response-application-keys
-                          existing-id)
+                                existing-id)
                         {:db/id "new-application-response"})
          project-id (cooperation-db/application-project-id db application-id)
          activity-id (cooperation-db/application-activity-id db application-id)
