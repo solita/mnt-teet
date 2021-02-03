@@ -104,7 +104,6 @@
       (cooperation-style/opinion-status-color status)
       (tr-enum status)]]))
 
-
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
   ([{:keys [edit-button]}
@@ -360,16 +359,24 @@
 
 (defn application-response-change-fn
   [val change]
-  (-> (merge val change)
-       (update :cooperation.response/valid-months #(and (or (number? %)
-                                                            (not-empty %))
-                                                        (js/parseInt %)))
-       cu/without-empty-vals
-       cooperation-model/with-valid-until))
+  (if (= (:cooperation.response/status change) :cooperation.response.status/no-response)
+    (merge (dissoc val
+                   :cooperation.response/content
+                   :cooperation.response/valid-months
+                   :cooperation.response/date
+                   :cooperation.response/valid-until)
+           change)
+    (-> (merge val change)
+        (update :cooperation.response/valid-months #(and (or (number? %)
+                                                             (not-empty %))
+                                                         (js/parseInt %)))
+        cu/without-empty-vals
+        cooperation-model/with-valid-until)))
 
 (defn- application-response-form [{:keys [e! project-id application-id]} close-event form-atom]
   (let [max-months 1200
-        min-months 0]
+        min-months 0
+        status-no-response? (= (:cooperation.response/status @form-atom) :cooperation.response.status/no-response)]
     [form/form2 {:e! e!
                  :value @form-atom
                  :on-change-event (form/update-atom-event form-atom application-response-change-fn)
@@ -389,15 +396,16 @@
                  :spec ::cooperation-model/response-form}
      [:div
       [:div {:class (<class common-styles/gray-container-style)}
-       [Grid {:container true :spacing 3}
+       [Grid {:container true :spacing 0}
         [Grid {:item true :xs 12}
          [form/field :cooperation.response/status
           [select/select-enum {:e! e!
                                :attribute :cooperation.response/status}]]]
 
         [Grid {:item true :xs 12}
-         [form/field :cooperation.response/date
-          [date-picker/date-input {}]]]
+         [form/field {:attribute :cooperation.response/date}
+          [date-picker/date-input {:required (not status-no-response?) ;; only required when the status is other than no-response
+                                   :read-only? status-no-response?}]]]
 
         [Grid {:item true :xs 6
                :style {:display :flex
@@ -409,25 +417,26 @@
                                       (when (or (js/isNaN val) (>= val max-months) (>= min-months val))
                                         true))))}
           [text-field/TextField {:type :number
+                                 :read-only? status-no-response?
                                  :max max-months
                                  :min min-months}]]]
 
-        [Grid {:item true :xs 6
-               :style {:display :flex
-                       :align-items :flex-end}}
+        [Grid {:item true :xs 6}
          (when (:cooperation.response/valid-until @form-atom)
            [form/field :cooperation.response/valid-until
             [date-picker/date-input {:read-only? true}]])]
         [Grid {:item true :xs 12}
-         [form/field :cooperation.response/content
-          [rich-text-editor/rich-text-field {}]]]]]
+         (when-not status-no-response?
+           [form/field :cooperation.response/content
+            [rich-text-editor/rich-text-field {}]])]]]
       [form/footer2]]]))
 
 (defn application-response
   [e! new-document files-form application project related-task]
   (r/with-let [{:keys [upload!] :as controls} (task-view/file-upload-controls e!)]
     (let [response (:cooperation.application/response application)
-          linked-files (:link/_from response)]
+          linked-files (:link/_from response)
+          no-response? (= (:cooperation.response/status response) :cooperation.response.status/no-response)]
       [:div {:class (<class common-styles/margin-bottom 3)}
        [Divider {:style {:margin "1.5rem 0"}}]
        [:div {:class [(<class common-styles/flex-row-space-between)
@@ -447,19 +456,11 @@
        [:div {:class (<class common-styles/margin-bottom 1)}
         [rich-text-editor/display-markdown
          (:cooperation.response/content response)]]
-       [task-view/task-file-upload {:e! e!
-                                    :controls controls
-                                    :task related-task
-                                    :linked-from [:cooperation.response (:db/id response)]
-                                    :activity (:cooperation.application/activity application)
-                                    :project-id (:thk.project/id project)
-                                    :drag-container-id "drag-container-id"
-                                    :new-document new-document
-                                    :files-form files-form}]
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
-                                          (:application-editable authz)))
+                                          (:application-editable authz)
+                                          (not no-response?)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
@@ -467,33 +468,47 @@
 
                             (not (:application-editable authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])
-                             :body (tr [:cooperation :error :response-not-editable])})]
-            (if (empty? linked-files)
-              [common/popper-tooltip error-msg
-               [buttons/button-primary {:size :small
-                                        :on-click #(upload! {})
-                                        :disabled (not can-upload?)
-                                        :end-icon (r/as-element [icons/content-add])}
-                (tr [:cooperation :add-files])]]
-              [:div
-               [:div {:class (<class common-styles/header-with-actions)}
-                [typography/Heading2 (tr [:common :files])]
-                [common/popper-tooltip error-msg
-                 [buttons/button-primary {:size :small
-                                          :on-click #(upload! {})
-                                          :disabled (not can-upload?)
-                                          :end-icon (r/as-element [icons/content-add])}
-                  (tr [:cooperation :add-files])]]]
-               [link-view/links
-                {:e! e!
-                 :links linked-files
-                 :editable? false
-                 :link-entity-opts {:file
-                                    {:column-widths [3 1]
-                                     :allow-replacement-opts
-                                     {:e! e!
-                                      :task related-task
-                                      :small true}}}}]]))))])))
+                             :body (tr [:cooperation :error :response-not-editable])}
+
+                            no-response?
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :body (tr [:cooperation :error :response-not-given])})]
+            [:div#drag-container-id
+             [task-view/task-file-upload {:e! e!
+                                          :controls controls
+                                          :task related-task
+                                          :linked-from [:cooperation.response (:db/id response)]
+                                          :activity (:cooperation.application/activity application)
+                                          :project-id (:thk.project/id project)
+                                          :drag-container-id "drag-container-id"
+                                          :new-document new-document
+                                          :files-form files-form}]
+             (if (empty? linked-files)
+               [common/popper-tooltip error-msg
+                [buttons/button-primary {:size :small
+                                         :on-click #(upload! {})
+                                         :disabled (not can-upload?)
+                                         :end-icon (r/as-element [icons/content-add])}
+                 (tr [:cooperation :add-files])]]
+               [:div
+                [:div {:class (<class common-styles/header-with-actions)}
+                 [typography/Heading2 (tr [:common :files])]
+                 [common/popper-tooltip error-msg
+                  [buttons/button-primary {:size :small
+                                           :on-click #(upload! {})
+                                           :disabled (not can-upload?)
+                                           :end-icon (r/as-element [icons/content-add])}
+                   (tr [:cooperation :add-files])]]]
+                [link-view/links
+                 {:e! e!
+                  :links linked-files
+                  :editable? false
+                  :link-entity-opts {:file
+                                     {:column-widths [3 1]
+                                      :allow-replacement-opts
+                                      {:e! e!
+                                       :task related-task
+                                       :small true}}}}]])])))])))
 
 
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
