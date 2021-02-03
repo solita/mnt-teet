@@ -41,11 +41,13 @@
 ;; ^ commented out because touched empty form fields have value "" and not nil
 
 (s/def ::response-form
-  (s/keys :req [:cooperation.response/status]
-          :opt [:cooperation.response/date
-                :cooperation.response/valid-months
-                :cooperation.response/valid-until
-                :cooperation.response/content]))
+  (s/or :no-response (s/and #(= (:cooperation.response/status %) :cooperation.response.status/no-response)
+                            (s/keys :req [:cooperation.response/status]))
+        :response (s/keys :req [:cooperation.response/status
+                                :cooperation.response/date]
+                          :opt [:cooperation.response/valid-months
+                                :cooperation.response/valid-until
+                                :cooperation.response/content])))
 
 (s/def ::opinion-form
   (s/keys :req [:cooperation.opinion/status :cooperation.opinion/comment]))
