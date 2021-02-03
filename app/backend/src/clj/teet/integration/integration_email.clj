@@ -2,10 +2,13 @@
   "Email integration through AWS Simple Email Service"
   (:require [cognitect.aws.client.api :as aws]
             [clojure.string :as str]
-            [teet.environment :as environment])
+            [teet.environment :as environment]
+            [postal.core)
   (:import (java.util Base64)))
 
-(def ^:private email (delay (aws/client {:api :email})))
+(def ^:private email-server {:host "test.net"               ;; TODO init from environment settiing
+                      :user "test"                          ;;
+                      :pass "test"})
 
 (def boundary-digits "0123456789abcdefghijklmnopqrstuvwxyz")
 
@@ -65,9 +68,15 @@
    {:op :SendRawEmail
     :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}}))
 
+
+(defn send-email-smtp* [msg]
+  (println (str "email server " email-server))
+  (println (str "message " msg))
+  (println (postal.core/send-message email-server msg)))
+
 (defn send-email! [msg]
   (let [prefix (environment/config-value :email :subject-prefix)
         msg (if prefix
               (update msg :subject #(str prefix " " %))
               msg)]
-    (send-email!* msg)))
+    (send-email-smtp* msg)))
