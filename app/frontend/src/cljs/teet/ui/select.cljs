@@ -17,39 +17,38 @@
             ["react"]
             [teet.util.collection :as cu]
             [teet.ui.icons :as icons]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [teet.ui.typography :as typography]))
 
 (def select-bg-caret-down "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23005E87%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')")
 
 (defn- primary-select-style
-  [error]
+  [error read-only?]
   ^{:pseudo {:focus theme-colors/focus-style}}
-  {:-moz {:appearance :none}
-   :-webkit {:appearance :none}
-   :border-radius "2px"
-   :appearance "none"
-   :display :block
-   :background-color :white
-   :border (if error
-             (str "1px solid " theme-colors/error)
-             (str "1px solid " theme-colors/gray-light))
-   :padding "10px 30px 10px 13px"
-   :width "100%"
-   :cursor :pointer
-   :max-height "41px"
-   :font-size "1rem"
-   :background-image select-bg-caret-down
-   :background-repeat "no-repeat"
-   :background-position "right .7em top 50%"
-   :background-size "0.65rem auto"})
-
-(defn- select-label-style
-  []
-  {:font-size "1rem"})
+  (merge {:-moz {:appearance :none}
+          :-webkit {:appearance :none}
+          :border-radius "3px"
+          :appearance "none"
+          :display :block
+          :background-color :white
+          :border (if error
+                    (str "1px solid " theme-colors/error)
+                    (str "1px solid " theme-colors/black-coral-1))
+          :padding "10px 30px 10px 13px"
+          :width "100%"
+          :max-height "41px"
+          :font-size "1rem"
+          :background-image select-bg-caret-down
+          :background-repeat "no-repeat"
+          :background-position "right .7em top 50%"
+          :background-size "0.65rem auto"
+          :cursor :pointer}
+         (when read-only?
+           {:cursor :default})))
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
                            show-label? show-empty-selection? error error-text required empty-selection-label
-                           data-item?]
+                           data-item? read-only?]
                         :or {format-item :label
                              show-label? true
                              data-item? false}}]
@@ -60,17 +59,19 @@
                            (on-change nil)
                            (on-change (nth items (int val))))))]
     [:label {:for id
-             :class (<class select-label-style)}
+             :class (<class common-styles/input-label-style read-only?)}
      (when show-label?
        (if label-element
          [label-element label (when required [common/required-astrix])]
-         [:span label (when required
+         [typography/Text2Bold
+          label (when required
                         [common/required-astrix])]))
      [:div {:style {:position :relative}}
       [:select
        {:value (or (option-idx value) "")
         :name name
-        :class (<class primary-select-style error)
+        :disabled read-only?
+        :class (<class primary-select-style error read-only?)
         :required (boolean required)
         :id (str "links-type-select" id)
         :on-change (fn [e]
@@ -218,7 +219,7 @@
     (e! (query-enums-for-attribute! attribute)))
   (fn [{:keys [value on-change name show-label? show-empty-selection?
                tiny-select? id error container-class class values-filter
-               full-value? empty-selection-label]
+               full-value? empty-selection-label read-only?]
         :enum/keys [valid-for]
         :or {show-label? true
              show-empty-selection? true}}]
@@ -247,6 +248,7 @@
       [select-comp {:label (tr [:fields attribute])
                     :name name
                     :id id
+                    :read-only? read-only?
                     :label-element label-element
                     :empty-selection-label empty-selection-label
                     :container-class container-class

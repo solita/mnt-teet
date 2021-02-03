@@ -12,7 +12,9 @@
             [teet.ui.material-ui :refer [Divider]]
             [teet.ui.util :as util]
             [teet.util.string :as string]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.typography :as typography])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -28,7 +30,8 @@
    :background-color theme-colors/white
    :border (str "1px solid " (if error
                                theme-colors/error
-                               theme-colors/gray-light))})
+                               theme-colors/black-coral-1))
+   :border-radius "3px"})
 
 
 (def block-types
@@ -202,9 +205,10 @@
      [:div (when id {:id id})
       [:div
        (when label
-         [:label
-          label (when required
-                  [common/required-astrix])])
+         [:label {:class (<class common-styles/input-label-style read-only?)}
+          [typography/Text2Bold
+           label (when required
+                   [common/required-astrix])]])
        [:div (merge {:on-click focus-editor}
                     (when-not read-only? {:class (<class editor-style error)}))
         (when-not read-only?
@@ -232,11 +236,13 @@
 
 (defn rich-text-field
   "Rich text input that can be used in forms."
-  [{:keys [value on-change label required error]}]
+  [{:keys [value on-change label required error read-only?]}]
   [:f> wysiwyg-editor {:value (if (string? value)
                                 (markdown->editor-state value)
                                 value)
+                       :read-only? read-only?
                        :label label
                        :required required
                        :error error
-                       :on-change on-change}])
+                       :on-change (when-not read-only?
+                                    on-change)}])
