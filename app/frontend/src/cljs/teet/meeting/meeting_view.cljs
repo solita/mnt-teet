@@ -700,9 +700,7 @@
             [form/field :user/given-name
              [TextField {:placeholder (tr [:fields :user/given-name])}]]
             [form/field :user/family-name
-             [TextField {:placeholder (tr [:fields :user/family-name])}]]
-            [form/field :user/email
-             [TextField {:placeholder (tr [:fields :user/email])}]]]
+             [TextField {:placeholder (tr [:fields :user/family-name])}]]]
            [form/footer2]]
           ^{:key "teet-user"}
           [form/form2 {:e! e!
