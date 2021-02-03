@@ -275,7 +275,7 @@
       [:div {:class (<class file-style/file-icon-container-style)}
        [(if link-icon?
           icons/content-link
-          icons/action-description)  {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
+          icons/action-description-outlined)  {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
       [:div {:style {:min-width 0}}
        [:div {:class [(<class common-styles/flex-align-center)
                       (<class common-styles/margin-bottom 0.5)]}
@@ -286,8 +286,14 @@
           (if title-downloads?
             [common/Link {:target "_blank"
                           :class (<class file-style/file-list-entity-name-style)
-                          :href (common-controller/query-url :file/download-file
-                                                             {:file-id (:db/id file)})}
+                          :href (common-controller/query-url
+                                  (if attached-to
+                                    :file/download-attachment
+                                    :file/download-file)
+                                  (merge
+                                    {:file-id (:db/id file)}
+                                    (when attached-to
+                                      {:attached-to attached-to})))}
              description]
             [url/Link (merge
                      {:title description

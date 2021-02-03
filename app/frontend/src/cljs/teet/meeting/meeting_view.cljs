@@ -146,13 +146,13 @@
                                  edit?]
   [:div {:id (str "decision-" id)}
    [rich-text-editor/display-markdown body]
-   [links-content e! [:meeting-decision id] links-from edit?]
    [file-attachments {:e! e!
                       :drag-container-id (str "decision-" id)
                       :allow-delete? edit?
                       :drop-message (tr [:drag :drop-to-meeting-decision])
                       :attach-to [:meeting-decision id]
-                      :files files}]])
+                      :files files}]
+   [links-content e! [:meeting-decision id] links-from edit?]])
 
 (defn meeting-view-container
   ([param]
@@ -826,7 +826,7 @@
 (defn add-decision-component
   [e! meeting agenda-topic]
   (r/with-let [[pfrom pto] (common/portal)]
-    [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/gray-lighter 5)))}
+    [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/white 5)))}
      [form/form-container-button
       {:form-component [decision-form e! (:db/id agenda-topic)]
        :modal-title (tr [:meeting :new-decision-modal-title])
