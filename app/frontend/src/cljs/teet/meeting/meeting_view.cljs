@@ -614,9 +614,9 @@
                                      close-event)}
                      (when-let [agenda-id (:db/id @form-atom)]
                        {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
-    ^{:attribute :meeting.agenda/topic}
+    ^{:attribute :meeting.agenda/topic :xs 6}
     [TextField {:id "agenda-title"}]
-    ^{:attribute :meeting.agenda/responsible}
+    ^{:attribute :meeting.agenda/responsible :xs 6}
     [select/select-user {:e! e!}]
     ^{:attribute :meeting.agenda/body}
     [rich-text-editor/rich-text-field {}]]])
