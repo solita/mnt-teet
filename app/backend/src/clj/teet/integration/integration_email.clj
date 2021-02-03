@@ -1,7 +1,8 @@
 (ns teet.integration.integration-email
   "Email integration through AWS Simple Email Service"
   (:require [cognitect.aws.client.api :as aws]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.environment :as environment])
   (:import (java.util Base64)))
 
 (def ^:private email (delay (aws/client {:api :email})))
@@ -57,7 +58,11 @@
              (->b64 body))))))
 
 (defn send-email! [msg]
-  (aws/invoke
-   @email
-   {:op :SendRawEmail
-    :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}}))
+  (let [prefix (environment/config-value :email :subject-prefix)
+        msg (if prefix
+              (update msg :subject #(str prefix " " %))
+              msg)]
+    (aws/invoke
+     @email
+     {:op :SendRawEmail
+      :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}})))
