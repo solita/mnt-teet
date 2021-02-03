@@ -3,7 +3,7 @@
   (:require [cognitect.aws.client.api :as aws]
             [clojure.string :as str]
             [teet.environment :as environment]
-            [postal.core)
+            [postal.core])
   (:import (java.util Base64)))
 
 (def ^:private email-server {:host "test.net"               ;; TODO init from environment settiing
@@ -59,15 +59,6 @@
                                    "Content-Transfer-Encoding" "base64"}))
              "\r\n\r\n"
              (->b64 body))))))
-
-(defn- send-email!*
-  "Invoke email sending"
-  [msg]
-  (aws/invoke
-   @email
-   {:op :SendRawEmail
-    :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}}))
-
 
 (defn send-email-smtp* [msg]
   (println (str "email server " email-server))
