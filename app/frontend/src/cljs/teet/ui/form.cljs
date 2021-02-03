@@ -1,7 +1,7 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Portal]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
@@ -528,3 +528,28 @@
                    (fn []
                      (reset! form-atom (or form-value {}))
                      (reset! open-atom true))))]))
+
+(defn form-container-button
+  "Like form-modal-button but renders form inside the given
+  container component.
+
+  Container must be a function that can be used in hiccup as
+  a component."
+  [{:keys [container
+           form-component button-component
+           form-value
+           open? id]}]
+  (r/with-let [open-atom (r/atom (or open? false))
+               form-atom (r/atom (or form-value {}))
+               close-event (reset-atom-event open-atom false)]
+    [:<>
+     (when @open-atom
+       [container
+        (into form-component [close-event form-atom])])
+     (-> button-component
+         (assoc-in [1 :id] id)
+         (assoc-in [1 :on-click]
+                   (fn []
+                     (reset! form-atom (or form-value {}))
+                     (reset! open-atom true)))
+         (assoc-in [1 :disabled] @open-atom))]))

@@ -274,7 +274,8 @@
       [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
        [circle-svg {:status activity-state :size 20 :dark-theme? dark-theme?}]
        [:div {:class (<class step-container-style {:offset -4})}
-        [:div {:class (<class flex-column)}
+        [:div {:class (<class flex-column)
+               :data-cy (str "activity-link" (:db/ident (:activity/name activity)))}
          [url/Link {:page (or activity-link-page :activity)
                     :params {:activity (:db/id activity)}
                     :class (<class stepper-button-style {:size "20px"

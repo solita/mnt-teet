@@ -826,10 +826,14 @@
 
 (defn add-decision-component
   [e! meeting agenda-topic]
-  [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/white 5)))}
-   [form/form-modal-button {:form-component [decision-form e! (:db/id agenda-topic)]
-                            :modal-title (tr [:meeting :new-decision-modal-title])
-                            :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
+  (r/with-let [[pfrom pto] (common/portal)]
+    [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/gray-lighter 5)))}
+     [form/form-container-button
+      {:form-component [decision-form e! (:db/id agenda-topic)]
+       :modal-title (tr [:meeting :new-decision-modal-title])
+       :container pfrom
+       :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]
+     [pto]]))
 
 
 (defn- meeting-agenda-content [e! {id :db/id
@@ -933,94 +937,127 @@
                               :button-component [buttons/button-warning {}
                                                  (tr [:meeting :reject-meeting-button])]}]]))
 
-(defn meeting-details*
-  [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
-  (let [edit? (get rights :edit-meeting)
-        review? (get rights :review-meeting)]
-    [:div
-     [common/basic-information-row
-      {:right-align-last? true}
-      [[(tr [:fields :meeting/date-and-time])
-        (str (format/date start)
-             " "
-             (format/time* start)
-             " - "
-             (format/time* end))]
-       [(tr [:fields :meeting/location])
-        location]
-       [(tr "PDF")
-        [:a {:href (common-controller/query-url :meeting/download-pdf
-                                                {:db/id (:db/id meeting)})
-             :target "_blank" } "Download"]]]]
-     [:div {:class (<class common-styles/heading-and-action-style) :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0" :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
-      [typography/Heading2 (tr [:fields :meeting/agenda])]
-       (when edit?
-         [form/form-modal-button {:form-component   [agenda-form e! meeting]
-                                  :id               "add-agenda"
-                                  :form-value       {:meeting.agenda/responsible (select-keys user [:db/id
-                                                                                                    :user/id
-                                                                                                    :user/given-name
-                                                                                                    :user/family-name
-                                                                                                    :user/email
-                                                                                                    :user/person-id])}
-                                  :modal-title      (tr [:meeting :new-agenda-modal-title])
-                                  :button-component [buttons/button-primary {:start-icon (r/as-element
-                                                                                           [icons/content-add])} (tr [:meeting :add-agenda-button])]}])]
-     [:div {:style {:margin-bottom "1rem"}}
-      (doall
-       (for [{id :db/id
-              :meeting.agenda/keys [topic responsible body decisions] :as agenda-topic} agenda]
-         ^{:key id}
-         [meeting-view-container
-          {:heading [:div.agenda-heading
-                     [:div {:style {:display :flex}}
-                      (let
-                       [agenda-files (:file/_attached-to agenda-topic)
-                        agenda-links (:link/_from agenda-topic)]
-                       (if (or (seq agenda-files) (seq agenda-links))
-                               [:div {:class (<class file-style/file-icon-container-style)
-                                      :title (tr [:meeting :agenda-has-attachments])} [icons/content-link
-                                                             {:style {:color theme-colors/primary}}]]))
-                     [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]]
-                     [:span (user-model/user-name responsible)]]
-           :open? true
-           :heading-button (when edit?
-                             [form/form-modal-button {:form-component [agenda-form e! meeting]
-                                                      :id (str "edit-agenda-" id)
-                                                      :form-value agenda-topic
-                                                      :modal-title (tr [:meeting :edit-agenda-modal-title])
-                                                      :button-component [buttons/button-secondary {:size :small}
-                                                                         (tr [:buttons :edit])]}])
-           :content [meeting-agenda-content e! agenda-topic edit?]
-           :children (for [d decisions]
-                       {:key (:db/id d)
-                        :open? true
-                        :heading [:div
-                                  {:style {:display :flex}}
-                                  (let
-                                    [decision-files (:file/_attached-to d)
-                                     decision-links (:link/_from d)]
-                                    (if (or (seq decision-files) (seq decision-links))
-                                      [:div {:class (<class file-style/file-icon-container-style)
-                                             :title (tr [:meeting :decision-has-attachments])} [icons/content-link
-                                                                                                 {:style {:color theme-colors/primary}}]]))
-                        [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
-                                                                                      :num (:meeting.decision/number d)})]]
-                        :heading-button (when edit?
-                                          [form/form-modal-button
-                                           {:form-component [decision-form e! (:db/id agenda-topic)]
-                                            :form-value d
-                                            :modal-title (tr [:meeting :edit-decision-modal-title])
-                                            :button-component [buttons/button-secondary {:size :small}
-                                                               (tr [:buttons :edit])]}])
-                        :content [meeting-decision-content e! d edit?]})
-           :after-children-component (when edit?
-                                       [add-decision-component e! meeting agenda-topic])}
-          theme-colors/white]))]
+(defn- meeting-details-info
+  "Display meeting info: location, date/time and download link."
+  [{:meeting/keys [start end location] :as meeting}]
+  [common/basic-information-row
+   {:right-align-last? true}
+   [[(tr [:fields :meeting/date-and-time])
+     (str (format/date start)
+          " "
+          (format/time* start)
+          " - "
+          (format/time* end))]
+    [(tr [:fields :meeting/location])
+     location]
+    [(tr "PDF")
+     [:a {:href (common-controller/query-url :meeting/download-pdf
+                                             {:db/id (:db/id meeting)})
+          :target "_blank" } "Download"]]]])
 
-     [reviews meeting]
-     (when review?
-       [review-actions e! meeting])]))
+(defn meeting-details-add-agenda [e! user meeting pfrom]
+  [form/form-container-button
+   {:form-component   [agenda-form e! meeting]
+    :container pfrom
+    :id "add-agenda"
+    :form-value {:meeting.agenda/responsible
+                 (select-keys user [:db/id
+                                    :user/id
+                                    :user/given-name
+                                    :user/family-name
+                                    :user/email
+                                    :user/person-id])}
+    :modal-title (tr [:meeting :new-agenda-modal-title])
+    :button-component [buttons/button-primary {:start-icon (r/as-element
+                                                            [icons/content-add])}
+                       (tr [:meeting :add-agenda-button])]}])
+
+(defn- meeting-agenda-heading [{:meeting.agenda/keys [topic responsible] :as agenda-topic}]
+  [:div.agenda-heading
+   [:div {:style {:display :flex}}
+    (let
+        [agenda-files (:file/_attached-to agenda-topic)
+         agenda-links (:link/_from agenda-topic)]
+      (when (or (seq agenda-files) (seq agenda-links))
+        [:div {:class (<class file-style/file-icon-container-style)
+               :title (tr [:meeting :agenda-has-attachments])}
+         [icons/content-link
+          {:style {:color theme-colors/primary}}]]))
+    [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]]
+   [:span (user-model/user-name responsible)]])
+
+(defn- meeting-agenda-decisions [e! edit? {:meeting.agenda/keys [topic decisions] :as agenda-topic}]
+  (for [d decisions
+        :let [[pfrom pto] (common/portal)]]
+    {:key (:db/id d)
+     :open? true
+     :heading [:div
+               {:style {:display :flex}}
+               (let [decision-files (:file/_attached-to d)
+                     decision-links (:link/_from d)]
+                 (when (or (seq decision-files) (seq decision-links))
+                   [:div {:class (<class file-style/file-icon-container-style)
+                          :title (tr [:meeting :decision-has-attachments])}
+                    [icons/content-link
+                     {:style {:color theme-colors/primary}}]]))
+               [typography/Heading3
+                (tr [:meeting :decision-topic]
+                    {:topic topic
+                     :num (:meeting.decision/number d)})]]
+     :heading-button (when edit?
+                       [form/form-container-button
+                        {:form-component [decision-form e! (:db/id agenda-topic)]
+                         :container pfrom
+                         :form-value d
+                         :modal-title (tr [:meeting :edit-decision-modal-title])
+                         :button-component [buttons/button-secondary {:size :small}
+                                            (tr [:buttons :edit])]}])
+     :content
+     [:<>
+      [pto]
+      [meeting-decision-content e! d edit?]]}))
+
+(defn meeting-details*
+  [e! user {:meeting/keys [agenda] :as meeting} rights]
+  (r/with-let [[pfrom pto] (common/portal)]
+    (let [edit? (get rights :edit-meeting)
+          review? (get rights :review-meeting)]
+      [:div {:data-cy "meeting-details"}
+       [meeting-details-info meeting]
+       [:div {:class (<class common-styles/heading-and-action-style) :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0" :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
+        [typography/Heading2 (tr [:fields :meeting/agenda])]
+        (when edit?
+          [meeting-details-add-agenda e! user meeting pfrom])]
+       [pto]
+       [:div {:style {:margin-bottom "1rem"}}
+        (doall
+         (for [{id :db/id :as agenda-topic} agenda
+               :let [[pfrom pto] (common/portal)]]
+           ^{:key id}
+           [meeting-view-container
+            {:heading [meeting-agenda-heading agenda-topic]
+             :open? true
+             :heading-button (when edit?
+                               [form/form-container-button
+                                {:form-component [agenda-form e! meeting]
+                                 :container pfrom
+                                 :id (str "edit-agenda-" id)
+                                 :form-value agenda-topic
+                                 :modal-title (tr [:meeting :edit-agenda-modal-title])
+                                 :button-component [buttons/button-secondary {:size :small}
+                                                    (tr [:buttons :edit])]}])
+             :content
+             [:<>
+              [pto]
+              [meeting-agenda-content e! agenda-topic edit?]]
+             :children (meeting-agenda-decisions e! edit? agenda-topic)
+             :after-children-component (when edit?
+                                         [add-decision-component e! meeting agenda-topic])}
+            theme-colors/white]))]
+
+       [reviews meeting]
+       (when review?
+         [review-actions e! meeting])])))
 
 (defn meeting-details [e! user meeting]
   [authorization-context/consume

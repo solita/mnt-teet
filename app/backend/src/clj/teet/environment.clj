@@ -126,7 +126,9 @@
            :instance-id (->ssm [:xroad-instance-id] nil)
            :kr-subsystem-id (->ssm [:xroad-kr-subsystem-id] nil)}
    :eelis {:wms-url (->ssm [:eelis :wms-url] nil)}
-   :email {:from (->ssm [:email :from] nil)}})
+   :email {:from (->ssm [:email :from] nil)
+           :subject-prefix (->ssm [:email :subject-prefix] nil)}
+   :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}})
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config

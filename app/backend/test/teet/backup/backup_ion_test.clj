@@ -5,9 +5,13 @@
             [clojure.java.io :as io]
             [datomic.client.api :as d]
             [clojure.walk :as walk]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.environment :as environment]))
 
-(use-fixtures :each tu/with-environment tu/with-global-data)
+(use-fixtures :each
+  tu/with-environment
+  tu/with-global-data
+  (tu/with-config {:enabled-features #{:asset-db}}))
 
 (defn- remove-keys [tree & keys]
   (walk/prewalk (fn [x]
@@ -160,10 +164,27 @@
           (is (integer? (:db/id restored-project)))
           (is (integer? (:db/id @project))))))))
 
+(defn asset-db-schema []
+  (if-not (environment/feature-enabled? :asset-db)
+    :ignore
+    (let [list-items #(into #{}
+                            (map first)
+                            (d/q '[:find ?id
+                                   :where
+                                   [?e :enum/attribute _]
+                                   [?e :db/ident ?id]]
+                                 (tu/asset-db)))
+          items-before (list-items)]
+      (is (seq items-before)
+          "There are asset db items")
+      (fn []
+        (is (= items-before (list-items)))))))
+
 ;; Add any new test setup/verify functions here
 (def test-parts [#'file-user-seen
                  #'task-and-comment
-                 #'compare-project-pull])
+                 #'compare-project-pull
+                 #'asset-db-schema])
 
 (deftest restore-tx-backup
   (let [with-populated-db (tu/with-db)
@@ -179,9 +200,13 @@
                   (doall
                    (for [setup test-parts]
                      (setup))))
-
-          (#'backup-ion/output-all-tx (tu/connection)
-                                      (io/output-stream backup-file)))))
+          (with-open [out (io/output-stream backup-file)]
+            (#'backup-ion/output-zip
+             out
+             ["transactions.edn" (partial #'backup-ion/output-all-tx (tu/connection))]
+             (when (environment/feature-enabled? :asset-db)
+               ["assets.edn" (partial #'backup-ion/output-all-tx
+                                      (tu/asset-connection))]))))))
 
     (testing "Backup file has been created"
       (is (.canRead backup-file) "Backup file exists")
@@ -194,6 +219,7 @@
                            (tu/db)))
               "Database is empty before restore")
           (#'backup-ion/restore-tx-file {:conn (tu/connection)
+                                         :asset-conn (tu/asset-connection)
                                          :file backup-file})
 
           ;; Run all verify-fns to check state after restore
@@ -209,7 +235,7 @@
                                    :mock-users? false
                                    :skip-delete? true
                                    :data-fixtures []})
-        verify-fns (atom nil)]        
+        verify-fns (atom nil)]
 
     (with-empty-db
       (fn []
