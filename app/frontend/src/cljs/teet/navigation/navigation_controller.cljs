@@ -22,12 +22,10 @@
 
   CloseExtraPanel
   (process-event [_ app]
-    (println "closeextrapanel")
     (assoc-in app [:navigation :extra-panel-open?] false))
 
   ToggleExtraPanel
   (process-event [{extra-panel :extra-panel} app]
-    (println "toggle panel")
     (let [open? (get-in app [:navigation :extra-panel-open?])]
       (if (= (get-in app [:navigation :extra-panel]) extra-panel)
         (assoc-in app [:navigation :extra-panel-open?] (not open?))
