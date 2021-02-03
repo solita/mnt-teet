@@ -189,6 +189,7 @@
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
    :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :response-not-given "Faile saab lisada peale vastuse lisamist",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
    :response-not-editable

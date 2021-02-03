@@ -25,6 +25,7 @@
 (def white "#FFFFFF")
 
 (def black-coral-1 "#D2D3D8")                               ;;not sure how these should be used, straight from the design
+(def black-coral "#5D6071")
 
 (def dark-tangerine-11 "#E8A510")
 (def dark-tangerine-1 "#FFF1D3")
@@ -66,3 +67,8 @@
 (def card-background-extra-light "#F9F9F9")
 (def page-background-dark "#E1E2E5")
 (def border-dark "#D2D3D8")
+
+
+;; Text colors
+
+(def text-disabled "#9799A4")

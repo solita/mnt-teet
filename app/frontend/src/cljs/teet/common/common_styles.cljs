@@ -498,3 +498,10 @@
   {:display :flex
    :flex-direction :column
    :flex 1})
+
+(defn input-label-style
+  [disabled?]
+  (merge {:display :block
+          :color theme-colors/black-coral}
+         (when disabled?
+           {:color theme-colors/text-disabled})))
