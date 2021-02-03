@@ -57,12 +57,17 @@
              "\r\n\r\n"
              (->b64 body))))))
 
+(defn- send-email!*
+  "Invoke email sending"
+  [msg]
+  (aws/invoke
+   @email
+   {:op :SendRawEmail
+    :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}}))
+
 (defn send-email! [msg]
   (let [prefix (environment/config-value :email :subject-prefix)
         msg (if prefix
               (update msg :subject #(str prefix " " %))
               msg)]
-    (aws/invoke
-     @email
-     {:op :SendRawEmail
-      :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}})))
+    (send-email!* msg)))
