@@ -62,7 +62,7 @@
    :db.type/string "Text",
    :name "Name",
    :db.type/ref "Reference",
-   :db.type/bigdec "Decimal number",
+   :db.type/bigdec "Number",
    :fgroup "Asset Features",
    :header "Road Object Type Library (ROTL)",
    :link "ROTL",
