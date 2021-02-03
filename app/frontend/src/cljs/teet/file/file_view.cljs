@@ -275,7 +275,7 @@
       [:div {:class (<class file-style/file-icon-container-style)}
        [(if link-icon?
           icons/content-link
-          icons/action-description)  {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
+          icons/action-description-outlined)  {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
       [:div {:style {:min-width 0}}
        [:div {:class [(<class common-styles/flex-align-center)
                       (<class common-styles/margin-bottom 0.5)]}
