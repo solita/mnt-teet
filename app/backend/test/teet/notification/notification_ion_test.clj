@@ -8,8 +8,8 @@
             [teet.notification.notification-ion :as notification-ion]
             [teet.util.date :as date]))
 
-(t/use-fixtures
-  :each
+(t/use-fixtures :each
+  (tu/with-config {:notify {:application-expire-days "45"}})
   tu/with-environment
   (tu/with-db))
 
