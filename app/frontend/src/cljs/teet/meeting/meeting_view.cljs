@@ -426,7 +426,7 @@
            (for [[date meetings] this-week-by-days-of-week]
              ^{:key date}
              [:div {:class (<class common-styles/margin-bottom 1)}
-              [:div {:style {:display :flex}}
+              [:div {:class (<class common-styles/flex-align-center)}
                [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
                 (str/capitalize (format/localized-day-of-the-week (format/date-string->date date)))]
                [typography/GreyText {:style {:margin-left "0.5rem"}}
@@ -700,8 +700,6 @@
             [TextField {:placeholder (tr [:fields :user/given-name])}]]
            [form/field :user/family-name
             [TextField {:placeholder (tr [:fields :user/family-name])}]]
-           [form/field :user/email
-            [TextField {:placeholder (tr [:fields :user/email])}]]
            [form/footer2]]
           ^{:key "teet-user"}
           [form/form2 {:e! e!

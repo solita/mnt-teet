@@ -21,8 +21,7 @@
 
 (s/def :meeting/add-non-teet-user-form
   (s/keys :req [:user/given-name
-                :user/family-name
-                :user/email]))
+                :user/family-name]))
 
 (s/def :meeting/add-teet-user-form
   (s/keys :req [:participation/role
