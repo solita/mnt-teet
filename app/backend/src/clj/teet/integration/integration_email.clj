@@ -2,8 +2,8 @@
   "Email integration through AWS Simple Email Service"
   (:require [cognitect.aws.client.api :as aws]
             [clojure.string :as str]
-            [teet.environment :as environment]
-            [postal.core])
+            [teet.localization :refer [with-language tr]
+            [teet.environment :as environment])
   (:import (java.util Base64)))
 
 (def ^:private email-server {:host "test.net"               ;; TODO init from environment settiing
@@ -65,9 +65,35 @@
   (println (str "message " msg))
   (println (postal.core/send-message email-server msg)))
 
+(defn- with-subject-prefix
+  "Add prefix to subject (if configured)"
+  [{prefix :subject-prefix} msg]
+  (if prefix
+    (update msg :subject #(str prefix " " %))
+    msg))
+
+(defn- with-data-protection-footer
+  "Add data protection clause to text parts"
+  [{addr :contact-address} msg]
+  (update
+   msg :parts
+   (fn [parts]
+     (mapv
+      (fn [part]
+        (let [type (get-in part [:headers "Content-Type"])]
+          (if (and type (str/starts-with? type "text/plain"))
+            (let [footer #(tr [:email :footer] {:contact-mailto addr})]
+              (update part :body #(str % "\n"
+                                       (with-language :et (footer))
+                                       (with-language :en (footer)))))
+            part)))
+      parts))))
+
 (defn send-email! [msg]
-  (let [prefix (environment/config-value :email :subject-prefix)
-        msg (if prefix
-              (update msg :subject #(str prefix " " %))
-              msg)]
-    (send-email-smtp!* msg)))
+  (let [config (environment/config-map
+                {:subject-prefix [:email :subject-prefix]
+                 :contact-address [:email :contact-address]})]
+    (send-email-smtp!!*
+     (->> msg
+          (with-subject-prefix config)
+          (with-data-protection-footer config)))))
