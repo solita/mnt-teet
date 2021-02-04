@@ -426,7 +426,7 @@
            (for [[date meetings] this-week-by-days-of-week]
              ^{:key date}
              [:div {:class (<class common-styles/margin-bottom 1)}
-              [:div {:style {:display :flex}}
+              [:div {:class (<class common-styles/flex-align-center)}
                [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
                 (str/capitalize (format/localized-day-of-the-week (format/date-string->date date)))]
                [typography/GreyText {:style {:margin-left "0.5rem"}}
