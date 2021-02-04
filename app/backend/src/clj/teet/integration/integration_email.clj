@@ -93,7 +93,7 @@
 (defn send-email! [msg]
   (let [config (environment/config-map
                 {:subject-prefix [:email :subject-prefix]
-                 :contact-ddress [:email :contact-address]})]
+                 :contact-address [:email :contact-address]})]
     (send-email!*
      (->> msg
           (with-subject-prefix config)
