@@ -15,7 +15,8 @@
             [teet.link.link-db :as link-db]
             [teet.notification.notification-db :as notification-db]
             [teet.util.collection :as cu]
-            [teet.localization :refer [tr with-language]])
+            [teet.localization :refer [tr with-language]]
+            [teet.entity.entity-db :as entity-db])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -434,3 +435,12 @@
           :participation/in "new-meeting"
           :participation/role (:db/ident role)
           :participation/participant (:db/id participant)})))})
+
+
+(defcommand :meeting/seen
+  {:doc "Mark meeting seen timestamp for user"
+   :payload {id :db/id}
+   :context {:keys [db user]}
+   :project-id (project-db/meeting-project-id db id)
+   :authorization {:project/read-info {:eid (project-db/meeting-project-id db id)}}
+   :transact [(entity-db/entity-seen-tx db user id)]})
