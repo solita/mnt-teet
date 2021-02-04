@@ -60,7 +60,7 @@
              "\r\n\r\n"
              (->b64 body))))))
 
-(defn send-email-smtp* [msg]
+(defn send-email-smtp!* [msg]
   (println (str "email server " email-server))
   (println (str "message " msg))
   (println (postal.core/send-message email-server msg)))
@@ -70,4 +70,4 @@
         msg (if prefix
               (update msg :subject #(str prefix " " %))
               msg)]
-    (send-email-smtp* msg)))
+    (send-email-smtp!* msg)))

@@ -8,7 +8,7 @@
 (defn with-outbox []
   (fn [tests]
     (reset! outbox [])
-    (with-redefs [integration-email/send-email!* #(swap! outbox conj %)]
+    (with-redefs [integration-email/send-email-smtp!* #(swap! outbox conj %)]
       (tests))))
 
 (t/use-fixtures :each (with-outbox))
