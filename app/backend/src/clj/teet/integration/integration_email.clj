@@ -2,8 +2,9 @@
   "Email integration through AWS Simple Email Service"
   (:require [cognitect.aws.client.api :as aws]
             [clojure.string :as str]
-            [teet.localization :refer [with-language tr]
-            [teet.environment :as environment])
+            [teet.environment :as environment]
+            [postal.core :as postal.core]
+            [teet.localization :refer [with-language tr]])
   (:import (java.util Base64)))
 
 (def ^:private email-server {:host "test.net"               ;; TODO init from environment settiing
@@ -93,7 +94,7 @@
   (let [config (environment/config-map
                 {:subject-prefix [:email :subject-prefix]
                  :contact-address [:email :contact-address]})]
-    (send-email-smtp!!*
+    (send-email-smtp!*
      (->> msg
           (with-subject-prefix config)
           (with-data-protection-footer config)))))
