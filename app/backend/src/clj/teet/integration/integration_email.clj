@@ -7,10 +7,6 @@
             [teet.localization :refer [with-language tr]])
   (:import (java.util Base64)))
 
-(def ^:private email-server {:host "test.net"               ;; TODO init from environment settiing
-                      :user "test"                          ;;
-                      :pass "test"})
-
 (def boundary-digits "0123456789abcdefghijklmnopqrstuvwxyz")
 
 (defn- boundary []
@@ -62,9 +58,14 @@
              (->b64 body))))))
 
 (defn send-email-smtp!* [msg]
-  (println (str "email server " email-server))
-  (println (str "message " msg))
-  (println (postal.core/send-message email-server msg)))
+  (let [smtp-node-config
+        (environment/config-map
+          {:host [:email :host]
+           :user [:email :user]
+           :pass [:email :pass]})]
+    (println smtp-node-config)
+    (println msg)
+    (postal.core/send-message smtp-node-config msg)))
 
 (defn- with-subject-prefix
   "Add prefix to subject (if configured)"
