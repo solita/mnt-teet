@@ -7,15 +7,15 @@
             [teet.ui.typography :as typography]))
 
 (defn- input-field-style
-  [error multiline read-only? start-icon? end-icon? type]
+  [error multiline disabled? start-icon? end-icon? type]
   (merge
     ^{:pseudo {:invalid {:box-shadow "inherit"
                          :outline "inherit"}
                "-webkit-outer-spin-button" {"-webkit-appearance" "none"}}}
-    {:border-radius "2px"
+    {:border-radius "3px"
      :border (if error
                (str "1px solid " theme-colors/error)
-               (str "1px solid " theme-colors/gray-light))
+               (str "1px solid " theme-colors/black-coral-1))
      :padding "10px 13px"
      :width "100%"
      :font-size "1rem"}
@@ -25,12 +25,11 @@
       {:padding-left "2.5rem"})
     (when end-icon?
       {:padding-right "2.5rem"})
-    (when read-only?
-      {:color :inherit
-       :background-color theme-colors/gray-lighter})
+    (when disabled?
+      {:color theme-colors/text-disabled
+       :background-color theme-colors/card-background-extra-light})
     (when (= type :number)
       {"-moz-appearance" "textfield"})))
-
 
 
 (defn- label-style
@@ -83,10 +82,6 @@
   [file-type]
   [:span {:class (<class file-end-style)} (str file-type)])
 
-(defn form-label-style
-  []
-  {:display :block})
-
 (defn TextField
   [{:keys [label id type error style input-button-icon read-only? inline?
            input-button-click required input-style
@@ -98,7 +93,7 @@
                   :textarea
                   :input)]
     [:label {:for id
-             :class (<class form-label-style)
+             :class (<class common-styles/input-label-style read-only?)
              :style style}
      (when-not hide-label?
        (if label-element

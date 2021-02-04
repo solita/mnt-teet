@@ -220,7 +220,8 @@
 
 (defn date-input*
   "Combined text field and date picker component"
-  [{:keys [label error value on-change selectable? required read-only? end start min-date max-date error-text]}]
+  [{:keys [label error value on-change selectable? required placeholder
+            read-only? end start min-date max-date error-text]}]
   (let [[txt set-txt!] (react/useState "")
         [open? set-open?] (react/useState false)
         [ref set-ref!] (react/useState nil)
@@ -244,11 +245,12 @@
                          (set-txt! (some-> value goog.date.Date. unparse-opt))
                          identity))
                     #js [value])                            ;; need to use a javascript array
-    [:div
+    [:<>
      [TextField (merge {:label label
                         :read-only? read-only?
                         :value (or txt "")
                         :ref set-ref
+                        :placeholder placeholder
                         :error error
                         :error-text error-text
                         :required required
