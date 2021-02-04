@@ -68,16 +68,14 @@
 
 (defn- with-subject-prefix
   "Add prefix to subject (if configured)"
-  [msg]
-  (update msg :subject
-          (fn [subject]
-            (if-let [prefix (environment/config-value :email :subject-prefix)]
-              (str prefix " " subject)
-              subject))))
+  [{prefix :subject-prefix} msg]
+  (if prefix
+    (update msg :subject #(str prefix " " %))
+    msg))
 
 (defn- with-data-protection-footer
   "Add data protection clause to text parts"
-  [msg]
+  [{addr :contact-address} msg]
   (update
    msg :parts
    (fn [parts]
@@ -85,8 +83,7 @@
       (fn [part]
         (let [type (get-in part [:headers "Content-Type"])]
           (if (and type (str/starts-with? type "text/plain"))
-            (let [addr (environment/config-value :email :contact-address)
-                  footer #(tr [:email :footer] {:contact-mailto addr})]
+            (let [footer #(tr [:email :footer] {:contact-mailto addr})]
               (update part :body #(str % "\n"
                                        (with-language :et (footer))
                                        (with-language :en (footer)))))
@@ -94,7 +91,10 @@
       parts))))
 
 (defn send-email! [msg]
-  (-> msg
-      with-subject-prefix
-      with-data-protection-footer
-      send-email!*))
+  (let [config (environment/config-map
+                {:subject-prefix [:email :subject-prefix]
+                 :contact-ddress [:email :contact-address]})]
+    (send-email!*
+     (->> msg
+          (with-subject-prefix config)
+          (with-data-protection-footer config)))))
