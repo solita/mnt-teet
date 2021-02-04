@@ -3,6 +3,7 @@
   (:require [cheshire.core :as cheshire]
             [org.httpkit.client :as client]
             [teet.auth.jwt-token :as jwt-token]
+            [teet.db-api.core :refer [fail!]]
             [teet.log :as log]
             [clojure.string :as str]))
 
@@ -36,8 +37,10 @@
 
 (defn- decode-response-body [resp]
   (try (cheshire/decode (:body resp) keyword)
-       (catch Exception e
-         (log/error "Failed to decode PostgREST response: " e))))
+       (catch Exception _
+         (log/error "Failed to decode PostgREST response: " (:body resp))
+         (fail! {:msg "Failed to decode PostgREST response"
+                 :error :postgrest-response-error}))))
 
 (defn select
   "Select data from a table endpoint in PostgREST."
