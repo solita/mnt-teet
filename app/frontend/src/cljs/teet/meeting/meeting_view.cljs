@@ -1134,18 +1134,19 @@
   "Mark meeting as seen if there are no new indicators.
   If there are indicators, user must open the items to mark as seen."
   [e! {seen-at :entity-seen/seen-at :as m}]
-  (let [seen (some-> seen-at .getTime)
-        new-indicators? (and seen
-                             (some #(when-let [time (or (:meta/modified-at %)
-                                                        (:meta/created-at %))]
-                                      (> (.getTime time) seen))
-                                   (concat [m]
-                                           (for [a (:meeting/agenda m)] a)
-                                           (for [a (:meeting/agenda m)
-                                                 d (:meeting.agenda/decisions a)]
-                                             d))))]
-    (when-not new-indicators?
-      (e! (meeting-controller/->MarkMeetingAsSeen)))))
+  (when m
+    (let [seen (some-> seen-at .getTime)
+          new-indicators? (and seen
+                               (some #(when-let [time (or (:meta/modified-at %)
+                                                          (:meta/created-at %))]
+                                        (> (.getTime time) seen))
+                                     (concat [m]
+                                             (for [a (:meeting/agenda m)] a)
+                                             (for [a (:meeting/agenda m)
+                                                   d (:meeting.agenda/decisions a)]
+                                               d))))]
+      (when-not new-indicators?
+        (e! (meeting-controller/->MarkMeetingAsSeen))))))
 
 (defn meeting-page [e! _ {m :meeting}]
   (maybe-mark-meeting-as-seen! e! m)
