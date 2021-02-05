@@ -162,10 +162,14 @@
                user
                meeting-id
                [{:db/id meeting-id
-                 :meeting/agenda (mapv #(select-keys % [:db/id
-                                                        :meeting.agenda/topic
-                                                        :meeting.agenda/body
-                                                        :meeting.agenda/responsible])
+                 :meeting/agenda (mapv #(merge
+                                         (select-keys % [:db/id
+                                                         :meeting.agenda/topic
+                                                         :meeting.agenda/body
+                                                         :meeting.agenda/responsible])
+                                         (if (string? (:db/id %))
+                                           (meta-model/creation-meta user)
+                                           (meta-model/modification-meta user)))
                                        agenda)}])})
 
 (defcommand :meeting/delete-agenda
