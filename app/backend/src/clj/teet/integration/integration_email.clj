@@ -60,9 +60,11 @@
 (defn send-email-smtp!* [msg]
   (let [smtp-node-config
         (environment/config-map
-          {:host [:email :host]
-           :user [:email :user]
-           :pass [:email :pass]})]
+          {:host [:email :server :host]
+           :user [:email :server :user]
+           :pass [:email :server :pass]
+           :port [:email :server :port]
+           :tls  [:email :server :tls]})]
     (println smtp-node-config)
     (println msg)
     (postal.core/send-message smtp-node-config msg)))
