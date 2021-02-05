@@ -51,6 +51,14 @@
       {:host "localhost", :user "user",
        :pass "pass", :port 567, :tls true}}}
     (integration-email/send-email! test-message)
-    (let [host (get-in @outbox [0 :server])]
-      (is (str/includes? host "localhost")
-        "SMTP configuration contains host name"))))
+    (let [smtp-conf (get-in @outbox [0 :server])]
+      (is (str/includes? (:host smtp-conf) "localhost")
+        "SMTP configuration contains host name")
+      (is (str/includes? (:user smtp-conf) "user")
+        "SMTP configuration contains user name")
+      (is (str/includes? (:pass smtp-conf) "pass")
+        "SMTP configuration contains user password")
+      (is (str/includes? (:port smtp-conf) "567")
+        "SMTP configuration contains port number")
+      (is (str/includes? (:tls smtp-conf) "true")
+        "SMTP configuration contains TLS switch"))))
