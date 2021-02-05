@@ -319,7 +319,8 @@
     (if (not (seq to))
       (do
         (log/warn "not sending email because no participants with email")
-        {:error :no-participants-with-email})
+        (throw (ex-info "no participants with emails"
+                        {:error :no-participants-with-email})))
       (do
         (log/debug "send-meeting-email in future mode because meeting in future")
         (notify-about-meeting db meeting user
