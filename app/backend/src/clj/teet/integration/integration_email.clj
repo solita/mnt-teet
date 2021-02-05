@@ -57,16 +57,12 @@
              "\r\n\r\n"
              (->b64 body))))))
 
-(defn send-email-smtp!* [msg]
-  (let [smtp-node-config
-        (environment/config-map
-          {:host [:email :server :host]
-           :user [:email :server :user]
-           :pass [:email :server :pass]
-           :port [:email :server :port]
-           :tls  [:email :server :tls]})]
-    (println smtp-node-config)
-    (println msg)
+(defn- with-smtp-config [smtp-conf msg]
+  (assoc msg :server smtp-conf))
+
+(defn send-email-smtp!*
+  [msg]
+  (let [smtp-node-config (:server msg)]
     (postal.core/send-message smtp-node-config msg)))
 
 (defn- with-subject-prefix
@@ -96,8 +92,15 @@
 (defn send-email! [msg]
   (let [config (environment/config-map
                 {:subject-prefix [:email :subject-prefix]
-                 :contact-address [:email :contact-address]})]
+                 :contact-address [:email :contact-address]})
+        smtp-node-config (environment/config-map
+                           {:host [:email :server :host]
+                            :user [:email :server :user]
+                            :pass [:email :server :pass]
+                            :port [:email :server :port]
+                            :tls [:email :server :tls]})]
     (send-email-smtp!*
      (->> msg
           (with-subject-prefix config)
-          (with-data-protection-footer config)))))
+          (with-data-protection-footer config)
+          (with-smtp-config smtp-node-config)))))

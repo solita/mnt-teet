@@ -43,3 +43,14 @@
          "body contains estonian footer")
      (is (str/includes? txt "e-mail address FOO@EXAMPLE.COM")
          "body contains english footer"))))
+
+(deftest smtp-config-map
+  (tu/run-with-config
+    {:email
+     {:server
+      {:host "localhost", :user "user",
+       :pass "pass", :port 567, :tls true}}}
+    (integration-email/send-email! test-message)
+    (let [host (get-in @outbox [0 :server])]
+      (is (str/includes? host "localhost")
+        "SMTP configuration contains host name"))))
