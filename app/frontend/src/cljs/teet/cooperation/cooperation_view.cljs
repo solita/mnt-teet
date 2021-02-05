@@ -457,6 +457,15 @@
        [:div {:class (<class common-styles/margin-bottom 1)}
         [rich-text-editor/display-markdown
          (:cooperation.response/content response)]]
+       [task-view/task-file-upload {:e! e!
+                                    :controls controls
+                                    :task related-task
+                                    :linked-from [:cooperation.response (:db/id response)]
+                                    :activity (:cooperation.application/activity application)
+                                    :project-id (:thk.project/id project)
+                                    :drag-container-id "drag-container-id"
+                                    :new-document new-document
+                                    :files-form files-form}]
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
@@ -474,16 +483,7 @@
                             no-response?
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :response-not-given])})]
-            [:div#drag-container-id
-             [task-view/task-file-upload {:e! e!
-                                          :controls controls
-                                          :task related-task
-                                          :linked-from [:cooperation.response (:db/id response)]
-                                          :activity (:cooperation.application/activity application)
-                                          :project-id (:thk.project/id project)
-                                          :drag-container-id "drag-container-id"
-                                          :new-document new-document
-                                          :files-form files-form}]
+            [:div {:id (when can-upload? :drag-container-id)}
              (if (empty? linked-files)
                [common/popper-tooltip error-msg
                 [buttons/button-primary {:size :small
@@ -542,7 +542,7 @@
      :button-component button-component}]])
 
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
-  [:<>
+  [:div {:class (<class common-styles/margin-bottom 1)}
    [:div.application-conclusion {:class (<class common-styles/margin-bottom 1)}
     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
      (tr [:cooperation :opinion-title])]

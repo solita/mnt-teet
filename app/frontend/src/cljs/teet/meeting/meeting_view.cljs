@@ -729,6 +729,7 @@
     (let [participations (sort-by
                            meeting-model/role-id-name
                            participations)
+          participating-teet-users (filter #(get-in % [:participation/participant :user/id]) participations)
           attendees (filterv
                       #(not (:participation/absent? %))
                       participations)
@@ -794,7 +795,7 @@
                                  :title (tr [:meeting :latest-notifications-sent])
                                  :content (format/date-time (:meeting/notifications-sent-at meeting))}]))]
           [:div
-           (if (= (count participations) 1)
+           (if (= (count participating-teet-users) 1)
              [typography/WarningText (tr [:meeting :not-enough-participants])]
              [:div {:style {:text-align :right}}
               [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications (:db/id meeting))}

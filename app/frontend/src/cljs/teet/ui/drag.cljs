@@ -77,19 +77,19 @@
     #(reset! drag-state state)))
 
 (defn drop-zone [{:keys [element-id label on-drop]}]
-  (let [pos (-> element-id
-                js/document.getElementById
-                .getClientRects
-                (aget 0))]
-
-    [:div.drop-zone {:style {:left (aget pos "left")
-                             :top (aget pos "top")
-                             :width (aget pos "width")
-                             :height (aget pos "height")}
-                     :class (<class drop-zone-style)
-                     :on-drop (on-drop-f on-drop)
-                     :on-drag-over cancel}
-     label]))
+  (let [pos (some-> element-id
+                    js/document.getElementById
+                    .getClientRects
+                    (aget 0))]
+    (when pos
+      [:div.drop-zone {:style {:left (aget pos "left")
+                               :top (aget pos "top")
+                               :width (aget pos "width")
+                               :height (aget pos "height")}
+                       :class (<class drop-zone-style)
+                       :on-drop (on-drop-f on-drop)
+                       :on-drag-over cancel}
+       label])))
 
 (defn drag-handler
   "Global drag&drop handler. Should be rendered as part
