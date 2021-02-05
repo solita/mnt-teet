@@ -530,7 +530,9 @@
   :bad-request "Vigane päring",
   :replaced-file-not-latest
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
-  :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud"},
+  :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
+  :no-participants-with-email
+  "Ühelgi teavitataval osalejal pole emaili aadressi"},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -826,7 +828,7 @@
   :move-to-participants-modal-title
   "Kas lisan kasutaja osalejate nimekirja?",
   :not-enough-participants
-  "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja.",
+  "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja kes on TEETu kasutaja.",
   :absentees-title "Puudujad",
   :email-body "Koosolek",
   :add-decision-button "Lisan otsuse",

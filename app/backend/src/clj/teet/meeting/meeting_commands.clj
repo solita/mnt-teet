@@ -314,10 +314,11 @@
                                                                           :user/family-name]}]}]
                         meeting-eid)]
     (assert (:db/id user))
-    (log/debug "to-list participant counts before / after filtering:" (count all-to) (count to))
+    (log/info "Trying to send emails for a meeting with id: " meeting-eid)
+    (log/info "Count of all participants: " (count all-to) " Count of participants with email addresses: " (count to))
     (if (not (seq to))
       (do
-        (log/debug "not sending email because no participants with email")
+        (log/warn "not sending email because no participants with email")
         {:error :no-participants-with-email})
       (do
         (log/debug "send-meeting-email in future mode because meeting in future")

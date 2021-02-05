@@ -536,7 +536,9 @@
   :replaced-file-not-latest
   "Can't replace an old version of a file. Replace newest version.",
   :meeting-has-no-decisions
-  "The meeting doesn't contain anything to review"},
+  "The meeting doesn't contain anything to review",
+  :no-participants-with-email
+  "None of the participants who should receive the notification have a valid email address."},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
@@ -830,7 +832,7 @@
   :search-decisions "Search decisions",
   :move-to-participants-modal-title "Move user to participants?",
   :not-enough-participants
-  " To send notifications, you need to add at least one more participant.",
+  " To send notifications, you need to add at least one more participant who is a TEET user.",
   :absentees-title "Absentees",
   :email-body "Meeting",
   :add-decision-button "Add decision",
