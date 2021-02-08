@@ -16,7 +16,8 @@
             [teet.notification.notification-db :as notification-db]
             [teet.util.collection :as cu]
             [teet.localization :refer [tr with-language]]
-            [teet.entity.entity-db :as entity-db])
+            [teet.entity.entity-db :as entity-db]
+            [clojure.spec.alpha :as s])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -152,6 +153,7 @@
 (defcommand :meeting/update-agenda
   {:doc "Add/update agenda item(s) in a meeting"
    :context {:keys [db user]}
+   :spec (s/keys :req [:db/id :meeting/agenda])
    :payload {meeting-id :db/id
              agenda :meeting/agenda}
    :project-id (project-db/meeting-project-id db meeting-id)
@@ -443,6 +445,7 @@
 (defcommand :meeting/seen
   {:doc "Mark meeting seen timestamp for user"
    :payload {id :db/id}
+   :spec (s/keys :req [:db/id])
    :context {:keys [db user]}
    :project-id (project-db/meeting-project-id db id)
    :authorization {:project/read-info {:eid (project-db/meeting-project-id db id)}}
