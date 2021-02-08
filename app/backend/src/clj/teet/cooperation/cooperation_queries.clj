@@ -4,7 +4,8 @@
             [teet.project.project-db :as project-db]
             [teet.link.link-db :as link-db]
             [teet.util.datomic :as du]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.cooperation.cooperation-model :as cooperation-model]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
@@ -27,7 +28,7 @@
   (let [p [:thk.project/id project-id]
         tp-id (cooperation-db/third-party-by-teet-id db teet-id)]
     (du/idents->keywords
-     {:third-party (d/pull db [:cooperation.3rd-party/name] tp-id)
+     {:third-party (d/pull db cooperation-model/third-party-display-attrs tp-id)
       :project (project-db/project-by-id db p)
       :overview (cooperation-db/overview db p
                                          #(= tp-id %))})))

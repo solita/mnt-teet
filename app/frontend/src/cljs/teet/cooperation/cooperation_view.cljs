@@ -37,7 +37,7 @@
               :on-change-event (form/update-atom-event form-atom merge)
               :cancel-event close-event
               :save-event #(common-controller/->SaveForm
-                            :cooperation/create-3rd-party
+                            :cooperation/save-3rd-party
                             {:thk.project/id project-id
                              :third-party (common-controller/prepare-form-data @form-atom)}
                             (fn [response]
@@ -245,7 +245,8 @@
       :button-component [buttons/rect-white {:size :small
                                              :start-icon (r/as-element
                                                           [icons/content-add])}
-                         (tr [:cooperation :new-third-party])]}]]])
+                         (tr [:cooperation :new-third-party])]
+      :form-value {:db/id "new-3rd-party"}}]]])
 
 (defn- selected-third-party-teet-id [{:keys [params] :as _app}]
   (some-> params :third-party uuid))
@@ -329,34 +330,35 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
-(defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
-  (let [third-party-teet-id (uuid (:third-party params))
-        third-party (some #(when (= third-party-teet-id
-                                    (:teet/id %)) %)
-                          overview)]
-    [:div.cooperation-third-party-page {:class (<class common-styles/flex-column-1)}
-     [cooperation-page-structure
-      e! app project overview
-      [:<>
-       [:div {:class (<class common-styles/margin-bottom 1)}
-        [common/header-with-actions
-         (:cooperation.3rd-party/name third-party)
-         [buttons/button-secondary
+(defn third-party-page [e! {:keys [params] :as app} {:keys [project overview third-party]}]
+  [:div.cooperation-third-party-page {:class (<class common-styles/flex-column-1)}
+   [cooperation-page-structure
+    e! app project overview
+    [:<>
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      [common/header-with-actions
+       (:cooperation.3rd-party/name third-party)
+       [form/form-modal-button
+        {:max-width "sm"
+         :modal-title (tr [:cooperation :edit-third-party-title])
+         :button-component [buttons/button-secondary {} (tr [:buttons :edit])]
+         :form-component [third-party-form {:e! e!
+                                            :project-id (:thk.project/id project)}]
+         :form-value third-party}]]
+      [typography/Heading3
+       {:class (<class common-styles/margin-bottom 2)}
+       (tr [:cooperation :applications])]
 
-          (tr [:buttons :edit])]]
-        [typography/Heading3
-         {:class (<class common-styles/margin-bottom 2)}
-         (tr [:cooperation :applications])]
-
-        [form/form-modal-button
-         {:max-width "sm"
-          :form-component [application-form {:e! e!
-                                             :project-id (:thk.project/id project)
-                                             :third-party-teet-id third-party-teet-id}]
-          :modal-title (tr [:cooperation :new-application-title])
-          :button-component [buttons/button-primary {:class "new-application"}
-                             (tr [:cooperation :new-application])]}]]
-       [applications third-party]]]]))
+      [form/form-modal-button
+       {:max-width "sm"
+        :form-component [application-form {:e! e!
+                                           :project-id (:thk.project/id project)
+                                           :third-party-teet-id (:teet/id third-party)}]
+        :modal-title (tr [:cooperation :new-application-title])
+        :button-component [buttons/button-primary {:class "new-application"}
+                           (tr [:cooperation :new-application])]
+        :form-value {:db/id "new-3rd-party"}}]]
+     [applications third-party]]]])
 
 (defn application-response-change-fn
   [val change]

@@ -14,24 +14,17 @@
             [teet.activity.activity-db :as activity-db]))
 
 
-(defcommand :cooperation/create-3rd-party
-  {:doc "Create a new third party in project."
-   :context {:keys [user db]}
-   :payload {project-id :thk.project/id
-             third-party :third-party}
-   :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-3rd-party {}}
-   :transact
-   [(list 'teet.cooperation.cooperation-tx/create-3rd-party
-          (merge
-           (select-keys third-party
-                        [:cooperation.3rd-party/name
-                         :cooperation.3rd-party/id-code
-                         :cooperation.3rd-party/email
-                         :cooperation.3rd-party/phone])
-           {:db/id "new-third-party"
-            :teet/id (java.util.UUID/randomUUID)
-            :cooperation.3rd-party/project [:thk.project/id project-id]}))]})
+(defn- third-party-is-new-or-belongs-to-project?
+  "Check :db/id of new 3rd party form data and check if it is
+  new (string) or already belongs to the project."
+  [db project-eid {id :db/id :as _third-party}]
+  (or (string? id)
+      (boolean
+       (seq
+        (d/q '[:find ?tp
+               :where [?tp :cooperation.3rd-party/project ?p]
+               :in $ ?tp ?p]
+             db id project-eid)))))
 
 (defn- third-party-belongs-to-project? [db third-party-teet-id project-eid]
   (seq (d/q '[:find ?tp :in $ ?id ?project
@@ -39,6 +32,31 @@
               [?tp :teet/id ?id]
               [?tp :cooperation.3rd-party/project ?project]]
             db third-party-teet-id project-eid)))
+
+(defcommand :cooperation/save-3rd-party
+  {:doc "Create or update a third party in project."
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             third-party :third-party}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-3rd-party {}}
+   :pre [(third-party-is-new-or-belongs-to-project? db [:thk.project/id project-id] third-party)]
+   :transact
+   [(list 'teet.cooperation.cooperation-tx/save-3rd-party
+          (meta-model/with-creation-or-modification-meta
+            user
+            (merge
+             (select-keys third-party
+                          [:db/id
+                           :cooperation.3rd-party/name
+                           :cooperation.3rd-party/id-code
+                           :cooperation.3rd-party/email
+                           :cooperation.3rd-party/phone])
+             {:cooperation.3rd-party/project [:thk.project/id project-id]}
+             (when (string? (:db/id third-party))
+               {:teet/id (java.util.UUID/randomUUID)}))))]})
+
+
 
 (defcommand :cooperation/create-application
   {:doc "Create new application in project for the given 3rd party."
