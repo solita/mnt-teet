@@ -2,7 +2,6 @@
   "Meeting related transaction functions"
   (:require [datomic.ion :as ion]
             [teet.meeting.meeting-db :as meeting-db]
-            [clojure.string :as str]
             [teet.meta.meta-model :as meta-model]
             [teet.user.user-model :as user-model]
             [teet.entity.entity-db :as entity-db]))
