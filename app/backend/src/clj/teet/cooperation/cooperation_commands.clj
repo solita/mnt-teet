@@ -229,4 +229,5 @@
    :payload {id :db/id}
    :project-id (cooperation-db/third-party-project-id db id)
    :authorization {:cooperation/edit-3rd-party {:entity-id id}}
+   :pre [(empty? (:cooperation.3rd-party/applications (du/entity db id)))]
    :transact [(meta-model/deletion-tx user id)]})
