@@ -1,6 +1,7 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
+            [cljs.pprint]
             [teet.ui.material-ui :refer [Grid]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
@@ -83,7 +84,7 @@
 (defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
                            delete-disabled-error-text delete-link?
                            cancel validate disabled?]}]
-  (log/debug "default form-footer, texts" delete-cancel-button-text)
+  (log/debug "default form-footer, texts" delete-cancel-button-text "delete-link?" delete-link? "got delete?" (some? delete) "got cancel?" (some? cancel))
   (let [delete-element
         (when delete
           [common/popper-tooltip
@@ -457,11 +458,16 @@
        [:<> (util/with-keys children)])]))
 
 (defn footer2
-  ([] (footer2 form-footer))
+  ([]
+   (log/debug "footer2 calling default form-footer")
+   (footer2 form-footer))
   ([footer-component]
+   (log/debug "footer2 calling supplied footer-component")
    (context/consume
     :form
     (fn [{:keys [value footer]}]
+      (println "pprint context provided form footer:")
+      (cljs.pprint/pprint footer)
       [footer-component (update footer :validate
                                 (fn [validate]
                                   (when validate

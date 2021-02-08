@@ -22,35 +22,28 @@
 ;;       - remains a mystery, switch approaches
 ;;     - plan b - imitate edit-opinion button and use form/form-modal-button. get backend call working first and then mod towards delete button look
 ;;       - has the problem that it opens up a whole another form
-;;       - try to look for other similar 
+;;       - try to look for other similar ? maybe later, try plan c now
 ;;     - plan c - looks like there's builtin delete button support in form/form-footer
 ;;       - figure out how to use that
 ;;       - add a comment block to cooperation view start that shows the nesting structure of components to discern form vs form2 usage
 ;;         - turns out was unnecessary, delete support in both form types, but useful doc still
 ;;         - does the spec on ticket allow using this? -> yes
-;;         - do we have a nearby form/form parent? not really, 2 parents components don't use form
-;;         - but. maybe there's a parent that's not apparent in the code.
-;;            - circumstancial evidence: edit-opinion component has this form-component/form-value set of attrs and the opening modal has cancel & save buttons without having been specified
-;;        
+;;         - do we have a nearby form/form parent? well not a parent but a child. opinion-form is passed by edit-opinion component
+;;        - circumstancial evidence: edit-opinion component has this form-component/form-value set of attrs and the opening modal has cancel & save buttons without having been specified
+;;            - debug prints in default form-footer component revealed it's being used here somehow
+;;            - need to figure where how to get to the footer args. footer is passed to form/form fn explicitly from somewhere
+;;              - footer2 picks up :footer key from context so maybe we could put :delete style keys there?
+;;              - yep - pprinting the :footer stuff from under context key :form shows cancel and validate handlers defined in the context defined in form/form2 fn
+;;              - if we could provide args for the form2 fn call there we could define a :delete callback.. and form/form (used by opinion-form) seems to pass its opts straight to form/form2. let's try this..
+;;              - actually there's a :delete usage in cooperation-view/application-people-panel, missed this earlier, try along that
 
-;;  - implement delete commadn on backend
-;;  - make opinion disappear from app (or reload state from backend) after delete success
-;;  - check appearance of delete button - test with red version
+;;            - edit-opinion coimpoentn contains form/form-modal-button component. this makes a panels/modal component as parent of the passed-in form-component (here opinion-form).
+;;
+;;  - implement delete command on backend [ ]
+;;  - ensure opinion disappeasr from app (or reload state from backend) after delete success [ ]
 
-(defn delete-opinion-action [opinion]
-  ;; this is the :action fn of the delete-button for deleting an opinion
-  (log/debug "in delete-opinion-action")
-  (if-let [id (:db/id opinion)]
-    (do
-      (log/debug "about to invoke ->SaveForm2")
-      (common-controller/->SaveForm2 :cooperation/delete-opinion
-                                    {:opinion-id id}
-                                    (fn [_response]
-                                      ;; need to do anything here?
-                                      (log/info "in delete-opinion SaveForm response callback")
-                                      common-controller/refresh-fx)))
-    ;; else
-    (log/debug "delete-opinion-action: no :db/id in passed opinion (" (pr-str opinion) ")")))
+
+
 
 (extend-protocol t/Event
   ThirdPartyCreated

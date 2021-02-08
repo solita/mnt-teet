@@ -631,18 +631,7 @@
 (defrecord SaveForm [command form-data on-success-fx]
   t/Event
   (process-event [_ app]
-    (do ;; (log/debug "SaveForm called for command" command)
-        (t/fx app
-              {:tuck.effect/type :command!
-               :command command
-               :payload form-data
-               :result-event (partial ->SaveFormResponse on-success-fx)}))))
-
-(log/debug "evaluating SaveForm2 defn")
-(defrecord SaveForm2 [command form-data on-success-fx]
-  t/Event
-  (process-event [_ app]
-    (do (log/debug "SaveForm2 called for command" command)
+    (do (log/debug "SaveForm called for command" command)
         (t/fx app
               {:tuck.effect/type :command!
                :command command

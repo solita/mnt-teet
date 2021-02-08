@@ -523,24 +523,39 @@
 
 
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
-  [form/form
-   {:e! e!
-    :value @form-atom
-    :on-change-event (form/update-atom-event form-atom merge)
-    :cancel-event close-event
-    :save-event #(cooperation-controller/save-opinion-event
-                  application
-                  (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
-                  close-event)
-    :spec ::cooperation-model/opinion-form}
-   ^{:attribute :cooperation.opinion/status :xs 10}
-   [select/select-enum {:e! e!
-                        :attribute :cooperation.opinion/status}]
+  (let [form-value @form-atom
+        opinion-eid (:db/id form-value)
+        application-eid (:db/id application)]
+    (log/debug "db/id of opinion-form form-value: " opinion-eid)
+    [form/form
+     {:e! e!
+      :value form-value
+      :on-change-event (form/update-atom-event form-atom merge)
+      :cancel-event close-event
+      :save-event #(cooperation-controller/save-opinion-event
+                    application
+                    (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
+                    close-event)
+      :delete  (fn []
+                 (log/debug "calling SaveForm delete from opinion-form")
+                 (common-controller/->SaveForm
+                  :cooperation/delete-contact-info ;; command here
+                  {:application-id application-eid}
+                  (fn [_response]
+                    ;; (reset! edit-contact? false) 
+                    (reset! form-atom {}) 
+                    common-controller/refresh-fx)))
+      ;; :delete #(log/debug "delete callback" %)
+      :delete-link? false
+      :spec ::cooperation-model/opinion-form}
+     ^{:attribute :cooperation.opinion/status :xs 10}
+     [select/select-enum {:e! e!
+                          :attribute :cooperation.opinion/status}]
 
 
-   ^{:attribute :cooperation.opinion/comment
-     :validate rich-text-editor/validate-rich-text-form-field-not-empty}
-   [rich-text-editor/rich-text-field {}]])
+     ^{:attribute :cooperation.opinion/comment
+       :validate rich-text-editor/validate-rich-text-form-field-not-empty}
+     [rich-text-editor/rich-text-field {}]]))
 
 (defn- edit-opinion [e! application button-component]
   [authorization-context/when-authorized :save-opinion
