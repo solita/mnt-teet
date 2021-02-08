@@ -2,9 +2,9 @@
   "Meeting related transaction functions"
   (:require [datomic.ion :as ion]
             [teet.meeting.meeting-db :as meeting-db]
-            [clojure.string :as str]
             [teet.meta.meta-model :as meta-model]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.entity.entity-db :as entity-db]))
 
 (defn update-meeting
   [db user meeting-id tx-vec]
@@ -14,7 +14,8 @@
                  :teet/error :meeting-is-locked})
     (into tx-vec
           (concat
-            [(merge
+           [(entity-db/entity-seen-tx db user meeting-id)
+            (merge
                {:db/id meeting-id}
                (meta-model/modification-meta user))]
             (meeting-db/review-retractions db meeting-id)))))
