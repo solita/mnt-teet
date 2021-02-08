@@ -83,6 +83,7 @@
 (defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
                            delete-disabled-error-text delete-link?
                            cancel validate disabled?]}]
+  (log/debug "default form-footer, texts" delete-cancel-button-text)
   (let [delete-element
         (when delete
           [common/popper-tooltip
@@ -503,6 +504,7 @@
                        {:key (str attribute)}))))))]]
    (when (and footer
               (or cancel-fn cancel-event save-event))
+     (log/debug "doing a footer. provided fns: " (some? cancel-fn) (some? cancel-event) (some? save-event))
      [footer2 footer])])
 
 (defn form-modal-button

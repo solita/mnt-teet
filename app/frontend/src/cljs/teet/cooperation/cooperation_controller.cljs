@@ -16,11 +16,23 @@
 
 ;; delete opinion todo
 ;;  - make controller call the command when delete button is used [ ]
-;;     - common-controller/SaveForm prob: request doesn't fire judging by network tab even though SaveForm is called.
-;;     - debug log in button widget is triggered though.
-;;     - remains a mystery, switch approaches
+;;     - plan a: add delete-button-with-confirm component with straightforward DeleteOpinion tuck event
+;;       - common-controller/SaveForm prob: request doesn't fire judging by network tab even though SaveForm is called.
+;;       - debug log in button widget is triggered though.
+;;       - remains a mystery, switch approaches
 ;;     - plan b - imitate edit-opinion button and use form/form-modal-button. get backend call working first and then mod towards delete button look
-;;     - plan c - looks like there's builtin delete button support in eg form/form-footer - figure out how to use that
+;;       - has the problem that it opens up a whole another form
+;;       - try to look for other similar 
+;;     - plan c - looks like there's builtin delete button support in form/form-footer
+;;       - figure out how to use that
+;;       - add a comment block to cooperation view start that shows the nesting structure of components to discern form vs form2 usage
+;;         - turns out was unnecessary, delete support in both form types, but useful doc still
+;;         - does the spec on ticket allow using this? -> yes
+;;         - do we have a nearby form/form parent? not really, 2 parents components don't use form
+;;         - but. maybe there's a parent that's not apparent in the code.
+;;            - circumstancial evidence: edit-opinion component has this form-component/form-value set of attrs and the opening modal has cancel & save buttons without having been specified
+;;        
+
 ;;  - implement delete commadn on backend
 ;;  - make opinion disappear from app (or reload state from backend) after delete success
 ;;  - check appearance of delete button - test with red version

@@ -32,6 +32,28 @@
             [teet.authorization.authorization-check :as authorization-check]))
 
 
+;; Form structure in this view:
+;; third-party-page
+;;   cooperation-page-structure (usage #1)
+;;     third-parties
+;;       third-party-form (uses form/form)
+;;     applications
+;;   project-view/project-full-page-structure
+;;     third-parties
+;;   application-form
+;;     
+;; 
+;; application-page
+;;   cooperation-page-structure (usage #2)
+;;     third-parties
+;;       third-party-form (uses form/form)
+;;     application-conclusion
+;;       opinion-view
+;;     application-response
+;;       application-response-form (uses form/form2)
+;;   application-people-panel (uses form/form)
+;;
+
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
@@ -261,6 +283,7 @@
     :right-panel right-content
     :main main-content}])
 
+;; entrypoint from route /projects/:project/cooperation route
 (defn overview-page [e! app {:keys [project overview]}]
 
   [:div.cooperation-overview-page {:class (<class common-styles/flex-column-1)}
@@ -331,6 +354,7 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
+;; entrypoint from route /projects/:project/cooperation/:third-party 
 (defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
   (let [third-party-teet-id (uuid (:third-party params))
         third-party (some #(when (= third-party-teet-id
@@ -654,6 +678,7 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
+;; entrypoint from route /projects/:project/cooperation/:third-party/:application
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
