@@ -834,8 +834,8 @@
       :validate #(rich-text-editor/validate-rich-text-form-field-not-empty %)}
     [rich-text-editor/rich-text-field {}]]])
 
-(defn add-decision-component
-  [e! meeting agenda-topic]
+(defn- add-decision-component
+  [e! agenda-topic]
   (r/with-let [[pfrom pto] (common/portal)]
     [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/white 5)))}
      [form/form-container-button
@@ -1038,7 +1038,9 @@
           review? (get rights :review-meeting)]
       [:div {:data-cy "meeting-details"}
        [meeting-details-info meeting]
-       [:div {:class (<class common-styles/heading-and-action-style) :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0" :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
+       [:div {:class (<class common-styles/heading-and-action-style)
+              :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0"
+                      :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
         [typography/Heading2 (tr [:fields :meeting/agenda])]
         (when edit?
           [meeting-details-add-agenda e! user meeting pfrom])]
@@ -1067,7 +1069,7 @@
               [meeting-agenda-content e! agenda-topic edit?]]
              :children (meeting-agenda-decisions e! edit? seen-at agenda-topic)
              :after-children-component (when edit?
-                                         [add-decision-component e! meeting agenda-topic])}
+                                         [add-decision-component e! agenda-topic])}
             theme-colors/white]))]
 
        [reviews meeting]
