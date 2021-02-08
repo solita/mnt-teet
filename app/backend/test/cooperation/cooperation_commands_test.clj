@@ -72,4 +72,13 @@
                                :application invalid-date-application}))))
 
     (testing "Can edit application"
-      (is (some? edit-res)))))
+      (is (some? edit-res)))
+
+    (testing "Application and project need to match when editing"
+      (is (thrown?
+           Exception
+           (tu/local-command :cooperation/edit-application
+                             ;; Using the THK project id of another project
+                             {:thk.project/id (:thk.project/id (du/entity (tu/db) (tu/->db-id "p2")))
+                              :application {:db/id new-application-id
+                                            :cooperation.application/type :cooperation.application.type/building-permit-order}}))))))
