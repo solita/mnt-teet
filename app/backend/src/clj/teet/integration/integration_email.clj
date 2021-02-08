@@ -3,7 +3,7 @@
   (:require [cognitect.aws.client.api :as aws]
             [clojure.string :as str]
             [teet.environment :as environment]
-            [postal.core :as postal.core]
+            postal.core
             [teet.localization :refer [with-language tr]])
   (:import (java.util Base64)))
 
@@ -57,13 +57,10 @@
              "\r\n\r\n"
              (->b64 body))))))
 
-(defn- with-smtp-config [smtp-conf msg]
-  (assoc msg :server smtp-conf))
-
 (defn send-email-smtp!*
-  [msg]
-  (let [smtp-node-config (:server msg)]
-    (postal.core/send-message smtp-node-config msg)))
+  "Send msg email using smtp config"
+  [config msg]
+  (postal.core/send-message config msg))
 
 (defn- with-subject-prefix
   "Add prefix to subject (if configured)"
@@ -93,14 +90,8 @@
   (let [config (environment/config-map
                 {:subject-prefix [:email :subject-prefix]
                  :contact-address [:email :contact-address]})
-        smtp-node-config (environment/config-map
-                           {:host [:email :server :host]
-                            :user [:email :server :user]
-                            :pass [:email :server :pass]
-                            :port [:email :server :port]
-                            :tls [:email :server :tls]})]
-    (send-email-smtp!*
-     (->> msg
+        smtp-node-config (environment/config-value :email :server)]
+    (send-email-smtp!* smtp-node-config
+      (->> msg
           (with-subject-prefix config)
-          (with-data-protection-footer config)
-          (with-smtp-config smtp-node-config)))))
+          (with-data-protection-footer config)))))
