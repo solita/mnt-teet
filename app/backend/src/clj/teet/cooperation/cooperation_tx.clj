@@ -9,6 +9,7 @@
                :where
                [?tp :cooperation.3rd-party/project ?p]
                [?tp :cooperation.3rd-party/name ?n]
+               [(missing? $ ?tp :meta/deleted?)]
                :in $ ?p]
              db-after project)]
     (if-not (apply distinct? (map second third-parties))

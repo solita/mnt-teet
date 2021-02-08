@@ -221,3 +221,12 @@
                 [:db/retractEntity contact-id]]
                (throw (ex-info "Application has no contact info"
                                {:error :no-contact-info})))})
+
+(defcommand :cooperation/delete-third-party
+  {:doc "Delete a third party. It must not have any applications."
+   :spec (s/keys :req [:db/id])
+   :context {:keys [user db]}
+   :payload {id :db/id}
+   :project-id (cooperation-db/third-party-project-id db id)
+   :authorization {:cooperation/edit-3rd-party {:entity-id id}}
+   :transact [(meta-model/deletion-tx user id)]})
