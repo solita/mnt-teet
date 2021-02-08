@@ -166,13 +166,15 @@
 (defn meeting-view-container
   ([param]
    [meeting-view-container param theme-colors/gray-light])
-  ([{:keys [text-color content open? heading heading-button children after-children-component on-open]
+  ([{:keys [text-color content open? heading heading-button children after-children-component
+            on-toggle-open]
      :or {text-color :inherit
           open? false}}
     bg-color]
    (r/with-let [open? (r/atom open?)
                 toggle-open! #(do
-                                (when on-open (on-open))
+                                (when on-toggle-open
+                                  (on-toggle-open))
                                 (.stopPropagation %)
                                 (swap! open? not))]
      [:div {:class [(<class meeting-style/meeting-container-heading)]}
@@ -999,7 +1001,7 @@
   (for [d decisions
         :let [[pfrom pto] (common/portal)]]
     {:key (:db/id d)
-     :on-open #(e! (meeting-controller/->MarkMeetingAsSeen))
+     :on-toggle-open #(e! (meeting-controller/->MarkMeetingAsSeen))
      :open? true
      :heading [:div
                {:style {:display :flex}}
@@ -1048,7 +1050,7 @@
            ^{:key id}
            [meeting-view-container
             {:heading [meeting-agenda-heading seen-at agenda-topic]
-             :on-open #(e! (meeting-controller/->MarkMeetingAsSeen))
+             :on-toggle-open #(e! (meeting-controller/->MarkMeetingAsSeen))
              :open? true
              :heading-button (when edit?
                                [form/form-container-button
