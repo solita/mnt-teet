@@ -18,6 +18,7 @@
   "Check :db/id of new 3rd party form data and check if it is
   new (string) or already belongs to the project."
   [db project-eid {id :db/id :as _third-party}]
+  {:pre [(some? id)]}
   (or (string? id)
       (boolean
        (seq
