@@ -433,9 +433,9 @@
                                                                  :meeting.agenda/responsible]))))})
                      (meta-model/creation-meta user)))]
        (for [{:participation/keys [role participant]} (:participation/_in old-meeting)
+             ;; Do not duplicate organizer participation
              :when (and (not (:meta/deleted? participant))
-                        (not (du/enum= role :participation.role/organizer)) ;; Do not duplicate organizer participation
-                        )]
+                        (not (du/enum= role :participation.role/organizer)))]
          {:db/id (str "new-participation-" (:db/id participant))
           :participation/in "new-meeting"
           :participation/role (:db/ident role)
