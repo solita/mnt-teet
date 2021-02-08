@@ -93,6 +93,25 @@
        :application-teet-id teet-id})
     (db-api/bad-request! "No such 3rd party")))
 
+(defcommand :cooperation/edit-application
+  {:doc "Create new application in project for the given 3rd party."
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             application :application}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-application {}} ;; TODO: Ownership affects?
+   :pre [
+         ;; TODO: Check application -> 3d-party -> project-id ok
+         ]}
+  (tx [(merge (select-keys application
+                           [:db/id
+                            :cooperation.application/type
+                            :cooperation.application/response-type
+                            :cooperation.application/response-deadline
+                            :cooperation.application/comment])
+
+              (meta-model/modification-meta user))]))
+
 
 (defmethod link-db/link-from [:cooperation.response :file]
   [db _user [_ response-id] _type to]
