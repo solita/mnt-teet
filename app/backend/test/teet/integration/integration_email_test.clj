@@ -4,12 +4,14 @@
             [teet.test.utils :as tu]
             [clojure.string :as str]))
 
-(def outbox (atom []))
+(def outbox (atom [:server {} :msg {}]))
+
+(defn- update-outbox [server msg] (swap! outbox conj server msg))
 
 (defn with-outbox []
   (fn [tests]
     (reset! outbox [])
-    (with-redefs [integration-email/send-email-smtp!* #(swap! outbox conj %1 %2)]
+    (with-redefs [integration-email/send-email-smtp!* update-outbox]
       (tests))))
 
 (t/use-fixtures :each (with-outbox))
