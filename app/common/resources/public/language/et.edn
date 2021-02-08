@@ -188,7 +188,8 @@
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
-   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-missing
+   "Tegevusel puudub kooskõlastusülesanne või ülesande staatus ei luba failide lisamist.",
    :response-not-given "Faile saab lisada peale vastuse lisamist",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus.",

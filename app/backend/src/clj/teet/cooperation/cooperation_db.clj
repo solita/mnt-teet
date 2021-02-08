@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [teet.util.date :as date]
             [teet.util.datomic :as du]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [teet.project.task-model :as task-model]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -94,18 +95,20 @@
 
 (defn third-party-application-task
   [db third-party-id application-id]
-  (ffirst
-   (d/q '[:find (pull ?task [*]) ;; todo: add some param definitions
-          :in $ ?third-part ?application-id
-          :where
-          [?third-part :cooperation.3rd-party/applications ?applications]
-          [(missing? $ ?applications :meta/deleted?)]
-          [?applications :cooperation.application/activity ?activities]
-          [(missing? $ ?activities :meta/deleted?)]
-          [?activities :activity/tasks ?task]
-          [(missing? $ ?task :meta/deleted?)]
-          [?task :task/type :task.type/no-objection-coordination]]
-        db third-party-id application-id)))
+  (let [task (ffirst
+               (d/q '[:find (pull ?task [*])
+                      :in $ ?third-part ?application-id
+                      :where
+                      [?third-part :cooperation.3rd-party/applications ?applications]
+                      [(missing? $ ?applications :meta/deleted?)]
+                      [?applications :cooperation.application/activity ?activities]
+                      [(missing? $ ?activities :meta/deleted?)]
+                      [?activities :activity/tasks ?task]
+                      [(missing? $ ?task :meta/deleted?)]
+                      [?task :task/type :task.type/no-objection-coordination]]
+                    db third-party-id application-id))]
+    (when (task-model/can-submit? task)
+      task)))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id

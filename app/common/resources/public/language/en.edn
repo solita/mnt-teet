@@ -189,7 +189,7 @@
   :error
   {:upload-not-allowed "Upload not allowed",
    :coordination-task-missing
-   "Coordination task does not exist for the activity.",
+   "Coordination task does not exist for the activity, or it is in a state that does not allow file uploading.",
    :response-not-given "Files can be added after response is added",
    :coordination-task-status-mismatch
    "Task is not in a state that allows file upload.",
