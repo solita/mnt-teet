@@ -40,7 +40,15 @@
                                                  :cooperation.3rd-party/name "No such third party exists"
                                                  :application application}
         res (tu/local-command :cooperation/create-application
-                              application-payload)]
+                              application-payload)
+
+        ;; Editing
+        new-application-id (get-in res [:tempids "new-application"])
+
+        edit-res (tu/local-command :cooperation/edit-application
+                                   {:thk.project/id project-id
+                                    :application {:db/id new-application-id
+                                                  :cooperation.application/type :cooperation.application.type/building-permit-order}})]
 
     (testing "Can create a third party"
       (is (some? third-party-id)))
@@ -60,4 +68,7 @@
             (tu/local-command :cooperation/create-application
                               {:thk.project/id project-id
                                :cooperation.3rd-party/name third-party-name
-                               :application invalid-date-application}))))))
+                               :application invalid-date-application}))))
+
+    (testing "Can edit application"
+      (is (some? edit-res)))))
