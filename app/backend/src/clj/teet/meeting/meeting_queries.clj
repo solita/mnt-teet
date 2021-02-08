@@ -17,7 +17,8 @@
             [teet.comment.comment-db :as comment-db]
             [teet.pdf.pdf-export :as pdf-export]
             [teet.meeting.meeting-pdf :as meeting-pdf]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.entity.entity-db :as entity-db]))
 
 
 (defn project-related-unit-ids
@@ -288,7 +289,8 @@
                     (merge
                       meeting
                       (comment-db/comment-count-of-entity-by-status
-                        db user meeting-id :meeting)))}
+                       db user meeting-id :meeting)
+                      (entity-db/entity-seen db user meeting-id)))}
 
         (fn [entity]
           (contains? entity :link/to))))))

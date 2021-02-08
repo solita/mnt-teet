@@ -5,7 +5,8 @@
             [teet.util.date :as date]
             [teet.util.datomic :as du]
             [clj-time.core :as t]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.entity.entity-db :as entity-db]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -74,10 +75,10 @@
 
 (def third-party-by-teet-id
   "Find 3rd party by :teet/id. Returns entity :db/id or nil."
-  (partial du/entity-by-teet-id :cooperation.3rd-party/name))
+  (partial entity-db/entity-by-teet-id :cooperation.3rd-party/name))
 
 (def application-by-teet-id
-  (partial du/entity-by-teet-id :cooperation.application/type))
+  (partial entity-db/entity-by-teet-id :cooperation.application/type))
 
 
 
