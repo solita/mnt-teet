@@ -588,8 +588,7 @@
                     application
                     (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
                     close-event)
-      :delete  (do
-                 (log/debug "calling SaveForm delete from opinion-form")
+      :delete  (when (some? opinion-eid)
                  (common-controller/->SaveForm
                   :cooperation/delete-opinion
                   {:application-id application-eid
