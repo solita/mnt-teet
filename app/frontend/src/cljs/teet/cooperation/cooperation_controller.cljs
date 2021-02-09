@@ -50,9 +50,6 @@
 ;;       - edit-application perm checked
 ;;  - ensure opinion disappears from app (or reload state from backend) after delete success [ ]
 
-
-
-
 (extend-protocol t/Event
   ThirdPartyCreated
   (process-event [{name :name} {params :params :as app}]
@@ -79,23 +76,6 @@
              (tr [:cooperation :response-created])))
           common-controller/refresh-fx))
 
-  DeleteOpinion
-  (process-event [{opinion :opinion} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command :cooperation/delete-opinion
-           :payload {:cooperation/opinion-id (:db/id opinion)}
-           :success-message (tr [:notifications :opinion-deleted])
-           :result-event ->DeleteOpinionSuccess
-           }))
-
-  DeleteOpinionSuccess
-  (process-event [{opinion :opinion} {:keys [params] :as app}]
-    ;; need to remove opinion from app db by id and keep view the same (refresh fx?)
-    )
-
-  
-  
   OpinionSaved
   (process-event [{new? :new? r :response} app]
     (t/fx (snackbar-controller/open-snack-bar

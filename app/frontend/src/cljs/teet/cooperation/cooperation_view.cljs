@@ -538,14 +538,13 @@
       :delete  (do
                  (log/debug "calling SaveForm delete from opinion-form")
                  (common-controller/->SaveForm
-                  :cooperation/delete-opinion ;; command here
+                  :cooperation/delete-opinion
                   {:application-id application-eid
                    :opinion-id opinion-eid}
                   (fn opinion-delete-command-success-fx [_response]
-                    (close-event) ;; can we just call this like this?
+                    (close-event)
                     (reset! form-atom {}) 
                     common-controller/refresh-fx)))
-      ;; :delete #(log/debug "delete callback" %)
       :delete-link? false
       :spec ::cooperation-model/opinion-form}
      ^{:attribute :cooperation.opinion/status :xs 10}
@@ -566,16 +565,6 @@
      :form-value (:cooperation.application/opinion application {})
      :button-component button-component}]])
 
-(defn- delete-opinion [e! application button-component]
-  ;; todo: identical with edit-opinion? just change the name and pass different button comps?
-  [authorization-context/when-authorized :save-opinion
-   [form/form-modal-button
-    {:max-width "sm"
-     :modal-title (tr [:cooperation :delete-opinion-title])
-     :form-component [opinion-form {:e! e! :application application}]
-     :form-value (:cooperation.application/opinion application {})
-     :button-component button-component}]])
-
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
   [:<>
    [:div.application-conclusion {:class (<class common-styles/margin-bottom 1)}
@@ -586,18 +575,7 @@
                                  [buttons/button-secondary {:size "small"
                                                             :class "edit-opinion"
                                                             :disabled (boolean (not opinion))}
-                                  (tr [:buttons :edit])]]
-                   ;; :delete-button [buttons/delete-button-with-confirm {:id (str "opinion-delete-button-" (:db/id opinion))
-                   ;;                                                     :clear? true
-                   ;;                                                     ;; :action #(e! (cooperation-controller/->DeleteOpinion opinion))
-                   ;;                                                     :action #(cooperation-controller/delete-opinion-action opinion)
-                   ;;                                                     }]
-                   :delete-button [delete-opinion e! application
-                                   [buttons/button-secondary {:size "small"
-                                                              :class "delete-opinion"
-                                                              :disabled (boolean (not opinion))}
-                                    (tr [:buttons :delete])]]
-                   }
+                                  (tr [:buttons :edit])]]}
      application]]
    (when (not opinion)
      [edit-opinion e! application
@@ -725,17 +703,6 @@
            [application-response e! (:new-document app) files-form application project related-task]
            [application-conclusion e! application project]]
           [authorization-context/when-authorized :edit-application
-           [form/form-modal-button
-            {:max-width "sm"
-             :modal-title (tr [:cooperation :add-application-response])
-             :form-component [application-response-form {:e! e!
-                                                         :project-id (:thk.project/id project)
-                                                         :application-id (:db/id application)}]
-             :button-component [buttons/button-primary {:class "enter-response"}
-                                (tr [:cooperation :enter-response])]}]])
-        ;; wrong place for delete button? should it be in opinion-form?
-        #_(when (= (:cooperation.application/type application) :cooperation.application.response-type/opinion)
-          [authorization-context/when-authorized :save-opinion
            [form/form-modal-button
             {:max-width "sm"
              :modal-title (tr [:cooperation :add-application-response])
