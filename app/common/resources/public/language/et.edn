@@ -174,8 +174,11 @@
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
   :add-application-response "Lisan kaasatud osapoole vastuse",
+  :cant-delete-third-party-with-applications
+  "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
   :add-application-contact "Lisan kontakti",
+  :third-party-deleted "Kaasatud osapool kustutatud",
   :create-opinion-button "Lisan ametliku seisukoha",
   :new-application-created "Taotlus edukalt loodud",
   :no-deadline "Tähtaega pole",
@@ -188,7 +191,8 @@
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
-   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-missing
+   "Tegevusel puudub kooskõlastusülesanne või ülesande staatus ei luba failide lisamist.",
    :response-not-given "Faile saab lisada peale vastuse lisamist",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
@@ -199,6 +203,7 @@
   :response-created "Vastus edukalt loodud",
   :application-terms-expire-warning
   "Esitatud tingimused aeguvad peagi / on aegunud!",
+  :edit-third-party-title "Muudan kaasatud osapoolt",
   :opinion-saved "Seisukoht edukalt salvestatud",
   :new-third-party "Lisan kaasatud osapoole"},
  :dashboard

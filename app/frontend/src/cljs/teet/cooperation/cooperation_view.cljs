@@ -28,32 +28,55 @@
             [teet.task.task-view :as task-view]
             [teet.link.link-view :as link-view]
             [teet.ui.authorization-context :as authorization-context]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.ui.validation :as validation]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 
-(defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
-  [form/form {:e! e!
-              :value @form-atom
-              :on-change-event (form/update-atom-event form-atom merge)
-              :cancel-event close-event
-              :save-event #(common-controller/->SaveForm
-                            :cooperation/create-3rd-party
-                            {:thk.project/id project-id
-                             :third-party (common-controller/prepare-form-data @form-atom)}
-                            (fn [response]
-                              (fn [e!]
-                                (e! (close-event))
-                                (e! (cooperation-controller/->ThirdPartyCreated
-                                     (:cooperation.3rd-party/name @form-atom)
-                                     response)))))
-              :spec ::cooperation-model/third-party-form}
+(defn- third-party-form [{:keys [e! project-id edit? has-applications?]}
+                         close-event form-atom]
+  [form/form (merge
+              {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom merge)
+               :cancel-event close-event
+               :save-event #(common-controller/->SaveForm
+                             :cooperation/save-3rd-party
+                             {:thk.project/id project-id
+                              :third-party (common-controller/prepare-form-data @form-atom)}
+                             (fn [response]
+                               (fn [e!]
+                                 (e! (close-event))
+                                 (e! (cooperation-controller/->ThirdPartyCreated
+                                      (:cooperation.3rd-party/name @form-atom)
+                                      response)))))
+               :spec ::cooperation-model/third-party-form}
+              (when edit?
+                {:delete (common-controller/->SaveForm
+                          :cooperation/delete-third-party
+                          {:db/id (:db/id @form-atom)}
+                          (fn [_]
+
+                            (e! (close-event))
+                            (e! (common-controller/->Navigate :cooperation
+                                                              {:project project-id}
+                                                              nil))
+                            (js/setTimeout
+                             #(e! (snackbar-controller/->OpenSnackBar
+                                   (tr [:cooperation :third-party-deleted])
+                                   :success))
+                             100)))
+                 :delete-disabled-error-text
+                 (when has-applications?
+                   (tr [:cooperation :cant-delete-third-party-with-applications]))}))
    ^{:attribute :cooperation.3rd-party/name}
    [text-field/TextField {}]
 
    ^{:attribute :cooperation.3rd-party/id-code}
    [text-field/TextField {}]
 
-   ^{:attribute :cooperation.3rd-party/email}
+   ^{:attribute :cooperation.3rd-party/email
+     :validate validation/validate-email-optional}
    [text-field/TextField {}]
 
    ^{:attribute :cooperation.3rd-party/phone}
@@ -245,7 +268,8 @@
       :button-component [buttons/rect-white {:size :small
                                              :start-icon (r/as-element
                                                           [icons/content-add])}
-                         (tr [:cooperation :new-third-party])]}]]])
+                         (tr [:cooperation :new-third-party])]
+      :form-value {:db/id "new-3rd-party"}}]]])
 
 (defn- selected-third-party-teet-id [{:keys [params] :as _app}]
   (some-> params :third-party uuid))
@@ -275,7 +299,8 @@
                                            :project-id (:thk.project/id project)}]
         :modal-title (tr [:cooperation :new-third-party-title])
         :button-component [buttons/button-primary {:class "new-third-party"}
-                           (tr [:cooperation :new-third-party])]}]]
+                           (tr [:cooperation :new-third-party])]
+        :form-value {:db/id "new-3rd-party"}}]]
      (for [{teet-id :teet/id :cooperation.3rd-party/keys [name applications]} overview]
        [url/with-navigation-params
         {:third-party (str teet-id)}
@@ -329,7 +354,9 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
-(defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
+(defn third-party-page [e! {:keys [params] :as app}
+                        {:keys [project overview]
+                         third-party-info :third-party}]
   (let [third-party-teet-id (uuid (:third-party params))
         third-party (some #(when (= third-party-teet-id
                                     (:teet/id %)) %)
@@ -341,9 +368,19 @@
        [:div {:class (<class common-styles/margin-bottom 1)}
         [common/header-with-actions
          (:cooperation.3rd-party/name third-party)
-         [buttons/button-secondary
-
-          (tr [:buttons :edit])]]
+         [form/form-modal-button
+          {:max-width "sm"
+           :modal-title (tr [:cooperation :edit-third-party-title])
+           :button-component [buttons/button-secondary
+                              {:class "edit-third-party"}
+                              (tr [:buttons :edit])]
+           :form-component
+           [third-party-form
+            {:e! e!
+             :project-id (:thk.project/id project)
+             :edit? true
+             :has-applications? (seq (:cooperation.3rd-party/applications third-party))}]
+           :form-value third-party-info}]]
         [typography/Heading3
          {:class (<class common-styles/margin-bottom 2)}
          (tr [:cooperation :applications])]
@@ -352,10 +389,11 @@
          {:max-width "sm"
           :form-component [application-form {:e! e!
                                              :project-id (:thk.project/id project)
-                                             :third-party-teet-id third-party-teet-id}]
+                                             :third-party-teet-id (:teet/id third-party)}]
           :modal-title (tr [:cooperation :new-application-title])
           :button-component [buttons/button-primary {:class "new-application"}
-                             (tr [:cooperation :new-application])]}]]
+                             (tr [:cooperation :new-application])]
+          :form-value {:db/id "new-3rd-party"}}]]
        [applications third-party]]]]))
 
 (defn application-response-change-fn
@@ -606,7 +644,8 @@
         ^{:attribute :cooperation.contact/id-code}
         [text-field/TextField {}]
 
-        ^{:attribute :cooperation.contact/email}
+        ^{:attribute :cooperation.contact/email
+          :validate validation/validate-email-optional}
         [text-field/TextField {}]
 
         ^{:attribute :cooperation.contact/phone}
