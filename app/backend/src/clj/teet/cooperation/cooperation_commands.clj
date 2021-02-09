@@ -119,7 +119,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
    :pre [(application-belongs-to-project? db application-id project-id)]
-   :transact [(meta-model/deletion-tx user application-id)]})
+   :transact [(list 'teet.cooperation.cooperation-tx/delete-application user application-id)]})
 
 
 (defmethod link-db/link-from [:cooperation.response :file]

@@ -81,4 +81,9 @@
                              ;; Using the THK project id of another project
                              {:thk.project/id (:thk.project/id (du/entity (tu/db) (tu/->db-id "p2")))
                               :application {:db/id new-application-id
-                                            :cooperation.application/type :cooperation.application.type/building-permit-order}}))))))
+                                            :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
+
+    (testing "Application can be deleted"
+      (is (some? (tu/local-command :cooperation/delete-application
+                                   {:thk.project/id project-id
+                                    :db/id new-application-id}))))))
