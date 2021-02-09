@@ -80,16 +80,26 @@
 
 
 (defcommand :cooperation/edit-application
-  {:doc "Create new application in project for the given 3rd party."
+  {:doc "Edit a given application in a given project"
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
              application :application}
    :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-application {}} ;; TODO: Ownership affects?
+   :authorization {:cooperation/edit-application {}}
    :pre [(application-belongs-to-project? db (:db/id application) project-id)]
    :transact [(merge (select-keys application
                                   (conj cooperation-model/editable-application-attributes :db/id))
                      (meta-model/modification-meta user))]})
+
+(defcommand :cooperation/delete-application
+  {:doc "Delete a given application in a given project"
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             application-id :db/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-application {}}
+   :pre [(application-belongs-to-project? db application-id project-id)]
+   :transact [(meta-model/deletion-tx user application-id)]})
 
 
 (defmethod link-db/link-from [:cooperation.response :file]
