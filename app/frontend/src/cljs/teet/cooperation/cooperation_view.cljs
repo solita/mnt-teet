@@ -152,7 +152,7 @@
 
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
-  ([{:keys [edit-button delete-button]}
+  ([{:keys [edit-button]}
     {:cooperation.application/keys [opinion]}]
    (let [{:meta/keys [creator modifier created-at modified-at]
           comment :cooperation.opinion/comment} opinion]
@@ -170,8 +170,7 @@
                 :style {:flex 1
                         :justify-content :space-between}}
           (opinion-status (:cooperation.opinion/status opinion))
-          edit-button
-          delete-button]
+          edit-button]
          (when-let [date (or modified-at created-at)]
            [:div
             [typography/BoldGreyText {:style {:display :inline-block}}
@@ -623,14 +622,12 @@
   [:div {:class (<class common-styles/margin-bottom 1)}
    [:div.application-conclusion {:class (<class common-styles/margin-bottom 1)}
     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
-     (tr [:cooperation :opinion-title])]
-    (log/debug "opinion data:" (pr-str opinion))
+     (tr [:cooperation :opinion-title])]    
     [opinion-view {:edit-button [edit-opinion e! application
                                  [buttons/button-secondary {:size "small"
                                                             :class "edit-opinion"
                                                             :disabled (boolean (not opinion))}
-                                  (tr [:buttons :edit])]]}
-     application]]
+                                  (tr [:buttons :edit])]]} application]]
    (when (not opinion)
      [edit-opinion e! application
       [buttons/button-primary {:class "create-opinion"}

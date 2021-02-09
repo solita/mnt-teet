@@ -168,7 +168,6 @@
                                  {:id (str "confirm-delete")
                                   :on-click (if close-on-action?
                                               #(do (action)
-                                                   (log/debug "delete-button: invoked action after confirm")
                                                    (close))
                                               action)}
                                  confirm-button-text]]

@@ -1,7 +1,6 @@
 (ns teet.cooperation.cooperation-controller
   (:require [tuck.core :as t]
             [taoensso.timbre :as log]
-
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]))

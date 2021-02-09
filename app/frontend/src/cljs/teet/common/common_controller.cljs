@@ -506,7 +506,6 @@
   (assert (some? payload)
           "Must specify :payload for the command")
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
-  (log/debug "processing command" q)
   (if @test-mode?
     (send-fake-command! q)
     (-> (fetch* e! error-event
@@ -631,12 +630,11 @@
 (defrecord SaveForm [command form-data on-success-fx]
   t/Event
   (process-event [_ app]
-    (do (log/debug "SaveForm called for command" command)
-        (t/fx app
-              {:tuck.effect/type :command!
-               :command command
-               :payload form-data
-               :result-event (partial ->SaveFormResponse on-success-fx)}))))
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command command
+           :payload form-data
+           :result-event (partial ->SaveFormResponse on-success-fx)})))
 
 
 (defn ^:export test-command
