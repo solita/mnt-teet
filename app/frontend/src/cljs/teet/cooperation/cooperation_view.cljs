@@ -865,6 +865,39 @@
             (tr [:cooperation :add-application-contact])])]])]))
 
 ;; entrypoint from route /projects/:project/cooperation/:third-party/:application
+
+(defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              :save-event #(common-controller/->SaveForm
+                             :cooperation/edit-application
+                             {:thk.project/id project-id
+                              :application (common-controller/prepare-form-data @form-atom)}
+                             (fn [response]
+                               (fn [e!]
+                                 (e! (close-event))
+                                 #_(e! (cooperation-controller/->ApplicationCreated response)))))
+              :spec ::cooperation-model/application-form}
+   ^{:attribute :cooperation.application/type}
+   [select/select-enum {:e! e! :attribute :cooperation.application/type}]
+
+   ^{:attribute :cooperation.application/response-type}
+   [select/select-enum {:e! e! :attribute :cooperation.application/response-type}]
+
+   ^{:attribute :cooperation.application/date
+     :xs 8}
+   [date-picker/date-input {}]
+
+   ^{:attribute :cooperation.application/response-deadline
+     :xs 8}
+   [date-picker/date-input {}]
+
+   ^{:attribute :cooperation.application/comment}
+   [text-field/TextField {:multiline true
+                          :rows 5}]])
+
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
@@ -884,7 +917,17 @@
        e! app project overview
        [:<>
         [:div {:class (<class common-styles/margin-bottom 1)}
-         [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+         [common/header-with-actions (:cooperation.3rd-party/name third-party)
+          [authorization-context/when-authorized :edit-application
+           [form/form-modal-button
+            {:max-width "sm"
+             :form-component [edit-application-form {:e! e!
+                                                     :project-id (:thk.project/id project)}]
+             :form-value (select-keys application
+                                      cooperation-model/editable-application-attributes)
+             :modal-title (tr [:cooperation :new-application-title])
+             :button-component [buttons/button-secondary {}
+                                (tr [:buttons :edit])]}]]]
          [typography/Heading2
           (tr-enum (:cooperation.application/type application)) " / "
           (tr-enum (:cooperation.application/response-type application))]
