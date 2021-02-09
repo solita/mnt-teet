@@ -1,8 +1,7 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [cljs.pprint]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Portal]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
@@ -274,11 +273,12 @@
            [:div {:data-form-attribute (str attribute)
                   :class (<class common-styles/margin-bottom 1)}
             (add-validation
-                   (update field 1 (fn [{label :label :as input-opts}]
-                                     (merge input-opts opts
-                                            (when-not label
-                                              {:label (tr [:fields attribute])}))))
-                   (partial validate-attribute-fn invalid-attributes validate-field) attribute)]))})))
+              (update field 1 (fn [{label :label :as input-opts}]
+                                (merge opts                 ;;input-opts' required overrides the computed required value because it's more specific
+                                       (dissoc input-opts :value :on-change)
+                                       (when-not label
+                                         {:label (tr [:fields attribute])}))))
+              (partial validate-attribute-fn invalid-attributes validate-field) attribute)]))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute
@@ -466,8 +466,6 @@
    (context/consume
     :form
     (fn [{:keys [value footer]}]
-      (println "pprint context provided form footer:")
-      (cljs.pprint/pprint footer)
       [footer-component (update footer :validate
                                 (fn [validate]
                                   (when validate
@@ -536,3 +534,28 @@
                    (fn []
                      (reset! form-atom (or form-value {}))
                      (reset! open-atom true))))]))
+
+(defn form-container-button
+  "Like form-modal-button but renders form inside the given
+  container component.
+
+  Container must be a function that can be used in hiccup as
+  a component."
+  [{:keys [container
+           form-component button-component
+           form-value
+           open? id]}]
+  (r/with-let [open-atom (r/atom (or open? false))
+               form-atom (r/atom (or form-value {}))
+               close-event (reset-atom-event open-atom false)]
+    [:<>
+     (when @open-atom
+       [container
+        (into form-component [close-event form-atom])])
+     (-> button-component
+         (assoc-in [1 :id] id)
+         (assoc-in [1 :on-click]
+                   (fn []
+                     (reset! form-atom (or form-value {}))
+                     (reset! open-atom true)))
+         (assoc-in [1 :disabled] @open-atom))]))

@@ -55,15 +55,21 @@
  :asset
  {:type-library
   {:description "Kirjeldus",
+   :db.type/instant "Ajatempel",
    :fclass "Vara klass",
    :unit "Ühik",
+   :datatype "Tüüp",
+   :db.type/string "Tekst",
    :name "Nimi",
+   :db.type/ref "Viide",
+   :db.type/bigdec "Arv",
    :fgroup "Vara liik",
    :header "Tee olemi tüübiteek (TOTT) ",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
    :ctype "Komponent",
+   :db.type/long "Täisarv",
    :attributes "Omadused"}},
  :buttons
  {:confirm "Kinnitan",
@@ -168,8 +174,11 @@
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
   :add-application-response "Lisan kaasatud osapoole vastuse",
+  :cant-delete-third-party-with-applications
+  "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
   :add-application-contact "Lisan kontakti",
+  :third-party-deleted "Kaasatud osapool kustutatud",
   :create-opinion-button "Lisan ametliku seisukoha",
   :new-application-created "Taotlus edukalt loodud",
   :no-deadline "Tähtaega pole",
@@ -182,7 +191,9 @@
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
-   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-missing
+   "Tegevusel puudub kooskõlastusülesanne või ülesande staatus ei luba failide lisamist.",
+   :response-not-given "Faile saab lisada peale vastuse lisamist",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
    :response-not-editable
@@ -192,6 +203,7 @@
   :response-created "Vastus edukalt loodud",
   :application-terms-expire-warning
   "Esitatud tingimused aeguvad peagi / on aegunud!",
+  :edit-third-party-title "Muudan kaasatud osapoolt",
   :opinion-saved "Seisukoht edukalt salvestatud",
   :new-third-party "Lisan kaasatud osapoole"},
  :dashboard
@@ -523,7 +535,9 @@
   :bad-request "Vigane päring",
   :replaced-file-not-latest
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
-  :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud"},
+  :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
+  :no-participants-with-email
+  "Ühelgi teavitataval osalejal pole emaili aadressi"},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -819,7 +833,7 @@
   :move-to-participants-modal-title
   "Kas lisan kasutaja osalejate nimekirja?",
   :not-enough-participants
-  "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja.",
+  "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja kes on TEETu kasutaja.",
   :absentees-title "Puudujad",
   :email-body "Koosolek",
   :add-decision-button "Lisan otsuse",

@@ -41,11 +41,13 @@
 ;; ^ commented out because touched empty form fields have value "" and not nil
 
 (s/def ::response-form
-  (s/keys :req [:cooperation.response/status
-                :cooperation.response/date]
-          :opt [:cooperation.response/valid-months
-                :cooperation.response/valid-until
-                :cooperation.response/content]))
+  (s/or :no-response (s/and #(= (:cooperation.response/status %) :cooperation.response.status/no-response)
+                            (s/keys :req [:cooperation.response/status]))
+        :response (s/keys :req [:cooperation.response/status
+                                :cooperation.response/date]
+                          :opt [:cooperation.response/valid-months
+                                :cooperation.response/valid-until
+                                :cooperation.response/content])))
 
 (s/def ::opinion-form
   (s/keys :req [:cooperation.opinion/status :cooperation.opinion/comment]))
@@ -84,7 +86,7 @@
 
 (def third-party-display-attrs
   "Attributes to pull for showing a 3rd party"
-  [:db/id
+  [:db/id :teet/id
    :cooperation.3rd-party/name
    :cooperation.3rd-party/phone
    :cooperation.3rd-party/email

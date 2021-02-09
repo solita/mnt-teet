@@ -159,7 +159,7 @@
                                  modal-title
                                  (tr [:common :confirm-deletion]))
                     :open-atom open-atom
-                    :actions   [DialogActions {:class (<class common-styles/margin-bottom 1)}
+                    :actions   [DialogActions
                                 [button-secondary
                                  {:on-click close
                                   :id (str "cancel-delete")}
@@ -180,8 +180,9 @@
      (cond
        trashcan?
        [IconButton {:on-click open
-                    :size :small}
-        [icons/action-delete-outlined]
+                    :size :small
+                    :style {:color theme-colors/red}}
+        [icons/action-delete-forever]
         button-content]
 
        clear?

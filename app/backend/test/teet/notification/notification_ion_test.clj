@@ -8,8 +8,8 @@
             [teet.notification.notification-ion :as notification-ion]
             [teet.util.date :as date]))
 
-(t/use-fixtures
-  :each
+(t/use-fixtures :each
+  (tu/with-config {:notify {:application-expire-days "45"}})
   tu/with-environment
   (tu/with-db))
 
@@ -27,13 +27,15 @@
 (defn create-cooperation-3rd-party
   "Create test 3rd party and return its :teet/id"
   [db]
-  (let [cooperation-3rd-party {:cooperation.3rd-party/name cooperation-3rd-party-name
+  (let [cooperation-3rd-party {:db/id "new-third-party"
+                               :cooperation.3rd-party/name cooperation-3rd-party-name
                                :cooperation.3rd-party/id-code "00000001"
                                :cooperation.3rd-party/email "cooperation3rdparty@entity.te"
                                :cooperation.3rd-party/phone "111111111111111"}
         third-party-id (get-in
-                        (tu/local-command :cooperation/create-3rd-party {:thk.project/id (project-id db)
-                                                                         :third-party cooperation-3rd-party})
+                        (tu/local-command :cooperation/save-3rd-party
+                                          {:thk.project/id (project-id db)
+                                           :third-party cooperation-3rd-party})
                         [:tempids "new-third-party"])]
     (:teet/id (du/entity (tu/db) third-party-id))))
 

@@ -29,7 +29,9 @@
             [teet.task.task-view :as task-view]
             [teet.link.link-view :as link-view]
             [teet.ui.authorization-context :as authorization-context]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.ui.validation :as validation]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 
 ;; Form structure in this view:
@@ -52,31 +54,52 @@
 ;;     application-response
 ;;       application-response-form (uses form/form2)
 ;;   application-people-panel (uses form/form)
-;;
 
-(defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
-  [form/form {:e! e!
-              :value @form-atom
-              :on-change-event (form/update-atom-event form-atom merge)
-              :cancel-event close-event
-              :save-event #(common-controller/->SaveForm
-                            :cooperation/create-3rd-party
-                            {:thk.project/id project-id
-                             :third-party (common-controller/prepare-form-data @form-atom)}
-                            (fn [response]
-                              (fn [e!]
-                                (e! (close-event))
-                                (e! (cooperation-controller/->ThirdPartyCreated
-                                     (:cooperation.3rd-party/name @form-atom)
-                                     response)))))
-              :spec ::cooperation-model/third-party-form}
+
+(defn- third-party-form [{:keys [e! project-id edit? has-applications?]}
+                         close-event form-atom]
+  [form/form (merge
+              {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom merge)
+               :cancel-event close-event
+               :save-event #(common-controller/->SaveForm
+                             :cooperation/save-3rd-party
+                             {:thk.project/id project-id
+                              :third-party (common-controller/prepare-form-data @form-atom)}
+                             (fn [response]
+                               (fn [e!]
+                                 (e! (close-event))
+                                 (e! (cooperation-controller/->ThirdPartyCreated
+                                      (:cooperation.3rd-party/name @form-atom)
+                                      response)))))
+               :spec ::cooperation-model/third-party-form}
+              (when edit?
+                {:delete (common-controller/->SaveForm
+                          :cooperation/delete-third-party
+                          {:db/id (:db/id @form-atom)}
+                          (fn [_]
+
+                            (e! (close-event))
+                            (e! (common-controller/->Navigate :cooperation
+                                                              {:project project-id}
+                                                              nil))
+                            (js/setTimeout
+                             #(e! (snackbar-controller/->OpenSnackBar
+                                   (tr [:cooperation :third-party-deleted])
+                                   :success))
+                             100)))
+                 :delete-disabled-error-text
+                 (when has-applications?
+                   (tr [:cooperation :cant-delete-third-party-with-applications]))}))
    ^{:attribute :cooperation.3rd-party/name}
    [text-field/TextField {}]
 
    ^{:attribute :cooperation.3rd-party/id-code}
    [text-field/TextField {}]
 
-   ^{:attribute :cooperation.3rd-party/email}
+   ^{:attribute :cooperation.3rd-party/email
+     :validate validation/validate-email-optional}
    [text-field/TextField {}]
 
    ^{:attribute :cooperation.3rd-party/phone}
@@ -126,7 +149,6 @@
      [color-and-status
       (cooperation-style/opinion-status-color status)
       (tr-enum status)]]))
-
 
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
@@ -181,8 +203,9 @@
         [[(tr [:cooperation :response-of-third-party])
           ;; colored circle based on status
           [response-status response]]
-         [(tr [:fields :cooperation.response/date])
-          (format/date date)]
+         (when date
+           [(tr [:fields :cooperation.response/date])
+            (format/date date)])
          (when valid-until
            [(tr [:fields :cooperation.response/valid-until])
             [:div {:style {:display :flex}}
@@ -269,7 +292,8 @@
       :button-component [buttons/rect-white {:size :small
                                              :start-icon (r/as-element
                                                           [icons/content-add])}
-                         (tr [:cooperation :new-third-party])]}]]])
+                         (tr [:cooperation :new-third-party])]
+      :form-value {:db/id "new-3rd-party"}}]]])
 
 (defn- selected-third-party-teet-id [{:keys [params] :as _app}]
   (some-> params :third-party uuid))
@@ -300,7 +324,8 @@
                                            :project-id (:thk.project/id project)}]
         :modal-title (tr [:cooperation :new-third-party-title])
         :button-component [buttons/button-primary {:class "new-third-party"}
-                           (tr [:cooperation :new-third-party])]}]]
+                           (tr [:cooperation :new-third-party])]
+        :form-value {:db/id "new-3rd-party"}}]]
      (for [{teet-id :teet/id :cooperation.3rd-party/keys [name applications]} overview]
        [url/with-navigation-params
         {:third-party (str teet-id)}
@@ -355,7 +380,9 @@
                           :rows 5}]])
 
 ;; entrypoint from route /projects/:project/cooperation/:third-party 
-(defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
+(defn third-party-page [e! {:keys [params] :as app}
+                        {:keys [project overview]
+                         third-party-info :third-party}]
   (let [third-party-teet-id (uuid (:third-party params))
         third-party (some #(when (= third-party-teet-id
                                     (:teet/id %)) %)
@@ -367,9 +394,19 @@
        [:div {:class (<class common-styles/margin-bottom 1)}
         [common/header-with-actions
          (:cooperation.3rd-party/name third-party)
-         [buttons/button-secondary
-
-          (tr [:buttons :edit])]]
+         [form/form-modal-button
+          {:max-width "sm"
+           :modal-title (tr [:cooperation :edit-third-party-title])
+           :button-component [buttons/button-secondary
+                              {:class "edit-third-party"}
+                              (tr [:buttons :edit])]
+           :form-component
+           [third-party-form
+            {:e! e!
+             :project-id (:thk.project/id project)
+             :edit? true
+             :has-applications? (seq (:cooperation.3rd-party/applications third-party))}]
+           :form-value third-party-info}]]
         [typography/Heading3
          {:class (<class common-styles/margin-bottom 2)}
          (tr [:cooperation :applications])]
@@ -378,24 +415,33 @@
          {:max-width "sm"
           :form-component [application-form {:e! e!
                                              :project-id (:thk.project/id project)
-                                             :third-party-teet-id third-party-teet-id}]
+                                             :third-party-teet-id (:teet/id third-party)}]
           :modal-title (tr [:cooperation :new-application-title])
           :button-component [buttons/button-primary {:class "new-application"}
-                             (tr [:cooperation :new-application])]}]]
+                             (tr [:cooperation :new-application])]
+          :form-value {:db/id "new-3rd-party"}}]]
        [applications third-party]]]]))
 
 (defn application-response-change-fn
   [val change]
-  (-> (merge val change)
-       (update :cooperation.response/valid-months #(and (or (number? %)
-                                                            (not-empty %))
-                                                        (js/parseInt %)))
-       cu/without-empty-vals
-       cooperation-model/with-valid-until))
+  (if (= (:cooperation.response/status change) :cooperation.response.status/no-response)
+    (merge (dissoc val
+                   :cooperation.response/content
+                   :cooperation.response/valid-months
+                   :cooperation.response/date
+                   :cooperation.response/valid-until)
+           change)
+    (-> (merge val change)
+        (update :cooperation.response/valid-months #(and (or (number? %)
+                                                             (not-empty %))
+                                                         (js/parseInt %)))
+        cu/without-empty-vals
+        cooperation-model/with-valid-until)))
 
 (defn- application-response-form [{:keys [e! project-id application-id]} close-event form-atom]
   (let [max-months 1200
-        min-months 0]
+        min-months 0
+        status-no-response? (= (:cooperation.response/status @form-atom) :cooperation.response.status/no-response)]
     [form/form2 {:e! e!
                  :value @form-atom
                  :on-change-event (form/update-atom-event form-atom application-response-change-fn)
@@ -415,15 +461,16 @@
                  :spec ::cooperation-model/response-form}
      [:div
       [:div {:class (<class common-styles/gray-container-style)}
-       [Grid {:container true :spacing 3}
+       [Grid {:container true :spacing 0}
         [Grid {:item true :xs 12}
          [form/field :cooperation.response/status
           [select/select-enum {:e! e!
                                :attribute :cooperation.response/status}]]]
 
         [Grid {:item true :xs 12}
-         [form/field :cooperation.response/date
-          [date-picker/date-input {}]]]
+         [form/field {:attribute :cooperation.response/date}
+          [date-picker/date-input {:required (not status-no-response?) ;; only required when the status is other than no-response
+                                   :read-only? status-no-response?}]]]
 
         [Grid {:item true :xs 6
                :style {:display :flex
@@ -435,25 +482,26 @@
                                       (when (or (js/isNaN val) (>= val max-months) (>= min-months val))
                                         true))))}
           [text-field/TextField {:type :number
+                                 :read-only? status-no-response?
                                  :max max-months
                                  :min min-months}]]]
 
-        [Grid {:item true :xs 6
-               :style {:display :flex
-                       :align-items :flex-end}}
+        [Grid {:item true :xs 6}
          (when (:cooperation.response/valid-until @form-atom)
            [form/field :cooperation.response/valid-until
             [date-picker/date-input {:read-only? true}]])]
         [Grid {:item true :xs 12}
-         [form/field :cooperation.response/content
-          [rich-text-editor/rich-text-field {}]]]]]
+         (when-not status-no-response?
+           [form/field :cooperation.response/content
+            [rich-text-editor/rich-text-field {}]])]]]
       [form/footer2]]]))
 
 (defn application-response
   [e! new-document files-form application project related-task]
   (r/with-let [{:keys [upload!] :as controls} (task-view/file-upload-controls e!)]
     (let [response (:cooperation.application/response application)
-          linked-files (:link/_from response)]
+          linked-files (:link/_from response)
+          no-response? (= (:cooperation.response/status response) :cooperation.response.status/no-response)]
       [:div {:class (<class common-styles/margin-bottom 3)}
        [Divider {:style {:margin "1.5rem 0"}}]
        [:div {:class [(<class common-styles/flex-row-space-between)
@@ -485,7 +533,8 @@
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
-                                          (:application-editable authz)))
+                                          (:application-editable authz)
+                                          (not no-response?)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
@@ -493,33 +542,38 @@
 
                             (not (:application-editable authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])
-                             :body (tr [:cooperation :error :response-not-editable])})]
-            (if (empty? linked-files)
-              [common/popper-tooltip error-msg
-               [buttons/button-primary {:size :small
-                                        :on-click #(upload! {})
-                                        :disabled (not can-upload?)
-                                        :end-icon (r/as-element [icons/content-add])}
-                (tr [:cooperation :add-files])]]
-              [:div
-               [:div {:class (<class common-styles/header-with-actions)}
-                [typography/Heading2 (tr [:common :files])]
-                [common/popper-tooltip error-msg
-                 [buttons/button-primary {:size :small
-                                          :on-click #(upload! {})
-                                          :disabled (not can-upload?)
-                                          :end-icon (r/as-element [icons/content-add])}
-                  (tr [:cooperation :add-files])]]]
-               [link-view/links
-                {:e! e!
-                 :links linked-files
-                 :editable? false
-                 :link-entity-opts {:file
-                                    {:column-widths [3 1]
-                                     :allow-replacement-opts
-                                     {:e! e!
-                                      :task related-task
-                                      :small true}}}}]]))))])))
+                             :body (tr [:cooperation :error :response-not-editable])}
+
+                            no-response?
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :body (tr [:cooperation :error :response-not-given])})]
+            [:div {:id (when can-upload? :drag-container-id)}
+             (if (empty? linked-files)
+               [common/popper-tooltip error-msg
+                [buttons/button-primary {:size :small
+                                         :on-click #(upload! {})
+                                         :disabled (not can-upload?)
+                                         :end-icon (r/as-element [icons/content-add])}
+                 (tr [:cooperation :add-files])]]
+               [:div
+                [:div {:class (<class common-styles/header-with-actions)}
+                 [typography/Heading2 (tr [:common :files])]
+                 [common/popper-tooltip error-msg
+                  [buttons/button-primary {:size :small
+                                           :on-click #(upload! {})
+                                           :disabled (not can-upload?)
+                                           :end-icon (r/as-element [icons/content-add])}
+                   (tr [:cooperation :add-files])]]]
+                [link-view/links
+                 {:e! e!
+                  :links linked-files
+                  :editable? false
+                  :link-entity-opts {:file
+                                     {:column-widths [3 1]
+                                      :allow-replacement-opts
+                                      {:e! e!
+                                       :task related-task
+                                       :small true}}}}]])])))])))
 
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
   (let [form-value @form-atom
@@ -566,7 +620,7 @@
      :button-component button-component}]])
 
 (defn- application-conclusion [e! {:cooperation.application/keys [opinion] :as application}]
-  [:<>
+  [:div {:class (<class common-styles/margin-bottom 1)}
    [:div.application-conclusion {:class (<class common-styles/margin-bottom 1)}
     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
      (tr [:cooperation :opinion-title])]
@@ -632,7 +686,8 @@
         ^{:attribute :cooperation.contact/id-code}
         [text-field/TextField {}]
 
-        ^{:attribute :cooperation.contact/email}
+        ^{:attribute :cooperation.contact/email
+          :validate validation/validate-email-optional}
         [text-field/TextField {}]
 
         ^{:attribute :cooperation.contact/phone}

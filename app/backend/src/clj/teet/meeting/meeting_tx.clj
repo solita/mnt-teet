@@ -2,9 +2,9 @@
   "Meeting related transaction functions"
   (:require [datomic.ion :as ion]
             [teet.meeting.meeting-db :as meeting-db]
-            [clojure.string :as str]
             [teet.meta.meta-model :as meta-model]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.entity.entity-db :as entity-db]))
 
 (defn update-meeting
   [db user meeting-id tx-vec]
@@ -14,7 +14,8 @@
                  :teet/error :meeting-is-locked})
     (into tx-vec
           (concat
-            [(merge
+           [(entity-db/entity-seen-tx db user meeting-id)
+            (merge
                {:db/id meeting-id}
                (meta-model/modification-meta user))]
             (meeting-db/review-retractions db meeting-id)))))
@@ -24,21 +25,8 @@
                           participant :participation/participant
                           :as participation}]
   (let [teet-user? (not (string? (:db/id participant)))]
-    (if (or
-         ;; If user is TEET user, check that they are not already participating
-         (and teet-user?
-              (meeting-db/user-is-participating? db participant meeting))
-
-         ;; Check that email is not in use by some participant
-         (let [emails (into #{}
-                            (comp
-                             (map :user/email)
-                             (remove nil?)
-                             (map str/lower-case))
-                            (meeting-db/participants db meeting))
-               new-email (:user/email participant)]
-           ;; If some participant already has the email being added
-           (and new-email (emails (str/lower-case new-email)))))
+    (if (and teet-user?
+             (meeting-db/user-is-participating? db participant meeting))
       (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
                    :cognitect.anomalies/message "User is already participating"
                    :teet/error :user-is-already-participant})

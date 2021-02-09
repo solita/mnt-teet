@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "cypress": "^6.2.1"
+    "cypress": "^6.4.0"
   },
   "devDependencies": {
     "cypress-multi-reporters": "^1.4.0",

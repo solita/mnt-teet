@@ -5,7 +5,7 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper]]
+            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
@@ -509,3 +509,18 @@
                                  :title title
                                  :body body
                                  :icon icon}]]])))
+
+
+(defn portal
+  "Create new portal component pair. Returns vector of two components [from-comp to-comp].
+  When from-comp component is rendered it will render a portal that places the children
+  to the to-comp. When to-comp is rendered it will create the target element where the
+  portal places its children.
+  "
+  []
+  (let [elt (r/atom nil)]
+    [(fn portal-from [& children]
+       (when-let [e @elt]
+         (into [Portal {:container e}] children)))
+     (fn portal-to []
+       [:div {:ref #(reset! elt %)}])]))

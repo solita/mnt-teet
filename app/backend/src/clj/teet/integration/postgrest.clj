@@ -3,6 +3,8 @@
   (:require [cheshire.core :as cheshire]
             [org.httpkit.client :as client]
             [teet.auth.jwt-token :as jwt-token]
+            [teet.db-api.core :refer [fail!]]
+            [teet.log :as log]
             [clojure.string :as str]))
 
 (defn valid-api-context? [ctx]
@@ -33,6 +35,13 @@
                  [(name key) (str "eq." val)])))
         where))
 
+(defn- decode-response-body [resp]
+  (try (cheshire/decode (:body resp) keyword)
+       (catch Exception _
+         (log/error "Failed to decode PostgREST response: " (:body resp))
+         (fail! {:msg "Failed to decode PostgREST response"
+                 :error :postgrest-response-error}))))
+
 (defn select
   "Select data from a table endpoint in PostgREST."
   ([ctx table] (select ctx table nil nil))
@@ -44,7 +53,7 @@
                                                    {"select" (str/join "," (map name columns))})
                                                  (where-params where))
                             :headers (auth-header ctx)})]
-     (cheshire/decode (:body resp) keyword))))
+     (decode-response-body resp))))
 
 (defn delete!
   "Delete rows from table with the given where clause."
@@ -54,7 +63,7 @@
   (let [resp @(client/delete (str (:api-url ctx) "/" (name table))
                              {:query-params (where-params where)
                               :headers (auth-header ctx)})]
-    (cheshire/decode (:body resp) keyword)))
+    (decode-response-body resp)))
 
 (defn upsert!
   "Upsert data to a table endpoint in PostgREST."
@@ -75,4 +84,13 @@
                            {:headers (merge {"Content-Type" "application/json"}
                                             (auth-header ctx))
                             :body (cheshire/encode params)})]
-    (cheshire/decode (:body resp) keyword)))
+    (if
+      (or
+        (= (:status resp) 401)
+        (= (:status resp) 503))
+      (throw (ex-info "Error posting a PostgREST request"
+                      {:rpc-name rpc-name
+                       :request-params params
+                       :error-response (cheshire/decode (:body resp))
+                       }))
+      (decode-response-body resp))))

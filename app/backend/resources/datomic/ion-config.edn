@@ -9,7 +9,7 @@
          teet.file.file-tx/create-task-file-part
          teet.file.file-tx/remove-task-file-part
          teet.file.file-tx/modify-file
-         teet.cooperation.cooperation-tx/create-3rd-party
+         teet.cooperation.cooperation-tx/save-3rd-party
          teet.util.string/contains-words?
          teet.user.user-tx/set-global-role
          clojure.string/includes?

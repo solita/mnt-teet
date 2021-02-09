@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [teet.util.date :as date]
             [teet.util.datomic :as du]
-            [clj-time.core :as t]))
+            [teet.entity.entity-db :as entity-db]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -73,10 +73,10 @@
 
 (def third-party-by-teet-id
   "Find 3rd party by :teet/id. Returns entity :db/id or nil."
-  (partial du/entity-by-teet-id :cooperation.3rd-party/name))
+  (partial entity-db/entity-by-teet-id :cooperation.3rd-party/name))
 
 (def application-by-teet-id
-  (partial du/entity-by-teet-id :cooperation.application/type))
+  (partial entity-db/entity-by-teet-id :cooperation.application/type))
 
 
 
@@ -144,6 +144,19 @@
   (get-in (du/entity db application-id)
     [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/name]))
 
+(defn application-3rd-party-uuid [db application-id]
+  (first (d/q '[:find ?id
+                :in $ ?application-id
+                :keys uuid
+                :where [?cooperation :cooperation.3rd-party/applications ?application-id]
+                [?cooperation :teet/id ?id]]
+           db application-id)))
+
+(defn application-uuid
+  [db application-id]
+  (let [application-uuid (get-in (du/entity db application-id) [:teet/id])]
+    {:uuid application-uuid}))
+
 (defn response-project-id [db response-id]
   ;(def *args [db response-id])
   (get-in (du/entity db response-id)
@@ -163,4 +176,31 @@
            [?notification :notification/target ?application]
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
-    db (date/inc-days (date/now) days)))
+    db (date/inc-days (date/now) (Integer/valueOf days))))
+
+(defn- ->third-party-id [id]
+  (if (uuid? id)
+    [:teet/id id]
+    id))
+
+(defn third-party-project-id
+  "Return project id for the third party. Third party id
+  can either be a UUID (:teet/id) or long (:db/id)."
+  [db third-party-id]
+  (ffirst
+   (d/q '[:find ?p
+          :where [?tp :cooperation.3rd-party/project ?p]
+          :in $ ?tp]
+        db (->third-party-id third-party-id))))
+
+(defn has-applications?
+  "Check if third party has applications."
+  [db third-party-id]
+  (boolean
+   (seq
+    (d/q '[:find ?a
+           :where
+           [?tp :cooperation.3rd-party/applications ?a]
+           [(missing? $ ?a :meta/deleted?)]
+           :in $ ?tp]
+         db (->third-party-id third-party-id)))))

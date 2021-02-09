@@ -55,15 +55,21 @@
  :asset
  {:type-library
   {:description "Description",
+   :db.type/instant "Timestamp",
    :fclass "Feature class",
    :unit "Unit",
+   :datatype "Type",
+   :db.type/string "Text",
    :name "Name",
+   :db.type/ref "Reference",
+   :db.type/bigdec "Number",
    :fgroup "Asset Features",
    :header "Road Object Type Library (ROTL)",
    :link "ROTL",
    :label "Label",
    :values "Values",
    :ctype "Component",
+   :db.type/long "Integer",
    :attributes "Attributes"}},
  :buttons
  {:confirm "Confirm",
@@ -168,8 +174,11 @@
   :new-third-party-created "Involved party created successfully",
   :all-third-parties "All involved parties",
   :add-application-response "Add involved party response",
+  :cant-delete-third-party-with-applications
+  "Involved party can be deleted if it has applications added to it",
   :create-opinion-title "Add opinion",
   :add-application-contact "Add contact",
+  :third-party-deleted "Involved party deleted",
   :create-opinion-button "Opinion of Competent Authority",
   :new-application-created "Application created successfully",
   :no-deadline "No deadline",
@@ -183,7 +192,8 @@
   :error
   {:upload-not-allowed "Upload not allowed",
    :coordination-task-missing
-   "Coordination task does not exist for the activity.",
+   "Coordination task does not exist for the activity, or it is in a state that does not allow file uploading.",
+   :response-not-given "Files can be added after response is added",
    :coordination-task-status-mismatch
    "Task is not in a state that allows file upload.",
    :response-not-editable
@@ -193,6 +203,7 @@
   :response-created "Response created successfully",
   :application-terms-expire-warning
   "The application terms will expire soon/have expired!",
+  :edit-third-party-title "Edit involved party",
   :opinion-saved "Opinion saved successfully",
   :new-third-party "Add involved party"},
  :dashboard
@@ -486,7 +497,7 @@
    :test
    "You are using the test environment of TEET. From time to time the data in the environment is updated and the manually added data disappears.",
    :prelive
-   " are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
+   "You are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
   :version "Version"},
  :error
  {:file-metadata-not-unique
@@ -529,7 +540,9 @@
   :replaced-file-not-latest
   "Can't replace an old version of a file. Replace newest version.",
   :meeting-has-no-decisions
-  "The meeting doesn't contain anything to review"},
+  "The meeting doesn't contain anything to review",
+  :no-participants-with-email
+  "None of the participants who should receive the notification have a valid email address."},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
@@ -823,7 +836,7 @@
   :search-decisions "Search decisions",
   :move-to-participants-modal-title "Move user to participants?",
   :not-enough-participants
-  " To send notifications, you need to add at least one more participant.",
+  " To send notifications, you need to add at least one more participant who is a TEET user.",
   :absentees-title "Absentees",
   :email-body "Meeting",
   :add-decision-button "Add decision",
