@@ -73,12 +73,6 @@
        :application-teet-id teet-id})
     (db-api/bad-request! "No such 3rd party")))
 
-(def ^:private editable-application-attributes
-  [:cooperation.application/type
-   :cooperation.application/response-type
-   :cooperation.application/response-deadline
-   :cooperation.application/comment])
-
 (defn- application-belongs-to-project? [db application-id thk-project-id]
   (= thk-project-id
      (get-in (du/entity db application-id)
@@ -92,10 +86,10 @@
              application :application}
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}} ;; TODO: Ownership affects?
-   :pre [(application-belongs-to-project? db (:db/id application) project-id)]}
-  (tx [(merge (select-keys application
-                           (conj editable-application-attributes :db/id))
-              (meta-model/modification-meta user))]))
+   :pre [(application-belongs-to-project? db (:db/id application) project-id)]
+   :transact [(merge (select-keys application
+                                  (conj cooperation-model/editable-application-attributes :db/id))
+                     (meta-model/modification-meta user))]})
 
 
 (defmethod link-db/link-from [:cooperation.response :file]

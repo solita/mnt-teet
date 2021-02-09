@@ -33,6 +33,13 @@
           :opt [:cooperation.application/response-deadline
                 :cooperation.application/comment]))
 
+(def editable-application-attributes
+  [:cooperation.application/type
+   :cooperation.application/response-type
+   :cooperation.application/date
+   :cooperation.application/response-deadline
+   :cooperation.application/comment])
+
 (s/def :cooperation.response/status ::du/enum)
 (s/def :cooperation.response/date inst?)
 (s/def :cooperation.response/valid-until inst?)
