@@ -952,7 +952,8 @@
      location]
     [(tr "PDF")
      [:a {:href (common-controller/query-url :meeting/download-pdf
-                                             {:db/id (:db/id meeting)})
+                                             {:db/id (:db/id meeting)
+                                              :language @localization/selected-language})
           :target "_blank" } "Download"]]]])
 
 (defn meeting-details-add-agenda [e! user meeting pfrom]

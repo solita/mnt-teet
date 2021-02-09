@@ -332,7 +332,8 @@
 (defquery :meeting/download-pdf
   {:doc "Download meeting minutes as PDF"
    :context {:keys [db user]}
-   :args {id :db/id}
+   :args {id :db/id
+          language :language}
    :project-id (project-db/meeting-project-id db id)
    :authorization {:meeting/download-attachment {:db/id id
                                                  :link :meeting/organizer-or-reviewer}}}
@@ -344,7 +345,7 @@
           (fn [ostream]
             (try
               (pdf-export/hiccup->pdf
-               (meeting-pdf/meeting-pdf db user id)
+               (meeting-pdf/meeting-pdf db user language id)
                ostream)
               (catch Exception e
                 (log/error e "Exception while generating meeting PDF")))))})
