@@ -14,11 +14,12 @@
   (tu/local-login tu/mock-user-boss)
   (let [project-id (:thk.project/id (du/entity (tu/db) (tu/->db-id "p1")))
         third-party-name "party of third"
-        third-party {:cooperation.3rd-party/name third-party-name
+        third-party {:db/id "new-third-party"
+                     :cooperation.3rd-party/name third-party-name
                      :cooperation.3rd-party/id-code "123"
                      :cooperation.3rd-party/email "party@example.om"
                      :cooperation.3rd-party/phone "2222"}
-        third-party-id (get-in (tu/local-command :cooperation/create-3rd-party
+        third-party-id (get-in (tu/local-command :cooperation/save-3rd-party
                                                  {:thk.project/id project-id
                                                   :third-party third-party})
                                [:tempids "new-third-party"])

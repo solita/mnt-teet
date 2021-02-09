@@ -1,5 +1,5 @@
 context('Cooperation', function() {
-    before(() => {
+    beforeEach(() => {
 
         cy.request({method: "POST",
                     url: "/testsetup/task",
@@ -136,4 +136,22 @@ context('Cooperation', function() {
 
     })
 
+    it("is possible to delete 3rd party without applications", function() {
+        cy.wrap(`deleteme${new Date().getTime()}`).as("tpname")
+
+        cy.visit(`#/projects/${this.projectID}/cooperation`)
+        cy.get("button.new-third-party").click()
+        cy.get("@tpname").then((n) => {
+            cy.formInput(":cooperation.3rd-party/name", n)
+            cy.formSubmit()
+            cy.get(`div[data-third-party=${n}] a`).click()
+            cy.get("button.edit-third-party").click()
+            cy.get("button#delete-button").click()
+            cy.get("button#confirm-delete").click()
+
+            // redirect back to main cooperation page
+            cy.location("hash").should("eq", `#/projects/${this.projectID}/cooperation`)
+        })
+
+    })
 })

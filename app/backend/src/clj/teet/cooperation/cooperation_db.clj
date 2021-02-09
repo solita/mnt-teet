@@ -177,3 +177,30 @@
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
     db (date/inc-days (date/now) (Integer/valueOf days))))
+
+(defn- ->third-party-id [id]
+  (if (uuid? id)
+    [:teet/id id]
+    id))
+
+(defn third-party-project-id
+  "Return project id for the third party. Third party id
+  can either be a UUID (:teet/id) or long (:db/id)."
+  [db third-party-id]
+  (ffirst
+   (d/q '[:find ?p
+          :where [?tp :cooperation.3rd-party/project ?p]
+          :in $ ?tp]
+        db (->third-party-id third-party-id))))
+
+(defn has-applications?
+  "Check if third party has applications."
+  [db third-party-id]
+  (boolean
+   (seq
+    (d/q '[:find ?a
+           :where
+           [?tp :cooperation.3rd-party/applications ?a]
+           [(missing? $ ?a :meta/deleted?)]
+           :in $ ?tp]
+         db (->third-party-id third-party-id)))))
