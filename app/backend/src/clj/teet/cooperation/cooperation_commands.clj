@@ -203,3 +203,12 @@
                 [:db/retractEntity contact-id]]
                (throw (ex-info "Application has no contact info"
                                {:error :no-contact-info})))})
+
+(defcommand :cooperation/delete-opinion
+  {:doc "Delete opinion from the application"
+   :spec (s/keys :req-un [::application-id ::opinion-id])
+   :context {:keys [user db]}
+   :payload {:keys [application-id opinion-id]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/edit-application {}}
+   :transact [[:db/retractEntity opinion-id]]})
