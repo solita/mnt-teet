@@ -174,9 +174,13 @@
   :new-third-party-created "Involved party created successfully",
   :all-third-parties "All involved parties",
   :add-application-response "Add involved party response",
+  :cant-delete-third-party-with-applications
+  "Involved party can be deleted if it has applications added to it",
   :create-opinion-title "Add opinion",
   :add-application-contact "Add contact",
+  :third-party-deleted "Involved party deleted",
   :create-opinion-button "Opinion of Competent Authority",
+  :application-edited "Application edited succesfully",
   :new-application-created "Application created successfully",
   :no-deadline "No deadline",
   :new-application-title "Add new application",
@@ -189,7 +193,7 @@
   :error
   {:upload-not-allowed "Upload not allowed",
    :coordination-task-missing
-   "Coordination task does not exist for the activity.",
+   "Coordination task does not exist for the activity, or it is in a state that does not allow file uploading.",
    :response-not-given "Files can be added after response is added",
    :coordination-task-status-mismatch
    "Task is not in a state that allows file upload.",
@@ -200,6 +204,7 @@
   :response-created "Response created successfully",
   :application-terms-expire-warning
   "The application terms will expire soon/have expired!",
+  :edit-third-party-title "Edit involved party",
   :opinion-saved "Opinion saved successfully",
   :new-third-party "Add involved party"},
  :dashboard

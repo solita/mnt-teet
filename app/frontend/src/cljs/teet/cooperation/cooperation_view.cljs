@@ -657,7 +657,7 @@
                              (fn [response]
                                (fn [e!]
                                  (e! (close-event))
-                                 #_(e! (cooperation-controller/->ApplicationCreated response)))))
+                                 (e! (cooperation-controller/->ApplicationEdited response)))))
               :spec ::cooperation-model/application-form}
    ^{:attribute :cooperation.application/type}
    [select/select-enum {:e! e! :attribute :cooperation.application/type}]
@@ -704,7 +704,8 @@
              :form-component [edit-application-form {:e! e!
                                                      :project-id (:thk.project/id project)}]
              :form-value (select-keys application
-                                      cooperation-model/editable-application-attributes)
+                                      (conj cooperation-model/editable-application-attributes
+                                            :db/id))
              :modal-title (tr [:cooperation :new-application-title])
              :button-component [buttons/button-secondary {}
                                 (tr [:buttons :edit])]}]]]

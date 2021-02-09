@@ -5,7 +5,9 @@
             [teet.common.common-controller :as common-controller]))
 
 (defrecord ThirdPartyCreated [name save-response])
+
 (defrecord ApplicationCreated [save-response])
+(defrecord ApplicationEdited [edit-response])
 
 (defrecord ResponseCreated [response edit?])
 (defrecord OpinionSaved [new? response])
@@ -26,6 +28,11 @@
              :params {:project (:project params)
                       :third-party third-party-teet-id
                       :application application-teet-id}})))
+
+  ApplicationEdited
+  (process-event [_ app]
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:cooperation :application-edited]))
+          common-controller/refresh-fx))
 
   ResponseCreated
   (process-event [{r :response
