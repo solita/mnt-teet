@@ -521,13 +521,12 @@
                                       :task related-task
                                       :small true}}}}]]))))])))
 
-
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
   (let [form-value @form-atom
         opinion-eid (:db/id form-value)
         application-eid (:db/id application)]
     (log/debug "db/id of opinion-form form-value: " opinion-eid)
-    [form/form
+    [form/form     
      {:e! e!
       :value form-value
       :on-change-event (form/update-atom-event form-atom merge)
@@ -536,13 +535,14 @@
                     application
                     (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
                     close-event)
-      :delete  (fn []
+      :delete  (do
                  (log/debug "calling SaveForm delete from opinion-form")
                  (common-controller/->SaveForm
-                  :cooperation/delete-contact-info ;; command here
-                  {:application-id application-eid}
-                  (fn [_response]
-                    ;; (reset! edit-contact? false) 
+                  :cooperation/delete-opinion ;; command here
+                  {:application-id application-eid
+                   :opinion-id opinion-eid}
+                  (fn opinion-delete-command-success-fx [_response]
+                    (close-event) ;; can we just call this like this?
                     (reset! form-atom {}) 
                     common-controller/refresh-fx)))
       ;; :delete #(log/debug "delete callback" %)
