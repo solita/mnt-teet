@@ -658,6 +658,9 @@
                                (fn [e!]
                                  (e! (close-event))
                                  (e! (cooperation-controller/->ApplicationEdited response)))))
+              :delete identity
+              :delete-title (tr [:cooperation :application-delete-confirm])
+              :delete-message (tr [:cooperation :application-delete-information])
               :spec ::cooperation-model/application-form}
    ^{:attribute :cooperation.application/type}
    [select/select-enum {:e! e! :attribute :cooperation.application/type}]

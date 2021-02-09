@@ -159,6 +159,7 @@
   :phone2 "Telefon"},
  :cooperation
  {:response "Vastus",
+  :application-delete-confirm "Kustutan taotluse?",
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
@@ -169,6 +170,8 @@
   :no-activity-manager
   "Seotud tegevusele ei ole määratud projektijuhti.",
   :opinion-title "Seisukoht",
+  :application-delete-information
+  "Taotlusele sisestatud info kustutatakse lõplikult.",
   :opinion "Seisukoht",
   :enter-response "Sisestan kaasatud osapoole vastuse",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",

@@ -159,6 +159,7 @@
   :phone2 "Phone"},
  :cooperation
  {:response "Response",
+  :application-delete-confirm "Delete the application?",
   :competent-authority-name "Transport Administration ",
   :conclusion "Conclusion",
   :applications "APPLICATIONS",
@@ -169,6 +170,8 @@
   :no-activity-manager
   "No project manager has been assigned to the related activity.",
   :opinion-title "Opinion",
+  :application-delete-information
+  "Information will be removed and cannot be undone.",
   :opinion "Opinion",
   :enter-response "Enter involved party response",
   :new-third-party-created "Involved party created successfully",

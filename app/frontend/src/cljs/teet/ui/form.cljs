@@ -81,7 +81,7 @@
      :padding-bottom "1rem"})))
 
 (defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
-                           delete-disabled-error-text delete-link?
+                           delete-title delete-disabled-error-text delete-link?
                            cancel validate disabled?]}]
   (let [delete-element
         (when delete
@@ -100,7 +100,9 @@
              (when delete-cancel-button-text
                {:cancel-button-text delete-cancel-button-text})
              (when delete-disabled-error-text
-               {:disabled true}))
+               {:disabled true})
+             (when delete-title
+               {:modal-title delete-title}))
             (tr [:buttons :delete])]])]
     [:div
      [:div {:class (<class form-buttons)}
@@ -395,6 +397,7 @@
            spec            ;; Spec for validating form fields
            id              ;; Id for the form element
            delete          ;; Delete function
+           delete-title    ;; title shown in delete confirmation dialog
            delete-message  ;; message shown in delete confirmation dialog
            delete-confirm-button-text ;; label for confirm delete button
            delete-cancel-button-text ;; label form cancel delete button
@@ -435,6 +438,7 @@
                                             (validate value @current-fields)))
                              :delete (when delete           ;;TODO inconsistent with save-event and cancel event
                                        #(e! delete))
+                             :delete-title delete-title
                              :delete-message delete-message
                              :delete-confirm-button-text delete-confirm-button-text
                              :delete-cancel-button-text delete-cancel-button-text
