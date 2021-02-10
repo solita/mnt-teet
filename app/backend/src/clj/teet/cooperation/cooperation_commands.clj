@@ -168,7 +168,8 @@
    :authorization {:cooperation/application-approval {}}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
    :transact
-   (store-large-text!
+   (db-api-large-text/store-large-text!
+    cooperation-model/rich-text-fields
     [{:db/id application-id
       :cooperation.application/opinion
       (merge
