@@ -14,7 +14,8 @@
             [teet.util.string :as string]
             [clojure.string :as str]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.typography :as typography])
+            [teet.ui.typography :as typography]
+            [teet.ui.form :as form])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -234,15 +235,35 @@
     [:f> wysiwyg-editor {:value editor-state}]
     [:span]))
 
+
+
+(defrecord RichTextFieldValue [editor-state]
+  form/ToValue
+  (to-value [_]
+    (editor-state->markdown editor-state)))
+
+(defn- ->editor-state [value]
+  (cond
+    (nil? value)
+    (markdown->editor-state "")
+
+    (string? value)
+    (markdown->editor-state value)
+
+    (instance? RichTextFieldValue value)
+    (:editor-state value)
+
+    :else (throw (ex-info "Unrecognized rich text form value"
+                          {:unrecognized-value value}))))
 (defn rich-text-field
   "Rich text input that can be used in forms."
   [{:keys [value on-change label required error read-only?]}]
-  [:f> wysiwyg-editor {:value (if (string? value)
-                                (markdown->editor-state value)
-                                value)
+
+  [:f> wysiwyg-editor {:value (->editor-state value)
                        :read-only? read-only?
                        :label label
                        :required required
                        :error error
                        :on-change (when-not read-only?
-                                    on-change)}])
+                                    #(on-change
+                                      (->RichTextFieldValue %)))}])

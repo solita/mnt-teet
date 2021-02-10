@@ -15,7 +15,24 @@
             [clojure.set :as set]
             [teet.common.common-styles :as common-styles]
             [teet.ui.panels :as panels]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [clojure.walk :as walk]))
+
+(defprotocol ToValue
+  :extend-via-metadata true
+  (to-value [this]
+    "Return the actual form value from this internal field state."))
+
+(defn serialize
+  "Turn form into serializable form that can be sent as payload.
+  Calls to-value on all internal field states."
+  [form]
+  (walk/prewalk
+   (fn [x]
+     (if (satisfies? ToValue x)
+       (to-value x)
+       x))
+   form))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
