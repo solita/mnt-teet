@@ -107,9 +107,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
    :pre [(application-belongs-to-project? db (:db/id application) project-id)]
-   :transact [(merge (select-keys application
-                                  (conj cooperation-model/editable-application-attributes :db/id))
-                     (meta-model/modification-meta user))]})
+   :transact [(list 'teet.cooperation.cooperation-tx/edit-application user application)]})
 
 (defcommand :cooperation/delete-application
   {:doc "Delete a given application in a given project"

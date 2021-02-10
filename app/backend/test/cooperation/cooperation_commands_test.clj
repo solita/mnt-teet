@@ -44,12 +44,7 @@
                               application-payload)
 
         ;; Editing
-        new-application-id (get-in res [:tempids "new-application"])
-
-        edit-res (tu/local-command :cooperation/edit-application
-                                   {:thk.project/id project-id
-                                    :application {:db/id new-application-id
-                                                  :cooperation.application/type :cooperation.application.type/building-permit-order}})]
+        new-application-id (get-in res [:tempids "new-application"])]
 
     (testing "Can create a third party"
       (is (some? third-party-id)))
@@ -71,9 +66,6 @@
                                :cooperation.3rd-party/name third-party-name
                                :application invalid-date-application}))))
 
-    (testing "Can edit application"
-      (is (some? edit-res)))
-
     (testing "Application and project need to match when editing"
       (is (thrown?
            Exception
@@ -83,6 +75,37 @@
                               :application {:db/id new-application-id
                                             :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
+
+    ;; Application editing
+    (testing "Application can be edited"
+      (is (some? (tu/local-command :cooperation/edit-application
+                                   {:thk.project/id project-id
+                                    :application {:db/id new-application-id
+                                                  :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
+
+
+    (testing "Application can't be edited if it has a third party response"
+      (let [;; Create new application
+            new-application-id (-> (tu/local-command :cooperation/create-application
+                                                     application-payload)
+                                   (get-in [:tempids "new-application"]))]
+        ;; Create response
+        (tu/local-command :cooperation/save-application-response
+                          {:thk.project/id project-id
+                           :application-id new-application-id
+                           :form-data {:cooperation.response/status :cooperation.response.status/no-objection
+                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/valid-months 12}})
+
+        ;; Can't be edited
+        (is (thrown?
+             Exception
+             (tu/local-command :cooperation/edit-application
+                               {:thk.project/id project-id
+                                :application {:db/id new-application-id
+                                              :cooperation.application/type :cooperation.application.type/building-permit-order}})))))
+
+    ;; Application deletion
     (testing "Application can be deleted"
       (is (some? (tu/local-command :cooperation/delete-application
                                    {:thk.project/id project-id
@@ -101,6 +124,7 @@
                                        :cooperation.response/date (dateu/now)
                                        :cooperation.response/valid-months 12}})
 
+        ;; Can't be deleted
         (is (thrown?
              Exception
              (tu/local-command :cooperation/delete-application
