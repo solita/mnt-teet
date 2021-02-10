@@ -5,7 +5,7 @@
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.credentials :as aws-credentials]
-            [clojure.string :as str]))
+            [teet.util.hash :refer [sha256 hex]]))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 
@@ -165,9 +165,7 @@
   (defn- timestamp [d]
     (.format fmt d)))
 
-(defn- hex [bytes]
-  (str/join ""
-            (map #(format "%02x" %) bytes)))
+
 
 (defn- ->b [string]
   (.getBytes string "UTF-8"))
@@ -177,10 +175,6 @@
         mac (doto (javax.crypto.Mac/getInstance "HmacSHA256")
               (.init secret-key))]
     (.doFinal mac content-bytes)))
-
-(defn- sha256 [bytes]
-  (let [d (java.security.MessageDigest/getInstance "SHA-256")]
-    (.digest d bytes)))
 
 (def credentials-provider (aws-credentials/cached-credentials-with-auto-refresh
                            (aws-credentials/default-credentials-provider (aws/default-http-client))))
