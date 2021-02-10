@@ -48,10 +48,11 @@
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
                            show-label? show-empty-selection? error error-text required empty-selection-label
-                           data-item? read-only?]
+                           data-item? read-only? dark-theme?]
                         :or {format-item :label
                              show-label? true
-                             data-item? false}}]
+                             data-item? false
+                             dark-theme? false}}]
   (let [option-idx (zipmap items (range))
         change-value (fn [e]
                        (let [val (-> e .-target .-value)]
@@ -59,7 +60,7 @@
                            (on-change nil)
                            (on-change (nth items (int val))))))]
     [:label {:for id
-             :class (<class common-styles/input-label-style read-only?)}
+             :class (<class common-styles/input-label-style read-only? dark-theme?)}
      (when show-label?
        (if label-element
          [label-element label (when required [common/required-astrix])]

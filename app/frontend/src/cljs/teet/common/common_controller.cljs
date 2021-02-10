@@ -17,7 +17,6 @@
              :refer [fromString fromNumber]
              :rename {fromString string->long
                       fromNumber number->long}]
-            [teet.ui.query :as query]
             [clojure.tools.reader :as reader]))
 
 (defn ->long [x]
@@ -51,26 +50,6 @@
 ;; Helpers for faking backend requests in unit tests
 (defonce test-mode? (atom false))
 (defonce test-requests (atom []))
-
-;; Events to run after session has been initialized/user has logged in (has a valid jwt)
-(defonce init-events (atom {:query-request-permissions #(query/->Query :authorization/permissions
-                                                                       {}
-                                                                       [:authorization/permissions]
-                                                                       nil)}))
-
-(defn register-init-event!
-  "Register an init event to be run when user has logged in."
-  [name constructor]
-  (swap! init-events assoc name constructor))
-
-(defn run-init-events!
-  "Run all registered init events."
-  [e!]
-  (doseq [[name constructor] @init-events]
-    (log/info "Run init event: " name)
-    (e! (constructor)))
-  ;; Clear init events
-  (reset! init-events nil))
 
 (defn take-test-request!
   "Return test request matching predicate and remove it from the list.
