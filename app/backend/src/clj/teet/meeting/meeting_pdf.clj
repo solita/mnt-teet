@@ -16,8 +16,8 @@
    :height "29.7cm"
 
    ;; 1cm margins
-   :margin-top "1.2cm" :margin-bottom "1.2cm"
-   :margin-left "3cm" :margin-right "1.5cm"
+   :margin-top "0.2cm" :margin-bottom "1.2cm"
+   :margin-left "2.8cm" :margin-right "1.4cm"
 
    :body {:margin-top "1cm"}
    :header {:extent "1cm"}
@@ -37,12 +37,12 @@
    :border-top-color "#D2D3D8"})
 
 (def reviewers-look-and-feel
-  {:font-size "16px"
+  {:font-size "14px"
    :padding-top 9
    :padding-bottom 12})
 
 (def reviewers-date-look-and-feel
-  {:font-size "16px"
+  {:font-size "14px"
    :padding-top 9
    :padding-bottom 12
    :padding-left 12})
@@ -278,7 +278,7 @@
    [:fo:block {:font-style "normal" :font-size "16px" :font-weight 700 :space-after 11}
     (tr [:meeting :approvals])]
    (if (seq (:review/decision (first review-of)))
-     (table-4-columns {:first-width    "10%" :left-width "30%" :center-width "40%" :right-width "20%"
+     (table-4-columns {:first-width    "10%" :left-width "40%" :center-width "20%" :right-width "30%"
                        :first-content  (reviewers-yes-no review-of)
                        :left-content   (reviewers-names review-of)
                        :center-content (reviewers-decisions review-of)
@@ -361,7 +361,7 @@
                            :right-width   "55%" :right-header (tr [:meeting :absentees-title])
                            :left-content  [:fo:block (participants meeting false)]
                            :right-content [:fo:block (participants meeting true)]
-                           :fonts         {:header-font {:font-size "16px" :font-weight "400" :font-style "normal"}
+                           :fonts         {:header-font {:font-size "14px" :font-weight "400" :font-style "normal"}
                                            :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
         [:fo:block (list-of-topics (:meeting/agenda meeting))]
         [:fo:block (reviews (:review/_of meeting))]
