@@ -121,7 +121,6 @@
    :pre [(application-belongs-to-project? db application-id project-id)]
    :transact [(list 'teet.cooperation.cooperation-tx/delete-application user application-id)]})
 
-
 (defmethod link-db/link-from [:cooperation.response :file]
   [db _user [_ response-id] _type to]
   ;; Checks that the uploaded file is in the same project the cooperation response is in

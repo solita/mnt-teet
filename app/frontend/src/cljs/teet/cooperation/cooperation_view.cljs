@@ -879,7 +879,7 @@
                                (fn [e!]
                                  (e! (close-event))
                                  (e! (cooperation-controller/->ApplicationEdited response)))))
-              :delete identity
+              :delete (cooperation-controller/->DeleteApplication (:db/id @form-atom) project-id)
               :delete-title (tr [:cooperation :application-delete-confirm])
               :delete-message (tr [:cooperation :application-delete-information])
               :spec ::cooperation-model/application-form}
