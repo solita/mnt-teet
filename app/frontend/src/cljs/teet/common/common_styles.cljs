@@ -280,7 +280,8 @@
 
 (defn header-with-actions []
   {:justify-content :space-between
-   :display :flex})
+   :display :flex
+   :align-items :center})
 
 (defn space-between-center
   []
@@ -418,6 +419,14 @@
                   :bold
                   :normal)})
 
+(defn white-link-button-style
+  []
+  ^{:pseudo {:hover {:text-decoration :none}}}
+  {:color theme-colors/white
+   :display :flex
+   :text-decoration :underline
+   :align-items :center})
+
 (defn gray-lightest-background-style []
   {:background-color theme-colors/gray-lightest})
 
@@ -500,8 +509,10 @@
    :flex 1})
 
 (defn input-label-style
-  [disabled?]
+  [disabled? dark-theme?]
   (merge {:display :block
-          :color theme-colors/black-coral}
+          :color (if dark-theme?
+                   theme-colors/white
+                   theme-colors/black-coral)}
          (when disabled?
            {:color theme-colors/text-disabled})))
