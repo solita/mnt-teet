@@ -17,7 +17,8 @@
             [teet.comment.comment-db :as comment-db]
             [teet.pdf.pdf-export :as pdf-export]
             [teet.meeting.meeting-pdf :as meeting-pdf]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.entity.entity-db :as entity-db]))
 
 
 (defn project-related-unit-ids
@@ -288,7 +289,8 @@
                     (merge
                       meeting
                       (comment-db/comment-count-of-entity-by-status
-                        db user meeting-id :meeting)))}
+                       db user meeting-id :meeting)
+                      (entity-db/entity-seen db user meeting-id)))}
 
         (fn [entity]
           (contains? entity :link/to))))))
@@ -332,7 +334,8 @@
 (defquery :meeting/download-pdf
   {:doc "Download meeting minutes as PDF"
    :context {:keys [db user]}
-   :args {id :db/id}
+   :args {id :db/id
+          language :language}
    :project-id (project-db/meeting-project-id db id)
    :authorization {:meeting/download-attachment {:db/id id
                                                  :link :meeting/organizer-or-reviewer}}}
@@ -344,7 +347,7 @@
           (fn [ostream]
             (try
               (pdf-export/hiccup->pdf
-               (meeting-pdf/meeting-pdf db user id)
+               (meeting-pdf/meeting-pdf db user language id)
                ostream)
               (catch Exception e
                 (log/error e "Exception while generating meeting PDF")))))})

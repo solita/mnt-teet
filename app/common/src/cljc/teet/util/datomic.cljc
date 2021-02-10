@@ -196,16 +196,3 @@
       (vec
        (concat retractions [(assoc changes :db/id id)]))
       [])))
-
-#?(:clj
-  (defn entity-by-teet-id
-    "Return entity :db/id for the given :teet/id UUID.
-  Checks that the entity has a required attribute."
-    [required-attribute-kw db teet-id]
-    (ffirst
-     (d/q [:find '?e
-           :where
-           ['?e :teet/id '?id]
-           ['?e required-attribute-kw '_]
-           :in '$ '?id]
-          db teet-id))))

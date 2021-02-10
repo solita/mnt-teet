@@ -3,7 +3,10 @@
             [teet.cooperation.cooperation-model :as cooperation-model]
             [clojure.string :as str]
             [teet.util.date :as date]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [clj-time.core :as t]
+            [teet.project.task-model :as task-model]
+            [teet.entity.entity-db :as entity-db]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -78,10 +81,10 @@
 
 (def third-party-by-teet-id
   "Find 3rd party by :teet/id. Returns entity :db/id or nil."
-  (partial du/entity-by-teet-id :cooperation.3rd-party/name))
+  (partial entity-db/entity-by-teet-id :cooperation.3rd-party/name))
 
 (def application-by-teet-id
-  (partial du/entity-by-teet-id :cooperation.application/type))
+  (partial entity-db/entity-by-teet-id :cooperation.application/type))
 
 
 
@@ -99,18 +102,20 @@
 
 (defn third-party-application-task
   [db third-party-id application-id]
-  (ffirst
-   (d/q '[:find (pull ?task [*]) ;; todo: add some param definitions
-          :in $ ?third-part ?application-id
-          :where
-          [?third-part :cooperation.3rd-party/applications ?applications]
-          [(missing? $ ?applications :meta/deleted?)]
-          [?applications :cooperation.application/activity ?activities]
-          [(missing? $ ?activities :meta/deleted?)]
-          [?activities :activity/tasks ?task]
-          [(missing? $ ?task :meta/deleted?)]
-          [?task :task/type :task.type/no-objection-coordination]]
-        db third-party-id application-id)))
+  (let [task (ffirst
+               (d/q '[:find (pull ?task [*])
+                      :in $ ?third-part ?application-id
+                      :where
+                      [?third-part :cooperation.3rd-party/applications ?applications]
+                      [(missing? $ ?applications :meta/deleted?)]
+                      [?applications :cooperation.application/activity ?activities]
+                      [(missing? $ ?activities :meta/deleted?)]
+                      [?activities :activity/tasks ?task]
+                      [(missing? $ ?task :meta/deleted?)]
+                      [?task :task/type :task.type/no-objection-coordination]]
+                    db third-party-id application-id))]
+    (when (task-model/can-submit? task)
+      task)))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
@@ -182,3 +187,30 @@
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
     db (date/inc-days (date/now) (Integer/valueOf days))))
+
+(defn- ->third-party-id [id]
+  (if (uuid? id)
+    [:teet/id id]
+    id))
+
+(defn third-party-project-id
+  "Return project id for the third party. Third party id
+  can either be a UUID (:teet/id) or long (:db/id)."
+  [db third-party-id]
+  (ffirst
+   (d/q '[:find ?p
+          :where [?tp :cooperation.3rd-party/project ?p]
+          :in $ ?tp]
+        db (->third-party-id third-party-id))))
+
+(defn has-applications?
+  "Check if third party has applications."
+  [db third-party-id]
+  (boolean
+   (seq
+    (d/q '[:find ?a
+           :where
+           [?tp :cooperation.3rd-party/applications ?a]
+           [(missing? $ ?a :meta/deleted?)]
+           :in $ ?tp]
+         db (->third-party-id third-party-id)))))

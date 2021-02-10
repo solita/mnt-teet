@@ -86,7 +86,7 @@
 
 (def third-party-display-attrs
   "Attributes to pull for showing a 3rd party"
-  [:db/id
+  [:db/id :teet/id
    :cooperation.3rd-party/name
    :cooperation.3rd-party/phone
    :cooperation.3rd-party/email

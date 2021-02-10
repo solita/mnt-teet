@@ -38,6 +38,9 @@
     :user/family-name "Consultant"
     :user/email "carla.consultant@example.com"
                                         ; :user/organization "ACME Road Consulting, Ltd."
+    :user/permissions [{:db/id "carla-permission"
+                        :permission/role :external-consultant
+                        :permission/valid-from (java.util.Date.)}]
     }
 
    {:user/id boss-id
