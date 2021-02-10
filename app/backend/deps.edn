@@ -16,7 +16,8 @@
         org.apache.xmlgraphics/fop {:mvn/version "2.3"}
         com.vladsch.flexmark/flexmark {:mvn/version "0.62.2"}
 
-
+        ;; Send RFC822-compliant email
+        com.draines/postal {:mvn/version  "2.0.4"}
 
         ;; JWT and JWK
         com.nimbusds/nimbus-jose-jwt {:mvn/version "7.9" ;; oct 2019

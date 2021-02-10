@@ -17,10 +17,23 @@ context('Cooperation', function() {
 
     })
 
-    it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
+    function createCooperation(name) {
+        cy.get("button.new-third-party").click()
 
+        cy.formInput(
+            ":cooperation.3rd-party/name", name,
+            ":cooperation.3rd-party/id-code", "123456",
+            ":cooperation.3rd-party/email", "test@example.com",
+            ":cooperation.3rd-party/phone", "555-1234-567890")
+
+        cy.formSubmit()
+
+        cy.get(".MuiSnackbar-root") // snackbar message is shown
+    }
+
+    function navigateToProjectCooperations(projectId) {
         // visit project page
-        cy.visit("#/projects/"+this.projectID)
+        cy.visit("#/projects/"+projectId)
 
         // open menu and select cooperation
         cy.get("button.project-menu").click({force: true})
@@ -29,6 +42,11 @@ context('Cooperation', function() {
         cy.get(".cooperation-overview-page")
 
         // Create new third party
+    }
+
+    it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
+
+        navigateToProjectCooperations(this.projectID);
 
         cy.get("button.new-third-party").click()
 
@@ -152,6 +170,24 @@ context('Cooperation', function() {
             // redirect back to main cooperation page
             cy.location("hash").should("eq", `#/projects/${this.projectID}/cooperation`)
         })
+
+    })
+
+    it("Cooperation search filtering should work", function () {
+        const newCompanyName = "xxxx"
+        navigateToProjectCooperations(this.projectID);
+        createCooperation(newCompanyName);
+
+        cy.formInput(
+            ":third-party-name", "x");
+
+        cy.get(`.cooperation-overview-page [data-third-party='${newCompanyName}'] a`).should("be.visible");
+
+        // Add non matching string to the name search and the company should not me found
+        cy.formInput(
+            ":third-party-name", "abcd");
+
+        cy.get(`.cooperation-overview-page [data-third-party='${newCompanyName}'] a`).should("not.exist");
 
     })
 })

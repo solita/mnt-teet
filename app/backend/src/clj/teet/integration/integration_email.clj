@@ -3,10 +3,9 @@
   (:require [cognitect.aws.client.api :as aws]
             [clojure.string :as str]
             [teet.environment :as environment]
+            postal.core
             [teet.localization :refer [with-language tr]])
   (:import (java.util Base64)))
-
-(def ^:private email (delay (aws/client {:api :email})))
 
 (def boundary-digits "0123456789abcdefghijklmnopqrstuvwxyz")
 
@@ -58,13 +57,10 @@
              "\r\n\r\n"
              (->b64 body))))))
 
-(defn- send-email!*
-  "Invoke email sending"
-  [msg]
-  (aws/invoke
-   @email
-   {:op :SendRawEmail
-    :request {:RawMessage {:Data (.getBytes (raw-message msg) "UTF-8")}}}))
+(defn send-email-smtp!*
+  "Send msg email using smtp config"
+  [config msg]
+  (postal.core/send-message config msg))
 
 (defn- with-subject-prefix
   "Add prefix to subject (if configured)"
@@ -93,8 +89,9 @@
 (defn send-email! [msg]
   (let [config (environment/config-map
                 {:subject-prefix [:email :subject-prefix]
-                 :contact-address [:email :contact-address]})]
-    (send-email!*
-     (->> msg
+                 :contact-address [:email :contact-address]})
+        smtp-node-config (environment/config-value :email :server)]
+    (send-email-smtp!* smtp-node-config
+      (->> msg
           (with-subject-prefix config)
           (with-data-protection-footer config)))))
