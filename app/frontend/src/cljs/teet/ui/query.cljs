@@ -50,7 +50,7 @@
         state-atom (when-not state-path
                      (r/atom nil))
         filter-atom (r/atom {})
-        debounce (functions/debounce (fn []
+        debounced-refresh (functions/debounce (fn []
                                        (e! (common-controller/->Refresh)))
                                      250)
         change-filter #(swap! filter-atom merge %)
@@ -60,7 +60,7 @@
                                   (* 1000 poll-seconds)))]
     (add-watch filter-atom :requery-filters
                (fn [_ _ _ _]
-                 (debounce)))
+                 (debounced-refresh)))
     (e! (->Query query args state-path state-atom))
     (r/create-class
       {:component-will-unmount #(do
