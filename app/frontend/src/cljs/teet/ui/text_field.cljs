@@ -84,7 +84,7 @@
 
 (defn TextField
   [{:keys [label id type error style input-button-icon read-only? inline?
-           input-button-click required input-style
+           input-button-click required input-style dark-theme?
            multiline error-text input-class start-icon
            maxrows rows hide-label? end-icon label-element]
     :as props
@@ -93,7 +93,7 @@
                   :textarea
                   :input)]
     [:label {:for id
-             :class (<class common-styles/input-label-style read-only?)
+             :class (<class common-styles/input-label-style read-only? dark-theme?)
              :style style}
      (when-not hide-label?
        (if label-element

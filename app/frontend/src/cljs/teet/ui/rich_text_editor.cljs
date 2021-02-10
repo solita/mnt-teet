@@ -182,7 +182,8 @@
   :value      current draftjs EditorState object (or nil for empty)
   :on-change  callback to update editor state"
 
-  [{:keys [value on-change id label required error]}]
+  [{:keys [value on-change id label required error dark-theme?]
+    :or {dark-theme? false}}]
   (js>
    (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
@@ -206,7 +207,7 @@
      [:div (when id {:id id})
       [:div
        (when label
-         [:label {:class (<class common-styles/input-label-style read-only?)}
+         [:label {:class (<class common-styles/input-label-style read-only? dark-theme?)}
           [typography/Text2Bold
            label (when required
                    [common/required-astrix])]])

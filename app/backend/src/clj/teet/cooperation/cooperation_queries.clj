@@ -13,7 +13,9 @@
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
    :context {:keys [db user]}
-   :args {project-id :thk.project/id}
+   :args {project-id :thk.project/id
+          filters :filters
+          :as args}
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/view-cooperation-page {}}}
   (let [p [:thk.project/id project-id]]
@@ -21,7 +23,7 @@
      db
      (du/idents->keywords
       {:project (project-db/project-by-id db p)
-       :overview (cooperation-db/overview db p)}))))
+       :overview (cooperation-db/overview {:db db :project-eid p :search-filters filters})}))))
 
 (defquery :cooperation/third-party
   {:doc "Fetches overview plus a given 3rd party and all its applications"
@@ -37,8 +39,8 @@
      (du/idents->keywords
       {:third-party (d/pull db cooperation-model/third-party-display-attrs tp-id)
        :project (project-db/project-by-id db p)
-       :overview (cooperation-db/overview db p
-                                          #(= tp-id %))}))))
+       :overview (cooperation-db/overview {:db db :project-eid p
+                                           :all-applications-pred #(= tp-id %)})}))))
 
 (defquery :cooperation/application
   {:doc "Fetch overview plus a single 3rd party appliation with all information"
@@ -48,16 +50,16 @@
           application-teet-id :application-teet-id}
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/view-cooperation-page {}}}
-  (db-api-large-text/with-large-text
-    cooperation-model/rich-text-fields
-    (let [p [:thk.project/id project-id]
-          tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)
-          app-id (cooperation-db/application-by-teet-id db application-teet-id)]
+  (let [p [:thk.project/id project-id]
+        tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)
+        app-id (cooperation-db/application-by-teet-id db application-teet-id)]
+    (db-api-large-text/with-large-text
+      cooperation-model/rich-text-fields
       (meta-query/without-deleted
        db
        (du/idents->keywords
         {:project (project-db/project-by-id db p)
-         :overview (cooperation-db/overview db p)
+         :overview (cooperation-db/overview {:db db :project-eid p})
          :third-party (link-db/fetch-links
                        {:db db
                         :user user

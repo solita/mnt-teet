@@ -30,7 +30,8 @@
             [teet.ui.authorization-context :as authorization-context]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.ui.validation :as validation]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.ui.context :as context]))
 
 
 (defn- third-party-form [{:keys [e! project-id edit? has-applications?]}
@@ -274,6 +275,26 @@
 (defn- selected-third-party-teet-id [{:keys [params] :as _app}]
   (some-> params :third-party uuid))
 
+(defn cooperation-application-search
+  "Uses context :query-filter created by the query component to manage the filters for the query component"
+  [e!]
+  [context/consume :query-filter
+   (fn [{:keys [value on-change reset-filter]}]
+     [:div {:class (<class project-navigator-view/navigator-container-style true)}
+      [:div {:style {:margin-right "1rem"}}
+       [form/form2 {:e! e!
+                    :on-change-event on-change
+                    :value value}
+        [form/field :third-party-name
+         [text-field/TextField {:start-icon icons/action-search
+                                :dark-theme? true
+                                :label (tr [:fields :cooperation.3rd-party/name])}]]]
+       [:div {:style {:display :flex
+                      :justify-content :flex-end}}
+        [buttons/link-button-with-icon {:on-click reset-filter
+                                        :icon [icons/content-clear {:font-size :small}]}
+         (tr [:search :clear-filters])]]]])])
+
 (defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   [project-view/project-full-page-structure
    {:e! e!
@@ -283,11 +304,22 @@
     :right-panel right-content
     :main main-content}])
 
+(defn- cooperation-overview-structure
+  "Only in the overview page do we want the cooperation search to be in place instead of the third party navigator"
+  [e! app project main-content & [right-content]]
+  [project-view/project-full-page-structure
+   {:e! e!
+    :app app
+    :project project
+    :left-panel [cooperation-application-search e!]
+    :right-panel right-content
+    :main main-content}])
+
 (defn overview-page [e! app {:keys [project overview]}]
 
   [:div.cooperation-overview-page {:class (<class common-styles/flex-column-1)}
-   [cooperation-page-structure
-    e! app project overview
+   [cooperation-overview-structure
+    e! app project
     [:<>
      [:div {:class (<class common-styles/margin-bottom 1.5)}
       [typography/Heading2 (tr [:cooperation :page-title])]
@@ -532,12 +564,13 @@
                [:div
                 [:div {:class (<class common-styles/header-with-actions)}
                  [typography/Heading2 (tr [:common :files])]
-                 [common/popper-tooltip error-msg
-                  [buttons/button-primary {:size :small
-                                           :on-click #(upload! {})
-                                           :disabled (not can-upload?)
-                                           :end-icon (r/as-element [icons/content-add])}
-                   (tr [:cooperation :add-files])]]]
+                 [:div
+                  [common/popper-tooltip error-msg
+                   [buttons/button-primary {:size :small
+                                            :on-click #(upload! {})
+                                            :disabled (not can-upload?)
+                                            :end-icon (r/as-element [icons/content-add])}
+                    (tr [:cooperation :add-files])]]]]
                 [link-view/links
                  {:e! e!
                   :links linked-files

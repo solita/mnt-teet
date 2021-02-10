@@ -7,7 +7,8 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.common.common-controller :as common-controller]
             [teet.app-state :as app-state]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.ui.query :as query]))
 
 (defrecord Login [demo-user])
 (defrecord Logout [])
@@ -21,6 +22,25 @@
 (def ^{:const true
        :doc "How often to refresh JWT token (15 minutes)"}
   refresh-token-timeout-ms (* 1000 60 15))
+
+;; Events to run after session has been initialized/user has logged in (has a valid jwt)
+(defonce init-events (atom {:query-request-permissions #(query/->Query :authorization/permissions
+                                                                       {}
+                                                                       [:authorization/permissions]
+                                                                       nil)}))
+(defn register-init-event!
+  "Register an init event to be run when user has logged in."
+  [name constructor]
+  (swap! init-events assoc name constructor))
+
+(defn run-init-events!
+  "Run all registered init events."
+  [e!]
+  (doseq [[name constructor] @init-events]
+    (log/info "Run init event: " name)
+    (e! (constructor)))
+  ;; Clear init events
+  (reset! init-events nil))
 
 (extend-protocol t/Event
   CheckExistingSession ; Check existing token from browser localstorage storage
@@ -103,7 +123,7 @@
                         :timeout refresh-token-timeout-ms
                         :event ->RefreshToken}
                        (fn [e!]
-                         (common-controller/run-init-events! e!))]
+                         (run-init-events! e!))]
               effects (if after-login?
                         (conj effects (merge {::tuck-effect/type :navigate
                                               :page :projects}
