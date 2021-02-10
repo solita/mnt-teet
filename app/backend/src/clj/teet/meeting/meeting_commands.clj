@@ -21,14 +21,6 @@
             [teet.db-api.db-api-large-text :as db-api-large-text])
   (:import (java.util Date)))
 
-(defn- store-large-text! [form]
-  (db-api-large-text/store-large-text!
-   (environment/api-context)
-   meeting-model/rich-text-fields
-   form))
-
-
-
 (defn update-meeting-tx
   [user meeting-id tx-data]
   [(list 'teet.meeting.meeting-tx/update-meeting
@@ -170,7 +162,8 @@
                                           :link :meeting/organizer-or-reviewer}}
    :pre [(agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
    :transact
-   (store-large-text!
+   (db-api-large-text/store-large-text!
+    meeting-model/rich-text-fields
     (update-meeting-tx
      user
      meeting-id

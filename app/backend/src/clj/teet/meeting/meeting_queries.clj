@@ -21,12 +21,6 @@
             [teet.entity.entity-db :as entity-db]
             [teet.db-api.db-api-large-text :as db-api-large-text]))
 
-(defn- with-large-text! [form]
-  (db-api-large-text/with-large-text
-    (environment/api-context)
-    meeting-model/rich-text-fields
-    form))
-
 (defn project-related-unit-ids
   [db api-context project-eid]
   (let [units (:thk.project/related-cadastral-units (datomic-util/entity db project-eid))]
@@ -250,7 +244,8 @@
    :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
                                        :link :thk.project/owner
                                        :access :read}}}
-  (with-large-text!
+  (db-api-large-text/with-large-text
+    meeting-model/rich-text-fields
     (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
       (link-db/fetch-links
        db user

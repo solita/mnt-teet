@@ -370,7 +370,8 @@
     ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
-       [typography/Paragraph description])
+       [typography/Paragraph
+        [rich-text-editor/display-markdown description]])
      [task-basic-info task]
      [task-file-view e! activity task (:upload! upload-controls) files-form project-id]
      [task-file-upload {:e! e!

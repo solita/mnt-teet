@@ -15,12 +15,6 @@
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.environment :as environment]))
 
-(defn- store-large-text! [form]
-  (db-api-large-text/store-large-text!
-   (environment/api-context)
-   cooperation-model/rich-text-fields
-   form))
-
 (defn- third-party-is-new-or-belongs-to-project?
   "Check :db/id of new 3rd party form data and check if it is
   new (string) or already belongs to the project."
@@ -125,7 +119,8 @@
    :authorization {:cooperation/application-approval {}}
    :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
-   (store-large-text!
+   (db-api-large-text/store-large-text!
+    cooperation-model/rich-text-fields
     (let [existing-id (:db/id response-payload)
           response-id (or existing-id "new-application-response")
           old-response (if existing-id

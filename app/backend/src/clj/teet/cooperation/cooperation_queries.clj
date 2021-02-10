@@ -10,12 +10,6 @@
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.environment :as environment]))
 
-(defn- with-large-text [form]
-  (db-api-large-text/with-large-text
-    (environment/api-context)
-    cooperation-model/rich-text-fields
-    form))
-
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
    :context {:keys [db user]}
@@ -54,7 +48,8 @@
           application-teet-id :application-teet-id}
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/view-cooperation-page {}}}
-  (with-large-text
+  (db-api-large-text/with-large-text
+    cooperation-model/rich-text-fields
     (let [p [:thk.project/id project-id]
           tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)
           app-id (cooperation-db/application-by-teet-id db application-teet-id)]
