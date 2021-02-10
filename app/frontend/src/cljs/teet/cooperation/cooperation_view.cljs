@@ -621,7 +621,7 @@
   [:div {:class (<class common-styles/margin-bottom 1)}
    [:div.application-conclusion {:class (<class common-styles/margin-bottom 1)}
     [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
-     (tr [:cooperation :opinion-title])]    
+     (tr [:cooperation :opinion-title])]
     [opinion-view {:edit-button [edit-opinion e! application
                                  [buttons/button-secondary {:size "small"
                                                             :class "edit-opinion"
