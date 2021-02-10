@@ -379,7 +379,8 @@
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db (:db/id form-data))
                                           :link :meeting/organizer-or-reviewer}}
    :transact
-   (store-large-text!
+   (db-api-large-text/store-large-text!
+    meeting-model/rich-text-fields
     (update-meeting-tx
      user
      (meeting-db/decision-meeting-id db (:db/id form-data))
