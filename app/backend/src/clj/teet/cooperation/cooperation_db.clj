@@ -146,6 +146,7 @@
    {:cooperation.3rd-party/applications
     [(ffirst (d/q '[:find (pull ?e attrs)
                     :where [?third-party :cooperation.3rd-party/applications ?e]
+                           [(missing? $ ?e :meta/deleted?)]
                     :in $ ?third-party ?e attrs]
                   db third-party-id application-id
                   cooperation-model/application-overview-attrs))]}))
@@ -228,6 +229,7 @@
   (d/q '[:find ?application ?third-party ?date ?application-expiration-date
          :keys application-id third-party-id date application-expiration-date
          :where [?third-party :cooperation.3rd-party/applications ?application]
+         [(missing? $ ?application :meta/deleted?)]
          [?application :cooperation.application/date ?date]
          [?application :cooperation.application/response ?response]
          [?response :cooperation.response/valid-until ?application-expiration-date]

@@ -43,7 +43,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command          :cooperation/delete-application
-           :success-message  (tr [:notifications :application-deleted])
+           :success-message  (tr [:cooperation :application-deleted])
            :payload          {:db/id (common-controller/->long application-id)
                               :thk.project/id project-id}
            :result-event     ->ApplicationDeleted}))
