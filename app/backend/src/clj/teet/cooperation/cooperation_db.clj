@@ -27,6 +27,7 @@
                      :where
                      [?third-party :cooperation.3rd-party/applications ?application]
                      [?application :cooperation.application/date ?date]
+                     [(missing? $ ?application :meta/deleted?)]
                      :in $ [?third-party ...]]
                    db (map :db/id third-parties))
               (group-by first))
