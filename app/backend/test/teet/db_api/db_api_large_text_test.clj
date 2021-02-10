@@ -12,15 +12,16 @@
   (fn [tests]
     (reset! large-text {})
     ;; Mock PostgREST as we don't have it in CI tests
-    (with-redefs [postgrest/rpc (fn [_ name {:keys [text hash]}]
-                                  (case name
-                                    :fetch_large_text
-                                    (@large-text hash)
+    (with-redefs [postgrest/rpc
+                  (fn [_ name {:keys [text hash]}]
+                    (case name
+                      :fetch_large_text
+                      (@large-text hash)
 
-                                    :store_large_text
-                                    (let [h (hex (sha256 text))]
-                                      (swap! large-text assoc h text)
-                                      h)))]
+                      :store_large_text
+                      (let [h (hex (sha256 text))]
+                        (swap! large-text assoc h text)
+                        h)))]
       (tests))))
 
 (deftest small-text
