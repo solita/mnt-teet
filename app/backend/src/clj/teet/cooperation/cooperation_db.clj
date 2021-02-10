@@ -181,7 +181,10 @@
          :in $ ?deadline]
        db (date/inc-days (date/now) (Integer/valueOf days))))
 
-(defn application-has-third-party-response?
+(defn application-editable?
   "Does the application have a third party response?"
   [db application-id]
-  (boolean (get (du/entity db application-id) :cooperation.application/response)))
+  (cooperation-model/editable? (d/pull db
+                                       [:cooperation.application/opinion
+                                        :cooperation.application/response]
+                                       application-id)))

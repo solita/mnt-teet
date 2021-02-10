@@ -26,14 +26,14 @@
 (defn delete-application
   "Delete application if it doesn't have a third party response."
   [db user application-id]
-  (if (cooperation-db/application-has-third-party-response? db application-id)
-    (ion/cancel response-given-conflict)
-    [(meta-model/deletion-tx user application-id)]))
+  (if (cooperation-db/application-editable? db application-id)
+    [(meta-model/deletion-tx user application-id)]
+    (ion/cancel response-given-conflict)))
 
 (defn edit-application
   [db user application]
-  (if (cooperation-db/application-has-third-party-response? db (:db/id application))
-    (ion/cancel response-given-conflict)
+  (if (cooperation-db/application-editable? db (:db/id application))
     [(merge (select-keys application
                          (conj cooperation-model/editable-application-attributes :db/id))
-            (meta-model/modification-meta user))]))
+            (meta-model/modification-meta user))]
+    (ion/cancel response-given-conflict)))

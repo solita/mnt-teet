@@ -110,6 +110,7 @@
        (valAt [_ kw default-value]
          (assert (keyword? kw))
          (fetch-entity-attr! db eid fetched-attrs kw default-value)))
+
      (defmethod print-method Entity [entity writer]
        (print-simple entity writer))
      (defn entity
