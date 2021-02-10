@@ -36,7 +36,8 @@
             [goog.string :as gstr]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.common.common-controller :as common-controller]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.ui.rich-text-editor :as rich-text-editor]))
 
 
 (defn- task-groups-for-activity [activity-name task-groups]
@@ -402,7 +403,7 @@
                  :cancel-event close-event
                  :save-event #(common-controller/->SaveForm
                                :task/update
-                               (select-keys @form-atom task-model/edit-form-keys)
+                               (form/serialize (select-keys @form-atom task-model/edit-form-keys))
                                (fn [_response]
                                  (fn [e!]
                                    (e! (close-event))
@@ -420,7 +421,7 @@
                  :spec :task/edit-task-form}
 
       ^{:attribute :task/description}
-      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+      [rich-text-editor/rich-text-field {}]
 
       ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
       [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
