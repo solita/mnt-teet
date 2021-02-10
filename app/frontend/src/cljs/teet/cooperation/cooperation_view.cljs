@@ -457,7 +457,7 @@
                                 {:thk.project/id project-id
                                  :application-id application-id
                                  :form-data (common-controller/prepare-form-data
-                                             (form/serialize @form-atom))}
+                                             (form/to-value @form-atom))}
                                 (fn [response]
                                   (fn [e!]
                                     (e! (close-event))
@@ -589,7 +589,7 @@
     :cancel-event close-event
     :save-event #(cooperation-controller/save-opinion-event
                   application
-                  (form/serialize @form-atom)
+                  (form/to-value @form-atom)
                   close-event)
     :spec ::cooperation-model/opinion-form}
    ^{:attribute :cooperation.opinion/status :xs 10}

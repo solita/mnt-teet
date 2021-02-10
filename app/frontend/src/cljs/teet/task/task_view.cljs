@@ -404,7 +404,7 @@
                  :cancel-event close-event
                  :save-event #(common-controller/->SaveForm
                                :task/update
-                               (form/serialize (select-keys @form-atom task-model/edit-form-keys))
+                               (form/to-value (select-keys @form-atom task-model/edit-form-keys))
                                (fn [_response]
                                  (fn [e!]
                                    (e! (close-event))
