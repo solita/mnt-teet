@@ -15,7 +15,7 @@
   :asset-schema/type :asset-schema.type/fgroup}
  {:db/id ":fgroup/embankment",
   :db/ident :fgroup/embankment,
-  :db/doc "Cut and fill",
+  :db/doc "Cut and fill, subgrade strengthening",
   :asset-schema/label ["Muldkeha" "Embankment"],
   :asset-schema/type :asset-schema.type/fgroup}
  {:db/id ":fgroup/structures",
@@ -711,7 +711,7 @@
  {:asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Piirde kõrgus, m" "Barrier height, m"],
+  :asset-schema/label ["Piirde kõrgus" "Barrier height"],
   :attribute/ctype ":ctype/barrier",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
@@ -1383,7 +1383,7 @@
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
-  ["Piirde elemendi pikkus, m" "Barrier element length, m"],
+  ["Piirde elemendi pikkus" "Barrier element length"],
   :attribute/ctype ":ctype/barrier",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
@@ -1685,6 +1685,36 @@
   :asset-schema/label ["z4" "z4"],
   :asset-schema/type :asset-schema.type/enum,
   :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
+ {:db/id ":item/piletypedrilled",
+  :db/ident :item/piletypedrilled,
+  :asset-schema/label ["Puurvai" "Drilled pile"],
+  :asset-schema/type :asset-schema.type/enum,
+  :enum/attribute ":pile/piletype"}
+ {:db/id ":item/piletypedriven",
+  :db/ident :item/piletypedriven,
+  :asset-schema/label ["Rammvai" ""],
+  :asset-schema/type :asset-schema.type/enum,
+  :enum/attribute ":pile/piletype"}
+ {:db/id ":item/piletypeinjection",
+  :db/ident :item/piletypeinjection,
+  :asset-schema/label ["Injektsioonvai" ""],
+  :asset-schema/type :asset-schema.type/enum,
+  :enum/attribute ":pile/piletype"}
+ {:db/id ":item/pavingmaterialdendseac",
+  :db/ident :item/pavingmaterialdendseac,
+  :asset-schema/label ["Tihe asfaltbetoon" ""],
+  :asset-schema/type :asset-schema.type/enum,
+  :enum/attribute ":pavinglayer/pavingmaterial"}
+ {:db/id ":item/pavingmaterialcoarseac",
+  :db/ident :item/pavingmaterialcoarseac,
+  :asset-schema/label ["Poorne asfaltbetoon" ""],
+  :asset-schema/type :asset-schema.type/enum,
+  :enum/attribute ":pavinglayer/pavingmaterial"}
+ {:db/id ":item/pavingstonemastix",
+  :db/ident :item/pavingstonemastix,
+  :asset-schema/label ["Killustikmastiks AB" ""],
+  :asset-schema/type :asset-schema.type/enum,
+  :enum/attribute ":pavinglayer/pavingmaterial"}
  {:db/id ":item/snip1984",
   :db/ident :item/snip1984,
   :asset-schema/label ["SNiP 2.03.05-1984" "SNiP 2.03.05-1984"],
