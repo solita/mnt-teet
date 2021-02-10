@@ -17,8 +17,17 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr with-language]]
             [teet.entity.entity-db :as entity-db]
-            [clojure.spec.alpha :as s])
+            [clojure.spec.alpha :as s]
+            [teet.db-api.db-api-large-text :as db-api-large-text])
   (:import (java.util Date)))
+
+(defn- store-large-text! [form]
+  (db-api-large-text/store-large-text!
+   (environment/api-context)
+   meeting-model/rich-text-fields
+   form))
+
+
 
 (defn update-meeting-tx
   [user meeting-id tx-data]
@@ -160,18 +169,20 @@
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
    :pre [(agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
-   :transact (update-meeting-tx
-               user
-               meeting-id
-               [{:db/id meeting-id
-                 :meeting/agenda
-                 (mapv #(meta-model/with-creation-or-modification-meta
-                          user
-                          (select-keys % [:db/id
-                                          :meeting.agenda/topic
-                                          :meeting.agenda/body
-                                          :meeting.agenda/responsible]))
-                       agenda)}])})
+   :transact
+   (store-large-text!
+    (update-meeting-tx
+     user
+     meeting-id
+     [{:db/id meeting-id
+       :meeting/agenda
+       (mapv #(meta-model/with-creation-or-modification-meta
+                user
+                (select-keys % [:db/id
+                                :meeting.agenda/topic
+                                :meeting.agenda/body
+                                :meeting.agenda/responsible]))
+             agenda)}]))})
 
 (defcommand :meeting/delete-agenda
   {:doc "Mark given agenda topic as deleted"

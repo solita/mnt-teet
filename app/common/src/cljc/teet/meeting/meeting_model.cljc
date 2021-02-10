@@ -41,3 +41,5 @@
                   (= (:db/id user)
                      (get-in % [:participation/participant :db/id])))
             (:participation/_in meeting))))
+
+(def rich-text-fields #{:meeting.agenda/body :meeting.decision/body})
