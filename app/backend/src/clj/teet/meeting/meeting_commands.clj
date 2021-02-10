@@ -385,11 +385,13 @@
    :project-id (project-db/decision-project-id db (:db/id form-data))
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db (:db/id form-data))
                                           :link :meeting/organizer-or-reviewer}}
-   :transact (update-meeting-tx
-               user
-               (meeting-db/decision-meeting-id db (:db/id form-data))
-               [(merge (select-keys form-data [:meeting.decision/body :db/id])
-                       (meta-model/modification-meta user))])})
+   :transact
+   (store-large-text!
+    (update-meeting-tx
+     user
+     (meeting-db/decision-meeting-id db (:db/id form-data))
+     [(merge (select-keys form-data [:meeting.decision/body :db/id])
+             (meta-model/modification-meta user))]))})
 
 (defcommand :meeting/delete-decision
   {:doc "Mark a given decision as deleted"
