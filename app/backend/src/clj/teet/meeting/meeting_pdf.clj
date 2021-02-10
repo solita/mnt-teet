@@ -16,8 +16,8 @@
    :height "29.7cm"
 
    ;; 1cm margins
-   :margin-top "1.2cm" :margin-bottom "1.2cm"
-   :margin-left "3cm" :margin-right "1.5cm"
+   :margin-top "0.2cm" :margin-bottom "1.2cm"
+   :margin-left "2.8cm" :margin-right "1.4cm"
 
    :body {:margin-top "1cm"}
    :header {:extent "1cm"}
