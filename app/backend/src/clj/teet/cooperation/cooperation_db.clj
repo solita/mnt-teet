@@ -264,3 +264,8 @@
            [(missing? $ ?a :meta/deleted?)]
            :in $ ?tp]
          db (->third-party-id third-party-id)))))
+
+(defn application-has-third-party-response?
+  "Does the application have a third party response?"
+  [db application-id]
+  (boolean (get (du/entity db application-id) :cooperation.application/response)))

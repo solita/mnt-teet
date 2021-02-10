@@ -1,6 +1,7 @@
 (ns teet.cooperation.cooperation-tx
   (:require [datomic.client.api :as d]
             [datomic.ion :as ion]
+            [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.meta.meta-model :as meta-model]))
 
 (defn save-3rd-party [db {:cooperation.3rd-party/keys [project] :as tp}]
@@ -21,6 +22,11 @@
       [tp])))
 
 (defn delete-application
+  "Delete application if it doesn't have a third party response."
   [db user application-id]
-  ;; TODO User can delete a cooperation application if the involved party response has not been added to the application
-  [(meta-model/deletion-tx user application-id)])
+  (if (cooperation-db/application-has-third-party-response? db application-id)
+    (ion/cancel
+     {:cognitect.anomalies/category :cognitect.anomalies/conflict
+      :cognitect.anomalies/message "This application has a third party response and cannot be deleted."
+      :teet/error :application-has-third-party-response})
+    [(meta-model/deletion-tx user application-id)]))
