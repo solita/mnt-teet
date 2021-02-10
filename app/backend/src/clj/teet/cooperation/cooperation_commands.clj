@@ -11,8 +11,15 @@
             [teet.project.project-db :as project-db]
             [clojure.spec.alpha :as s]
             [teet.cooperation.cooperation-notifications :as cooperation-notifications]
-            [teet.activity.activity-db :as activity-db]))
+            [teet.activity.activity-db :as activity-db]
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.environment :as environment]))
 
+(defn- store-large-text! [form]
+  (db-api-large-text/store-large-text!
+   (environment/api-context)
+   cooperation-model/rich-text-fields
+   form))
 
 (defn- third-party-is-new-or-belongs-to-project?
   "Check :db/id of new 3rd party form data and check if it is
@@ -118,28 +125,29 @@
    :authorization {:cooperation/application-approval {}}
    :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
-   (let [existing-id (:db/id response-payload)
-         response-id (or existing-id "new-application-response")
-         old-response (if existing-id
-                        (d/pull db cooperation-model/response-application-keys
-                                existing-id)
-                        {:db/id "new-application-response"})
-         project-id (cooperation-db/application-project-id db application-id)
-         activity-id (cooperation-db/application-activity-id db application-id)
-         activity-manager-user-id (activity-db/activity-manager db activity-id)]
-     (into [{:db/id application-id
-             :cooperation.application/response response-id}]
-       (concat (du/modify-entity-tx
-                 old-response
-                 (merge (cu/without-nils
-                          (select-keys response-payload
-                            cooperation-model/response-application-keys))
-                   {:db/id response-id}
-                   (if (:db/id response-payload)
-                     (meta-model/modification-meta user)
-                     (meta-model/creation-meta user))))
-         [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
-            project-id application-id cooperation-notifications/new-response-type)])))})
+   (store-large-text!
+    (let [existing-id (:db/id response-payload)
+          response-id (or existing-id "new-application-response")
+          old-response (if existing-id
+                         (d/pull db cooperation-model/response-application-keys
+                                 existing-id)
+                         {:db/id "new-application-response"})
+          project-id (cooperation-db/application-project-id db application-id)
+          activity-id (cooperation-db/application-activity-id db application-id)
+          activity-manager-user-id (activity-db/activity-manager db activity-id)]
+      (into [{:db/id application-id
+              :cooperation.application/response response-id}]
+            (concat (du/modify-entity-tx
+                     old-response
+                     (merge (cu/without-nils
+                             (select-keys response-payload
+                                          cooperation-model/response-application-keys))
+                            {:db/id response-id}
+                            (if (:db/id response-payload)
+                              (meta-model/modification-meta user)
+                              (meta-model/creation-meta user))))
+                    [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
+                                                                                     project-id application-id cooperation-notifications/new-response-type)]))))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
@@ -164,15 +172,17 @@
    :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
    :authorization {:cooperation/application-approval {}}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
-   :transact [{:db/id application-id
-               :cooperation.application/opinion
-               (merge
-                {:db/id (or (:db/id opinion-form) "new-opinion")}
-                (select-keys opinion-form [:cooperation.opinion/status
-                                           :cooperation.opinion/comment])
-                (if (:db/id opinion-form)
-                  (meta-model/modification-meta user)
-                  (meta-model/creation-meta user)))}]})
+   :transact
+   (store-large-text!
+    [{:db/id application-id
+      :cooperation.application/opinion
+      (merge
+       {:db/id (or (:db/id opinion-form) "new-opinion")}
+       (select-keys opinion-form [:cooperation.opinion/status
+                                  :cooperation.opinion/comment])
+       (if (:db/id opinion-form)
+         (meta-model/modification-meta user)
+         (meta-model/creation-meta user)))}])})
 
 (s/def ::contact-form ::cooperation-model/contact-form)
 
