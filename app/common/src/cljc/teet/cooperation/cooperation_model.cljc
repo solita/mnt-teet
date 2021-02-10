@@ -140,6 +140,7 @@
    :cooperation.response/status])
 
 (defn editable? [application]
-  (not (contains? application :cooperation.application/opinion)))
+  (and (not (contains? application :cooperation.application/response))
+       (not (contains? application :cooperation.application/opinion))))
 
 (def rich-text-fields #{:cooperation.response/content :cooperation.opinion/comment})
