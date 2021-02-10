@@ -142,18 +142,6 @@
   (js>
    (export-markdown/stateToMarkdown (.getCurrentContent editor-state))))
 
-(defn form-data-with-rich-text
-  "Given a key where the rich text is in the map and a map
-  returns a map which can be stored in the backend"
-  [rich-text-attr form]
-  (if-not (contains? form rich-text-attr)
-    form
-    (update form rich-text-attr
-            (fn [data]
-              (if (or (string? data) (nil? data))
-                data
-                (editor-state->markdown data))))))
-
 (defn validate-rich-text-form-field-not-empty
   [value]
   (when (or

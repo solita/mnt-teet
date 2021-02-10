@@ -457,9 +457,7 @@
                                 {:thk.project/id project-id
                                  :application-id application-id
                                  :form-data (common-controller/prepare-form-data
-                                              (rich-text-editor/form-data-with-rich-text
-                                                :cooperation.response/content
-                                                @form-atom))}
+                                             (form/serialize @form-atom))}
                                 (fn [response]
                                   (fn [e!]
                                     (e! (close-event))
@@ -591,7 +589,7 @@
     :cancel-event close-event
     :save-event #(cooperation-controller/save-opinion-event
                   application
-                  (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
+                  (form/serialize @form-atom)
                   close-event)
     :spec ::cooperation-model/opinion-form}
    ^{:attribute :cooperation.opinion/status :xs 10}
