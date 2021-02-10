@@ -176,4 +176,9 @@
            [?notification :notification/target ?application]
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
-    db (date/inc-days (date/now) (Integer/valueOf days))))
+       db (date/inc-days (date/now) (Integer/valueOf days))))
+
+(defn application-has-third-party-response?
+  "Does the application have a third party response?"
+  [db application-id]
+  (boolean (get (du/entity db application-id) :cooperation.application/response)))

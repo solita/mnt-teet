@@ -85,4 +85,23 @@
     (testing "Application can be deleted"
       (is (some? (tu/local-command :cooperation/delete-application
                                    {:thk.project/id project-id
-                                    :db/id new-application-id}))))))
+                                    :db/id new-application-id}))))
+
+    (testing "Application can't be deleted if it has a third party response"
+      (let [;; Create new application
+            new-application-id (-> (tu/local-command :cooperation/create-application
+                                                     application-payload)
+                                   (get-in [:tempids "new-application"]))]
+        ;; Create response
+        (tu/local-command :cooperation/save-application-response
+                          {:thk.project/id project-id
+                           :application-id new-application-id
+                           :form-data {:cooperation.response/status :cooperation.response.status/no-objection
+                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/valid-months 12}})
+
+        (is (thrown?
+             Exception
+             (tu/local-command :cooperation/delete-application
+                               {:thk.project/id project-id
+                                :db/id new-application-id})))))))
