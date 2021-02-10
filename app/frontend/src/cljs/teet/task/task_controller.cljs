@@ -34,10 +34,6 @@
 (defrecord DeleteTaskResult [response])
 
 (defrecord OpenEditModal [entity])
-(defrecord UpdateEditTaskForm [form-data])
-(defrecord CancelTaskEdit [])
-(defrecord SaveTaskForm [])
-(defrecord SaveTaskSuccess [])
 
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
@@ -176,38 +172,6 @@
          :success-message (tr [:notifications :task-status-updated])
          :result-event     common-controller/->Refresh})))
 
-  UpdateEditTaskForm
-  (process-event [{form-data :form-data} app]
-    (update-in app [:edit-task-data] merge form-data))
-
-  CancelTaskEdit
-  (process-event [_ {:keys [page params query] :as app}]
-    (t/fx (-> app
-              (dissoc :edit-task-data)
-              (update :stepper dissoc :dialog))
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (dissoc query :modal :add :edit :activity :lifecycle)}))
-
-  SaveTaskForm
-  (process-event [_ {edit-task-data :edit-task-data
-                     stepper :stepper :as app}]
-    (t/fx app
-          (merge
-           {:tuck.effect/type :command!
-            :result-event ->SaveTaskSuccess}
-           {:command :task/update
-            :payload (select-keys edit-task-data
-                                  task-model/edit-form-keys)
-            :success-message (tr [:notifications :task-updated])})))
-
-  SaveTaskSuccess
-  (process-event [_ {:keys [page query params] :as app}]
-    (t/fx (-> app
-              (dissoc :edit-task-data)
-              (update :stepper dissoc :dialog))
-          common-controller/refresh-fx))
 
   UpdateTask
   (process-event [{:keys [task updated-task]} app]
