@@ -74,7 +74,9 @@ context('Cooperation', function() {
             ":cooperation.application/type", "[:cooperation.application.type/work-permit]",
             ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
             ":cooperation.application/date", this.today,
-            ":cooperation.application/response-deadline", this.twoWeeks);
+            ":cooperation.application/response-deadline", this.twoWeeks,
+            ":cooperation.application/comment", "TEXT:this is the comment"
+        );
         cy.formSubmit()
 
         // Navigated to application page:
@@ -82,6 +84,7 @@ context('Cooperation', function() {
         cy.get(".cooperation-application-page")
         cy.get(".application-people") // page has people panel
 
+        cy.get("div.application-comment").contains("this is the comment")
 
         // Fill contact information
         cy.get("[data-cy=add-contact]").click()
