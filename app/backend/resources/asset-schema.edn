@@ -80,7 +80,7 @@
   :fclass/fgroup ":fgroup/carriageway"}
  {:db/id ":fclass/kerb",
   :db/ident :fclass/kerb,
-  :asset-schema/label ["Äärekivi" "kerb"],
+  :asset-schema/label ["Äärekivi" "Kerb"],
   :asset-schema/type :asset-schema.type/fclass,
   :fclass/fgroup ":fgroup/carriageway"}
  {:db/id ":fclass/shoulder",
@@ -200,7 +200,7 @@
  {:db/id ":fclass/signagelocation",
   :db/ident :fclass/signagelocation,
   :asset-schema/label
-  ["Liikluskorralduvahendi koht" "Traffica signage location"],
+  ["Liikluskorraldusvahendi koht" "Traffic signage location"],
   :asset-schema/type :asset-schema.type/fclass,
   :fclass/fgroup ":fgroup/trafficarrangement"}
  {:db/id ":fclass/linearmarking",
@@ -587,7 +587,7 @@
   :db/ident :ctype/deepstabilisation,
   :db/doc "No",
   :asset-schema/label
-  ["Süvastabiliseerimitud aluspinnas" "Deep stabilized earth"],
+  ["Süvastabiliseeritud aluspinnas" "Deep stabilized earth"],
   :asset-schema/type :asset-schema.type/ctype,
   :ctype/parent ":fclass/subgrade"}
  {:db/id ":ctype/pileslab",

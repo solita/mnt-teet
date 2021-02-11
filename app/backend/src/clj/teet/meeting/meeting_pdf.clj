@@ -359,8 +359,8 @@
         [:fo:block {:space-after "10"}
          (table-2-columns {:left-width    "45%" :left-header (tr [:meeting :participants-title])
                            :right-width   "55%" :right-header (tr [:meeting :absentees-title])
-                           :left-content  [:fo:block (participants meeting false)]
-                           :right-content [:fo:block (participants meeting true)]
+                           :left-content  [:fo:block (doall (participants meeting false))]
+                           :right-content [:fo:block (doall (participants meeting true))]
                            :fonts         {:header-font {:font-size "14px" :font-weight "400" :font-style "normal"}
                                            :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
         [:fo:block (list-of-topics (:meeting/agenda meeting))]
