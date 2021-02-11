@@ -1,6 +1,6 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
-            [teet.ui.material-ui :refer [Button Fab Divider Checkbox]]
+            [teet.ui.material-ui :refer [Button Fab Divider Checkbox CircularProgress LinearProgress]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
@@ -210,46 +210,22 @@
                                   :drop-message "Drop it like it's hot"}
     "Click to upload"]])
 
-(defn- itemlist-demo []
-  [:<>
+(defn- loader-demo []
+  [:div {:style {:width "100%"
+                :margin-top "5px"
+                :padding "5px 5rem"}}
    [:div {:style {:margin "2rem 0"}}
-    [itemlist/ProgressList
-     {:title "itemlist title" :subtitle "Foo bar"}
-     [{:status :success
-       :link "#/12"
-       :name "First task"}
-      {:status :fail
-       :link "#/123"
-       :name "second task"}
-      {:status :created
-       :link "#/1234"
-       :name "third task"}
-      {:status :created
-       :link "#/1323"
-       :name "asdasd task"}
-      {:status :success
-       :link "#/3232"
-       :name "fifth task"}]]]
-   [:div {:style {:width "50%"
-                  :margin "2rem 0"}}
-    [itemlist/LinkList
-     {:title "itemlist title" :subtitle "Foo bar"}
-     [{:link "/foo"
-       :name "First task"}
-      {:status :fail
-       :name "second task"}
-      {:link "/foo"
-       :name "third task"}
-      {:link "/foo"
-       :name "asdasd task"}
-      {:link "/:success"
-       :name "fifth task"}]
-     (fn on-click-handler [x]
-       (log/info "on click handler got:" (pr-str x)))]]])
+    [CircularProgress]]
+   [:div {:style {:margin "2rem 0"}}
+    [LinearProgress]]
+   [:div
+    [skeleton/skeleton {:width "60%"
+                        :height "2rem"}]]])
 
 (defn skeleton-demo []
   [:div {:style {:width "100%"
-                 :margin-top "5px"}}
+                 :margin-top "5px"
+                 :margin "5px 5rem"}}
    [skeleton/skeleton {:width "60%"
                        :height "2rem"}]])
 
@@ -314,11 +290,8 @@
     :heading "File upload"
     :component [file-upload-demo]}
    {:id :itemlist
-    :heading "Itemlist"
-    :component [itemlist-demo]}
-   {:id :skeleton
-    :heading "Skeleton"
-    :component [skeleton-demo]}
+    :heading "Loaders"
+    :component [loader-demo]}
    {:id :select
     :heading "Select"
     :component [select-demo]}
