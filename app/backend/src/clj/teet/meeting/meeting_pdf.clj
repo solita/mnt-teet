@@ -369,9 +369,9 @@
                                            :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
         [:fo:block (list-of-topics (:meeting/agenda meeting))]
         [:fo:block (reviews (:review/_of meeting))]
-        [:fo:block {:font-style "normal" :font-size "14px" :font-weight 400 :space-after 11}
-         (str (tr [:meeting :link-to-original]) " ")]
         [:fo:block {:font-style "normal" :font-size "12px" :font-weight 400 :space-after 11}
+         (str (tr [:meeting :link-to-original]) " ")]
+        [:fo:block {:font-style "normal" :font-size "10px" :font-weight 400 :space-after 11}
          (get-meeting-link meeting db)]
         [:fo:block {:font-size "10px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]
         [:fo:block {:font-size "14px"} ]]]]))))
