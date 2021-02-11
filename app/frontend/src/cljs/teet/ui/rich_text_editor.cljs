@@ -25,6 +25,27 @@
 
 (def character-limit 4000)
 
+(declare editor-state->markdown markdown->editor-state)
+
+(defrecord RichTextFieldValue [editor-state]
+  form/ToValue
+  (to-value [_]
+    (editor-state->markdown editor-state)))
+
+(defn- ->editor-state [value]
+  (cond
+    (nil? value)
+    (markdown->editor-state "")
+
+    (string? value)
+    (markdown->editor-state value)
+
+    (instance? RichTextFieldValue value)
+    (:editor-state value)
+
+    :else (throw (ex-info "Unrecognized rich text form value"
+                          {:unrecognized-value value}))))
+
 (defn editor-style
   [error]
   {:padding "1rem"
@@ -144,14 +165,14 @@
 
 (defn validate-rich-text-form-field-not-empty
   [value]
-  (when (or
-          (nil? value)
-          (and (string? value) (empty? value))
-          (and (not (string? value))
-               (every?
-                 empty?
-                 (string/words (str/replace (editor-state->markdown value) #"\u200b" "")))))
-    "Rich text editor can't be empty"))
+  (let [value (if (instance? RichTextFieldValue value)
+                (editor-state->markdown (:editor-state value))
+                value)]
+    (when (or
+           (nil? value)
+           (every? empty?
+                   (string/words (str/replace value #"\u200b" ""))))
+      "Rich text editor can't be empty")))
 
 (def ^:private decorator
   (draft-js/CompositeDecorator. #js [#js {:strategy findLinkWithRegex
@@ -224,26 +245,6 @@
     [:f> wysiwyg-editor {:value editor-state}]
     [:span]))
 
-
-
-(defrecord RichTextFieldValue [editor-state]
-  form/ToValue
-  (to-value [_]
-    (editor-state->markdown editor-state)))
-
-(defn- ->editor-state [value]
-  (cond
-    (nil? value)
-    (markdown->editor-state "")
-
-    (string? value)
-    (markdown->editor-state value)
-
-    (instance? RichTextFieldValue value)
-    (:editor-state value)
-
-    :else (throw (ex-info "Unrecognized rich text form value"
-                          {:unrecognized-value value}))))
 (defn rich-text-field
   "Rich text input that can be used in forms."
   [{:keys [value on-change label required error read-only?]}]
