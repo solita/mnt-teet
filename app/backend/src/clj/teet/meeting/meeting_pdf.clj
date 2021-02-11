@@ -16,7 +16,7 @@
    :height "29.7cm"
 
    ;; 1cm margins
-   :margin-top "0.2cm" :margin-bottom "1.2cm"
+   :margin-top "0.2cm" :margin-bottom "1cm"
    :margin-left "2.8cm" :margin-right "1.4cm"
 
    :body {:margin-top "1cm"}
@@ -24,7 +24,7 @@
    :footer {:extent "1cm"}})
 
 (def link-look-and-feel
-  {:font-size "16px"
+  {:font-size "14px"
    :border-top-style "solid"
    :border-top-width "1"
    :border-top-color "#D2D3D8"
@@ -37,18 +37,18 @@
    :border-top-color "#D2D3D8"})
 
 (def reviewers-look-and-feel
-  {:font-size "14px"
+  {:font-size "12px"
    :padding-top 9
    :padding-bottom 12})
 
 (def reviewers-date-look-and-feel
-  {:font-size "14px"
+  {:font-size "12px"
    :padding-top 9
    :padding-bottom 12
    :padding-left 12})
 
 (def external-link-icon
-  {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/link.svg")})
+  {:padding-right 10 :content-width "12px" :content-height "12px" :src (io/resource "img/link.svg")})
 
 (def date-format
   (doto (java.text.SimpleDateFormat. "dd.MM.yyyy" )
@@ -97,7 +97,7 @@
   [svg-file]
   [:fo:block
    [:fo:external-graphic
-    { :content-width "15px" :content-height "15px" :src (io/resource svg-file) } ]])
+    { :content-width "12px" :content-height "12px" :src (io/resource svg-file) } ]])
 
 (defn- decision-list-item
   "Return the agenda topic descition list item"
@@ -141,7 +141,7 @@
   [:fo:block link-look-and-feel
    [:fo:block
     [:fo:external-graphic
-     {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/file.svg")}]
+     {:padding-right 10 :content-width "12px" :content-height "12px" :src (io/resource "img/file.svg")}]
     (str (tr [:link :type-label :appendix]) " " idx " - " (:file/name attachment))]])
 
 (defn- list-of-topics
@@ -157,11 +157,11 @@
               [:fo:block
                [:fo:block {:font-size "16px" :font-weight "700" :space-after "2"}
                 (:meeting.agenda/topic topic)]
-               [:fo:block {:font-size "14px" :font-weight "400" :space-after "24"}
+               [:fo:block {:font-size "12px" :font-weight "400" :space-after "24"}
                 [:fo:inline
                  (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
-               [:fo:block {:font-size "16px" :space-after "24"} (md/render-md (:meeting.agenda/body topic))]
+               [:fo:block {:font-size "14px" :space-after "24"} (md/render-md (:meeting.agenda/body topic))]
                [:fo:block {:space-after "16"} (doall
                                                 (map link-list-item (:link/_from topic)))]
                [:fo:block {:space-after "8"} (doall
@@ -228,9 +228,13 @@
                             :border-left-style "solid"
                             :border-left-width 1
                             :border-left-color "#D2D3D8"
-                            :padding-left 12} center]]
+                            :padding-left 4} center]]
                [:fo:table-cell
-                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
+                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style
+                            :border-left-style "solid"
+                            :border-left-width 1
+                            :border-left-color "#D2D3D8"
+                            :padding-left 4} right]]])
             first-content left-content center-content right-content)]]))
 
 
@@ -278,7 +282,7 @@
    [:fo:block {:font-style "normal" :font-size "16px" :font-weight 700 :space-after 11}
     (tr [:meeting :approvals])]
    (if (seq (:review/decision (first review-of)))
-     (table-4-columns {:first-width    "10%" :left-width "40%" :center-width "20%" :right-width "30%"
+     (table-4-columns {:first-width    "8%" :left-width "30%" :center-width "38%" :right-width "24%"
                        :first-content  (reviewers-yes-no review-of)
                        :left-content   (reviewers-names review-of)
                        :center-content (reviewers-decisions review-of)
@@ -365,9 +369,9 @@
                                            :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
         [:fo:block (list-of-topics (:meeting/agenda meeting))]
         [:fo:block (reviews (:review/_of meeting))]
-        [:fo:block {:font-style "normal" :font-size "16px" :font-weight 400 :space-after 11}
-         (str (tr [:meeting :link-to-original]) " ")]
         [:fo:block {:font-style "normal" :font-size "14px" :font-weight 400 :space-after 11}
+         (str (tr [:meeting :link-to-original]) " ")]
+        [:fo:block {:font-style "normal" :font-size "12px" :font-weight 400 :space-after 11}
          (get-meeting-link meeting db)]
-        [:fo:block {:font-size "14px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]
+        [:fo:block {:font-size "10px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]
         [:fo:block {:font-size "14px"} ]]]]))))
