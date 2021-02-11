@@ -159,6 +159,7 @@
   :phone2 "Phone"},
  :cooperation
  {:response "Response",
+  :application-delete-confirm "Delete the application?",
   :competent-authority-name "Transport Administration ",
   :conclusion "Conclusion",
   :applications "APPLICATIONS",
@@ -169,8 +170,11 @@
   :no-activity-manager
   "No project manager has been assigned to the related activity.",
   :opinion-title "Opinion",
+  :application-delete-information
+  "Information will be removed and cannot be undone.",
   :opinion "Opinion",
   :enter-response "Enter involved party response",
+  :application-deleted "Application deleted succesfully",
   :new-third-party-created "Involved party created successfully",
   :all-third-parties "All involved parties",
   :add-application-response "Add involved party response",
@@ -180,6 +184,7 @@
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
   :create-opinion-button "Opinion of Competent Authority",
+  :application-edited "Application edited succesfully",
   :new-application-created "Application created successfully",
   :no-deadline "No deadline",
   :new-application-title "Add new application",
@@ -509,6 +514,8 @@
   :user-is-already-participant
   "The email address of the participant is already in the participant list!",
   :file-type-not-allowed "File type is not valid",
+  :application-has-third-party-response
+  "Applications with involved party response can't be edited or deleted.",
   :server-error "Server error.",
   :invalid-x-road-response "Invalid response from X-road",
   :permission-already-granted

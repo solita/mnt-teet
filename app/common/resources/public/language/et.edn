@@ -56,21 +56,21 @@
  {:type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
-   :fclass "Vara klass",
+   :fclass "Vara liik",
    :unit "Ühik",
    :datatype "Tüüp",
    :db.type/string "Tekst",
    :name "Nimi",
    :db.type/ref "Viide",
    :db.type/bigdec "Arv",
-   :fgroup "Vara liik",
+   :fgroup "Vara grupp",
    :header "Tee olemi tüübiteek (TOTT) ",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
    :ctype "Komponent",
    :db.type/long "Täisarv",
-   :attributes "Omadused"}},
+   :attributes "Tunnused"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -159,6 +159,7 @@
   :phone2 "Telefon"},
  :cooperation
  {:response "Vastus",
+  :application-delete-confirm "Kustutan taotluse?",
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
@@ -169,8 +170,11 @@
   :no-activity-manager
   "Seotud tegevusele ei ole määratud projektijuhti.",
   :opinion-title "Seisukoht",
+  :application-delete-information
+  "Taotlusele sisestatud info kustutatakse lõplikult.",
   :opinion "Seisukoht",
   :enter-response "Sisestan kaasatud osapoole vastuse",
+  :application-deleted "Taotlus edukalt kustutatud",
   :new-third-party-created "Kaasatud osapool edukalt lisatud",
   :all-third-parties "Kõik kaasatud osapooled",
   :add-application-response "Lisan kaasatud osapoole vastuse",
@@ -180,6 +184,7 @@
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
   :create-opinion-button "Lisan ametliku seisukoha",
+  :application-edited "Taotlus edukalt muutetud",
   :new-application-created "Taotlus edukalt loodud",
   :no-deadline "Tähtaega pole",
   :new-application-title "Uus taotlus",
@@ -506,6 +511,8 @@
   :user-is-already-participant
   "Lisatava kasutaja e-posti aadress on juba osalejate nimekirjas!",
   :file-type-not-allowed "Failitüüp ei ole toetatud",
+  :application-has-third-party-response
+  "Taotlusi, millel on seotud osapoole vastus lisatud, ei saa muuta ega kustutada.",
   :server-error "Serveri viga.",
   :invalid-x-road-response "Vale vastus X-teelt",
   :permission-already-granted "Selle kasutaja luba on juba antud",
