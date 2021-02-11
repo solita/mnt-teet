@@ -780,7 +780,9 @@
           (tr-enum (:cooperation.application/response-type application))]
          [typography/SectionHeading {:style {:text-transform :uppercase}}
           (tr-enum (get-in application [:cooperation.application/activity :activity/name]))]]
+        [:div.application-comment (:cooperation.application/comment application)]
         [application-information application]
+
         (if (:cooperation.application/response application)
           [:<>
            [application-response e! (:new-document app) files-form application project related-task]
