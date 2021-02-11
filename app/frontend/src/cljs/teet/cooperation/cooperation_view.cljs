@@ -1,5 +1,6 @@
 (ns teet.cooperation.cooperation-view
   (:require [herb.core :as herb :refer [<class]]
+            [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
@@ -32,6 +33,28 @@
             [teet.ui.validation :as validation]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.ui.context :as context]))
+
+
+;; Form structure in this view:
+;; third-party-page
+;;   cooperation-page-structure (usage #1)
+;;     third-parties
+;;       third-party-form (uses form/form)
+;;     applications
+;;   project-view/project-full-page-structure
+;;     third-parties
+;;   application-form
+;;     
+;; 
+;; application-page
+;;   cooperation-page-structure (usage #2)
+;;     third-parties
+;;       third-party-form (uses form/form)
+;;     application-conclusion
+;;       opinion-view
+;;     application-response
+;;       application-response-form (uses form/form2)
+;;   application-people-panel (uses form/form)
 
 
 (defn- third-party-form [{:keys [e! project-id edit? has-applications?]}
@@ -315,6 +338,8 @@
     :right-panel right-content
     :main main-content}])
 
+
+;; entrypoint from route /projects/:project/cooperation route
 (defn overview-page [e! app {:keys [project overview]}]
 
   [:div.cooperation-overview-page {:class (<class common-styles/flex-column-1)}
@@ -386,6 +411,7 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
+;; entrypoint from route /projects/:project/cooperation/:third-party 
 (defn third-party-page [e! {:keys [params] :as app}
                         {:keys [project overview]
                          third-party-info :third-party}]
@@ -582,26 +608,39 @@
                                        :task related-task
                                        :small true}}}}]])])))])))
 
-
 (defn- opinion-form [{:keys [e! application]} close-event form-atom]
-  [form/form
-   {:e! e!
-    :value @form-atom
-    :on-change-event (form/update-atom-event form-atom merge)
-    :cancel-event close-event
-    :save-event #(cooperation-controller/save-opinion-event
-                  application
-                  (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
-                  close-event)
-    :spec ::cooperation-model/opinion-form}
-   ^{:attribute :cooperation.opinion/status :xs 10}
-   [select/select-enum {:e! e!
-                        :attribute :cooperation.opinion/status}]
+  (let [form-value @form-atom
+        opinion-eid (:db/id form-value)
+        application-eid (:db/id application)]
+    (log/debug "db/id of opinion-form form-value: " opinion-eid)
+    [form/form     
+     {:e! e!
+      :value form-value
+      :on-change-event (form/update-atom-event form-atom merge)
+      :cancel-event close-event
+      :save-event #(cooperation-controller/save-opinion-event
+                    application
+                    (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
+                    close-event)
+      :delete  (when (some? opinion-eid)
+                 (common-controller/->SaveForm
+                  :cooperation/delete-opinion
+                  {:application-id application-eid
+                   :opinion-id opinion-eid}
+                  (fn opinion-delete-command-success-fx [_response]
+                    (close-event)
+                    (reset! form-atom {}) 
+                    common-controller/refresh-fx)))
+      :delete-link? false
+      :spec ::cooperation-model/opinion-form}
+     ^{:attribute :cooperation.opinion/status :xs 10}
+     [select/select-enum {:e! e!
+                          :attribute :cooperation.opinion/status}]
 
 
-   ^{:attribute :cooperation.opinion/comment
-     :validate rich-text-editor/validate-rich-text-form-field-not-empty}
-   [rich-text-editor/rich-text-field {}]])
+     ^{:attribute :cooperation.opinion/comment
+       :validate rich-text-editor/validate-rich-text-form-field-not-empty}
+     [rich-text-editor/rich-text-field {}]]))
 
 (defn- edit-opinion [e! application button-component]
   [authorization-context/when-authorized :save-opinion
@@ -717,6 +756,7 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
+;; entrypoint from route /projects/:project/cooperation/:third-party/:application
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with

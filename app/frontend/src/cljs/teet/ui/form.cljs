@@ -504,6 +504,7 @@
                        {:key (str attribute)}))))))]]
    (when (and footer
               (or cancel-fn cancel-event save-event))
+     (log/debug "doing a footer. provided fns: " (some? cancel-fn) (some? cancel-event) (some? save-event))
      [footer2 footer])])
 
 (defn form-modal-button

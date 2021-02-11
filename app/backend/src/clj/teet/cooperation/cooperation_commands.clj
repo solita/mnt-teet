@@ -232,3 +232,12 @@
    :authorization {:cooperation/edit-3rd-party {:entity-id id}}
    :pre [(not (cooperation-db/has-applications? db id))]
    :transact [(meta-model/deletion-tx user id)]})
+
+(defcommand :cooperation/delete-opinion
+  {:doc "Delete opinion from the application"
+   :spec (s/keys :req-un [::application-id ::opinion-id])
+   :context {:keys [user db]}
+   :payload {:keys [application-id opinion-id]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/edit-application {}}
+   :transact [[:db/retractEntity opinion-id]]})

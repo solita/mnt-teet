@@ -1,5 +1,6 @@
 (ns teet.cooperation.cooperation-controller
   (:require [tuck.core :as t]
+            [taoensso.timbre :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]))
@@ -9,9 +10,10 @@
 
 (defrecord ResponseCreated [response edit?])
 (defrecord OpinionSaved [new? response])
+(defrecord DeleteOpinion [opinion])
+(defrecord DeleteOpinionSuccess [opinion])
 
 (extend-protocol t/Event
-
   ThirdPartyCreated
   (process-event [{name :name} {params :params :as app}]
     (t/fx (snackbar-controller/open-snack-bar app (tr [:cooperation :new-third-party-created]))

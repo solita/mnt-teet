@@ -7,6 +7,7 @@
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
+            [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
             [teet.common.common-styles :as common-styles]))
