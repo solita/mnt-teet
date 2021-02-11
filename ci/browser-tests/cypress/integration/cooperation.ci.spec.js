@@ -75,7 +75,7 @@ context('Cooperation', function() {
             ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
             ":cooperation.application/date", this.today,
             ":cooperation.application/response-deadline", this.twoWeeks,
-            ":cooperation.application/comment", "this is the comment"
+            ":cooperation.application/comment", "TEXT:this is the comment"
         );
         cy.formSubmit()
 
