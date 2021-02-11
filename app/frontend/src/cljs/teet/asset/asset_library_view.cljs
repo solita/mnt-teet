@@ -55,6 +55,7 @@
   [collapsible open ct
    (str (tr [:asset :type-library :ctype]) " " (tr* ct))
    [:div
+    (tr* ct :asset-schema/description)
     (when (seq attributes)
       [:<>
        [typography/BoldGreyText (tr [:asset :type-library :attributes])]
@@ -82,6 +83,7 @@
   [collapsible open fclass
    (str (tr [:asset :type-library :fclass]) " " (tr* fclass))
    [:div
+    (tr* fclass :asset-schema/description)
     (doall
      (for [ct (:ctype/_parent fclass)]
        ^{:key (str (:db/id ct))}
@@ -91,6 +93,7 @@
   [collapsible open fgroup
    (str (tr [:asset :type-library :fgroup]) " " (tr* fgroup))
    [:div
+    (tr* fgroup :asset-schema/description)
     (doall
      (for [fc (:fclass/_fgroup fgroup)]
        ^{:key (str (:db/id fc))}
