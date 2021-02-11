@@ -6,7 +6,9 @@
             [teet.util.datomic :as du]
             [datomic.client.api :as d]
             [teet.cooperation.cooperation-model :as cooperation-model]
-            [teet.meta.meta-query :as meta-query]))
+            [teet.meta.meta-query :as meta-query]
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.environment :as environment]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
@@ -51,15 +53,17 @@
   (let [p [:thk.project/id project-id]
         tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)
         app-id (cooperation-db/application-by-teet-id db application-teet-id)]
-    (meta-query/without-deleted
-     db
-     (du/idents->keywords
-      {:project (project-db/project-by-id db p)
-       :overview (cooperation-db/overview {:db db :project-eid p})
-       :third-party (link-db/fetch-links
-                     {:db db
-                      :user user
-                      :fetch-links-pred? #(contains? % :cooperation.response/status)
-                      :return-links-to-deleted? false}
-                     (cooperation-db/third-party-with-application db tp-id app-id))
-       :related-task (cooperation-db/third-party-application-task db tp-id app-id)}))))
+    (db-api-large-text/with-large-text
+      cooperation-model/rich-text-fields
+      (meta-query/without-deleted
+       db
+       (du/idents->keywords
+        {:project (project-db/project-by-id db p)
+         :overview (cooperation-db/overview {:db db :project-eid p})
+         :third-party (link-db/fetch-links
+                       {:db db
+                        :user user
+                        :fetch-links-pred? #(contains? % :cooperation.response/status)
+                        :return-links-to-deleted? false}
+                       (cooperation-db/third-party-with-application db tp-id app-id))
+         :related-task (cooperation-db/third-party-application-task db tp-id app-id)})))))

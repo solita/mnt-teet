@@ -21,7 +21,8 @@
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.integration.integration-id :as integration-id]
-            [teet.file.file-db :as file-db]))
+            [teet.file.file-db :as file-db]
+            [teet.db-api.db-api-large-text :as db-api-large-text]))
 
 (defquery :thk.project/integration-id->thk-id
   {:doc "Fetch THK project id for given entity :integration/id number"
@@ -82,17 +83,19 @@
   (let [project (meta-query/without-deleted
                  db
                  (project-db/project-by-id db [:thk.project/id id]))]
-    (-> project
-        (assoc :thk.project/permitted-users
-               (project-model/users-with-permission
-                (permission-db/valid-project-permissions db (:db/id project))))
-        (update :thk.project/lifecycles project-model/sort-lifecycles)
-        (update :thk.project/lifecycles
-                (fn [lifecycle]
-                  (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
-        (maybe-fetch-task-files db user task-id)
-        (maybe-update-activity-tasks activity-id)
-        (activity-db/update-activity-histories db))))
+    (db-api-large-text/with-large-text
+      #{:task/description}
+      (-> project
+          (assoc :thk.project/permitted-users
+                 (project-model/users-with-permission
+                  (permission-db/valid-project-permissions db (:db/id project))))
+          (update :thk.project/lifecycles project-model/sort-lifecycles)
+          (update :thk.project/lifecycles
+                  (fn [lifecycle]
+                    (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
+          (maybe-fetch-task-files db user task-id)
+          (maybe-update-activity-tasks activity-id)
+          (activity-db/update-activity-histories db)))))
 
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"

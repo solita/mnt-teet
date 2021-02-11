@@ -34,7 +34,10 @@
             [teet.log :as log]
             [teet.ui.drag :as drag]
             [goog.string :as gstr]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.common.common-controller :as common-controller]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.ui.rich-text-editor :as rich-text-editor]))
 
 
 (defn- task-groups-for-activity [activity-name task-groups]
@@ -367,7 +370,8 @@
     ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
-       [typography/Paragraph description])
+       [typography/Paragraph
+        [rich-text-editor/display-markdown description]])
      [task-basic-info task]
      [task-file-view e! activity task (:upload! upload-controls) files-form project-id]
      [task-file-upload {:e! e!
@@ -390,48 +394,23 @@
          [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
           (tr [:task :accept-review])]]])]))
 
-(defn- task-header
-  [e! task]
-  [:div.task-header {:class (<class common-styles/heading-and-action-style)}
-   [typography/Heading1 (tr-enum (:task/type task))]
-   [when-authorized :task/update
-    task
-    [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditTaskDialog (:db/id task)))}
-     (tr [:buttons :edit])]]])
-
-(defn- start-review [e!]
-  (e! (task-controller/->StartReview))
-  (fn [_]
-    [:span]))
-
-(defn- task-page-content
-  [e! app activity {status :task/status :as task} pm? files-form]
-  [:div.task-page
-   (when (and pm? (du/enum= status :task.status/waiting-for-review))
-     [when-authorized :task/start-review task
-      [start-review e!]])
-   [task-header e! task]
-   [tabs/details-and-comments-tabs
-    {:e! e!
-     :app app
-     :type :task-comment
-     :entity-type :task
-     :entity-id (:db/id task)}
-    [task-details e! (:new-document app)
-     (get-in app [:params :project])
-     activity task files-form]]])
-
-
-(defn- edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]} allow-delete?]
-  (when initialization-fn
-    (initialization-fn))
-  (fn [e! {id :db/id send-to-thk? :task/send-to-thk? :as task}]
+(defn- edit-task-form [e! {:keys [max-date min-date allow-delete?]}
+                       close-event form-atom ]
+  (let [{id :db/id send-to-thk? :task/send-to-thk? :as task} @form-atom]
     [:div.edit-task-form
      [form/form {:e! e!
                  :value task
-                 :on-change-event task-controller/->UpdateEditTaskForm
-                 :cancel-event task-controller/->CancelTaskEdit
-                 :save-event task-controller/->SaveTaskForm
+                 :on-change-event (form/update-atom-event form-atom merge)
+                 :cancel-event close-event
+                 :save-event #(common-controller/->SaveForm
+                               :task/update
+                               (form/to-value (select-keys @form-atom task-model/edit-form-keys))
+                               (fn [_response]
+                                 (fn [e!]
+                                   (e! (close-event))
+                                   (e! (snackbar-controller/->OpenSnackBar
+                                        (tr [:notifications :task-updated]) :success))
+                                   (e! (common-controller/->Refresh)))))
                  :delete (when allow-delete?
                            (task-controller/->DeleteTask id))
                  :delete-message (when send-to-thk?
@@ -443,7 +422,7 @@
                  :spec :task/edit-task-form}
 
       ^{:attribute :task/description}
-      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+      [rich-text-editor/rich-text-field {}]
 
       ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
       [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
@@ -460,6 +439,58 @@
       ^{:attribute :task/assignee}
       [select/select-user {:e! e! :attribute :task/assignee}]]]))
 
+(defn- edit-task-form-button [e! activity task allow-delete?]
+  [form/form-modal-button
+   {:e! e!
+    :button-component [buttons/button-secondary {}
+                       (tr [:buttons :edit])]
+    :modal-title (tr [:project :edit-task])
+    :form-component [edit-task-form e!
+                     {:max-date (:activity/estimated-end-date activity)
+                      :min-date (:activity/estimated-start-date activity)
+                      :allow-delete? allow-delete?}]
+    :form-value task}])
+
+(defn- task-header
+  [e! activity task]
+  [:div.task-header {:class (<class common-styles/heading-and-action-style)}
+   [typography/Heading1 (tr-enum (:task/type task))]
+   [when-authorized :task/update
+    task
+    [authorization-check/with-authorization-check
+     (if (:task/send-to-thk? task)
+       :task/delete-task-sent-to-thk
+       :task/delete-task)
+     task
+
+     [edit-task-form-button e! activity task]]
+    ]])
+
+(defn- start-review [e!]
+  (e! (task-controller/->StartReview))
+  (fn [_]
+    [:span]))
+
+(defn- task-page-content
+  [e! app activity {status :task/status :as task} pm? files-form]
+  [:div.task-page
+   (when (and pm? (du/enum= status :task.status/waiting-for-review))
+     [when-authorized :task/start-review task
+      [start-review e!]])
+   [task-header e! activity task]
+   [tabs/details-and-comments-tabs
+    {:e! e!
+     :app app
+     :type :task-comment
+     :entity-type :task
+     :entity-id (:db/id task)}
+    [task-details e! (:new-document app)
+     (get-in app [:params :project])
+     activity task files-form]]])
+
+
+
+
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
   (let [activity-id (get-in app [:add-tasks-data :db/id])
@@ -469,20 +500,6 @@
      activity
      {:max-date (:activity/estimated-end-date activity)
       :min-date (:activity/estimated-start-date activity)}]))
-
-(defmethod project-navigator-view/project-navigator-dialog :edit-task
-  [{:keys [e! app project] :as _opts}  _dialog]
-  (let [activity-id (get-in app [:params :activity])
-        activity (project-model/activity-by-id project activity-id)
-        task (:edit-task-data app)]
-    [authorization-check/with-authorization-check
-     (if (:task/send-to-thk? task)
-       :task/delete-task-sent-to-thk
-       :task/delete-task)
-     task
-     [edit-task-form e! task
-      {:max-date (:activity/estimated-end-date activity)
-       :min-date (:activity/estimated-start-date activity)}]]))
 
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]

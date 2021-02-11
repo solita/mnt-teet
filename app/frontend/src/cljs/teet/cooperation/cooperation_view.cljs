@@ -44,8 +44,8 @@
 ;;   project-view/project-full-page-structure
 ;;     third-parties
 ;;   application-form
-;;     
-;; 
+;;
+;;
 ;; application-page
 ;;   cooperation-page-structure (usage #2)
 ;;     third-parties
@@ -411,7 +411,7 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
-;; entrypoint from route /projects/:project/cooperation/:third-party 
+;; entrypoint from route /projects/:project/cooperation/:third-party
 (defn third-party-page [e! {:keys [params] :as app}
                         {:keys [project overview]
                          third-party-info :third-party}]
@@ -483,9 +483,7 @@
                                 {:thk.project/id project-id
                                  :application-id application-id
                                  :form-data (common-controller/prepare-form-data
-                                              (rich-text-editor/form-data-with-rich-text
-                                                :cooperation.response/content
-                                                @form-atom))}
+                                             (form/to-value @form-atom))}
                                 (fn [response]
                                   (fn [e!]
                                     (e! (close-event))
@@ -613,14 +611,14 @@
         opinion-eid (:db/id form-value)
         application-eid (:db/id application)]
     (log/debug "db/id of opinion-form form-value: " opinion-eid)
-    [form/form     
+    [form/form
      {:e! e!
       :value form-value
       :on-change-event (form/update-atom-event form-atom merge)
       :cancel-event close-event
       :save-event #(cooperation-controller/save-opinion-event
                     application
-                    (rich-text-editor/form-data-with-rich-text :cooperation.opinion/comment @form-atom)
+                    (form/to-value @form-atom)
                     close-event)
       :delete  (when (some? opinion-eid)
                  (common-controller/->SaveForm
@@ -629,7 +627,7 @@
                    :opinion-id opinion-eid}
                   (fn opinion-delete-command-success-fx [_response]
                     (close-event)
-                    (reset! form-atom {}) 
+                    (reset! form-atom {})
                     common-controller/refresh-fx)))
       :delete-link? false
       :spec ::cooperation-model/opinion-form}

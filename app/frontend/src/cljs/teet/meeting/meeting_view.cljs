@@ -623,7 +623,7 @@
                       :spec :meeting/agenda-form
                       :save-event #(meeting-controller/->SubmitAgendaForm
                                      meeting
-                                     (rich-text-editor/form-data-with-rich-text :meeting.agenda/body @form-atom)
+                                     (form/to-value @form-atom)
                                      close-event)}
                      (when-let [agenda-id (:db/id @form-atom)]
                        {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
@@ -826,7 +826,7 @@
                       :spec :meeting/decision-form
                       :save-event #(meeting-controller/->SubmitDecisionForm
                                      agenda-eid
-                                     (rich-text-editor/form-data-with-rich-text :meeting.decision/body @form-atom)
+                                     (form/to-value @form-atom)
                                      close-event)}
                      (when (:db/id @form-atom)
                        {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))

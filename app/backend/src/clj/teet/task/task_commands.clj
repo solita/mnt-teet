@@ -11,7 +11,9 @@
             [teet.util.datomic :as du]
             [clojure.spec.alpha :as s]
             [teet.task.task-db :as task-db]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.environment :as environment]))
 
 (defn allow-delete?
   "Check extra access for deleting task that has been sent to THK"
@@ -71,26 +73,29 @@
          (not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   :transact (let [task* (du/entity db id)
-                   new-assignee-id (get-in task [:task/assignee :user/id])
-                   old-assignee-id (get-in task* [:task/assignee :user/id])
-                   assign? (not= new-assignee-id old-assignee-id)]
-               [(merge
-                  (when (and (not old-assignee-id)
-                             new-assignee-id)
-                    {:task/status :task.status/in-progress})
-                  (-> task
-                      (select-update-keys (task-db/send-to-thk? db id))
-                      uc/without-nils)
-                  (meta-model/modification-meta user))
-                (if assign?
-                  (assignment-notification-tx db user task (project-db/task-project-id db id))
-                  {})
-                (if assign?
-                  ;; If assigning, set activity status to in-progress
-                  {:db/id (get-in task* [:activity/_tasks 0 :db/id])
-                   :activity/status :activity.status/in-progress}
-                  {})])})
+   :transact
+   (db-api-large-text/store-large-text!
+    #{:task/description}
+    (let [task* (du/entity db id)
+          new-assignee-id (get-in task [:task/assignee :user/id])
+          old-assignee-id (get-in task* [:task/assignee :user/id])
+          assign? (not= new-assignee-id old-assignee-id)]
+      [(merge
+        (when (and (not old-assignee-id)
+                   new-assignee-id)
+          {:task/status :task.status/in-progress})
+        (-> task
+            (select-update-keys (task-db/send-to-thk? db id))
+            uc/without-nils)
+        (meta-model/modification-meta user))
+       (if assign?
+         (assignment-notification-tx db user task (project-db/task-project-id db id))
+         {})
+       (if assign?
+         ;; If assigning, set activity status to in-progress
+         {:db/id (get-in task* [:activity/_tasks 0 :db/id])
+          :activity/status :activity.status/in-progress}
+         {})]))})
 
 (defcommand :task/submit
   {:doc "Submit task results for review."

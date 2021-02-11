@@ -15,7 +15,28 @@
             [clojure.set :as set]
             [teet.common.common-styles :as common-styles]
             [teet.ui.panels :as panels]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [clojure.walk :as walk]
+            [teet.util.collection :as cu]))
+
+(defprotocol ToValue
+  :extend-via-metadata true
+  (to-value [this]
+    "Return the actual form value from this internal field state."))
+
+(defn- to-value* [x]
+  (if (satisfies? ToValue x)
+    (to-value x)
+    x))
+
+(extend-protocol ToValue
+  cljs.core/PersistentArrayMap
+  (to-value [this]
+    (cu/map-vals to-value* this))
+
+  cljs.core/PersistentVector
+  (to-value [this]
+    (mapv to-value* this)))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
