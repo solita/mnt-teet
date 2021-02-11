@@ -85,13 +85,18 @@
                       second))
         m))
 
-(defn common-attrs [type {:keys [name comment label-et label-en]}]
+(defn common-attrs [type {:keys [name comment label-et label-en
+                                 description-et description-en]}]
   (without-empty
-   {:db/id (str name)
-    :db/ident name
-    :db/doc comment
-    :asset-schema/label [(or label-et "") (or label-en "")]
-    :asset-schema/type type}))
+   (merge
+    {:db/id (str name)
+     :db/ident name
+     :db/doc comment
+     :asset-schema/type type}
+    (when (or label-et label-en)
+      {:asset-schema/label [(or label-et "") (or label-en "")]})
+    (when (or description-et description-en)
+      {:asset-schema/description [(or description-et) (or description-en "")]}))))
 
 
 
