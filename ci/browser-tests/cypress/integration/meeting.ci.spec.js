@@ -51,6 +51,7 @@ context("Meetings", () => {
 
         cy.selectByKeyword(".new-participant select", ":participation.role/reviewer")
         cy.get(".new-participant button[type=submit]").click()
+        cy.wait(500)
         cy.get(".participant-list").contains("Carla Consultant")
 
         cy.location().as("meeting")
