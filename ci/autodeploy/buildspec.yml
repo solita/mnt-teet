@@ -17,3 +17,4 @@ phases:
       - ./ci/scripts/build-and-deploy.bash
       - sleep 60
       - ./ci/scripts/codebuild teet-browser-tests $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - ./ci/scripts/codebuild teet-drift-detect $CODEBUILD_RESOLVED_SOURCE_VERSION
