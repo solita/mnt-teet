@@ -50,28 +50,31 @@
          [:li
           (str (tr* v) " (" (str (:db/ident v)) ")")])])))
 
-(defn- ctype [open {attributes :attribute/_ctype
+(defn- attribute-table [open attributes]
+  (when (seq attributes)
+    [:<>
+     [typography/BoldGreyText (tr [:asset :type-library :attributes])]
+     [table/simple-table
+      [[(tr [:asset :type-library :name])]
+       [(tr [:asset :type-library :datatype])]
+       [(tr [:asset :type-library :label])]
+       [(str (tr [:asset :type-library :unit]) " / "
+             (tr [:asset :type-library :values]))]]
+      (for [a attributes]
+        [[(str (:db/ident a))]
+         [(tr [:asset :type-library (-> a :db/valueType :db/ident)])]
+         [(tr* a)]
+         [[:<>
+           (:asset-schema/unit a)
+           [attribute-values open a]]]])]]))
+
+(defn- ctype [open {attributes :attribute/_parent
                     child-ctypes :ctype/_parent :as ct}]
   [collapsible open ct
    (str (tr [:asset :type-library :ctype]) " " (tr* ct))
    [:div
     (tr* ct :asset-schema/description)
-    (when (seq attributes)
-      [:<>
-       [typography/BoldGreyText (tr [:asset :type-library :attributes])]
-       [table/simple-table
-        [[(tr [:asset :type-library :name])]
-         [(tr [:asset :type-library :datatype])]
-         [(tr [:asset :type-library :label])]
-         [(str (tr [:asset :type-library :unit]) " / "
-               (tr [:asset :type-library :values]))]]
-        (for [a attributes]
-          [[(str (:db/ident a))]
-           [(tr [:asset :type-library (-> a :db/valueType :db/ident)])]
-           [(tr* a)]
-           [[:<>
-             (:asset-schema/unit a)
-             [attribute-values open a]]]])]])
+    [attribute-table open attributes]
     (when (seq child-ctypes)
       [:div.child-ctypes
        (doall
@@ -79,11 +82,12 @@
           ^{:key (str (:db/id ct))}
           [ctype open ct]))])]])
 
-(defn- fclass [open fclass]
+(defn- fclass [open {attributes :attribute/_parent :as fclass}]
   [collapsible open fclass
    (str (tr [:asset :type-library :fclass]) " " (tr* fclass))
    [:div
     (tr* fclass :asset-schema/description)
+    [attribute-table open attributes]
     (doall
      (for [ct (:ctype/_parent fclass)]
        ^{:key (str (:db/id ct))}

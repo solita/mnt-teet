@@ -158,7 +158,7 @@
                              "number" :db.type/bigdec
                              "datetime" :db.type/instant)
              :asset-schema/unit (:unit p)
-             :attribute/ctype (str (:ctype p))})))
+             :attribute/parent (str (:ctype p))})))
 
         ;; Output enum values
         (for [item list-items

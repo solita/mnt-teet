@@ -8,14 +8,16 @@
 (def ctype-pattern
   '[*
     {:ctype/_parent [*]}
-    {:attribute/_ctype
+    {:attribute/_parent
      [*
       {:enum/_attribute [*]}]}])
 
 (def type-library-pattern
   `[~'*
     {:fclass/_fgroup
-     [~'* {:ctype/_parent ~ctype-pattern}]}])
+     [~'*
+      {:attribute/_parent [~'* {:enum/_attribute [~'*]}]}
+      {:ctype/_parent ~ctype-pattern}]}])
 
 (defn- ctype? [x]
   (and (map? x)
