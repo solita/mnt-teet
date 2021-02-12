@@ -218,9 +218,9 @@
   (when-not (contains? @enum-values attribute)
     (log/debug "getting enum vals for attribute" attribute)
     (e! (query-enums-for-attribute! attribute)))
-  (fn [{:keys [value on-change name show-label? show-empty-selection?
+  (fn [{:keys [value label on-change name show-label? show-empty-selection?
                tiny-select? id error container-class class values-filter
-               full-value? empty-selection-label read-only?]
+               full-value? empty-selection-label read-only? dark-theme?]
         :enum/keys [valid-for]
         :or {show-label? true
              show-empty-selection? true}}]
@@ -246,7 +246,7 @@
                    (filterv values-filter values)
                    ;; else
                    values)]
-      [select-comp {:label (tr [:fields attribute])
+      [select-comp {:label (or label (tr [:fields attribute]))
                     :name name
                     :id id
                     :read-only? read-only?
@@ -267,6 +267,7 @@
                                  on-change)
                     :show-empty-selection? show-empty-selection?
                     :items (sort-by (or sort-fn tr*) values)
+                    :dark-theme? dark-theme?
                     :format-item tr*
                     :required required
                     :class class
