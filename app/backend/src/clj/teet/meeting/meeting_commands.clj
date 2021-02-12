@@ -365,14 +365,17 @@
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db agenda-eid)
                                                          [:meeting/_agenda :db/id])
                                           :link :meeting/organizer-or-reviewer}}
-   :transact (update-meeting-tx
-               user
-               (meeting-db/agenda-meeting-id db agenda-eid)
-               [{:db/id agenda-eid
-                 :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
-                                                   {:db/id "new decision"
-                                                    :meeting.decision/number (meeting-db/next-decision-number db agenda-eid)}
-                                                   (meta-model/creation-meta user))]}])})
+   :transact
+   (db-api-large-text/store-large-text!
+    meeting-model/rich-text-fields
+    (update-meeting-tx
+     user
+     (meeting-db/agenda-meeting-id db agenda-eid)
+     [{:db/id agenda-eid
+       :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
+                                         {:db/id "new decision"
+                                          :meeting.decision/number (meeting-db/next-decision-number db agenda-eid)}
+                                         (meta-model/creation-meta user))]}]))})
 
 (defcommand :meeting/update-decision
   {:doc "Create a new decision under a topic"
