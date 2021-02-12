@@ -121,7 +121,7 @@
                                    "& .MuiListItemIcon-root" {:color :inherit
                                                               :min-width "40px"}}
                            :paperAnchorDockedLeft {:border-right 0}}
-               ;:MuiDivider {:root {:margin "1rem 0"}}
+               :MuiDivider {:light {:background-color theme-colors/white}}
                :MuiTableHead {:root data-label-style}
 
                :MuiTableSortLabel {:root {:display "inline-block" :width "100%"}

@@ -6,7 +6,44 @@
             [teet.util.datomic :as du]
             [clj-time.core :as t]
             [teet.project.task-model :as task-model]
-            [teet.entity.entity-db :as entity-db]))
+            [teet.entity.entity-db :as entity-db]
+            [teet.util.collection :as cu]))
+
+(defn filters->query-parts
+  [filters]
+  (for [[key val] (cu/without-nils
+                    (dissoc filters :shortcut :third-party-name))]
+    (case key
+      :response-type
+      {:where '[[?application :cooperation.application/response-type ?response-type]]
+       :in '[?response-type]
+       :args [val]}
+      :application-type
+      {:where '[[?application :cooperation.application/type ?application-type]]
+       :in '[?application-type]
+       :args [val]}
+      :response-status
+      {:where '[[?response :cooperation.response/status ?response-status]]
+       :in '[?response-status]
+       :args [val]}
+      :project-activity
+      {:where '[[?application :cooperation.application/activity ?activity]
+                [?activity :activity/name ?project-activity]]
+       :in '[?project-activity]
+       :args [val]}
+      :cooperation-opinion-status
+      {:where '[[?application :cooperation.application/opinion ?opinion]
+                [?opinion :cooperation.opinion/status ?opinion-status]]
+       :in '[?opinion-status]
+       :args [val]})))
+
+(def filters-targeting-applications
+  [:response-type :application-type :response-status :project-activity :cooperation-opinion-status])
+
+(defn filter-out-empty-third-parties?
+  "Used to check if the current set of filters should result in removal of empty third parties"
+  [filters]
+  (some #(contains? filters %) filters-targeting-applications))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -19,6 +56,12 @@
          search-filters {}}}]
   (let [{:keys [third-party-name]
          :or {third-party-name ""}} search-filters
+        all-applications-pred (if (= (:shortcut search-filters) :all-applications)
+                                (constantly true)
+                                all-applications-pred)
+
+        filters (filters->query-parts search-filters)
+
         third-parties
         (mapv first
               (d/q '[:find (pull ?third-party [:db/id :teet/id :cooperation.3rd-party/name])
@@ -31,12 +74,15 @@
                    db project-eid (str/lower-case third-party-name)))
 
         applications-by-party
-        (->> (d/q '[:find ?third-party ?application ?date
-                    :where
-                    [?third-party :cooperation.3rd-party/applications ?application]
-                    [?application :cooperation.application/date ?date]
-                    :in $ [?third-party ...]]
-                  db (map :db/id third-parties))
+        (->> (d/q {:query {:find '[?third-party ?application ?date]
+                           :where
+                           (into '[[?third-party :cooperation.3rd-party/applications ?application]
+                                   [?application :cooperation.application/date ?date]
+                                   [?application :cooperation.application/response ?response]
+                                   [(missing? $ ?application :meta/deleted?)]]
+                                 (mapcat :where filters))
+                           :in (into '[$ [?third-party ...]] (mapcat :in filters))}
+                   :args (into [db (map :db/id third-parties)] (mapcat :args filters))})
              (group-by first))
 
         applications-to-fetch
@@ -54,7 +100,11 @@
               applications-by-party)]
     (->>
       (for [{id :db/id :as tp} third-parties
-            :let [application-ids (applications-to-fetch id)]]
+            :let [application-ids (applications-to-fetch id)]
+            ;; Only return third parties when we either allow finding of empty third parties
+            ;; Or they contain applications
+            :when (or (not (filter-out-empty-third-parties? search-filters))
+                      (some? application-ids))]
         (merge
           tp
           (when (seq application-ids)

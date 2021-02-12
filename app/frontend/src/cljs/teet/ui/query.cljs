@@ -10,7 +10,8 @@
             goog.async.Debouncer
             [goog.functions :as functions]
             [teet.ui.context :as context]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.util.collection :as cu]))
 
 (defrecord Query [query args state-path state-atom])
 (defrecord QueryResult [state-path state-atom result])
@@ -80,7 +81,8 @@
                       (not= @previous-args args))
               (reset! refresh-value refresh)
               (reset! previous-args args)
-              (e! (->Query query (assoc args :filters @filter-atom) state-path state-atom)))
+              (e! (->Query query (assoc args :filters (cu/without-empty-vals
+                                                        @filter-atom)) state-path state-atom)))
             (if (or state loading-state)
               ;; Results loaded, call the view
               (if simple-view
