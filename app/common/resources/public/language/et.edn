@@ -136,6 +136,7 @@
   :show-details "Vaatan arvutuskäiku",
   :end-time "Lõpuaeg",
   :forbidden "Keelatud",
+  :all "Kõik",
   :construction-phase-activities "Faasid",
   :last-modified "Viimati muudetud",
   :added-on "Lisatud",

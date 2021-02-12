@@ -369,17 +369,23 @@
       [select/select-enum {:dark-theme? true
                            :e! e!
                            :label (tr [:fields :cooperation.application/type])
-                           :attribute :cooperation.application/type}]]
+                           :attribute :cooperation.application/type
+                           :show-empty-selection? true
+                           :empty-selection-label (tr [:common :all])}]]
      [form/field :response-type
       [select/select-enum {:dark-theme? true
                            :e! e!
                            :label (tr [:fields :cooperation.application/response-type])
-                           :attribute :cooperation.application/response-type}]]
+                           :attribute :cooperation.application/response-type
+                           :show-empty-selection? true
+                           :empty-selection-label (tr [:common :all])}]]
      [form/field :response-status
       [select/select-enum {:dark-theme? true
                            :e! e!
                            :label (tr [:fields :cooperation.response/status])
-                           :attribute :cooperation.response/status}]]
+                           :attribute :cooperation.response/status
+                           :show-empty-selection? true
+                           :empty-selection-label (tr [:common :all])}]]
      [form/field :project-activity
       [select/select-enum {:dark-theme? true
                            :e! e!
@@ -392,28 +398,16 @@
                                               (project-activities
                                                 val)))
                            :label (tr [:fields :activity/name])
-                           :attribute :activity/name}]]
+                           :attribute :activity/name
+                           :show-empty-selection? true
+                           :empty-selection-label (tr [:common :all])}]]
      [form/field :cooperation-opinion-status
       [select/select-enum {:dark-theme? true
                            :e! e!
                            :label (tr [:fields :cooperation.opinion/status])
-                           :attribute :cooperation.opinion/status}]]]}]
-  #_[context/consume :query-filter
-   (fn [{:keys [value on-change reset-filter]}]
-     [:div {:class (<class project-navigator-view/navigator-container-style true)}
-      [:div {:style {:margin-right "1rem"}}
-       [form/form2 {:e! e!
-                    :on-change-event on-change
-                    :value value}
-        [form/field :third-party-name
-         [text-field/TextField {:start-icon icons/action-search
-                                :dark-theme? true
-                                :label (tr [:fields :cooperation.3rd-party/name])}]]]
-       [:div {:style {:display :flex
-                      :justify-content :flex-end}}
-        [buttons/link-button-with-icon {:on-click reset-filter
-                                        :icon [icons/content-clear {:font-size :small}]}
-         (tr [:search :clear-filters])]]]])])
+                           :attribute :cooperation.opinion/status
+                           :show-empty-selection? true
+                           :empty-selection-label (tr [:common :all])}]]]}])
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   [project-view/project-full-page-structure

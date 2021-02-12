@@ -136,6 +136,7 @@
   :show-details "Show details",
   :end-time "Ends at",
   :forbidden "Forbidden",
+  :all "All",
   :construction-phase-activities "Project phases",
   :last-modified "Last modified",
   :added-on "Added on",
