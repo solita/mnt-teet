@@ -92,10 +92,10 @@
     (create-application-response (tu/db)
                                  (get (:tempids create-application-result) "new-application"))
     ;; Run notify ion and verify there is new notification
-    (notification-ion/notify {})
+    (notification-ion/notify event)
     (testing "Notification created"
       (is (not (empty? (fetch-application-to-expire-notifications (tu/db))))))
     ;; Run notify ion once again and verify no new notifications created
-    (notification-ion/notify {})
+    (notification-ion/notify event)
     (testing "No additional notifications created"
       (is (= 1 (count (fetch-application-to-expire-notifications (tu/db))))))))
