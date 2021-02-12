@@ -244,28 +244,35 @@
      [(tr [:common :date])
       (format/date (:meta/created-at opinion))]]]])
 
-(defn application-list-item
-  [{:keys [parent-link-comp]} {:cooperation.application/keys [activity] :as application}]
-  [:div {:class (<class cooperation-style/application-list-item-style)}
+(defn application-data
+  [{:cooperation.application/keys [activity] :as application}]
+  [Grid {:container true
+         :spacing 3}
+   [Grid {:item true
+          :md 12
+          :lg 8}
+    [:div {:class [(<class common-styles/flex-row)
+                   (<class common-styles/margin-bottom 1)]}
+     [application-link application]
+     [typography/GreyText {:style {:margin-left "0.5rem"}}
+      (tr-enum (:activity/name activity))]]
+    [application-information application]]
+   [Grid {:item true
+          :md 12
+          :lg 4}
+    [application-list-opinion application]]])
 
+(defn application-list-item
+  "Takes a list of applications and renders them in within 2 borders
+  Optionally takes a parent-link-component which is used to render a link to the third party"
+  [{:keys [parent-link-comp]} applications]
+  [:div {:class (<class cooperation-style/application-list-item-style)}
    (when parent-link-comp
      parent-link-comp)
-   (when application
-     [Grid {:container true
-            :spacing 3}
-      [Grid {:item true
-             :md 12
-             :lg 8}
-       [:div {:class [(<class common-styles/flex-row)
-                      (<class common-styles/margin-bottom 1)]}
-        [application-link application]
-        [typography/GreyText {:style {:margin-left "0.5rem"}}
-         (tr-enum (:activity/name activity))]]
-       [application-information application]]
-      [Grid {:item true
-             :md 12
-             :lg 4}
-       [application-list-opinion application]]])])
+   (when applications
+     (for [application applications]
+       ^{:key (:db/id application)}
+       [application-data application]))])
 
 (defn- third-parties [e! project third-parties selected-third-party-teet-id]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
@@ -298,10 +305,100 @@
 (defn- selected-third-party-teet-id [{:keys [params] :as _app}]
   (some-> params :third-party uuid))
 
+
+(defn query-context-search
+  "Takes as parameter a vector of shortcut values that are handled in the backend
+  And attributes and their types
+  :default-shortcut - highligted value of shortcut-options when no option is selected
+  :shortcut-options - map with keys [:option-val :tr-path] only one selectable value under key :shortcut in value
+  :search-fields - as form/field components"
+  [{:keys [e! default-shortcut shortcut-options search-fields]}]
+  [context/consume :query-filter
+   (fn [{:keys [value on-change reset-filter]}]
+     [:div {:class (<class project-navigator-view/navigator-container-style true)}
+      [:div {:style {:margin-right "1rem"}}
+       [:div {:class (<class common-styles/margin-bottom 0.5)
+              :style {:display :flex
+                      :justify-content :flex-end}}
+        [buttons/link-button-with-icon {:on-click reset-filter
+                                        :icon [icons/content-clear {:font-size :small}]}
+         (tr [:search :clear-filters])]]
+       [typography/Text2 {:style {:color :white}} (tr [:common :filter-shortcuts])]
+       [Divider {:style {:margin "0.5rem 0"}
+                 :light true}]
+
+       (into [:div {:style {:color :white}
+                    :class (<class common-styles/margin-bottom 1)}]
+             (for [{:keys [option-val tr-path]} shortcut-options
+                   :let [selected? (if-let [shortcut-val (:shortcut value)]
+                                     (= shortcut-val
+                                       option-val)
+                                     (= option-val default-shortcut))]]
+               [:div
+                [buttons/link-button {:on-click #(on-change {:shortcut option-val})
+                                      :class (<class common-styles/white-link-style selected?)}
+                 (tr tr-path)]]))
+
+       (into [form/form2 {:e! e!
+                          :on-change-event on-change
+                          :value value}]
+             search-fields)
+       [:div {:style {:display :flex
+                      :justify-content :flex-end}}
+        [buttons/link-button-with-icon {:on-click reset-filter
+                                        :icon [icons/content-clear {:font-size :small}]}
+         (tr [:search :clear-filters])]]]])])
+
 (defn cooperation-application-search
   "Uses context :query-filter created by the query component to manage the filters for the query component"
-  [e!]
-  [context/consume :query-filter
+  [e! project-activities]
+  [query-context-search
+   {:e! e!
+    :default-shortcut :newest-application
+    :shortcut-options
+    [{:option-val :newest-application
+      :tr-path [:cooperation :filter :newest-applications]}
+     {:option-val :all-applications
+      :tr-path [:cooperation :filter :all-applications]}]
+    :search-fields
+    [[form/field :third-party-name
+      [text-field/TextField {:start-icon icons/action-search
+                             :dark-theme? true
+                             :label (tr [:fields :cooperation.3rd-party/name])}]]
+     [form/field :application-type
+      [select/select-enum {:dark-theme? true
+                           :e! e!
+                           :label (tr [:fields :cooperation.application/type])
+                           :attribute :cooperation.application/type}]]
+     [form/field :response-type
+      [select/select-enum {:dark-theme? true
+                           :e! e!
+                           :label (tr [:fields :cooperation.application/response-type])
+                           :attribute :cooperation.application/response-type}]]
+     [form/field :response-status
+      [select/select-enum {:dark-theme? true
+                           :e! e!
+                           :label (tr [:fields :cooperation.response/status])
+                           :attribute :cooperation.response/status}]]
+     [form/field :project-activity
+      [select/select-enum {:dark-theme? true
+                           :e! e!
+                           ;; Only show actual activities that exist for the project
+                           :values-filter (fn [val]
+                                            (and
+                                              (not
+                                                (#{:activity.name/warranty :activity.name/land-acquisition}
+                                                 val))
+                                              (project-activities
+                                                val)))
+                           :label (tr [:fields :activity/name])
+                           :attribute :activity/name}]]
+     [form/field :cooperation-opinion-status
+      [select/select-enum {:dark-theme? true
+                           :e! e!
+                           :label (tr [:fields :cooperation.opinion/status])
+                           :attribute :cooperation.opinion/status}]]]}]
+  #_[context/consume :query-filter
    (fn [{:keys [value on-change reset-filter]}]
      [:div {:class (<class project-navigator-view/navigator-container-style true)}
       [:div {:style {:margin-right "1rem"}}
@@ -330,13 +427,18 @@
 (defn- cooperation-overview-structure
   "Only in the overview page do we want the cooperation search to be in place instead of the third party navigator"
   [e! app project main-content & [right-content]]
-  [project-view/project-full-page-structure
-   {:e! e!
-    :app app
-    :project project
-    :left-panel [cooperation-application-search e!]
-    :right-panel right-content
-    :main main-content}])
+  (let [project-activities (->> (:thk.project/lifecycles project)
+                                (mapcat
+                                  :thk.lifecycle/activities)
+                                (map :activity/name)
+                                set)]
+    [project-view/project-full-page-structure
+     {:e! e!
+      :app app
+      :project project
+      :left-panel [cooperation-application-search e! project-activities]
+      :right-panel right-content
+      :main main-content}]))
 
 
 ;; entrypoint from route /projects/:project/cooperation route
@@ -347,36 +449,45 @@
     e! app project
     [:<>
      [:div {:class (<class common-styles/margin-bottom 1.5)}
-      [typography/Heading2 (tr [:cooperation :page-title])]
-      [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
-       (tr [:cooperation :all-third-parties])]
-      [form/form-modal-button
-       {:max-width "sm"
-        :form-component [third-party-form {:e! e!
-                                           :project-id (:thk.project/id project)}]
-        :modal-title (tr [:cooperation :new-third-party-title])
-        :button-component [buttons/button-primary {:class "new-third-party"}
-                           (tr [:cooperation :new-third-party])]
-        :form-value {:db/id "new-3rd-party"}}]]
-     (for [{teet-id :teet/id :cooperation.3rd-party/keys [name applications]} overview]
-       [url/with-navigation-params
-        {:third-party (str teet-id)}
-        (let [application (first applications)]
+      [:div {:class (<class common-styles/header-with-actions)}
+       [:div
+        [typography/Heading2 (tr [:cooperation :page-title])]
+        [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+         (tr [:cooperation :all-third-parties])]]
+       [form/form-modal-button
+        {:max-width "sm"
+         :form-component [third-party-form {:e! e!
+                                            :project-id (:thk.project/id project)}]
+         :modal-title (tr [:cooperation :new-third-party-title])
+         :button-component [buttons/button-primary {:class "new-third-party"
+                                                    :end-icon (r/as-element [icons/content-add])}
+                            (tr [:cooperation :new-third-party])]
+         :form-value {:db/id "new-3rd-party"}}]]
+      [:div {:style {:text-align :right}}
+       [typography/Text3 (tr [:cooperation :results] {:count (count overview)})]]]
+     (if (not-empty overview)
+       (for [{teet-id :teet/id :cooperation.3rd-party/keys [name applications]} overview]
+         ^{:key (str teet-id)}
+         [url/with-navigation-params
+          {:third-party (str teet-id)}
           [:div {:data-third-party name}
+
            [application-list-item
-            {:parent-link-comp [url/Link {:style {:font-size "1.5rem"
-                                                  :display :block}
-                                          :class (<class common-styles/margin-bottom 1.5)
-                                          :page :cooperation-third-party
-                                          :params {:third-party teet-id}}
+            {:parent-link-comp [url/Link2 {:style {:font-size "1.5rem"
+                                                   :display :block}
+                                           :class (<class common-styles/margin-bottom 1.5)
+                                           :page :cooperation-third-party
+                                           :params {:third-party teet-id}}
                                 name]}
-            application]])])]]])
+            applications]]])
+       [typography/Heading3 (tr [:link :search :no-results])])]]])
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
    (for [{id :db/id :as application} applications]
      ^{:key (str id)}
-     [application-list-item {} application])])
+     [application-list-item {} [application]                ;;Each application needs it's own row
+      ])])
 
 (defn- application-form [{:keys [e! project-id third-party-teet-id]} close-event form-atom]
   [form/form {:e! e!
