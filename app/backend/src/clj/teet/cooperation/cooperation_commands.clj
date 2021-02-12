@@ -11,27 +11,22 @@
             [teet.project.project-db :as project-db]
             [clojure.spec.alpha :as s]
             [teet.cooperation.cooperation-notifications :as cooperation-notifications]
-            [teet.activity.activity-db :as activity-db]))
+            [teet.activity.activity-db :as activity-db]
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.environment :as environment]))
 
-
-(defcommand :cooperation/create-3rd-party
-  {:doc "Create a new third party in project."
-   :context {:keys [user db]}
-   :payload {project-id :thk.project/id
-             third-party :third-party}
-   :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-3rd-party {}}
-   :transact
-   [(list 'teet.cooperation.cooperation-tx/create-3rd-party
-          (merge
-           (select-keys third-party
-                        [:cooperation.3rd-party/name
-                         :cooperation.3rd-party/id-code
-                         :cooperation.3rd-party/email
-                         :cooperation.3rd-party/phone])
-           {:db/id "new-third-party"
-            :teet/id (java.util.UUID/randomUUID)
-            :cooperation.3rd-party/project [:thk.project/id project-id]}))]})
+(defn- third-party-is-new-or-belongs-to-project?
+  "Check :db/id of new 3rd party form data and check if it is
+  new (string) or already belongs to the project."
+  [db project-eid {id :db/id :as _third-party}]
+  {:pre [(some? id)]}
+  (or (string? id)
+      (boolean
+       (seq
+        (d/q '[:find ?tp
+               :where [?tp :cooperation.3rd-party/project ?p]
+               :in $ ?tp ?p]
+             db id project-eid)))))
 
 (defn- third-party-belongs-to-project? [db third-party-teet-id project-eid]
   (seq (d/q '[:find ?tp :in $ ?id ?project
@@ -39,6 +34,31 @@
               [?tp :teet/id ?id]
               [?tp :cooperation.3rd-party/project ?project]]
             db third-party-teet-id project-eid)))
+
+(defcommand :cooperation/save-3rd-party
+  {:doc "Create or update a third party in project."
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             third-party :third-party}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-3rd-party {}}
+   :pre [(third-party-is-new-or-belongs-to-project? db [:thk.project/id project-id] third-party)]
+   :transact
+   [(list 'teet.cooperation.cooperation-tx/save-3rd-party
+          (meta-model/with-creation-or-modification-meta
+            user
+            (merge
+             (select-keys third-party
+                          [:db/id
+                           :cooperation.3rd-party/name
+                           :cooperation.3rd-party/id-code
+                           :cooperation.3rd-party/email
+                           :cooperation.3rd-party/phone])
+             {:cooperation.3rd-party/project [:thk.project/id project-id]}
+             (when (string? (:db/id third-party))
+               {:teet/id (java.util.UUID/randomUUID)}))))]})
+
+
 
 (defcommand :cooperation/create-application
   {:doc "Create new application in project for the given 3rd party."
@@ -124,28 +144,30 @@
    :authorization {:cooperation/application-approval {}}
    :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
-   (let [existing-id (:db/id response-payload)
-         response-id (or existing-id "new-application-response")
-         old-response (if existing-id
-                        (d/pull db cooperation-model/response-application-keys
-                                existing-id)
-                        {:db/id "new-application-response"})
-         project-id (cooperation-db/application-project-id db application-id)
-         activity-id (cooperation-db/application-activity-id db application-id)
-         activity-manager-user-id (activity-db/activity-manager db activity-id)]
-     (into [{:db/id application-id
-             :cooperation.application/response response-id}]
-       (concat (du/modify-entity-tx
-                 old-response
-                 (merge (cu/without-nils
-                          (select-keys response-payload
-                            cooperation-model/response-application-keys))
-                   {:db/id response-id}
-                   (if (:db/id response-payload)
-                     (meta-model/modification-meta user)
-                     (meta-model/creation-meta user))))
-         [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
-            project-id application-id cooperation-notifications/new-response-type)])))})
+   (db-api-large-text/store-large-text!
+    cooperation-model/rich-text-fields
+    (let [existing-id (:db/id response-payload)
+          response-id (or existing-id "new-application-response")
+          old-response (if existing-id
+                         (d/pull db cooperation-model/response-application-keys
+                                 existing-id)
+                         {:db/id "new-application-response"})
+          project-id (cooperation-db/application-project-id db application-id)
+          activity-id (cooperation-db/application-activity-id db application-id)
+          activity-manager-user-id (activity-db/activity-manager db activity-id)]
+      (into [{:db/id application-id
+              :cooperation.application/response response-id}]
+            (concat (du/modify-entity-tx
+                     old-response
+                     (merge (cu/without-nils
+                             (select-keys response-payload
+                                          cooperation-model/response-application-keys))
+                            {:db/id response-id}
+                            (if (:db/id response-payload)
+                              (meta-model/modification-meta user)
+                              (meta-model/creation-meta user))))
+                    [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
+                                                                                     project-id application-id cooperation-notifications/new-response-type)]))))})
 
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
@@ -170,15 +192,18 @@
    :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
    :authorization {:cooperation/application-approval {}}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
-   :transact [{:db/id application-id
-               :cooperation.application/opinion
-               (merge
-                {:db/id (or (:db/id opinion-form) "new-opinion")}
-                (select-keys opinion-form [:cooperation.opinion/status
-                                           :cooperation.opinion/comment])
-                (if (:db/id opinion-form)
-                  (meta-model/modification-meta user)
-                  (meta-model/creation-meta user)))}]})
+   :transact
+   (db-api-large-text/store-large-text!
+    cooperation-model/rich-text-fields
+    [{:db/id application-id
+      :cooperation.application/opinion
+      (merge
+       {:db/id (or (:db/id opinion-form) "new-opinion")}
+       (select-keys opinion-form [:cooperation.opinion/status
+                                  :cooperation.opinion/comment])
+       (if (:db/id opinion-form)
+         (meta-model/modification-meta user)
+         (meta-model/creation-meta user)))}])})
 
 (s/def ::contact-form ::cooperation-model/contact-form)
 
@@ -228,3 +253,22 @@
                 [:db/retractEntity contact-id]]
                (throw (ex-info "Application has no contact info"
                                {:error :no-contact-info})))})
+
+(defcommand :cooperation/delete-third-party
+  {:doc "Delete a third party. It must not have any applications."
+   :spec (s/keys :req [:db/id])
+   :context {:keys [user db]}
+   :payload {id :db/id}
+   :project-id (cooperation-db/third-party-project-id db id)
+   :authorization {:cooperation/edit-3rd-party {:entity-id id}}
+   :pre [(not (cooperation-db/has-applications? db id))]
+   :transact [(meta-model/deletion-tx user id)]})
+
+(defcommand :cooperation/delete-opinion
+  {:doc "Delete opinion from the application"
+   :spec (s/keys :req-un [::application-id ::opinion-id])
+   :context {:keys [user db]}
+   :payload {:keys [application-id opinion-id]}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/edit-application {}}
+   :transact [[:db/retractEntity opinion-id]]})

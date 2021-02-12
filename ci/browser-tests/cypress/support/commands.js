@@ -55,6 +55,14 @@ Cypress.Commands.add("randomName", (contextName, prefix) => {
     cy.wrap(randomName).as(contextName);
 })
 
+Cypress.Commands.add("selectByKeyword", (sel, kw) => {
+    const option = `${sel} option[data-item='${kw}']`
+
+    cy.get(option).then(($opt) => {
+        cy.get(sel).select($opt.attr("value"))
+    })
+})
+
 // Input to TEET form text input
 Cypress.Commands.add("formInput", (...attrAndText) => {
     for(let i = 0; i < attrAndText.length/2; i++) {
@@ -76,6 +84,9 @@ Cypress.Commands.add("formInput", (...attrAndText) => {
         } else if(text.startsWith("RTE:")) {
             // Rich Text Editor field
             cy.get(`div[data-form-attribute='${attr}'] [contenteditable]`).type(text.substr(4), {force: true})
+        } else if(text.startsWith("TEXT:")) {
+            // Textarea
+            cy.get(`div[data-form-attribute='${attr}'] textarea`).type(text.substr(5), {force: true})
         } else {
             // Regular text, just type it in
             cy.get(`div[data-form-attribute='${attr}'] input`).type(text, {force: true})

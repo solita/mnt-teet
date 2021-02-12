@@ -17,8 +17,9 @@
             [teet.comment.comment-db :as comment-db]
             [teet.pdf.pdf-export :as pdf-export]
             [teet.meeting.meeting-pdf :as meeting-pdf]
-            [teet.log :as log]))
-
+            [teet.log :as log]
+            [teet.entity.entity-db :as entity-db]
+            [teet.db-api.db-api-large-text :as db-api-large-text]))
 
 (defn project-related-unit-ids
   [db api-context project-eid]
@@ -243,55 +244,58 @@
    :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
                                        :link :thk.project/owner
                                        :access :read}}}
-  (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
-    (link-db/fetch-links
-      db user
-      valid-external-ids
-      #(or (contains? % :meeting.agenda/topic)
-           (contains? % :meeting.decision/body))
-      (meta-query/without-deleted
+  (db-api-large-text/with-large-text
+    meeting-model/rich-text-fields
+    (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
+      (link-db/fetch-links
+       db user
+       valid-external-ids
+       #(or (contains? % :meeting.agenda/topic)
+            (contains? % :meeting.decision/body))
+       (meta-query/without-deleted
         db
         {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
          :meeting (let [meeting
                         (d/pull
-                          db
-                          `[:db/id
-                            :meeting/locked?
-                            :meeting/title :meeting/location
-                            :meeting/start :meeting/end
-                            :meeting/notifications-sent-at
-                            :meeting/number :meta/created-at :meta/modified-at
-                            {:meeting/organizer ~user-model/user-listing-attributes}
-                            {:meeting/agenda [:db/id
-                                              :meeting.agenda/topic
-                                              :meeting.agenda/body
-                                              :meta/created-at :meta/modified-at
-                                              {:meeting.agenda/decisions
-                                               [:db/id :meeting.decision/body
-                                                :meta/created-at :meta/modified-at
-                                                :meeting.decision/number
-                                                ~attachments]}
-                                              {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                              ~attachments]}
-                            {:review/_of [:db/id
-                                          :review/comment
-                                          :review/decision
-                                          :meta/created-at
-                                          {:review/reviewer ~user-model/user-listing-attributes}]}
-                            {:participation/_in
-                             [:db/id
-                              :participation/absent?
-                              :participation/role
-                              :meta/created-at :meta/modified-at
-                              {:participation/participant ~user-model/user-listing-attributes}]}]
-                          (meeting-db/activity-meeting-id db activity-id meeting-id))]
+                         db
+                         `[:db/id
+                           :meeting/locked?
+                           :meeting/title :meeting/location
+                           :meeting/start :meeting/end
+                           :meeting/notifications-sent-at
+                           :meeting/number :meta/created-at :meta/modified-at
+                           {:meeting/organizer ~user-model/user-listing-attributes}
+                           {:meeting/agenda [:db/id
+                                             :meeting.agenda/topic
+                                             :meeting.agenda/body
+                                             :meta/created-at :meta/modified-at
+                                             {:meeting.agenda/decisions
+                                              [:db/id :meeting.decision/body
+                                               :meta/created-at :meta/modified-at
+                                               :meeting.decision/number
+                                               ~attachments]}
+                                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                             ~attachments]}
+                           {:review/_of [:db/id
+                                         :review/comment
+                                         :review/decision
+                                         :meta/created-at
+                                         {:review/reviewer ~user-model/user-listing-attributes}]}
+                           {:participation/_in
+                            [:db/id
+                             :participation/absent?
+                             :participation/role
+                             :meta/created-at :meta/modified-at
+                             {:participation/participant ~user-model/user-listing-attributes}]}]
+                         (meeting-db/activity-meeting-id db activity-id meeting-id))]
                     (merge
-                      meeting
-                      (comment-db/comment-count-of-entity-by-status
-                        db user meeting-id :meeting)))}
+                     meeting
+                     (comment-db/comment-count-of-entity-by-status
+                      db user meeting-id :meeting)
+                     (entity-db/entity-seen db user meeting-id)))}
 
         (fn [entity]
-          (contains? entity :link/to))))))
+          (contains? entity :link/to)))))))
 
 
 (defquery :meeting/activity-meeting-history
@@ -332,7 +336,8 @@
 (defquery :meeting/download-pdf
   {:doc "Download meeting minutes as PDF"
    :context {:keys [db user]}
-   :args {id :db/id}
+   :args {id :db/id
+          language :language}
    :project-id (project-db/meeting-project-id db id)
    :authorization {:meeting/download-attachment {:db/id id
                                                  :link :meeting/organizer-or-reviewer}}}
@@ -344,7 +349,7 @@
           (fn [ostream]
             (try
               (pdf-export/hiccup->pdf
-               (meeting-pdf/meeting-pdf db user id)
+               (meeting-pdf/meeting-pdf db user language id)
                ostream)
               (catch Exception e
                 (log/error e "Exception while generating meeting PDF")))))})

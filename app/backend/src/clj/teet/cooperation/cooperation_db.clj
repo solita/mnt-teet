@@ -4,7 +4,9 @@
             [clojure.string :as str]
             [teet.util.date :as date]
             [teet.util.datomic :as du]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [teet.project.task-model :as task-model]
+            [teet.entity.entity-db :as entity-db]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -12,31 +14,37 @@
 
   If all-applications-pred function is given, all applications will be
   returned for third parties whose id matches the predicate."
-  ([db project-eid]
-   (overview db project-eid (constantly false)))
-  ([db project-eid all-applications-pred]
-   (let [third-parties
-         (mapv first
-               (d/q '[:find (pull ?e [:db/id :teet/id :cooperation.3rd-party/name])
-                      :where [?e :cooperation.3rd-party/project ?project]
-                      :in $ ?project]
-                    db project-eid))
-
-         applications-by-party
-         (->> (d/q '[:find ?third-party ?application ?date
+  [{:keys [db project-eid all-applications-pred search-filters]
+    :or {all-applications-pred (constantly false)
+         search-filters {}}}]
+  (let [{:keys [third-party-name]
+         :or {third-party-name ""}} search-filters
+        third-parties
+        (mapv first
+              (d/q '[:find (pull ?third-party [:db/id :teet/id :cooperation.3rd-party/name])
                      :where
-                     [?third-party :cooperation.3rd-party/applications ?application]
-                     [?application :cooperation.application/date ?date]
-                     [(missing? $ ?application :meta/deleted?)]
-                     :in $ [?third-party ...]]
-                   db (map :db/id third-parties))
-              (group-by first))
+                     [?third-party :cooperation.3rd-party/project ?project]
+                     [?third-party :cooperation.3rd-party/name ?name]
+                     [(.toLowerCase ^String ?name) ?lower-name]
+                     [(.contains ?lower-name ?third-party-name)]
+                     :in $ ?project ?third-party-name]
+                   db project-eid (str/lower-case third-party-name)))
 
-         applications-to-fetch
-         (into {}
-               (map (fn [[third-party-id applications]]
-                      [third-party-id
-                       (map
+        applications-by-party
+        (->> (d/q '[:find ?third-party ?application ?date
+                    :where
+                    [?third-party :cooperation.3rd-party/applications ?application]
+                    [?application :cooperation.application/date ?date]
+                    [(missing? $ ?application :meta/deleted?)]
+                    :in $ [?third-party ...]]
+                  db (map :db/id third-parties))
+             (group-by first))
+
+        applications-to-fetch
+        (into {}
+              (map (fn [[third-party-id applications]]
+                     [third-party-id
+                      (map
                         second
                         (if (all-applications-pred third-party-id)
                           ;; Return all applications
@@ -44,23 +52,23 @@
 
                           ;; Return only the latest application
                           (take 1 (reverse (sort-by #(nth % 2) applications)))))]))
-               applications-by-party)]
-     (->>
+              applications-by-party)]
+    (->>
       (for [{id :db/id :as tp} third-parties
             :let [application-ids (applications-to-fetch id)]]
         (merge
-         tp
-         (when (seq application-ids)
-           {:cooperation.3rd-party/applications
-            (->> (d/q '[:find (pull ?e attrs)
-                        :in $ [?e ...] attrs]
-                      db application-ids
-                      cooperation-model/application-overview-attrs)
-                 (mapv first)
-                 (sort-by :cooperation.application/date)
-                 reverse)})))
+          tp
+          (when (seq application-ids)
+            {:cooperation.3rd-party/applications
+             (->> (d/q '[:find (pull ?e attrs)
+                         :in $ [?e ...] attrs]
+                       db application-ids
+                       cooperation-model/application-overview-attrs)
+                  (mapv first)
+                  (sort-by :cooperation.application/date)
+                  reverse)})))
       (sort-by (comp str/lower-case :cooperation.3rd-party/name))
-      vec))))
+      vec)))
 
 (defn third-party-id-by-name
   "Find 3rd party id in project by its name."
@@ -74,10 +82,10 @@
 
 (def third-party-by-teet-id
   "Find 3rd party by :teet/id. Returns entity :db/id or nil."
-  (partial du/entity-by-teet-id :cooperation.3rd-party/name))
+  (partial entity-db/entity-by-teet-id :cooperation.3rd-party/name))
 
 (def application-by-teet-id
-  (partial du/entity-by-teet-id :cooperation.application/type))
+  (partial entity-db/entity-by-teet-id :cooperation.application/type))
 
 
 
@@ -96,18 +104,20 @@
 
 (defn third-party-application-task
   [db third-party-id application-id]
-  (ffirst
-   (d/q '[:find (pull ?task [*]) ;; todo: add some param definitions
-          :in $ ?third-part ?application-id
-          :where
-          [?third-part :cooperation.3rd-party/applications ?applications]
-          [(missing? $ ?applications :meta/deleted?)]
-          [?applications :cooperation.application/activity ?activities]
-          [(missing? $ ?activities :meta/deleted?)]
-          [?activities :activity/tasks ?task]
-          [(missing? $ ?task :meta/deleted?)]
-          [?task :task/type :task.type/no-objection-coordination]]
-        db third-party-id application-id)))
+  (let [task (ffirst
+               (d/q '[:find (pull ?task [*])
+                      :in $ ?third-part ?application-id
+                      :where
+                      [?third-part :cooperation.3rd-party/applications ?applications]
+                      [(missing? $ ?applications :meta/deleted?)]
+                      [?applications :cooperation.application/activity ?activities]
+                      [(missing? $ ?activities :meta/deleted?)]
+                      [?activities :activity/tasks ?task]
+                      [(missing? $ ?task :meta/deleted?)]
+                      [?task :task/type :task.type/no-objection-coordination]]
+                    db third-party-id application-id))]
+    (when (task-model/can-submit? task)
+      task)))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
@@ -188,3 +198,30 @@
                                        [:cooperation.application/opinion
                                         :cooperation.application/response]
                                        application-id)))
+
+(defn- ->third-party-id [id]
+  (if (uuid? id)
+    [:teet/id id]
+    id))
+
+(defn third-party-project-id
+  "Return project id for the third party. Third party id
+  can either be a UUID (:teet/id) or long (:db/id)."
+  [db third-party-id]
+  (ffirst
+   (d/q '[:find ?p
+          :where [?tp :cooperation.3rd-party/project ?p]
+          :in $ ?tp]
+        db (->third-party-id third-party-id))))
+
+(defn has-applications?
+  "Check if third party has applications."
+  [db third-party-id]
+  (boolean
+   (seq
+    (d/q '[:find ?a
+           :where
+           [?tp :cooperation.3rd-party/applications ?a]
+           [(missing? $ ?a :meta/deleted?)]
+           :in $ ?tp]
+         db (->third-party-id third-party-id)))))

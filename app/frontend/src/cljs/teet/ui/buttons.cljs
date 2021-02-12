@@ -7,6 +7,7 @@
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
+            [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
             [teet.common.common-styles :as common-styles]))
@@ -110,6 +111,14 @@
 (def link-button
   (util/make-component Link {:component :button
                              :type      :button}))
+
+
+(defn link-button-with-icon
+  [{:keys [on-click icon]} label]
+  [link-button {:class (<class common-styles/white-link-button-style)
+                :on-click on-click}
+   icon
+   label])
 
 (defn button-with-confirm
   [{:keys [action modal-title modal-text confirm-button-text cancel-button-text close-on-action? id]}

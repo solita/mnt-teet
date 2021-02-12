@@ -24,6 +24,8 @@
 (defrecord ChangeAbsentStatus [participation-id absent?])
 
 (defrecord SubmitReview [meeting-id form-data close-event])
+(defrecord MarkMeetingAsSeen [])
+(defrecord MarkMeetingAsSeenResponse [response])
 
 (extend-protocol t/Event
   SubmitMeetingForm
@@ -199,4 +201,25 @@
                                 (tr [:notifications :decision-created]))
              :result-event (partial common-controller/->ModalFormResult close-event)})))
 
-  )
+  MarkMeetingAsSeen
+  (process-event [_ app]
+    (if (common-controller/page-state app :mark-meeting-as-seen-response)
+      ;; We alread marked this meeting as seen
+      app
+
+      ;; Mark it as seen now
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :meeting/seen
+             :payload {:db/id (common-controller/page-state app :meeting :db/id)}
+             :result-event ->MarkMeetingAsSeenResponse})))
+
+
+  MarkMeetingAsSeenResponse
+  (process-event [{response :response} app]
+    (-> app
+        ;; Remember that we already marked this as seen
+        (assoc-in [:route :meeting :mark-meeting-as-seen-response] response)
+
+        ;; Remove the seen timestamp so we don't show the indicators anymore
+        (update-in [:route :meeting :meeting] dissoc :entity-seen/seen-at))))

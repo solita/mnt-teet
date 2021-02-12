@@ -123,7 +123,6 @@
 (defrecord DrawSelectionCancel [])
 
 
-(defrecord OpenEditTaskDialog [task-id])
 (defrecord OpenEditActivityDialog [activity-id])
 
 (defrecord DeleteActivity [activity-id])
@@ -744,15 +743,6 @@
                (-> app common-controller/page-state
                    (project-model/activity-by-id activity-id)
                    (update :activity/name :db/ident)))))
-
-  OpenEditTaskDialog
-  (process-event [{task-id :task-id} app]
-    (-> app
-        (assoc-in [:stepper :dialog] {:type :edit-task})
-        (assoc :edit-task-data
-               (-> app common-controller/page-state
-                   (project-model/task-by-id task-id)
-                   task->edit-task-data))))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]

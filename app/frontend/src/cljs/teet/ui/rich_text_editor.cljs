@@ -14,7 +14,8 @@
             [teet.util.string :as string]
             [clojure.string :as str]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.typography :as typography])
+            [teet.ui.typography :as typography]
+            [teet.ui.form :as form])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -23,6 +24,27 @@
          (local-storage (atom nil) "editor-state"))
 
 (def character-limit 4000)
+
+(declare editor-state->markdown markdown->editor-state)
+
+(defrecord RichTextFieldValue [editor-state]
+  form/ToValue
+  (to-value [_]
+    (editor-state->markdown editor-state)))
+
+(defn- ->editor-state [value]
+  (cond
+    (nil? value)
+    (markdown->editor-state "")
+
+    (string? value)
+    (markdown->editor-state value)
+
+    (instance? RichTextFieldValue value)
+    (:editor-state value)
+
+    :else (throw (ex-info "Unrecognized rich text form value"
+                          {:unrecognized-value value}))))
 
 (defn editor-style
   [error]
@@ -141,28 +163,16 @@
   (js>
    (export-markdown/stateToMarkdown (.getCurrentContent editor-state))))
 
-(defn form-data-with-rich-text
-  "Given a key where the rich text is in the map and a map
-  returns a map which can be stored in the backend"
-  [rich-text-attr form]
-  (if-not (contains? form rich-text-attr)
-    form
-    (update form rich-text-attr
-            (fn [data]
-              (if (or (string? data) (nil? data))
-                data
-                (editor-state->markdown data))))))
-
 (defn validate-rich-text-form-field-not-empty
   [value]
-  (when (or
-          (nil? value)
-          (and (string? value) (empty? value))
-          (and (not (string? value))
-               (every?
-                 empty?
-                 (string/words (str/replace (editor-state->markdown value) #"\u200b" "")))))
-    "Rich text editor can't be empty"))
+  (let [value (if (instance? RichTextFieldValue value)
+                (editor-state->markdown (:editor-state value))
+                value)]
+    (when (or
+           (nil? value)
+           (every? empty?
+                   (string/words (str/replace value #"\u200b" ""))))
+      "Rich text editor can't be empty")))
 
 (def ^:private decorator
   (draft-js/CompositeDecorator. #js [#js {:strategy findLinkWithRegex
@@ -181,7 +191,8 @@
   :value      current draftjs EditorState object (or nil for empty)
   :on-change  callback to update editor state"
 
-  [{:keys [value on-change id label required error]}]
+  [{:keys [value on-change id label required error dark-theme?]
+    :or {dark-theme? false}}]
   (js>
    (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
@@ -205,7 +216,7 @@
      [:div (when id {:id id})
       [:div
        (when label
-         [:label {:class (<class common-styles/input-label-style read-only?)}
+         [:label {:class (<class common-styles/input-label-style read-only? dark-theme?)}
           [typography/Text2Bold
            label (when required
                    [common/required-astrix])]])
@@ -237,12 +248,12 @@
 (defn rich-text-field
   "Rich text input that can be used in forms."
   [{:keys [value on-change label required error read-only?]}]
-  [:f> wysiwyg-editor {:value (if (string? value)
-                                (markdown->editor-state value)
-                                value)
+
+  [:f> wysiwyg-editor {:value (->editor-state value)
                        :read-only? read-only?
                        :label label
                        :required required
                        :error error
                        :on-change (when-not read-only?
-                                    on-change)}])
+                                    #(on-change
+                                      (->RichTextFieldValue %)))}])

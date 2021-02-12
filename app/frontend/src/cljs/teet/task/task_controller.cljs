@@ -26,18 +26,11 @@
                 (conj selected-task false))))))
 
 (defrecord UploadDocuments [files])
-(defrecord UpdateTask [task updated-task]) ; update task info to database
-(defrecord UpdateTaskResponse [response])
-(defrecord UpdateTaskStatus [status])
 
 (defrecord DeleteTask [task-id])
 (defrecord DeleteTaskResult [response])
 
 (defrecord OpenEditModal [entity])
-(defrecord UpdateEditTaskForm [form-data])
-(defrecord CancelTaskEdit [])
-(defrecord SaveTaskForm [])
-(defrecord SaveTaskSuccess [])
 
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
@@ -164,67 +157,6 @@
              :task-id (common-controller/->long task)
              :project-id project
              :app-path [:task task :task/documents]})))
-
-  UpdateTaskStatus
-  (process-event [{status :status} app]
-    (let [task-id (get-in app [:params :task])]
-      (t/fx app
-        {:tuck.effect/type :command!
-         :command          :task/update
-         :payload          {:db/id (common-controller/->long task-id)
-                            :task/status status}
-         :success-message (tr [:notifications :task-status-updated])
-         :result-event     common-controller/->Refresh})))
-
-  UpdateEditTaskForm
-  (process-event [{form-data :form-data} app]
-    (update-in app [:edit-task-data] merge form-data))
-
-  CancelTaskEdit
-  (process-event [_ {:keys [page params query] :as app}]
-    (t/fx (-> app
-              (dissoc :edit-task-data)
-              (update :stepper dissoc :dialog))
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (dissoc query :modal :add :edit :activity :lifecycle)}))
-
-  SaveTaskForm
-  (process-event [_ {edit-task-data :edit-task-data
-                     stepper :stepper :as app}]
-    (t/fx app
-          (merge
-           {:tuck.effect/type :command!
-            :result-event ->SaveTaskSuccess}
-           {:command :task/update
-            :payload (select-keys edit-task-data
-                                  task-model/edit-form-keys)
-            :success-message (tr [:notifications :task-updated])})))
-
-  SaveTaskSuccess
-  (process-event [_ {:keys [page query params] :as app}]
-    (t/fx (-> app
-              (dissoc :edit-task-data)
-              (update :stepper dissoc :dialog))
-          common-controller/refresh-fx))
-
-  UpdateTask
-  (process-event [{:keys [task updated-task]} app]
-    (let [id (:db/id task)
-          task-path  [:task (str id)]
-          new-task (merge task updated-task)]
-
-      (t/fx (assoc-in app task-path new-task)
-            {:tuck.effect/type :command!
-             :command          :task/update
-             :payload          (assoc updated-task :db/id id)
-             :result-event     ->UpdateTaskResponse})))
-
-  UpdateTaskResponse
-  (process-event [{response :response} app]
-    (log/info "GOT RESPONSE: " response)
-    app)
 
   OpenAddTasksDialog
   (process-event [{activity-id :activity-id} {:keys [page params query] :as app}]

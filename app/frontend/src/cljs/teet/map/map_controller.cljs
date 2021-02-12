@@ -3,9 +3,9 @@
   (:require [tuck.core :as t]
             [teet.map.openlayers :as openlayers]
             [teet.log :as log]
-            [teet.common.common-controller :as common-controller]
             [clojure.string :as str]
-            [cljs-bean.core :refer [->clj]]))
+            [cljs-bean.core :refer [->clj]]
+            [teet.login.login-controller :as login-controller]))
 
 (defn atleast-one-open?
   [layers]
@@ -230,7 +230,7 @@
                                                    vec)]
                                     (openlayers/fit! extent {:padding [0 0 0 300]})))))))))))))
 
-(common-controller/register-init-event! :fetch-datasources ->FetchDatasources)
+(login-controller/register-init-event! :fetch-datasources ->FetchDatasources)
 
 (defn datasources
   "Return datasource definitions from the given app state."

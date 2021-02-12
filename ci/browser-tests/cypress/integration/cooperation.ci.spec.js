@@ -1,5 +1,5 @@
 context('Cooperation', function() {
-    before(() => {
+    beforeEach(() => {
 
         cy.request({method: "POST",
                     url: "/testsetup/task",
@@ -17,10 +17,23 @@ context('Cooperation', function() {
 
     })
 
-    it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
+    function createCooperation(name) {
+        cy.get("button.new-third-party").click()
 
+        cy.formInput(
+            ":cooperation.3rd-party/name", name,
+            ":cooperation.3rd-party/id-code", "123456",
+            ":cooperation.3rd-party/email", "test@example.com",
+            ":cooperation.3rd-party/phone", "555-1234-567890")
+
+        cy.formSubmit()
+
+        cy.get(".MuiSnackbar-root") // snackbar message is shown
+    }
+
+    function navigateToProjectCooperations(projectId) {
         // visit project page
-        cy.visit("#/projects/"+this.projectID)
+        cy.visit("#/projects/"+projectId)
 
         // open menu and select cooperation
         cy.get("button.project-menu").click({force: true})
@@ -29,6 +42,11 @@ context('Cooperation', function() {
         cy.get(".cooperation-overview-page")
 
         // Create new third party
+    }
+
+    it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
+
+        navigateToProjectCooperations(this.projectID);
 
         cy.get("button.new-third-party").click()
 
@@ -56,7 +74,9 @@ context('Cooperation', function() {
             ":cooperation.application/type", "[:cooperation.application.type/work-permit]",
             ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
             ":cooperation.application/date", this.today,
-            ":cooperation.application/response-deadline", this.twoWeeks);
+            ":cooperation.application/response-deadline", this.twoWeeks,
+            ":cooperation.application/comment", "TEXT:this is the comment"
+        );
         cy.formSubmit()
 
         // Navigated to application page:
@@ -64,6 +84,7 @@ context('Cooperation', function() {
         cy.get(".cooperation-application-page")
         cy.get(".application-people") // page has people panel
 
+        cy.get("div.application-comment").contains("this is the comment")
 
         // Fill contact information
         cy.get("[data-cy=add-contact]").click()
@@ -136,4 +157,40 @@ context('Cooperation', function() {
 
     })
 
+    it("is possible to delete 3rd party without applications", function() {
+        cy.wrap(`deleteme${new Date().getTime()}`).as("tpname")
+
+        cy.visit(`#/projects/${this.projectID}/cooperation`)
+        cy.get("button.new-third-party").click()
+        cy.get("@tpname").then((n) => {
+            cy.formInput(":cooperation.3rd-party/name", n)
+            cy.formSubmit()
+            cy.get(`div[data-third-party=${n}] a`).click()
+            cy.get("button.edit-third-party").click()
+            cy.get("button#delete-button").click()
+            cy.get("button#confirm-delete").click()
+
+            // redirect back to main cooperation page
+            cy.location("hash").should("eq", `#/projects/${this.projectID}/cooperation`)
+        })
+
+    })
+
+    it("Cooperation search filtering should work", function () {
+        const newCompanyName = "xxxx"
+        navigateToProjectCooperations(this.projectID);
+        createCooperation(newCompanyName);
+
+        cy.formInput(
+            ":third-party-name", "x");
+
+        cy.get(`.cooperation-overview-page [data-third-party='${newCompanyName}'] a`).should("be.visible");
+
+        // Add non matching string to the name search and the company should not me found
+        cy.formInput(
+            ":third-party-name", "abcd");
+
+        cy.get(`.cooperation-overview-page [data-third-party='${newCompanyName}'] a`).should("not.exist");
+
+    })
 })

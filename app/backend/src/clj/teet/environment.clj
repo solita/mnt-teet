@@ -128,7 +128,8 @@
    :eelis {:wms-url (->ssm [:eelis :wms-url] nil)}
    :email {:from (->ssm [:email :from] nil)
            :subject-prefix (->ssm [:email :subject-prefix] nil)
-           :contact-address (->ssm [:email :contact-address] nil)}
+           :contact-address (->ssm [:email :contact-address] nil)
+           :server (->ssm [:email :server] {} read-string)}
    :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}})
 
 (defn- load-ssm-config! [base-config]

@@ -3,11 +3,12 @@
             [teet.meeting.meeting-commands-test :as meeting-commands-test]
             [teet.test.utils :as tu]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [hiccup.core :as core]))
+            [hiccup.core :as core]
+            [taoensso.timbre :as log]))
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
-(def title-fo-block "<fo:block font-family=\"Helvetica, Arial, sans-serif\" font-size=\"32px\" font-style=\"normal\" font-weight=\"300\" line-height=\"48px\" space-after=\"5\" space-before=\"5\">Test meeting for PDF report #1</fo:block>")
+(def title-fo-block "<fo:block font-family=\"Arial, sans-serif\" font-size=\"24px\" font-style=\"normal\" font-weight=\"300\" line-height=\"24px\" space-after=\"5\" space-before=\"5\">Test meeting for PDF report #1</fo:block>")
 (def topic-underlied-text-fo "<fo:block><fo:block>This <fo:inline text-decoration=\"underline\">is some underlined</fo:inline> text</fo:block></fo:block>")
 
 (defn test-meeting []
@@ -32,11 +33,12 @@
                   [:tempids "new-agenda"]) "new agenda with underlined text is created"))
     (testing
       "PDF has correct title"
-      (let [pdf (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) new-meeting-id)]
+      (let [pdf (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) "en" new-meeting-id)]
         (is (= (core/html (nth (last (last pdf)) 2)) title-fo-block))))
     (testing
       "Underlied text rendered correctly"
-      (let [pdf-2 (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) new-meeting-id)
+      (let [pdf-2 (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) "en" new-meeting-id)
             fo-with-topic (nth (last (last pdf-2)) 5)
-            block-with-underlined-text (nth (nth (last (nth (first (nth (nth fo-with-topic 1) 2)) 2)) 3) 2)]
+            block-with-underlined-text (nth (nth (last (nth (first (nth (nth fo-with-topic 1) 2)) 3)) 3) 2)]
+        (log/debug fo-with-topic)
         (is (= (core/html block-with-underlined-text) topic-underlied-text-fo))))))
