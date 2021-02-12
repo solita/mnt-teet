@@ -387,7 +387,8 @@
                              :cooperation/create-application
                              {:thk.project/id project-id
                               :third-party-teet-id third-party-teet-id
-                              :application (common-controller/prepare-form-data @form-atom)}
+                              :application (common-controller/prepare-form-data
+                                             (cu/without-empty-vals @form-atom))}
                              (fn [response]
                                (fn [e!]
                                  (e! (close-event))
