@@ -19,8 +19,8 @@
 (def test-message {:from "test@example.com"
                    :to "foo.barsky@example.com"
                    :subject "Hello there"
-                   :parts [{:headers {"Content-Type" "text/plain"}
-                            :body "hello"}]})
+                   :body [{:type "text/plain; charset=utf-8"
+                           :content "hello"}]})
 (def test-smtp-config
   {:server
    {:host "localhost", :user "user",
@@ -44,7 +44,7 @@
   (tu/run-with-config
    {:email {:contact-address "FOO@EXAMPLE.COM"}}
    (integration-email/send-email! test-message)
-   (let [txt (get-in @outbox [0 :msg :parts 0 :body])]
+   (let [txt (get-in @outbox [0 :msg :body 0 :content])]
      (is (str/includes? txt "e-posti aadressiga FOO@EXAMPLE.COM")
          "body contains estonian footer")
      (is (str/includes? txt "e-mail address FOO@EXAMPLE.COM")

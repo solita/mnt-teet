@@ -279,11 +279,14 @@
        " / "
        (with-language :en (tr [:meeting :email-title] {:meeting-title (meeting-model/meeting-title meeting)}))))
 
+(defn email-content [link]
+  (str (with-language :et (tr [:meeting :email-body]))
+    " / "
+    (with-language :en (tr [:meeting :email-body])) ": " link "\n\n"))
+
 (defn email-parts [meeting-link]
-  [{:headers {"Content-Type" "text/plain; charset=utf-8"}
-    :body (str (with-language :et (tr [:meeting :email-body]))
-               " / "
-               (with-language :en (tr [:meeting :email-body])) ": " meeting-link "\n\n")}])
+  [{:type "text/plain; charset=utf-8"
+    :content (email-content meeting-link)}])
 
 (defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid]
   (let [meeting-link (meeting-link db
@@ -294,7 +297,7 @@
           {:from (environment/config-value :email :from)
            :to to
            :subject (email-subject meeting)
-           :parts (email-parts meeting-link)})]
+           :body (email-parts meeting-link)})]
     (log/info "SES send response" email-response)
     (log/info "SES emails sent to: " (pr-str to))
     (tx-ret [{:db/id meeting-eid

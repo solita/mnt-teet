@@ -73,17 +73,16 @@
   "Add data protection clause to text parts"
   [{addr :contact-address} msg]
   (update
-   msg :parts
+   msg :body
    (fn [parts]
      (mapv
-      (fn [part]
-        (let [type (get-in part [:headers "Content-Type"])]
-          (if (and type (str/starts-with? type "text/plain"))
-            (let [footer #(tr [:email :footer] {:contact-mailto addr})]
-              (update part :body #(str % "\n"
-                                       (with-language :et (footer))
-                                       (with-language :en (footer)))))
-            part)))
+      (fn [{type :type :as part}]
+        (if (and type (str/starts-with? type "text/plain"))
+          (let [footer #(tr [:email :footer] {:contact-mailto addr})]
+            (update part :content #(str % "\n"
+                                     (with-language :et (footer))
+                                     (with-language :en (footer)))))
+          part))
       parts))))
 
 (defn send-email! [msg]
