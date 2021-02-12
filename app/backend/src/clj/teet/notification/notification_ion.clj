@@ -4,7 +4,8 @@
             [teet.activity.activity-db :as activity-db]
             [teet.environment :as environment]
             [datomic.client.api :as d]
-            [teet.notification.notification-db :as notification-db]))
+            [teet.notification.notification-db :as notification-db]
+            [clojure.tools.logging :as log]))
 
 
 (defn notify-tx-data
@@ -24,12 +25,13 @@
   new notification is sent to active Activity PM and
   consultant who entered the application into system
   providing the Activity is not finished"
-  ([days]
+  ([event days]
+   (log/info (str "Call notify by event: " event " with days param: " days))
    (let [conn (environment/datomic-connection) db (d/db conn)]
      (d/transact conn
        {:tx-data
         (map (comp (partial notify-tx-data db) :application-id)
           (cooperation-db/applications-to-be-expired db days))})))
-  (;; default read from env config
-   []
-   (notify (environment/config-value :notify :application-expire-days))))
+  (;; read days from env config
+   [event]
+   (notify event (environment/config-value :notify :application-expire-days))))
