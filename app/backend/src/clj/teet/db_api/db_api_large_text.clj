@@ -38,6 +38,16 @@
        :private true}
   storage-length-threshold 1024)
 
+(defn- replace-with-hash! [ctx [k v]]
+  {:pre [(keyword? k)
+         (string? v)]
+   :post [(some? (->hash (second %)))]}
+  (let [new-hash
+        ;; Store new text
+        (postgrest/rpc ctx :store_large_text
+                       {:text v})]
+    [k (str "[" new-hash "]")]))
+
 (defn store-large-text!
   "Store any large values for large-text-keys in PostgREST and replace them with
   their hash. If a value is already a hash, it is not touched.
@@ -61,10 +71,6 @@
                (not (->hash (second x)))
                (string? (second x))
                (> (count (second x)) storage-length-threshold))
-        (let [new-hash
-              ;; Store new text
-              (postgrest/rpc ctx :store_large_text
-                             {:text (second x)})]
-          [(first x) (str "[" new-hash "]")])
+        (replace-with-hash! ctx x)
         no-replacement))
     form)))
