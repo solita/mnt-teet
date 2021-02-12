@@ -139,7 +139,9 @@
               :where
               [?project :thk.project/lifecycles ?lc]
               [?lc :thk.lifecycle/activities ?act]
+              [(missing? $ ?act :meta/deleted?)]
               [?act :activity/tasks ?task]
+              [(missing? $ ?task :meta/deleted?)]
               [?task :task/assignee ?a]
               :in
               $ ?project]
