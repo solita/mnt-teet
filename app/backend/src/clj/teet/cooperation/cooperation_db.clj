@@ -238,7 +238,15 @@
            [?notification :notification/target ?application]
            [?notification :notification/type :notification.type/cooperation-application-expired-soon])
          :in $ ?deadline]
-    db (date/inc-days (date/now) (Integer/valueOf days))))
+       db (date/inc-days (date/now) (Integer/valueOf days))))
+
+(defn application-editable?
+  "Does the application have a third party response?"
+  [db application-id]
+  (cooperation-model/application-editable? (d/pull db
+                                                   [:cooperation.application/opinion
+                                                    :cooperation.application/response]
+                                                   application-id)))
 
 (defn- ->third-party-id [id]
   (if (uuid? id)

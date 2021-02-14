@@ -647,7 +647,7 @@
        [:div {:class [(<class common-styles/flex-row-space-between)
                       (<class common-styles/margin-bottom 1)]}
         [typography/Heading2 (tr [:cooperation :response])]
-        [authorization-context/when-authorized :edit-application
+        [authorization-context/when-authorized :edit-response
          [form/form-modal-button
           {:max-width "sm"
            :form-value response
@@ -907,11 +907,15 @@
      {:edit-application (and (authorization-check/authorized?
                                {:functionality :cooperation/edit-application
                                 :entity application})
-                             (cooperation-model/editable? application))
+                             (cooperation-model/application-editable? application))
+      :edit-response (and (authorization-check/authorized?
+                           {:functionality :cooperation/edit-application
+                            :entity application})
+                          (cooperation-model/application-response-editable? application))
       :edit-application-right (authorization-check/authorized?
                                 {:functionality :cooperation/edit-application
                                  :entity application})
-      :application-editable (cooperation-model/editable? application)
+      :application-editable (cooperation-model/application-editable? application)
       :save-opinion (authorization-check/authorized?
                       {:functionality :cooperation/application-approval
                        :entity application})}
@@ -930,7 +934,7 @@
                                       (conj cooperation-model/editable-application-attributes
                                             :db/id))
              :modal-title (tr [:cooperation :new-application-title])
-             :button-component [buttons/button-secondary {}
+             :button-component [buttons/button-secondary {:data-cy "edit-application"}
                                 (tr [:buttons :edit])]}]]]
          [typography/Heading2
           (tr-enum (:cooperation.application/type application)) " / "
@@ -944,7 +948,7 @@
           [:<>
            [application-response e! (:new-document app) files-form application project related-task]
            [application-conclusion e! application project]]
-          [authorization-context/when-authorized :edit-application
+          [authorization-context/when-authorized :edit-response
            [form/form-modal-button
             {:max-width "sm"
              :modal-title (tr [:cooperation :add-application-response])

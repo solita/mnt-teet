@@ -102,6 +102,14 @@ context('Cooperation', function() {
         cy.get(".application-contact-info")
 
 
+        // edit the application
+        cy.get("[data-cy=edit-application]").click()
+        cy.formInput(":cooperation.application/comment", "TEXT:this is the EDITED comment")
+        cy.formSubmit()
+
+        // check edits take effect
+        cy.get("div.application-comment").contains("this is the EDITED comment")
+
         // check we have button for entering response
 
         cy.get("button.enter-response").click()
@@ -122,6 +130,9 @@ context('Cooperation', function() {
 
         // test that the value generated based on valid-months actually made it to the frontend
         cy.get("div[data-cy='valid-until']");
+
+        // test that the application can't be edited after receiving a response
+        cy.get("[data-cy=edit-application]").should("not.exist")
 
         // EDIT THE response and remove the valid months so the valid-until should be removed
         cy.get(".edit-response").click();

@@ -139,8 +139,15 @@
    :cooperation.response/content
    :cooperation.response/status])
 
-(defn editable? [application]
+(defn application-editable?
+  "The application data is editable as long as no response is given."
+  [application]
   (and (not (contains? application :cooperation.application/response))
        (not (contains? application :cooperation.application/opinion))))
+
+(defn application-response-editable?
+  "Response is editable as long as no opinion is given."
+  [application]
+  (not (contains? application :cooperation.application/opinion)))
 
 (def rich-text-fields #{:cooperation.response/content :cooperation.opinion/comment})
