@@ -79,22 +79,23 @@
 (deftest application-expired-notify
   (tu/local-login tu/mock-user-boss)
   ;; Create Application
-  (let [third-party-teet-id (create-cooperation-3rd-party (tu/db))
+  (let [event {}
+        third-party-teet-id (create-cooperation-3rd-party (tu/db))
         create-application-result (create-cooperation-application (tu/db) third-party-teet-id)]
     (is (some? third-party-teet-id))
     (is (some? create-application-result))
     ;; Run notify ion and check - no notifications created
-    (notification-ion/notify)
+    (notification-ion/notify event)
     (testing "No notification before"
       (is (empty? (fetch-application-to-expire-notifications (tu/db)))))
     ;; Create response with validity 1 month
     (create-application-response (tu/db)
                                  (get (:tempids create-application-result) "new-application"))
     ;; Run notify ion and verify there is new notification
-    (notification-ion/notify)
+    (notification-ion/notify event)
     (testing "Notification created"
       (is (not (empty? (fetch-application-to-expire-notifications (tu/db))))))
     ;; Run notify ion once again and verify no new notifications created
-    (notification-ion/notify)
+    (notification-ion/notify event)
     (testing "No additional notifications created"
       (is (= 1 (count (fetch-application-to-expire-notifications (tu/db))))))))
