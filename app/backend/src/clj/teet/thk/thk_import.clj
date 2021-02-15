@@ -17,7 +17,7 @@
             [teet.integration.integration-id :as integration-id])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
-(def excluded-project-types #{"TUGI" "TEEMU"})
+(def excluded-project-types #{"TUGI"})
 
 (defn parse-thk-export-csv [input]
   (with-open [raw-input-stream (io/input-stream input)
@@ -219,7 +219,7 @@
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
        (:thk.project/start-m p1)
-       (not (excluded-project-types (:object/groupname p1)))))
+       (not (excluded-project-types (:thk.project/repair-method p1)))))
 
 (defn- thk-project-tx [db url projects-csv]
   (into [{:db/id "datomic.tx"

@@ -30,7 +30,11 @@
     "22222;1104;REK;rekonstrueerimine;6;1;69.937;72.162;;test rek project 2;;3344556677;1803;Lääne;2019-11-01 09:37:44.915;2020-03-12 11:39:01.0;1605;Kinnitatud;13957;;4098;ehitetapp;2022-06-27;2023-11-30;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;2446500.00;5488;;;;4005;Teostus;4100;Ettevalmistamisel;false;2022-06-27;2023-11-30;;;;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;;2350000.00;;"
     "33333;1108;LOK;liiklusohtliku koha kõrvaldamine;23;1;2.300;2.700;;test lok project 3;;9483726473;1801;Ida;2020-04-07 11:48:42.279;2020-04-07 13:35:08.0;1605;Kinnitatud;15921;;4099;projetapp;2020-04-13;2021-04-21;2020-04-07 08:19:28.791;;16000.00;;;;;;;;;;;;;;;;;;;;"
     "44444;1104;REK;rekonstrueerimine;20;1;2.000;4.000;;test rek project 4;;;1801;Ida;2020-04-07 11:24:10.297;2020-04-07 13:35:08.0;1605;Kinnitatud;15927;;4099;projetapp;2020-04-07;2020-07-07;2020-04-07 11:23:25.742;;44000.00;;;;;;;;;;;;;;;;;;;;"
-    "55555;1104;REK;rekonstrueerimine;20;1;0.000;10.000;;test rek project 5;;66666666666;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15932;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"]))
+    "55555;1104;REK;rekonstrueerimine;20;1;0.000;10.000;;test rek project 5;;66666666666;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15932;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"
+    ;; This last one does not represent realistic THK data. Insead, it's
+    ;; slightly modified from the above line. The relevant part is that it's
+    ;; `object_groupshortname` is TUGI, and it's therefore excluded from imports
+    "66666;1104;TUGI;tugi;20;1;0.000;10.000;;test rek project 6;;66666666667;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15933;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"]))
 
 (defn import-csv!
   ([] (import-csv! (.getBytes test-csv)))
@@ -79,11 +83,12 @@
                      (tu/db)))))
   (testing "THK -> TEET import"
     (import-csv!)
-    (is (= 5 (count (tu/get-data :projects-csv))))
+    (is (= 6 (count (tu/get-data :projects-csv))))
 
     (testing "Imported projects information is correct"
       (let [db (tu/db)]
-        (testing "All projects are found by id after import"
+        (testing "All non-excluded projects are found by id after import"
+          ;; Also note that 66666, a TUGI project, is not present
           (is (=
                #{"11111" "22222" "33333" "44444" "55555"}
                (into #{}

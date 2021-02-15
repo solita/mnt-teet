@@ -1,8 +1,23 @@
 (ns teet.user.user-tx
   (:require [datomic.client.api :as d]
-            [teet.meta.meta-model :as meta-model])
+            [teet.meta.meta-model :as meta-model]
+            [datomic.ion :as ion])
   (:import (java.util Date)))
 
+(defn ensure-unique-email [db email tx-data]
+  (if-not email
+    tx-data
+    (let [{db-after :db-after} (d/with db {:tx-data tx-data})
+          users (d/q '[:find ?u
+                       :where
+                       [?u :user/id _]
+                       [?u :user/email ?email]
+                       :in $ ?email] db-after email)]
+      (if (> (count users) 1)
+        (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
+                     :cognitect.anomalies/message "Duplicate email"
+                     :teet/error :email-address-already-in-use})
+        tx-data))))
 
 (defn set-global-role
   [db modifying-user user-eid role]

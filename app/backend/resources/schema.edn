@@ -1713,7 +1713,7 @@
            :enum/attribute :cooperation.opinion/status}]]}
 
  ;; Cooperation notifications
- {:db/ident :cooperation.response/notification
+ {:db/ident :migration/notification-cooperation-application-expire-soon
   :txes [[{:db/ident :notification.type/cooperation-response-to-application-added
            :enum/attribute :notification/type}
           {:db/ident :notification.type/cooperation-application-expired-soon
