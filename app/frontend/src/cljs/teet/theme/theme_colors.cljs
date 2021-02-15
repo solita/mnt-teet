@@ -72,3 +72,5 @@
 ;; Text colors
 
 (def text-disabled "#9799A4")
+
+(def text-medium-emphasis "#4D4f5D")

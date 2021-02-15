@@ -183,6 +183,7 @@
   :cant-delete-third-party-with-applications
   "Involved party can be deleted if it has applications added to it",
   :create-opinion-title "Add opinion",
+  :waiting-for-response "Waiting for response",
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
   :newest-application "Newest application",
@@ -200,6 +201,7 @@
   :response-saved "Response saved successfully",
   :application-contact-person "Application contact person",
   :all-applications "Applications",
+  :waiting-for-opinion "Waiting for opinion",
   :new-third-party-title "Add involved party",
   :error
   {:upload-not-allowed "Upload not allowed",
