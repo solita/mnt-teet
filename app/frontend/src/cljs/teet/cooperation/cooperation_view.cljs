@@ -673,14 +673,14 @@
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
-                                          (:application-editable authz)
+                                          (:response-uploads-allowed authz)
                                           (not no-response?)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :coordination-task-missing])}
 
-                            (not (:application-editable authz))
+                            (not (:response-uploads-allowed authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :response-not-editable])}
 
@@ -915,7 +915,7 @@
       :edit-application-right (authorization-check/authorized?
                                 {:functionality :cooperation/edit-application
                                  :entity application})
-      :application-editable (cooperation-model/application-editable? application)
+      :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
                       {:functionality :cooperation/application-approval
                        :entity application})}
