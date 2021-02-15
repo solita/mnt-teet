@@ -527,12 +527,15 @@
      (fn portal-to []
        [:div {:ref #(reset! elt %)}])]))
 
-(defn- context-menu-item [toggle-menu! {:keys [icon label on-click]}]
+(defn- context-menu-item [toggle-menu! {:keys [icon label on-click link]}]
   [MenuItem {:on-click (fn [_]
                          (toggle-menu!)
-                         (on-click))}
+                         (when on-click
+                           (on-click)))}
    [ListItemIcon icon]
-   [typography/Text label]])
+   (if link
+     [Link link label]
+     [typography/Text label])])
 
 (defn context-menu
   "Shows a button that opens a context menu.
@@ -565,4 +568,5 @@
       [ClickAwayListener
        {:on-click-away toggle!}
        [Paper
-        (mapc (r/partial context-menu-item toggle!) items)]]]]))
+        (mapc (r/partial context-menu-item toggle!)
+              (remove nil? items))]]]]))
