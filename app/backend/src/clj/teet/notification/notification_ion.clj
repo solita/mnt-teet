@@ -5,20 +5,26 @@
             [teet.environment :as environment]
             [datomic.client.api :as d]
             [teet.notification.notification-db :as notification-db]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.user.user-db :as user-db]))
 
 
 (defn notify-tx-data
   "Transaction data for notification"
   [db application-id]
   (let [ project-id (cooperation-db/application-project-id db application-id)
-         activity-id (cooperation-db/application-activity-id db application-id)
-         user-to (activity-db/activity-manager db activity-id)]
-     (notification-db/system-notification-tx db
-       {:to user-to
-        :project project-id
-        :target application-id
-        :type cooperation-notifications/application-response-expired-soon})) )
+        activity-id (cooperation-db/application-activity-id db application-id)
+        user-to (activity-db/activity-manager db activity-id)]
+    (if (some? user-to)
+      (if (user-db/is-user-deactivated? db user-to)
+        (log/info "Notification skipped for application-id " application-id " because of deactivated user " user-to)
+        (notification-db/system-notification-tx db
+             {:to user-to
+              :project project-id
+              :target application-id
+              :type cooperation-notifications/application-response-expired-soon}))
+      (log/info "Notification skipped for application-id " application-id
+        " as Activity Manager not found for activity-id " activity-id))))
 
 (defn notify
   "Given number of days before Application expiration
