@@ -14,10 +14,10 @@
 
 (defn login-logo
   []
-  [:span {:class (<class login-styles/logo-container)}
-   [navigation-logo/logo-shield {:height 65 :width 58}]
-   [:span {:class (<class login-styles/logo-text)}
-    "MAANTEEAMET"]])
+  [:div {:style {:display :flex
+                 :justify-content :center}}
+   [:span {:class (<class login-styles/logo-container)}
+    [navigation-logo/logo-shield {:height 120}]]])
 
 (defn- dummy-login? []
   (let [host js/window.location.hostname]

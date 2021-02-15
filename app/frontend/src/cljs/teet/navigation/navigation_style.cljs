@@ -109,24 +109,8 @@
    :flex-direction :row
    :justify-content :flex-start
    :flex-grow 1
-   :flex-basis "15%"})
-
-
-
-(defn logout-container-style
-  []
-  {:border 0
-   :margin 0
-   :display :inline-flex
-   :position :relative
-   :flex-direction :column
-   :vertical-align :top})
-
-(defn logout-style
-  []
-  {:white-space :nowra
-   :position :relative
-   :font-size "16px"})
+   :flex-basis "15%"
+   :max-height "100%"})
 
 (defn feedback-container-style []
   (merge {:display :flex
