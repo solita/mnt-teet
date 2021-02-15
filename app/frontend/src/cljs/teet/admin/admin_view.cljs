@@ -312,6 +312,7 @@
   [:user/given-name
    :user/family-name
    :user/person-id
+   :user/email
    :project])
 
 (defn search-inputs
