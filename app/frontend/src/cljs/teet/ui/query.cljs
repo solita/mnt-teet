@@ -76,13 +76,16 @@
                                          :reset-filter reset-filter}
           (let [state (if state-path
                         state
-                        @state-atom)]
+                        @state-atom)
+                new-args (if (not-empty @filter-atom)
+                           (assoc args :filters (cu/without-empty-vals
+                                                  @filter-atom))
+                           args)]
             (when (or (not= @refresh-value refresh)
                       (not= @previous-args args))
               (reset! refresh-value refresh)
               (reset! previous-args args)
-              (e! (->Query query (assoc args :filters (cu/without-empty-vals
-                                                        @filter-atom)) state-path state-atom)))
+              (e! (->Query query new-args state-path state-atom)))
             (if (or state loading-state)
               ;; Results loaded, call the view
               (if simple-view

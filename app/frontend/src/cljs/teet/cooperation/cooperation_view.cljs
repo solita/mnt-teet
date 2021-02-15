@@ -444,10 +444,14 @@
     [:<>
      [:div {:class (<class common-styles/margin-bottom 1.5)}
       [:div {:class (<class common-styles/header-with-actions)}
-       [:div
-        [typography/Heading2 (tr [:cooperation :page-title])]
-        [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
-         (tr [:cooperation :all-third-parties])]]
+       [context/consume :query-filter
+        (fn [{:keys [value]}]
+          [:div
+           [typography/Heading2 (tr [:cooperation :page-title])]
+           [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+            (if (not= (:shortcut value) :all-applications)
+              (tr [:cooperation :filter :newest-applications])
+              (tr [:cooperation :filter :all-applications]))]])]
        [form/form-modal-button
         {:max-width "sm"
          :form-component [third-party-form {:e! e!
