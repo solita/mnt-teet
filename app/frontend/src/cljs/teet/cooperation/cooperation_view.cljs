@@ -445,8 +445,14 @@
        [:div {:class (<class common-styles/space-between-center)}
         [buttons/button-secondary {:on-click toggle-export-dialog!}
          (tr [:buttons :cancel])]
-        [buttons/button-primary {:on-click :D}
-         (tr [:cooperation :export-preview])]]]]]))
+        (let [{:cooperation.application/keys [activity type] :as fv} @form-value]
+          [buttons/button-primary {:element :a
+                                   :target :_blank
+                                   :disabled (or (nil? activity) (nil? type))
+                                   :href (common-controller/query-url
+                                          :cooperation/export-summary
+                                          (update fv :cooperation.application/activity :db/id))}
+           (tr [:cooperation :export-preview])])]]]]))
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   [project-view/project-full-page-structure
