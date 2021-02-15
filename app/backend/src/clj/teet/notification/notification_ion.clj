@@ -5,7 +5,7 @@
             [teet.environment :as environment]
             [datomic.client.api :as d]
             [teet.notification.notification-db :as notification-db]
-            [clojure.tools.logging :as log]))
+            [teet.log :as log]))
 
 
 (defn notify-tx-data
@@ -26,7 +26,7 @@
   consultant who entered the application into system
   providing the Activity is not finished"
   ([event days]
-   (log/info (str "Call notify by event: " event " with days param: " days))
+   (log/info "Call notify by event: " event " with days param: " days)
    (let [conn (environment/datomic-connection) db (d/db conn)]
      (d/transact conn
        {:tx-data
