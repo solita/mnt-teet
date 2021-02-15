@@ -5,11 +5,13 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal]]
+            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal
+                                         Paper Menu MenuItem ListItemIcon ClickAwayListener]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
-            [re-svg-icons.feather-icons :as fi]))
+            [re-svg-icons.feather-icons :as fi]
+            [teet.ui.util :refer [mapc]]))
 
 (def Link typography/Link)
 (def Link2 typography/Link2)
@@ -524,3 +526,43 @@
          (into [Portal {:container e}] children)))
      (fn portal-to []
        [:div {:ref #(reset! elt %)}])]))
+
+(defn- context-menu-item [toggle-menu! {:keys [icon label on-click]}]
+  [MenuItem {:on-click (fn [_]
+                         (toggle-menu!)
+                         (on-click))}
+   [ListItemIcon icon]
+   [typography/Text label]])
+
+(defn context-menu
+  "Shows a button that opens a context menu.
+  Label is the label for the button that opens the menu.
+  Icon is the icon for the button.
+
+  Items is a collection of menu items that are to be shown.
+  Each item is a map containing an :icon, a :label and
+  :on-click. Nil values are ignored.
+
+  Optional keys:
+  :menu-placement controls where the Popper component is placed
+                  in relation to the button (detaults to bottom-end)"
+  [{:keys [label icon items menu-placement]
+    :or {menu-placement "bottom-end"}}]
+  (r/with-let [open? (r/atom false)
+               toggle! #(swap! open? not)
+               anchor (r/atom false)
+               set-anchor! #(reset! anchor %)]
+    [:<>
+     [buttons/button-secondary
+      {:size "small"
+       :end-icon (r/as-element icon)
+       :on-click toggle!
+       :ref set-anchor!}
+      label]
+     [Popper {:open @open?
+              :anchor-el @anchor
+              :placement menu-placement}
+      [ClickAwayListener
+       {:on-click-away toggle!}
+       [Paper
+        (mapc (r/partial context-menu-item toggle!) items)]]]]))
