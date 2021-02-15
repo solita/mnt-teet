@@ -33,6 +33,14 @@
               [(.toLowerCase ^String ?code) ?lower-code]
               [(.contains ?lower-code ?id-code)]]}))
 
+(defmethod search-clause :user/email
+  [[_ email]]
+  (when-not (str/blank? email)
+    {:where '[[?u :user/email ?email]
+              [(.toLowerCase ^String ?email) ?lower-email]
+              [(.contains ?lower-email ?email-search)]]
+     :in {'?email-search (str/lower-case email)}}))
+
 (defmethod search-clause :user-group
   [[_ user-group]]
   (if (some? user-group)
