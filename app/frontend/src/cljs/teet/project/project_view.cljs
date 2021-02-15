@@ -77,7 +77,20 @@
   []
   {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn project-header [project]
+(defn default-export-action-component [project]
+  (when (project-model/has-related-info? project)
+    [common/Link
+     {:target :_blank
+      :style {:margin-right "1rem"
+              :display :flex
+              :align-items :center}
+      :href (common-controller/query-url :thk.project/download-related-info
+                                         (select-keys project [:thk.project/id]))}
+     [:span {:style {:margin-right "0.5rem"}}
+      (tr [:project :download-related-info])]
+     [icons/file-cloud-download]]))
+
+(defn project-header [project export-action-component]
   (let [thk-url (project-info/thk-url project)]
     [:div {:class (<class project-header-style)}
      [:div {:style {:display :flex
@@ -86,16 +99,7 @@
        (project-model/get-column project :thk.project/project-name)]
       [:div {:style {:display :flex
                      :align-items :center}}
-       (when (project-model/has-related-info? project)
-         [common/Link {:target :_blank
-                       :style {:margin-right "1rem"
-                               :display :flex
-                               :align-items :center}
-                :href (common-controller/query-url :thk.project/download-related-info
-                                                   (select-keys project [:thk.project/id]))}
-          [:span {:style {:margin-right "0.5rem"}}
-           (tr [:project :download-related-info])]
-          [icons/file-cloud-download]])
+       [export-action-component project]
        [common/thk-link {:href thk-url
                          :target "_blank"}
         (str "THK" (:thk.project/id project))]]]]))
@@ -115,7 +119,7 @@
                               (project-controller/project-setup-step app)
                               (get-in app [:query :configure]))]
     [:div {:class (<class project-style/project-page-structure)}
-     [project-header project]
+     [project-header project default-export-action-component]
      [:div {:class (<class project-style/project-map-container)}
                                         ;[project-map-view/project-map e! app project]
       (project-map-view/create-project-map e! app project)
@@ -696,12 +700,14 @@
 
   If left-side content is not specified, the project navigator is used.
   The :project-navigator map options can be used to override default parameters."
-  [{:keys [e! app project main left-panel right-panel project-navigator]}]
+  [{:keys [e! app project main left-panel right-panel project-navigator
+           export-action-component]}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
      (select-keys project [:db/id :thk.project/id])
      [:<>
-      [project-header project]
+      [project-header project (or export-action-component
+                                  default-export-action-component)]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
