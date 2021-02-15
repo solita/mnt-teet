@@ -98,8 +98,8 @@
                                        :cooperation.response/valid-months 12}})
 
         ;; Can't be edited
-        (is (thrown?
-             Exception
+        (is (tu/is-thrown-with-data?
+             {:teet/error :application-has-third-party-response}
              (tu/local-command :cooperation/edit-application
                                {:thk.project/id project-id
                                 :application {:db/id new-application-id
