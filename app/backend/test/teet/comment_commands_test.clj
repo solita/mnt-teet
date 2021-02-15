@@ -238,13 +238,11 @@
                  [:task/assignee :user/id]))
       "task is assigned to carla")
   (tu/local-login tu/mock-user-carla-consultant)
-  (with-redefs [;; Mock out URL generation (we don't use it for anything)
-                teet.integration.integration-s3/presigned-url (constantly "url")]
-    (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
-                                         :file {:file/name "land_deals.pdf"
-                                                :file/size 666}})
-         :file
-         (tu/store-data! :file)))
+  (->> (tu/fake-upload (tu/get-data :task-id)
+                       {:file/name "land_deals.pdf"
+                        :file/size 666})
+
+       (tu/store-data! :file))
 
   (is (some? (:db/id (tu/get-data :file))) "file was created")
 
@@ -256,7 +254,7 @@
                        :comment "very nice file 5/5"
                        :visibility :comment.visibility/all})
 
-    (let [{:notification/keys [target]}
+    (let [{id :db/id :notification/keys [target]}
           (ffirst
            (d/q '[:find (pull ?n [*])
                   :where
@@ -267,4 +265,15 @@
       (is (= (get-in (du/entity (tu/db) (:db/id target))
                      [:file/_comments  0 :db/id])
              (:db/id (tu/get-data :file)))
-          "Notification is about comment on file"))))
+          "Notification is about comment on file")
+
+      (testing "Navigation info to file is correct"
+        (let [nav (tu/local-query tu/mock-user-carla-consultant
+                                  :notification/navigate
+                                  {:notification-id id})]
+          (is (= {:page :file
+                  :params {:project "11111"
+                           :file (-> :file tu/get-data :file/id str)}
+                  :query {:tab "comments"
+                          :focus-on (str (:db/id target))}}
+                 nav)))))))
