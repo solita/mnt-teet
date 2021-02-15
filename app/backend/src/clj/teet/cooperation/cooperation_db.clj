@@ -23,7 +23,8 @@
        :in '[?application-type]
        :args [val]}
       :response-status
-      {:where '[[?response :cooperation.response/status ?response-status]]
+      {:where '[[?application :cooperation.application/response ?response]
+                [?response :cooperation.response/status ?response-status]]
        :in '[?response-status]
        :args [val]}
       :project-activity
@@ -78,7 +79,6 @@
                            :where
                            (into '[[?third-party :cooperation.3rd-party/applications ?application]
                                    [?application :cooperation.application/date ?date]
-                                   [?application :cooperation.application/response ?response]
                                    [(missing? $ ?application :meta/deleted?)]]
                                  (mapcat :where filters))
                            :in (into '[$ [?third-party ...]] (mapcat :in filters))}

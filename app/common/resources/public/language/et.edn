@@ -183,8 +183,10 @@
   :cant-delete-third-party-with-applications
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
+  :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
+  :newest-application "Uusim pöördumine",
   :create-opinion-button "Lisan ametliku seisukoha",
   :application-edited "Taotlus edukalt muutetud",
   :new-application-created "Taotlus edukalt loodud",
@@ -198,6 +200,8 @@
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
   :application-contact-person "Pöördumise kontaktisik",
+  :all-applications "Kõik pöördumised",
+  :waiting-for-opinion "Ootab seisukohta",
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
@@ -549,6 +553,7 @@
   :replaced-file-not-latest
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
   :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
+  :email-address-already-in-use "E-posti aadress on juba kasutusel.",
   :no-participants-with-email
   "Ühelgi teavitataval osalejal pole emaili aadressi"},
  :fields

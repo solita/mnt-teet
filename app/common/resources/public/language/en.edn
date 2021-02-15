@@ -164,7 +164,7 @@
   :application-delete-confirm "Delete the application?",
   :competent-authority-name "Transport Administration ",
   :conclusion "Conclusion",
-  :applications "APPLICATIONS",
+  :applications "Applications",
   :edit-response-title "Edit involved party response",
   :new-application "Add new application",
   :add-files "Add files",
@@ -183,8 +183,10 @@
   :cant-delete-third-party-with-applications
   "Involved party can be deleted if it has applications added to it",
   :create-opinion-title "Add opinion",
+  :waiting-for-response "Waiting for response",
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
+  :newest-application "Newest application",
   :create-opinion-button "Opinion of Competent Authority",
   :application-edited "Application edited succesfully",
   :new-application-created "Application created successfully",
@@ -198,6 +200,8 @@
   :responsible-person "Responsible: {user-name}",
   :response-saved "Response saved successfully",
   :application-contact-person "Application contact person",
+  :all-applications "Applications",
+  :waiting-for-opinion "Waiting for opinion",
   :new-third-party-title "Add involved party",
   :error
   {:upload-not-allowed "Upload not allowed",
@@ -554,6 +558,7 @@
   "Can't replace an old version of a file. Replace newest version.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
+  :email-address-already-in-use "Email address already in use.",
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address."},
  :fields
