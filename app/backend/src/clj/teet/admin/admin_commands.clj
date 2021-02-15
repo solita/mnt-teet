@@ -75,8 +75,10 @@
    :audit? true
    :transact (let [user-values (select-keys form-value [:user/email :user/company :user/phone-number
                                                         :user/person-id])]
-               [(merge user-values
-                       (meta-model/modification-meta user))
+               [(list 'teet.user.user-tx/ensure-unique-email
+                      (:user/email form-value)
+                      [(merge user-values
+                              (meta-model/modification-meta user))])
                 (list 'teet.user.user-tx/set-global-role
                       user
                       [:user/person-id (:user/person-id form-value)]
