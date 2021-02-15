@@ -1738,4 +1738,7 @@
            :db/ident :entity-seen/entity+user}
           {:db/id :file-seen/seen-at
            :db/ident :entity-seen/seen-at}]]}
-]
+
+ ;; need to use separate design and construction side tasks for road safety audit, the tasks have different codes and meant different things in THK.
+ {:db/ident :migration/road-safety-design-and-construction-codes
+  :txes [[{:db/ident :thk.task-type/design-road-safety-audit :thk/code "4011"}]]}]
