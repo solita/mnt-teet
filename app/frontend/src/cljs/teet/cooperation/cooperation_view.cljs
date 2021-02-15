@@ -647,7 +647,7 @@
        [:div {:class [(<class common-styles/flex-row-space-between)
                       (<class common-styles/margin-bottom 1)]}
         [typography/Heading2 (tr [:cooperation :response])]
-        [authorization-context/when-authorized :edit-application
+        [authorization-context/when-authorized :edit-response
          [form/form-modal-button
           {:max-width "sm"
            :form-value response
@@ -673,14 +673,14 @@
        (authorization-context/consume
         (fn [authz]
           (let [can-upload? (boolean (and (some? related-task)
-                                          (:application-editable authz)
+                                          (:response-uploads-allowed authz)
                                           (not no-response?)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :coordination-task-missing])}
 
-                            (not (:application-editable authz))
+                            (not (:response-uploads-allowed authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :response-not-editable])}
 
@@ -865,17 +865,57 @@
             (tr [:cooperation :add-application-contact])])]])]))
 
 ;; entrypoint from route /projects/:project/cooperation/:third-party/:application
+
+(defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              :save-event #(common-controller/->SaveForm
+                             :cooperation/edit-application
+                             {:thk.project/id project-id
+                              :application (common-controller/prepare-form-data @form-atom)}
+                             (fn [response]
+                               (fn [e!]
+                                 (e! (close-event))
+                                 (e! (cooperation-controller/->ApplicationEdited response)))))
+              :delete (cooperation-controller/->DeleteApplication (:db/id @form-atom) project-id)
+              :delete-title (tr [:cooperation :application-delete-confirm])
+              :delete-message (tr [:cooperation :application-delete-information])
+              :spec ::cooperation-model/application-form}
+   ^{:attribute :cooperation.application/type}
+   [select/select-enum {:e! e! :attribute :cooperation.application/type}]
+
+   ^{:attribute :cooperation.application/response-type}
+   [select/select-enum {:e! e! :attribute :cooperation.application/response-type}]
+
+   ^{:attribute :cooperation.application/date
+     :xs 8}
+   [date-picker/date-input {}]
+
+   ^{:attribute :cooperation.application/response-deadline
+     :xs 8}
+   [date-picker/date-input {}]
+
+   ^{:attribute :cooperation.application/comment}
+   [text-field/TextField {:multiline true
+                          :rows 5}]])
+
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [authorization-context/with
      {:edit-application (and (authorization-check/authorized?
                                {:functionality :cooperation/edit-application
                                 :entity application})
-                             (cooperation-model/editable? application))
+                             (cooperation-model/application-editable? application))
+      :edit-response (and (authorization-check/authorized?
+                           {:functionality :cooperation/edit-application
+                            :entity application})
+                          (cooperation-model/application-response-editable? application))
       :edit-application-right (authorization-check/authorized?
                                 {:functionality :cooperation/edit-application
                                  :entity application})
-      :application-editable (cooperation-model/editable? application)
+      :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
                       {:functionality :cooperation/application-approval
                        :entity application})}
@@ -884,7 +924,18 @@
        e! app project overview
        [:<>
         [:div {:class (<class common-styles/margin-bottom 1)}
-         [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+         [common/header-with-actions (:cooperation.3rd-party/name third-party)
+          [authorization-context/when-authorized :edit-application
+           [form/form-modal-button
+            {:max-width "sm"
+             :form-component [edit-application-form {:e! e!
+                                                     :project-id (:thk.project/id project)}]
+             :form-value (select-keys application
+                                      (conj cooperation-model/editable-application-attributes
+                                            :db/id))
+             :modal-title (tr [:cooperation :new-application-title])
+             :button-component [buttons/button-secondary {:data-cy "edit-application"}
+                                (tr [:buttons :edit])]}]]]
          [typography/Heading2
           (tr-enum (:cooperation.application/type application)) " / "
           (tr-enum (:cooperation.application/response-type application))]
@@ -897,7 +948,7 @@
           [:<>
            [application-response e! (:new-document app) files-form application project related-task]
            [application-conclusion e! application project]]
-          [authorization-context/when-authorized :edit-application
+          [authorization-context/when-authorized :edit-response
            [form/form-modal-button
             {:max-width "sm"
              :modal-title (tr [:cooperation :add-application-response])

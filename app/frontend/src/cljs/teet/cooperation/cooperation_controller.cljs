@@ -6,7 +6,11 @@
             [teet.common.common-controller :as common-controller]))
 
 (defrecord ThirdPartyCreated [name save-response])
+
 (defrecord ApplicationCreated [save-response])
+(defrecord ApplicationEdited [edit-response])
+(defrecord DeleteApplication [application-id project-id])
+(defrecord ApplicationDeleted [delete-response])
 
 (defrecord ResponseCreated [response edit?])
 (defrecord OpinionSaved [new? response])
@@ -28,6 +32,28 @@
              :params {:project (:project params)
                       :third-party third-party-teet-id
                       :application application-teet-id}})))
+
+  ApplicationEdited
+  (process-event [_ app]
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:cooperation :application-edited]))
+          common-controller/refresh-fx))
+
+  DeleteApplication
+  (process-event [{:keys [application-id project-id]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command          :cooperation/delete-application
+           :success-message  (tr [:cooperation :application-deleted])
+           :payload          {:db/id (common-controller/->long application-id)
+                              :thk.project/id project-id}
+           :result-event     ->ApplicationDeleted}))
+
+  ApplicationDeleted
+  (process-event [_response {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page             :cooperation-third-party
+           :params           (select-keys params [:project :third-party])}))
 
   ResponseCreated
   (process-event [{r :response

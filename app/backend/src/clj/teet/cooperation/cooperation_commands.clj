@@ -93,6 +93,34 @@
        :application-teet-id teet-id})
     (db-api/bad-request! "No such 3rd party")))
 
+(defn- application-belongs-to-project? [db application-id thk-project-id]
+  (= thk-project-id
+     (get-in (du/entity db application-id)
+             [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :thk.project/id])))
+
+
+(defcommand :cooperation/edit-application
+  {:doc "Edit a given application in a given project"
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             application :application}
+   :spec (s/keys :req [:thk.project/id]
+                 :req-un [::application])
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-application {}}
+   :pre [(application-belongs-to-project? db (:db/id application) project-id)]
+   :transact [(list 'teet.cooperation.cooperation-tx/edit-application user application)]})
+
+(defcommand :cooperation/delete-application
+  {:doc "Delete a given application in a given project"
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             application-id :db/id}
+   :spec (s/keys :req [:thk.project/id :db/id])
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-application {}}
+   :pre [(application-belongs-to-project? db application-id project-id)]
+   :transact [(list 'teet.cooperation.cooperation-tx/delete-application user application-id)]})
 
 (defmethod link-db/link-from [:cooperation.response :file]
   [db _user [_ response-id] _type to]
