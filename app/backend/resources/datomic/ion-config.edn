@@ -12,6 +12,7 @@
          teet.cooperation.cooperation-tx/save-3rd-party
          teet.util.string/contains-words?
          teet.user.user-tx/set-global-role
+         teet.user.user-tx/ensure-unique-email
          clojure.string/includes?
          teet.task.task-tx/delete-task]
  :lambdas {:query

@@ -54,13 +54,15 @@
    :transact (let [user-person-id (user-model/normalize-person-id (:user/person-id user-data))
                    global-role (:user/global-role user-data)]
                ;; New user, no need to check
-               [(merge (user-model/new-user user-person-id)
-                       (select-keys user-data [:user/email :user/company :user/phone-number])
-                       (meta-model/creation-meta user)
-                       (when global-role
-                         (new-permission user
-                                         global-role
-                                         (java.util.Date.))))])})
+               [(list 'teet.user.user-tx/ensure-unique-email
+                      (:user/email user-data)
+                      [(merge (user-model/new-user user-person-id)
+                              (select-keys user-data [:user/email :user/company :user/phone-number])
+                              (meta-model/creation-meta user)
+                              (when global-role
+                                (new-permission user
+                                                global-role
+                                                (java.util.Date.))))])])})
 
 
 (defcommand :admin/edit-user
