@@ -32,7 +32,8 @@
             [teet.authorization.authorization-check :as authorization-check]
             [teet.ui.validation :as validation]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.ui.context :as context]))
+            [teet.ui.context :as context]
+            [teet.ui.panels :as panels]))
 
 
 ;; Form structure in this view:
@@ -409,6 +410,44 @@
                            :show-empty-selection? true
                            :empty-selection-label (tr [:common :all])}]]]}])
 
+(defn- export-menu [e! project]
+  (r/with-let [export-dialog-open? (r/atom false)
+               toggle-export-dialog! #(swap! export-dialog-open? not)
+               form-value (r/atom {})
+               activities (mapcat :thk.lifecycle/activities
+                                  (:thk.project/lifecycles project))]
+    [:<>
+     [common/context-menu
+      {:label "export"
+       :icon [icons/file-cloud-download]
+       :items [{:label "summary"
+                :icon [icons/maps-local-see]
+                :on-click toggle-export-dialog!}]}]
+     [panels/modal
+      {:title [:div {:class (<class common-styles/flex-row)}
+               "involved parties"
+               [typography/GreyText {:style {:margin-left "1rem"}}
+                "summary table"]]
+       :open-atom export-dialog-open?}
+      [:<>
+       [form/form {:e! e!
+                   :value @form-value
+                   :on-change-event (form/update-atom-event form-value merge)}
+        ^{:attribute :cooperation.application/activity}
+        [select/form-select {:show-empty-selection? true
+                             :items activities
+                             :format-item (comp tr-enum :activity/name)}]
+
+        ^{:attribute :cooperation.application/type}
+        [select/select-enum {:e! e!
+                             :attribute :cooperation.application/type}]]
+
+       [:div {:class (<class common-styles/space-between-center)}
+        [buttons/button-secondary {:on-click toggle-export-dialog!}
+         (tr [:buttons :cancel])]
+        [buttons/button-primary {:on-click :D}
+         (tr [:cooperation :export-preview])]]]]]))
+
 (defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   [project-view/project-full-page-structure
    {:e! e!
@@ -416,7 +455,8 @@
     :project project
     :left-panel [third-parties e! project third-parties-list (selected-third-party-teet-id app)]
     :right-panel right-content
-    :main main-content}])
+    :main main-content
+    :export-action-component (partial export-menu e!)}])
 
 (defn- cooperation-overview-structure
   "Only in the overview page do we want the cooperation search to be in place instead of the third party navigator"
@@ -432,7 +472,8 @@
       :project project
       :left-panel [cooperation-application-search e! project-activities]
       :right-panel right-content
-      :main main-content}]))
+      :main main-content
+      :export-action-component (partial export-menu e!)}]))
 
 
 ;; entrypoint from route /projects/:project/cooperation route
