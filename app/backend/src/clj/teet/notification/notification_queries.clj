@@ -6,7 +6,8 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [teet.comment.comment-db :as comment-db]
-            [teet.cooperation.cooperation-db :as cooperation-db]))
+            [teet.cooperation.cooperation-db :as cooperation-db]
+            [teet.file.file-db :as file-db]))
 
 (defquery :notification/unread-notifications
   {:doc "Fetch unread notifications for user, sorted by most recent first."
@@ -21,7 +22,7 @@
   {:doc "Fetch notifications for user, sorted by most recent first."
    :context {:keys [db user]}
    :args _
-   :spec empty?
+   :spec any?
    :project-id nil
    :authorization {}}
   (notification-db/user-notifications db user 20))
@@ -51,21 +52,20 @@
               :activity (str activity-id)}}))
 
 (defn- file-navigation-info [db file-id]
-  (let [[project activity task]
-        (first (d/q '[:find ?project-id ?activity ?task
+  (let [[project id]
+        (first (d/q '[:find ?project-id ?id
                       :where
                       [?task :task/files ?file]
+                      [?file :file/id ?id]
                       [?activity :activity/tasks ?task]
                       [?lifecycle :thk.lifecycle/activities ?activity]
                       [?project :thk.project/lifecycles ?lifecycle]
                       [?project :thk.project/id ?project-id]
                       :in $ ?file]
-                    db file-id))]
+                    db (file-db/latest-version db file-id)))]
     {:page :file
      :params {:project (str project)
-              :activity (str activity)
-              :task (str task)
-              :file (str file-id)}}))
+              :file (str id)}}))
 
 
 
