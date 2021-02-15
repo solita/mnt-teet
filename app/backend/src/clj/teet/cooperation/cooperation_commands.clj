@@ -104,6 +104,8 @@
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
              application :application}
+   :spec (s/keys :req [:thk.project/id]
+                 :req-un [::application])
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
    :pre [(application-belongs-to-project? db (:db/id application) project-id)]
@@ -114,6 +116,7 @@
    :context {:keys [user db]}
    :payload {project-id :thk.project/id
              application-id :db/id}
+   :spec (s/keys :req [:thk.project/id :db/id])
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
    :pre [(application-belongs-to-project? db application-id project-id)]
