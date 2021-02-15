@@ -8,7 +8,8 @@
             [teet.cooperation.cooperation-model :as cooperation-model]
             [teet.meta.meta-query :as meta-query]
             [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [hiccup.core :as h]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
@@ -67,3 +68,19 @@
                         :return-links-to-deleted? false}
                        (cooperation-db/third-party-with-application db tp-id app-id))
          :related-task (cooperation-db/third-party-application-task db tp-id app-id)})))))
+
+(defquery :cooperation/export-summary
+  {:doc "Fetch summary table as HTML"
+   :context {:keys [db user]}
+   :args {:cooperation.application/keys [activity type] :as args}
+   :project-id (project-db/activity-project-id db activity)
+   :authorization {:cooperation/view-cooperation-page {}}}
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Type" "text/html; charset=UTF-8"}
+   :body (h/html
+          [:html
+           [:head
+            [:title "foo"]]
+           [:body
+            [:div (pr-str args)]]])})
