@@ -527,11 +527,14 @@
      (fn portal-to []
        [:div {:ref #(reset! elt %)}])]))
 
-(defn- context-menu-item [toggle-menu! {:keys [icon label on-click link]}]
-  [MenuItem {:on-click (fn [_]
-                         (toggle-menu!)
-                         (when on-click
-                           (on-click)))}
+(defn- context-menu-item [toggle-menu! {:keys [icon label on-click link id]}]
+  [MenuItem
+   (merge
+    {:on-click (fn [_]
+                 (toggle-menu!)
+                 (when on-click
+                   (on-click)))}
+    (when id {:id id}))
    [ListItemIcon icon]
    (if link
      [Link link label]
@@ -549,7 +552,7 @@
   Optional keys:
   :menu-placement controls where the Popper component is placed
                   in relation to the button (detaults to bottom-end)"
-  [{:keys [label icon items menu-placement]
+  [{:keys [label icon items menu-placement id]
     :or {menu-placement "bottom-end"}}]
   (r/with-let [open? (r/atom false)
                toggle! #(swap! open? not)
@@ -557,10 +560,12 @@
                set-anchor! #(reset! anchor %)]
     [:<>
      [buttons/button-secondary
-      {:size "small"
-       :end-icon (r/as-element icon)
-       :on-click toggle!
-       :ref set-anchor!}
+      (merge
+       {:size "small"
+        :end-icon (r/as-element icon)
+        :on-click toggle!
+        :ref set-anchor!}
+       (when id {:id id}))
       label]
      [Popper {:open @open?
               :anchor-el @anchor

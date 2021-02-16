@@ -98,7 +98,8 @@
        [:div {:style {:display :flex
                       :align-items :center}}
         [common/context-menu
-         {:label (tr [:project :export])
+         {:id "project-export-menu"
+          :label (tr [:project :export])
           :icon [icons/file-cloud-download-outlined]
           :items (concat export-menu-items (default-export-menu-items project))}]
         [common/thk-link {:href thk-url

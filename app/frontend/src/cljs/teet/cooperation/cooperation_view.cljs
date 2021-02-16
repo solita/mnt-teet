@@ -415,7 +415,8 @@
   []
   (let [export-dialog-open? (r/atom false)]
     {:export-dialog-open? export-dialog-open?
-     :items [{:label (tr [:cooperation :export :title])
+     :items [{:id "export-cooperation-summary"
+              :label (tr [:cooperation :export :title])
               :icon [icons/maps-local-see]
               :on-click #(swap! export-dialog-open? not)}]}))
 
@@ -444,7 +445,8 @@
        [buttons/button-secondary {:on-click toggle-export-dialog!}
         (tr [:buttons :cancel])]
        (let [{:cooperation.application/keys [activity type] :as fv} @form-value]
-         [buttons/button-primary {:element :a
+         [buttons/button-primary {:id "preview"
+                                  :element :a
                                   :target :_blank
                                   :disabled (or (nil? activity) (nil? type))
                                   :href (common-controller/query-url

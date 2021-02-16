@@ -204,4 +204,14 @@ context('Cooperation', function() {
         cy.get(`.cooperation-overview-page [data-third-party='${newCompanyName}'] a`).should("not.exist");
 
     })
+
+    it("opens export dialog", function() {
+        navigateToProjectCooperations(this.projectID);
+        cy.get("#project-export-menu").click();
+        cy.get("#export-cooperation-summary").click();
+        cy.get("a#preview").should("have.class", "Mui-disabled")
+        cy.get("[data-form-attribute=':cooperation.application/activity'] select").select("0") // select first option
+        cy.formInput(":cooperation.application/type", "[:cooperation.application.type/design]")
+        cy.get("a#preview").should("not.have.class", "Mui-disabled")
+    })
 })
