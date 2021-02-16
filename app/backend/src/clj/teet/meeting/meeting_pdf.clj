@@ -9,8 +9,7 @@
    [teet.meeting.meeting-model :as meeting-model]
    [teet.util.md :as md]
    [teet.util.date :as date]
-   [clojure.java.io :as io]
-   [teet.util.date :as date]))
+   [clojure.java.io :as io]))
 
 (def default-layout-config
   {;; A4 portrait width/height
