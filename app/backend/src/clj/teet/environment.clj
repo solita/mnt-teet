@@ -130,7 +130,10 @@
            :subject-prefix (->ssm [:email :subject-prefix] nil)
            :contact-address (->ssm [:email :contact-address] nil)
            :server (->ssm [:email :server] {} read-string)}
-   :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}})
+   :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}
+   :vektorio {:api-key (->ssm [:vektorio :api-key] nil)
+              :config (->ssm [:vektorio :config] {} (comp #(update % :file-extensions suffix-list)
+                                                          read-string))}})
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config
