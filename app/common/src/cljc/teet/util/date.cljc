@@ -107,3 +107,35 @@
        (let [t (now)]
          (.setDate t (- (.getDate (now)) 1))
          (assert (date-before-today? t))))))
+
+#?(:clj
+   (do
+     (def date-format
+       (doto (java.text.SimpleDateFormat. "dd.MM.yyyy")
+         (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
+
+     (def time-format
+       (doto (java.text.SimpleDateFormat. "HH:mm")
+         (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
+
+     (def time-sec-format
+       (doto (java.text.SimpleDateFormat. "HH:mm:ss")
+         (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
+
+     (defn format-date
+       "Format date in human readable locale specific format, eg. dd.MM.yyyy"
+       [date]
+       (when date
+         (.format date-format date)))
+
+     (defn format-time
+       "Format time with minute resolution"
+       [date]
+       (when date
+         (.format time-format date)))
+
+     (defn format-time-sec
+       "Format time with seconds resolution"
+       [date]
+       (when date
+         (.format time-sec-format date)))))

@@ -8,7 +8,9 @@
    [teet.user.user-model :as user-model]
    [teet.meeting.meeting-model :as meeting-model]
    [teet.util.md :as md]
-   [clojure.java.io :as io]))
+   [teet.util.date :as date]
+   [clojure.java.io :as io]
+   [teet.util.date :as date]))
 
 (def default-layout-config
   {;; A4 portrait width/height
@@ -50,47 +52,19 @@
 (def external-link-icon
   {:padding-right 10 :content-width "12px" :content-height "12px" :src (io/resource "img/link.svg")})
 
-(def date-format
-  (doto (java.text.SimpleDateFormat. "dd.MM.yyyy" )
-    (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
 
-(def time-format
-  (doto (java.text.SimpleDateFormat. "HH:mm" )
-    (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
-
-(def time-sec-format
-  (doto (java.text.SimpleDateFormat. "HH:mm:ss" )
-    (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
-
-(defn format-date
-  "Format date in human readable locale specific format, eg. dd.MM.yyyy"
-  [date]
-  (when date
-    (.format date-format date)))
-
-(defn format-time
-  "Format time with minute resolution"
-  [date]
-  (when date
-    (.format time-format date)))
-
-(defn format-time-sec
-  "Format time with seconds resolution"
-  [date]
-  (when date
-    (.format time-sec-format date)))
 
 (defn- meeting-time
   "Format meeting begin, end time, date"
   [meeting]
-  (str (format-date (:meeting/start meeting))
-       " " (format-time (:meeting/start meeting)) " - "
-       (format-time (:meeting/end meeting))))
+  (str (date/format-date (:meeting/start meeting))
+       " " (date/format-time (:meeting/start meeting)) " - "
+       (date/format-time (:meeting/end meeting))))
 
 (defn- approval-date-time
   "Format approval review date and time"
   [review]
-  (str (format-date review) " " (format-time-sec review)))
+  (str (date/format-date review) " " (date/format-time-sec review)))
 
 (defn- render-svg
   "Render .SVG content"
@@ -373,5 +347,5 @@
          (str (tr [:meeting :link-to-original]) " ")]
         [:fo:block {:font-style "normal" :font-size "10px" :font-weight 400 :space-after 11}
          (get-meeting-link meeting db)]
-        [:fo:block {:font-size "10px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]
+        [:fo:block {:font-size "10px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (date/format-date now) " " (date/format-time-sec now) " " (user-model/user-name user))]
         [:fo:block {:font-size "14px"} ]]]]))))

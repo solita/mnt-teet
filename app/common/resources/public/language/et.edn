@@ -187,6 +187,28 @@
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
+  :export
+  {:cooperation.application.response-type/coordination
+   {:header "KOOSKÕLASTUSED",
+    :user-column "Kaasatud kooskõlastaja",
+    :content-column "Kooskõlastuse sisu",
+    :decision-column "Otsus esitatud kooskõlastuse osas"},
+   :cooperation.application.response-type/opinion
+   {:header "ARVAMUSED ",
+    :user-column "Arvamuse esitaja",
+    :content-column "Arvamuse sisu",
+    :decision-column "Otsus esitatud arvamuse osas"},
+   :cooperation.application.response-type/consent
+   {:header "NÕUSOLEKUD",
+    :user-column "Nõusoleku esitaja",
+    :content-column "Nõusoleku sisu",
+    :decision-column "Otsus esitatud nõusoleku osas"},
+   :cooperation.application.response-type/other
+   {:header "MUU",
+    :user-column "Esitaja",
+    :content-column "Sisu",
+    :decision-column "Otsus"},
+   :seq#-column "Jrk nr"},
   :newest-application "Uusim pöördumine",
   :create-opinion-button "Lisan ametliku seisukoha",
   :application-edited "Taotlus edukalt muutetud",

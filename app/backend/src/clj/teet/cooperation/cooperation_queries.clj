@@ -6,10 +6,9 @@
             [teet.util.datomic :as du]
             [datomic.client.api :as d]
             [teet.cooperation.cooperation-model :as cooperation-model]
+            [teet.cooperation.cooperation-export :as cooperation-export]
             [teet.meta.meta-query :as meta-query]
-            [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.environment :as environment]
-            [hiccup.core :as h]))
+            [teet.db-api.db-api-large-text :as db-api-large-text]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
@@ -78,9 +77,4 @@
   ^{:format :raw}
   {:status 200
    :headers {"Content-Type" "text/html; charset=UTF-8"}
-   :body (h/html
-          [:html
-           [:head
-            [:title "foo"]]
-           [:body
-            [:div (pr-str args)]]])})
+   :body (cooperation-export/summary-table db activity type)})
