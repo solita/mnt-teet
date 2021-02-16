@@ -18,7 +18,8 @@
             [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.ui.mentions :as mentions]))
+            [teet.ui.mentions :as mentions]
+            [teet.ui.common :as common-ui]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -270,8 +271,27 @@
         :value @existing-state
         :on-change #(reset! existing-state (-> % .-target .-value))}]]]))
 
+(defn- context-menu-demo [e!]
+  [:div {:style {:margin-left "100px"}}
+   [ui-common/context-menu {:label "click to open"
+                            :icon [icons/notification-time-to-leave]
+                            :items [{:label "please click"
+                                     :on-click #(js/alert "fooled you!")
+                                     :icon [icons/maps-directions-boat]}
+
+                                    {:label "click me too"
+                                     :on-click #(js/alert "fooled you again!")
+                                     :icon [icons/maps-local-pizza]}
+
+                                    {:label "this one is legit"
+                                     :link {:target :_blank
+                                            :href "http://example.com"}
+                                     :icon [icons/notification-bluetooth-audio]}]}]])
 (def demos
-  [{:id :rte
+  [{:id :context-menu
+    :heading "Context menu"
+    :component [context-menu-demo]}
+   {:id :rte
     :heading "Rich text editor"
     :component [rte-demo]}
    {:id :typography
