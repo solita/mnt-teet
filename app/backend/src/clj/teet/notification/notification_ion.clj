@@ -42,7 +42,7 @@
      (if (empty? tx-list)
        (log/info "No transaction info generated, automatic notifications skipped")
        (d/transact conn {:tx-data tx-list}))
-     (str "{\"success\": true \"notifications\": " notifications-count " }")))
+     (str "{\"success\": true, \"notifications\": " notifications-count " }")))
   (;; read days from env config
    [event]
    (notify event (environment/config-value :notify :application-expire-days))))
