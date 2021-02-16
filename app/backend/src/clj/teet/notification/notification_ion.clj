@@ -11,19 +11,20 @@
 
 (defn notify-tx-data
   "Transaction data for notification"
-  [db application-id]
+  [db {:keys [application-id third-party-id]}]
   (let [ project-id (cooperation-db/application-project-id db application-id)
         activity-id (cooperation-db/application-activity-id db application-id)
         user-to (activity-db/activity-manager db activity-id)]
     (if (some? user-to)
       (if (user-db/is-user-deactivated? db user-to)
-        (log/info "Notification skipped for application-id " application-id " because of deactivated user " user-to)
+        (log/info "Notification skipped for related party third-party-id " third-party-id
+          " for application-id " application-id " because of deactivated user " user-to)
         (notification-db/system-notification-tx db
              {:to user-to
               :project project-id
               :target application-id
               :type cooperation-notifications/application-response-expired-soon}))
-      (log/info "Notification skipped for application-id " application-id
+      (log/info "Notification skipped for related party " third-party-id " for application-id " application-id
         " as Activity Manager not found for activity-id " activity-id))))
 
 (defn notify
@@ -33,11 +34,12 @@
   providing the Activity is not finished"
   ([event days]
    (log/info "Call notify by event: " event " with days param: " days)
-   (let [conn (environment/datomic-connection) db (d/db conn)]
-     (d/transact conn
-       {:tx-data
-        (map (comp (partial notify-tx-data db) :application-id)
-          (cooperation-db/applications-to-be-expired db days))})))
+   (let [conn (environment/datomic-connection) db (d/db conn)
+         tx-list (map (comp (partial notify-tx-data db))
+                  (cooperation-db/applications-to-be-expired db days))]
+     (if (empty? tx-list)
+       (log/info "No transaction info generated, automatic notifications skipped")
+       (d/transact conn {:tx-data tx-list}))))
   (;; read days from env config
    [event]
    (notify event (environment/config-value :notify :application-expire-days))))
