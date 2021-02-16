@@ -163,10 +163,14 @@
                       [(missing? $ ?activities :meta/deleted?)]
                       [?activities :activity/tasks ?task]
                       [(missing? $ ?task :meta/deleted?)]
-                      [?task :task/type :task.type/no-objection-coordination]]
+                      (or [?task :task/type :task.type/no-objection-coordination]
+                        [?task :task/type :task.type/collaboration])]
                     db third-party-id application-id))]
-    (when (task-model/can-submit? task)
-      task)))
+    (if (some? task)
+      (if (task-model/can-submit? task)
+        task
+        (println "Error task can not be submitted"))
+      (println "No task found for application"))))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id

@@ -186,6 +186,30 @@
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
+  :export
+  {:title "Kaasatud osapoolte koondtabel",
+   :preview "Eelvaade",
+   :cooperation.application.response-type/coordination
+   {:header "KOOSKÕLASTUSED",
+    :user-column "Kaasatud kooskõlastaja",
+    :content-column "Kooskõlastuse sisu",
+    :decision-column "Otsus esitatud kooskõlastuse osas"},
+   :cooperation.application.response-type/opinion
+   {:header "ARVAMUSED ",
+    :user-column "Arvamuse esitaja",
+    :content-column "Arvamuse sisu",
+    :decision-column "Otsus esitatud arvamuse osas"},
+   :cooperation.application.response-type/consent
+   {:header "NÕUSOLEKUD",
+    :user-column "Nõusoleku esitaja",
+    :content-column "Nõusoleku sisu",
+    :decision-column "Otsus esitatud nõusoleku osas"},
+   :cooperation.application.response-type/other
+   {:header "MUU",
+    :user-column "Esitaja",
+    :content-column "Sisu",
+    :decision-column "Otsus"},
+   :seq#-column "Jrk nr"},
   :newest-application "Uusim pöördumine",
   :create-opinion-button "Lisan ametliku seisukoha",
   :application-edited "Taotlus edukalt muutetud",
@@ -205,8 +229,9 @@
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
-   :coordination-task-missing
-   "Tegevusel puudub kooskõlastusülesanne või ülesande staatus ei luba failide lisamist.",
+   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-status-no-upload
+   "Ülesande staatus ei luba failide lisamist.",
    :response-not-given "Faile saab lisada peale vastuse lisamist",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
@@ -622,6 +647,7 @@
   "Kaasatud osapoole registrikood/isikukood",
   :user/phone-number "Telefoni number",
   :thk.project/carriageway "SO",
+  :cooperation.application/activity "Tegevuse",
   :participation/participant "Kasutaja",
   :land-acquisition/status "Olek",
   :common {"description" "Kirjeldus", "name" "Nimi"},
@@ -976,6 +1002,7 @@
   :restrictions-tab "Kitsendused",
   :download-related-info "Laen seotud andmed alla",
   :edit-comment "Muudan märkust",
+  :export "Eksport",
   :show-timeline "Kuvan projekti ajakava",
   :edit-task "Muudan ülesannet",
   :activity {:no-tasks "Ülesandeid pole lisatud"},

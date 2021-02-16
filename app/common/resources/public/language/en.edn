@@ -186,6 +186,30 @@
   :waiting-for-response "Waiting for response",
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
+  :export
+  {:title "Involved parties summary table",
+   :preview "Preview",
+   :cooperation.application.response-type/coordination
+   {:header nil,
+    :user-column nil,
+    :content-column nil,
+    :decision-column nil},
+   :cooperation.application.response-type/opinion
+   {:header nil,
+    :user-column nil,
+    :content-column nil,
+    :decision-column nil},
+   :cooperation.application.response-type/consent
+   {:header nil,
+    :user-column nil,
+    :content-column nil,
+    :decision-column nil},
+   :cooperation.application.response-type/other
+   {:header nil,
+    :user-column nil,
+    :content-column nil,
+    :decision-column nil},
+   :seq#-column nil},
   :newest-application "Newest application",
   :create-opinion-button "Opinion of Competent Authority",
   :application-edited "Application edited succesfully",
@@ -206,7 +230,9 @@
   :error
   {:upload-not-allowed "Upload not allowed",
    :coordination-task-missing
-   "Coordination task does not exist for the activity, or it is in a state that does not allow file uploading.",
+   "Coordination task does not exist for the activity.",
+   :coordination-task-status-no-upload
+   "Coordination task state does not allow file uploading.",
    :response-not-given "Files can be added after response is added",
    :coordination-task-status-mismatch
    "Task is not in a state that allows file upload.",
@@ -626,6 +652,7 @@
   "Involved party registry/personal ID code",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
+  :cooperation.application/activity "Activity",
   :participation/participant "User",
   :land-acquisition/status "Status",
   :common {"description" "Description", "name" "Name"},
@@ -978,6 +1005,7 @@
   :restrictions-tab "Restrictions",
   :download-related-info "Download related info",
   :edit-comment "Edit comment",
+  :export "Export",
   :show-timeline "Show project timeline",
   :edit-task "Edit task",
   :activity {:no-tasks "No tasks defined"},
