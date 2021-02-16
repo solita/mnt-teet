@@ -163,7 +163,6 @@
  {:response "Response",
   :application-delete-confirm "Delete the application?",
   :competent-authority-name "Transport Administration ",
-  :export-preview "Preview",
   :conclusion "Conclusion",
   :applications "Applications",
   :edit-response-title "Edit involved party response",
@@ -188,7 +187,9 @@
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
   :export
-  {:cooperation.application.response-type/coordination
+  {:title "Involved parties summary table",
+   :preview "Preview",
+   :cooperation.application.response-type/coordination
    {:header nil,
     :user-column nil,
     :content-column nil,

@@ -415,7 +415,7 @@
   []
   (let [export-dialog-open? (r/atom false)]
     {:export-dialog-open? export-dialog-open?
-     :items [{:label "summary"
+     :items [{:label (tr [:cooperation :export :title])
               :icon [icons/maps-local-see]
               :on-click #(swap! export-dialog-open? not)}]}))
 
@@ -425,10 +425,7 @@
                activities (mapcat :thk.lifecycle/activities
                                   (:thk.project/lifecycles project))]
     [panels/modal
-     {:title [:div {:class (<class common-styles/flex-row)}
-              "involved parties"
-              [typography/GreyText {:style {:margin-left "1rem"}}
-               "summary table"]]
+     {:title (tr [:cooperation :export :title])
       :open-atom export-dialog-open?}
      [:<>
       [form/form {:e! e!
@@ -453,7 +450,7 @@
                                   :href (common-controller/query-url
                                          :cooperation/export-summary
                                          (update fv :cooperation.application/activity :db/id))}
-          (tr [:cooperation :export-preview])])]]]))
+          (tr [:cooperation :export :preview])])]]]))
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
   (r/with-let [{:keys [export-dialog-open? items]} (export-menu-items)]

@@ -163,7 +163,6 @@
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",
   :competent-authority-name "Transpordiamet",
-  :export-preview "Eelvaade",
   :conclusion "Järeldus",
   :applications "Taotlused",
   :edit-response-title "Muudan kaasatud osapoole vastust",
@@ -188,7 +187,9 @@
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
   :export
-  {:cooperation.application.response-type/coordination
+  {:title "Kaasatud osapoolte koondtabel",
+   :preview "Eelvaade",
+   :cooperation.application.response-type/coordination
    {:header "KOOSKÕLASTUSED",
     :user-column "Kaasatud kooskõlastaja",
     :content-column "Kooskõlastuse sisu",
