@@ -1,7 +1,9 @@
 (ns teet.navigation.navigation-logo)
 
 (defn logo-shield
-  [{:keys [width height]}]
+  [{:keys [width height]
+    :or {width 170
+         height 90}}]
   [:svg#Layer_1 {:style {:max-height "100%"}
                  :height height
                  :width width
