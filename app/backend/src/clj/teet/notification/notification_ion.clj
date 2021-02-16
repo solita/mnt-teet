@@ -35,8 +35,9 @@
   ([event days]
    (log/info "Call notify by event: " event " with days param: " days)
    (let [conn (environment/datomic-connection) db (d/db conn)
-         tx-list (map (comp (partial notify-tx-data db))
-                  (cooperation-db/applications-to-be-expired db days))]
+         tx-list (filter not-empty
+                   (map (comp (partial notify-tx-data db))
+                     (cooperation-db/applications-to-be-expired db days)))]
      (if (empty? tx-list)
        (log/info "No transaction info generated, automatic notifications skipped")
        (d/transact conn {:tx-data tx-list}))))
