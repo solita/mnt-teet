@@ -126,31 +126,35 @@
      (tr-enum type) " / " (tr-enum response-type))])
 
 (defn color-and-status
-  [color text]
+  [color text-comp]
   [:div {:style {:display :flex
                  :align-items :center}}
-   [:div {:class (<class common-styles/status-circle-style color)}]
-   [:span text]])
+   (when color
+     [:div {:class (<class common-styles/status-circle-style color)}])
+   text-comp])
 
 (defn response-status
   [response]
-  (let [color (case (or (get-in response [:cooperation.response/status :db/ident]) (:cooperation.response/status response))
+  (let [color (case (or (get-in response [:cooperation.response/status :db/ident])
+                        (:cooperation.response/status response))
                 :cooperation.response.status/no-objection theme-colors/success
                 :cooperation.response.status/no-objection-with-terms theme-colors/warning
                 :cooperation.response.status/objection theme-colors/error
                 :cooperation.response.status/no-response theme-colors/error
-                theme-colors/black-coral-1)]
+                nil)]
     [:div
      [color-and-status color (if response
-                               (tr-enum (:cooperation.response/status response))
-                               (tr [:cooperation :applied]))]]))
+                               [:span (tr-enum (:cooperation.response/status response))]
+                               [typography/ItalicMediumEmphasis (tr [:cooperation :waiting-for-response])])]]))
 
-(defn- opinion-status [status]
-  (let [status (or status :cooperation.opinion.status/unanswered)]
+(defn- opinion-status [given-status]
+  (let [status (or given-status :waiting-for-opinion)]
     [:div {:data-cy (name status)}
      [color-and-status
       (cooperation-style/opinion-status-color status)
-      (tr-enum status)]]))
+      (if given-status
+        [:span (tr-enum given-status)]
+        [typography/ItalicMediumEmphasis (tr [:cooperation :waiting-for-opinion])])]]))
 
 (defn- opinion-view
   ([opinion] (opinion-view {} opinion))
@@ -242,8 +246,9 @@
     [[(tr [:cooperation :opinion])
       ;; colored circle based on status
       [opinion-status (:cooperation.opinion/status opinion)]]
-     [(tr [:common :date])
-      (format/date (:meta/created-at opinion))]]]])
+     (when-let [date (or (:meta/modified-at opinion) (:meta/created-at opinion))]
+       [(tr [:common :date])
+        (format/date date)])]]])
 
 (defn application-data
   [{:cooperation.application/keys [activity] :as application}]

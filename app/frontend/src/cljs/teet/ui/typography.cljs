@@ -34,6 +34,11 @@
   {:font-weight 700
    :font-size "0.875rem"})
 
+(defn- medium-italic-style
+  []
+  {:font-style :italic
+   :color theme-colors/text-medium-emphasis})
+
 ;; Legacy style
 (defn- section-heading-style []
   {:font-weight    700
@@ -94,3 +99,5 @@
 (def SmallText (util/make-component :p {:class (<class small-text-style)}))
 
 (def SmallBoldText (util/make-component :span {:class (<class small-bold-text-style)}))
+
+(def ItalicMediumEmphasis (util/make-component :span {:class (<class medium-italic-style)}))

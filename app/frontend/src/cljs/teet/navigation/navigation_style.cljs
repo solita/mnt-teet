@@ -34,6 +34,7 @@
   {:display :flex
    :background-color theme-colors/white
    :color theme-colors/gray-dark
+   :height theme-spacing/appbar-height
    :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
    :transition "all 0.2s ease-in-out"})
 
@@ -109,24 +110,8 @@
    :flex-direction :row
    :justify-content :flex-start
    :flex-grow 1
-   :flex-basis "15%"})
-
-
-
-(defn logout-container-style
-  []
-  {:border 0
-   :margin 0
-   :display :inline-flex
-   :position :relative
-   :flex-direction :column
-   :vertical-align :top})
-
-(defn logout-style
-  []
-  {:white-space :nowra
-   :position :relative
-   :font-size "16px"})
+   :flex-basis "15%"
+   :max-height "100%"})
 
 (defn feedback-container-style []
   (merge {:display :flex

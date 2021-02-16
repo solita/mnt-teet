@@ -8,7 +8,8 @@
    :border-top (str "1px solid " theme-colors/black-coral-1)})
 
 (def opinion-status-color
-  {:cooperation.opinion.status/agreed "#308653"
+  {:waiting-for-opinion nil
+   :cooperation.opinion.status/agreed "#308653"
    :cooperation.opinion.status/partially-rejected "#FFB511"
    :cooperation.opinion.status/rejected "#D73E3E"
    :cooperation.opinion.status/unanswered theme-colors/gray-light})
