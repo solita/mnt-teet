@@ -37,10 +37,12 @@
    (let [conn (environment/datomic-connection) db (d/db conn)
          tx-list (filter not-empty
                    (map (comp (partial notify-tx-data db))
-                     (cooperation-db/applications-to-be-expired db days)))]
+                     (cooperation-db/applications-to-be-expired db days)))
+         notifications-count (count tx-list)]
      (if (empty? tx-list)
        (log/info "No transaction info generated, automatic notifications skipped")
-       (d/transact conn {:tx-data tx-list}))))
+       (d/transact conn {:tx-data tx-list}))
+     (str "{\"success\": true \"notifications\": " notifications-count " }")))
   (;; read days from env config
    [event]
    (notify event (environment/config-value :notify :application-expire-days))))
