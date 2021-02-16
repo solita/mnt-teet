@@ -34,6 +34,7 @@
   {:display :flex
    :background-color theme-colors/white
    :color theme-colors/gray-dark
+   :height theme-spacing/appbar-height
    :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
    :transition "all 0.2s ease-in-out"})
 
