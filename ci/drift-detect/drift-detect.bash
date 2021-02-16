@@ -27,7 +27,7 @@ for stack in $STACK_NAMES; do
 	  exit 2
       elif [ $detection_status = DETECTION_IN_PROGRESS ]; then
 	  echo 'waiting for detection to complete...'
-	  sleep 3.14
+	  sleep 30
 	  continue
       else
 	  echo unhandled drift status: "$drift_status"
@@ -36,6 +36,7 @@ for stack in $STACK_NAMES; do
 	  exit 3
       fi     
     done
+    sleep 120
 done
 if [ $drifts_seen = true ]; then
     exit 1
