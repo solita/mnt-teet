@@ -35,13 +35,10 @@
     (clojure.pprint/pprint tx-data)))
 
 ;; TEET-1307 road-safety-audit task thk/code mapping problem todo / notes
-;; - in  migrations we have 2 conflicting idents: :thk.task-type/road-safety-audit :thk/code "4011" and a later :thk.task-type/road-safety-audit :thk/code "4009"
+;; - we first thought that in migrations we have 2 conflicting idents: :thk.task-type/road-safety-audit :thk/code "4011" and a later :thk.task-type/road-safety-audit :thk/code "4009"
 ;; - we actually need these to be separate codes and to coexist: 4011 for designand 4009 for construction
-;; - there's actually already defined design-road-safety-audit task type that has translations and is valid for design-approval group
-;; - scan for ambiguities in code:
-;;  - only references in codes are in tests
-;; - add the 4011 code to the design type in a schema addition
-;; - write a migration that converts and tasks under design tasks to this
-;; - and ensure you can only select design-road-safety-audit in a design task
+;;    - later found out that we actually do have 2 separate idents, but mistakenly the thk code for design was applied to the construction side task type in a migration:
+;;    - there's design-road-safety-audit task type that has translations and is valid for design-approval group
+;;    -> actually this migration seems unnecessary
 ;; - then generate thk export csv and verify results
 ;; - write test?
