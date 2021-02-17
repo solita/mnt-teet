@@ -4,7 +4,7 @@
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.util.collection :as cu]
             [hiccup.core :as h]
-            [teet.localization :refer [tr with-language]]
+            [teet.localization :refer [tr tr-enum with-language]]
             [teet.util.date :as date]
             [teet.util.md :as md]
             [teet.project.project-db :as project-db]
@@ -22,6 +22,7 @@
           :where
           [?a :cooperation.application/activity ?activity]
           [?a :cooperation.application/type ?type]
+
           :in $ ?activity type] db activity type)
    (db-api-large-text/with-large-text #{:cooperation.response/content :cooperation.opinion/comment})
    (map first)
@@ -33,6 +34,18 @@
     [:p
      (str (inc i) ". ")
      (render-item-fn item)]))
+
+(defn- response [{:cooperation.response/keys [status content]}]
+  [:span
+   [:b (tr-enum status)]
+   (when content
+     (md/render-md-html content))])
+
+(defn- opinion [{:cooperation.opinion/keys [status comment]}]
+  [:span
+   [:b (tr-enum status)]
+   (when comment
+     (md/render-md-html comment))])
 
 (defn- applications-table [num applications]
   (let [rt (-> applications first :cooperation.application/response-type :db/ident)
@@ -47,6 +60,7 @@
                                                      first
                                                      :cooperation.3rd-party/name)
                                :applications applications}))
+                       (sort-by :third-party-name)
                        cu/indexed)]
     [:span
      [:h3 num ". " (tr* :header)]
@@ -65,27 +79,26 @@
           [:strong (tr* :decision-column)]]]]
 
        (for [{tpi ::cu/i :keys [third-party-name applications]} third-parties
-             :let [applications (cu/indexed applications)]]
+             :let [applications (->> applications
+                                     (sort-by (comp :cooperation.response/date :cooperation.application/response))
+                                     cu/indexed)]]
          [:tr
-          [:td {:width "38"}
+          [:td {:width "38" :valign "top"}
            [:p (str (inc tpi))]]
-          [:td {:width "169"}
+          [:td {:width "169" :valign "top"}
            [:p third-party-name]
            (numbered applications
                      #(some-> % :cooperation.application/response :cooperation.response/date date/format-date))]
-          [:td {:width "340"}
+          [:td {:width "340" :valign "top"}
            (numbered applications
                      #(some-> %
                               :cooperation.application/response
-                              :cooperation.response/content
-                              md/render-md-html))]
-          [:td {:width "385"}
-           [:p "Opinion of Competent Authority"]
+                              response))]
+          [:td {:width "385" :valign "top"}
            (numbered applications
                      #(some-> %
                               :cooperation.application/opinion
-                              :cooperation.opinion/comment
-                              md/render-md-html))]])]]]))
+                              opinion))]])]]]))
 
 (def ^:private response-type-order
   [:cooperation.application.response-type/coordination
@@ -101,22 +114,25 @@
      (with-language :et
        (cu/eager
         [:html
-         [:script
-          (str "function copyToClipboard() {"
-               "var e = document.getElementById('export');"
-               "var s = window.getSelection();"
-               "var r = document.createRange();"
-               "r.selectNodeContents(e);"
-               "s.removeAllRanges();"
-               "s.addRange(r);"
-               "document.execCommand('Copy');"
-               "}")]
+         [:head
+          [:title (tr-enum type)]
+          [:script
+           (str "function copyToClipboard() {"
+                "var e = document.getElementById('export');"
+                "var s = window.getSelection();"
+                "var r = document.createRange();"
+                "r.selectNodeContents(e);"
+                "s.removeAllRanges();"
+                "s.addRange(r);"
+                "document.execCommand('Copy');"
+                "}")]]
          [:body
           [:button {:style "float: right;"
                     :onclick "copyToClipboard()"}
            (tr [:buttons :copy-to-clipboard])]
           [:div#export
            [:h1 (or (:thk.project/project-name project) (:thk.project/name project))]
+           [:h2 (tr-enum type)]
            (map-indexed
             (fn [i applications]
               (applications-table (inc i) applications))
