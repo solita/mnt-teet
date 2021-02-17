@@ -6,7 +6,9 @@
             [hiccup.core :as h]
             [teet.localization :refer [tr with-language]]
             [teet.util.date :as date]
-            [teet.util.md :as md]))
+            [teet.util.md :as md]
+            [teet.project.project-db :as project-db]
+            [clojure.string :as str]))
 
 (defn- applications-by-response-type [db activity type]
   (->>
@@ -92,14 +94,31 @@
    :cooperation.application.response-type/other])
 
 (defn summary-table [db activity type]
-  (let [applications (applications-by-response-type db activity type)]
+  (let [applications (applications-by-response-type db activity type)
+        project (d/pull db [:thk.project/name :thk.project/project-name]
+                        (project-db/activity-project-id db activity))]
     (h/html
      (with-language :et
        (cu/eager
         [:html
+         [:script
+          (str "function copyToClipboard() {"
+               "var e = document.getElementById('export');"
+               "var s = window.getSelection();"
+               "var r = document.createRange();"
+               "r.selectNodeContents(e);"
+               "s.removeAllRanges();"
+               "s.addRange(r);"
+               "document.execCommand('Copy');"
+               "}")]
          [:body
-          (map-indexed
-           (fn [i applications]
-             (applications-table (inc i) applications))
-           (remove nil?
-                   (map applications response-type-order)))]])))))
+          [:button {:style "float: right;"
+                    :onclick "copyToClipboard()"}
+           (tr [:buttons :copy-to-clipboard])]
+          [:div#export
+           [:h1 (or (:thk.project/project-name project) (:thk.project/name project))]
+           (map-indexed
+            (fn [i applications]
+              (applications-table (inc i) applications))
+            (remove nil?
+                    (map applications response-type-order)))]]])))))
