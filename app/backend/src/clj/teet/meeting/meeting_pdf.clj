@@ -1,15 +1,16 @@
 (ns teet.meeting.meeting-pdf
   "Generate meeting PDF as hiccup formatted XSL-FO"
   (:require
-   [teet.meeting.meeting-db :as meeting-db]
-   [teet.meeting.meeting-commands :as meeting-commands]
-   [teet.environment :as environment]
-   [teet.localization :refer [with-language tr tr-enum]]
-   [teet.user.user-model :as user-model]
-   [teet.meeting.meeting-model :as meeting-model]
-   [teet.util.md :as md]
-   [teet.util.date :as date]
-   [clojure.java.io :as io]))
+    [teet.meeting.meeting-db :as meeting-db]
+    [teet.meeting.meeting-commands :as meeting-commands]
+    [teet.environment :as environment]
+    [teet.localization :refer [with-language tr tr-enum]]
+    [teet.user.user-model :as user-model]
+    [teet.meeting.meeting-model :as meeting-model]
+    [teet.util.md :as md]
+    [teet.util.date :as date]
+    [clojure.java.io :as io]
+    [teet.db-api.db-api-large-text :as db-api-large-text]))
 
 (def default-layout-config
   {;; A4 portrait width/height
@@ -305,7 +306,9 @@
    (meeting-pdf db user language meeting-id default-layout-config))
   ([db user language meeting-id {:keys [body header footer] :as layout}]
    (with-language language
-   (let [meeting (meeting-db/export-meeting db user meeting-id)
+   (let [meeting (db-api-large-text/with-large-text
+                   meeting-model/rich-text-fields
+                   (meeting-db/export-meeting db user meeting-id))
          now (new java.util.Date)]
      [:fo:root {:xmlns:fo  "http://www.w3.org/1999/XSL/Format"
                 :xmlns:svg "http://www.w3.org/2000/svg"}
