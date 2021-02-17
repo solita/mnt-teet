@@ -213,5 +213,12 @@ context('Cooperation', function() {
         cy.get("[data-form-attribute=':cooperation.application/activity'] select").select("0") // select first option
         cy.formInput(":cooperation.application/type", "[:cooperation.application.type/design]")
         cy.get("a#preview").should("not.have.class", "Mui-disabled")
+
+        // Visit the page
+        cy.get("a#preview").then(($link) => {
+            cy.visit($link.attr("href"))
+        })
+
+        cy.get("div#export h1").contains("COOPERATION TESTING")
     })
 })

@@ -84,6 +84,7 @@
   :send "Saadan teavituse",
   :cancel "Tühistan",
   :add "Lisan",
+  :copy-to-clipboard "Kopeeri tekst",
   :upload "Laadin üles"},
  :cadastral-group
  {"" "Määratlemata",
@@ -229,8 +230,9 @@
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
   {:upload-not-allowed "Üleslaadimine pole lubatud",
-   :coordination-task-missing
-   "Tegevusel puudub kooskõlastusülesanne või ülesande staatus ei luba failide lisamist.",
+   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+   :coordination-task-status-no-upload
+   "Ülesande staatus ei luba failide lisamist.",
    :response-not-given "Faile saab lisada peale vastuse lisamist",
    :coordination-task-status-mismatch
    "Ülesanne ei ole failide üleslaadimist lubavas olekus.",

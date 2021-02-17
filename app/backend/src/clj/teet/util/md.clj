@@ -1,17 +1,16 @@
 (ns teet.util.md
   (:require
-    [clojure.string :as str])
+   [clojure.string :as str]
+   [hiccup.core :as h])
   (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
-           (com.vladsch.flexmark.util.data DataHolder MutableDataSet)
+           (com.vladsch.flexmark.util.data DataHolder)
            (com.vladsch.flexmark.util.sequence BasedSequence)
            (com.vladsch.flexmark.util.ast Document Node DelimitedNode)
            (com.vladsch.flexmark.parser.delimiter DelimiterProcessor)
            (com.vladsch.flexmark.ast
              ;; Import node types for rendering
              Paragraph BulletList OrderedList Heading Text
-             StrongEmphasis Emphasis)
-           (com.vladsch.flexmark.html HtmlRenderer)
-           (com.vladsch.flexmark.html.renderer NodeRenderer NodeRendererFactory NodeRenderingHandler)))
+             StrongEmphasis Emphasis)))
 
 (declare render-md)
 
@@ -92,7 +91,7 @@
 (defmethod md->xsl-fo Text [t]
   (str (.getChars t)))
 
-(defmethod md->html Text [t] (str (.getChars t)))
+(defmethod md->html Text [t] (h/h (str (.getChars t))))
 
 (defmethod md->xsl-fo StrongEmphasis [t]
   [:fo:inline {:font-weight 900}
