@@ -18,7 +18,8 @@
             [teet.localization :refer [tr with-language]]
             [teet.entity.entity-db :as entity-db]
             [clojure.spec.alpha :as s]
-            [teet.db-api.db-api-large-text :as db-api-large-text])
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.authorization.authorization-check :as authorization-check])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -31,7 +32,11 @@
 (defmethod file-db/attach-to :meeting-agenda
   [db user _file [_ meeting-agenda-id]]
   (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
-    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+    (when (authorization-check/authorized?
+           user :meeting/edit-meeting
+           {:entity (du/entity db meeting-id)
+            :link :meeting/organizer-or-reviewer
+            :project-id (project-db/meeting-project-id db meeting-id)})
       {:eid meeting-agenda-id
        :wrap-tx #(update-meeting-tx user meeting-id %)})))
 
