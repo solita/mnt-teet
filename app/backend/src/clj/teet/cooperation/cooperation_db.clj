@@ -152,22 +152,28 @@
                   cooperation-model/application-overview-attrs))]}))
 
 (defn third-party-application-task
-  "Get related task (if any) that has code \"KK\" and can be submitted"
+  "Get related task (if any) that has code \"KK\" and can be submitted.
+  If no tasks added to the related lifecycle activity return nil
+  If there is a task that can not be submitted return map with error message"
   [db third-party-id application-id]
-  (ffirst
-    (filter task-model/can-submit?
-      (d/q '[:find (pull ?task [*])
-             :in $ ?third-part ?application-id
-             :where
-             [?third-part :cooperation.3rd-party/applications ?applications]
-             [(missing? $ ?applications :meta/deleted?)]
-             [?applications :cooperation.application/activity ?activities]
-             [(missing? $ ?activities :meta/deleted?)]
-             [?activities :activity/tasks ?task]
-             [(missing? $ ?task :meta/deleted?)]
-             [?task :task/type ?task-type]
-             [?task-type :filename/code "KK"]]
-        db third-party-id application-id))))
+  (let [tasks (d/q '[:find (pull ?task [*])
+                     :in $ ?third-party-id ?application-id
+                     :where
+                     [?third-part :cooperation.3rd-party/applications ?applications]
+                     [(missing? $ ?applications :meta/deleted?)]
+                     [?applications :cooperation.application/activity ?activities]
+                     [(missing? $ ?activities :meta/deleted?)]
+                     [?activities :activity/tasks ?task]
+                     [(missing? $ ?task :meta/deleted?)]
+                     [?task :task/type ?task-type]
+                     [?task-type :filename/code "KK"]]
+                db third-party-id application-id)
+        can-be-submitted (filter task-model/can-submit? tasks)]
+    (if (and
+          (seq tasks)
+          (empty? can-be-submitted))
+      {:error-message "Task can not be submitted"}
+      (ffirst can-be-submitted))))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
