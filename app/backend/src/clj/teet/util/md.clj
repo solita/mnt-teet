@@ -121,6 +121,13 @@
                            3 "16pt")}
    (render-children h)])
 
+(defmethod md->html Heading [h]
+  [(case (.getLevel h)
+     1 :h3
+     2 :h4
+     3 :h5)
+   (render-children-html h)])
+
 (defn create-underline-node [opening-marker text closing-marker]
   (let [state (atom {:opening-marker opening-marker
                      :text text
