@@ -152,25 +152,22 @@
                   cooperation-model/application-overview-attrs))]}))
 
 (defn third-party-application-task
+  "Get related task (if any) that has code \"KK\" and can be submitted"
   [db third-party-id application-id]
-  (let [task (ffirst
-               (d/q '[:find (pull ?task [*])
-                      :in $ ?third-part ?application-id
-                      :where
-                      [?third-part :cooperation.3rd-party/applications ?applications]
-                      [(missing? $ ?applications :meta/deleted?)]
-                      [?applications :cooperation.application/activity ?activities]
-                      [(missing? $ ?activities :meta/deleted?)]
-                      [?activities :activity/tasks ?task]
-                      [(missing? $ ?task :meta/deleted?)]
-                      [?task :task/type ?task-type]
-                      [?task-type :filename/code "KK"]]
-                    db third-party-id application-id))]
-    (if (some? task)
-      (if (task-model/can-submit? task)
-        task
-        (println "Error task can not be submitted"))
-      (println "No task found for application"))))
+  (ffirst
+    (filter task-model/can-submit?
+      (d/q '[:find (pull ?task [*])
+             :in $ ?third-part ?application-id
+             :where
+             [?third-part :cooperation.3rd-party/applications ?applications]
+             [(missing? $ ?applications :meta/deleted?)]
+             [?applications :cooperation.application/activity ?activities]
+             [(missing? $ ?activities :meta/deleted?)]
+             [?activities :activity/tasks ?task]
+             [(missing? $ ?task :meta/deleted?)]
+             [?task :task/type ?task-type]
+             [?task-type :filename/code "KK"]]
+        db third-party-id application-id))))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
