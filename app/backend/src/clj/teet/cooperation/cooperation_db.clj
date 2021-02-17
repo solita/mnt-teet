@@ -163,8 +163,8 @@
                       [(missing? $ ?activities :meta/deleted?)]
                       [?activities :activity/tasks ?task]
                       [(missing? $ ?task :meta/deleted?)]
-                      (or [?task :task/type :task.type/no-objection-coordination]
-                        [?task :task/type :task.type/collaboration])]
+                      [?task :task/type ?task-type]
+                      [?task-type :filename/code "KK"]]
                     db third-party-id application-id))]
     (if (some? task)
       (if (task-model/can-submit? task)
