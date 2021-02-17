@@ -421,15 +421,19 @@
   (let [export-dialog-open? (r/atom false)]
     {:export-dialog-open? export-dialog-open?
      :items [{:id "export-cooperation-summary"
-              :label (tr [:cooperation :export :title])
+              :label #(tr [:cooperation :export :title])
               :icon [icons/action-visibility-outlined]
               :on-click #(swap! export-dialog-open? not)}]}))
 
 (defn- export-dialog [e! export-dialog-open? project]
   (r/with-let [toggle-export-dialog! #(swap! export-dialog-open? not)
                form-value (r/atom {})
-               activities (mapcat :thk.lifecycle/activities
-                                  (:thk.project/lifecycles project))]
+               skip-activities #{:activity.name/warranty :activity.name/land-acquisition}
+               activities (into []
+                                (comp
+                                 (mapcat :thk.lifecycle/activities)
+                                 (remove (comp skip-activities :activity/name)))
+                                (:thk.project/lifecycles project))]
     [panels/modal
      {:title (tr [:cooperation :export :title])
       :open-atom export-dialog-open?}
