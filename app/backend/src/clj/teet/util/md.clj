@@ -1,6 +1,7 @@
 (ns teet.util.md
   (:require
-    [clojure.string :as str])
+   [clojure.string :as str]
+   [hiccup.core :as h])
   (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
            (com.vladsch.flexmark.util.data DataHolder MutableDataSet)
            (com.vladsch.flexmark.util.sequence BasedSequence)
@@ -92,7 +93,7 @@
 (defmethod md->xsl-fo Text [t]
   (str (.getChars t)))
 
-(defmethod md->html Text [t] (str (.getChars t)))
+(defmethod md->html Text [t] (h/h (str (.getChars t))))
 
 (defmethod md->xsl-fo StrongEmphasis [t]
   [:fo:inline {:font-weight 900}
