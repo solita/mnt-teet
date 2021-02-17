@@ -6,9 +6,9 @@
             [teet.util.datomic :as du]
             [datomic.client.api :as d]
             [teet.cooperation.cooperation-model :as cooperation-model]
+            [teet.cooperation.cooperation-export :as cooperation-export]
             [teet.meta.meta-query :as meta-query]
-            [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.environment :as environment]))
+            [teet.db-api.db-api-large-text :as db-api-large-text]))
 
 (defquery :cooperation/overview
   {:doc "Fetch project overview of cooperation: 3rd parties and their latest applications"
@@ -67,3 +67,14 @@
                         :return-links-to-deleted? false}
                        (cooperation-db/third-party-with-application db tp-id app-id))
          :related-task (cooperation-db/third-party-application-task db tp-id app-id)})))))
+
+(defquery :cooperation/export-summary
+  {:doc "Fetch summary table as HTML"
+   :context {:keys [db user]}
+   :args {:cooperation.application/keys [activity type] :as args}
+   :project-id (project-db/activity-project-id db activity)
+   :authorization {:cooperation/view-cooperation-page {}}}
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Type" "text/html; charset=UTF-8"}
+   :body (cooperation-export/summary-table db activity type)})

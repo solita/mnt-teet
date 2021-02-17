@@ -2,43 +2,58 @@
   (:require
     [clojure.string :as str])
   (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
-           (com.vladsch.flexmark.util.data DataHolder)
+           (com.vladsch.flexmark.util.data DataHolder MutableDataSet)
            (com.vladsch.flexmark.util.sequence BasedSequence)
            (com.vladsch.flexmark.util.ast Document Node DelimitedNode)
            (com.vladsch.flexmark.parser.delimiter DelimiterProcessor)
            (com.vladsch.flexmark.ast
              ;; Import node types for rendering
              Paragraph BulletList OrderedList Heading Text
-             StrongEmphasis Emphasis)))
+             StrongEmphasis Emphasis)
+           (com.vladsch.flexmark.html HtmlRenderer)
+           (com.vladsch.flexmark.html.renderer NodeRenderer NodeRendererFactory NodeRenderingHandler)))
 
 (declare render-md)
 
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
 
-(defmulti md->xsl-fo
-          (fn [node]
-            (let [s (str node)]
-              (cond
-                ;; Check our extension classes
-                (str/starts-with? s "#<Underline")
-                "Underline"
+(defn- node-type [node]
+  (let [s (str node)]
+    (cond
+      ;; Check our extension classes
+      (str/starts-with? s "#<Underline")
+      "Underline"
 
-                ;; Otherwise use Java class of node
-                :else
-                (class node)))))
+      ;; Otherwise use Java class of node
+      :else
+      (class node))))
+
+(defmulti md->xsl-fo node-type)
+(defmulti md->html node-type)
 
 (defn- render-children [node]
   (for [c (md-children node)]
     (md->xsl-fo c)))
 
+(defn- render-children-html [node]
+  (for [c (md-children node)]
+    (md->html c)))
+
 (defmethod md->xsl-fo Document [root]
   [:fo:block
    (render-children root)])
 
+(defmethod md->html Document [root]
+  [:span
+   (render-children-html root)])
+
 (defmethod md->xsl-fo Paragraph [c]
   [:fo:block
    (render-children c)])
+
+(defmethod md->html Paragraph [c]
+  [:p (render-children-html c)])
 
 (defmethod md->xsl-fo BulletList [ul]
   [:fo:list-block
@@ -50,6 +65,11 @@
        [:fo:block
         (for [c (md-children item)]
           (md->xsl-fo c))]]])])
+
+(defmethod md->html BulletList [ul]
+  [:ul
+   (for [item (md-children ul)]
+     [:li (render-children-html item)])])
 
 (defmethod md->xsl-fo OrderedList [ol]
   [:fo:list-block
@@ -64,20 +84,36 @@
             (md->xsl-fo c))]]])
      (md-children ol))])
 
+(defmethod md->html OrderedList [ol]
+  [:ol
+   (for [item (md-children ol)]
+     [:li (render-children-html item)])])
+
 (defmethod md->xsl-fo Text [t]
   (str (.getChars t)))
+
+(defmethod md->html Text [t] (str (.getChars t)))
 
 (defmethod md->xsl-fo StrongEmphasis [t]
   [:fo:inline {:font-weight 900}
    (render-children t)])
 
+(defmethod md->html StrongEmphasis [t]
+  [:b (render-children-html t)])
+
 (defmethod md->xsl-fo Emphasis [t]
   [:fo:inline {:font-style "italic"}
    (render-children t)])
 
+(defmethod md->html Emphasis [t]
+  [:i (render-children-html t)])
+
 (defmethod md->xsl-fo "Underline" [t]
   [:fo:inline {:text-decoration "underline"}
    (render-children t)])
+
+(defmethod md->html "Underline" [t]
+  [:ins (render-children-html t)])
 
 (defmethod md->xsl-fo Heading [h]
   [:fo:block {:font-size (case (.getLevel h)
@@ -150,6 +186,10 @@
   "Parse and render markdown as xsl-fo"
   [md-formatted-text]
   (md->xsl-fo (parse-md md-formatted-text)))
+
+(defn render-md-html
+  [md-formatted-text]
+  (md->html (parse-md md-formatted-text)))
 
 (comment
   (def md "hello **everyone**\n\n​\n\nlets\n\n​\n\n1. do\n2. some things\n3. here\n\n## level two header\n\nsome more content _italic also_\n")

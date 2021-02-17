@@ -32,7 +32,8 @@
             [teet.authorization.authorization-check :as authorization-check]
             [teet.ui.validation :as validation]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.ui.context :as context]))
+            [teet.ui.context :as context]
+            [teet.ui.panels :as panels]))
 
 
 ;; Form structure in this view:
@@ -414,30 +415,82 @@
                            :show-empty-selection? true
                            :empty-selection-label (tr [:common :all])}]]]}])
 
-(defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
-  [project-view/project-full-page-structure
-   {:e! e!
-    :app app
-    :project project
-    :left-panel [third-parties e! project third-parties-list (selected-third-party-teet-id app)]
-    :right-panel right-content
-    :main main-content}])
+(defn- export-menu-items
+  "Create state for export dialog and return the atom and menu items"
+  []
+  (let [export-dialog-open? (r/atom false)]
+    {:export-dialog-open? export-dialog-open?
+     :items [{:id "export-cooperation-summary"
+              :label (tr [:cooperation :export :title])
+              :icon [icons/maps-local-see]
+              :on-click #(swap! export-dialog-open? not)}]}))
 
-(defn- cooperation-overview-structure
-  "Only in the overview page do we want the cooperation search to be in place instead of the third party navigator"
-  [e! app project main-content & [right-content]]
-  (let [project-activities (->> (:thk.project/lifecycles project)
-                                (mapcat
-                                  :thk.lifecycle/activities)
-                                (map :activity/name)
-                                set)]
+(defn- export-dialog [e! export-dialog-open? project]
+  (r/with-let [toggle-export-dialog! #(swap! export-dialog-open? not)
+               form-value (r/atom {})
+               activities (mapcat :thk.lifecycle/activities
+                                  (:thk.project/lifecycles project))]
+    [panels/modal
+     {:title (tr [:cooperation :export :title])
+      :open-atom export-dialog-open?}
+     [:<>
+      [form/form {:e! e!
+                  :value @form-value
+                  :on-change-event (form/update-atom-event form-value merge)}
+       ^{:attribute :cooperation.application/activity}
+       [select/form-select {:show-empty-selection? true
+                            :items activities
+                            :format-item (comp tr-enum :activity/name)}]
+
+       ^{:attribute :cooperation.application/type}
+       [select/select-enum {:e! e!
+                            :attribute :cooperation.application/type}]]
+
+      [:div {:class (<class common-styles/space-between-center)}
+       [buttons/button-secondary {:on-click toggle-export-dialog!}
+        (tr [:buttons :cancel])]
+       (let [{:cooperation.application/keys [activity type] :as fv} @form-value]
+         [buttons/button-primary {:id "preview"
+                                  :element :a
+                                  :target :_blank
+                                  :disabled (or (nil? activity) (nil? type))
+                                  :href (common-controller/query-url
+                                         :cooperation/export-summary
+                                         (update fv :cooperation.application/activity :db/id))}
+          (tr [:cooperation :export :preview])])]]]))
+
+(defn- cooperation-page-structure [e! app project third-parties-list main-content & [right-content]]
+  (r/with-let [{:keys [export-dialog-open? items]} (export-menu-items)]
     [project-view/project-full-page-structure
      {:e! e!
       :app app
       :project project
-      :left-panel [cooperation-application-search e! project-activities]
+      :left-panel [third-parties e! project third-parties-list (selected-third-party-teet-id app)]
       :right-panel right-content
-      :main main-content}]))
+      :main [:<>
+             main-content
+             [export-dialog e! export-dialog-open? project]]
+      :export-menu-items items}]))
+
+(defn- cooperation-overview-structure
+  "Only in the overview page do we want the cooperation search to be in place instead of the third party navigator"
+  [e! app project main-content & [right-content]]
+  (r/with-let [{:keys [export-dialog-open? items]} (export-menu-items)]
+    (let [project-activities (->> (:thk.project/lifecycles project)
+                                  (mapcat
+                                   :thk.lifecycle/activities)
+                                  (map :activity/name)
+                                  set)]
+      [project-view/project-full-page-structure
+       {:e! e!
+        :app app
+        :project project
+        :left-panel [cooperation-application-search e! project-activities]
+        :right-panel right-content
+        :main [:<>
+               main-content
+               [export-dialog e! export-dialog-open? project]]
+        :export-menu-items items}])))
 
 
 ;; entrypoint from route /projects/:project/cooperation route

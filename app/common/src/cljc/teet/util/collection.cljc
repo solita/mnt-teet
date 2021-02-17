@@ -202,3 +202,20 @@
                                   (and
                                     (some? %)
                                     (not (string? %))))))
+
+(defn eager
+  "Walk collection and force all lazy sequences.
+  Runs doall on any lazy sequence."
+  [form]
+  (walk/prewalk
+   (fn [x]
+     (if (= clojure.lang.LazySeq (type x))
+       (doall x)
+       x))
+   form))
+
+(defn indexed
+  "Add :teet.util.collection/i key with index to values of coll."
+  [coll]
+  (map-indexed (fn [i x]
+                 (assoc x ::i i)) coll))

@@ -77,28 +77,34 @@
   []
   {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn project-header [project]
-  (let [thk-url (project-info/thk-url project)]
-    [:div {:class (<class project-header-style)}
-     [:div {:style {:display :flex
-                    :justify-content :space-between}}
-      [Heading1 {:style {:margin-bottom 0}}
-       (project-model/get-column project :thk.project/project-name)]
+(defn default-export-menu-items [project]
+  [(when (project-model/has-related-info? project)
+     {:label (tr [:project :download-related-info])
+      :icon [icons/file-cloud-download]
+      :link {:target :_blank
+             :href (common-controller/query-url :thk.project/download-related-info
+                                          (select-keys project [:thk.project/id]))}})])
+
+(defn project-header
+  ([project]
+   (project-header project nil))
+  ([project export-menu-items]
+   (let [thk-url (project-info/thk-url project)]
+     [:div {:class (<class project-header-style)}
       [:div {:style {:display :flex
-                     :align-items :center}}
-       (when (project-model/has-related-info? project)
-         [common/Link {:target :_blank
-                       :style {:margin-right "1rem"
-                               :display :flex
-                               :align-items :center}
-                :href (common-controller/query-url :thk.project/download-related-info
-                                                   (select-keys project [:thk.project/id]))}
-          [:span {:style {:margin-right "0.5rem"}}
-           (tr [:project :download-related-info])]
-          [icons/file-cloud-download]])
-       [common/thk-link {:href thk-url
-                         :target "_blank"}
-        (str "THK" (:thk.project/id project))]]]]))
+                     :justify-content :space-between}}
+       [Heading1 {:style {:margin-bottom 0}}
+        (project-model/get-column project :thk.project/project-name)]
+       [:div {:style {:display :flex
+                      :align-items :center}}
+        [common/context-menu
+         {:id "project-export-menu"
+          :label (tr [:project :export])
+          :icon [icons/file-cloud-download-outlined]
+          :items (concat export-menu-items (default-export-menu-items project))}]
+        [common/thk-link {:href thk-url
+                          :target "_blank"}
+         (str "THK" (:thk.project/id project))]]]])))
 
 (defn heading-state
   [title select]
@@ -696,12 +702,13 @@
 
   If left-side content is not specified, the project navigator is used.
   The :project-navigator map options can be used to override default parameters."
-  [{:keys [e! app project main left-panel right-panel project-navigator]}]
+  [{:keys [e! app project main left-panel right-panel project-navigator
+           export-menu-items]}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
      (select-keys project [:db/id :thk.project/id])
      [:<>
-      [project-header project]
+      [project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
