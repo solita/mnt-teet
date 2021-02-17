@@ -528,17 +528,20 @@
        [:div {:ref #(reset! elt %)}])]))
 
 (defn- context-menu-item [toggle-menu! {:keys [icon label on-click link id]}]
-  [MenuItem
-   (merge
-    {:on-click (fn [_]
-                 (toggle-menu!)
-                 (when on-click
-                   (on-click)))}
-    (when id {:id id}))
-   [ListItemIcon icon]
-   (if link
-     [Link link label]
-     [typography/Text label])])
+  (let [label (if (fn? label)
+                (label)
+                label)]
+    [MenuItem
+     (merge
+      {:on-click (fn [_]
+                   (toggle-menu!)
+                   (when on-click
+                     (on-click)))}
+      (when id {:id id}))
+     [ListItemIcon icon]
+     (if link
+       [Link link label]
+       [typography/Text label])]))
 
 (defn context-menu
   "Shows a button that opens a context menu.

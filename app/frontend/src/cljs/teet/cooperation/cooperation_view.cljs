@@ -421,7 +421,7 @@
   (let [export-dialog-open? (r/atom false)]
     {:export-dialog-open? export-dialog-open?
      :items [{:id "export-cooperation-summary"
-              :label (tr [:cooperation :export :title])
+              :label #(tr [:cooperation :export :title])
               :icon [icons/action-visibility-outlined]
               :on-click #(swap! export-dialog-open? not)}]}))
 
