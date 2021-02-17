@@ -3,16 +3,14 @@
    [clojure.string :as str]
    [hiccup.core :as h])
   (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
-           (com.vladsch.flexmark.util.data DataHolder MutableDataSet)
+           (com.vladsch.flexmark.util.data DataHolder)
            (com.vladsch.flexmark.util.sequence BasedSequence)
            (com.vladsch.flexmark.util.ast Document Node DelimitedNode)
            (com.vladsch.flexmark.parser.delimiter DelimiterProcessor)
            (com.vladsch.flexmark.ast
              ;; Import node types for rendering
              Paragraph BulletList OrderedList Heading Text
-             StrongEmphasis Emphasis)
-           (com.vladsch.flexmark.html HtmlRenderer)
-           (com.vladsch.flexmark.html.renderer NodeRenderer NodeRendererFactory NodeRenderingHandler)))
+             StrongEmphasis Emphasis)))
 
 (declare render-md)
 
