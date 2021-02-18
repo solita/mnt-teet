@@ -79,7 +79,7 @@
         ;; no task returned initially
         (is (nil? no-task))
         ;; collaboration task is returned then added
-        (is (= (:task/description collaboration-task "Design requirements for testing.")))
+        (is (= (:task/description collaboration-task) "Design requirements for testing."))
         ;; error message returned then for already submitted task
         (is (= (:error-message error-message) "Task can not be submitted"))))))
 
