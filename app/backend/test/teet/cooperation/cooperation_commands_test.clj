@@ -1,4 +1,4 @@
-(ns ^:db cooperation.cooperation-commands-test
+(ns ^:db teet.cooperation.cooperation-commands-test
   (:require [clojure.test :refer [deftest is testing] :as t]
             [teet.test.utils :as tu]
             [teet.util.date :as dateu]

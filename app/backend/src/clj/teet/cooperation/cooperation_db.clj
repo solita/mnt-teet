@@ -168,12 +168,12 @@
                      [?task :task/type ?task-type]
                      [?task-type :filename/code "KK"]]
                 db third-party-id application-id)
-        can-be-submitted (filter task-model/can-submit? tasks)]
+        can-be-submitted (filter task-model/can-submit? (first tasks))]
     (if (and
           (seq tasks)
           (empty? can-be-submitted))
       {:error-message "Task can not be submitted"}
-      (ffirst can-be-submitted))))
+      (first can-be-submitted))))
 
 ;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
