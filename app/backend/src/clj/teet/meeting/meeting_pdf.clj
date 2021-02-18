@@ -124,22 +124,31 @@
   [topics]
   (when (seq topics)
     [:fo:list-block {:space-after "40"}
-     (map (fn [topic]
-            [:fo:list-item {:space-after "40"}
-             [:fo:list-item-label [:fo:block]]
-             [:fo:list-item-body
-              [:fo:block
-               [:fo:block {:font-size "16px" :font-weight "700" :space-after "2"}
-                (:meeting.agenda/topic topic)]
-               [:fo:block {:font-size "12px" :font-weight "400" :space-after "24"}
-                [:fo:inline
-                 (:user/given-name (:meeting.agenda/responsible topic)) " "
-                 (:user/family-name (:meeting.agenda/responsible topic))]]
-               [:fo:block {:font-size "14px" :space-after "24"} (md/render-md (:meeting.agenda/body topic))]
-               [:fo:block {:space-after "16"} (map link-list-item (:link/_from topic))]
-               [:fo:block {:space-after "8"} (map-indexed attachment-files (:file/_attached-to topic))]
-               [:fo:block {:space-after "40"} (map #(decision-list-item % (:meeting.agenda/topic topic))
-                                                   (:meeting.agenda/decisions topic))]]]]) topics)]))
+     (for [{links :link/_from
+            attachments :file/_attached-to
+            decisions :meeting.agenda/decisions :as topic} topics]
+       [:fo:list-item {:space-after "40"}
+        [:fo:list-item-label [:fo:block]]
+        [:fo:list-item-body
+         [:fo:block
+          [:fo:block {:font-size "16px" :font-weight "700" :space-after "2"}
+           (:meeting.agenda/topic topic)]
+          [:fo:block {:font-size "12px" :font-weight "400" :space-after "24"}
+           [:fo:inline
+            (:user/given-name (:meeting.agenda/responsible topic)) " "
+            (:user/family-name (:meeting.agenda/responsible topic))]]
+          [:fo:block {:font-size "14px" :space-after "24"}
+           (md/render-md (:meeting.agenda/body topic))]
+          (when (seq links)
+            [:fo:block {:space-after "16"}
+             (map link-list-item links)])
+          (when (seq attachments)
+            [:fo:block {:space-after "8"}
+             (map-indexed attachment-files attachments)])
+          (when (seq decisions)
+            [:fo:block {:space-after "40"}
+             (map #(decision-list-item % (:meeting.agenda/topic topic))
+                  decisions)])]]])]))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
