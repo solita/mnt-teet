@@ -5,7 +5,8 @@
             [teet.util.datomic :as du]
             [teet.meeting.meeting-model :as meeting-model]
             [teet.project.project-db :as project-db]
-            [teet.link.link-db :as link-db]))
+            [teet.link.link-db :as link-db]
+            [teet.meta.meta-query :as meta-query]))
 
 (defn meetings
   "Fetch a listing of meetings for the given where
@@ -259,8 +260,14 @@
   "Fetch information required for export meeting PDF"
   [db user id]
   (link-db/fetch-links
-    db user {} #(or (contains? % :meeting.agenda/topic)
-                    (contains? % :meeting.decision/body))
+   {:db db
+    :user user
+    :valid-external-ids-by-type {}
+    :fetch-links-pred? #(or (contains? % :meeting.agenda/topic)
+                            (contains? % :meeting.decision/body))
+    :return-links-to-deleted? true}
+   (meta-query/without-deleted
+    db
     (d/pull db '[:db/id
                  :meeting/title
                  :meeting/location
@@ -273,10 +280,10 @@
                                    :meeting.agenda/body
                                    {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
                                    {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}
-                                   {:file/_attached-to [:file/name]}]}
+                                   {:file/_attached-to [:file/name :db/id]}]}
                  {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
                                {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
                  {:participation/_in [:participation/role
                                       :meta/deleted?
                                       {:participation/participant [:db/id :user/family-name :user/given-name :user/id]}
-                                      :participation/absent?]}] id)))
+                                      :participation/absent?]}] id))))
