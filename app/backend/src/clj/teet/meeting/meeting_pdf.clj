@@ -10,7 +10,8 @@
     [teet.util.md :as md]
     [teet.util.date :as date]
     [clojure.java.io :as io]
-    [teet.db-api.db-api-large-text :as db-api-large-text]))
+    [teet.db-api.db-api-large-text :as db-api-large-text]
+    [teet.util.collection :as cu]))
 
 (def default-layout-config
   {;; A4 portrait width/height
@@ -123,8 +124,7 @@
   [topics]
   (when (seq topics)
     [:fo:list-block {:space-after "40"}
-     (doall
-       (map (fn [topic]
+     (map (fn [topic]
             [:fo:list-item {:space-after "40"}
              [:fo:list-item-label [:fo:block]]
              [:fo:list-item-body
@@ -136,13 +136,10 @@
                  (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
                [:fo:block {:font-size "14px" :space-after "24"} (md/render-md (:meeting.agenda/body topic))]
-               [:fo:block {:space-after "16"} (doall
-                                                (map link-list-item (:link/_from topic)))]
-               [:fo:block {:space-after "8"} (doall
-                                               (map-indexed attachment-files (:file/_attached-to topic)))]
-               [:fo:block {:space-after "40"} (doall
-                                                (map #(decision-list-item % (:meeting.agenda/topic topic))
-                                                   (:meeting.agenda/decisions topic)))]]]]) topics))]))
+               [:fo:block {:space-after "16"} (map link-list-item (:link/_from topic))]
+               [:fo:block {:space-after "8"} (map-indexed attachment-files (:file/_attached-to topic))]
+               [:fo:block {:space-after "40"} (map #(decision-list-item % (:meeting.agenda/topic topic))
+                                                   (:meeting.agenda/decisions topic))]]]]) topics)]))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
@@ -306,48 +303,49 @@
    (meeting-pdf db user language meeting-id default-layout-config))
   ([db user language meeting-id {:keys [body header footer] :as layout}]
    (with-language language
-   (let [meeting (db-api-large-text/with-large-text
-                   meeting-model/rich-text-fields
-                   (meeting-db/export-meeting db user meeting-id))
-         now (new java.util.Date)]
-     [:fo:root {:xmlns:fo  "http://www.w3.org/1999/XSL/Format"
-                :xmlns:svg "http://www.w3.org/2000/svg"}
-      [:fo:layout-master-set
-       [:fo:simple-page-master {:master-name   "first"
-                                :page-height   (:height layout)
-                                :page-width    (:width layout)
-                                :margin-top    (:margin-top layout)
-                                :margin-bottom (:margin-bottom layout)
-                                :margin-left   (:margin-left layout)
-                                :margin-right  (:margin-right layout)}
-        [:fo:region-body {:region-name "xsl-region-body"
-                          :margin-top  (:margin-top body)}]
-        [:fo:region-before {:region-name "xsl-region-before"
-                            :extent      (:extent header)}]
-        [:fo:region-after {:region-name "xsl-region-after"
-                           :extent      (:extent footer)}]]]
-      [:fo:page-sequence {:master-reference "first"}
-       [:fo:flow {:flow-name "xsl-region-body"}
-        (meeting-title meeting)
-        [:fo:block {:space-after "10"}
-         (table-2-columns {:left-width    "40%" :left-header (tr [:fields :meeting/date-and-time])
-                           :right-width   "60%" :right-header (tr [:fields :meeting/location])
-                           :left-content  [:fo:block (meeting-time meeting)]
-                           :right-content [:fo:block (:meeting/location meeting)]
-                           :fonts         {:header-font {:font-size "12px" :font-weight "700" :font-style "normal"}
-                                           :rows-font   {:font-size "14px" :font-weight "400" :font-style "normal"}}})]
-        [:fo:block {:space-after "10"}
-         (table-2-columns {:left-width    "45%" :left-header (tr [:meeting :participants-title])
-                           :right-width   "55%" :right-header (tr [:meeting :absentees-title])
-                           :left-content  [:fo:block (doall (participants meeting false))]
-                           :right-content [:fo:block (doall (participants meeting true))]
-                           :fonts         {:header-font {:font-size "14px" :font-weight "400" :font-style "normal"}
-                                           :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
-        [:fo:block (list-of-topics (:meeting/agenda meeting))]
-        [:fo:block (reviews (:review/_of meeting))]
-        [:fo:block {:font-style "normal" :font-size "12px" :font-weight 400 :space-after 11}
-         (str (tr [:meeting :link-to-original]) " ")]
-        [:fo:block {:font-style "normal" :font-size "10px" :font-weight 400 :space-after 11}
-         (get-meeting-link meeting db)]
-        [:fo:block {:font-size "10px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (date/format-date now) " " (date/format-time-sec now) " " (user-model/user-name user))]
-        [:fo:block {:font-size "14px"} ]]]]))))
+     (cu/eager
+      (let [meeting (db-api-large-text/with-large-text
+                      meeting-model/rich-text-fields
+                      (meeting-db/export-meeting db user meeting-id))
+            now (new java.util.Date)]
+        [:fo:root {:xmlns:fo  "http://www.w3.org/1999/XSL/Format"
+                   :xmlns:svg "http://www.w3.org/2000/svg"}
+         [:fo:layout-master-set
+          [:fo:simple-page-master {:master-name   "first"
+                                   :page-height   (:height layout)
+                                   :page-width    (:width layout)
+                                   :margin-top    (:margin-top layout)
+                                   :margin-bottom (:margin-bottom layout)
+                                   :margin-left   (:margin-left layout)
+                                   :margin-right  (:margin-right layout)}
+           [:fo:region-body {:region-name "xsl-region-body"
+                             :margin-top  (:margin-top body)}]
+           [:fo:region-before {:region-name "xsl-region-before"
+                               :extent      (:extent header)}]
+           [:fo:region-after {:region-name "xsl-region-after"
+                              :extent      (:extent footer)}]]]
+         [:fo:page-sequence {:master-reference "first"}
+          [:fo:flow {:flow-name "xsl-region-body"}
+           (meeting-title meeting)
+           [:fo:block {:space-after "10"}
+            (table-2-columns {:left-width    "40%" :left-header (tr [:fields :meeting/date-and-time])
+                              :right-width   "60%" :right-header (tr [:fields :meeting/location])
+                              :left-content  [:fo:block (meeting-time meeting)]
+                              :right-content [:fo:block (:meeting/location meeting)]
+                              :fonts         {:header-font {:font-size "12px" :font-weight "700" :font-style "normal"}
+                                              :rows-font   {:font-size "14px" :font-weight "400" :font-style "normal"}}})]
+           [:fo:block {:space-after "10"}
+            (table-2-columns {:left-width    "45%" :left-header (tr [:meeting :participants-title])
+                              :right-width   "55%" :right-header (tr [:meeting :absentees-title])
+                              :left-content  [:fo:block (participants meeting false)]
+                              :right-content [:fo:block (participants meeting true)]
+                              :fonts         {:header-font {:font-size "14px" :font-weight "400" :font-style "normal"}
+                                              :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
+           [:fo:block (list-of-topics (:meeting/agenda meeting))]
+           [:fo:block (reviews (:review/_of meeting))]
+           [:fo:block {:font-style "normal" :font-size "12px" :font-weight 400 :space-after 11}
+            (str (tr [:meeting :link-to-original]) " ")]
+           [:fo:block {:font-style "normal" :font-size "10px" :font-weight 400 :space-after 11}
+            (get-meeting-link meeting db)]
+           [:fo:block {:font-size "10px" :font-weight 400 :space-after 16} (str (tr [:meeting :pdf-created-by]) ": " (date/format-date now) " " (date/format-time-sec now) " " (user-model/user-name user))]
+           [:fo:block {:font-size "14px"}]]]])))))
