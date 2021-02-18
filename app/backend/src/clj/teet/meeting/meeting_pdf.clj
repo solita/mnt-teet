@@ -117,7 +117,7 @@
    [:fo:block
     [:fo:external-graphic
      {:padding-right 10 :content-width "12px" :content-height "12px" :src (io/resource "img/file.svg")}]
-    (str (tr [:link :type-label :appendix]) " " idx " - " (:file/name attachment))]])
+    (str (tr [:link :type-label :appendix]) " " (inc idx) " - " (:file/name attachment))]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
