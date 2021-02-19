@@ -7,8 +7,7 @@
             [teet.localization :refer [tr tr-enum with-language]]
             [teet.util.date :as date]
             [teet.util.md :as md]
-            [teet.project.project-db :as project-db]
-            [clojure.string :as str]))
+            [teet.project.project-db :as project-db]))
 
 (defn- applications-by-response-type [db activity type]
   (->>
@@ -20,6 +19,7 @@
                           {:cooperation.application/opinion
                            [*]}])
           :where
+          [(missing? $ ?a :meta/deleted?)]
           [?a :cooperation.application/activity ?activity]
           [?a :cooperation.application/type ?type]
 
