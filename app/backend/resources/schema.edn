@@ -1737,4 +1737,12 @@
           {:db/id :file-seen/file+user
            :db/ident :entity-seen/entity+user}
           {:db/id :file-seen/seen-at
-           :db/ident :entity-seen/seen-at}]]}]]}]
+           :db/ident :entity-seen/seen-at}]]}
+ {:db/ident :migration/road-safety-design-and-construction-codes-v2
+   :txes [[{:db/ident :thk.task-type/design-road-safety-audit :thk/code "4011"}
+           {:db/ident :task.type/design-road-safety-audit,
+            :enum/attribute :task/type,
+            :enum/valid-for :task.group/design-approval,
+            :thk/task-type :thk.task-type/design-road-safety-audit,
+            :filename/code "LA"}
+           {:db/ident :thk.task-type/road-safety-audit :thk/code "4009"}]]}]]}]
