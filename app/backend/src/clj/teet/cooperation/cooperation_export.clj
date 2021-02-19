@@ -19,9 +19,9 @@
                           {:cooperation.application/opinion
                            [*]}])
           :where
-          [(missing? $ ?a :meta/deleted?)]
           [?a :cooperation.application/activity ?activity]
           [?a :cooperation.application/type ?type]
+          [(missing? $ ?a :meta/deleted?)]
 
           :in $ ?activity type] db activity type)
    (db-api-large-text/with-large-text #{:cooperation.response/content :cooperation.opinion/comment})
