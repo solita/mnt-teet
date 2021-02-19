@@ -162,11 +162,19 @@
       (.putNextEntry zip-out (java.util.zip.ZipEntry. entry-name))
       (generate-entry-fn out))))
 
+
+;; Old ref attrs and tuple attrs, this is needed to skip old file-seen stuff that was later
+;; aliased to entity-seen.
+(def ^:private old-ref-attrs
+  #{:file-seen/user :file-seen/file})
+(def ^:private old-tuple-attrs
+    {:file-seen/file+user [:file-seen/file :file-seen/user]})
+
 (defn- output-all-tx [conn out]
   (let [db (d/db conn)
         attr-ident-cache (atom {})
         out! #(pprint/pprint % out)
-        ref-attrs (into #{}
+        ref-attrs (into old-ref-attrs
                         (comp
                          (map first)
                          (remove #(str/starts-with? (str %) ":db")))
@@ -175,7 +183,7 @@
                                [?attr :db/ident ?id]
                                [?attr :db/valueType :db.type/ref]]
                              db))
-        tuple-attrs (into {}
+        tuple-attrs (into old-tuple-attrs
                           (d/q '[:find ?id ?ta
                                  :where
                                  [?attr :db/ident ?id]
@@ -188,7 +196,7 @@
            :tuple-attrs tuple-attrs
            :backup-timestamp (java.util.Date.)})
     (doseq [tx (all-transactions conn)
-            :let [tx-map (output-tx db attr-ident-cache tx
+            :let [tx-map (output-tx (d/as-of db (:t tx)) attr-ident-cache tx
                                     ignore-attributes)]
             :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
       (out! tx-map))))
