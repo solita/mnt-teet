@@ -66,7 +66,7 @@
                         :fetch-links-pred? #(contains? % :cooperation.response/status)
                         :return-links-to-deleted? false}
                        (cooperation-db/third-party-with-application db tp-id app-id))
-         :related-task (cooperation-db/third-party-application-task db tp-id app-id)})))))
+         :related-task (cooperation-db/third-party-application-task db app-id)})))))
 
 (defquery :cooperation/export-summary
   {:doc "Fetch summary table as HTML"

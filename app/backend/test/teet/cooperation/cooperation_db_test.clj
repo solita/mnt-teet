@@ -71,11 +71,11 @@
         new-application-id (get-in application-res [:tempids "new-application"])]
     (create-response (get-project-id (tu/db)) new-application-id)
     (testing ;; test there is a task attached to activity of the new application
-      (let [no-task (cooperation-db/third-party-application-task (tu/db) third-party-id new-application-id)
+      (let [no-task (cooperation-db/third-party-application-task (tu/db) new-application-id)
             _ (create-task (tu/db))
-            collaboration-task (cooperation-db/third-party-application-task (tu/db) third-party-id new-application-id)
+            collaboration-task (cooperation-db/third-party-application-task (tu/db) new-application-id)
             _ (complete-task tu/mock-user-boss (:db/id collaboration-task))
-            error-message (cooperation-db/third-party-application-task (tu/db) third-party-id new-application-id)]
+            error-message (cooperation-db/third-party-application-task (tu/db) new-application-id)]
         ;; no task returned initially
         (is (nil? no-task))
         ;; collaboration task is returned then added
