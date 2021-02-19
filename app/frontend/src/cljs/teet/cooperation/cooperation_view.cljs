@@ -698,6 +698,12 @@
             [rich-text-editor/rich-text-field {}]])]]]
       [form/footer2]]]))
 
+(defn some-submittable-task?
+  [task]
+  "Check if the given task is not empty and doesn't have :error-message"
+  (and (some? task)
+    (empty? (:error-message task))))
+
 (defn application-response
   [e! new-document files-form application project related-task]
   (r/with-let [{:keys [upload!] :as controls} (task-view/file-upload-controls e!)]
@@ -734,13 +740,17 @@
                                     :files-form files-form}]
        (authorization-context/consume
         (fn [authz]
-          (let [can-upload? (boolean (and (some? related-task)
+          (let [can-upload? (boolean (and (some-submittable-task? related-task)
                                           (:response-uploads-allowed authz)
                                           (not no-response?)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :coordination-task-missing])}
+
+                            (not (some-submittable-task? related-task))
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :body (tr [:cooperation :error :coordination-task-status-no-upload])}
 
                             (not (:response-uploads-allowed authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])
