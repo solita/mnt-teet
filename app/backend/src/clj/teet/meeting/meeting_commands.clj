@@ -29,14 +29,17 @@
          meeting-id
          tx-data)])
 
+(defn- edit-authorized? [db user meeting-id]
+  (authorization-check/authorized?
+   user :meeting/edit-meeting
+   {:entity (du/entity db meeting-id)
+    :link :meeting/organizer-or-reviewer
+    :project-id (project-db/meeting-project-id db meeting-id)}))
+
 (defmethod file-db/attach-to :meeting-agenda
   [db user _file [_ meeting-agenda-id]]
   (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
-    (when (authorization-check/authorized?
-           user :meeting/edit-meeting
-           {:entity (du/entity db meeting-id)
-            :link :meeting/organizer-or-reviewer
-            :project-id (project-db/meeting-project-id db meeting-id)})
+    (when (edit-authorized? db user meeting-id)
       {:eid meeting-agenda-id
        :wrap-tx #(update-meeting-tx user meeting-id %)})))
 
@@ -48,7 +51,7 @@
 (defmethod file-db/delete-attachment :meeting-agenda
   [db user file-id [_ meeting-agenda-id]]
   (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
-    (if (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+    (if (edit-authorized? db user meeting-id)
       (update-meeting-tx user meeting-id [(meta-model/deletion-tx user file-id)])
       (throw (ex-info "Unauthorized attachment delete"
                       {:error :unauthorized})))))
@@ -56,7 +59,7 @@
 (defmethod file-db/attach-to :meeting-decision
   [db user _file [_ meeting-decision-id]]
   (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
-    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+    (when (edit-authorized? db user meeting-id)
       {:eid meeting-decision-id
        :wrap-tx #(update-meeting-tx user meeting-id %)})))
 
@@ -69,7 +72,7 @@
 (defmethod file-db/delete-attachment :meeting-decision
   [db user file-id [_ meeting-decision-id]]
   (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
-    (if (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+    (if (edit-authorized? db user meeting-id)
       (update-meeting-tx user meeting-id
                          [(meta-model/deletion-tx user file-id)])
       (throw (ex-info "Unauthorized attachment delete"
@@ -78,7 +81,7 @@
 
 (defn- link-from-meeting [db user from]
   (let [meeting-id (meeting-db/link-from->meeting db from)]
-    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+    (when (edit-authorized? db user meeting-id)
       {:wrap-tx #(update-meeting-tx user meeting-id %)})))
 
 (def link-types [[:meeting-agenda :task]
