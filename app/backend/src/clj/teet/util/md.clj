@@ -136,12 +136,12 @@
 (defmethod md->xsl-fo InlineLinkNode [node]
   (let [text (.getText node)]
     (when-not (str/blank? text)
-      [:fo:block text])))
+      [:fo:block (h/h text)])))
 
 (defmethod md->html InlineLinkNode [node]
   (let [text (.getText node)]
     (when-not (str/blank? text)
-      [:span text])))
+      [:span (h/h text)])))
 
 ;; ignore images (copy pasted)
 (defmethod md->xsl-fo Image [_node] nil)
