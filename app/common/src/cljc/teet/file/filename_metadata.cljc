@@ -71,6 +71,19 @@
                    ((filename-part-parser k) v)))
             parts))))
 
+(defn metadata->vektorio-filename
+  [{:keys [part document-group
+           sequence-number
+           description extension]}]
+  (str/join "_"
+            (remove nil?
+                    [part
+                     (when document-group
+                       (str document-group
+                            (when sequence-number
+                              (str "-" sequence-number))))
+                     (str description "." extension)])))
+
 (defn metadata->filename [{object :thk.project/id
                            :keys [activity task part
                                   document-group
