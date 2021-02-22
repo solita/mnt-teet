@@ -211,6 +211,7 @@
                            {:got first}))
            (merge {first (take-while (complement keyword?) rest)}
                   (map-by-keywords (drop-while (complement keyword?) rest))))))
+
      (defn- to-map-query
        "Convert multi arg query call to map format"
        [args]
@@ -227,13 +228,19 @@
                (map-by-keywords query))
              {:args args}))
 
+          (and (map? (first args))
+               (contains? (first args) :find))
+          ;; Map query with args
+          (merge {:args (vec (rest args))}
+                 (first args))
+
           (vector? (first args))
           ;; Split by keyword
           (merge {:args (vec (rest args))}
                  (map-by-keywords (first args)))
 
           :else
-          (throw (ex-info "Invalid query call, expected single arg query map or vector as first argument."
+          (throw (ex-info "Invalid query call, expected single arg query map, query map with args or vector as first argument."
                           {:invalid-arguments args})))))
 
      (defn- assert-valid-query [query-args]
