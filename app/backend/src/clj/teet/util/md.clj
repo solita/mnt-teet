@@ -10,7 +10,9 @@
            (com.vladsch.flexmark.ast
              ;; Import node types for rendering
              Paragraph BulletList OrderedList Heading Text
-             StrongEmphasis Emphasis)))
+             StrongEmphasis Emphasis
+
+             InlineLinkNode Image)))
 
 (declare render-md)
 
@@ -33,7 +35,9 @@
 
 (defn- render-children [node]
   (for [c (md-children node)]
-    (md->xsl-fo c)))
+    (do
+      (println "RENDER: " c)
+      (md->xsl-fo c))))
 
 (defn- render-children-html [node]
   (for [c (md-children node)]
@@ -127,6 +131,21 @@
      2 :h4
      3 :h5)
    (render-children-html h)])
+
+(defmethod md->xsl-fo InlineLinkNode [node]
+  (let [text (.getText node)]
+    (when-not (str/blank? text)
+      [:fo:block text])))
+
+(defmethod md->html InlineLinkNode [node]
+  (let [text (.getText node)]
+    (when-not (str/blank? text)
+      [:span text])))
+
+;; ignore images (copy pasted)
+(defmethod md->xsl-fo Image [_node] nil)
+(defmethod md->html Image [_node] nil)
+
 
 (defn create-underline-node [opening-marker text closing-marker]
   (let [state (atom {:opening-marker opening-marker
