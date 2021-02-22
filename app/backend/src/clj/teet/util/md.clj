@@ -12,7 +12,7 @@
              Paragraph BulletList OrderedList Heading Text
              StrongEmphasis Emphasis
 
-             InlineLinkNode Image)))
+             InlineLinkNode LinkRef Image)))
 
 (declare render-md)
 
@@ -92,9 +92,7 @@
    (for [item (md-children ol)]
      [:li (render-children-html item)])])
 
-(defmethod md->xsl-fo Text [t]
-  (str (.getChars t)))
-
+(defmethod md->xsl-fo Text [t] (h/h (str (.getChars t))))
 (defmethod md->html Text [t] (h/h (str (.getChars t))))
 
 (defmethod md->xsl-fo StrongEmphasis [t]
@@ -131,6 +129,9 @@
      2 :h4
      3 :h5)
    (render-children-html h)])
+
+(defmethod md->xsl-fo LinkRef [node] nil)
+(defmethod md->html LinkRef [node] nil)
 
 (defmethod md->xsl-fo InlineLinkNode [node]
   (let [text (.getText node)]
