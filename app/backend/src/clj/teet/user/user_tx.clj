@@ -26,14 +26,13 @@
         permissions (mapv
                       first
                       (d/q '[:find (pull ?p [:permission/role :db/id])
-                             :in $ ?u ?now
+                             :in $ ?u
                              :where
                              [?u :user/permissions ?p]
                              [(missing? $ ?p :permission/projects)]
                              [(missing? $ ?p :permission/valid-until)]]
                            db
-                           user-id
-                           now))
+                           user-id))
         existing-role (some
                         #(when (= (:permission/role %) role)
                            %)
