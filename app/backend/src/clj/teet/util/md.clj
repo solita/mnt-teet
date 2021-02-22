@@ -35,9 +35,7 @@
 
 (defn- render-children [node]
   (for [c (md-children node)]
-    (do
-      (println "RENDER: " c)
-      (md->xsl-fo c))))
+    (md->xsl-fo c)))
 
 (defn- render-children-html [node]
   (for [c (md-children node)]
