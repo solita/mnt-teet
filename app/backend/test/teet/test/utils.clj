@@ -212,7 +212,9 @@
                                (throw (ex-info "Data fixtures have duplicate tempids!"
                                                {:duplicates duplicates}))
                                (merge current-tempids tempids))))))
-                (f)))
+                (with-redefs [d/q (fn [& args]
+                                    (apply du/q args))]
+                  (f))))
             (finally
               (when-not skip-delete?
                 (log/info "Deleting databases: " test-db-name ", " test-asset-db-name)

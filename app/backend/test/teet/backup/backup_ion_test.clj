@@ -53,14 +53,15 @@
         pull-seen-by-manager-tx (fn []
                                   (first
                                    (d/q '[:find (pull ?tx [:db/txInstant :tx/author])
-                                          :in $ ?name ?manager-id
+                                          :in $ ?name ?manager
                                           :where
                                           [?file :file/name ?name]
                                           [?e :file-seen/file ?file]
+                                          [?e :file-seen/user ?manager]
                                           [?e :file-seen/seen-at _ ?tx true]]
                                         (tu/db)
                                         test-file-name
-                                        tu/manager-id)))]
+                                        [:user/id tu/manager-id])))]
     (tu/store-data! :seen-by-manager-at
                     (ffirst (d/q '[:find (max ?d)
                                    :where
@@ -102,7 +103,7 @@
                   [{:file-seen/user {:user/given-name "Danny D."
                                      :user/family-name "Manager"}}]}))
           (is (= (get-in file-with-seen [:file-seen/_file 0 :file-seen/file+user])
-                     [file-id user-id]))))
+                 [file-id user-id]))))
 
       (testing "File seen tx data is correct"
         (let [old-file-seen-tx (tu/get-data :seen-by-manager-tx)
