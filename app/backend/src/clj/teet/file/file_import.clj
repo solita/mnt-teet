@@ -21,6 +21,8 @@
   "Import file based on suffix"
   uploaded-file-suffix)
 
+;; The default case for all file uploads
+;; Check for the file-suffix to match vektorio config values and the upload the file to vektorio
 (defmethod import-by-suffix :default
   [{:keys [vektorio-config conn s3] :as ctx}]
   (let [suffix (uploaded-file-suffix ctx)]

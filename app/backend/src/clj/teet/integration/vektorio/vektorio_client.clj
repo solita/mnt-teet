@@ -6,10 +6,6 @@
             [teet.db-api.core :as db-api]))
 
 
-(def user-id 15)                                            ;;; TODO REMOVE THIS
-
-(def project-id 36)                                         ;;TODO
-
 (def succes-statuses
   #{200 201 204 203})
 
@@ -59,45 +55,39 @@
 
 (defn create-user!
   [vektor-conf {:keys [account name]}]
-  (let [resp (vektor-post! vektor-conf {:endpoint "users"
-                                        :payload {:account account :name name}})]
-    resp))
+  (vektor-post! vektor-conf {:endpoint "users"
+                             :payload {:account account :name name}}))
 
 (def config (environment/config-value :vektorio))
 
 (defn get-user-by-account!
   [vektor-conf email]
-  (let [resp (vektor-get! vektor-conf (str "users/byAccount/" email))]
-    resp))
+  (vektor-get! vektor-conf (str "users/byAccount/" email)))
 
 (defn create-project!
   [vektor-conf {:keys [name lat long]
                 :or {lat 58.5953
                      long 25.0136}                          ;;Estonian center coordinates
                 }]
-  (let [resp (vektor-post! vektor-conf {:endpoint "projects"
-                                        :payload {:name name
-                                                  :latitude lat
-                                                  :longitude long}})]
-    (println "resp: " resp)
-    resp))
+  (vektor-post! vektor-conf {:endpoint "projects"
+                             :payload {:name name
+                                       :latitude lat
+                                       :longitude long}}))
 
 (defn add-user-to-project!
   [vektor-conf {:keys [project-id user-id]}]
-  (let [resp (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
-                                        :payload {:userId user-id}})]
-    resp))
+  (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
+                             :payload {:userId user-id}}))
 
 (defn add-model-to-project!
   [vektor-conf {:keys [project-id model-file vektorio-filename vektorio-filepath]}]
-  (let [resp (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/models")
-                                        :headers {"x-viewer-api-model-filename" vektorio-filename
-                                                  "x-viewer-api-model-filepath" vektorio-filepath
-                                                  "Content-Type" "application/octet-stream"}
-                                        :payload model-file})]
+  (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/models")
+                             :headers {"x-viewer-api-model-filename" vektorio-filename
+                                       "x-viewer-api-model-filepath" vektorio-filepath
+                                       "Content-Type" "application/octet-stream"}
+                             :payload model-file}))
 
-    (println "RESPONSE FROM VEKTO FILE POST: " resp)
-    ;; TODO Assert that this succeeded
-
+(defn instant-login!
+  [vektorio-conf {:keys [user-id]}]
+  (let [resp (vektor-post! vektorio-conf {:endpoint (str "users/" user-id "/intantLogins")})]
     resp))
-
