@@ -7,18 +7,32 @@
             [teet.log :as log]
             [teet.environment :as environment]
             [teet.project.project-model :as project-model]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.integration.vektorio.vektorio-core :as vektorio-core]))
+
+
+(defn uploaded-file-suffix [ctx]
+  (-> ctx :s3 :file-key
+      (str/split #"\.")
+      last
+      str/lower-case))
 
 (defmulti import-by-suffix
   "Import file based on suffix"
-  (fn [ctx]
-    (-> ctx :s3 :file-key
-        (str/split #"\.")
-        last
-        str/lower-case)))
+  uploaded-file-suffix)
 
 (defmethod import-by-suffix :default
-  [ctx]
+  [{:keys [vektorio-config conn s3] :as ctx}]
+  (let [suffix (uploaded-file-suffix ctx)]
+    (when-let [extensions (and vektorio-config (get-in vektorio-config [:config :file-extensions]))]
+      (when (extensions suffix)
+        (let [file-id (ffirst (d/q '[:find ?file
+                                     :in $ ?s3-key
+                                     :where [?file :file/s3-key ?s3-key]]
+                                   (d/db conn) (:file-key s3)))]
+          (vektorio-core/upload-file-to-vektor conn vektorio-config file-id)))))
+
+
   (log/info "Nothing to import for uploaded file: " (:s3 ctx)))
 
 (defmethod import-by-suffix "ags" [ctx]
@@ -58,6 +72,8 @@
 (defn import-uploaded-file [event]
   (future
     (ctx-> {:event event
+            :vektorio-config (when (environment/feature-enabled? :vektorio)
+                               (environment/config-value :vektorio))
             :conn (environment/datomic-connection)
             :api-url (environment/config-value :api-url)
             :api-secret (environment/config-value :auth :jwt-secret)}

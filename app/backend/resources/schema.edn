@@ -1737,4 +1737,15 @@
           {:db/id :file-seen/file+user
            :db/ident :entity-seen/entity+user}
           {:db/id :file-seen/seen-at
-           :db/ident :entity-seen/seen-at}]]}]]}]
+           :db/ident :entity-seen/seen-at}]]}
+
+ ;; TEET-1255 vektorio-integration
+ {:db/ident :migration/vektorio-attributes
+  :txes [[{:db/ident :vektorio/project-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "ID of the project in vektorio"}
+          {:db/ident :vektorio/model-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "ID of the model in vektorio"}]]}]
