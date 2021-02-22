@@ -37,9 +37,7 @@
                        headers)
         content-type (get headers "Content-Type")
         resp @(client/post (str api-url endpoint)
-                           {:headers (merge {"x-vektor-viewer-api-key" api-key
-                                             "Content-Type" "application/json"}
-                                            headers)
+                           {:headers headers
                             :body (if (= content-type "application/octet-stream")
                                     payload
                                     (cheshire/encode payload))})]
