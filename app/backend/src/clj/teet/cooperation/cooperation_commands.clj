@@ -172,6 +172,22 @@
                     [(cooperation-notifications/application-response-notification-tx db user activity-manager-user-id
                                                                                      project-id application-id cooperation-notifications/new-response-type)]))))})
 
+(defcommand :cooperation/delete-application-response
+  {:doc "Delete existing application response."
+   :context {:keys [user db]}
+   :payload {application-id :application-id}
+   :project-id (cooperation-db/application-project-id db application-id)
+   :authorization {:cooperation/application-approval {}}
+   :pre [^{:error :application-has-opinion}
+         (nil? (:cooperation.application/opinion (du/entity db application-id)))]
+   :transact
+   (let [response (:cooperation.application/response (du/entity db application-id))
+         response-id (:db/id response)
+         links (map :db/id (:link/_from response))]
+     (into [[:db/retractEntity response-id]]
+           (for [l links]
+             [:db/retractEntity l])))})
+
 (s/def ::application-id integer?)
 (s/def ::opinion-form (s/keys :req [:cooperation.opinion/status]
                               :opt [:cooperation.opinion/comment
