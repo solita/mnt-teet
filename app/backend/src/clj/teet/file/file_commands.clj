@@ -13,7 +13,9 @@
             teet.file.file-tx
             [teet.util.collection :as cu]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.environment :as environment]
+            [teet.integration.vektorio.core :as vektorio]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -78,6 +80,19 @@
      :file (d/pull (:db-after res) '[*] file-id)}))
 
 
+;; TEET-1270: Delete models from Vektorio if linked file is deleted in TEET
+;; 
+;; - study / document the things going on in delete functionality
+;; - multimethod delete-attachment for it has a dispatch fn (terminlogy?) that looks at (first (check-attach-fn attach)) 
+;;   - default impl aways throws a not-allowed error
+;;   - two methods for :meeting-agenda and :meeting-decision in meeting-commands ns
+;;     - they both generate same kind of delete tx for the file-id, but permission checks differ
+;; - the modal behaviour of delete-attachment commant depending on supplied params
+;;   - is also related to the permission checks. if no attachment-id is specified, the file delete tx is emitted as is
+;;   - on frontend side, file-controller has DeleteFile with single file-id param and DeleteAttachment has both file-id and attached-to
+;;
+;;  -> todo: (a) add comments per above notes, (b) change file delete tx emissions in :file/delete-attachment to call vektorio delete first before returning tx
+
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
    :context {:keys [user db]}
@@ -86,9 +101,15 @@
    :authorization {}
    :pre [(or attached-to
              (file-db/own-file? db user file-id))]
-   :transact (if attached-to
-               (file-db/delete-attachment db user file-id attached-to)
-               [(deletion-tx user file-id)])})
+   :transact (let [;; generate ready to run tx first, relying on permission checks generating their exceptions eagerly
+                   tx (if attached-to
+                        (file-db/delete-attachment db user file-id attached-to)
+                        [(deletion-tx user file-id)])
+                   vektorio-config (environment/config-value :vektorio)]
+               (when (environment/feature-enabled? :vektorio)
+                 
+                 (vektorio/delete-file-from-project! db vektorio-config file-id))
+               tx)})
 
 
 (defcommand :file/upload-complete
