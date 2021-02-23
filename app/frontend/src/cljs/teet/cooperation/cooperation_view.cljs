@@ -208,6 +208,8 @@
         [[(tr [:cooperation :response-of-third-party])
           ;; colored circle based on status
           [response-status response]]
+         [(tr [:fields :cooperation.application/date])
+          (format/date date)]
          (when date
            [(tr [:fields :cooperation.response/date])
             (format/date date)])
