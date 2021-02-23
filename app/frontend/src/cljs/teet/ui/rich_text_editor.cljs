@@ -159,9 +159,22 @@
 (defn focus! [editor-id]
   (.focus (js/document.querySelector (str "#" editor-id " .DraftEditor-editorContainer div:nth-child(1)"))))
 
+(defn- fix-underline-plusses
+  "Markdown parser has bug with underlined things ending in whitespace, like
+  ++some text ++  (whitespace at end).
+
+  Move the whitespace to after the ++ ending.
+
+  This ugly hack is needed as the markdown parsing library hasn't been updated
+  in a long time and this is the easiest way to fix it for now."
+  [text]
+  (if-let [[_ before underlined spaces after] (re-find #"(.*?)\+\+(.+?)(\s+)\+\+(.*)" text)]
+    (str before "++" underlined "++" spaces (fix-underline-plusses after))
+    text))
+
 (defn editor-state->markdown [^draft-js/EditorState editor-state]
   (js>
-   (export-markdown/stateToMarkdown (.getCurrentContent editor-state))))
+   (fix-underline-plusses (export-markdown/stateToMarkdown (.getCurrentContent editor-state)))))
 
 (defn validate-rich-text-form-field-not-empty
   [value]
