@@ -208,9 +208,15 @@
          (inspector-enabled?)]}
   (let [id (:db/id (du/entity db (->eid string-id)))
         entity (d/pull db '[*] id)]
-    {:entity (expand-extra-attrs db entity)
-     :ref-attrs (ref-attrs db entity)
-     :linked-from (linked-from db id)}))
+    (if (empty? (dissoc entity :db/id))
+      ;; entity only has :db/id, it is possibly retracted entity
+      {:entity entity
+       :ref-attrs #{}
+       :linked-from {}}
+
+      {:entity (expand-extra-attrs db entity)
+       :ref-attrs (ref-attrs db entity)
+       :linked-from (linked-from db id)})))
 
 
 (defn entity-tx-log
