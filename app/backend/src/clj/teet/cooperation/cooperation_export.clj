@@ -29,19 +29,13 @@
    (group-by :cooperation.application/response-type)
    (cu/map-keys :db/ident)))
 
-(defn- numbered [items render-item-fn]
-  (for [{i ::cu/i :as item} items]
-    [:p
-     (str (inc i) ". ")
-     (render-item-fn item)]))
-
-(defn- response [{:cooperation.response/keys [status content]}]
+(defn- render-response [{:cooperation.response/keys [status content]}]
   [:span
    [:b (tr-enum status)]
    (when content
      (md/render-md-html content))])
 
-(defn- opinion [{:cooperation.opinion/keys [status comment]}]
+(defn- render-opinion [{:cooperation.opinion/keys [status comment]}]
   [:span
    [:b (tr-enum status)]
    (when comment
@@ -79,26 +73,27 @@
           [:strong (tr* :decision-column)]]]]
 
        (for [{tpi ::cu/i :keys [third-party-name applications]} third-parties
-             :let [applications (->> applications
-                                     (sort-by (comp :cooperation.response/date :cooperation.application/response))
-                                     cu/indexed)]]
+             {appi ::cu/i :cooperation.application/keys [response opinion]}
+             (->> applications
+                  (sort-by (comp :cooperation.response/date :cooperation.application/response))
+                  cu/indexed)
+             :let [many? (> (count applications) 1)
+                   prefix (when many? (str (inc appi) ". "))]]
          [:tr
           [:td {:width "38" :valign "top"}
-           [:p (str (inc tpi))]]
+           [:p (str (inc tpi)
+                    (when many?
+                      (str "." (inc appi))))]]
           [:td {:width "169" :valign "top"}
            [:p third-party-name]
-           (numbered applications
-                     #(some-> % :cooperation.application/response :cooperation.response/date date/format-date))]
+           [:p prefix
+            (some-> response :cooperation.response/date date/format-date)]]
           [:td {:width "340" :valign "top"}
-           (numbered applications
-                     #(some-> %
-                              :cooperation.application/response
-                              response))]
+           [:p prefix
+            (some-> response render-response)]]
           [:td {:width "385" :valign "top"}
-           (numbered applications
-                     #(some-> %
-                              :cooperation.application/opinion
-                              opinion))]])]]]))
+           [:p prefix
+            (some-> opinion render-opinion)]]])]]]))
 
 (def ^:private response-type-order
   [:cooperation.application.response-type/coordination
