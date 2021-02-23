@@ -312,6 +312,7 @@
 
 (defn- user-select-popper []
   {:padding "0.3rem"
+   :overflow "scroll"
    :z-index 99})
 
 (defn- user-select-entry [highlight?]
@@ -444,8 +445,8 @@
 
                   :style {:z-index 9999} ; Must have high z-index to use in modals
                   }
-          [Paper  {:style {:width (.-clientWidth @input-ref)}
-                   :class ["user-select-popper" (<class user-select-popper)]}
+          [Paper {:style {:width (.-clientWidth @input-ref) :height 300}
+                  :class ["user-select-popper" (<class user-select-popper)]}
            (if loading?
              [CircularProgress {:size 20}]
              [:div.select-user-list
