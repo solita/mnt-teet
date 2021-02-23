@@ -7,8 +7,9 @@
   [:svg#Layer_1 {:style {:max-height "100%"}
                  :height height
                  :width width
-                 :version "1.1" :xmlns "http://www.w3.org/2000/svg" :xmlns:xlink "http://www.w3.org/1999/xlink"
-                 :x "0px" :y "0px" :viewBox "0 0 170.079 90.709" :xml:space "preserve"}
+                 :version "1.1" :xmlns "http://www.w3.org/2000/svg"
+                 :x "0px" :y "0px"
+                 :viewBox "0 0 170.079 90.709"}
    [:g
     [:path.st0 {:style {:fill "#222221"}
                 :d "M156.76,42.142h-4.988v0.962h1.844v6.319h1.263v-6.319h1.881V42.142z M150.029,45.154h-2.681v-2.05h3.137
