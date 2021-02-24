@@ -13,7 +13,9 @@
             teet.file.file-tx
             [teet.util.collection :as cu]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.file.file-export :as file-export]
+            [teet.integration.integration-s3 :as integration-s3]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -275,3 +277,29 @@
    :transact [(list 'teet.file.file-tx/modify-file
                     (merge file
                            (meta-model/modification-meta user)))]})
+
+(defn- export-task [db user task-id language export-bucket]
+  (let [{:keys [filename input-stream]} (file-export/task-zip db task-id)
+        s3-key (str (java.util.UUID/randomUUID))
+        response (integration-s3/put-object export-bucket
+                                            s3-key
+                                            input-stream)
+        download-url (integration-s3/presigned-url {:content-disposition (str "attachment; filename=" filename)
+                                                    :expiration-seconds (* 24 60 60)}
+                                                   "GET" export-bucket s3-key)]
+    (log/info "Generated task " task-id " zip file " filename
+              " to S3, bucket: " export-bucket ", file-key: " s3-key)
+    ;; email presigned url to user
+    ))
+(defcommand :file/export-task
+  {:doc "Export task files as zip."
+   :context {:keys [user db]}
+   :payload {:keys [task-id language]}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:project/read-info {}}
+   :config {export-bucket [:document-storage :export-bucket-name]}
+   :pre [^{:error :configuration-missing}
+         (some? export-bucket)]}
+  (future
+    (export-task db user task-id language export-bucket))
+  {:success? true})
