@@ -2,9 +2,7 @@
   (:require [teet.environment :as environment]
             [org.httpkit.client :as http]
             [cheshire.core :as cheshire]
-            [teet.log :as log]
-            [teet.db-api.core :as db-api]))
-
+            [teet.log :as log]))
 
 (def succes-statuses
   #{200 201 204 203})
@@ -19,15 +17,16 @@
   (let [parsed-response (try (cheshire/decode (:body response) keyword)
                              (catch Exception _
                                (log/error "Failed to decode Vektorio response: " (:body response))
-                               (db-api/fail! {:msg "Failed to decode vektorio response"
-                                              :error :vektorio-response})))]
+                               (throw (ex-info "Failed to decode vektorio response"
+                                               {:error :vektorio-response}))))]
     (log/info "Vektorio response " response)
     (if (request-success? (:status response))
       parsed-response
       (do
         (log/error "Vektorio error: " response)
-        (db-api/fail! {:msg "Vektorio error"
-                       :response response})))))
+        (throw (ex-info "Vektorio error"
+                        {:msg "Vektorio error"
+                         :response response}))))))
 
 (defn vektor-post!
   [{:keys [config api-key]} {:keys [endpoint payload headers]}]
@@ -43,7 +42,7 @@
                                     (cheshire/encode payload))})]
     (vektor-message-handler resp)))
 
-(defn vektor-get!
+(defn vektor-get
   [{:keys [config api-key]} endpoint]
   (let [{:keys [api-url]} config
         resp @(http/get (str api-url endpoint)
@@ -58,9 +57,9 @@
 
 (def config (environment/config-value :vektorio))
 
-(defn get-user-by-account!
+(defn get-user-by-account
   [vektor-conf email]
-  (vektor-get! vektor-conf (str "users/byAccount/" email)))
+  (vektor-get vektor-conf (str "users/byAccount/" email)))
 
 (defn create-project!
   [vektor-conf {:keys [name lat long]
@@ -85,7 +84,7 @@
                                        "Content-Type" "application/octet-stream"}
                              :payload model-file}))
 
-(defn instant-login!
+(defn instant-login
   [vektorio-conf {:keys [user-id]}]
   (let [resp (vektor-post! vektorio-conf {:endpoint (str "users/" user-id "/intantLogins")})]
     resp))

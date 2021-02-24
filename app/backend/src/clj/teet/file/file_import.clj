@@ -32,7 +32,7 @@
                                      :in $ ?s3-key
                                      :where [?file :file/s3-key ?s3-key]]
                                    (d/db conn) (:file-key s3)))]
-          (vektorio-core/upload-file-to-vektor conn vektorio-config file-id)))))
+          (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))
 
 
   (log/info "Nothing to import for uploaded file: " (:s3 ctx)))

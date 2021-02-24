@@ -9,7 +9,7 @@
             [teet.file.file-db :as file-db]
             [teet.file.filename-metadata :as filename-metadata]))
 
-(defn create-project-in-vektorio
+(defn create-project-in-vektorio!
   [conn vektor-config project-eid]
   (let [db (d/db conn)
         project (d/pull db [:db/id :thk.project/name :thk.project/project-name] project-eid)
@@ -26,13 +26,13 @@
                                        :vektorio/project-id vektorio-project-id}]})
           vektorio-project-id))))
 
-(defn ensure-project-vektorio-id
+(defn ensure-project-vektorio-id!
   [conn vektor-config file-eid]
   (let [db (d/db conn)
         project-id (project-db/file-project-id db file-eid)]
     (if-let [project-vektorio-id (:vektorio/project-id (d/pull db [:vektorio/project-id] project-id))]
       project-vektorio-id
-      (create-project-in-vektorio conn vektor-config project-id))))
+      (create-project-in-vektorio! conn vektor-config project-id))))
 
 (defn- vektorio-filepath
   "Returns {activity-code}/{task-code} for given file"
@@ -49,7 +49,6 @@
                                        db file-id))]
     (str/join "/" task-activity-code)))
 
-
 (defn- vektorio-filename
   "Returns for example '02_1_Uskuna.dwg'"
   [db file-id]
@@ -57,12 +56,11 @@
                          (file-db/file-metadata-by-id db file-id))]
     file-meta-data))
 
-
-(defn upload-file-to-vektor
+(defn upload-file-to-vektor!
   [conn vektor-config file-id]
   (log/info "Uploading file" file-id "to vektorio")
   (let [db (d/db conn)
-        project-vektor-id (ensure-project-vektorio-id conn vektor-config file-id)
+        project-vektor-id (ensure-project-vektorio-id! conn vektor-config file-id)
         file-data (d/pull db '[:file/name :db/id :file/s3-key] file-id)
         response (vektorio-client/add-model-to-project! vektor-config {:project-id project-vektor-id
                                                               :model-file (integration-s3/get-object (file-storage/storage-bucket)
@@ -80,10 +78,10 @@
 (defn instant-login
   [vektorio-config]
   (let [vektorio-user-id (or
-                           (:id (vektorio-client/get-user-by-account!
+                           (:id (vektorio-client/get-user-by-account
                                   vektorio-config
                                   (get-in vektorio-config [:config :api-user])))
                            (:id (vektorio-client/create-user!
                                   vektorio-config
                                   {:account (get-in vektorio-config [:config :api-user])})))]
-    (vektorio-client/instant-login! vektorio-config {:user-id vektorio-user-id})))
+    (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id})))
