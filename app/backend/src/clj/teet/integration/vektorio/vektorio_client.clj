@@ -1,6 +1,6 @@
 (ns teet.integration.vektorio.vektorio-client
   (:require [teet.environment :as environment]
-            [org.httpkit.client :as client]
+            [org.httpkit.client :as http]
             [cheshire.core :as cheshire]
             [teet.log :as log]
             [teet.db-api.core :as db-api]))
@@ -36,7 +36,7 @@
                         "Content-Type" "application/json"}
                        headers)
         content-type (get headers "Content-Type")
-        resp @(client/post (str api-url endpoint)
+        resp @(http/post (str api-url endpoint)
                            {:headers headers
                             :body (if (= content-type "application/octet-stream")
                                     payload
@@ -46,7 +46,7 @@
 (defn vektor-get!
   [{:keys [config api-key]} endpoint]
   (let [{:keys [api-url]} config
-        resp @(client/get (str api-url endpoint)
+        resp @(http/get (str api-url endpoint)
                           {:headers {"x-vektor-viewer-api-key" api-key
                                      "Content-Type" "application/json"}})]
     (vektor-message-handler resp)))
