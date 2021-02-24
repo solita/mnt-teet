@@ -28,7 +28,6 @@
                 (fn [bucket file-key]
                   (java.io.ByteArrayInputStream. (.getBytes file-key "UTF-8")))]
     (let [activity-id (tu/->db-id "p1-lc1-act1")
-          _ (println "ACT: " activity-id)
           activity-entity (du/entity (tu/db) activity-id)
           task-id (tu/create-task {:activity activity-id
                                    :task {:task/group :task.group/land-purchase
