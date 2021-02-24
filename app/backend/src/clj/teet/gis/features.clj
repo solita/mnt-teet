@@ -1,6 +1,6 @@
 (ns teet.gis.features
   "Utilities to fetch from PostgREST datasource/feature tables."
-  (:require [org.httpkit.client :as client]
+  (:require [org.httpkit.client :as http]
             [cheshire.core :as cheshire]
             [teet.auth.jwt-token :as jwt-token]))
 
@@ -12,7 +12,7 @@
 
 (defn geojson-features-by-id [{:keys [api-url api-secret]} ids]
   (-> (str api-url "/rpc/geojson_features_by_id")
-      (client/post
+      (http/post
        {:body (cheshire/encode {"ids" (vec ids)})
         :headers {"Accept" "text/plain"
                   "Authorization"

@@ -4,7 +4,7 @@
             [kaocha.hierarchy :as hierarchy]
             [clojure.java.io :as io]
             [cheshire.core :as cheshire]
-            [org.httpkit.client :as client]
+            [org.httpkit.client :as http]
             [clojure.string :as str]
             [clojure.java.shell :refer [sh]]))
 
@@ -65,7 +65,7 @@
     (when (and (enabled?)
                (or (pos? fail)
                    (pos? error)))
-      @(client/post (webhook-url)
+      @(http/post (webhook-url)
                     {:headers {"Content-Type" "application/json"}
                      :body
                      (cheshire/encode
