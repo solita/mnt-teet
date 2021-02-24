@@ -1,8 +1,8 @@
 (ns teet.integration.vektorio.vektorio-core
-  (:require [teet.environment :as environment]
-            [teet.integration.vektorio.vektorio-client :as vektorio-client]
+  (:require [teet.integration.vektorio.vektorio-client :as vektorio-client]
             [datomic.client.api :as d]
             [teet.project.project-db :as project-db]
+            [teet.log :as log]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.file.file-storage :as file-storage]
             [clojure.string :as str]
@@ -17,6 +17,7 @@
                                     (:thk.project/name project))
         resp (vektorio-client/create-project! vektor-config {:name project-name-for-vektor})
         vektorio-project-id (str (:id resp))]
+    (log/info "Creating project in vektorio for project" project)
     (if-not (some? vektorio-project-id)
       (throw (ex-info "No id for project in Vektorio response"
                {:resp resp
@@ -59,6 +60,7 @@
 
 (defn upload-file-to-vektor
   [conn vektor-config file-id]
+  (log/info "Uploading file" file-id "to vektorio")
   (let [db (d/db conn)
         project-vektor-id (ensure-project-vektorio-id conn vektor-config file-id)
         file-data (d/pull db '[:file/name :db/id :file/s3-key] file-id)
