@@ -4,7 +4,8 @@
             [clojure.walk :as walk]
             #?(:clj [datomic.client.api :as d])
             [clojure.set :as set]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.string :as str]))
 
 (s/def :db/ident keyword?)
 (s/def ::enum (s/or :keyword keyword?
@@ -197,3 +198,71 @@
       (vec
        (concat retractions [(assoc changes :db/id id)]))
       [])))
+
+#?(:clj
+   (do
+     (defn- binding-symbols [form]
+       (cu/collect #(and (symbol? %) (str/starts-with? (str %) "?"))
+                   form))
+     (defn- map-by-keywords [[first & rest]]
+       (when first
+         (if-not (keyword? first)
+           (throw (ex-info "Expected keyword"
+                           {:got first}))
+           (merge {first (take-while (complement keyword?) rest)}
+                  (map-by-keywords (drop-while (complement keyword?) rest))))))
+
+     (defn- to-map-query
+       "Convert multi arg query call to map format"
+       [args]
+       (merge
+        {:in '[$]}
+        (cond
+          (and (= 1 (count args))
+               (map? (first args)))
+          (let [{:keys [query args]} (first args)]
+            ;; Already a map, take query and args
+            (merge
+             (if (map? query)
+               query
+               (map-by-keywords query))
+             {:args args}))
+
+          (and (map? (first args))
+               (contains? (first args) :find))
+          ;; Map query with args
+          (merge {:args (vec (rest args))}
+                 (first args))
+
+          (vector? (first args))
+          ;; Split by keyword
+          (merge {:args (vec (rest args))}
+                 (map-by-keywords (first args)))
+
+          :else
+          (throw (ex-info "Invalid query call, expected single arg query map, query map with args or vector as first argument."
+                          {:invalid-arguments args})))))
+
+     (defn- assert-valid-query [query-args]
+       (let [{:keys [in args find where] :as q} (to-map-query query-args)]
+         (when-not (= (count in) (count args))
+           (throw (ex-info ":in list must be same length as args"
+                           {:declared-argument-count (count in)
+                            :declared-arguments in
+                            :received-argument-count (count args)
+                            :received-arguments args})))
+
+         (let [unreferred-symbols (set/difference
+                                   (binding-symbols in)
+                                   (set/union (binding-symbols find)
+                                              (binding-symbols where)))]
+           (when (seq unreferred-symbols)
+             (throw (ex-info "Unreferred to input binding symbols"
+                             {:unreferred-symbols unreferred-symbols}))))))
+
+     (def datomic-q d/q)
+     (defn q
+       "Wrapper to d/q that asserts some validity rules."
+       [& args]
+       (assert-valid-query args)
+       (apply datomic-q args))))

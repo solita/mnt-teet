@@ -1739,7 +1739,18 @@
           {:db/id :file-seen/seen-at
            :db/ident :entity-seen/seen-at}]]}
 
- ;; TEET-1255 vektorio-integration
+ {:db/ident :migration/road-safety-design-and-construction-codes-v3
+  :txes [[{:db/ident :thk.task-type/design-road-safety-audit :thk/code "4011"}]
+         [{:db/ident :task.type/design-road-safety-audit,
+           ;; ;; pre-existing attributes:
+           ;; :enum/attribute :task/type,
+           ;; :enum/valid-for :task.group/design-approval,
+           ;; :filename/code "LA"
+           ;; ;; previous (wrong) value of this attribute:
+           ;; :thk/task-type :thk.task-type/road-safety-audit,
+           ;; ;; corrected:
+           :thk/task-type :thk.task-type/design-road-safety-audit,}]]}
+
  {:db/ident :migration/vektorio-attributes
   :txes [[{:db/ident :vektorio/project-id
            :db/valueType :db.type/string
@@ -1749,3 +1760,4 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "ID of the model in vektorio"}]]}]
+

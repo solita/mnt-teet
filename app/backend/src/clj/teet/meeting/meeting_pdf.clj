@@ -4,7 +4,7 @@
     [teet.meeting.meeting-db :as meeting-db]
     [teet.meeting.meeting-commands :as meeting-commands]
     [teet.environment :as environment]
-    [teet.localization :refer [with-language tr tr-enum]]
+    [teet.localization :refer [with-language tr]]
     [teet.user.user-model :as user-model]
     [teet.meeting.meeting-model :as meeting-model]
     [teet.util.md :as md]
