@@ -662,6 +662,19 @@
                                   (fn [e!]
                                     (e! (close-event))
                                     (e! (cooperation-controller/->ResponseCreated response (boolean (:db/id @form-atom)))))))
+                 :delete (when (:db/id @form-atom)
+                           (common-controller/->SaveForm
+                            :cooperation/delete-application-response
+                            {:application-id application-id}
+                            (fn [_response]
+                              (fn [e!]
+                                (e! (close-event))
+                                (e! (common-controller/->Refresh))))))
+                 :delete-message (when (seq (:link/_from @form-atom))
+                                   [:div
+                                    (tr [:common :deletion-modal-text])
+                                    [:br]
+                                    (tr [:cooperation :delete-response-with-files])])
                  :spec ::cooperation-model/response-form}
      [:div
       [:div {:class (<class common-styles/gray-container-style)}
