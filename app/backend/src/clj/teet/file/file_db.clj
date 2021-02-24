@@ -334,8 +334,6 @@
             :document-group-kw doc-group
             :file-id file-id})))
 
-
-
 (defn next-task-part-number
   "Return next available file part number for the given task.
   Part numbers start from 1 and end in 99. If no part number

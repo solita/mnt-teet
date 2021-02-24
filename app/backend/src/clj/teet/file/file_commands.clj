@@ -90,7 +90,6 @@
                (file-db/delete-attachment db user file-id attached-to)
                [(deletion-tx user file-id)])})
 
-
 (defcommand :file/upload-complete
   {:doc "Mark file upload as complete"
    :context {:keys [conn user db]}
