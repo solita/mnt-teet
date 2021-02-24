@@ -529,7 +529,6 @@
                        {:key (str attribute)}))))))]]
    (when (and footer
               (or cancel-fn cancel-event save-event))
-     (log/debug "doing a footer. provided fns: " (some? cancel-fn) (some? cancel-event) (some? save-event))
      [footer2 footer])])
 
 (defn form-modal-button
@@ -565,8 +564,9 @@
   [{:keys [container
            form-component button-component
            form-value
+           open-atom
            open? id]}]
-  (r/with-let [open-atom (r/atom (or open? false))
+  (r/with-let [open-atom (or open-atom (r/atom (or open? false)))
                form-atom (r/atom (or form-value {}))
                close-event (reset-atom-event open-atom false)]
     [:<>

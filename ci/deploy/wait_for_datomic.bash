@@ -6,6 +6,8 @@ ENDPOINT="query/?q=%5B%22%5E%20%22%2C%22~%3Aquery%22%2C%22~%3Ateet.system%2Fdb%2
 
 while true
 do
+    # echo curl on "$BASEURL/$ENDPOINT" returns $(curl  "$BASEURL/$ENDPOINT")
+    echo curl returns $(curl -s -L -w ' %{http_code}\n' "$BASEURL/$ENDPOINT")
     read -r CURRENT_COMMIT STATUS < <(curl -s -L -w ' %{http_code}\n' "$BASEURL/$ENDPOINT")
 
     if [ "$STATUS" == "200" ] && [ "$CODEBUILD_RESOLVED_SOURCE_VERSION" == "$CURRENT_COMMIT" ]; then
@@ -13,7 +15,6 @@ do
         break;
     else
         echo "Waiting, deployed: $CURRENT_COMMIT, expected: $CODEBUILD_RESOLVED_SOURCE_VERSION"
-        # TODO: remove this break once
     fi
     sleep 5
 done

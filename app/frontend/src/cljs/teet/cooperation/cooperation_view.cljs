@@ -208,6 +208,8 @@
         [[(tr [:cooperation :response-of-third-party])
           ;; colored circle based on status
           [response-status response]]
+         [(tr [:fields :cooperation.application/date])
+          (format/date date)]
          (when date
            [(tr [:fields :cooperation.response/date])
             (format/date date)])
@@ -421,15 +423,19 @@
   (let [export-dialog-open? (r/atom false)]
     {:export-dialog-open? export-dialog-open?
      :items [{:id "export-cooperation-summary"
-              :label (tr [:cooperation :export :title])
+              :label #(tr [:cooperation :export :title])
               :icon [icons/action-visibility-outlined]
               :on-click #(swap! export-dialog-open? not)}]}))
 
 (defn- export-dialog [e! export-dialog-open? project]
   (r/with-let [toggle-export-dialog! #(swap! export-dialog-open? not)
                form-value (r/atom {})
-               activities (mapcat :thk.lifecycle/activities
-                                  (:thk.project/lifecycles project))]
+               skip-activities #{:activity.name/warranty :activity.name/land-acquisition}
+               activities (into []
+                                (comp
+                                 (mapcat :thk.lifecycle/activities)
+                                 (remove (comp skip-activities :activity/name)))
+                                (:thk.project/lifecycles project))]
     [panels/modal
      {:title (tr [:cooperation :export :title])
       :open-atom export-dialog-open?}
@@ -656,6 +662,19 @@
                                   (fn [e!]
                                     (e! (close-event))
                                     (e! (cooperation-controller/->ResponseCreated response (boolean (:db/id @form-atom)))))))
+                 :delete (when (:db/id @form-atom)
+                           (common-controller/->SaveForm
+                            :cooperation/delete-application-response
+                            {:application-id application-id}
+                            (fn [_response]
+                              (fn [e!]
+                                (e! (close-event))
+                                (e! (common-controller/->Refresh))))))
+                 :delete-message (when (seq (:link/_from @form-atom))
+                                   [:div
+                                    (tr [:common :deletion-modal-text])
+                                    [:br]
+                                    (tr [:cooperation :delete-response-with-files])])
                  :spec ::cooperation-model/response-form}
      [:div
       [:div {:class (<class common-styles/gray-container-style)}
@@ -694,6 +713,12 @@
             [rich-text-editor/rich-text-field {}]])]]]
       [form/footer2]]]))
 
+(defn some-submittable-task?
+  [task]
+  "Check if the given task is not empty and doesn't have :error-message"
+  (and (some? task)
+    (empty? (:error-message task))))
+
 (defn application-response
   [e! new-document files-form application project related-task]
   (r/with-let [{:keys [upload!] :as controls} (task-view/file-upload-controls e!)]
@@ -730,13 +755,17 @@
                                     :files-form files-form}]
        (authorization-context/consume
         (fn [authz]
-          (let [can-upload? (boolean (and (some? related-task)
+          (let [can-upload? (boolean (and (some-submittable-task? related-task)
                                           (:response-uploads-allowed authz)
                                           (not no-response?)))
                 error-msg (cond
                             (nil? related-task)
                             {:title (tr [:cooperation :error :upload-not-allowed])
                              :body (tr [:cooperation :error :coordination-task-missing])}
+
+                            (not (some-submittable-task? related-task))
+                            {:title (tr [:cooperation :error :upload-not-allowed])
+                             :body (tr [:cooperation :error :coordination-task-status-no-upload])}
 
                             (not (:response-uploads-allowed authz))
                             {:title (tr [:cooperation :error :upload-not-allowed])

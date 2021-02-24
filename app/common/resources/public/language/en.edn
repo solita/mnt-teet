@@ -215,6 +215,8 @@
   :create-opinion-button "Opinion of Competent Authority",
   :application-edited "Application edited succesfully",
   :new-application-created "Application created successfully",
+  :delete-response-with-files
+  "Response has file(s) linked to it, if the files also need to be deleted then it should be done under the task.",
   :no-deadline "No deadline",
   :new-application-title "Add new application",
   :page-title "Cooperation",

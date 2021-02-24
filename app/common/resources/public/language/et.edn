@@ -215,6 +215,8 @@
   :create-opinion-button "Lisan ametliku seisukoha",
   :application-edited "Taotlus edukalt muutetud",
   :new-application-created "Taotlus edukalt loodud",
+  :delete-response-with-files
+  "Taotlusega on seotud fail(id), kui need peab ka kustutama siis seda tuleb teha vastava ülesande juures",
   :no-deadline "Tähtaega pole",
   :new-application-title "Uus taotlus",
   :page-title "Koostöö",

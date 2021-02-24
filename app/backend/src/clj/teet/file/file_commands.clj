@@ -106,7 +106,6 @@
                  (vektorio/delete-file-from-project! db vektorio-config file-id))
                tx)})
 
-
 (defcommand :file/upload-complete
   {:doc "Mark file upload as complete"
    :context {:keys [conn user db]}

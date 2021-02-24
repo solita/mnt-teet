@@ -44,6 +44,20 @@ context('Cooperation', function() {
         // Create new third party
     }
 
+    function createApplication() {
+        cy.get("button.new-application").click()
+
+        // fill out new application form
+        cy.formInput(
+            ":cooperation.application/type", "[:cooperation.application.type/work-permit]",
+            ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
+            ":cooperation.application/date", this.today,
+            ":cooperation.application/response-deadline", this.twoWeeks,
+            ":cooperation.application/comment", "TEXT:this is the comment"
+        );
+        cy.formSubmit()
+    }
+
     it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
 
         navigateToProjectCooperations(this.projectID);
@@ -67,17 +81,8 @@ context('Cooperation', function() {
         // Navigated to 3rd party page: check that it has h1 with name of 3rd party and new application button
 
         cy.get(".cooperation-third-party-page h1").contains(this.thirdparty)
-        cy.get("button.new-application").click()
 
-        // fill out new application form
-        cy.formInput(
-            ":cooperation.application/type", "[:cooperation.application.type/work-permit]",
-            ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
-            ":cooperation.application/date", this.today,
-            ":cooperation.application/response-deadline", this.twoWeeks,
-            ":cooperation.application/comment", "TEXT:this is the comment"
-        );
-        cy.formSubmit()
+        createApplication.call(this)
 
         // Navigated to application page:
 
@@ -220,5 +225,28 @@ context('Cooperation', function() {
         })
 
         cy.get("div#export h1").contains("COOPERATION TESTING")
+    })
+
+    it("is possible to delete response", function() {
+        let company = "delete response ltd";
+        navigateToProjectCooperations(this.projectID);
+        createCooperation(company);
+        cy.get(`.cooperation-overview-page [data-third-party='${company}'] a`).click()
+
+        createApplication.call(this)
+
+        cy.get(".enter-response").click()
+        cy.formInput(
+            ":cooperation.response/status", "[:cooperation.response.status/no-objection]",
+            ":cooperation.response/date", this.today);
+        cy.formSubmit()
+
+        cy.get(".edit-response").click()
+        cy.get("#delete-button").click()
+        cy.get("#confirm-delete").click()
+
+        cy.get(".enter-response").should("exist")
+        cy.get(".edit-response").should("not.exist")
+
     })
 })
