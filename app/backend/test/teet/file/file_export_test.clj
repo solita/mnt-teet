@@ -20,12 +20,12 @@
     (String. (.toByteArray out))))
 
 (deftest export-task
-  ;; We can't actually read from the input stream in because the fake uploaded files
-  ;; aren't actually in S3, but we can redef the get-object call to give us some fake
+  ;; We can't actually read files from the input stream because the fake uploaded files
+  ;; don't have any content in S3, but we can redef the get-object call to give us some fake
   ;; data for it
   (tu/local-login tu/mock-user-boss)
   (with-redefs [integration-s3/get-object
-                (fn [bucket file-key]
+                (fn [_bucket file-key]
                   (java.io.ByteArrayInputStream. (.getBytes file-key "UTF-8")))]
     (let [activity-id (tu/->db-id "p1-lc1-act1")
           activity-entity (du/entity (tu/db) activity-id)
