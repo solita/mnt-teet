@@ -82,16 +82,10 @@
 
 ;; TEET-1270: Delete models from Vektorio if linked file is deleted in TEET
 ;; 
-;; - study / document the things going on in delete functionality
-;; - multimethod delete-attachment for it has a dispatch fn (terminlogy?) that looks at (first (check-attach-fn attach)) 
-;;   - default impl aways throws a not-allowed error
-;;   - two methods for :meeting-agenda and :meeting-decision in meeting-commands ns
-;;     - they both generate same kind of delete tx for the file-id, but permission checks differ
-;; - the modal behaviour of delete-attachment commant depending on supplied params
-;;   - is also related to the permission checks. if no attachment-id is specified, the file delete tx is emitted as is
-;;   - on frontend side, file-controller has DeleteFile with single file-id param and DeleteAttachment has both file-id and attached-to
-;;
-;;  -> todo: (a) add comments per above notes, (b) change file delete tx emissions in :file/delete-attachment to call vektorio delete first before returning tx
+;; done - study / document the things going on in delete functionality 
+;; done - multimethod delete-attachment for it has a dispatch fn (terminlogy?) that looks at (first (check-attach-fn attach)) 
+;; documented - the modal behaviour of delete-attachment commant depending on supplied params
+;; pending input on slack - on frontend side, file-controller has DeleteFile with single file-id param and DeleteAttachment has both file-id and attached-to
 
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
@@ -99,15 +93,16 @@
    :payload {:keys [file-id attached-to]}
    :project-id nil
    :authorization {}
+   ;; this command has modal behaviour depending on whether attached-to tuple is provided.
+   ;; if it is, permission check and delete-attachment call go to the multimethod that
+   ;; will do a permission check depending on the attachment type.
    :pre [(or attached-to
              (file-db/own-file? db user file-id))]
-   :transact (let [;; generate ready to run tx first, relying on permission checks generating their exceptions eagerly
-                   tx (if attached-to
+   :transact (let [tx (if attached-to
                         (file-db/delete-attachment db user file-id attached-to)
                         [(deletion-tx user file-id)])
                    vektorio-config (environment/config-value :vektorio)]
                (when (environment/feature-enabled? :vektorio)
-                 
                  (vektorio/delete-file-from-project! db vektorio-config file-id))
                tx)})
 

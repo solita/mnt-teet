@@ -49,7 +49,11 @@
   This is used to implement custom permission checks in different kinds of meeting attachments.
   When permission check passes, they all make the same kind of deletion-tx for the file entity.
   
-  Default behaviour is to disallow and throw an exception."
+  Default behaviour is to disallow and throw an exception.
+
+  Dispatches on the on the first element of the \"attach\" parameter, which is a keyword-id pair such as [:meeting-decision id].
+
+  The implementations emit the same kind of file delete tx, just their permission checks differ."
   (fn [_db _user _file-id attach]
     (first (check-attach-definition attach))))
 
