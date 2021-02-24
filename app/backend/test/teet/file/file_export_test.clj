@@ -36,12 +36,12 @@
                                           :task/estimated-start-date (:activity/estimated-start-date activity-entity)
                                           :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})
           file (tu/fake-upload task-id #:file {:name "image.png" :file/size 666})
-          s3-file-key (:file/s3-key (du/entity (tu/db) (:db/id file)))]
-      (let [{:keys [filename input-stream]} (file-export/task-zip (tu/db) task-id)]
-        ;; MO = land acqusiiton, KY = plot allocation plan
-        (is (= filename "MA11111_MO_TL_KY.zip"))
-        (let [in (java.util.zip.ZipInputStream. input-stream)
-              entry (.getNextEntry in)]
-          (is (= (.getName entry) "00_Üldine/MA11111_MO_TL_KY_00_image.png"))
-          (is (= s3-file-key (read-entry in)))
-          (is (nil? (.getNextEntry in))))))))
+          s3-file-key (:file/s3-key (du/entity (tu/db) (:db/id file)))
+          {:keys [filename input-stream]} (file-export/task-zip (tu/db) task-id)]
+      ;; MO = land acqusiiton, KY = plot allocation plan
+      (is (= filename "MA11111_MO_TL_KY.zip"))
+      (let [in (java.util.zip.ZipInputStream. input-stream)
+            entry (.getNextEntry in)]
+        (is (= (.getName entry) "00_Üldine/MA11111_MO_TL_KY_00_image.png"))
+        (is (= s3-file-key (read-entry in)))
+        (is (nil? (.getNextEntry in)))))))
