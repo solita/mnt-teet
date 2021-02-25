@@ -22,7 +22,7 @@
 (defn- dummy-login? []
   (let [host js/window.location.hostname]
     (or (= host "localhost")
-        (= host "dev-teet.solitacloud.fi"))))
+        (string/ends-with? host ".solitacloud.fi"))))
 
 (defn login-page-heading-style
   []
