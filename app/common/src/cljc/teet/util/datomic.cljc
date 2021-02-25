@@ -254,6 +254,7 @@
 
          (let [unreferred-symbols (set/difference
                                    (symbols in)
+                                   #{'$ '...}
                                    (set/union (symbols find)
                                               (symbols where)))]
            (when (seq unreferred-symbols)
