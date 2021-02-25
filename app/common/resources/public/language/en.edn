@@ -1101,6 +1101,7 @@
   :accept-review "Accept review",
   :confirm-delete-cancel "No",
   :reject-review "Reject review",
+  :export-files-zip "Export files as ZIP",
   :documents "Documents",
   :add-part-modal-title "Add task part",
   :part-deleted-successfully "Task part deleted successfully",
