@@ -209,11 +209,19 @@
    :display :flex
    :align-items :center})
 
+(defn- vectorio-link-style
+  []
+  (thk-link-style))
+
 (defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
    :font-size "20px"
    :font-weight :bold})
+
+(defn- vectorio-link-icon-style
+  []
+  (thk-link-icon-style))
 
 (defn thk-link
   [opts label]
@@ -221,6 +229,13 @@
                opts)
    label
    [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
+
+(defn vertorio-link
+  [opts label]
+  [Link (merge {:class (<class vectorio-link-style)}
+          opts)
+   label
+   [icons/action-open-in-new {:class (<class vectorio-link-icon-style)}]])
 
 (def ^{:const true
        :doc "Minimum browser window width that is considered wide for layout purposes."}

@@ -19,3 +19,8 @@
   "Checks the environment based on the hostname and returns THK url for a project"
   [{:thk.project/keys [id]}]
   (str (environment/config-value :thk :url) id))
+
+(defn vectorio-url
+  "BIN viewer with this project's models"
+  [project-id]
+  (str (environment/config-value :vektorio :config :viewer-url) project-id))

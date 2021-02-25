@@ -39,6 +39,7 @@
             [teet.project.project-map-view :as project-map-view]
             [teet.common.common-controller :as common-controller]
             [teet.road.road-model :as road-model]
+            [teet.environment :as environment]
             [teet.ui.query :as query]
             [taoensso.timbre :as log]
             [clojure.string :as str]
@@ -89,7 +90,8 @@
   ([project]
    (project-header project nil))
   ([project export-menu-items]
-   (let [thk-url (project-info/thk-url project)]
+   (let [thk-url (project-info/thk-url project)
+         vector-io-url (project-info/vectorio-url (:db/id project))]
      [:div {:class (<class project-header-style)}
       [:div {:style {:display :flex
                      :justify-content :space-between}}
@@ -102,6 +104,12 @@
           :label (tr [:project :export])
           :icon [icons/file-cloud-download-outlined]
           :items (concat export-menu-items (default-export-menu-items project))}]
+        (when (and
+                (environment/config-value :enabled-features :vektorio)
+                (some? (:vektorio/project-id project)))
+          [common/vertorio-link {:href vector-io-url
+                                 :target "_blank"}
+           (str "BIM mudelid")])
         [common/thk-link {:href thk-url
                           :target "_blank"}
          (str "THK" (:thk.project/id project))]]]])))
