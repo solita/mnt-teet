@@ -73,38 +73,7 @@
        [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])]))
 
 
-(defn project-header-style
-  []
-  {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn default-export-menu-items [project]
-  [(when (project-model/has-related-info? project)
-     {:label (tr [:project :download-related-info])
-      :icon [icons/file-cloud-download]
-      :link {:target :_blank
-             :href (common-controller/query-url :thk.project/download-related-info
-                                          (select-keys project [:thk.project/id]))}})])
-
-(defn project-header
-  ([project]
-   (project-header project nil))
-  ([project export-menu-items]
-   (let [thk-url (project-info/thk-url project)]
-     [:div {:class (<class project-header-style)}
-      [:div {:style {:display :flex
-                     :justify-content :space-between}}
-       [Heading1 {:style {:margin-bottom 0}}
-        (project-model/get-column project :thk.project/project-name)]
-       [:div {:style {:display :flex
-                      :align-items :center}}
-        [common/context-menu
-         {:id "project-export-menu"
-          :label (tr [:project :export])
-          :icon [icons/file-cloud-download-outlined]
-          :items (concat export-menu-items (default-export-menu-items project))}]
-        [common/thk-link {:href thk-url
-                          :target "_blank"}
-         (str "THK" (:thk.project/id project))]]]])))
 
 (defn heading-state
   [title select]
@@ -121,7 +90,7 @@
                               (project-controller/project-setup-step app)
                               (get-in app [:query :configure]))]
     [:div {:class (<class project-style/project-page-structure)}
-     [project-header project]
+     [project-navigator-view/project-header project]
      [:div {:class (<class project-style/project-map-container)}
                                         ;[project-map-view/project-map e! app project]
       (project-map-view/create-project-map e! app project)
@@ -708,7 +677,7 @@
     [project-context/provide
      (select-keys project [:db/id :thk.project/id])
      [:<>
-      [project-header project export-menu-items]
+      [project-navigator-view/project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
