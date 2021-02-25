@@ -85,12 +85,20 @@
           part))
       parts))))
 
+(defn- with-sender
+  "Add configured :from if not specified in email"
+  [{from :from} msg]
+  (update msg :from #(or % from)))
+
 (defn send-email! [msg]
   (let [config (environment/config-map
                 {:subject-prefix [:email :subject-prefix]
-                 :contact-address [:email :contact-address]})
+                 :contact-address [:email :contact-address]
+                 :from [:email :from]})
         smtp-node-config (environment/config-value :email :server)]
-    (send-email-smtp!* smtp-node-config
-      (->> msg
+    (send-email-smtp!*
+     smtp-node-config
+     (->> msg
+          (with-sender config)
           (with-subject-prefix config)
           (with-data-protection-footer config)))))
