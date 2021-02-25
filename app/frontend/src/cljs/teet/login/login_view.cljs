@@ -10,7 +10,8 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.login.login-styles :as login-styles]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [clojure.string :as string]))
 
 (defn login-logo
   []
