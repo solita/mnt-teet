@@ -30,6 +30,7 @@
   [conn vektor-config file-eid]
   (let [db (d/db conn)
         project-id (project-db/file-project-id db file-eid)]
+    (log/info "Ensure the project exists in vektorio for project:" project-id)
     (if-let [project-vektorio-id (:vektorio/project-id (d/pull db [:vektorio/project-id] project-id))]
       project-vektorio-id
       (create-project-in-vektorio! conn vektor-config project-id))))
@@ -68,6 +69,7 @@
                                                               :vektorio-filename (vektorio-filename db file-id)
                                                               :vektorio-filepath (vektorio-filepath db file-id)})
         vektorio-model-id (str (:id response))]
+    (log/info "Model id in vektor")
     (if-not (some? vektorio-model-id)
       (throw (ex-info "No model id in Vektorio response"
                       {:response response
