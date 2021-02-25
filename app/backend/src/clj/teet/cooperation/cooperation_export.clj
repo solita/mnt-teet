@@ -23,7 +23,7 @@
           [?a :cooperation.application/type ?type]
           [(missing? $ ?a :meta/deleted?)]
 
-          :in $ ?activity type] db activity type)
+          :in $ ?activity ?type] db activity type)
    (db-api-large-text/with-large-text #{:cooperation.response/content :cooperation.opinion/comment})
    (map first)
    (group-by :cooperation.application/response-type)
