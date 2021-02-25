@@ -1101,6 +1101,13 @@
   :accept-review "Accept review",
   :confirm-delete-cancel "No",
   :reject-review "Reject review",
+  :export-files-zip
+  {:button "Export files as ZIP",
+   :success
+   "Task export is being generated. A link will be emailed to you soon.",
+   :email-subject "Task {task} exported files are ready",
+   :email-body
+   "Download from: {link}. The link is valid for 24 hours."},
   :documents "Documents",
   :add-part-modal-title "Add task part",
   :part-deleted-successfully "Task part deleted successfully",
