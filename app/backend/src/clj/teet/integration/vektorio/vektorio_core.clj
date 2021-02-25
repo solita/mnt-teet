@@ -72,7 +72,7 @@
       (throw (ex-info "No model id in Vektorio response"
                       {:response response
                        :error :no-model-id-in-response}))
-      (d/transact conn {:tx-data [{:db/id (:db/id file-id)
+      (d/transact conn {:tx-data [{:db/id (:db/id file-data)
                                    :vektorio/model-id vektorio-model-id}]}))))
 
 (defn instant-login

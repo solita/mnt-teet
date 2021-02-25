@@ -201,9 +201,9 @@
 
 #?(:clj
    (do
-     (defn- binding-symbols [form]
-       (cu/collect #(and (symbol? %) (str/starts-with? (str %) "?"))
-                   form))
+     (defn- symbols [form]
+       (cu/collect symbol? form))
+
      (defn- map-by-keywords [[first & rest]]
        (when first
          (if-not (keyword? first)
@@ -253,9 +253,10 @@
                             :received-arguments args})))
 
          (let [unreferred-symbols (set/difference
-                                   (binding-symbols in)
-                                   (set/union (binding-symbols find)
-                                              (binding-symbols where)))]
+                                   (symbols in)
+                                   #{'$ '...}
+                                   (set/union (symbols find)
+                                              (symbols where)))]
            (when (seq unreferred-symbols)
              (throw (ex-info "Unreferred to input binding symbols"
                              {:unreferred-symbols unreferred-symbols}))))))
