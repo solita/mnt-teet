@@ -69,7 +69,7 @@
                                                               :vektorio-filename (vektorio-filename db file-id)
                                                               :vektorio-filepath (vektorio-filepath db file-id)})
         vektorio-model-id (str (:id response))]
-    (log/info "Model id in vektor")
+    (log/info "Model id from vektorio response:" vektorio-model-id)
     (if-not (some? vektorio-model-id)
       (throw (ex-info "No model id in Vektorio response"
                       {:response response
