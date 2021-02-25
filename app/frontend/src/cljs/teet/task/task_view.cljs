@@ -501,9 +501,13 @@
      {:max-date (:activity/estimated-end-date activity)
       :min-date (:activity/estimated-start-date activity)}]))
 
+(defn- export-task-files [e! task-id]
+  [{:id "export-task-files"
+    :label #(tr [:task :export-files-zip :button])
+    :on-click #(e! (task-controller/->ExportFiles task-id))}])
+
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
-  (log/info "task-page render")
   (let [{activity-manager :activity/manager
          :as activity}
         (cu/find-> project
@@ -513,7 +517,8 @@
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
-      :app app}
+      :app app
+      :export-menu-items (export-task-files e! task-id)}
 
      [task-page-content
       e!
