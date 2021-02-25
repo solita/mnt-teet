@@ -1,16 +1,27 @@
 (ns teet.navigation.navigation-style
   (:require [teet.theme.theme-spacing :as theme-spacing]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (def drawer-width {true 200   ; width when open
                    false 80}) ; width when closed
 
 (defn drawer
   [open?]
-  (let [w (drawer-width open?)]
-    {:min-width (str w "px")
-     :width (str w "px")
-     :transition "all 0.2s ease-in-out"}))
+  (with-meta
+    (let [w (drawer-width open?)]
+      {:min-width (if open?
+                    (str w "px")
+                    "0px")
+       :width (if open?
+                (str w "px")
+                "0px")
+       :transition "all 0.2s ease-in-out"})
+    (responsivity-styles/desktop-only-meta
+      (let [w (drawer-width open?)]
+        {:min-width (str w "px")
+         :width (str w "px")
+         :transition "all 0.2s ease-in-out"}))))
 
 (defn toolbar
   []
@@ -41,22 +52,26 @@
 (def appbar-height "90px")
 
 (defn appbar-position [drawer-open?]
-  (let [dw (drawer-width drawer-open?)]
+  (with-meta
     {:z-index 10
-     :height appbar-height
-     :width (str "calc(100% - " dw "px)")
-     :margin-left (str dw "px")}))
+     :height appbar-height}
+    (responsivity-styles/desktop-only-meta
+      (let [dw (drawer-width drawer-open?)]
+        {:width (str "calc(100% - " dw "px)")
+         :margin-left (str dw "px")}))))
 
 (defn main-container [drawer-open?]
-  (let [dw (drawer-width drawer-open?)]
+  (with-meta
     {:background-color theme-colors/gray-lightest
      :flex 1
      :display :flex
      :position :relative
      :flex-direction :column
-     :width (str "calc(100% - " dw "px)")
-     :transition "all 0.2s ease-in-out"
-     :margin-left (str dw "px")}))
+     :transition "all 0.2s ease-in-out"}
+    (responsivity-styles/desktop-only-meta
+      (let [dw (drawer-width drawer-open?)]
+        {:width (str "calc(100% - " dw "px)")
+         :margin-left (str dw "px")}))))
 
 (defn drawer-projects-style
   []
@@ -101,16 +116,15 @@
   {:border-color theme-colors/gray-lighter
    :border-width "0 1px 0 0"
    :border-style "solid"
-   :padding "0 1rem 0 1rem"})
+   :padding "0 0.5rem 0 0.5rem"})
 
 (defn logo-style
   []
-  {:margin-right "1rem"
-   :display :flex
+  {:display :flex
    :flex-direction :row
    :justify-content :flex-start
-   :flex-grow 1
-   :flex-basis "15%"
+   :flex-basis "200px"
+   :margin-right :auto
    :max-height "100%"})
 
 (defn feedback-container-style []

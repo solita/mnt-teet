@@ -20,8 +20,7 @@
   []
   {:display :flex
    :flex-direction :column
-   :justify-content :flex-end
-   :padding-bottom "0.5rem"})
+   :justify-content :flex-end})
 
 (defn notification-style
   [read?]

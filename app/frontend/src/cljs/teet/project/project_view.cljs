@@ -99,6 +99,7 @@
                       :align-items :center}}
         [common/context-menu
          {:id "project-export-menu"
+          :class (<class common-styles/margin-right 1)
           :label (tr [:project :export])
           :icon [icons/file-cloud-download-outlined]
           :items (concat export-menu-items (default-export-menu-items project))}]

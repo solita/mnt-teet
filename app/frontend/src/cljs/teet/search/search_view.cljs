@@ -28,9 +28,7 @@
       (hotkeys/hotkey "Escape" #(reset! show-results? false))
       (events/click-outside #(reset! show-results? false))
       (fn [e! quick-search]
-        [:div {:style {:position :relative
-                       :flex-grow 1
-                       :flex-basis "400px"}}
+        [:div
          [TextField
           {:id          "quick-search"
            :style       {:width sw}
