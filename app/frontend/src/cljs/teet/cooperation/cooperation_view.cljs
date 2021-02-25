@@ -201,6 +201,7 @@
   [:div {:class (<class common-styles/margin-bottom 1)}
    (if response
      (let [{:cooperation.response/keys [date valid-until]} response
+           application-date (:cooperation.application/date application)
            expiration-warning? (cooperation-model/application-expiration-warning? response)]
        [common/basic-information-row
         {:right-align-last? false
@@ -209,7 +210,7 @@
           ;; colored circle based on status
           [response-status response]]
          [(tr [:fields :cooperation.application/date])
-          (format/date date)]
+          (format/date application-date)]
          (when date
            [(tr [:fields :cooperation.response/date])
             (format/date date)])
