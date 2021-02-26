@@ -74,16 +74,31 @@
    [:fo:external-graphic
     { :content-width "12px" :content-height "12px" :src (io/resource svg-file) } ]])
 
+(defmulti link-list-item (fn [link] (:link/type link)))
+
+(defn attachment-files
+  "List of attachments for the topic or decision"
+  [idx attachment]
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic
+     {:padding-right 10 :content-width "12px" :content-height "12px" :src (io/resource "img/file.svg")}]
+    (str (tr [:link :type-label :appendix]) " " (inc idx) " - " (:file/name attachment))]])
+
 (defn- decision-list-item
-  "Return the agenda topic descition list item"
+  "Return the agenda topic decision list item"
   [decision topic]
   (let [title (str topic " " (tr [:fields :meeting.decision/body]) " #" (:meeting.decision/number decision))
-        decision-text (md/render-md (:meeting.decision/body decision))]
+        decision-text (md/render-md (:meeting.decision/body decision))
+        {links :link/_from
+         attachments :file/_attached-to} decision]
     [:fo:block
      [:fo:block {:font-size "16px" :font-weight "700"} title]
-     [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
-
-(defmulti link-list-item (fn [link] (:link/type link)))
+     [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]
+     (when (seq links)
+           [:fo:block {:space-after "16"} (map link-list-item links)])
+     (when (seq attachments)
+           [:fo:block {:space-after "8"} (map-indexed attachment-files attachments)])]))
 
 (defmethod link-list-item :file [{info :link/info}]
   [:fo:block link-look-and-feel
@@ -109,15 +124,6 @@
    [:fo:block
     [:fo:external-graphic external-link-icon]
     (str (tr [:link :type-label :cadastral-unit]) ": " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
-
-(defn attachment-files
-  "List of attachement for the topic"
-  [idx attachment]
-  [:fo:block link-look-and-feel
-   [:fo:block
-    [:fo:external-graphic
-     {:padding-right 10 :content-width "12px" :content-height "12px" :src (io/resource "img/file.svg")}]
-    (str (tr [:link :type-label :appendix]) " " (inc idx) " - " (:file/name attachment))]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
