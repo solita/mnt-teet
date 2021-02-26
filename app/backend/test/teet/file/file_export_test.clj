@@ -4,7 +4,8 @@
             [clojure.test :as t :refer [deftest is testing]]
             [teet.util.datomic :as du]
             [teet.integration.integration-s3 :as integration-s3]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [teet.localization :refer [with-language]]))
 
 (t/use-fixtures :each
   (tu/with-config {:file {:allowed-suffixes #{"png" "doc" "xls"}
@@ -37,11 +38,11 @@
                                           :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})
           file (tu/fake-upload task-id #:file {:name "image.png" :file/size 666})
           s3-file-key (:file/s3-key (du/entity (tu/db) (:db/id file)))
-          {:keys [filename input-stream]} (file-export/task-zip (tu/db) task-id)]
+          {:keys [filename input-stream]} (with-language :en (file-export/task-zip (tu/db) task-id))]
       ;; MO = land acqusiiton, KY = plot allocation plan
       (is (= filename "MA11111_MO_TL_KY.zip"))
       (let [in (java.util.zip.ZipInputStream. input-stream)
             entry (.getNextEntry in)]
-        (is (= (.getName entry) "00_Üldine/MA11111_MO_TL_KY_00_image.png"))
+        (is (= (.getName entry) "00_General/MA11111_MO_TL_KY_00_image.png"))
         (is (= s3-file-key (read-entry in)))
         (is (nil? (.getNextEntry in)))))))
