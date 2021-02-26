@@ -84,13 +84,6 @@
      :file (d/pull (:db-after res) '[*] file-id)}))
 
 
-;; TEET-1270: Delete models from Vektorio if linked file is deleted in TEET
-;; 
-;; done - study / document the things going on in delete functionality 
-;; done - multimethod delete-attachment for it has a dispatch fn (terminlogy?) that looks at (first (check-attach-fn attach)) 
-;; documented - the modal behaviour of delete-attachment commant depending on supplied params
-;; pending input on slack - on frontend side, file-controller has DeleteFile with single file-id param and DeleteAttachment has both file-id and attached-to
-
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
    :context {:keys [user db]}
