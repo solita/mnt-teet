@@ -13,7 +13,11 @@
             teet.file.file-tx
             [teet.util.collection :as cu]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.file.file-export :as file-export]
+            [teet.integration.integration-s3 :as integration-s3]
+            [teet.integration.integration-email :as integration-email]
+            [teet.localization :refer [tr tr-enum with-language]]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -275,3 +279,61 @@
    :transact [(list 'teet.file.file-tx/modify-file
                     (merge file
                            (meta-model/modification-meta user)))]})
+
+(defn- export-zip [{:keys [db user export-fn export-bucket email-subject-message] :as opts}]
+  (if-let [email (:user/email (du/entity db (user-model/user-ref user)))]
+    (future
+      (try
+        (let [{:keys [filename input-stream]} (export-fn)
+              s3-key (str (java.util.UUID/randomUUID))
+              _response (integration-s3/put-object export-bucket
+                                                   s3-key
+                                                   input-stream)
+              download-url (integration-s3/presigned-url {:content-disposition (str "attachment; filename=" filename)
+                                                          :expiration-seconds (* 24 60 60)}
+                                                         "GET" export-bucket s3-key)]
+          (integration-email/send-email!
+           {:to email
+            :subject email-subject-message
+            :body [{:type "text/plain; charset=utf-8"
+                    :content (tr [:file :export-files-zip :email-body]
+                                 {:link (str "\n" download-url "\n")})}]}))
+        (catch Throwable t
+          (log/error t "Error exporting zip" opts))))
+    (db-api/fail! {:error :user-has-no-email})))
+
+(defcommand :file/export-task
+  {:doc "Export task files as zip."
+   :context {:keys [user db]}
+   :payload {:keys [task-id language]}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:project/read-info {}}
+   :config {export-bucket [:document-storage :export-bucket-name]}
+   :pre [^{:error :configuration-missing}
+         (some? export-bucket)]}
+  (with-language language
+    (export-zip {:db db
+                 :user user
+                 :export-bucket export-bucket
+                 :export-fn #(file-export/task-zip db task-id)
+                 :email-subject-message (tr [:file :export-files-zip :task-email-subject]
+                                            {:task (tr-enum (:task/type (du/entity db task-id)))})}))
+  {:success? true})
+
+(defcommand :file/export-activity
+  {:doc "Export activity files as zip."
+   :context {:keys [user db]}
+   :payload {:keys [activity-id language]}
+   :project-id (project-db/activity-project-id db activity-id)
+   :authorization {:project/read-info {}}
+   :config {export-bucket [:document-storage :export-bucket-name]}
+   :pre [^{:error :configuration-missing}
+         (some? export-bucket)]}
+  (with-language language
+    (export-zip {:db db
+                 :user user
+                 :export-bucket export-bucket
+                 :export-fn #(file-export/activity-zip db activity-id)
+                 :email-subject-message (tr [:file :export-files-zip :activity-email-subject]
+                                            {:activity (tr-enum (:activity/name (du/entity db activity-id)))})}))
+  {:success? true})

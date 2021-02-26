@@ -605,7 +605,7 @@
   :activity/manager "Projektijuht",
   :cooperation.response/valid-months "Kehtivus kuudes",
   :cooperation.response/valid-until "Aegumiskuupäev",
-  :cooperation.opinion/status "Ametliku seisukoht",
+  :cooperation.opinion/status "Ametlik seisukoht",
   :activity/status "Olek",
   :cooperation.contact/id-code "Reg. nr / isikukood",
   :file.part/name "Ülesande osa nimi",
@@ -720,6 +720,18 @@
   "Oled sa kindel, et soovid kõik selle faili versioonid kustutada?",
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
+  :export-files-zip
+  {:activity-button "Tegevusega seotud dokumendid",
+   :task-button "Ülesandega seotud dokumendid",
+   :activity-success
+   "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
+   :task-success
+   "Toimub ülesandega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
+   :activity-email-subject
+   "Tegevusega seotud dokumentide eksport on lõppenud",
+   :task-email-subject
+   "Ülesandega seotud dokumentide eksport on lõppenud",
+   :email-body "Lae alla siit: \n{link} \nLink kehtib 24 tundi."},
   :replace-dialog-title "Laen üles uue versiooni",
   :edit-info "Viimati muudetud {author} {date} ",
   :other-versions "Muud versioonid",
