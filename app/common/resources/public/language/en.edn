@@ -729,12 +729,13 @@
   {:activity-button "Activity related documents",
    :task-button "Task related documents",
    :activity-success
-   "Activity export is being generated. A link will be emailed to you soon.",
+   "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
    :task-success
-   "Task export is being generated. A link will be emailed to you soon.",
+   "Documents related to the task are exported. A link to the documents will be emailed to you shortly",
    :activity-email-subject
-   "Activity {activity} exported files are ready",
-   :task-email-subject "Task {task} exported files are ready",
+   "The export of activity-related documents has ended",
+   :task-email-subject
+   "The export of task-related documents has ended",
    :email-body
    "Download from: \n{link}\nThe link is valid for 24 hours."},
   :replace-dialog-title "Upload new version ",

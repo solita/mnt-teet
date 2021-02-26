@@ -724,13 +724,14 @@
   {:activity-button "Tegevusega seotud dokumendid",
    :task-button "Ülesandega seotud dokumendid",
    :activity-success
-   "Tehakse tegevuse eksport. Varsti saadetakse teile e-postiga link.",
+   "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
    :task-success
-   "Tehakse ülesande eksport. Varsti saadetakse teile e-postiga link.",
+   "Toimub ülesandega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
    :activity-email-subject
-   "Tegevuse {activity} eksporditud failid on valmis",
-   :task-email-subject "Ülesande eksporditud failid on valmis",
-   :email-body "Alla laadida: \n{link} \nLink kehtib 24 tundi."},
+   "Tegevusega seotud dokumentide eksport on lõppenud",
+   :task-email-subject
+   "Ülesandega seotud dokumentide eksport on lõppenud",
+   :email-body "Lae alla siit: \n{link} \nLink kehtib 24 tundi."},
   :replace-dialog-title "Laen üles uue versiooni",
   :edit-info "Viimati muudetud {author} {date} ",
   :other-versions "Muud versioonid",
