@@ -15,7 +15,7 @@
             [teet.file.filename-metadata :as filename-metadata]
             [teet.project.task-model :as task-model]
             [teet.environment :as environment]
-            [teet.integration.vektorio.vektorio-core :as vektorio]))
+            [teet.integration.vektorio.vektorio-core :as vektorio]
             [teet.file.file-export :as file-export]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.integration.integration-email :as integration-email]
