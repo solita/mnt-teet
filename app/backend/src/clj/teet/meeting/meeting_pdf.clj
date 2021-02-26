@@ -94,7 +94,7 @@
          attachments :file/_attached-to} decision]
     [:fo:block
      [:fo:block {:font-size "16px" :font-weight "700"} title]
-     [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]
+     [:fo:block {:font-size "14px" :font-weight "400" :space-after "24"} decision-text]
      (when (seq links)
            [:fo:block {:space-after "16"} (map link-list-item links)])
      (when (seq attachments)
