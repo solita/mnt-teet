@@ -725,6 +725,18 @@
   "Are you sure you want to delete all the versions of this file?",
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
+  :export-files-zip
+  {:activity-button "Activity related documents",
+   :task-button "Task related documents",
+   :activity-success
+   "Activity export is being generated. A link will be emailed to you soon.",
+   :task-success
+   "Task export is being generated. A link will be emailed to you soon.",
+   :activity-email-subject
+   "Activity {activity} exported files are ready",
+   :task-email-subject "Task {task} exported files are ready",
+   :email-body
+   "Download from: \n{link}\nThe link is valid for 24 hours."},
   :replace-dialog-title "Upload new version ",
   :edit-info "Last edited {date} by {author}",
   :other-versions "Other versions",
@@ -1101,13 +1113,6 @@
   :accept-review "Accept review",
   :confirm-delete-cancel "No",
   :reject-review "Reject review",
-  :export-files-zip
-  {:button "Export files as ZIP",
-   :success
-   "Task export is being generated. A link will be emailed to you soon.",
-   :email-subject "Task {task} exported files are ready",
-   :email-body
-   "Download from: {link}. The link is valid for 24 hours."},
   :documents "Documents",
   :add-part-modal-title "Add task part",
   :part-deleted-successfully "Task part deleted successfully",

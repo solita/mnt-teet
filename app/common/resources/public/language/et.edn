@@ -720,6 +720,17 @@
   "Oled sa kindel, et soovid kõik selle faili versioonid kustutada?",
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
+  :export-files-zip
+  {:activity-button "Tegevusega seotud dokumendid",
+   :task-button "Ülesandega seotud dokumendid",
+   :activity-success
+   "Tehakse tegevuse eksport. Varsti saadetakse teile e-postiga link.",
+   :task-success
+   "Tehakse ülesande eksport. Varsti saadetakse teile e-postiga link.",
+   :activity-email-subject
+   "Tegevuse {activity} eksporditud failid on valmis",
+   :task-email-subject "Ülesande eksporditud failid on valmis",
+   :email-body "Alla laadida: \n{link} \nLink kehtib 24 tundi."},
   :replace-dialog-title "Laen üles uue versiooni",
   :edit-info "Viimati muudetud {author} {date} ",
   :other-versions "Muud versioonid",
@@ -1099,12 +1110,6 @@
   :accept-review "Aktsepteerin ülesande",
   :confirm-delete-cancel "Ei",
   :reject-review "Lükkan tagasi",
-  :export-files-zip
-  {:button "Eksportige failid ZIP-vormingus",
-   :success
-   "Tehakse ülesande eksport. Varsti saadetakse teile e-postiga link.",
-   :email-subject nil,
-   :email-body nil},
   :documents "Dokumendid",
   :add-part-modal-title "Lisan ülesande osa",
   :part-deleted-successfully "Ülesande osa edukalt kustutatud",
