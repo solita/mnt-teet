@@ -11,6 +11,7 @@
             [teet.notification.notification-view :as notification-view]
             [teet.routes :as routes]
             [teet.search.search-view :as search-view]
+            [teet.common.responsivity-styles :as responsivity-styles]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.icons :as icons]
@@ -44,9 +45,12 @@
                    :href (str "mailto:teet-feedback@transpordiamet.ee"
                               "?Subject=" (uri-quote subject-text)
                               "&body=" (uri-quote body-text))}
-      [icons/action-feedback-outlined {:style {:margin-right "0.5rem"}
-                                       :color :primary}]
-      (tr [:common :send-feedback])]]))
+      [icons/action-feedback-outlined {:color :primary}]
+      [:span {:class (<class responsivity-styles/desktop-only-style
+                             {:margin-left "0.5rem"
+                              :display :inline-block}
+                             {:display :none})}
+       (tr [:common :send-feedback])]]]))
 
 (defn- drawer-header
   [e! open?]
@@ -126,11 +130,11 @@
                  :icon icons/action-settings
                  :name (tr [:admin :title])}])])
 
-(defmulti header-extra-panel (fn [_e! _user extra-panel]
+(defmulti header-extra-panel (fn [_e! _user opts extra-panel]
                                extra-panel))
 
 (defmethod header-extra-panel :default
-  [_ _ _]
+  [_ _ _ _]
   "")
 
 (defn language-selector
@@ -179,8 +183,14 @@
                               :on-click #(change-lan-fn "en")}
          "ENG"])]]))
 
+(defmethod header-extra-panel :search
+  [e! user opts _]
+  [:div {:style {:min-width "300px"}}
+   [:div {:class (<class navigation-style/extran-nav-heading-element-style)}
+    [search-view/quick-search e! (:quick-search opts)]]])
+
 (defmethod header-extra-panel :account-control
-  [e! user _]
+  [e! user _ _]
   [:div {:style {:min-width "300px"}}
    [:div {:class (<class navigation-style/extran-nav-heading-element-style)}
     [typography/Text2
@@ -218,7 +228,6 @@
   [:div {:class (<class common-styles/flex-row-center)}
    [IconButton {:size :small
                 :id "open-account-navigation"
-                :style {:margin-left "1rem"}
                 :on-click #(e! (navigation-controller/->ToggleExtraPanel :account-control))}
     [icons/social-person-outlined {:color :primary}]]])
 
@@ -229,7 +238,13 @@
    [:div {:style {:display :flex
                   :justify-content :flex-end}}
     (when logged-in?
-      [notification-view/notifications e!])
+      [:<>
+       [IconButton {:size :small
+                    :id "open-mobile-search"
+                    :class [(<class responsivity-styles/visible-mobile-only) (<class navigation-style/divider-style)]
+                    :on-click #(e! (navigation-controller/->ToggleExtraPanel :search))}
+        [icons/action-search {:color :primary}]]
+       [notification-view/notifications e!]])
 
     [feedback-link user url]
     (when (not logged-in?)
@@ -241,31 +256,44 @@
        (tr [:login :login])])]))
 
 (defn header-extra-panel-container
-  [e! user extra-panel extra-panel-open?]
+  [e! user quick-search extra-panel extra-panel-open?]
   [:div {:style {:align-self :flex-end}}
    [Collapse {:in (boolean extra-panel-open?)}
     [:div {:class (<class navigation-style/extra-nav-style)}
-     [header-extra-panel e! user extra-panel]]]])
+     [header-extra-panel e! user {:quick-search quick-search} extra-panel]]]])
 
 (defn header
   [e! {:keys [open? page quick-search url extra-panel extra-panel-open?]} user]
   [:<>
-   [ClickAwayListener {:on-click-away (e! navigation-controller/->CloseExtraPanel)}
-    [AppBar {:position "sticky"
-             :className (herb/join (<class navigation-style/appbar)
-                                   (<class navigation-style/appbar-position open?))}
-     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
-      [:div {:class (<class navigation-style/logo-style)}
-       [navigation-logo/maanteeamet-logo false]]
-      [search-view/quick-search e! quick-search]
-      [navigation-header-links e! user url]]
-     [header-extra-panel-container e! user extra-panel extra-panel-open?]]]
+   [ClickAwayListener {:on-click-away (fn []
+                                         (e! (navigation-controller/->CloseDrawer))
+                                         (e! (navigation-controller/->CloseExtraPanel)))}
 
-   [Drawer {:classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
-            :variant "permanent"
-            :anchor "left"
-            :open open?}
-    [page-listing e! open? user page]]])
+    [:div
+     [AppBar {:position "sticky"
+              :className (herb/join (<class navigation-style/appbar)
+                                    (<class navigation-style/appbar-position open?))}
+      [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
+       [IconButton {:on-click #(e! (navigation-controller/->ToggleDrawer))
+                    :class (<class responsivity-styles/mobile-navigation-button)}
+        [icons/navigation-menu]]
+       [:div {:class (<class navigation-style/logo-style)}
+        [navigation-logo/maanteeamet-logo false]]
+       [:div {:class (<class responsivity-styles/desktop-only-style
+                             {:position :relative
+                              :flex-grow 1
+                              :flex-basis "400px"
+                              :display :block}
+                             {:display :none})}
+        [search-view/quick-search e! quick-search]]
+       [navigation-header-links e! user url]]
+      [header-extra-panel-container e! user quick-search extra-panel extra-panel-open?]]
+
+     [Drawer {:classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
+              :variant "permanent"
+              :anchor "left"
+              :open open?}
+      [page-listing e! open? user page]]]]])
 
 (defn login-header
   [e!]

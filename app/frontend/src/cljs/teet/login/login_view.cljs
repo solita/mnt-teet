@@ -10,7 +10,8 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.login.login-styles :as login-styles]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [clojure.string :as string]))
 
 (defn login-logo
   []
@@ -22,7 +23,7 @@
 (defn- dummy-login? []
   (let [host js/window.location.hostname]
     (or (= host "localhost")
-        (= host "dev-teet.solitacloud.fi"))))
+        (string/ends-with? host ".solitacloud.fi"))))
 
 (defn login-page-heading-style
   []

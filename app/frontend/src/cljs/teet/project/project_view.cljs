@@ -72,9 +72,6 @@
      (when repair-method
        [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])]))
 
-
-
-
 (defn heading-state
   [title select]
   [:div {:class (<class project-style/heading-state-style)}
