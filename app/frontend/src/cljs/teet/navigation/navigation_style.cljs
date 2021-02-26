@@ -25,9 +25,12 @@
 
 (defn toolbar
   []
-  {:display :flex
-   :justify-content :space-around
-   :min-height theme-spacing/appbar-height})
+  (with-meta
+    {:display :flex
+     :justify-content :space-around
+     :min-height theme-spacing/appbar-height}
+    (responsivity-styles/mobile-only-meta {:padding-left 0
+                                           :padding-right 0})))
 
 (defn maanteeamet-logo
   []
@@ -112,11 +115,14 @@
 
 (defn divider-style
   []
-  ^{:pseudo {:last-child {:border :none}}}
-  {:border-color theme-colors/gray-lighter
-   :border-width "0 1px 0 0"
-   :border-style "solid"
-   :padding "0 0.5rem 0 0.5rem"})
+  (with-meta
+    {:border-color theme-colors/gray-lighter
+     :border-width "0 1px 0 0"
+     :border-style "solid"
+     :padding "0 0.5rem 0 0.5rem"}
+    (merge {:pseudo {:last-child {:border :none}}}
+           (responsivity-styles/mobile-only-meta {:border-width 0
+                                                  :padding "0 0.25rem"}))))
 
 (defn logo-style
   []
@@ -128,9 +134,11 @@
    :max-height "100%"})
 
 (defn feedback-container-style []
-  (merge {:display :flex
-          :justify-content :center}
-         (divider-style)))
+  (with-meta
+    (merge {:display :flex
+            :justify-content :center}
+           (divider-style))
+    (responsivity-styles/mobile-only-meta {:border-width 0})))
 
 (defn navigator-left-panel-style
   []
