@@ -280,10 +280,10 @@
                     (merge file
                            (meta-model/modification-meta user)))]})
 
-(defn- export-zip [{:keys [db user export-fn export-bucket email-subject-message language]}]
+(defn- export-zip [{:keys [db user export-fn export-bucket email-subject-message] :as opts}]
   (if-let [email (:user/email (du/entity db (user-model/user-ref user)))]
     (future
-      (with-language language
+      (try
         (let [{:keys [filename input-stream]} (export-fn)
               s3-key (str (java.util.UUID/randomUUID))
               _response (integration-s3/put-object export-bucket
@@ -297,7 +297,9 @@
             :subject email-subject-message
             :body [{:type "text/plain; charset=utf-8"
                     :content (tr [:file :export-files-zip :email-body]
-                                 {:link (str "\n" download-url "\n")})}]}))))
+                                 {:link (str "\n" download-url "\n")})}]}))
+        (catch Throwable t
+          (log/error t "Error exporting zip" opts))))
     (db-api/fail! {:error :user-has-no-email})))
 
 (defcommand :file/export-task
@@ -309,13 +311,13 @@
    :config {export-bucket [:document-storage :export-bucket-name]}
    :pre [^{:error :configuration-missing}
          (some? export-bucket)]}
-  (export-zip {:db db
-               :user user
-               :language language
-               :export-bucket export-bucket
-               :export-fn #(file-export/task-zip db task-id)
-               :email-subject-message (tr [:file :export-files-zip :task-email-subject]
-                                          {:task (tr-enum (:task/type (du/entity db task-id)))})})
+  (with-language language
+    (export-zip {:db db
+                 :user user
+                 :export-bucket export-bucket
+                 :export-fn #(file-export/task-zip db task-id)
+                 :email-subject-message (tr [:file :export-files-zip :task-email-subject]
+                                            {:task (tr-enum (:task/type (du/entity db task-id)))})}))
   {:success? true})
 
 (defcommand :file/export-activity
@@ -327,11 +329,11 @@
    :config {export-bucket [:document-storage :export-bucket-name]}
    :pre [^{:error :configuration-missing}
          (some? export-bucket)]}
-  (export-zip {:db db
-               :user user
-               :language language
-               :export-bucket export-bucket
-               :export-fn #(file-export/activity-zip db activity-id)
-               :email-subject-message (tr [:file :export-files-zip :activity-email-subject]
-                                          {:task (tr-enum (:activity/name (du/entity db activity-id)))})})
+  (with-language language
+    (export-zip {:db db
+                 :user user
+                 :export-bucket export-bucket
+                 :export-fn #(file-export/activity-zip db activity-id)
+                 :email-subject-message (tr [:file :export-files-zip :activity-email-subject]
+                                            {:activity (tr-enum (:activity/name (du/entity db activity-id)))})}))
   {:success? true})
