@@ -218,7 +218,6 @@
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
-       (:thk.project/start-m p1)
        (not (excluded-project-types (:thk.project/repair-method p1)))))
 
 (defn- thk-project-tx [db url projects-csv]
