@@ -182,24 +182,21 @@
     (->> (mapv
            first
            (d/q '[:find (pull ?ac [:db/id
-                                   :meta/deleted?
-                                   :activity/name
                                    :activity/estimated-start-date
                                    :activity/estimated-end-date])
                   :in $ ?project
                   :where
                   [?project :thk.project/lifecycles ?lc]
                   [(missing? $ ?lc :meta/deleted?)]
+                  (not [?ac :activity/name :activity.name/land-acquisition])
                   [?lc :thk.lifecycle/activities ?ac]
                   [(missing? $ ?ac :meta/deleted?)]]
                 db [:thk.project/id project-id]))
          (some
            (fn [{:activity/keys [estimated-start-date
                                  estimated-end-date] :as activity}]
-             (when (and (date/date-within? application-date
-                                           [estimated-start-date estimated-end-date])
-                        (not= (get-in activity [:activity/name :db/ident])
-                              :activity.name/land-acquisition))
+             (when (date/date-within? application-date
+                                      [estimated-start-date estimated-end-date])
                activity)))
          :db/id)))
 
