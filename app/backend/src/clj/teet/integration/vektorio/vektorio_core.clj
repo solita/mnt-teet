@@ -75,6 +75,13 @@
       (d/transact conn {:tx-data [{:db/id (:db/id file-data)
                                    :vektorio/model-id vektorio-model-id}]}))))
 
+(defn delete-file-from-project! [db vektorio-config file-id]
+  ;; (du/retractions db file-id [:vektorio/model-id]) ;; won't need if we rely on the file entity being deleted immediately after
+  (let [params (d/pull db [:vektorio/project-id :vektorio/model-id] file-id)
+        response (vektorio-client/delete-model! vektorio-config params)]
+    (log/debug "delete response:" response)
+    response))
+
 (defn instant-login
   [vektorio-config]
   (let [vektorio-user-id (or

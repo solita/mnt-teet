@@ -42,6 +42,15 @@
                                     (cheshire/encode payload))})]
     (vektor-message-handler resp)))
 
+
+(defn vektor-delete!
+  [{:keys [config api-key]} {:keys [endpoint]}]
+  (let [{:keys [api-url]} config
+        headers {"x-vektor-viewer-api-key" api-key}
+        resp @(http/delete (str api-url endpoint)
+                           {:headers headers})]
+    (vektor-message-handler resp)))
+
 (defn vektor-get
   [{:keys [config api-key]} endpoint]
   (let [{:keys [api-url]} config
@@ -83,6 +92,9 @@
                                        "x-viewer-api-model-filepath" vektorio-filepath
                                        "Content-Type" "application/octet-stream"}
                              :payload model-file}))
+
+(defn delete-model! [vektorio-config {:keys [vektorio/model-id vektorio/project-id]}]
+  (vektor-delete! vektorio-config {:endpoint (str "projects/" project-id "/models/" model-id)}))
 
 (defn instant-login
   [vektorio-conf {:keys [user-id]}]
