@@ -83,6 +83,13 @@
     {:url (file-storage/upload-url key)
      :file (d/pull (:db-after res) '[*] file-id)}))
 
+(defn maybe-vektorio-delete! [db file-eid]
+  (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
+        vektorio-config (environment/config-value :vektorio)
+        project-eid (project-db/file-project-id db file-eid)]
+    (log/debug "delete corresponding model from vektorio? " (some? vektorio-enabled?))
+    (when vektorio-enabled?
+      (vektorio/delete-file-from-project! db vektorio-config project-eid file-eid))))
 
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
@@ -97,13 +104,8 @@
              (file-db/own-file? db user file-id))]
    :transact (let [file-delete-tx (if attached-to
                                     (file-db/delete-attachment db user file-id attached-to)
-                                    [(deletion-tx user file-id)])
-                   vektorio-enabled? (environment/feature-enabled? :vektorio)
-                   vektorio-config (environment/config-value :vektorio)]
-               (log/debug "delete-attachment: vektorio status" (some? vektorio-enabled?))
-               (when vektorio-enabled?
-                 (log/debug "delete-attachment: calling vektorio delete")
-                 (vektorio/delete-file-from-project! db vektorio-config file-id))
+                                    [(deletion-tx user file-id)])]
+               (maybe-vektorio-delete! db file-id)
                file-delete-tx)})
 
 (defcommand :file/upload-complete
@@ -255,13 +257,8 @@
    :authorization {:document/delete-document {:db/id file-id}}
    :transact (let [file-delete-tx (vec
                               (for [version-id (file-db/file-versions db file-id)]
-                                (deletion-tx user version-id)))
-                   vektorio-enabled? (environment/feature-enabled? :vektorio)
-                   vektorio-config (environment/config-value :vektorio)]
-                              (log/debug "delete-attachment: vektorio status" (some? vektorio-enabled?))
-               (when vektorio-enabled?
-                 (log/debug "delete-attachment: calling vektorio delete")
-                 (vektorio/delete-file-from-project! db vektorio-config file-id))
+                                (deletion-tx user version-id)))]
+               (maybe-vektorio-delete! db file-id)
                file-delete-tx)})
 
 (defcommand :file/seen

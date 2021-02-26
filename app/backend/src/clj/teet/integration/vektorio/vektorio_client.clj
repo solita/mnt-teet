@@ -96,6 +96,8 @@
                              :payload model-file}))
 
 (defn delete-model! [vektorio-config {:keys [vektorio/model-id vektorio/project-id]}]
+  (assert (some? project-id))
+  (assert (some? model-id))
   (vektor-delete! vektorio-config {:endpoint (str "projects/" project-id "/models/" model-id)}))
 
 (defn instant-login
