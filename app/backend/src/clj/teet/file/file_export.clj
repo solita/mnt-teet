@@ -54,55 +54,53 @@
   "Create zip from all the files in a task. Returns map with :filename for the zip
   and :input-stream where the zip file can be read from."
   [db task-id]
-  (with-language :et
-    (let [export-info
-          (d/pull db
-                  '[;; task filename code
-                    {:task/type [:filename/code]}
+  (let [export-info
+        (d/pull db
+                '[;; task filename code
+                  {:task/type [:filename/code]}
 
-                    {:activity/_tasks
-                     [;; activity filename code
-                      {:activity/name [:filename/code]}
+                  {:activity/_tasks
+                   [;; activity filename code
+                    {:activity/name [:filename/code]}
 
-                      {:thk.lifecycle/_activities
-                       [;; project THK id
-                        {:thk.project/_lifecycles [:thk.project/id]}]}]}]
-                  task-id)
-          filename (str "MA" (get-in export-info [:activity/_tasks 0
-                                                  :thk.lifecycle/_activities 0
-                                                  :thk.project/_lifecycles 0
-                                                  :thk.project/id])
-                        "_" (get-in export-info [:activity/_tasks 0 :activity/name :filename/code])
-                        "_TL"
-                        "_" (get-in export-info [:task/type :filename/code])
-                        ".zip")]
-      {:filename filename
-       :input-stream (zip-stream (task-zip-entries db task-id))})))
+                    {:thk.lifecycle/_activities
+                     [;; project THK id
+                      {:thk.project/_lifecycles [:thk.project/id]}]}]}]
+                task-id)
+        filename (str "MA" (get-in export-info [:activity/_tasks 0
+                                                :thk.lifecycle/_activities 0
+                                                :thk.project/_lifecycles 0
+                                                :thk.project/id])
+                      "_" (get-in export-info [:activity/_tasks 0 :activity/name :filename/code])
+                      "_TL"
+                      "_" (get-in export-info [:task/type :filename/code])
+                      ".zip")]
+    {:filename filename
+     :input-stream (zip-stream (task-zip-entries db task-id))}))
 
 (defn activity-zip
   "Create zip from all the files in all tasks for an activity.
   Returns map with :filename for the zip and :input-stream where the zip file can be read from."
   [db activity-id]
-  (with-language :et
-    (let [export-info
-          (d/pull db
-                  '[{:activity/name [:filename/code]}
-                    {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]
-                  activity-id)
-          filename (str "MA" (get-in export-info [:thk.lifecycle/_activities 0
-                                                  :thk.project/_lifecycles 0
-                                                  :thk.project/id])
-                        "_" (get-in export-info [:activity/name :filename/code])
-                        "_TL.zip")
-          tasks (d/q '[:find ?task ?code
-                       :where
-                       [?act :activity/tasks ?task]
-                       [(missing? $ ?task :meta/deleted?)]
-                       [?task :task/type ?type]
-                       [?type :filename/code ?code]
-                       :in $ ?act]
-                     db activity-id)]
-      {:filename filename
-       :input-stream (zip-stream (mapcat (fn [[task-id code]]
-                                           (task-zip-entries db task-id (str code "/")))
-                                         tasks))})))
+  (let [export-info
+        (d/pull db
+                '[{:activity/name [:filename/code]}
+                  {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]
+                activity-id)
+        filename (str "MA" (get-in export-info [:thk.lifecycle/_activities 0
+                                                :thk.project/_lifecycles 0
+                                                :thk.project/id])
+                      "_" (get-in export-info [:activity/name :filename/code])
+                      "_TL.zip")
+        tasks (d/q '[:find ?task ?code
+                     :where
+                     [?act :activity/tasks ?task]
+                     [(missing? $ ?task :meta/deleted?)]
+                     [?task :task/type ?type]
+                     [?type :filename/code ?code]
+                     :in $ ?act]
+                   db activity-id)]
+    {:filename filename
+     :input-stream (zip-stream (mapcat (fn [[task-id code]]
+                                         (task-zip-entries db task-id (str code "/")))
+                                       tasks))}))

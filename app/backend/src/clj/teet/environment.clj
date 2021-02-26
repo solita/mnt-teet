@@ -114,7 +114,8 @@
           :jwt-secret (->ssm [:api :jwt-secret])}
    :base-url (->ssm [:base-url])
    :api-url (->ssm [:api :url])
-   :document-storage {:bucket-name (->ssm [:s3 :document-bucket])}
+   :document-storage {:bucket-name (->ssm [:s3 :document-bucket])
+                      :export-bucket-name (->ssm [:s3 :export-bucket] nil)}
    :file {:allowed-suffixes (->ssm [:file :allowed-suffixes] #{} suffix-list)
           :image-suffixes (->ssm [:file :image-suffixes] #{} suffix-list)}
    :thk {:export-bucket-name (->ssm [:thk :teet-to-thk :bucket-name] nil)

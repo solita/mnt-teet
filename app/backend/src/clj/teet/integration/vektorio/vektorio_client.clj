@@ -4,6 +4,8 @@
             [cheshire.core :as cheshire]
             [teet.log :as log]))
 
+(def vektorio-api-key-header-name "x-vektor-viewer-api-key")
+
 (def succes-statuses
   #{200 201 204 203})
 
@@ -19,7 +21,7 @@
                                (log/error "Failed to decode Vektorio response: " (:body response))
                                (throw (ex-info "Failed to decode vektorio response"
                                                {:error :vektorio-response}))))]
-    (log/info "Vektorio response " response)
+    (log/info "Vektorio response " (assoc-in response [:opts :headers vektorio-api-key-header-name] "this is a secret 👀"))
     (if (request-success? (:status response))
       parsed-response
       (do
@@ -55,7 +57,7 @@
   [{:keys [config api-key]} endpoint]
   (let [{:keys [api-url]} config
         resp @(http/get (str api-url endpoint)
-                          {:headers {"x-vektor-viewer-api-key" api-key
+                          {:headers {vektorio-api-key-header-name api-key
                                      "Content-Type" "application/json"}})]
     (vektor-message-handler resp)))
 

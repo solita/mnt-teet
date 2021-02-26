@@ -22,7 +22,10 @@
             [teet.ui.project-context :as project-context]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
-            [teet.ui.util :refer [mapc]]))
+            [teet.ui.util :refer [mapc]]
+            [teet.project.project-info :as project-info]
+            [teet.project.project-model :as project-model]
+            [teet.common.common-controller :as common-controller]))
 
 (defn- svg-style
   [bottom?]
@@ -395,9 +398,43 @@
                          (override-project-navigator-dialog-options dialog))
       [project-navigator-dialog opts dialog]]))
 
+
+(defn project-header-style
+  []
+  {:padding "0 1.875rem 1.5rem 1.875rem"})
+
+(defn default-export-menu-items [project]
+  [(when (project-model/has-related-info? project)
+     {:label (tr [:project :download-related-info])
+      :icon [icons/file-cloud-download]
+      :link {:target :_blank
+             :href (common-controller/query-url :thk.project/download-related-info
+                                          (select-keys project [:thk.project/id]))}})])
+
+(defn project-header
+  ([project]
+   (project-header project nil))
+  ([project export-menu-items]
+   (let [thk-url (project-info/thk-url project)]
+     [:div {:class (<class project-header-style)}
+      [:div {:style {:display :flex
+                     :justify-content :space-between}}
+       [typography/Heading1 {:style {:margin-bottom 0}}
+        (project-model/get-column project :thk.project/project-name)]
+       [:div {:style {:display :flex
+                      :align-items :center}}
+        [common/context-menu
+         {:id "project-export-menu"
+          :label (tr [:project :export])
+          :icon [icons/file-cloud-download-outlined]
+          :items (concat export-menu-items (default-export-menu-items project))}]
+        [common/thk-link {:href thk-url
+                          :target "_blank"}
+         (str "THK" (:thk.project/id project))]]]])))
+
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths show-map?]
+  [{:keys [e! project app column-widths show-map? export-menu-items]
     :or {column-widths [3 6 :auto]
          show-map? true}
     :as opts} content]
@@ -405,32 +442,32 @@
     [project-context/provide
      {:db/id (:db/id project)
       :thk.project/id (:thk.project/id project)}
-     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-      [typography/Heading1 (or (:thk.project/project-name project)
-                               (:thk.project/name project))]
-      [project-navigator-dialogs opts]
-      [Paper {:class (<class task-style/task-page-paper-style)}
-       [Grid {:container true
-              :wrap :nowrap
-              :spacing   0}
-        [Grid {:item true
-               :xs nav-w
-               :class (<class navigation-style/navigator-left-panel-style)}
-         [project-menu/project-menu e! app project true]
-         [project-task-navigator e! project app true]]
-        [Grid {:item true
-               :xs content-w
-               :style (merge {:padding "2rem 1.5rem"
-                              :overflow-y :auto
-                              ;; content area should scroll, not the whole page because we
-                              ;; want map to stay in place without scrolling it
-                              }
-                             (when (not show-map?)
-                               {:flex 1}))}
-         content]
-        (when show-map?
-          [Grid {:item  true
-                 :xs :auto
-                 :style {:display :flex
-                         :flex    1}}
-           [project-map-view/project-map e! app project]])]]]]))
+     [:<>
+      [project-header project export-menu-items]
+      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
+       [project-navigator-dialogs opts]
+       [Paper {:class (<class task-style/task-page-paper-style)}
+        [Grid {:container true
+               :wrap :nowrap
+               :spacing   0}
+         [Grid {:item true
+                :xs nav-w
+                :class (<class navigation-style/navigator-left-panel-style)}
+          [project-menu/project-menu e! app project true]
+          [project-task-navigator e! project app true]]
+         [Grid {:item true
+                :xs content-w
+                :style (merge {:padding "2rem 1.5rem"
+                               :overflow-y :auto
+                               ;; content area should scroll, not the whole page because we
+                               ;; want map to stay in place without scrolling it
+                               }
+                              (when (not show-map?)
+                                {:flex 1}))}
+          content]
+         (when show-map?
+           [Grid {:item  true
+                  :xs :auto
+                  :style {:display :flex
+                          :flex    1}}
+            [project-map-view/project-map e! app project]])]]]]]))

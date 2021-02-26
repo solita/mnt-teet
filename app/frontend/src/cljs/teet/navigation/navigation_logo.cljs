@@ -2,9 +2,12 @@
 
 (defn logo-shield
   [{:keys [width height]
-    :or {width 170
-         height 90}}]
-  [:svg#Layer_1 {:style {:max-height "100%"}
+    :or {width "auto"
+         height "auto"}}]
+
+  [:svg#Layer_1 {:style {:max-height "100%"
+                         :width "auto"
+                         :height "100%"}
                  :height height
                  :width width
                  :version "1.1" :xmlns "http://www.w3.org/2000/svg"
@@ -510,7 +513,8 @@
 
 (defn maanteeamet-logo
   [login-page?]
-  [:div
+  [:div {:style {:display :flex
+                 :justify-content :flex-start}}
    [:a {:href (if login-page?
                 "/#/login"
                 "/#/")}
