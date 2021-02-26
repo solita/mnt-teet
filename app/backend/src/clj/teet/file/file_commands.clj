@@ -280,30 +280,24 @@
                     (merge file
                            (meta-model/modification-meta user)))]})
 
-(defn- export-task [db user task-id language export-bucket]
+(defn- export-zip [{:keys [db user export-fn export-bucket email-subject-message language]}]
   (if-let [email (:user/email (du/entity db (user-model/user-ref user)))]
     (future
-      (let [task (du/entity db task-id)
-            {:keys [filename input-stream]} (file-export/task-zip db task-id)
-            s3-key (str (java.util.UUID/randomUUID))
-            response (integration-s3/put-object export-bucket
-                                                s3-key
-                                                input-stream)
-            download-url (integration-s3/presigned-url {:content-disposition (str "attachment; filename=" filename)
-                                                        :expiration-seconds (* 24 60 60)}
-                                                       "GET" export-bucket s3-key)]
-        (log/info "Generated task " task-id " zip file " filename
-                  " to S3, bucket: " export-bucket ", file-key: " s3-key)
-        (log/info "DOWNLOAD URL: " download-url)
-        ;; email presigned url to user
-        (with-language language
+      (with-language language
+        (let [{:keys [filename input-stream]} (export-fn)
+              s3-key (str (java.util.UUID/randomUUID))
+              _response (integration-s3/put-object export-bucket
+                                                   s3-key
+                                                   input-stream)
+              download-url (integration-s3/presigned-url {:content-disposition (str "attachment; filename=" filename)
+                                                          :expiration-seconds (* 24 60 60)}
+                                                         "GET" export-bucket s3-key)]
           (integration-email/send-email!
            {:to email
-            :subject (tr [:task :export-files-zip :email-subject]
-                         {:task (tr-enum (:task/type task))})
+            :subject email-subject-message
             :body [{:type "text/plain; charset=utf-8"
-                    :content (tr [:task :export-files-zip :email-body]
-                                 {:link (str "\n\n" download-url "\n")})}]}))))
+                    :content (tr [:file :export-files-zip :email-body]
+                                 {:link (str "\n" download-url "\n")})}]}))))
     (db-api/fail! {:error :user-has-no-email})))
 
 (defcommand :file/export-task
@@ -315,6 +309,29 @@
    :config {export-bucket [:document-storage :export-bucket-name]}
    :pre [^{:error :configuration-missing}
          (some? export-bucket)]}
-  (do
-    (export-task db user task-id language export-bucket)
-    {:success? true}))
+  (export-zip {:db db
+               :user user
+               :language language
+               :export-bucket export-bucket
+               :export-fn #(file-export/task-zip db task-id)
+               :email-subject-message (tr [:file :export-files-zip :task-email-subject]
+                                          {:task (tr-enum (:task/type (du/entity db task-id)))})})
+  {:success? true})
+
+(defcommand :file/export-activity
+  {:doc "Export activity files as zip."
+   :context {:keys [user db]}
+   :payload {:keys [activity-id language]}
+   :project-id (project-db/activity-project-id db activity-id)
+   :authorization {:project/read-info {}}
+   :config {export-bucket [:document-storage :export-bucket-name]}
+   :pre [^{:error :configuration-missing}
+         (some? export-bucket)]}
+  (export-zip {:db db
+               :user user
+               :language language
+               :export-bucket export-bucket
+               :export-fn #(file-export/activity-zip db activity-id)
+               :email-subject-message (tr [:file :export-files-zip :activity-email-subject]
+                                          {:task (tr-enum (:activity/name (du/entity db activity-id)))})})
+  {:success? true})

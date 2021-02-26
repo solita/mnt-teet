@@ -503,7 +503,7 @@
 
 (defn- export-task-files [e! task-id]
   [{:id "export-task-files"
-    :label #(tr [:task :export-files-zip :button])
+    :label #(tr [:file :export-files-zip :task-button])
     :on-click #(e! (task-controller/->ExportFiles task-id))}])
 
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}

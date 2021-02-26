@@ -220,7 +220,7 @@
            :payload {:task-id (common-controller/->long task-id)
                      :language @localization/selected-language}
            :result-event (partial snackbar-controller/->OpenSnackBar
-                                  (tr [:task :export-files-zip :success])
+                                  (tr [:file :export-files-zip :task-success])
                                   :success)}))
   )
 
