@@ -4,7 +4,7 @@
             [teet.activity.activity-model :as activity-model]
             [teet.common.common-controller :as common-controller]
             [teet.file.file-controller]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr] :as localization]
             [teet.log :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.util.collection :as cu]
@@ -49,6 +49,7 @@
 (defrecord SavePartForm [close-event task-id form-data])
 (defrecord DeleteFilePart [close-event part-id])
 
+(defrecord ExportFiles [task-id])
 
 (extend-protocol t/Event
   SubmitResults
@@ -209,7 +210,19 @@
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :modal :add :edit :activity :lifecycle)})))
+           :query            (dissoc query :modal :add :edit :activity :lifecycle)}))
+
+  ExportFiles
+  (process-event [{:keys [task-id]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/export-task
+           :payload {:task-id (common-controller/->long task-id)
+                     :language @localization/selected-language}
+           :result-event (partial snackbar-controller/->OpenSnackBar
+                                  (tr [:file :export-files-zip :task-success])
+                                  :success)}))
+  )
 
 (defmethod common-controller/on-server-error :invalid-task-dates [err app]
   (let [error (-> err ex-data :error)]
