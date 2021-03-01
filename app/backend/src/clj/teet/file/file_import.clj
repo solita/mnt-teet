@@ -71,6 +71,9 @@
     (import-by-suffix ctx))
   ctx)
 
+
+
+;; entry point for s3 trigger event
 (defn import-uploaded-file [event]
   (future
     (ctx-> {:event event
@@ -83,3 +86,27 @@
            extract-project-from-filename
            import-file))
   "{\"success\": true}")
+
+(defn scheduled [db-connection]
+  (let [suffix (uploaded-file-suffix ctx)
+        vektorio-config (environment/config-value :vektorio)
+        extensions (or (get-in vektorio-config [:config :file-extensions])
+                       #{})
+        db (d/db db-connection)
+        ;; we'll go thrugh recently modified file entities for vektorio import candidates
+        files (file-db/recent-task-files db)]
+    
+    (doseq [{:keys [db/id vektorio/model-id file/name]} files
+            suffix (file-model/filename->suffix name)
+            file-eid id]
+      (when (get extensions suffix)
+        (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))
+
+
+;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
+(defn scheduled-file-import [event]
+  (future
+    (scheduled-file-import* 
+     (environment/datomic-connection)))
+  "{\"success\": true}")
+

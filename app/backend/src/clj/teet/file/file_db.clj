@@ -3,6 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.comment.comment-db :as comment-db]
+            [clj-time.core :as time]
+            [clj-time.coerce :as tc]
             [teet.log :as log]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.util.datomic :as du]
@@ -450,6 +452,24 @@
           [?p :thk.project/lifecycles ?l]
           :in $ ?uuid]
         db uuid)))
+
+;; used by vektorio scheduled upload retry
+(defn recent-task-files [db threshold-in-minutes]
+  (let [modified-threshold (->> threshold-in-minutes
+                                time/minutes
+                                (time/minus (time/now))
+                                tc/to-date)]
+    (log/debug "modified-threshold" modified-threshold)
+    (d/q '[:find ?f
+           :keys entity-id
+           :in $ ?modified-threshold
+           :where
+           [?f :file/id _]
+           [?f :meta/modified-at ?modified]
+           [(> ?modified ?modified-threshold)]
+           [(missing? $ ?f :vektorio/model-id)]
+           [(missing? $ ?f :meta/deleted?)]]
+         db modified-threshold)))
 
 (defn task-has-files?
   "Check if task currently has files. Doesn't include deleted files."
