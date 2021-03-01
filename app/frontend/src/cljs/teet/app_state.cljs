@@ -3,7 +3,7 @@
             [teet.road.road-model :as road-model]))
 
 (defonce app (r/atom {:config     {}
-                      :navigation {:open? true}
+                      :navigation {:open? false}
                       :map        {:road-buffer-meters (str road-model/default-road-buffer-meters)
                                    :layers [{:type :projects
                                              :id (random-uuid)}]}}))

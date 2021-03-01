@@ -570,7 +570,7 @@
   Optional keys:
   :menu-placement controls where the Popper component is placed
                   in relation to the button (detaults to bottom-end)"
-  [{:keys [label icon items menu-placement id]
+  [{:keys [label icon items menu-placement id class]
     :or {menu-placement "bottom-end"}}]
   (r/with-let [open? (r/atom false)
                toggle! #(swap! open? not)
@@ -583,7 +583,9 @@
         :end-icon (r/as-element icon)
         :on-click toggle!
         :ref set-anchor!}
-       (when id {:id id}))
+       (when id {:id id})
+       (when class
+         {:class class}))
       label]
      [Popper {:open @open?
               :anchor-el @anchor

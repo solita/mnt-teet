@@ -263,10 +263,16 @@
            (when (not-reviewed-status? status)
              [:div (tr [:activity :waiting-for-submission])])))]))
 
+(defn- export-activity-files [e! activity-id]
+  [{:id "export-activity-files"
+    :label #(tr [:file :export-files-zip :activity-button])
+    :on-click #(e! (activity-controller/->ExportFiles activity-id))}])
+
 (defn activity-page [e! {:keys [params] :as app} project]
   [project-navigator-view/project-navigator-with-content
    {:e! e!
     :project project
-    :app app}
+    :app app
+    :export-menu-items (export-activity-files e! (:activity params))}
 
    [activity-content e! params project]])

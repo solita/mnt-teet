@@ -129,7 +129,7 @@
                               (project-controller/project-setup-step app)
                               (get-in app [:query :configure]))]
     [:div {:class (<class project-style/project-page-structure)}
-     [project-header project]
+     [project-navigator-view/project-header project]
      [:div {:class (<class project-style/project-map-container)}
                                         ;[project-map-view/project-map e! app project]
       (project-map-view/create-project-map e! app project)
@@ -716,7 +716,7 @@
     [project-context/provide
      (select-keys project [:db/id :thk.project/id])
      [:<>
-      [project-header project export-menu-items]
+      [project-navigator-view/project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true

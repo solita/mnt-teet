@@ -9,6 +9,13 @@ describe("Task files", function() {
             })
     })
 
+    it("shows the task export menu item", function() {
+        cy.dummyLogin("Danny")
+        cy.visit(this.taskURL)
+        cy.get("#project-export-menu").click()
+        cy.get("#export-task-files").should("exist")
+    })
+
     it("Can upload files to task", function() {
         cy.dummyLogin("Danny")
         cy.visit(this.taskURL)

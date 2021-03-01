@@ -1,6 +1,7 @@
 {:linters
  {:unresolved-symbol
-  {:exclude [(teet.db-api.core/defcommand)
+  {:level :warning
+   :exclude [(teet.db-api.core/defcommand)
              (teet.db-api.core/defquery)
              (teet.db-api.core/defrequest*)
              (teet.integration.integration-context/defstep)]}}

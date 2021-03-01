@@ -725,6 +725,19 @@
   "Are you sure you want to delete all the versions of this file?",
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
+  :export-files-zip
+  {:activity-button "Activity related documents",
+   :task-button "Task related documents",
+   :activity-success
+   "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
+   :task-success
+   "Documents related to the task are exported. A link to the documents will be emailed to you shortly",
+   :activity-email-subject
+   "The export of activity-related documents has ended",
+   :task-email-subject
+   "The export of task-related documents has ended",
+   :email-body
+   "Download from: \n{link}\nThe link is valid for 24 hours."},
   :replace-dialog-title "Upload new version ",
   :edit-info "Last edited {date} by {author}",
   :other-versions "Other versions",

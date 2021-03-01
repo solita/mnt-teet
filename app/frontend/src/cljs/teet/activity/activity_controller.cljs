@@ -4,7 +4,8 @@
             [teet.localization :refer [tr]]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.task.task-controller :as task-controller]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [teet.localization :as localization]))
 
 (defmethod common-controller/on-server-error :conflicting-activities [err app]
   (let [error (-> err ex-data :error)]
@@ -20,6 +21,8 @@
 
 (defrecord SubmitResults []) ; submit activity for review
 (defrecord Review [status]) ; review results
+
+(defrecord ExportFiles [activity-id])
 
 (extend-protocol t/Event
   UpdateActivityForm
@@ -90,7 +93,17 @@
            :command :activity/review
            :payload {:activity-id (common-controller/->long (:activity status))
                      :status (:status status)}
-           :result-event common-controller/->Refresh})))
+           :result-event common-controller/->Refresh}))
+
+  ExportFiles
+  (process-event [{activity-id :activity-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/export-activity
+           :payload {:activity-id (common-controller/->long activity-id)
+                     :language @localization/selected-language}
+           :result-event (partial snackbar-controller/->OpenSnackBar
+                                  (tr [:file :export-files-zip :activity-success]) :success)})))
 
 
 (defmethod common-controller/on-server-error :invalid-activity-dates [err app]

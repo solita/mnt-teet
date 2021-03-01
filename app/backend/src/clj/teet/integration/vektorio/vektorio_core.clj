@@ -30,6 +30,7 @@
   [conn vektor-config file-eid]
   (let [db (d/db conn)
         project-id (project-db/file-project-id db file-eid)]
+    (log/info "Ensure the project exists in vektorio for project:" project-id)
     (if-let [project-vektorio-id (:vektorio/project-id (d/pull db [:vektorio/project-id] project-id))]
       project-vektorio-id
       (create-project-in-vektorio! conn vektor-config project-id))))
@@ -63,16 +64,17 @@
         project-vektor-id (ensure-project-vektorio-id! conn vektor-config file-id)
         file-data (d/pull db '[:file/name :db/id :file/s3-key] file-id)
         response (vektorio-client/add-model-to-project! vektor-config {:project-id project-vektor-id
-                                                              :model-file (integration-s3/get-object (file-storage/storage-bucket)
-                                                                                                     (:file/s3-key file-data))
-                                                              :vektorio-filename (vektorio-filename db file-id)
-                                                              :vektorio-filepath (vektorio-filepath db file-id)})
+                                                                       :model-file (integration-s3/get-object (file-storage/storage-bucket)
+                                                                                                              (:file/s3-key file-data))
+                                                                       :vektorio-filename (vektorio-filename db file-id)
+                                                                       :vektorio-filepath (vektorio-filepath db file-id)})
         vektorio-model-id (str (:id response))]
+    (log/info "Model id from vektorio response:" vektorio-model-id)
     (if-not (some? vektorio-model-id)
       (throw (ex-info "No model id in Vektorio response"
                       {:response response
                        :error :no-model-id-in-response}))
-      (d/transact conn {:tx-data [{:db/id (:db/id file-id)
+      (d/transact conn {:tx-data [{:db/id (:db/id file-data)
                                    :vektorio/model-id vektorio-model-id}]}))))
 
 (defn instant-login

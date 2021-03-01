@@ -4,6 +4,7 @@
             [teet.log :as log]))
 
 (defrecord ToggleDrawer [])
+(defrecord CloseDrawer [])
 (defrecord GoToLogin [])
 (defrecord ToggleExtraPanel [extra-panel])
 (defrecord CloseExtraPanel [])
@@ -12,6 +13,10 @@
   ToggleDrawer
   (process-event [_ app]
     (update-in app [:navigation :open?] not))
+
+  CloseDrawer
+  (process-event [_ app]
+    (assoc-in app [:navigation :open?] false))
 
   GoToLogin
   (process-event [_ app]
