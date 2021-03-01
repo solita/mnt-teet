@@ -14,6 +14,8 @@
             [teet.util.collection :as cu]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.project.task-model :as task-model]
+            [teet.environment :as environment]
+            [teet.integration.vektorio.vektorio-core :as vektorio]
             [teet.file.file-export :as file-export]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.integration.integration-email :as integration-email]
@@ -81,6 +83,13 @@
     {:url (file-storage/upload-url key)
      :file (d/pull (:db-after res) '[*] file-id)}))
 
+(defn maybe-vektorio-delete! [db file-eid]
+  (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
+        vektorio-config (environment/config-value :vektorio)
+        project-eid (project-db/file-project-id db file-eid)]
+    (log/debug "delete corresponding model from vektorio? " (some? vektorio-enabled?))
+    (when vektorio-enabled?
+      (vektorio/delete-file-from-project! db vektorio-config project-eid file-eid))))
 
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
@@ -88,11 +97,16 @@
    :payload {:keys [file-id attached-to]}
    :project-id nil
    :authorization {}
+   ;; this command has modal behaviour depending on whether attached-to tuple is supplied, or nil.
+   ;; if it is supplied, permission check and delete-attachment call go to the multimethod that
+   ;; will do a permission check depending on the attachment type.
    :pre [(or attached-to
              (file-db/own-file? db user file-id))]
-   :transact (if attached-to
-               (file-db/delete-attachment db user file-id attached-to)
-               [(deletion-tx user file-id)])})
+   :transact (let [file-delete-tx (if attached-to
+                                    (file-db/delete-attachment db user file-id attached-to)
+                                    [(deletion-tx user file-id)])]
+               (maybe-vektorio-delete! db file-id)
+               file-delete-tx)})
 
 (defcommand :file/upload-complete
   {:doc "Mark file upload as complete"
@@ -241,9 +255,11 @@
    :payload {:keys [file-id]}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
-   :transact (vec
-              (for [version-id (file-db/file-versions db file-id)]
-                (deletion-tx user version-id)))})
+   :transact (let [file-delete-tx (vec
+                              (for [version-id (file-db/file-versions db file-id)]
+                                (deletion-tx user version-id)))]
+               (maybe-vektorio-delete! db file-id)
+               file-delete-tx)})
 
 (defcommand :file/seen
   {:doc "Mark that I have seen this file"

@@ -61,7 +61,6 @@
     common-controller/refresh-fx))
 
 (extend-protocol t/Event
-
   DeleteFile
   (process-event [{file-id :file-id} {params :params :as app}]
     (t/fx app
@@ -77,6 +76,7 @@
 
   DeleteAttachment
   (process-event [{:keys [file-id on-success-event attached-to success-message]} app]
+    ;; attached-to is a keyword-id pair such as [:meeting-decision id]
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/delete-attachment
