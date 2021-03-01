@@ -82,8 +82,11 @@
   (let [params (merge
                 (d/pull db [:vektorio/model-id] file-eid)
                 (d/pull db [:vektorio/project-id ] project-eid))
-        response (vektorio-client/delete-model! vektorio-config params)]
-    (log/debug "delete response:" response)
+        response (if (not= 2 (count params))
+                   (log/info "skipping vektorio delete due to missing model/project ids for file" file-eid)
+                   (vektorio-client/delete-model! vektorio-config params))]
+    (when response
+      (log/info "successfully deleted vektorio model for file" file-eid))
     response))
 
 (defn instant-login
