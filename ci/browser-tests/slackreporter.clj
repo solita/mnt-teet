@@ -3,7 +3,7 @@
 (require '[cheshire.core :as cheshire])
 (require '[clojure.java.shell :as sh])
 (require '[clojure.string :as str])
-(require '[org.httpkit.client :as client])
+(require '[org.httpkit.client :as http])
 (require '[clojure.walk :as walk])
 
 (defn read-report [f]
@@ -76,6 +76,6 @@
       stats (stats reports)]
   (when-not (success? stats)
     (let [url (webhook-url)]
-      @(client/post url {:headers {"Content-Type" "application/json"}
+      @(http/post url {:headers {"Content-Type" "application/json"}
                          :body (cheshire/encode (format-slack-message reports))})
       "ok")))

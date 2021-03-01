@@ -7,7 +7,7 @@
             [clojure.zip :as zip]
             [teet.log :as log]
             [teet.environment :as environment]
-            [org.httpkit.client :as client])
+            [org.httpkit.client :as http])
   (:import (java.util UUID)))
 
 (defn- valid-header-system? [system]
@@ -109,7 +109,7 @@
 (defn perform-request [url request-xml]
   (maybe-log-request request-xml)
   (-> url
-      (client/post {:body request-xml
+      (http/post {:body request-xml
                     :as :stream
                     :headers {"Content-Type" "text/xml; charset=UTF-8"}})
       deref

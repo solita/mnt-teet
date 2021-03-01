@@ -1,6 +1,6 @@
 (ns teet.map.map-services
   "Client code to call WFS/WMS services"
-  (:require [org.httpkit.client :as client]
+  (:require [org.httpkit.client :as http]
             [clojure.string :as str]
             [clojure.xml :as xml]
             [clojure.zip :as zip]
@@ -105,7 +105,7 @@
                                 :TYPENAME "ms:teeosa"
                                 :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
                                (dissoc query-params ::parse-feature))
-           request-delay (client/get wfs-url
+           request-delay (http/get wfs-url
                                      {:connect-timeout 10000
                                       :query-params query-params
                                       :as :stream})]
@@ -122,7 +122,7 @@
                    ogc-filter]]]
         payload-xml (str "<?xml version=\"1.0\"?>\n"
                          (hiccup/html payload))
-        request-delay (client/post wfs-url
+        request-delay (http/post wfs-url
                                    {:as :stream
                                     :body payload-xml
                                     :headers {"Content-Type" "text/xml"}})]
@@ -176,7 +176,7 @@
 (defn fetch-capabilities [url service]
   (log/info "fetch" service "capabilities from" url)
   (let [{:keys [status body] :as response}
-        @(client/get url
+        @(http/get url
                      {:as :stream
                       :query-params {:version "1.3.0"
                                      :request "GetCapabilities"

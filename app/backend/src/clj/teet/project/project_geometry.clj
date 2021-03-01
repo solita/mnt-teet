@@ -1,7 +1,7 @@
 (ns teet.project.project-geometry
   "Code for working with project geometries stored in PostgreSQL.
   Provides functions for calling the PostgREST API."
-  (:require [org.httpkit.client :as client]
+  (:require [org.httpkit.client :as http]
             [teet.auth.jwt-token :as jwt-token]
             [clojure.string :as str]
             [cheshire.core :as cheshire]
@@ -39,7 +39,7 @@
                         :tooltip (or project-name name)
                         :geometry_wkt (geo/line-string-to-wkt geometry)})]
     (when (not-empty request-body)
-      (let [response @(client/post
+      (let [response @(http/post
                        (str api-url "/rpc/store_entity_info")
                        {:headers {"Content-Type" "application/json"
                                   "Authorization"
