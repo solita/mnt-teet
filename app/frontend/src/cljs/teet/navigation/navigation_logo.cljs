@@ -4,7 +4,6 @@
   [{:keys [width height]
     :or {width "100%"
          height "100%"}}]
-
   [:svg#Layer_1 {:style {:max-height "100%"
                          :width "100%"
                          :height "100%"}
