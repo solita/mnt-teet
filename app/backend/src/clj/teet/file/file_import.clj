@@ -96,7 +96,8 @@
         vektorio-handled-file-extensions (or (get-in vektorio-config [:config :file-extensions])
                        #{})
         db (d/db db-connection)
-        ;; we'll go thrugh recently modified file entities for vektorio import candidates
+        ;; we'll go thrugh model-idless file entities that haven't been just modified,
+        ;; for vektorio import candidates
         files (file-db/recent-task-files-without-model-id db threshold-in-minutes)]
     
     (doseq [{:keys [file-eid file-name]} files
