@@ -367,4 +367,5 @@
         retract-tx (vec (for [{:keys [user-eid email]} users-result]
                           [:db/retract user-eid :user/email email]))]    
     (d/transact db-connection {:tx-data retract-tx})
-    (log/info "Removed email address from" (count retract-tx) "users")))
+    (log/info "Removed email address from" (count retract-tx) "users")
+    "{\"success\": true}"))
