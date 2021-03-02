@@ -89,13 +89,6 @@
            import-file))
   "{\"success\": true}")
 
-;; todo
-;;  - ion config (done)
-;;  - file db query (done)
-;;  - cf template and schedule rule (written but not deployed or merged)
-;;  - top level fn to look over queried file entities and call import for model-idless ones (wip)
-;;  - test (wip)
-
 (defn scheduled-file-import* [db-connection]
   (log/info "scheduled vektor import starting")
   (let [threshold-in-minutes 10
@@ -104,7 +97,7 @@
                        #{})
         db (d/db db-connection)
         ;; we'll go thrugh recently modified file entities for vektorio import candidates
-        files (file-db/recent-task-files-without-model-id threshold-in-minutes db)]
+        files (file-db/recent-task-files-without-model-id db threshold-in-minutes)]
     
     (doseq [{:keys [file-eid file-name]} files
             suffix (file-model/filename->suffix name)]
