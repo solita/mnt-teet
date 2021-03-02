@@ -60,5 +60,6 @@
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
-  {:fgroups []
+  {:asset-type-library (asset-type-library (environment/asset-db))
+   :fgroups []
    :project (project-db/project-by-id db [:thk.project/id project-id])})

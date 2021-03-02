@@ -48,4 +48,18 @@
  {:db/ident :attribute/parent
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one
-  :db/doc "The fclass or ctype this attribute belongs to"}]
+  :db/doc "The fclass or ctype this attribute belongs to"}
+
+ ;; Base attributes of an asset
+ {:db/ident :asset/fclass
+  :db/doc "The feature class of this asset."
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :asset/components
+  :db/doc "Components of this asset (or component)"
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/many
+  :db/isComponent true}
+
+ ]
