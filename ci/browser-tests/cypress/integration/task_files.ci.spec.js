@@ -1,6 +1,6 @@
 describe("Task files", function() {
 
-    before(() => {
+    beforeEach(() => {
         cy.request({method: "POST",
                     url: "/testsetup/task",
                     body: {"project-name": "TASK TESTING"}})
