@@ -13,7 +13,20 @@ describe("Task files", function() {
         cy.dummyLogin("Danny")
         cy.visit(this.taskURL)
         cy.get("#project-export-menu").click()
+        cy.get("#export-task-files").should("not.exist")
+
+        cy.get("[data-cy=task-file-upload]").click()
+        cy.uploadFile({inputSelector: "input[id=files-field]",
+                       fixturePath: "text_file.jpg",
+                       mimeType: "image/jpeg",
+                       fileName: "somefile.jpeg"})
+        cy.get("button[type=submit]").click()
+        cy.get("[data-cy=task-file-list] a", {timeout: 30000}).contains("somefile")
+
+        // export menu item is present now
+        cy.get("#project-export-menu").click()
         cy.get("#export-task-files").should("exist")
+
     })
 
     it("Can upload files to task", function() {
@@ -90,4 +103,5 @@ describe("Task files", function() {
         cy.get(".file-identifying-info[data-version=1]").should("not.exist")
         cy.get(".file-identifying-info[data-version=2]").should("exist")
     })
+
 })
