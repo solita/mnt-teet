@@ -3,7 +3,8 @@
             [datomic.client.api :as d]
             [teet.environment :as environment]
             [teet.util.datomic :as du]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.project.project-db :as project-db]))
 
 (def ctype-pattern
   '[*
@@ -59,4 +60,5 @@
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
-  {:fgroups []})
+  {:fgroups []
+   :project (project-db/project-by-id db [:thk.project/id project-id])})

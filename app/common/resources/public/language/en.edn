@@ -726,8 +726,8 @@
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
   :export-files-zip
-  {:activity-button "Activity related documents",
-   :task-button "Task related documents",
+  {:activity-button "Documents related to the activity ",
+   :task-button "Documents related to the task",
    :activity-success
    "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
    :task-success
@@ -1009,14 +1009,15 @@
   :add-activity
   #:thk.lifecycle-type{:construction "Add phase", :design "Add phase"},
   :tabs
-  {:activities "Activities",
+  {:restrictions "Restrictions",
    :details "Details",
    :land "Land",
-   :people "People",
-   :restrictions "Restrictions",
    :road-objects "Road objects",
+   :activities "Activities",
    :meetings "Meetings",
-   :cooperation "Cooperation"},
+   :cooperation "Cooperation",
+   :people "People",
+   :cost-items "Cost items"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :download-related-info "Download related info",
