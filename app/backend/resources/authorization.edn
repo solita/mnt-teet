@@ -24,6 +24,11 @@
   :external-consultant :full,
   :authenticated-guest :read,
   :guest :read},
+ :cost-items/add-cost-items
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :link,
+  :external-consultant :link},
  :projects/projects-search
  {:admin :read,
   :manager :read,
@@ -66,6 +71,16 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :full},
+ :cost-items/edit-cost-items
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :link,
+  :external-consultant :link},
+ :cost-items/finances-listing
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full},
  :land/see-official-message-reply-subject-from-land-owner
  {:admin :full, :manager :full, :internal-consultant :full},
  :task/assign-task
@@ -85,7 +100,6 @@
   :internal-consultant :link,
   :external-consultant :link,
   :authenticated-guest :link},
- :activity/delete-activity-with-files {},
  :land/create-land-acquisition {:admin :full, :manager :full},
  :project/edit-permissions
  {:admin :full, :manager :full, :external-consultant :link},
@@ -172,7 +186,6 @@
   :manager :full,
   :internal-consultant :link,
   :external-consultant :link},
- :activity/delete-activity-without-files {:admin :full},
  :activity/activity-info
  {:admin :full,
   :manager :full,
@@ -181,6 +194,11 @@
   :authenticated-guest :read,
   :guest :read},
  :activity/create-activity {:admin :full, :manager :full},
+ :cost-items/materials-listing
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full},
  :project/view-internal-comments
  {:admin :full, :manager :full, :internal-consultant :full},
  :cooperation/view-cooperation-page
@@ -200,6 +218,11 @@
   :external-consultant :link},
  :cooperation/application-approval
  {:admin :full, :manager :full, :internal-consultant :full},
+ :cost-items/delete-cost-items
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :link,
+  :external-consultant :link},
  :task/change-task-status
  {:admin :full,
   :manager :full,
@@ -252,6 +275,11 @@
   :guest :read},
  :land/view-personal-information-of-estate-owners
  {:admin :full, :manager :link},
+ :cost-items/cost-items
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full},
  :document/view-document
  {:admin :full,
   :manager :full,
