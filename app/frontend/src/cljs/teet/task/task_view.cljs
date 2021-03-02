@@ -501,10 +501,11 @@
      {:max-date (:activity/estimated-end-date activity)
       :min-date (:activity/estimated-start-date activity)}]))
 
-(defn- export-task-files [e! task-id]
-  [{:id "export-task-files"
-    :label #(tr [:file :export-files-zip :task-button])
-    :on-click #(e! (task-controller/->ExportFiles task-id))}])
+(defn- export-task-files [e! {task-id :db/id files :task/files}]
+  (when (seq files)
+    [{:id "export-task-files"
+      :label #(tr [:file :export-files-zip :task-button])
+      :on-click #(e! (task-controller/->ExportFiles task-id))}]))
 
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
@@ -513,18 +514,19 @@
         (cu/find-> project
                    :thk.project/lifecycles some?
                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
-                                               (du/find-by-id task-id tasks)))]
+                                               (du/find-by-id task-id tasks)))
+        task (project-model/task-by-id project task-id)]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
       :app app
-      :export-menu-items (export-task-files e! task-id)}
+      :export-menu-items (export-task-files e! task)}
 
      [task-page-content
       e!
       app
       activity
-      (project-model/task-by-id project task-id)
+      task
       (= (:db/id user)
          (:db/id activity-manager))
       (:files-form project)]]))
