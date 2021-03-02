@@ -21,3 +21,11 @@ Version numbering for TEET is `43.yy.mm.N` where
 
 So the first version of january 2020 would be `43.20.01.1`.
 Versions are made into branches named `v<version>`.
+
+## Feature flags
+
+When adding a new feature flag:
+
+- Add the new feature flag to the local config file in the repository which contains it.
+- Add info about the feature flag to Confluence, under 2_0_Environments > Feature flags.
+- Ensure the feature flag is properly added to other environments via SSM parameters.
