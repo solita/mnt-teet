@@ -354,3 +354,17 @@
   (future
     (restore* event))
   "{\"success\": true}")
+
+
+;; ion :delete-email-addresses-from-datomic entry point
+;; 
+(defn delete-user-email-addresses [_]
+  (let [db-connection (environment/datomic-connection)
+        db (d/db db-connection)
+        users-result (d/q '[:find ?u ?email :keys user-eid email
+                            :where [?u :user/email ?email]]
+                          db)
+        retract-tx (vec (for [{:keys [user-eid email]} users-result]
+                          [:db/retract user-eid :user/email email]))]    
+    (d/transact db-connection {:tx-data retract-tx})
+    (log/info "Removed email address from" (count retract-tx) "users")))
