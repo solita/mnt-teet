@@ -89,7 +89,7 @@
         project-eid (try
                       (project-db/file-project-id db file-eid)
                       (catch clojure.lang.ExceptionInfo e
-                        nil))]
+                        (log/info "didn't find a project-id for file being deleted so skipping vektorio delete, file eid:" file-eid)))]
     (when project-eid
       (log/debug "delete corresponding model from vektorio? " (some? vektorio-enabled?))
       (when vektorio-enabled?
