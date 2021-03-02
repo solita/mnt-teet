@@ -14,7 +14,8 @@
             [teet.ui.typography :as typography]
             [teet.localization :refer [tr]]
             [teet.ui.project-context :as project-context]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -69,7 +70,9 @@
    {:name :cost-items
     :label [:project :tabs :cost-items]
     :navigate {:page :cost-items}
-    :hotkey "8"}
+    :hotkey "8"
+    :feature-flag :cost-items
+    :authorization :cost-items/cost-items}
    {:name :cooperation
     :label [:project :tabs :cooperation]
     :navigate {:page :cooperation}
@@ -120,7 +123,7 @@
         [:div {:class (<class project-style/project-view-selection-item-label)} (tr label)]
         [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
 
-(defn project-menu [_e! _app _project _dark-theme?]
+(defn project-menu [_e! _app project _dark-theme?]
   (let [open? (r/atom false)
         anchor-el (atom nil)
         toggle-open! #(do
@@ -155,9 +158,14 @@
                 [Paper
                  [MenuList {}
                   (doall
-                   (for [{ff :feature-flag :as tab} project-tabs-layout
-                         :when (or (nil? ff)
-                                   (common-controller/feature-enabled? ff))]
+                   (for [{ff :feature-flag
+                          authz :authorization :as tab} project-tabs-layout
+                         :when (and (or (nil? ff)
+                                        (common-controller/feature-enabled? ff))
+                                    (or (nil? authz)
+                                        (authorization-check/authorized?
+                                         {:functionality authz
+                                          :project-id (:db/id project)})))]
                      ^{:key (name (:name tab))}
                      [project-tabs-item
                       e! toggle-open! (= tab-name (:name tab))
