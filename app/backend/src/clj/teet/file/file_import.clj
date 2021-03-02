@@ -7,6 +7,8 @@
             [teet.log :as log]
             [teet.environment :as environment]
             [teet.project.project-model :as project-model]
+            [teet.file.file-db :as file-db]
+            [teet.file.file-model :as file-model]
             [datomic.client.api :as d]
             [teet.integration.vektorio.vektorio-core :as vektorio-core]))
 
@@ -87,20 +89,30 @@
            import-file))
   "{\"success\": true}")
 
-(defn scheduled [db-connection]
-  (let [suffix (uploaded-file-suffix ctx)
+;; todo
+;;  - ion config (done)
+;;  - file db query (done)
+;;  - cf template and schedule rule (written but not deployed or merged)
+;;  - top level fn to look over queried file entities and call import for model-idless ones (wip)
+;;  - test (wip)
+
+(defn scheduled-file-import* [db-connection]
+  (log/info "scheduled vektor import starting")
+  (let [threshold-in-minutes 10
         vektorio-config (environment/config-value :vektorio)
-        extensions (or (get-in vektorio-config [:config :file-extensions])
+        vektorio-handled-file-extensions (or (get-in vektorio-config [:config :file-extensions])
                        #{})
         db (d/db db-connection)
         ;; we'll go thrugh recently modified file entities for vektorio import candidates
-        files (file-db/recent-task-files db)]
+        files (file-db/recent-task-files-without-model-id threshold-in-minutes db)]
     
-    (doseq [{:keys [db/id vektorio/model-id file/name]} files
-            suffix (file-model/filename->suffix name)
-            file-eid id]
-      (when (get extensions suffix)
-        (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))
+    (doseq [{:keys [file-eid file-name]} files
+            suffix (file-model/filename->suffix name)]
+      (when (get vektorio-handled-file-extensions suffix)
+        (try
+          (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
+          (catch clojure.lang.ExceptionInfo e
+            (log/info "Upload errored on file" file-eid (str "(name:" file-name ")"))))))))
 
 
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports

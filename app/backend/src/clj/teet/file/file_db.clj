@@ -453,20 +453,23 @@
           :in $ ?uuid]
         db uuid)))
 
-;; used by vektorio scheduled upload retry
-(defn recent-task-files [db threshold-in-minutes]
+;; used by vektorio scheduled upload retry. considering only files that are older than threshold,
+;; so we don't step on top of normally (by s3 trigger) started uploads.
+(defn recent-task-files-without-model-id [db threshold-in-minutes]
   (let [modified-threshold (->> threshold-in-minutes
                                 time/minutes
                                 (time/minus (time/now))
                                 tc/to-date)]
     (log/debug "modified-threshold" modified-threshold)
-    (d/q '[:find ?f
-           :keys entity-id
+    (d/q '[:find ?f ?name ?mctime
+           :keys file-eid file-name mctime
            :in $ ?modified-threshold
            :where
            [?f :file/id _]
-           [?f :meta/modified-at ?modified]
-           [(> ?modified ?modified-threshold)]
+           [?f :file/name ?name]
+           [?f :meta/created-at ?created]
+           [(get-else $ ?f :meta/modified-at ?created) ?mctime]
+           [(< ?mctime ?modified-threshold)]
            [(missing? $ ?f :vektorio/model-id)]
            [(missing? $ ?f :meta/deleted?)]]
          db modified-threshold)))
