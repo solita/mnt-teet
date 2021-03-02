@@ -373,7 +373,11 @@
 
   :query  function from input search text to map that specifies
           what query is to be run on the backend.
-          The returned map must contain :query and :args.
+          The returned map must contain :query and :args or be a function
+          that can directly return results.
+
+          If return value of query is a function, if is called to
+          return the new results.
 
          "
   [{:keys [e! value on-change label required error
@@ -388,10 +392,11 @@
                               :open? false
                               :input ""})
                input-ref (atom nil)
+               set-ref! #(reset! input-ref %)
                on-key-down (partial arrow-navigation state on-change)]
     (let [{:keys [loading? results open? input highlight]} @state]
       [:<>
-       [TextField {:ref #(reset! input-ref %)
+       [TextField {:ref set-ref!
                    :label label
                    :show-label? show-label?
                    :required required
@@ -422,13 +427,20 @@
                                             :loading? loading?))
 
                                   (when loading?
-                                    (e! (->CompleteSearch (query t)
-                                                          (fn [results]
-                                                            (swap! state assoc
-                                                                   :loading? false
-                                                                   :open? true
-                                                                   :results results
-                                                                   :highlight (first results))))))))
+                                    (let [result-fn-or-query-map (query t)]
+                                      (if (fn? result-fn-or-query-map)
+                                        (let [results (result-fn-or-query-map)]
+                                          (swap! state merge {:loading? false
+                                                              :open? true
+                                                              :results results
+                                                              :highlight (first results)}))
+                                        (e! (->CompleteSearch result-fn-or-query-map
+                                                              (fn [results]
+                                                                (swap! state assoc
+                                                                       :loading? false
+                                                                       :open? true
+                                                                       :results results
+                                                                       :highlight (first results))))))))))
                    :input-button-click #(do
                                           (on-change nil)
                                           (swap! state assoc :input "")
