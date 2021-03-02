@@ -25,7 +25,9 @@
             [teet.ui.util :refer [mapc]]
             [teet.project.project-info :as project-info]
             [teet.project.project-model :as project-model]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.environment :as environment]
+            [taoensso.timbre :as log]))
 
 (defn- svg-style
   [bottom?]
@@ -428,6 +430,10 @@
           :label (tr [:project :export])
           :icon [icons/file-cloud-download-outlined]
           :items (concat export-menu-items (default-export-menu-items project))}]
+        (log/debug "instant-login: " (common-controller/query-url :vektorio/instant-login {:args (:project-id project)}))
+        [common/vertorio-link {:href (common-controller/query-url :vektorio/instant-login {:args (:project-id project)})
+                               :target "_blank"}
+         (str "BIM Models" (:thk.project/id project))]
         [common/thk-link {:href thk-url
                           :target "_blank"}
          (str "THK" (:thk.project/id project))]]]])))

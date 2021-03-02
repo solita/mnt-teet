@@ -86,34 +86,6 @@
              :href (common-controller/query-url :thk.project/download-related-info
                                           (select-keys project [:thk.project/id]))}})])
 
-(defn project-header
-  ([project]
-   (project-header project nil))
-  ([project export-menu-items]
-   (let [thk-url (project-info/thk-url project)
-         vector-io-url (project-info/vectorio-url (:db/id project))]
-     [:div {:class (<class project-header-style)}
-      [:div {:style {:display :flex
-                     :justify-content :space-between}}
-       [Heading1 {:style {:margin-bottom 0}}
-        (project-model/get-column project :thk.project/project-name)]
-       [:div {:style {:display :flex
-                      :align-items :center}}
-        [common/context-menu
-         {:id "project-export-menu"
-          :label (tr [:project :export])
-          :icon [icons/file-cloud-download-outlined]
-          :items (concat export-menu-items (default-export-menu-items project))}]
-        (when (and
-                (environment/config-value :enabled-features :vektorio)
-                (some? (:vektorio/project-id project)))
-          [common/vertorio-link {:href vector-io-url
-                                 :target "_blank"}
-           (str "BIM mudelid")])
-        [common/thk-link {:href thk-url
-                          :target "_blank"}
-         (str "THK" (:thk.project/id project))]]]])))
-
 (defn heading-state
   [title select]
   [:div {:class (<class project-style/heading-state-style)}

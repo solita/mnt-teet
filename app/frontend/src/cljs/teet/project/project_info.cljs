@@ -1,7 +1,8 @@
 (ns teet.project.project-info
   "UI components to show project info based on THK id."
   (:require [postgrest-ui.components.item-view :as item-view]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [taoensso.timbre :as log]))
 
 (defn- get-name [{name "name"}]
   name)
@@ -23,4 +24,7 @@
 (defn vectorio-url
   "BIN viewer with this project's models"
   [project-id]
-  (str (environment/config-value :vektorio :config :viewer-url) project-id))
+  (str (environment/config-value :vektorio :config :viewer-url) project-id)
+  (let [login-hash (vektorio-core/instant-login (environment/config-value :vektorio))]
+    (log/debug "login-hash " login-hash)))
+
