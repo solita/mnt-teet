@@ -51,3 +51,12 @@
    :unauthenticated? true
    :args _}
   (asset-type-library (environment/asset-db)))
+
+(defquery :asset/project-cost-items
+  {:doc "Query project cost items"
+   :context {:keys [db user]}
+   :args {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   ;; fixme: cost items authz
+   :authorization {:project/read-info {}}}
+  {:fgroups []})

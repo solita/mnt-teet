@@ -66,6 +66,10 @@
     :label [:project :tabs :road-objects]
     :navigate {:page :project :query {:tab "road"}}
     :hotkey "7"}
+   {:name :cost-items
+    :label [:project :tabs :cost-items]
+    :navigate {:page :cost-items}
+    :hotkey "8"}
    {:name :cooperation
     :label [:project :tabs :cooperation]
     :navigate {:page :cooperation}
