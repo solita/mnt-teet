@@ -1,6 +1,7 @@
 (ns teet.task.task-style
   (:require [teet.common.common-styles :as common-styles]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (defn task-status-container-style
   []
@@ -24,10 +25,12 @@
 
 (defn task-page-paper-style
   []
-  (merge (common-styles/content-paper-style)
-         {:display :flex
-          :flex    1
-          :max-height "calc(100vh - 250px)"}))
+  (with-meta
+    (merge (common-styles/content-paper-style)
+           {:display :flex
+            :height "calc(100vh - 260px)"})
+    (responsivity-styles/mobile-only-meta
+      {:height :auto})))
 
 (defn result-style
   []
