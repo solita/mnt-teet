@@ -63,7 +63,7 @@
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
             :description "Cleanup unreferenced deleted features"}
 
-           :delete-email-addresses-from-datomic
+           :delete-email-addresses
            {:fn teet.backup.backup-ion/delete-user-email-addresses
             :description "Delete user email addresses from user information stored in Datomic"}
 
