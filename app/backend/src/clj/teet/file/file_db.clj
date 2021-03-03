@@ -50,7 +50,7 @@
 
   This is used to implement custom permission checks in different kinds of meeting attachments.
   When permission check passes, they all make the same kind of deletion-tx for the file entity.
-  
+
   Default behaviour is to disallow and throw an exception.
 
   Dispatches on the on the first element of the \"attach\" parameter, which is a keyword-id pair such as [:meeting-decision id].
@@ -478,12 +478,26 @@
   "Check if task currently has files. Doesn't include deleted files."
   [db task-id]
   (boolean
-    (seq
-      (d/q '[:find ?f
+    (d/qseq '[:find ?f
+              :where
+              [?t :task/files ?f]
+              [(missing? $ ?f :meta/deleted?)]
+              (not-join [?f]
+                        [?replacement :file/previous-version ?f])
+              :in $ ?t]
+            db task-id)))
+
+(defn activity-has-files?
+  "Check if some task in activity has files. Doesn't include deleted tasks or files."
+  [db activity-id]
+  (boolean
+   (d/qseq '[:find ?f
              :where
-             [?t :task/files ?f]
+             [?act :activity/tasks ?task]
+             [(missing? $ ?task :meta/deleted?)]
+             [?task :task/files ?f]
              [(missing? $ ?f :meta/deleted?)]
              (not-join [?f]
-               [?replacement :file/previous-version ?f])
-             :in $ ?t]
-        db task-id))))
+                       [?replacement :file/previous-version ?f])
+             :in $ ?act]
+           db activity-id)))

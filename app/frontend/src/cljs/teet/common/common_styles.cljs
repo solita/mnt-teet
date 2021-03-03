@@ -231,7 +231,7 @@
 
 (defglobal global
   ;; media queries
-  [:body :html (merge body-1-regular {:height "100vh"})]
+  [:body :html (merge body-1-regular {:min-height "100vh"})]
   [:p {:margin 0}]
   [:p.paragraph {:margin-bottom "1rem"}]
   [:.body1-bold body-1-bold]
@@ -260,7 +260,7 @@
   [:a link-1]
   [:a.link2 link-2]
   [:a:hover {:text-decoration "none"}]
-  [:#teet-frontend {:height "100%"}]
+  [:#teet-frontend {:min-height "100vh"}]
   [:.mention
    [:textarea {:border :none}]
    [:.comment-textarea__control {:background-color theme-colors/white

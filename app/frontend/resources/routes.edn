@@ -165,6 +165,13 @@
                  :third-party-teet-id (uuid third-party)
                  :application-teet-id (uuid application)}}}
 
+ :cost-items
+ {:path "/projects/:project/cost-items"
+  :parent ::project
+  :view teet.asset.cost-items-view/cost-items-page
+  :state {:query :asset/project-cost-items
+          :args {:thk.project/id project}}}
+
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components

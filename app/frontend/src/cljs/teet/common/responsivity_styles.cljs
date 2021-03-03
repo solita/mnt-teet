@@ -1,7 +1,29 @@
 (ns teet.common.responsivity-styles
-  (:require [teet.theme.theme-colors :as theme-colors]))
+  (:require [teet.theme.theme-colors :as theme-colors]
+            [reagent.core :as r]))
 
-(def ^:const desktop-breakpoint "1024px")
+(def ^{:const true
+       :doc "Minimum browser window width that is considered wide for layout purposes."}
+  wide-display-cutoff-width 2200)
+
+(def ^:const desktop-cutoff-width 1024)
+
+(def ^:const desktop-breakpoint (str desktop-cutoff-width "px"))
+
+
+(defonce window-width
+         (let [width (r/atom js/document.body.clientWidth)]
+           (set! (.-onresize js/window)
+                 (fn [_]
+                   (reset! width js/document.body.clientWidth)))
+           width))
+
+(defn wide-display? []
+  (>= @window-width wide-display-cutoff-width))
+
+(defn mobile?
+  []
+  (>= desktop-cutoff-width @window-width))
 
 (defn mobile-only-meta
   [style]

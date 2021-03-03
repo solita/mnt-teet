@@ -222,21 +222,6 @@
    label
    [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
 
-(def ^{:const true
-       :doc "Minimum browser window width that is considered wide for layout purposes."}
-  wide-display-cutoff-width 2200)
-
-(defonce window-width
-  (let [width (r/atom js/document.body.clientWidth)]
-    (set! (.-onresize js/window)
-          (fn [_]
-            (reset! width js/document.body.clientWidth)))
-    width))
-
-
-(defn wide-display? []
-  (>= @window-width wide-display-cutoff-width))
-
 
 (defn estate-group-style
   []

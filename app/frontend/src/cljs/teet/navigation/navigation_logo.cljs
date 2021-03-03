@@ -2,11 +2,10 @@
 
 (defn logo-shield
   [{:keys [width height]
-    :or {width "auto"
-         height "auto"}}]
-
+    :or {width "100%"
+         height "100%"}}]
   [:svg#Layer_1 {:style {:max-height "100%"
-                         :width "auto"
+                         :width "100%"
                          :height "100%"}
                  :height height
                  :width width

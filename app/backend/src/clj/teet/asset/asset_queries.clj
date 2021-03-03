@@ -3,7 +3,8 @@
             [datomic.client.api :as d]
             [teet.environment :as environment]
             [teet.util.datomic :as du]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.project.project-db :as project-db]))
 
 (def ctype-pattern
   '[*
@@ -51,3 +52,13 @@
    :unauthenticated? true
    :args _}
   (asset-type-library (environment/asset-db)))
+
+(defquery :asset/project-cost-items
+  {:doc "Query project cost items"
+   :context {:keys [db user]}
+   :args {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   ;; fixme: cost items authz
+   :authorization {:project/read-info {}}}
+  {:fgroups []
+   :project (project-db/project-by-id db [:thk.project/id project-id])})

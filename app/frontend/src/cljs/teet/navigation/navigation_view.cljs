@@ -265,35 +265,44 @@
 (defn header
   [e! {:keys [open? page quick-search url extra-panel extra-panel-open?]} user]
   [:<>
-   [ClickAwayListener {:on-click-away (fn []
-                                         (e! (navigation-controller/->CloseDrawer))
-                                         (e! (navigation-controller/->CloseExtraPanel)))}
+   [ClickAwayListener {:on-click-away #(e! (navigation-controller/->CloseExtraPanel))}
+    [AppBar {:position "sticky"
+             :className (herb/join (<class navigation-style/appbar)
+                                   (<class navigation-style/appbar-position open?))}
 
-    [:div
-     [AppBar {:position "sticky"
-              :className (herb/join (<class navigation-style/appbar)
-                                    (<class navigation-style/appbar-position open?))}
-      [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
-       [IconButton {:on-click #(e! (navigation-controller/->ToggleDrawer))
-                    :class (<class responsivity-styles/mobile-navigation-button)}
-        [icons/navigation-menu]]
-       [:div {:class (<class navigation-style/logo-style)}
-        [navigation-logo/maanteeamet-logo false]]
-       [:div {:class (<class responsivity-styles/desktop-only-style
-                             {:position :relative
-                              :flex-grow 1
-                              :flex-basis "400px"
-                              :display :block}
-                             {:display :none})}
-        [search-view/quick-search e! quick-search]]
-       [navigation-header-links e! user url]]
-      [header-extra-panel-container e! user quick-search extra-panel extra-panel-open?]]
 
-     [Drawer {:classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
+     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
+      [IconButton {:on-click #(e! (navigation-controller/->ToggleDrawer))
+                   :class (<class responsivity-styles/mobile-navigation-button)}
+       [icons/navigation-menu]]
+      [:div {:class (<class navigation-style/logo-style)}
+       [navigation-logo/maanteeamet-logo false]]
+      [:div {:class (<class responsivity-styles/desktop-only-style
+                            {:position :relative
+                             :flex-grow 1
+                             :flex-basis "400px"
+                             :display :block}
+                            {:display :none})}
+       [search-view/quick-search e! quick-search]]
+      [navigation-header-links e! user url]]
+     [header-extra-panel-container e! user quick-search extra-panel extra-panel-open?]]]
+
+   (if (responsivity-styles/mobile?)
+     [Drawer {:classes {"paperAnchorDockedLeft"
+                        (<class navigation-style/mobile-drawer open?)}
+              :variant "temporary"
+              :on-close (e! navigation-controller/->CloseDrawer)
+              :anchor "left"
+              :open open?
+              :disablePortal true}
+      [page-listing e! open? user page]]
+     [Drawer {:classes {"paperAnchorDockedLeft"
+                        (<class navigation-style/desktop-drawer open?)}
               :variant "permanent"
+              :on-close (e! navigation-controller/->CloseDrawer)
               :anchor "left"
               :open open?}
-      [page-listing e! open? user page]]]]])
+      [page-listing e! open? user page]])])
 
 (defn login-header
   [e!]

@@ -459,9 +459,6 @@
                [comment-form ->UpdateCommentForm]
                (common-controller/internal-state initial-comment-form
                                                  {:merge? true})]
-    (log/debug "lazy-comments main: can-set-visibility?" can-set-visibility? {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
-                                                                              :project-id (:db/id proj-map)
-                                                                              :debug? true})
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [:div
        [query/query {:e! e!
