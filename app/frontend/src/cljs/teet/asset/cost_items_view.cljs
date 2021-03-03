@@ -9,10 +9,14 @@
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
             [datafrisk.core :as df]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Paper]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
-            [teet.util.string :as string]))
+            [teet.util.string :as string]
+            [teet.util.collection :as cu]
+            [teet.ui.context :as context]
+            [teet.ui.common :as common]
+            [teet.ui.icons :as icons]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -20,19 +24,84 @@
       (str (:db/ident m))
       l)))
 
-(defn- attributes [attrs ]
+(defn- attributes
+  "Render grid of attributes."
+  [e! attrs]
   (when (seq attrs)
-    [Grid {:container true}
+    [Grid {:container true
+           :justify :space-evenly
+           :alignItems :flex-end}
      (doall
-      (for [{:db/keys [ident valueType] :as attr} attrs
+      (for [{:db/keys [ident valueType]
+             :asset-schema/keys [unit] :as attr} attrs
             :let [type (:db/ident valueType)]]
-        [form/field {:attribute ident }
-         (case type
-           :db.type/string [text-field/TextField {:label (label attr)}]
+        [Grid {:item true :xs 4 :style {:padding "0.2rem"}}
+         [form/field {:attribute ident}
+          (if (= type :db.type/ref)
+            ;; Selection value
+            [select/select-enum {:e! e!
+                                 :attribute ident
+                                 :database :asset
+                                 :format-enum-fn (fn [enum-values]
+                                                   (let [by-value (into {}
+                                                                        (map (juxt :db/ident identity))
+                                                                        enum-values)]
+                                                     #(-> % by-value label)))}]
 
-           ;; fallback
-           [text-field/TextField {:label (label attr )}]
-           )]))]))
+            ;; Text field
+            [text-field/TextField
+             ;; parse based on type
+             (merge
+              {:label (label attr)
+               :end-icon (when unit
+                           (text-field/unit-end-icon unit))}
+              (case type
+                (:db.type/long :db.type/bigdec) {:type :number}
+                nil))])]]))]))
+
+
+(defn component-attributes [component rotl]
+  (let [ctype (cu/find-> rotl)])
+  )
+
+(defn- component
+  "Render one component."
+  [{:keys [e! component on-change]}]
+  [Paper {:style {:padding "0.5rem" :margin-bottom "1rem"}}
+   [typography/Heading3 (str (:component/ctype component))]
+   [form/form2 {:e! e!
+                :on-change-event (form/callback-change-event on-change)
+                :value component}
+    [attributes e! (get-in component [:ctype :attribute/_parent])]]])
+
+(defn- components
+  "Render field for components, with add component if there are allowed components.
+
+  Renders each component with it's own set
+  allowed-components is a collection of component types this entity can have, if empty
+  no new components can be added."
+  [{:keys [e! value on-change allowed-components]}]
+  [:<>
+   (doall
+    (map-indexed
+     (fn [i {id :db/id :as c}]
+       ^{:key (str id)}
+       [component {:e! e!
+                   :component c
+                   :on-change #(on-change (update value i merge %))}])
+     value))
+   [:div.add-component
+    [common/context-menu
+     {:label "add component"
+      :icon [icons/content-add-circle-outline]
+      :items (for [c allowed-components]
+               {:label (label c)
+                :icon [icons/content-add]
+                :on-click #(on-change (conj (or value [])
+                                            {:ctype c
+                                             :component/ctype (:db/ident c)}))})}]]
+
+   ])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
@@ -44,7 +113,7 @@
   (r/with-let [form-data (r/atom {})
                on-change-event (form/update-atom-event
                                 form-data
-                                (partial merge-with merge))]
+                                cu/deep-merge)]
     [:<>
 
      [form/form2
@@ -85,9 +154,11 @@
              :format-item tr*}]])]]
 
       ;; Show attributes for
-      [attributes (some-> @form-data :feature-group-and-class second :attribute/_parent)]
+      [attributes e! (some-> @form-data :feature-group-and-class second :attribute/_parent)]
 
-      ]
+      [form/field {:attribute :asset/components}
+       [components {:e! e!
+                    :allowed-components (get-in @form-data [:feature-group-and-class 1 :ctype/_parent])}]]]
 
      [df/DataFriskView @form-data]
      ]))
@@ -96,16 +167,17 @@
                                       asset-type-library]}]
   (r/with-let [add? (r/atom false)
                add-cost-item! #(reset! add? true)]
-    [project-view/project-full-page-structure
-     {:e! e!
-      :app app
-      :project project
-      :left-panel [:div (tr [:project :tabs :cost-items])]
-      :main [:div
-             [typography/Heading2 (tr [:project :tabs :cost-items])]
-             [buttons/button-primary {:on-click add-cost-item!
-                                      :disabled @add?}
-              "add cost item"]
+    [context/provide :rotl asset-type-library
+     [project-view/project-full-page-structure
+      {:e! e!
+       :app app
+       :project project
+       :left-panel [:div (tr [:project :tabs :cost-items])]
+       :main [:div
+              [typography/Heading2 (tr [:project :tabs :cost-items])]
+              [buttons/button-primary {:on-click add-cost-item!
+                                       :disabled @add?}
+               "add cost item"]
 
-             (when @add?
-               [add-cost-item-form e! asset-type-library])]}]))
+              (when @add?
+                [add-cost-item-form e! asset-type-library])]}]]))
