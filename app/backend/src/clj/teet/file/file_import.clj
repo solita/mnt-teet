@@ -30,11 +30,13 @@
   (let [suffix (uploaded-file-suffix ctx)]
     (when-let [extensions (and vektorio-config (get-in vektorio-config [:config :file-extensions]))]
       (when (extensions suffix)
-        (let [file-id (ffirst (d/q '[:find ?file
+        (let [db (d/db conn)
+              file-id (ffirst (d/q '[:find ?file
                                      :in $ ?s3-key
                                      :where [?file :file/s3-key ?s3-key]]
-                                   (d/db conn) (:file-key s3)))]
-          (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))
+                                   (:file-key s3)))]
+          (when (and file-id (file-db/is-task-file? db file-id))
+            (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id))))))
 
 
   (log/info "Nothing to import for uploaded file: " (:s3 ctx)))
@@ -102,7 +104,8 @@
     
     (doseq [{:keys [file-eid file-name]} files
             suffix (file-model/filename->suffix name)]
-      (when (get vektorio-handled-file-extensions suffix)
+      (when (and (get vektorio-handled-file-extensions suffix)
+                 (file-db/is-task-file? db file-eid))
         (try
           (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
           (catch clojure.lang.ExceptionInfo e

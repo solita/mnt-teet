@@ -159,6 +159,16 @@
                                   [:thk.project/id]}]}]}]}
               {:file/part [:file.part/number]}] file-id))
 
+(defn is-task-file?
+  "Differentiate between attachments and other stored files vs task file uploads"
+  [db file-eid]
+  (->> file-eid
+       (pull-file-metadata-by-id db)
+       :task/_files
+       first
+       :activity/_tasks
+       not-empty))
+
 (defn file-metadata-by-id
   "Return file metadata for a given file id."
   [db file-id]
