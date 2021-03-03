@@ -9,7 +9,7 @@
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
             [datafrisk.core :as df]
-            [teet.ui.material-ui :refer [Grid Paper]]
+            [teet.ui.material-ui :refer [Grid Paper Card CardHeader CardContent IconButton]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -63,10 +63,6 @@
                 nil))])]]))]))
 
 
-(defn component-attributes [component rotl]
-  (let [ctype (cu/find-> rotl)])
-  )
-
 (defn- component
   "Render one component."
   [{:keys [e! component on-change]}]
@@ -75,12 +71,16 @@
   ;; change event
   (r/with-let [on-change-atom (atom on-change)]
     (reset! on-change-atom on-change)
-    [Paper {:style {:padding "0.5rem" :margin-bottom "1rem"}}
-     [typography/Heading3 (str (:component/ctype component))]
-     [form/form2 {:e! e!
-                  :on-change-event (form/callback-change-event #(@on-change-atom %))
-                  :value component}
-      [attributes e! (get-in component [:ctype :attribute/_parent])]]]))
+    [Card {:style {:margin-bottom "1rem"}}
+     [CardHeader {:title (str (:component/ctype component))
+                  :action (r/as-element
+                           [IconButton {:on-click #(on-change {::deleted? true})}
+                            [icons/action-delete]])}]
+     [CardContent
+      [form/form2 {:e! e!
+                   :on-change-event (form/callback-change-event #(@on-change-atom %))
+                   :value component}
+       [attributes e! (get-in component [:ctype :attribute/_parent])]]]]))
 
 (defn- components
   "Render field for components, with add component if there are allowed components.
@@ -91,12 +91,13 @@
   [{:keys [e! value on-change allowed-components]}]
   [:<>
    (doall
-    (map-indexed
-     (fn [i {id :db/id :as c}]
-       ^{:key (str id)}
-       [component {:e! e!
-                   :component c
-                   :on-change #(on-change (update value i merge %))}])
+    (keep-indexed
+     (fn [i {id :db/id deleted? ::deleted? :as c}]
+       (when (not deleted?)
+         ^{:key (str id)}
+         [component {:e! e!
+                     :component c
+                     :on-change #(on-change (update value i merge %))}]))
      value))
    [Grid {:container true}
     (doall
@@ -125,6 +126,8 @@
         [select/select-search
          {:e! e!
           :on-change on-change
+          :placeholder (tr [:asset :feature-group-and-class-placeholder])
+          :no-results (tr [:asset :no-matching-feature-classes])
           :value value
           :format-result format-fg-and-fc
           :show-empty-selection? true
@@ -171,15 +174,16 @@
                                    :read-only? (seq (dissoc @form-data :feature-group-and-class))}]]
 
 
-      ;; Show attributes for
+      ;; Attributes for asset
       [attributes e! (some-> @form-data :feature-group-and-class second :attribute/_parent)]
 
+      ;; Components
       [form/field {:attribute :asset/components}
        [components {:e! e!
                     :allowed-components (get-in @form-data [:feature-group-and-class 1 :ctype/_parent])}]]]
 
-     [df/DataFriskView @form-data]
-     ]))
+     ;; FIXME: remove when finalizing form
+     [df/DataFriskView @form-data]]))
 
 
 (defn cost-items-page [e! app {:keys [fgroups project
@@ -196,7 +200,7 @@
               [typography/Heading2 (tr [:project :tabs :cost-items])]
               [buttons/button-primary {:on-click add-cost-item!
                                        :disabled @add?}
-               "add cost item"]
+               (tr [:asset :add-cost-item])]
 
               (when @add?
                 [add-cost-item-form e! asset-type-library])]}]]))
