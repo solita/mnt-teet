@@ -36,7 +36,12 @@
 
 (def fake-upload tu/fake-upload)
 
-(deftest file-uuid
+
+(defmethod file-db/attach-to :test-attachment-type
+  [&args]
+  true)
+
+(deftest file-upload-commands
   (tu/local-login tu/mock-user-boss)
   (with-redefs [file-storage/upload-url (fn [name]
                                           (str "UPLOAD:" name))]
@@ -55,6 +60,9 @@
                                    {:file/name "image.png"
                                     :file/size 666})))
 
+    (testing "Task file vs attachment differentiation works for task files"
+      (is (file-db/is-task-file? (tu/db) (:db/id (tu/get-data :original-file)))))
+    
     (testing "Uploading replacement moves id"
       (tu/store-data! :replacement-file
                       (fake-upload (tu/get-data :task-id)
@@ -65,6 +73,20 @@
              (:file/id (tu/get-data :original-file)))
           "Replacement has same (moved) UUID"))
 
+    (testing "Uploading attachment works"
+      (tu/store-data! :original-file
+                      (tu/fake-upload-attachment
+                       {:attach-to [:test-attachment-type 42]
+                        :project-id (tu/->db-id "p1")
+                        :file 
+                        {:file/name "image.png"
+                         :file/size 666}})))
+
+    (testing "Task file vs attachment differentiation works for non-task files"
+      (is (not (file-db/is-task-file? (tu/db) (:db/id (tu/get-data :original-file))))))
+    
+
+    
     (testing "database has correct info"
       (let [f (d/pull (tu/db)
                       '[:db/id :file/id
