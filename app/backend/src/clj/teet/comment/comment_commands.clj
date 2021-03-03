@@ -27,7 +27,7 @@
                      [?c :meta/creator ?user]
                      [?c :file/name ?name]
                      [(teet.file.file-model/image-suffix? ?name)]
-                     :in $ $user [?c ...]]
+                     :in $ ?user [?c ...]]
                    db
                    (user-model/user-ref user)
                    files))]
