@@ -62,4 +62,8 @@
   :db/cardinality :db.cardinality/many
   :db/isComponent true}
 
+ {:db/ident :component/ctype
+  :db/doc "The ctype of this component"
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one}
  ]
