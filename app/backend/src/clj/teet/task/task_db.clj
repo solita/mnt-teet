@@ -25,7 +25,9 @@
   [db user task-eid]
   (file-db/file-listing db user (mapv first
                                       (d/q '[:find ?f
-                                             :where [?t :task/files ?f]
+                                             :where
+                                             [?t :task/files ?f]
+                                             [?f :file/upload-complete? true]
                                              :in $ ?t]
                                            db task-eid))))
 
@@ -60,6 +62,7 @@
     (d/q '[:find ?f
            :where
            [?t :task/files ?f]
+           [?f :file/upload-complete? true]
            [(missing? $ ?f :meta/deleted?)]
            (not-join [?f]
                      [?replacement :file/previous-version ?f])
@@ -73,6 +76,7 @@
         (d/q '[:find ?f
                :where
                [?t :task/files ?f]
+               [?f :file/upload-complete? true]
                [(missing? $ ?f :meta/deleted?)]
                (not-join [?f]
                          [?replacement :file/previous-version ?f])

@@ -40,21 +40,22 @@
              :auto-hide-duration hide-duration
              :on-close (e! snackbar-controller/->CloseSnackbar)}
    [SnackbarContent
-    {:style {:background-color (snack-color variant)}
+    {:style {:background-color (snack-color variant)
+             :flex-grow 0}
      :message (r/as-element [:span
                              {:class (<class message-style)}
                              [(snack-icon variant) {:class (<class icon-style)}]
                              [:span message]])
      :action (r/as-element
-              [:<>
-               (when-let [{:keys [title event]} action]
-                 [Button {:size :small
-                          :color :inherit
-                          :on-click #(do
-                                       (e! event)
-                                       (e! (snackbar-controller/->CloseSnackbar)))}
-                  title])
-               [IconButton {:size :small
-                            :color "inherit"
-                            :on-click (e! snackbar-controller/->CloseSnackbar)}
-                [icons/content-clear]]])}]])
+               [:<>
+                (when-let [{:keys [title event]} action]
+                  [Button {:size :small
+                           :color :inherit
+                           :on-click #(do
+                                        (e! event)
+                                        (e! (snackbar-controller/->CloseSnackbar)))}
+                   title])
+                [IconButton {:size :small
+                             :color "inherit"
+                             :on-click (e! snackbar-controller/->CloseSnackbar)}
+                 [icons/content-clear]]])}]])

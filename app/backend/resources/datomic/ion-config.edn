@@ -42,6 +42,11 @@
            {:fn teet.file.file-import/import-uploaded-file
             :description "Import uploaded file"}
 
+           :scheduled-import
+           {:fn teet.file.file-import/scheduled-file-import
+            :description "Scheduled import job in case of retries or initial Vektorio import"}
+
+           
            :thk-export
            {:fn teet.thk.thk-integration-ion/export-projects-to-thk
             :description "Export projects as CSV for THK"}
@@ -58,9 +63,12 @@
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
             :description "Cleanup unreferenced deleted features"}
 
+           :delete-email-addresses-from-datomic
+           {:fn teet.backup.backup-ion/delete-user-email-addresses
+            :description "Delete user email addresses from user information stored in Datomic"}
+
            :notify
             {:fn teet.notification.notification-ion/notify
-             :description "Scheduled notifications"}
-           }
+             :description "Scheduled notifications"}}
 
  :app-name "teet-datomic"}

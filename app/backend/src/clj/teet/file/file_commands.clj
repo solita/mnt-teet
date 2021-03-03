@@ -86,10 +86,14 @@
 (defn maybe-vektorio-delete! [db file-eid]
   (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
         vektorio-config (environment/config-value :vektorio)
-        project-eid (project-db/file-project-id db file-eid)]
-    (log/debug "delete corresponding model from vektorio? " (some? vektorio-enabled?))
-    (when vektorio-enabled?
-      (vektorio/delete-file-from-project! db vektorio-config project-eid file-eid))))
+        project-eid (try
+                      (project-db/file-project-id db file-eid)
+                      (catch clojure.lang.ExceptionInfo e
+                        (log/info "didn't find a project-id for file being deleted so skipping vektorio delete, file id:" file-eid)))]
+    (when project-eid
+      (log/debug "delete corresponding model from vektorio? " (some? vektorio-enabled?))
+      (when vektorio-enabled?
+        (vektorio/delete-file-from-project! db vektorio-config project-eid file-eid)))))
 
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
@@ -105,7 +109,6 @@
    :transact (let [file-delete-tx (if attached-to
                                     (file-db/delete-attachment db user file-id attached-to)
                                     [(deletion-tx user file-id)])]
-               (maybe-vektorio-delete! db file-id)
                file-delete-tx)})
 
 (defcommand :file/upload-complete

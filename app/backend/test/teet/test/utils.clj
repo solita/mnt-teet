@@ -392,6 +392,29 @@
          (is (uuid? file-id))
          uploaded)))))
 
+(defn fake-upload-attachment
+  "Upload (or replace) attachment file.
+  params maps should have same keys as the upload-attachment command: file, project-id, attach-to
+  Doesn't really upload anything to S3, just invokes the backend commands."
+  [{:keys [file project-id attach-to] :as params}]
+  (with-redefs [file-storage/upload-url (fn [name]
+                                          (str "UPLOAD:" name))]
+    (let [{:keys [url task-id file]}
+          (local-command :file/upload-attachment
+                         params)]
+      (is (str/starts-with? url "UPLOAD:"))
+      (is (str/ends-with? url (:file/name file)))
+      (is (:db/id file))
+      (is (not (contains? file :file/id)))
+
+      ;; Mark upload as complete
+      (let [{id :db/id file-id :file/id :as uploaded}
+            (local-command :file/upload-complete
+                           {:db/id (:db/id file)})]
+        (is (= id (:db/id uploaded)))
+        (is (uuid? file-id))
+        uploaded))))
+
 (defmacro is-thrown-with-data?
   "Check that body throws given exception data."
   [thrown-ex-data & body]
