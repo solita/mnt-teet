@@ -56,6 +56,14 @@
    :border-bottom (str "2px solid " theme-colors/gray-light)
    :textTransform :uppercase})
 
+(defn- sub-section-style []
+  {:font-weight    700
+   :font-size      "1rem"
+   :margin-bottom "0.5rem"
+   :margin-top "1.5rem"
+   :color         theme-colors/secondary-text
+   :text-transform :uppercase})
+
 
 (def Heading1 (util/make-component :h1 {}))
 (def Heading2 (util/make-component :h2 {}))
@@ -87,6 +95,8 @@
 (def SectionHeading (util/make-component :h6 {:class (<class section-heading-style)}))
 
 (def DataLabel (util/make-component :div {:class (<class data-label-style)}))
+
+(def SubSectionLabel (util/make-component :div {:class (<class sub-section-style)}))
 
 (def SmallGrayText (util/make-component :span {:class (<class small-gray-text-style)}))
 
