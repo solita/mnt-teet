@@ -272,6 +272,8 @@
                 ;; Earlier it was possible to delete a task without deleting the files first.
                 ;; We don't want to list the files whose task has been deleted.
                 [(missing? $ ?task :meta/deleted?)]
+                ;; Or that haven't finished uploading
+                [?f :file/upload-complete? true]
                 [?act :activity/tasks ?task]
                 [?act :activity/name :activity.name/land-acquisition]
                 [?lc :thk.lifecycle/activities ?act]
@@ -341,6 +343,7 @@
                                :where
                                [?t :task/files ?f]
                                [(missing? $ ?f :meta/deleted?)]
+                               [?f :file/upload-complete? true]
                                (not-join [?f]
                                          [?replacement :file/previous-version ?f])
                                :in $ ?t]
@@ -411,6 +414,7 @@
                [?lc :thk.lifecycle/activities ?a]
                [?a :activity/tasks ?t]
                [?t :task/files ?f]
+               [?f :file/upload-complete? true]
                [(missing? $ ?f :meta/deleted?)]
                [?f :file/name ?file-name]
                [(teet.util.string/contains-words? ?file-name ?text)]]
@@ -429,6 +433,7 @@
            [?a :activity/tasks ?t]
            [?t :task/files ?f]
            [(missing? $ ?f :meta/deleted?)]
+           [?f :file/upload-complete? true]
            [?f :file/name ?file-name]
            [(teet.util.string/contains-words? ?file-name ?text)]
            (not-join [?f]
@@ -491,6 +496,7 @@
     (d/qseq '[:find ?f
               :where
               [?t :task/files ?f]
+              [?f :file/upload-complete? true]
               [(missing? $ ?f :meta/deleted?)]
               (not-join [?f]
                         [?replacement :file/previous-version ?f])
@@ -506,6 +512,7 @@
              [?act :activity/tasks ?task]
              [(missing? $ ?task :meta/deleted?)]
              [?task :task/files ?f]
+             [?f :file/upload-complete? true]
              [(missing? $ ?f :meta/deleted?)]
              (not-join [?f]
                        [?replacement :file/previous-version ?f])
