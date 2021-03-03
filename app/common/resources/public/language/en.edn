@@ -70,7 +70,11 @@
    :values "Values",
    :ctype "Component",
    :db.type/long "Integer",
-   :attributes "Attributes"}},
+   :attributes "Attributes"},
+  :add-cost-item "Add cost item",
+  :feature-group-and-class-placeholder
+  "Search feature group or class...",
+  :no-matching-feature-classes "No matching feature classes."},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
