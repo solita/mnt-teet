@@ -1,6 +1,7 @@
 (ns ^:db teet.file.file-queries-test
   (:require [clojure.test :refer [use-fixtures deftest is testing]]
             [teet.test.utils :as tu]
+            teet.file.file-db
             teet.file.file-queries))
 
 (use-fixtures :each

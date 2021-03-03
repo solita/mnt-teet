@@ -3,6 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.comment.comment-db :as comment-db]
+            [clj-time.core :as time]
+            [clj-time.coerce :as tc]
             [teet.log :as log]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.util.datomic :as du]
@@ -156,6 +158,16 @@
                                 [{:thk.project/_lifecycles
                                   [:thk.project/id]}]}]}]}
               {:file/part [:file.part/number]}] file-id))
+
+(defn is-task-file?
+  "Differentiate between attachments and other stored files vs task file uploads"
+  [db file-eid]
+  (->> file-eid
+       (pull-file-metadata-by-id db)
+       :task/_files
+       first
+       :activity/_tasks
+       not-empty))
 
 (defn file-metadata-by-id
   "Return file metadata for a given file id."
@@ -450,6 +462,27 @@
           [?p :thk.project/lifecycles ?l]
           :in $ ?uuid]
         db uuid)))
+
+;; used by vektorio scheduled upload retry. considering only files that are older than threshold,
+;; so we don't step on top of normally (by s3 trigger) started uploads.
+(defn recent-task-files-without-model-id [db threshold-in-minutes]
+  (let [modified-threshold (->> threshold-in-minutes
+                                time/minutes
+                                (time/minus (time/now))
+                                tc/to-date)]
+    (log/debug "modified-threshold" modified-threshold)
+    (d/q '[:find ?f ?name ?mctime
+           :keys file-eid file-name mctime
+           :in $ ?modified-threshold
+           :where
+           [?f :file/id _]
+           [?f :file/name ?name]
+           [?f :meta/created-at ?created]
+           [(get-else $ ?f :meta/modified-at ?created) ?mctime]
+           [(< ?mctime ?modified-threshold)]
+           [(missing? $ ?f :vektorio/model-id)]
+           [(missing? $ ?f :meta/deleted?)]]
+         db modified-threshold)))
 
 (defn task-has-files?
   "Check if task currently has files. Doesn't include deleted files."
