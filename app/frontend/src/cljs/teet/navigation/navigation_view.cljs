@@ -254,7 +254,7 @@
        [language-selector]])
     (if logged-in?
       [open-account-navigation e!]
-      [buttons/button-primary {:style {:margin "0 1rem"}
+      [buttons/button-primary {:style {:margin "0 0.5rem"}
                                :href "/oauth2/request"}
        (tr [:login :login])])]))
 
