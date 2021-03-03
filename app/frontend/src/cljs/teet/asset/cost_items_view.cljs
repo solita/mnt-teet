@@ -16,7 +16,9 @@
             [teet.util.collection :as cu]
             [teet.ui.context :as context]
             [teet.ui.common :as common]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.common.responsivity-styles :as responsivity-styles]
+            [herb.core :refer [<class]]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -40,6 +42,7 @@
           (if (= type :db.type/ref)
             ;; Selection value
             [select/select-enum {:e! e!
+                                 :id ident
                                  :attribute ident
                                  :database :asset
                                  :format-enum-fn (fn [enum-values]
@@ -67,12 +70,17 @@
 (defn- component
   "Render one component."
   [{:keys [e! component on-change]}]
-  [Paper {:style {:padding "0.5rem" :margin-bottom "1rem"}}
-   [typography/Heading3 (str (:component/ctype component))]
-   [form/form2 {:e! e!
-                :on-change-event (form/callback-change-event on-change)
-                :value component}
-    [attributes e! (get-in component [:ctype :attribute/_parent])]]])
+  ;; form uses the on-change-event constructor given at the 1st render
+  ;; so we need to keep track of the on-change here and use it in the
+  ;; change event
+  (r/with-let [on-change-atom (atom on-change)]
+    (reset! on-change-atom on-change)
+    [Paper {:style {:padding "0.5rem" :margin-bottom "1rem"}}
+     [typography/Heading3 (str (:component/ctype component))]
+     [form/form2 {:e! e!
+                  :on-change-event (form/callback-change-event #(@on-change-atom %))
+                  :value component}
+      [attributes e! (get-in component [:ctype :attribute/_parent])]]]))
 
 (defn- components
   "Render field for components, with add component if there are allowed components.
@@ -90,24 +98,60 @@
                    :component c
                    :on-change #(on-change (update value i merge %))}])
      value))
-   [:div.add-component
-    [common/context-menu
-     {:label "add component"
-      :icon [icons/content-add-circle-outline]
-      :items (for [c allowed-components]
-               {:label (label c)
-                :icon [icons/content-add]
-                :on-click #(on-change (conj (or value [])
-                                            {:ctype c
-                                             :component/ctype (:db/ident c)}))})}]]
-
-   ])
+   [Grid {:container true}
+    (doall
+     (for [c allowed-components]
+       ^{:key (str :db/ident c)}
+       [Grid {:item true :xs 3}
+        [buttons/button-secondary {:size :small
+                                   :on-click #(on-change (conj (or value [])
+                                                               {:ctype c
+                                                                :component/ctype (:db/ident c)}))
+                                   :start-icon (r/as-element [icons/content-add])}
+         (label c)]]))]])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
            (nil? fc))
     ""
     (str (label fg) " / " (label fc))))
+
+(defn group-and-class-selection [{:keys [e! on-change value asset-type-library read-only?]}]
+  (let [[fg fc] value]
+    (if read-only?
+      [typography/Heading3 (format-fg-and-fc value)]
+      [Grid {:container true}
+       [Grid {:item true :xs 12 :class (<class responsivity-styles/visible-desktop-only)}
+        [select/select-search
+         {:e! e!
+          :on-change on-change
+          :value value
+          :format-result format-fg-and-fc
+          :show-empty-selection? true
+          :query (fn [text]
+                   #(vec
+                     (for [fg asset-type-library
+                           fc (:fclass/_fgroup fg)
+                           :let [result [fg fc]]
+                           :when (string/contains-words? (format-fg-and-fc result) text)]
+                       result)))}]]
+
+       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
+        [select/select-with-action
+         {:show-empty-selection? true
+          :items asset-type-library
+          :format-item tr*
+          :value fg
+          :on-change #(on-change [% nil])}]]
+
+       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
+        (when-let [{fclasses :fclass/_fgroup} fg]
+          [select/select-with-action
+           {:show-empty-selection? true
+            :items fclasses
+            :format-item tr*
+            :value fc
+            :on-change #(on-change [fg %])}])]])))
 
 (defn- add-cost-item-form [e! asset-type-library]
   (r/with-let [form-data (r/atom {})
@@ -121,37 +165,11 @@
        :on-change-event on-change-event
        :value @form-data}
 
-      [Grid {:container true}
+      [form/field {:attribute :feature-group-and-class}
+       [group-and-class-selection {:e! e!
+                                   :asset-type-library asset-type-library
+                                   :read-only? (seq (dissoc @form-data :feature-group-and-class))}]]
 
-       [Grid {:item true :xs 12}
-        [form/field {:attribute :feature-group-and-class}
-         [select/select-search
-          {:e! e!
-           :format-result format-fg-and-fc
-           :show-empty-selection? true
-           :query (fn [text]
-                    #(vec
-                      (for [fg asset-type-library
-                            fc (:fclass/_fgroup fg)
-                            :let [result [fg fc]]
-                            :when (string/contains-words? (format-fg-and-fc result) text)]
-                        result)))}]]]
-       ;; allow changing fgroup/fclass only if no other information
-       ;; has been changed
-       #_[Grid {:item true :xs 6}
-        [form/field {:attribute :fgroup}
-         [select/select-with-action
-          {:show-empty-selection? true
-           :items asset-type-library
-           :format-item tr*}]]]
-
-       #_[Grid {:item true :xs 6}
-        (when-let [{fclasses :fclass/_fgroup} (:fgroup @form-data)]
-          [form/field {:attribute :asset/fclass}
-           [select/select-with-action
-            {:show-empty-selection? true
-             :items fclasses
-             :format-item tr*}]])]]
 
       ;; Show attributes for
       [attributes e! (some-> @form-data :feature-group-and-class second :attribute/_parent)]
@@ -162,6 +180,7 @@
 
      [df/DataFriskView @form-data]
      ]))
+
 
 (defn cost-items-page [e! app {:keys [fgroups project
                                       asset-type-library]}]
