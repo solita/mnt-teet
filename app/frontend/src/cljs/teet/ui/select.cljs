@@ -183,10 +183,13 @@
               (format-item item)])
            items))]]]))
 
-(defn query-enums-for-attribute! [attribute]
-  (common-controller/->Query {:query :enum/values
-                              :args {:attribute attribute}
-                              :result-event (partial ->SetEnumValues attribute)}))
+(defn query-enums-for-attribute!
+  ([attribute] (query-enums-for-attribute! attribute :teet))
+  ([attribute database]
+   (common-controller/->Query {:query :enum/values
+                               :args {:attribute attribute
+                                      :database database}
+                               :result-event (partial ->SetEnumValues attribute)})))
 
 (defn valid-enums-for
   "called along the lines of (valid-enums-for :document.category/project-doc ...)"
@@ -214,17 +217,20 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required label-element sort-fn]}]
+  [{:keys [e! attribute database required label-element sort-fn]
+    :or {database :teet}}]
   (when-not (contains? @enum-values attribute)
-    (log/debug "getting enum vals for attribute" attribute)
-    (e! (query-enums-for-attribute! attribute)))
+    (e! (query-enums-for-attribute! attribute database)))
   (fn [{:keys [value label on-change name show-label? show-empty-selection?
                tiny-select? id error container-class class values-filter
-               full-value? empty-selection-label read-only? dark-theme?]
+               full-value? empty-selection-label read-only? dark-theme?
+               format-enum-fn]
         :enum/keys [valid-for]
         :or {show-label? true
              show-empty-selection? true}}]
-    (let [tr* #(tr [:enum %])
+    (let [tr* (if format-enum-fn
+                (format-enum-fn (@enum-values attribute))
+                #(tr [:enum %]))
           value (if (and (map? value)
                          (contains? value :db/ident))
                   ;; If value is a enum ref pulled from db, extract the kw value
