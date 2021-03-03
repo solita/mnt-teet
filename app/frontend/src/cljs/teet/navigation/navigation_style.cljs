@@ -115,6 +115,7 @@
   {:display :flex
    :flex-direction :row
    :justify-content :flex-end
+   :align-items :center
    :flex-grow 1
    :color theme-colors/gray
    :font-weight 300

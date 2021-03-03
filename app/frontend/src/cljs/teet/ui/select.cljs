@@ -124,7 +124,7 @@
              :invalid {:box-shadow :inherit
                        :outline :inherit}
              :hover {:margin-bottom "0"
-                     :border-bottom (str "2px solid " theme-colors/primary)}}}
+                     :border-bottom (str "1px solid " theme-colors/primary)}}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
    :cursor :pointer
