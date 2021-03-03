@@ -64,7 +64,6 @@
    :color         theme-colors/secondary-text
    :text-transform :uppercase})
 
-
 (def Heading1 (util/make-component :h1 {}))
 (def Heading2 (util/make-component :h2 {}))
 (def Heading3 (util/make-component :h3 {}))
@@ -96,7 +95,7 @@
 
 (def DataLabel (util/make-component :div {:class (<class data-label-style)}))
 
-(def SubSectionLabel (util/make-component :div {:class (<class sub-section-style)}))
+(def SubSectionLabel (util/make-component :p {:class (<class sub-section-style)}))
 
 (def SmallGrayText (util/make-component :span {:class (<class small-gray-text-style)}))
 
