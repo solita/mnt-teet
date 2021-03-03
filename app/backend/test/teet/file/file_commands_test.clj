@@ -38,7 +38,7 @@
 
 
 (defmethod file-db/attach-to :test-attachment-type
-  [&args]
+  [a b c d]
   true)
 
 (deftest file-upload-commands
