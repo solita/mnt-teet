@@ -37,9 +37,10 @@
                        "Address in TEET: " url "\n"
                        "TEET branch: " (aget js/window "teet_branch") "\n"
                        "TEET git hash: " (aget js/window "teet_githash") "\n"
-                       "User: " (if user (str given-name " " family-name
-                                              " (person code:" person-id ")\n\n")
-                                    "User not logged in"))]
+                       "User: " (if user
+                                  (str given-name " " family-name
+                                       " (person code:" person-id ")\n\n")
+                                  "User not logged in"))]
     [:div {:class (<class navigation-style/feedback-container-style)}
      [common/Link {:class (<class navigation-style/feedback-style)
                    :href (str "mailto:teet-feedback@transpordiamet.ee"
@@ -311,7 +312,7 @@
    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
     [:div {:class (<class navigation-style/logo-style)}
      [navigation-logo/maanteeamet-logo true]]
-    [navigation-header-links nil "login" e! false]]])
+    [navigation-header-links e! nil "login" false]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}
