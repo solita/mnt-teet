@@ -6,7 +6,7 @@
 (def drawer-width {true 200   ; width when open
                    false 80}) ; width when closed
 
-(defn drawer
+(defn mobile-drawer
   [open?]
   (with-meta
     (let [w (drawer-width open?)]
@@ -18,10 +18,18 @@
                 "0px")
        :transition "all 0.2s ease-in-out"})
     (responsivity-styles/desktop-only-meta
-      (let [w (drawer-width open?)]
-        {:min-width (str w "px")
-         :width (str w "px")
-         :transition "all 0.2s ease-in-out"}))))
+      {:display :none})))
+
+(defn desktop-drawer
+  [open?]
+  (with-meta
+    (let [w (drawer-width open?)]
+      {:min-width (str w "px")
+       :width (str w "px")
+       :transition "all 0.2s ease-in-out"})
+    (responsivity-styles/mobile-only-meta
+      {:display :none})))
+
 
 (defn toolbar
   []
@@ -46,6 +54,8 @@
 
 (defn appbar []
   {:display :flex
+   :top 0
+   :bottom :auto
    :background-color theme-colors/white
    :color theme-colors/gray-dark
    :height theme-spacing/appbar-height
@@ -74,6 +84,7 @@
     (responsivity-styles/desktop-only-meta
       (let [dw (drawer-width drawer-open?)]
         {:width (str "calc(100% - " dw "px)")
+         ;:height (str "calc(100vh - " theme-spacing/appbar-height "px)")
          :margin-left (str dw "px")}))))
 
 (defn drawer-projects-style
@@ -142,8 +153,7 @@
 
 (defn navigator-left-panel-style
   []
-  {:max-width "400px"
-   :display :flex
+  {:display :flex
    :flex-direction :column})
 
 (defn feedback-style

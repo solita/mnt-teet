@@ -678,10 +678,11 @@
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
-               :wrap :nowrap
-               :spacing 0}
+               :spacing 0
+               :wrap :wrap}
          [Grid {:item true
-                :xs navigator-w
+                :xs 12
+                :md navigator-w
                 :class (<class navigation-style/navigator-left-panel-style)}
           [project-menu/project-menu e! app project true]
           (or left-panel
@@ -691,15 +692,18 @@
                        :add-activity? false}
                       project-navigator)])]
          [Grid {:item true
-                :xs content-w
+                :xs 12
+                :md content-w
                 :style (merge {:padding "2rem 1.5rem"
-                               :overflow-y :auto}
+                               :overflow-y :auto
+                               :max-height "100%"}
                               (when (not right-panel)
                                 {:flex 1}))}
           main]
          (when right-panel
            [Grid {:item true
-                  :xs :auto
+                  :xs 12
+                  :md 6
                   :style {:display :flex
                           :flex 1
                           :overflow-y :auto

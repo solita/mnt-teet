@@ -25,7 +25,9 @@
    :letterSpacing "0.25px"})
 
 (def teet-theme
-  {:typography {:body2 {:fontSize "1rem"}
+  {:breakpoints {:values {:xs 0
+                          :md 1024}}
+   :typography {:body2 {:fontSize "1rem"}
                 :fontFamily "Roboto"}
    :palette {:primary {:main theme-colors/primary}
              :secondary {:main theme-colors/secondary}

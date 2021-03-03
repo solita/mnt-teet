@@ -6,8 +6,8 @@
             [teet.project.project-layers :as project-layers]
             [teet.project.project-style :as project-style]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.common :as common]
-            [teet.map.map-overlay :as map-overlay]))
+            [teet.map.map-overlay :as map-overlay]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (defn map-style
   []
@@ -55,7 +55,7 @@
                        :flex-direction :column
                        :max-height "100%"}}
          ;; Add window width as key to force map rerender when window width changes.
-         ^{:key (str @common/window-width)}
+         ^{:key (str @responsivity-styles/window-width)}
          [map-view/map-view e!
           {:layer-controls? true
            :class (<class map-style)
