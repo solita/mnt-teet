@@ -36,10 +36,7 @@
                                      :where [?file :file/s3-key ?s3-key]]
                                    (:file-key s3)))]
           (when (and file-id (file-db/is-task-file? db file-id))
-            (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id))))))
-
-
-  (log/info "Nothing to import for uploaded file: " (:s3 ctx)))
+            (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))))
 
 (defmethod import-by-suffix "ags" [ctx]
   (ags-import/import-project-ags-files ctx))
