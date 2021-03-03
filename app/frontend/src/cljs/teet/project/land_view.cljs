@@ -237,7 +237,7 @@
 
         (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
           [:div
-           [form/many {:before [typography/BoldGreyText {:style {:margin-bottom "0.5rem"}}
+           [form/many {:before [typography/SubSectionLabel
                                 (tr [:fields :estate-procedure/land-exchanges])]
                        :attribute :estate-procedure/land-exchanges
                        :atleast-once? true}
