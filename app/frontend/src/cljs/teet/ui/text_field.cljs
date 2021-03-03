@@ -70,13 +70,14 @@
    :position :absolute
    :left "10px"})
 
-(defn euro-end-icon
-  []
-  [:span {:class (<class end-icon-style)} "€"])
+(defn unit-end-icon
+  "Display unit (like SI unit or currency) as end icon for text field"
+  [unit]
+  [:span {:class (<class end-icon-style)} unit])
 
-(defn sqm-end-icon
-  []
-  [:span {:class (<class end-icon-style)} "m²"])
+(def euro-end-icon (partial unit-end-icon "€"))
+(def sqm-end-icon (partial unit-end-icon "m²"))
+
 
 (defn file-end-icon
   [file-type]
