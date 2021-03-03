@@ -141,10 +141,9 @@
 (defn language-selector
   []
   [select/select-with-action
-   {:container-class (herb/join (<class navigation-style/language-select-container-style)
-                                (<class navigation-style/divider-style))
-    :label (str (tr [:common :language]))
+   {:container-class (<class navigation-style/language-select-container-style)
     :class (<class navigation-style/language-select-style)
+    :empty-selection-label true
     :id "language-select"
     :name "language"
     :value (case @localization/selected-language
@@ -249,10 +248,14 @@
 
     [feedback-link user url]
     (when (not logged-in?)
-      [language-selector])
+      [:div {:class (<class navigation-style/divider-style)
+             :style {:display :flex
+                     :align-items :center}}
+       [icons/action-language {:style {:color theme-colors/primary}}]
+       [language-selector]])
     (if logged-in?
       [open-account-navigation e!]
-      [buttons/button-primary {:style {:margin "0 1rem"}
+      [buttons/button-primary {:style {:margin "0 0.5rem"}
                                :href "/oauth2/request"}
        (tr [:login :login])])]))
 
