@@ -211,7 +211,13 @@
 
 (defn- vectorio-link-style
   []
-  (thk-link-style))
+  ^{:pseudo {:hover {:text-decoration :underline}}}
+   {:margin-left "10px"
+    :margin-right "10px"
+    :font-size "24px"
+    :text-decoration :none
+    :display :flex
+    :align-items :center})
 
 (defn- thk-link-icon-style
   []

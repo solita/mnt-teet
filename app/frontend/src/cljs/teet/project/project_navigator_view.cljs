@@ -430,9 +430,12 @@
           :label (tr [:project :export])
           :icon [icons/file-cloud-download-outlined]
           :items (concat export-menu-items (default-export-menu-items project))}]
-        [common/vertorio-link {:href (common-controller/query-url :vektorio/instant-login project)
-                               :target "_blank"}
-         (str "BIM Models" (:thk.project/id project))]
+        (when (and
+                (common-controller/feature-enabled? :vektorio)
+                (some? (:vektorio/project-id project)))
+          [common/vertorio-link {:href (common-controller/query-url :vektorio/instant-login project)
+                                 :target "_blank"}
+           (str "BIM Models" (:vektorio/project-id project))])
         [common/thk-link {:href thk-url
                           :target "_blank"}
          (str "THK" (:thk.project/id project))]]]])))
