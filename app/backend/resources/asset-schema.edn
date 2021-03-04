@@ -1689,4 +1689,388 @@
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":common/cci_class",
-  :db/ident :common/cci_class}]
+  :db/ident :common/cci_class}
+ {:db/id ":item/bcl_t1",
+  :db/ident :item/bcl_t1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["T1" "T1"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_t2",
+  :db/ident :item/bcl_t2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["T2" "T2"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_t3",
+  :db/ident :item/bcl_t3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["T3" "T3"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_n1",
+  :db/ident :item/bcl_n1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["N1" "N1"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_n2",
+  :db/ident :item/bcl_n2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["N2" "N2"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_h1",
+  :db/ident :item/bcl_h1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["H1" "H1"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_l1",
+  :db/ident :item/bcl_l1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["L1" "L1"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_h2",
+  :db/ident :item/bcl_h2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["H2" "H2"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_l2",
+  :db/ident :item/bcl_l2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["L2" "L2"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_h3",
+  :db/ident :item/bcl_h3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["H3" "H3"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_l3",
+  :db/ident :item/bcl_l3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["L3" "L3"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_h4a",
+  :db/ident :item/bcl_h4a,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["H4a" "H4a"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_h4b",
+  :db/ident :item/bcl_h4b,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["H4b" "H4b"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_l4a",
+  :db/ident :item/bcl_l4a,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["L4a" "L4a"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/bcl_l4b",
+  :db/ident :item/bcl_l4b,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["L4b" "L4b"],
+  :enum/attribute ":barrier/barriercontainmentlevel"}
+ {:db/id ":item/wwc1",
+  :db/ident :item/wwc1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W1 (0.6m)" "W1 (0.6m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc2",
+  :db/ident :item/wwc2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W2 (0.8m)" "W2 (0.8m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc3",
+  :db/ident :item/wwc3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W3 (1.0m)" "W3 (1.0m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc4",
+  :db/ident :item/wwc4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W4 (1.3m)" "W4 (1.3m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc5",
+  :db/ident :item/wwc5,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W5 (1.7m)" "W5 (1.7m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc6",
+  :db/ident :item/wwc6,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W6 (2.1m)" "W6 (2.1m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc7",
+  :db/ident :item/wwc7,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W7 (2.5m)" "W7 (2.5m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/wwc8",
+  :db/ident :item/wwc8,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["W8 (3.5m)" "W8 (3.5m)"],
+  :enum/attribute ":barrier/barrierworkingwidth"}
+ {:db/id ":item/C25",
+  :db/ident :item/C25,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C25" "C25"],
+  :enum/attribute ":girder/concreteclass"}
+ {:db/id ":item/C35",
+  :db/ident :item/C35,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C35" "C35"],
+  :enum/attribute ":girder/concreteclass"}
+ {:db/id ":item/C45",
+  :db/ident :item/C45,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C45" "C45"],
+  :enum/attribute ":girder/concreteclass"}
+ {:db/id ":item/C55",
+  :db/ident :item/C55,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C55" "C55"],
+  :enum/attribute ":girder/concreteclass"}
+ {:db/id ":item/planned",
+  :db/ident :item/planned,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Planeeritud" "Planned"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/asdesigned",
+  :db/ident :item/asdesigned,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Projekteeritud" "As-designed"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/workinprogress",
+  :db/ident :item/workinprogress,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ehitamisel" "Work in progress"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/created",
+  :db/ident :item/created,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ehitatud" "As-built"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/approved",
+  :db/ident :item/approved,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Heakskiidetud" "Approved"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/inuse",
+  :db/ident :item/inuse,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kasutusel" "In use"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/removed",
+  :db/ident :item/removed,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Lammutatud" "Demolished"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/abandoned",
+  :db/ident :item/abandoned,
+  :db/doc "Not in use, but still exists",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Maha jäetud " "Abandoned"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/stolen",
+  :db/ident :item/stolen,
+  :db/doc
+  "Should exist and be in use, but isnt. Likely needs replacement.",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kadunud, varastatud, vms" "Stolen, lost etc"],
+  :enum/attribute ":common/status"}
+ {:db/id ":item/concrete",
+  :db/ident :item/concrete,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Betoon" "Concrete"],
+  :enum/attribute ":girder/structuralmaterial"}
+ {:db/id ":item/steel",
+  :db/ident :item/steel,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Teras" "Steel"],
+  :enum/attribute ":girder/structuralmaterial"}
+ {:db/id ":item/aluminium",
+  :db/ident :item/aluminium,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Alumiinium" "Aluminium"],
+  :enum/attribute ":girder/structuralmaterial"}
+ {:db/id ":item/wood",
+  :db/ident :item/wood,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Puit" "Wood"],
+  :enum/attribute ":girder/structuralmaterial"}
+ {:db/id ":item/plastic",
+  :db/ident :item/plastic,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Plastik" "Plastic"],
+  :enum/attribute ":girder/structuralmaterial"}
+ {:db/id ":item/tisa",
+  :db/ident :item/tisa,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["A" "A"],
+  :enum/attribute ":barrierterminal/terminalimpactseverity"}
+ {:db/id ":item/tisb",
+  :db/ident :item/tisb,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["B" "B"],
+  :enum/attribute ":barrierterminal/terminalimpactseverity"}
+ {:db/id ":item/tldx1",
+  :db/ident :item/tldx1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["x1" "x1"],
+  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
+ {:db/id ":item/tldx2",
+  :db/ident :item/tldx2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["x2" "x2"],
+  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
+ {:db/id ":item/tldx3",
+  :db/ident :item/tldx3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["x3" "x3"],
+  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
+ {:db/id ":item/tldy1",
+  :db/ident :item/tldy1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["y1" "y1"],
+  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
+ {:db/id ":item/tldy2",
+  :db/ident :item/tldy2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["y2" "y2"],
+  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
+ {:db/id ":item/tldy3",
+  :db/ident :item/tldy3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["y3" "y3"],
+  :enum/attribute ":barrierterminal/terminallateraldisplacementclass"}
+ {:db/id ":item/tpc1",
+  :db/ident :item/tpc1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["P1" "P1"],
+  :enum/attribute ":barrierterminal/terminalperformanceclass"}
+ {:db/id ":item/tpc2",
+  :db/ident :item/tpc2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["P2" "P2"],
+  :enum/attribute ":barrierterminal/terminalperformanceclass"}
+ {:db/id ":item/tpc3",
+  :db/ident :item/tpc3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["P3" "P3"],
+  :enum/attribute ":barrierterminal/terminalperformanceclass"}
+ {:db/id ":item/tpc4",
+  :db/ident :item/tpc4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["P4" "P4"],
+  :enum/attribute ":barrierterminal/terminalperformanceclass"}
+ {:db/id ":item/tvrcz1",
+  :db/ident :item/tvrcz1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["z1" "z1"],
+  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
+ {:db/id ":item/tvrcz2",
+  :db/ident :item/tvrcz2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["z2" "z2"],
+  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
+ {:db/id ":item/tvrcz3",
+  :db/ident :item/tvrcz3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["z3" "z3"],
+  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
+ {:db/id ":item/tvrcz4",
+  :db/ident :item/tvrcz4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["z4" "z4"],
+  :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
+ {:db/id ":item/piletypedrilled",
+  :db/ident :item/piletypedrilled,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Puurvai" "Drilled pile"],
+  :enum/attribute ":pile/piletype"}
+ {:db/id ":item/piletypedriven",
+  :db/ident :item/piletypedriven,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Rammvai" ""],
+  :enum/attribute ":pile/piletype"}
+ {:db/id ":item/piletypeinjection",
+  :db/ident :item/piletypeinjection,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Injektsioonvai" ""],
+  :enum/attribute ":pile/piletype"}
+ {:db/id ":item/spangirder",
+  :db/ident :item/spangirder,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Tala" "Girder"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanarch",
+  :db/ident :item/spanarch,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kaar" "Arch"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanvault",
+  :db/ident :item/spanvault,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Võlv" "Vault"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spansuspension",
+  :db/ident :item/spansuspension,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ripp" "Suspension"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spancablestayed",
+  :db/ident :item/spancablestayed,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Vant" "Cable stayed"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spantruss",
+  :db/ident :item/spantruss,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Sõrestik" "Truss"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spancontinuous",
+  :db/ident :item/spancontinuous,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Jätkuvtala" "Continuos girder"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanplate",
+  :db/ident :item/spanplate,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Plaat" "Plate"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanframe",
+  :db/ident :item/spanframe,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Raam" "Frame"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanpipe",
+  :db/ident :item/spanpipe,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Toru" "soil steel composite"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spancantilever",
+  :db/ident :item/spancantilever,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Konsool" "cantilever"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/supportcolumn",
+  :db/ident :item/supportcolumn,
+  :db/doc "Intermediate supports below the superstructure",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Vahesammas" "Pier"],
+  :enum/attribute ":bridgesupport/supporttype"}
+ {:db/id ":item/supportabutment",
+  :db/ident :item/supportabutment,
+  :db/doc "End supports",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kaldasammas" "Abutment"],
+  :enum/attribute ":bridgesupport/supporttype"}
+ {:db/id ":item/supportpylon",
+  :db/ident :item/supportpylon,
+  :db/doc
+  "Intermediate supports rising above the superstructure to hold suspension cables",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Püloon" "Pylon"],
+  :enum/attribute ":bridgesupport/supporttype"}
+ {:db/id ":item/supporthinge",
+  :db/ident :item/supporthinge,
+  :db/doc
+  "Hinges in superstructure and cantilever ends of integral bridges (without supports)",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Liigend" "Hinge"],
+  :enum/attribute ":bridgesupport/supporttype"}]

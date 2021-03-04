@@ -114,8 +114,12 @@
           ctype (into [{:name :ctype/common
                         :comment "Attributes common to all assets and components"}]
                       (read-ctypes workbook))
+          ctypes-by-name (into {}
+                               (map (juxt :name identity))
+                               ctype)
           pset (read-pset workbook)
           list-items (read-list-items workbook)
+
           attrs-by-name
           (into {}
                 (keep (fn [{n :name :keys [ctype datatype] :as attr}]
@@ -126,7 +130,6 @@
           exists? (into #{}
                         (map :name)
                         (concat fgroup fclass ctype pset list-items))]
-      (def *exists? exists?)
       (vec
        (concat
         ;; Output feature groups
@@ -173,20 +176,21 @@
 
         ;; Output enum values
         (for [item list-items
-              :let [attr (get-in attrs-by-name [(:property item) :name])]
-              :when (and attr
+              :let [attr (attrs-by-name (:property item))
+                    attr-name (get-in attrs-by-name [(:property item) :name])
+                    ctype (get-in ctypes-by-name [(:ctype attr)])]
+              :when (and attr ctype
                          (:name item)
-                         (exists? attr))]
-          (do
-            (println "attr" attr " exists and has item " (:name item))
-            (merge
-             (common-attrs :asset-schema.type/enum item)
-             {:enum/attribute (str attr)}))))))))
+                         (exists? (:property item)))]
+          (merge
+           (common-attrs :asset-schema.type/enum item)
+           {:enum/attribute (str attr-name)})))))))
 
 (defn -main [& [sheet-path]]
   (let [sheet-file (some-> sheet-path io/file)]
     (if (some-> sheet-file .canRead)
-      (spit "../backend/resources/asset-schema.edn"
-            (with-out-str
-              (pp/pprint (generate-asset-schema sheet-file))))
+      (let [schema (generate-asset-schema sheet-file)]
+        (spit "../backend/resources/asset-schema.edn"
+              (with-out-str
+                (pp/pprint schema))))
       (println "Specify location of TEET_ROTL.xlsx as argument."))))
