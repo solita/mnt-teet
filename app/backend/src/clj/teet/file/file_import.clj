@@ -35,7 +35,7 @@
               file-id (ffirst (d/q '[:find ?file
                                      :in $ ?s3-key
                                      :where
-                                     [_ :task/files ?file]  ;; Check that file belongs to task so
+                                     [_ :task/files ?file]  ;; Check that file belongs to task so we don't upload attachments
                                      [?file :file/s3-key ?s3-key]]
                                    db (:file-key s3)))]
           (when (and file-id (file-db/is-task-file? db file-id))
