@@ -1,16 +1,16 @@
 (ns tara.endpoint
-  (:require [org.httpkit.client :as client]
+  (:require [org.httpkit.client :as http]
             [tara.json :as json])
   (:import (com.nimbusds.jose.jwk JWKSet)))
 
 (defn- load-openid-configuration [url]
   (->  (str url "/.well-known/openid-configuration")
-       client/get deref :body
+       http/get deref :body
        json/parse))
 
 (defn- load-jwks [jwks-uri]
   (-> jwks-uri
-      (client/get {:as :stream})
+      (http/get {:as :stream})
       deref :body slurp
       JWKSet/parse))
 

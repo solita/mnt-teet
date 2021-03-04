@@ -1,6 +1,6 @@
 (ns tara.routes
   (:require [compojure.core :refer [GET routes]]
-            [org.httpkit.client :as client]
+            [org.httpkit.client :as http]
             [tara.json :as json]
             [teet.log :as log]
             [tara.token :as token]
@@ -61,7 +61,7 @@
                                       "&redirect_uri=" (enc (str base-url "/oauth2/idpresponse")))
                            :as :text}
             _ (log/info "TOKEN REQUEST: " (pr-str token-request) ", ENDPOINT: " token-endpoint)
-            token-response @(client/post token-endpoint token-request)
+            token-response @(http/post token-endpoint token-request)
             _ (log/info "TOKEN RESPONSE: " token-response)
             token (-> token-response :body json/parse)]
         (if (contains? token :id-token)

@@ -38,6 +38,7 @@
             teet.cooperation.cooperation-view
             teet.asset.asset-library-view
             teet.account.account-view
+            teet.asset.cost-items-view
 
             teet.ui.query
             [teet.ui.url :as url]
@@ -84,7 +85,7 @@
        [theme/theme-provider
         [:div {:style {:display        :flex
                        :flex-direction :column
-                       :min-height     "100%"}}
+                       :min-height     "100vh"}}
          [build-info/top-banner nav-open? page]
          [snackbar/snackbar-container e! snackbar]
          [CssBaseline]

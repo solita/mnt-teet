@@ -25,7 +25,8 @@
             [teet.ui.util :refer [mapc]]
             [teet.project.project-info :as project-info]
             [teet.project.project-model :as project-model]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]))
 
 (defn- svg-style
   [bottom?]
@@ -427,6 +428,7 @@
          {:id "project-export-menu"
           :label (tr [:project :export])
           :icon [icons/file-cloud-download-outlined]
+          :class (<class common-styles/margin-right 1)
           :items (concat export-menu-items (default-export-menu-items project))}]
         (when (and
                 (common-controller/feature-enabled? :vektorio)
@@ -454,17 +456,20 @@
        [project-navigator-dialogs opts]
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
-               :wrap :nowrap
+               :wrap :wrap
                :spacing   0}
          [Grid {:item true
-                :xs nav-w
+                :md nav-w
+                :xs 12
                 :class (<class navigation-style/navigator-left-panel-style)}
           [project-menu/project-menu e! app project true]
           [project-task-navigator e! project app true]]
          [Grid {:item true
-                :xs content-w
+                :xs 12
+                :md content-w
                 :style (merge {:padding "2rem 1.5rem"
                                :overflow-y :auto
+                               :max-height "100%"
                                ;; content area should scroll, not the whole page because we
                                ;; want map to stay in place without scrolling it
                                }
@@ -472,8 +477,12 @@
                                 {:flex 1}))}
           content]
          (when show-map?
-           [Grid {:item  true
-                  :xs :auto
-                  :style {:display :flex
-                          :flex    1}}
+           [Grid {:item true
+                  :xs 12
+                  :md :auto
+                  :class (<class teet.common.responsivity-styles/mobile-only-style
+                                 {:flex-direction :column
+                                  :flex-basis "400px"}      ;; Needs minimum height for the container when in mobile so the map is visible.
+                                 {:display :flex
+                                  :flex 1})}
             [project-map-view/project-map e! app project]])]]]]]))

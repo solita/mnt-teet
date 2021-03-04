@@ -49,7 +49,7 @@
            :let [[section functionality & _] (map sheet/read-cell
                                                   (sheet/cell-seq row))
                  row-num (inc (.getRowNum row))]]
-       [(keyword (-> section str/trim str/lower-case)
+       [(keyword (name (keywordize section))
                  (name (keywordize functionality)))
         (reduce-kv
          (fn [perms role column]

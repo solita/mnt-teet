@@ -77,6 +77,18 @@
       (d/transact conn {:tx-data [{:db/id (:db/id file-data)
                                    :vektorio/model-id vektorio-model-id}]}))))
 
+(defn delete-file-from-project! [db vektorio-config project-eid file-eid]
+  ;; (du/retractions db file-id [:vektorio/model-id]) ;; won't need if we rely on the file entity being deleted immediately after
+  (let [params (merge
+                (d/pull db [:vektorio/model-id] file-eid)
+                (d/pull db [:vektorio/project-id ] project-eid))
+        response (if (not= 2 (count params))
+                   (log/info "skipping vektorio delete due to missing model/project ids for file" file-eid)
+                   (vektorio-client/delete-model! vektorio-config params))]
+    (when response
+      (log/info "successfully deleted vektorio model for file" file-eid))
+    response))
+
 (defn instant-login
   [vektorio-config]
   (let [vektorio-user-id (or

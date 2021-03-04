@@ -67,15 +67,22 @@
     task-model/task-with-status
     tasks))
 
-(defn maybe-update-activity-tasks
-  [project activity-id]
+(defn- maybe-update-activity [fun project activity-id]
   (if-not activity-id
     project
     (cu/update-path
       project
       [:thk.project/lifecycles some?
        :thk.lifecycle/activities #(= activity-id (str (:db/id %)))]
-      update :activity/tasks tasks-with-statuses)))
+      fun)))
+
+(def maybe-update-activity-tasks
+  (partial maybe-update-activity #(update % :activity/tasks tasks-with-statuses)))
+
+(defn maybe-update-activity-has-files?
+  [project db activity-id]
+  (maybe-update-activity #(assoc % :activity-has-files? (file-db/activity-has-files? db (:db/id %)))
+                         project activity-id))
 
 (defn fetch-project [db user {:thk.project/keys [id]
                               task-id :task-id
@@ -95,6 +102,7 @@
                     (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
           (maybe-fetch-task-files db user task-id)
           (maybe-update-activity-tasks activity-id)
+          (maybe-update-activity-has-files? db activity-id)
           (activity-db/update-activity-histories db)))))
 
 (defquery :thk.project/fetch-project

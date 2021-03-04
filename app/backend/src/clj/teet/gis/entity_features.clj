@@ -3,7 +3,7 @@
   (:require [teet.auth.jwt-token :as jwt-token]
             [cheshire.core :as cheshire]
             [teet.log :as log]
-            [org.httpkit.client :as client]
+            [org.httpkit.client :as http]
             [teet.integration.integration-id :as integration-id]))
 
 (defn- api-request [{:keys [api-url api-secret]} request-fn url-path opts]
@@ -18,7 +18,7 @@
   [config entity-id features]
   (log/info "Upserting" (count features) "features for entity:" entity-id)
   (let [response (api-request
-                  config client/post "/rpc/upsert_entity_feature"
+                  config http/post "/rpc/upsert_entity_feature"
                   {:body (cheshire/encode
                           (for [{:keys [geometry properties label type id]} features]
                             {:entity (str entity-id)
@@ -40,7 +40,7 @@
   "Uses postgrest endpoint to delete an entity feature."
   [config entity-id feature-id]
   (let [response (api-request
-                  config client/delete "/entity_feature"
+                  config http/delete "/entity_feature"
                   {:headers {"count" "exact"}
                    :query-params {"entity_id" (str "eq." entity-id)
                                   "id" (str "eq." feature-id)}})]
@@ -55,7 +55,7 @@
   [config integration-id distance]
   {:pre [(uuid? integration-id)]}
   (let [{:keys [status body] :as response}
-        (api-request config client/get "/rpc/gml_entity_search_area"
+        (api-request config http/get "/rpc/gml_entity_search_area"
                      {:headers {"Accept" "text/plain"}
                       :query-params {"entity_id" (integration-id/uuid->number integration-id)
                                      "distance" distance}})]

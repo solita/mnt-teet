@@ -7,6 +7,8 @@
             [teet.log :as log]
             [teet.environment :as environment]
             [teet.project.project-model :as project-model]
+            [teet.file.file-db :as file-db]
+            [teet.file.file-model :as file-model]
             [datomic.client.api :as d]
             [teet.integration.vektorio.vektorio-core :as vektorio-core]))
 
@@ -28,14 +30,13 @@
   (let [suffix (uploaded-file-suffix ctx)]
     (when-let [extensions (and vektorio-config (get-in vektorio-config [:config :file-extensions]))]
       (when (extensions suffix)
-        (let [file-id (ffirst (d/q '[:find ?file
+        (let [db (d/db conn)
+              file-id (ffirst (d/q '[:find ?file
                                      :in $ ?s3-key
                                      :where [?file :file/s3-key ?s3-key]]
-                                   (d/db conn) (:file-key s3)))]
-          (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))
-
-
-  (log/info "Nothing to import for uploaded file: " (:s3 ctx)))
+                                   (:file-key s3)))]
+          (when (and file-id (file-db/is-task-file? db file-id))
+            (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))))
 
 (defmethod import-by-suffix "ags" [ctx]
   (ags-import/import-project-ags-files ctx))
@@ -71,6 +72,9 @@
     (import-by-suffix ctx))
   ctx)
 
+
+
+;; entry point for s3 trigger event
 (defn import-uploaded-file [event]
   (future
     (ctx-> {:event event
@@ -83,3 +87,32 @@
            extract-project-from-filename
            import-file))
   "{\"success\": true}")
+
+(defn scheduled-file-import* [db-connection]
+  (log/info "scheduled vektor import starting")
+  (let [threshold-in-minutes 10
+        vektorio-config (environment/config-value :vektorio)
+        vektorio-handled-file-extensions (or (get-in vektorio-config [:config :file-extensions])
+                       #{})
+        db (d/db db-connection)
+        ;; we'll go thrugh model-idless file entities that haven't been just modified,
+        ;; for vektorio import candidates
+        files (file-db/recent-task-files-without-model-id db threshold-in-minutes)]
+    
+    (doseq [{:keys [file-eid file-name]} files
+            suffix (file-model/filename->suffix name)]
+      (when (and (get vektorio-handled-file-extensions suffix)
+                 (file-db/is-task-file? db file-eid))
+        (try
+          (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
+          (catch clojure.lang.ExceptionInfo e
+            (log/info "Upload errored on file" file-eid (str "(name:" file-name ")"))))))))
+
+
+;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
+(defn scheduled-file-import [event]
+  (future
+    (scheduled-file-import* 
+     (environment/datomic-connection)))
+  "{\"success\": true}")
+

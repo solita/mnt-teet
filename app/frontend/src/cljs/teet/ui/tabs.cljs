@@ -9,7 +9,8 @@
             [teet.ui.panels :as panels]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (defn- comments-link-content
   [comment-counts]
@@ -58,14 +59,14 @@
            :as opts} details]
        (let [query (:query app)
              comments-component [:div
-                                 (when (common/wide-display?)
+                                 (when (responsivity-styles/wide-display?)
                                    [typography/Heading2 {:class (<class common-styles/margin-bottom 2)} (tr [:document :comments])])
                                  [comments-view/lazy-comments
                                   (select-keys opts [:e! :app :entity-id :entity-type
                                                      :show-comment-form? :after-comment-list-rendered-event
                                                      :after-comment-added-event
                                                      :after-comment-deleted-event])]]]
-         (if (common/wide-display?)
+         (if (responsivity-styles/wide-display?)
            ;; Wide display, show side by side
            [panels/side-by-side
             1 details
@@ -76,18 +77,18 @@
             [tab-wrapper
              [:div.tab-links {:class (<class tab-links-container-style)}
 
-               [:div {:class (<class (if (= (:tab query) "comments") tab-element-style tab-element-style-selected))}
-                (if (= (:tab query) "comments")
-                  [common/Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
-                  [typography/SectionHeading (tr [:project :tabs :details])])]
+              [:div {:class (<class (if (= (:tab query) "comments") tab-element-style tab-element-style-selected))}
+               (if (= (:tab query) "comments")
+                 [common/Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
+                 [typography/SectionHeading (tr [:project :tabs :details])])]
 
-               [:div {:class (<class (if (= (:tab query) "comments") tab-element-style-selected tab-element-style))}
-                (if (= (:tab query) "comments")
-                  [typography/SectionHeading
-                   [comments-link-content comment-counts]]
-                  (or comment-link-comp
-                      [common/Link {:href (url/set-query-param :tab "comments")}
-                       [comments-link-content comment-counts]]))]]]
+              [:div {:class (<class (if (= (:tab query) "comments") tab-element-style-selected tab-element-style))}
+               (if (= (:tab query) "comments")
+                 [typography/SectionHeading
+                  [comments-link-content comment-counts]]
+                 (or comment-link-comp
+                     [common/Link {:href (url/set-query-param :tab "comments")}
+                      [comments-link-content comment-counts]]))]]]
             (if (= (:tab query) "comments")
               comments-component
               (with-meta

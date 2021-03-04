@@ -1,7 +1,7 @@
 (ns teet.integration.postgrest
   "Helpers for PostgREST calls"
   (:require [cheshire.core :as cheshire]
-            [org.httpkit.client :as client]
+            [org.httpkit.client :as http]
             [teet.auth.jwt-token :as jwt-token]
             [teet.db-api.core :refer [fail!]]
             [teet.log :as log]
@@ -47,7 +47,7 @@
   ([ctx table] (select ctx table nil nil))
   ([ctx table columns where]
    {:pre [(valid-api-context? ctx)]}
-   (let [resp @(client/get (str (:api-url ctx) "/" (name table))
+   (let [resp @(http/get (str (:api-url ctx) "/" (name table))
                            {:query-params (merge {}
                                                  (when (seq columns)
                                                    {"select" (str/join "," (map name columns))})
@@ -60,7 +60,7 @@
   [ctx table where]
   {:pre [(valid-api-context? ctx)
          (seq where)]}
-  (let [resp @(client/delete (str (:api-url ctx) "/" (name table))
+  (let [resp @(http/delete (str (:api-url ctx) "/" (name table))
                              {:query-params (where-params where)
                               :headers (auth-header ctx)})]
     (decode-response-body resp)))
@@ -69,7 +69,7 @@
   "Upsert data to a table endpoint in PostgREST."
   [ctx table rows]
   {:pre [(valid-api-context? ctx)]}
-  (let [resp @(client/post (str (:api-url ctx) "/" (name table))
+  (let [resp @(http/post (str (:api-url ctx) "/" (name table))
                            {:headers (merge
                                       {"Content-Type" "application/json"
                                        "Prefer" "resolution=merge-duplicates"}
@@ -80,7 +80,7 @@
 (defn rpc
   "POST request an RPC by name, expects JSON response."
   [ctx rpc-name params]
-  (let [resp @(client/post (str (:api-url ctx) "/rpc/" (name rpc-name))
+  (let [resp @(http/post (str (:api-url ctx) "/rpc/" (name rpc-name))
                            {:headers (merge {"Content-Type" "application/json"}
                                             (auth-header ctx))
                             :body (cheshire/encode params)})]

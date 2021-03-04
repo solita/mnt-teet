@@ -3,6 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.comment.comment-db :as comment-db]
+            [clj-time.core :as time]
+            [clj-time.coerce :as tc]
             [teet.log :as log]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.util.datomic :as du]
@@ -46,7 +48,14 @@
   Must check preconditions and permissions for deleting the attached file
   and throw exception with :error key in the data on failure.
 
-  Default behaviour is to disallow and throw an exception."
+  This is used to implement custom permission checks in different kinds of meeting attachments.
+  When permission check passes, they all make the same kind of deletion-tx for the file entity.
+
+  Default behaviour is to disallow and throw an exception.
+
+  Dispatches on the on the first element of the \"attach\" parameter, which is a keyword-id pair such as [:meeting-decision id].
+
+  The implementations emit the same kind of file delete tx, just their permission checks differ."
   (fn [_db _user _file-id attach]
     (first (check-attach-definition attach))))
 
@@ -149,6 +158,16 @@
                                 [{:thk.project/_lifecycles
                                   [:thk.project/id]}]}]}]}
               {:file/part [:file.part/number]}] file-id))
+
+(defn is-task-file?
+  "Differentiate between attachments and other stored files vs task file uploads"
+  [db file-eid]
+  (->> file-eid
+       (pull-file-metadata-by-id db)
+       :task/_files
+       first
+       :activity/_tasks
+       not-empty))
 
 (defn file-metadata-by-id
   "Return file metadata for a given file id."
@@ -253,6 +272,8 @@
                 ;; Earlier it was possible to delete a task without deleting the files first.
                 ;; We don't want to list the files whose task has been deleted.
                 [(missing? $ ?task :meta/deleted?)]
+                ;; Or that haven't finished uploading
+                [?f :file/upload-complete? true]
                 [?act :activity/tasks ?task]
                 [?act :activity/name :activity.name/land-acquisition]
                 [?lc :thk.lifecycle/activities ?act]
@@ -322,6 +343,7 @@
                                :where
                                [?t :task/files ?f]
                                [(missing? $ ?f :meta/deleted?)]
+                               [?f :file/upload-complete? true]
                                (not-join [?f]
                                          [?replacement :file/previous-version ?f])
                                :in $ ?t]
@@ -392,6 +414,7 @@
                [?lc :thk.lifecycle/activities ?a]
                [?a :activity/tasks ?t]
                [?t :task/files ?f]
+               [?f :file/upload-complete? true]
                [(missing? $ ?f :meta/deleted?)]
                [?f :file/name ?file-name]
                [(teet.util.string/contains-words? ?file-name ?text)]]
@@ -410,6 +433,7 @@
            [?a :activity/tasks ?t]
            [?t :task/files ?f]
            [(missing? $ ?f :meta/deleted?)]
+           [?f :file/upload-complete? true]
            [?f :file/name ?file-name]
            [(teet.util.string/contains-words? ?file-name ?text)]
            (not-join [?f]
@@ -444,16 +468,53 @@
           :in $ ?uuid]
         db uuid)))
 
+;; used by vektorio scheduled upload retry. considering only files that are older than threshold,
+;; so we don't step on top of normally (by s3 trigger) started uploads.
+(defn recent-task-files-without-model-id [db threshold-in-minutes]
+  (let [modified-threshold (->> threshold-in-minutes
+                                time/minutes
+                                (time/minus (time/now))
+                                tc/to-date)]
+    (log/debug "modified-threshold" modified-threshold)
+    (d/q '[:find ?f ?name ?mctime
+           :keys file-eid file-name mctime
+           :in $ ?modified-threshold
+           :where
+           [?f :file/id _]
+           [?f :file/name ?name]
+           [?f :meta/created-at ?created]
+           [(get-else $ ?f :meta/modified-at ?created) ?mctime]
+           [(< ?mctime ?modified-threshold)]
+           [(missing? $ ?f :vektorio/model-id)]
+           [(missing? $ ?f :meta/deleted?)]]
+         db modified-threshold)))
+
 (defn task-has-files?
   "Check if task currently has files. Doesn't include deleted files."
   [db task-id]
   (boolean
-    (seq
-      (d/q '[:find ?f
+    (d/qseq '[:find ?f
+              :where
+              [?t :task/files ?f]
+              [?f :file/upload-complete? true]
+              [(missing? $ ?f :meta/deleted?)]
+              (not-join [?f]
+                        [?replacement :file/previous-version ?f])
+              :in $ ?t]
+            db task-id)))
+
+(defn activity-has-files?
+  "Check if some task in activity has files. Doesn't include deleted tasks or files."
+  [db activity-id]
+  (boolean
+   (d/qseq '[:find ?f
              :where
-             [?t :task/files ?f]
+             [?act :activity/tasks ?task]
+             [(missing? $ ?task :meta/deleted?)]
+             [?task :task/files ?f]
+             [?f :file/upload-complete? true]
              [(missing? $ ?f :meta/deleted?)]
              (not-join [?f]
-               [?replacement :file/previous-version ?f])
-             :in $ ?t]
-        db task-id))))
+                       [?replacement :file/previous-version ?f])
+             :in $ ?act]
+           db activity-id)))
