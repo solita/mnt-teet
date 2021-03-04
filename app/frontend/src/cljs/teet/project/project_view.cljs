@@ -39,7 +39,6 @@
             [teet.project.project-map-view :as project-map-view]
             [teet.common.common-controller :as common-controller]
             [teet.road.road-model :as road-model]
-            [teet.environment :as environment]
             [teet.ui.query :as query]
             [taoensso.timbre :as log]
             [clojure.string :as str]
