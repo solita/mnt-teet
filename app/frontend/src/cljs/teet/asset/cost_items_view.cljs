@@ -62,25 +62,30 @@
                 (:db.type/long :db.type/bigdec) {:type :number}
                 nil))])]]))]))
 
+(declare components)
 
 (defn- component
   "Render one component."
-  [{:keys [e! component on-change]}]
+  [{:keys [e! component on-change]} rotl]
   ;; form uses the on-change-event constructor given at the 1st render
   ;; so we need to keep track of the on-change here and use it in the
   ;; change event
   (r/with-let [on-change-atom (atom on-change)]
     (reset! on-change-atom on-change)
-    [Card {:style {:margin-bottom "1rem"}}
-     [CardHeader {:title (str (:component/ctype component))
-                  :action (r/as-element
-                           [IconButton {:on-click #(on-change {::deleted? true})}
-                            [icons/action-delete]])}]
-     [CardContent
-      [form/form2 {:e! e!
-                   :on-change-event (form/callback-change-event #(@on-change-atom %))
-                   :value component}
-       [attributes e! (get-in component [:ctype :attribute/_parent])]]]]))
+    (let [ctype (get rotl (:component/ctype component))]
+      [Card {:style {:margin-bottom "1rem"}}
+       [CardHeader {:title (label ctype)
+                    :action (r/as-element
+                             [IconButton {:on-click #(on-change {::deleted? true})}
+                              [icons/action-delete]])}]
+       [CardContent
+        [form/form2 {:e! e!
+                     :on-change-event (form/callback-change-event #(@on-change-atom %))
+                     :value component}
+         [attributes e! (:attribute/_parent ctype)]
+
+         [form/field :component/components
+          [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]]])))
 
 (defn- components
   "Render field for components, with add component if there are allowed components.
@@ -95,9 +100,10 @@
      (fn [i {id :db/id deleted? ::deleted? :as c}]
        (when (not deleted?)
          ^{:key (str id)}
-         [component {:e! e!
-                     :component c
-                     :on-change #(on-change (update value i merge %))}]))
+         [context/consume :rotl
+          [component {:e! e!
+                      :component c
+                      :on-change #(on-change (update value i merge %))}]]))
      value))
    [Grid {:container true}
     (doall
@@ -106,8 +112,7 @@
        [Grid {:item true :xs 3}
         [buttons/button-secondary {:size :small
                                    :on-click #(on-change (conj (or value [])
-                                                               {:ctype c
-                                                                :component/ctype (:db/ident c)}))
+                                                               {:component/ctype (:db/ident c)}))
                                    :start-icon (r/as-element [icons/content-add])}
          (label c)]]))]])
 
@@ -185,12 +190,18 @@
      ;; FIXME: remove when finalizing form
      [df/DataFriskView @form-data]]))
 
+(defn- rotl-map
+  "Return a flat mapping of all ROTL items, by :db/ident."
+  [fgroups]
+  (into {}
+        (map (juxt :db/ident identity))
+        (cu/collect :db/ident fgroups)))
 
 (defn cost-items-page [e! app {:keys [fgroups project
                                       asset-type-library]}]
   (r/with-let [add? (r/atom false)
                add-cost-item! #(reset! add? true)]
-    [context/provide :rotl asset-type-library
+    [context/provide :rotl (rotl-map asset-type-library)
      [project-view/project-full-page-structure
       {:e! e!
        :app app
