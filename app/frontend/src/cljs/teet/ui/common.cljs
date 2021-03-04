@@ -225,7 +225,7 @@
    :font-size "20px"
    :font-weight :bold})
 
-(defn- vectorio-link-icon-style
+(defn- vektorio-link-icon-style
   []
   (thk-link-icon-style))
 
@@ -236,12 +236,12 @@
    label
    [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
 
-(defn vertorio-link
+(defn vektorio-link
   [opts label]
   [Link (merge {:class (<class vectorio-link-style)}
           opts)
    label
-   [icons/action-open-in-new {:class (<class vectorio-link-icon-style)}]])
+   [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
 
 (def ^{:const true
        :doc "Minimum browser window width that is considered wide for layout purposes."}
