@@ -73,19 +73,6 @@
      (when repair-method
        [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])]))
 
-
-(defn project-header-style
-  []
-  {:padding "0 1.875rem 1.5rem 1.875rem"})
-
-(defn default-export-menu-items [project]
-  [(when (project-model/has-related-info? project)
-     {:label (tr [:project :download-related-info])
-      :icon [icons/file-cloud-download]
-      :link {:target :_blank
-             :href (common-controller/query-url :thk.project/download-related-info
-                                          (select-keys project [:thk.project/id]))}})])
-
 (defn heading-state
   [title select]
   [:div {:class (<class project-style/heading-state-style)}

@@ -25,9 +25,7 @@
             [teet.ui.util :refer [mapc]]
             [teet.project.project-info :as project-info]
             [teet.project.project-model :as project-model]
-            [teet.common.common-controller :as common-controller]
-            [teet.environment :as environment]
-            [taoensso.timbre :as log]))
+            [teet.common.common-controller :as common-controller]))
 
 (defn- svg-style
   [bottom?]

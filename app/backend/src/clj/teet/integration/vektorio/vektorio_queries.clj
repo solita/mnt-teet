@@ -27,8 +27,4 @@
    :project-id project-id
    :vektorio-project-id vektorio-project-id
    :authorization {}}
-  (let [url-to-bim (url-for-bim-viewer vektorio-project-id)]
-    (println "url to bim viewer: " url-to-bim)
-    (println "project-id " project-id)
-    (println "vektorio-project-id " vektorio-project-id)
-    url-to-bim))
+  (url-for-bim-viewer vektorio-project-id))
