@@ -9,13 +9,12 @@
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
             [datafrisk.core :as df]
-            [teet.ui.material-ui :refer [Grid Paper Card CardHeader CardContent IconButton]]
+            [teet.ui.material-ui :refer [Grid Collapse Card CardHeader CardContent CardActions IconButton]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
             [teet.util.collection :as cu]
             [teet.ui.context :as context]
-            [teet.ui.common :as common]
             [teet.ui.icons :as icons]
             [teet.common.responsivity-styles :as responsivity-styles]
             [herb.core :refer [<class]]))
@@ -26,16 +25,14 @@
       (str (:db/ident m))
       l)))
 
-(defn- attributes
-  "Render grid of attributes."
-  [e! attrs]
-  (when (seq attrs)
+(defn- attributes* [e! attrs rotl]
+  (let [common-attrs (:attribute/_parent (:ctype/common rotl))]
     [Grid {:container true
            :justify :space-evenly
            :alignItems :flex-end}
      (doall
       (for [{:db/keys [ident valueType]
-             :asset-schema/keys [unit] :as attr} attrs
+             :asset-schema/keys [unit] :as attr} (concat common-attrs attrs)
             :let [type (:db/ident valueType)]]
         [Grid {:item true :xs 4 :style {:padding "0.2rem"}}
          [form/field {:attribute ident}
@@ -62,6 +59,11 @@
                 (:db.type/long :db.type/bigdec) {:type :number}
                 nil))])]]))]))
 
+(defn- attributes
+  "Render grid of attributes."
+  [e! attrs]
+  [context/consume :rotl [attributes* e! attrs]])
+
 (declare components)
 
 (defn- component
@@ -70,22 +72,33 @@
   ;; form uses the on-change-event constructor given at the 1st render
   ;; so we need to keep track of the on-change here and use it in the
   ;; change event
-  (r/with-let [on-change-atom (atom on-change)]
+  (r/with-let [on-change-atom (atom on-change)
+               expanded? (r/atom true)
+               toggle-expand! #(swap! expanded? not)]
     (reset! on-change-atom on-change)
     (let [ctype (get rotl (:component/ctype component))]
       [Card {:style {:margin-bottom "1rem"}}
-       [CardHeader {:title (label ctype)
+       [CardHeader {:title (str (label ctype)
+                                (when-let [name (:common/name component)]
+                                  (str ": " name)))
                     :action (r/as-element
-                             [IconButton {:on-click #(on-change {::deleted? true})}
-                              [icons/action-delete]])}]
-       [CardContent
-        [form/form2 {:e! e!
-                     :on-change-event (form/callback-change-event #(@on-change-atom %))
-                     :value component}
-         [attributes e! (:attribute/_parent ctype)]
+                             [CardActions
+                              [IconButton {:on-click #(on-change {::deleted? true})}
+                               [icons/action-delete]]
+                              [IconButton {:on-click toggle-expand!}
+                               (if @expanded?
+                                 [icons/navigation-expand-less]
+                                 [icons/navigation-expand-more])]])}]
 
-         [form/field :component/components
-          [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]]])))
+       [Collapse {:in @expanded? :unmountOnExit true}
+        [CardContent
+         [form/form2 {:e! e!
+                      :on-change-event (form/callback-change-event #(@on-change-atom %))
+                      :value component}
+          [attributes e! (:attribute/_parent ctype)]
+
+          [form/field :component/components
+           [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]]]])))
 
 (defn- components
   "Render field for components, with add component if there are allowed components.
@@ -122,10 +135,12 @@
     ""
     (str (label fg) " / " (label fc))))
 
-(defn group-and-class-selection [{:keys [e! on-change value asset-type-library read-only?]}]
+(defn group-and-class-selection [{:keys [e! on-change value fgroups read-only? name]}]
   (let [[fg fc] value]
     (if read-only?
-      [typography/Heading3 (format-fg-and-fc value)]
+      [typography/Heading3 (str (format-fg-and-fc value)
+                                (when name
+                                  (str ": " name)))]
       [Grid {:container true}
        [Grid {:item true :xs 12 :class (<class responsivity-styles/visible-desktop-only)}
         [select/select-search
@@ -138,7 +153,7 @@
           :show-empty-selection? true
           :query (fn [text]
                    #(vec
-                     (for [fg asset-type-library
+                     (for [fg fgroups
                            fc (:fclass/_fgroup fg)
                            :let [result [fg fc]]
                            :when (string/contains-words? (format-fg-and-fc result) text)]
@@ -147,7 +162,7 @@
        [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
         [select/select-with-action
          {:show-empty-selection? true
-          :items asset-type-library
+          :items fgroups
           :format-item tr*
           :value fg
           :on-change #(on-change [% nil])}]]
@@ -166,36 +181,44 @@
                on-change-event (form/update-atom-event
                                 form-data
                                 cu/deep-merge)]
-    [:<>
+    (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
+      [:<>
 
-     [form/form2
-      {:e! e!
-       :on-change-event on-change-event
-       :value @form-data}
+       [form/form2
+        {:e! e!
+         :on-change-event on-change-event
+         :value @form-data}
 
-      [form/field {:attribute :feature-group-and-class}
-       [group-and-class-selection {:e! e!
-                                   :asset-type-library asset-type-library
-                                   :read-only? (seq (dissoc @form-data :feature-group-and-class))}]]
+        [form/field {:attribute :feature-group-and-class}
+         [group-and-class-selection {:e! e!
+                                     :fgroups (:fgroups asset-type-library)
+                                     :read-only? (seq (dissoc @form-data :feature-group-and-class))
+                                     :name (:common/name @form-data)}]]
 
+        (when feature-class
+          [:<>
+           ;; Attributes for asset
+           [attributes e! (some-> feature-class :attribute/_parent)]
 
-      ;; Attributes for asset
-      [attributes e! (some-> @form-data :feature-group-and-class second :attribute/_parent)]
+           ;; Components
+           [form/field {:attribute :asset/components}
+            [components {:e! e!
+                         :allowed-components (:ctype/_parent feature-class)}]]])]
 
-      ;; Components
-      [form/field {:attribute :asset/components}
-       [components {:e! e!
-                    :allowed-components (get-in @form-data [:feature-group-and-class 1 :ctype/_parent])}]]]
-
-     ;; FIXME: remove when finalizing form
-     [df/DataFriskView @form-data]]))
+       ;; FIXME: remove when finalizing form
+       [df/DataFriskView @form-data]])))
 
 (defn- rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
-  [fgroups]
+  [rotl]
   (into {}
         (map (juxt :db/ident identity))
-        (cu/collect :db/ident fgroups)))
+
+        ;; collect maps that have :db/ident and more fields apart from identity
+        (cu/collect #(and (map? %)
+                          (contains? % :db/ident)
+                          (seq (dissoc % :db/id :db/ident)))
+                    rotl)))
 
 (defn cost-items-page [e! app {:keys [fgroups project
                                       asset-type-library]}]

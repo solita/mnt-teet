@@ -103,7 +103,7 @@
        ^{:key (str (:db/id fc))}
        [fclass open fc]))]])
 
-(defn asset-library-page [_e! _app fgroups]
+(defn asset-library-page [_e! _app {:keys [fgroups]}]
   (r/with-let [open (r/atom #{})]
     [:<>
      [typography/Heading1 (tr [:asset :type-library :header])]
