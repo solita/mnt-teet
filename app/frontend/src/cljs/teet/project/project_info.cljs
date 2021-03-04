@@ -19,4 +19,3 @@
   "Checks the environment based on the hostname and returns THK url for a project"
   [{:thk.project/keys [id]}]
   (str (environment/config-value :thk :url) id))
-
