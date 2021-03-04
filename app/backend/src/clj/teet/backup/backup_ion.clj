@@ -304,16 +304,20 @@
     (log/info "Starting TEET backup to bucket: "
               bucket ", file: " file-key)
     (try
-      (s3/write-file-to-s3 {:to {:bucket bucket
-                                 :file-key file-key}
-                            :contents (ring-io/piped-input-stream
-                                       (fn [out]
-                                         (output-zip
-                                          out
-                                          ["transactions.edn" (partial output-all-tx conn)]
-                                          (when (environment/feature-enabled? :asset-db)
-                                            ["assets.edn" (partial output-all-tx
-                                                                   (environment/asset-connection))]))))})
+      (s3/write-file-to-s3
+       {:to {:bucket bucket
+             :file-key file-key}
+        :contents (ring-io/piped-input-stream
+                   (fn [out]
+                     (try
+                       (output-zip
+                        out
+                        ["transactions.edn" (partial output-all-tx conn)]
+                        (when (environment/feature-enabled? :asset-db)
+                          ["assets.edn" (partial output-all-tx
+                                                 (environment/asset-connection))]))
+                       (catch Throwable t
+                         (log/error t "Error generating backup zip file")))))})
       (log/info "TEET backup finished.")
       (catch Exception e
         (log/error e "TEET backup failed")))))
@@ -357,7 +361,7 @@
 
 
 ;; ion :delete-email-addresses-from-datomic entry point
-;; 
+;;
 (defn delete-user-email-addresses [_]
   (let [db-connection (environment/datomic-connection)
         db (d/db db-connection)
@@ -365,7 +369,7 @@
                             :where [?u :user/email ?email]]
                           db)
         retract-tx (vec (for [{:keys [user-eid email]} users-result]
-                          [:db/retract user-eid :user/email email]))]    
+                          [:db/retract user-eid :user/email email]))]
     (d/transact db-connection {:tx-data retract-tx})
     (log/info "Removed email address from" (count retract-tx) "users")
     "{\"success\": true}"))
