@@ -57,7 +57,13 @@
   :db/cardinality :db.cardinality/one}
 
  {:db/ident :asset/components
-  :db/doc "Components of this asset (or component)"
+  :db/doc "Components of this asset"
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/many
+  :db/isComponent true}
+
+ {:db/ident :component/components
+  :db/doc "Subcomponents of this component"
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/many
   :db/isComponent true}
