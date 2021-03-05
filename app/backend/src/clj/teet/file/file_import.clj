@@ -27,14 +27,16 @@
 ;; Check for the file-suffix to match vektorio config values and the upload the file to vektorio
 (defmethod import-by-suffix :default
   [{:keys [vektorio-config conn s3] :as ctx}]
+  (log/info "File import by suffix triggered from aws S3 for file: " (:file-key s3))
   (let [suffix (uploaded-file-suffix ctx)]
     (when-let [extensions (and vektorio-config (get-in vektorio-config [:config :file-extensions]))]
       (when (extensions suffix)
         (let [db (d/db conn)
               file-id (ffirst (d/q '[:find ?file
                                      :in $ ?s3-key
-                                     :where [?file :file/s3-key ?s3-key]]
-                                   (:file-key s3)))]
+                                     :where
+                                     [?file :file/s3-key ?s3-key]]
+                                   db (:file-key s3)))]
           (when (and file-id (file-db/is-task-file? db file-id))
             (vektorio-core/upload-file-to-vektor! conn vektorio-config file-id)))))))
 
@@ -72,8 +74,6 @@
     (import-by-suffix ctx))
   ctx)
 
-
-
 ;; entry point for s3 trigger event
 (defn import-uploaded-file [event]
   (future
@@ -98,7 +98,7 @@
         ;; we'll go thrugh model-idless file entities that haven't been just modified,
         ;; for vektorio import candidates
         files (file-db/recent-task-files-without-model-id db threshold-in-minutes)]
-    
+
     (doseq [{:keys [file-eid file-name]} files
             suffix (file-model/filename->suffix name)]
       (when (and (get vektorio-handled-file-extensions suffix)
@@ -112,7 +112,7 @@
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
 (defn scheduled-file-import [event]
   (future
-    (scheduled-file-import* 
+    (scheduled-file-import*
      (environment/datomic-connection)))
   "{\"success\": true}")
 

@@ -309,13 +309,13 @@
       [page-listing e! open? user page]])])
 
 (defn login-header
-  [e!]
+  [e! {:keys [url] :as _app}]
   [AppBar {:position "sticky"
            :className (herb/join (<class navigation-style/appbar))}
    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
     [:div {:class (<class navigation-style/logo-style)}
      [navigation-logo/maanteeamet-logo true]]
-    [navigation-header-links e! nil "login" false]]])
+    [navigation-header-links e! nil url false]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}

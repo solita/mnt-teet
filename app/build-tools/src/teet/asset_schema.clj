@@ -4,13 +4,19 @@
             [clojure.pprint :as pp]
             [clojure.java.io :as io]))
 
+(defn- keywordize [pfx name]
+  (let [clean #(-> %
+                   (str/replace "(" "")
+                   (str/replace ")" "")
+                   (str/replace "/" "_"))]
+    (keyword (clean pfx) (clean name))))
 
 (defn- parse-name
   "Turn string name like \"[property:size]\" into keyword :property/size"
   [s]
   (when s
     (when-let [[_ pfx name] (re-matches #"\[([^:]+):([^]]+)\]" s)]
-      (keyword pfx name))))
+      (keywordize pfx name))))
 
 (defn- update-name-columns [name-keys rows]
   (mapv #(reduce
@@ -105,11 +111,15 @@
     (let [workbook (sheet/load-workbook in)
           fgroup (read-feature-groups workbook)
           fclass (read-feature-classes workbook)
-          ctype (into [{:name :ctype/general
-                        :comment "Attributes general to all assets"}]
+          ctype (into [{:name :ctype/common
+                        :comment "Attributes common to all assets and components"}]
                       (read-ctypes workbook))
+          ctypes-by-name (into {}
+                               (map (juxt :name identity))
+                               ctype)
           pset (read-pset workbook)
           list-items (read-list-items workbook)
+
           attrs-by-name
           (into {}
                 (keep (fn [{n :name :keys [ctype datatype] :as attr}]
@@ -136,9 +146,10 @@
 
         ;; Output component types
         (for [ct ctype
-              :when (and (:name ct)
-                         (or (not (contains? ct :part-of))
-                             (exists? (:part-of ct))))]
+              :when (or (= (:name ct) :ctype/common)
+                        (and (:name ct)
+                             (or (not (contains? ct :part-of))
+                                 (exists? (:part-of ct)))))]
           (merge
            (common-attrs :asset-schema.type/ctype ct)
            (when (contains? ct :part-of)
@@ -146,33 +157,40 @@
 
         ;; Output attributes namespaced by ctype
         (for [p (vals attrs-by-name)
-              :when (exists? (:ctype p))]
+              :let [valueType (case (:datatype p)
+                                ("text" "alphanumeric") :db.type/string
+                                "listitem" :db.type/ref
+                                "integer" :db.type/long
+                                "number" :db.type/bigdec
+                                "datetime" :db.type/instant
+                                nil)]
+              :when (and valueType
+                         (exists? (:ctype p)))]
           (without-empty
            (merge
             (common-attrs :asset-schema.type/attribute p)
             {:db/cardinality :db.cardinality/one ; PENDING: can be many?
-             :db/valueType (case (:datatype p)
-                             ("text" "alphanumeric") :db.type/string
-                             "listitem" :db.type/ref
-                             "integer" :db.type/long
-                             "number" :db.type/bigdec
-                             "datetime" :db.type/instant)
+             :db/valueType valueType
              :asset-schema/unit (:unit p)
              :attribute/parent (str (:ctype p))})))
 
         ;; Output enum values
         (for [item list-items
-              :let [attr (get-in attrs-by-name [(:property item) :name])]
-              :when (and (:name item)
+              :let [attr (attrs-by-name (:property item))
+                    attr-name (get-in attrs-by-name [(:property item) :name])
+                    ctype (get-in ctypes-by-name [(:ctype attr)])]
+              :when (and attr ctype
+                         (:name item)
                          (exists? (:property item)))]
           (merge
            (common-attrs :asset-schema.type/enum item)
-           {:enum/attribute (str attr)})))))))
+           {:enum/attribute (str attr-name)})))))))
 
 (defn -main [& [sheet-path]]
   (let [sheet-file (some-> sheet-path io/file)]
     (if (some-> sheet-file .canRead)
-      (spit "../backend/resources/asset-schema.edn"
-            (with-out-str
-              (pp/pprint (generate-asset-schema sheet-file))))
+      (let [schema (generate-asset-schema sheet-file)]
+        (spit "../backend/resources/asset-schema.edn"
+              (with-out-str
+                (pp/pprint schema))))
       (println "Specify location of TEET_ROTL.xlsx as argument."))))

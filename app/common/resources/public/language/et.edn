@@ -70,7 +70,10 @@
    :values "Väärtused",
    :ctype "Komponent",
    :db.type/long "Täisarv",
-   :attributes "Tunnused"}},
+   :attributes "Tunnused"},
+  :add-cost-item "Lisan kululoend",
+  :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
+  :no-matching-feature-classes "Pole vastavata vara liik"},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
