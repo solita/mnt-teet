@@ -125,15 +125,25 @@
                       :on-change #(on-change (update value i merge %))}]]))
      value))
    [Grid {:container true}
-    (doall
-     (for [c allowed-components]
-       ^{:key (str :db/ident c)}
-       [Grid {:item true :xs 3}
-        [buttons/button-secondary {:size :small
-                                   :on-click #(on-change (conj (or value [])
-                                                               {:component/ctype (:db/ident c)}))
-                                   :start-icon (r/as-element [icons/content-add])}
-         (label c)]]))]])
+    (if (> (count allowed-components) 3)
+      [common/context-menu
+       {:label "add component"
+        :icon [icons/content-add-circle-outline]
+        :items (for [c allowed-components]
+                 {:label (label c)
+                  :icon [icons/content-add]
+                  :on-click (r/partial on-change (conj (or value [])
+                                                       {:ctype c
+                                                        :component/ctype (:db/ident c)}))})}]
+      (doall
+       (for [c allowed-components]
+         ^{:key (str :db/ident c)}
+         [Grid {:item true :xs 12 :md 4}
+          [buttons/button-secondary {:size :small
+                                     :on-click (r/partial on-change (conj (or value [])
+                                                                          {:component/ctype (:db/ident c)}))
+                                     :start-icon (r/as-element [icons/content-add])}
+           (label c)]])))]])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
