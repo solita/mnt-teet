@@ -209,7 +209,7 @@
    :display :flex
    :align-items :center})
 
-(defn- vectorio-link-style
+(defn- vektorio-link-style
   []
   ^{:pseudo {:hover {:text-decoration :none}}}
    {:margin-left "10px"
@@ -238,7 +238,7 @@
 
 (defn vektorio-link
   [opts label]
-  [Link (merge {:class (<class vectorio-link-style)}
+  [Link (merge {:class (<class vektorio-link-style)}
           opts)
    label
    [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
