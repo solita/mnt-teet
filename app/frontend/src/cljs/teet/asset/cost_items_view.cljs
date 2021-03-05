@@ -35,7 +35,10 @@
       (for [{:db/keys [ident valueType]
              :asset-schema/keys [unit] :as attr} (concat common-attrs attrs)
             :let [type (:db/ident valueType)]]
-        [Grid {:item true :xs 4 :style {:padding "0.2rem"}}
+        [Grid {:item true
+               :md 4
+               :xs 12
+               :style {:padding "0.2rem"}}
          [form/field {:attribute ident}
           (if (= type :db.type/ref)
             ;; Selection value
