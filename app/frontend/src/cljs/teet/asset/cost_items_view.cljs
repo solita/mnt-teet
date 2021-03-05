@@ -17,7 +17,8 @@
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
             [teet.common.responsivity-styles :as responsivity-styles]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.ui.common :as common]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -73,8 +74,10 @@
   ;; so we need to keep track of the on-change here and use it in the
   ;; change event
   (r/with-let [on-change-atom (atom on-change)
+               on-change-event (form/callback-change-event #(@on-change-atom %))
                expanded? (r/atom true)
-               toggle-expand! #(swap! expanded? not)]
+               toggle-expand! #(swap! expanded? not)
+               delete! #(@on-change-atom {::deleted? true})]
     (reset! on-change-atom on-change)
     (let [ctype (get rotl (:component/ctype component))]
       [Card {:style {:margin-bottom "1rem"}}
@@ -83,7 +86,7 @@
                                   (str ": " name)))
                     :action (r/as-element
                              [CardActions
-                              [IconButton {:on-click #(on-change {::deleted? true})}
+                              [IconButton {:on-click delete!}
                                [icons/action-delete]]
                               [IconButton {:on-click toggle-expand!}
                                (if @expanded?
@@ -93,7 +96,7 @@
        [Collapse {:in @expanded? :unmountOnExit true}
         [CardContent
          [form/form2 {:e! e!
-                      :on-change-event (form/callback-change-event #(@on-change-atom %))
+                      :on-change-event on-change-event
                       :value component}
           [attributes e! (:attribute/_parent ctype)]
 
