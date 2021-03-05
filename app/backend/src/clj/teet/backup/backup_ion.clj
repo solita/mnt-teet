@@ -5,7 +5,6 @@
             [teet.integration.integration-s3 :as s3]
             [teet.integration.integration-context :as integration-context
              :refer [ctx-> defstep]]
-            [ring.util.io :as ring-io]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [teet.util.datomic :as du]
