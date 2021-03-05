@@ -330,7 +330,8 @@
           (s3/write-file-to-s3
            {:to {:bucket bucket
                  :file-key file-key}
-            :contents in})))
+            :contents in}))
+        (io/delete-file file))
       (log/info "TEET backup finished.")
       (catch Exception e
         (log/error e "TEET backup failed")))))
