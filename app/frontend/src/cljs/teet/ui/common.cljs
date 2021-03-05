@@ -203,19 +203,19 @@
 
 (defn- thk-link-style
   []
-  ^{:pseudo {:hover {:text-decoration :underline}}}
+  ^{:pseudo {:hover {:text-decoration :none}}}
   {:font-size "24px"
-   :text-decoration :none
+   :text-decoration :underline
    :display :flex
    :align-items :center})
 
 (defn- vectorio-link-style
   []
-  ^{:pseudo {:hover {:text-decoration :underline}}}
+  ^{:pseudo {:hover {:text-decoration :none}}}
    {:margin-left "10px"
     :margin-right "10px"
     :font-size "24px"
-    :text-decoration :none
+    :text-decoration :underline
     :display :flex
     :align-items :center})
 
