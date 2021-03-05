@@ -435,7 +435,7 @@
                 (some? (:vektorio/project-id project)))
           [common/vektorio-link {:href (common-controller/query-url :vektorio/instant-login project)
                                  :target "_blank"}
-           (str "BIM Models" (:vektorio/project-id project))])
+           (str (tr [:project :bim-models]) (:vektorio/project-id project))])
         [common/thk-link {:href thk-url
                           :target "_blank"}
          (str "THK" (:thk.project/id project))]]]])))
