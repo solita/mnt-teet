@@ -4,6 +4,8 @@
             [teet.util.datomic :as du]
             [teet.file.filename-metadata :as filename-metadata]
             [clojure.set :as set]
+            [teet.ui.select :as select]
+            [teet.localization :refer [tr tr-enum]]
             #?(:cljs [teet.file.file-spec :as file-spec])))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
@@ -80,6 +82,33 @@
 
       (not= (:db/id task) (:task-id metadata))
       {:error :wrong-task})))
+
+(defn wrong-task-error [expected-task-type task-types]
+  (let [correct-task (some #(when (= (:filename/code %) expected-task-type)
+                                  (:db/ident %))
+                       task-types)]
+    (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
+
+(defn validate-file-metadata-case
+  "Call validate file metadata and check the error
+  Returns map with title and description"
+  [e! project-id task metadata]
+  (when-let [metadata-validation-result (validate-file-metadata project-id task metadata)]
+    (case (:error metadata-validation-result)
+      ;; Check for wrong project
+      :wrong-project
+      {:title (tr [:file-upload :wrong-project])
+       :description ""}
+
+      ;; Check for wrong task (if metadata can be parsed)
+      :wrong-task
+      {:title (tr [:file-upload :wrong-task])
+       :description [select/with-enum-values
+                     {:e! e!
+                      :attribute :task/type}
+                     [wrong-task-error (:task metadata)]]}
+      ;; Validation OK
+      nil)))
 
 (def image-suffix? (partial has-suffix? image-suffixes))
 
