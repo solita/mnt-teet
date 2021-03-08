@@ -141,38 +141,38 @@
       nil)))
 
 (defn validate-file [e! project-id task {:keys [metadata] :as file-row}]
-  (let [file-info (files-field-entry file-row)]
-    (and (common-file-validation (merge file-row file-info))
-        (when-let [error (or (and metadata (validate-name file-row))
-                             (validate-seq-number file-row)
-                             (file-model/validate-file file-info)
-                             (file-model/validate-file-metadata project-id task metadata))]
+  (let [file-info (files-field-entry file-row)
+        file-row-info (merge file-row file-info)]
+    (or (common-file-validation file-row-info)
+      (when-let [error (or (and metadata (validate-name file-row-info))
+                          (validate-seq-number file-row-info)
+                          (file-model/validate-file file-row-info)
+                          (file-model/validate-file-metadata project-id task metadata))]
+        (case (:error error)
 
-          (case (:error error)
+          ;; Check for wrong project
+          :wrong-project
+          {:title (tr [:file-upload :wrong-project])
+           :description ""}
 
-            ;; Check for wrong project
-            :wrong-project
-            {:title (tr [:file-upload :wrong-project])
-             :description ""}
+          ;; Check for wrong task (if metadata can be parsed)
+          :wrong-task
+          {:title (tr [:file-upload :wrong-task])
+           :description [select/with-enum-values
+                         {:e! e!
+                          :attribute :task/type}
+                         [wrong-task-error (:task metadata)]]}
 
-            ;; Check for wrong task (if metadata can be parsed)
-            :wrong-task
-            {:title (tr [:file-upload :wrong-task])
-             :description [select/with-enum-values
-                           {:e! e!
-                            :attribute :task/type}
-                           [wrong-task-error (:task metadata)]]}
+          :description-and-extension-required
+          {:title (tr [:file-upload :description-required])
+           :description ""}
 
-            :description-and-extension-required
-            {:title (tr [:file-upload :description-required])
-             :description ""}
+          :invalid-sequence-number
+          {:title (tr [:file-upload :invalid-sequence-number])
+           :description ""}
 
-            :invalid-sequence-number
-            {:title (tr [:file-upload :invalid-sequence-number])
-             :description ""}
-
-            ;; All validations ok
-            nil)))))
+          ;; All validations ok
+          nil)))))
 
 (defn files-field-row [{:keys [e! update-file delete-file
                                project-id task]} file-row]
