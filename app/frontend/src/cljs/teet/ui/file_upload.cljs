@@ -90,6 +90,12 @@
       :file-object
       file-model/file-info))
 
+(defn wrong-task-error [expected-task-type task-types]
+  (let [correct-task (some #(when (= (:filename/code %) expected-task-type)
+                              (:db/ident %))
+                           task-types)]
+    (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
+
 (defn validate-name [{:file/keys [description extension] :as _file-row}]
   (cond
     (not (file-model/valid-description-length? description)) {:error :description-too-long}
@@ -136,14 +142,27 @@
 
 (defn validate-file [e! project-id task {:keys [metadata] :as file-row}]
   (let [file-info (files-field-entry file-row)]
-    (or
-      (file-model/validate-file-metadata-case e! project-id task metadata)
-      (common-file-validation (merge file-row file-info))
-      (when-let [error (or (and metadata (validate-name file-row))
+    (and (common-file-validation (merge file-row file-info))
+        (when-let [error (or (and metadata (validate-name file-row))
                              (validate-seq-number file-row)
-                             (file-model/validate-file file-info))]
+                             (file-model/validate-file file-info)
+                             (file-model/validate-file-metadata project-id task metadata))]
 
           (case (:error error)
+
+            ;; Check for wrong project
+            :wrong-project
+            {:title (tr [:file-upload :wrong-project])
+             :description ""}
+
+            ;; Check for wrong task (if metadata can be parsed)
+            :wrong-task
+            {:title (tr [:file-upload :wrong-task])
+             :description [select/with-enum-values
+                           {:e! e!
+                            :attribute :task/type}
+                           [wrong-task-error (:task metadata)]]}
+
             :description-and-extension-required
             {:title (tr [:file-upload :description-required])
              :description ""}
