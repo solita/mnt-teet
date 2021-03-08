@@ -111,7 +111,10 @@
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
 (defn scheduled-file-import [event]
   (future
-    (scheduled-file-import*
-     (environment/datomic-connection)))
+    (try      
+      (scheduled-file-import*
+       (environment/datomic-connection))
+      (catch Exception e
+        (log/error e))))
   "{\"success\": true}")
 
