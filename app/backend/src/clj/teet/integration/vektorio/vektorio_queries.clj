@@ -8,10 +8,10 @@
             [clojure.data.json :as json]))
 
 
-(defn- url-for-bim-viewer [vektorio-project-id project-id]
+(defn- url-for-bim-viewer [vektorio-project-id]
   (let [config (environment/config-value :vektorio)
         viewer-url (:viewer-url (:config config))
-        response (vektorio-core/instant-login config project-id)
+        response (vektorio-core/instant-login config vektorio-project-id)
         instantLogin (:instantLogin response)
         viewer-url-with-params (str viewer-url
                                  (if (not-empty vektorio-project-id) (str "&projectId=" vektorio-project-id) "")
@@ -27,4 +27,4 @@
    :project-id project-id
    :vektorio-project-id vektorio-project-id
    :authorization {}}
-  (url-for-bim-viewer vektorio-project-id project-id))
+  (url-for-bim-viewer vektorio-project-id))
