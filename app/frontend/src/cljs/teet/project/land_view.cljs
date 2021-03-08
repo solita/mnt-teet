@@ -44,7 +44,7 @@
      :flex-direction :column
      :transition "background-color 0.2s ease-in-out"
      :align-items :normal
-     :user-select :auto
+     :user-select :text
      :background-color bg-color}))
 
 (defn impact-form-style
@@ -473,6 +473,7 @@
    :justify-content :space-between
    :flex-direction :column
    :align-items :flex-start
+   :user-select :text
    :padding "0.5rem"})
 
 (defn estate-group
