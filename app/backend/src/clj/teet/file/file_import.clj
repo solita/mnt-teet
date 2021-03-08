@@ -77,15 +77,18 @@
 ;; entry point for s3 trigger event
 (defn import-uploaded-file [event]
   (future
-    (ctx-> {:event event
-            :vektorio-config (when (environment/feature-enabled? :vektorio)
-                               (environment/config-value :vektorio))
-            :conn (environment/datomic-connection)
-            :api-url (environment/config-value :api-url)
-            :api-secret (environment/config-value :auth :jwt-secret)}
-           integration-s3/read-trigger-event
-           extract-project-from-filename
-           import-file))
+    (try
+      (ctx-> {:event event
+              :vektorio-config (when (environment/feature-enabled? :vektorio)
+                                 (environment/config-value :vektorio))
+              :conn (environment/datomic-connection)
+              :api-url (environment/config-value :api-url)
+              :api-secret (environment/config-value :auth :jwt-secret)}
+             integration-s3/read-trigger-event
+             extract-project-from-filename
+             import-file))
+    (catch Exception e
+      (log/error e)))
   "{\"success\": true}")
 
 (defn scheduled-file-import* [db-connection]
