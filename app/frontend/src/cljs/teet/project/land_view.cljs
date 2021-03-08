@@ -44,6 +44,7 @@
      :flex-direction :column
      :transition "background-color 0.2s ease-in-out"
      :align-items :normal
+     :user-select :auto
      :background-color bg-color}))
 
 (defn impact-form-style
