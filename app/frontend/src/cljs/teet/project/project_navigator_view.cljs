@@ -430,6 +430,12 @@
           :icon [icons/file-cloud-download-outlined]
           :class (<class common-styles/margin-right 1)
           :items (concat export-menu-items (default-export-menu-items project))}]
+        (when (and
+                (common-controller/feature-enabled? :vektorio)
+                (some? (:vektorio/project-id project)))
+          [common/vektorio-link {:href (common-controller/query-url :vektorio/instant-login project)
+                                 :target "_blank"}
+           (str (tr [:project :bim-models]) (:vektorio/project-id project))])
         [common/thk-link {:href thk-url
                           :target "_blank"}
          (str "THK" (:thk.project/id project))]]]])))

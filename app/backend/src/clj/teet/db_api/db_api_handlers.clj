@@ -39,6 +39,7 @@
             teet.cooperation.cooperation-queries
             teet.cooperation.cooperation-commands
             teet.asset.asset-queries
+            teet.integration.vektorio.vektorio-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

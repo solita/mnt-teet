@@ -203,17 +203,31 @@
 
 (defn- thk-link-style
   []
-  ^{:pseudo {:hover {:text-decoration :underline}}}
+  ^{:pseudo {:hover {:text-decoration :none}}}
   {:font-size "24px"
-   :text-decoration :none
+   :text-decoration :underline
    :display :flex
    :align-items :center})
+
+(defn- vektorio-link-style
+  []
+  ^{:pseudo {:hover {:text-decoration :none}}}
+   {:margin-left "10px"
+    :margin-right "10px"
+    :font-size "24px"
+    :text-decoration :underline
+    :display :flex
+    :align-items :center})
 
 (defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
    :font-size "20px"
    :font-weight :bold})
+
+(defn- vektorio-link-icon-style
+  []
+  (thk-link-icon-style))
 
 (defn thk-link
   [opts label]
@@ -222,6 +236,12 @@
    label
    [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
 
+(defn vektorio-link
+  [opts label]
+  [Link (merge {:class (<class vektorio-link-style)}
+          opts)
+   label
+   [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
 
 (defn estate-group-style
   []
