@@ -23,6 +23,7 @@
 (def project-listing-attributes
   [:db/id
    :integration/id
+   :vektorio/project-id
    :thk.project/id
    :thk.project/name
    :thk.project/project-name
@@ -60,6 +61,7 @@
   "Default pull pattern required for project navigation"
   [:db/id
    :integration/id
+   :vektorio/project-id
    :task/name :task/description
    :task/status :task/type :task/group
    :task/estimated-start-date :task/estimated-end-date
