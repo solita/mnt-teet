@@ -83,9 +83,13 @@
                                        :longitude long}}))
 
 (defn add-user-to-project!
-  [vektor-conf {:keys [project-id user-id]}]
-  (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
-                             :payload {:userId user-id}}))
+  "Check if project-id is given then add the given user to it,
+  otherwise just return the user-id"
+  [vektor-conf project-id user-id]
+  (if (some? project-id)
+    (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
+                               :payload {:userId user-id}})
+    user-id))
 
 (defn add-model-to-project!
   [vektor-conf {:keys [project-id model-file vektorio-filename vektorio-filepath]}]

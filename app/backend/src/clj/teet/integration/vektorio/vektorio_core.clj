@@ -90,12 +90,15 @@
     response))
 
 (defn instant-login
-  [vektorio-config]
+  [vektorio-config project-id]
   (let [vektorio-user-id (or
                            (:id (vektorio-client/get-user-by-account
                                   vektorio-config
                                   (get-in vektorio-config [:config :api-user])))
-                           (:id (vektorio-client/create-user!
-                                  vektorio-config
-                                  {:account (get-in vektorio-config [:config :api-user])})))]
-    (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id})))
+                           (comp
+                             (partial apply vektorio-client/add-user-to-project! vektorio-config project-id)
+                             (:id (vektorio-client/create-user! vektorio-config
+                                    {:account (get-in vektorio-config [:config :api-user])}))))]
+    (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id}))
+  [vektorio-config]
+  (instant-login vektorio-config nil))
