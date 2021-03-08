@@ -235,13 +235,15 @@
   [url query-params]
   (->> query-params
        kr-kinnistu-d-request-xml
-       (x-road/perform-request url)
-       kinnistu-d-parse-response))
+       (x-road/perform-request url)))
 
 (defn- fetch-cached-estate-payload [ctx estate-id]
-  (when-let [estate (first (postgrest/select ctx :estate
-                                             #{:payload}
-                                             {:id estate-id}))]
+  (when-let [estate (some-> (postgrest/select ctx :estate
+                                              #{:payload}
+                                              {:id estate-id})
+                            first
+                            x-road/string->zipped-xml
+                            kinnistu-d-parse-response)]
     (merge (:payload estate)
            {:status :ok})))
 
@@ -251,11 +253,13 @@
                        :payload payload}]))
 
 (defn- fetch-and-cache-estate-info [ctx estate-id]
-  (let [estate-info (perform-kinnistu-d-request
-                     (:xroad-url ctx)
-                     (merge ctx {:registriosa-nr estate-id}))]
-    (store-cached-estate-payload ctx estate-id estate-info)
-    estate-info))
+  (let [response-string
+        (perform-kinnistu-d-request
+          (:xroad-url ctx)
+          (merge ctx {:registriosa-nr estate-id}))
+        zipped-xml (x-road/string->zipped-xml response-string)]
+    (store-cached-estate-payload ctx estate-id response-string)
+    (kinnistu-d-parse-response zipped-xml)))
 
 (defn fetch-estate-info [ctx estate-id]
   (or (fetch-cached-estate-payload ctx estate-id)
@@ -264,8 +268,12 @@
 (defn fetch-all-estate-info [ctx estate-ids]
   (let [estates (into {}
                       (map (juxt :id :payload))
-                      (postgrest/select ctx :estate #{:id :payload}
-                                        {:id [:in estate-ids]}))
+                      (map #(update % :payload (fn [val]
+                                                 (-> val
+                                                     x-road/string->zipped-xml
+                                                     kinnistu-d-parse-response)))
+                           (postgrest/select ctx :estate #{:id :payload}
+                                             {:id [:in estate-ids]})))
         missing (set/difference (set estate-ids) (set (keys estates)))]
     (into estates
           (for [id missing]

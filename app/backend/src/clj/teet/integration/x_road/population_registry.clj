@@ -45,4 +45,5 @@
        rr442-request-hiccup
        x-road/request-xml
        (x-road/perform-request url)
+       x-road/string->zipped-xml
        rr442-parse-name))

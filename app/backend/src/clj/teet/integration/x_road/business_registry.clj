@@ -84,4 +84,5 @@
                          :version "v1"}})
        detailandmed-request-xml
        (x-road/perform-request url)
+       x-road/string->zipped-xml
        parse-business-details))
