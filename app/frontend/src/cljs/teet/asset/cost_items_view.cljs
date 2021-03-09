@@ -17,7 +17,8 @@
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
             [teet.common.responsivity-styles :as responsivity-styles]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.ui.common :as common]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -34,7 +35,10 @@
       (for [{:db/keys [ident valueType]
              :asset-schema/keys [unit] :as attr} (concat common-attrs attrs)
             :let [type (:db/ident valueType)]]
-        [Grid {:item true :xs 4 :style {:padding "0.2rem"}}
+        [Grid {:item true
+               :md 4
+               :xs 12
+               :style {:padding "0.2rem"}}
          [form/field {:attribute ident}
           (if (= type :db.type/ref)
             ;; Selection value
@@ -73,8 +77,10 @@
   ;; so we need to keep track of the on-change here and use it in the
   ;; change event
   (r/with-let [on-change-atom (atom on-change)
+               on-change-event (form/callback-change-event #(@on-change-atom %))
                expanded? (r/atom true)
-               toggle-expand! #(swap! expanded? not)]
+               toggle-expand! #(swap! expanded? not)
+               delete! #(@on-change-atom {::deleted? true})]
     (reset! on-change-atom on-change)
     (let [ctype (get rotl (:component/ctype component))]
       [Card {:style {:margin-bottom "1rem"}}
@@ -83,7 +89,7 @@
                                   (str ": " name)))
                     :action (r/as-element
                              [CardActions
-                              [IconButton {:on-click #(on-change {::deleted? true})}
+                              [IconButton {:on-click delete!}
                                [icons/action-delete]]
                               [IconButton {:on-click toggle-expand!}
                                (if @expanded?
@@ -93,7 +99,7 @@
        [Collapse {:in @expanded? :unmountOnExit true}
         [CardContent
          [form/form2 {:e! e!
-                      :on-change-event (form/callback-change-event #(@on-change-atom %))
+                      :on-change-event on-change-event
                       :value component}
           [attributes e! (:attribute/_parent ctype)]
 
@@ -119,15 +125,25 @@
                       :on-change #(on-change (update value i merge %))}]]))
      value))
    [Grid {:container true}
-    (doall
-     (for [c allowed-components]
-       ^{:key (str :db/ident c)}
-       [Grid {:item true :xs 3}
-        [buttons/button-secondary {:size :small
-                                   :on-click #(on-change (conj (or value [])
-                                                               {:component/ctype (:db/ident c)}))
-                                   :start-icon (r/as-element [icons/content-add])}
-         (label c)]]))]])
+    (if (> (count allowed-components) 3)
+      [common/context-menu
+       {:label "add component"
+        :icon [icons/content-add-circle-outline]
+        :items (for [c allowed-components]
+                 {:label (label c)
+                  :icon [icons/content-add]
+                  :on-click (r/partial on-change (conj (or value [])
+                                                       {:ctype c
+                                                        :component/ctype (:db/ident c)}))})}]
+      (doall
+       (for [c allowed-components]
+         ^{:key (str :db/ident c)}
+         [Grid {:item true :xs 12 :md 4}
+          [buttons/button-secondary {:size :small
+                                     :on-click (r/partial on-change (conj (or value [])
+                                                                          {:component/ctype (:db/ident c)}))
+                                     :start-icon (r/as-element [icons/content-add])}
+           (label c)]])))]])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
