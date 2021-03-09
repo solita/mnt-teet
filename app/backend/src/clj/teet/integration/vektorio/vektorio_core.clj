@@ -21,9 +21,11 @@
 (defn create-project-in-vektorio!
   [conn vektor-config project-eid]
   (let [db (d/db conn)
-        project (d/pull db [:db/id :thk.project/name :thk.project/project-name] project-eid)
+        project (d/pull db [:db/id :thk.project/name :thk.project/project-name :thk.project/id] project-eid)
         project-name-for-vektor (or (:thk.project/project-name project)
-                                    (:thk.project/name project))
+                                    (:thk.project/name project)
+                                    (:thk.project/id project) ;; default to thk-id of the project, because might have no name in dev
+                                    )
         resp (vektorio-client/create-project! vektor-config {:name project-name-for-vektor})
         vektorio-project-id (str (:id resp))
         vektorio-user-id (get-or-create-user! vektor-config)]
