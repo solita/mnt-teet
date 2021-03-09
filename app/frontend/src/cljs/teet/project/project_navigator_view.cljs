@@ -433,7 +433,9 @@
         (when (and
                 (common-controller/feature-enabled? :vektorio)
                 (some? (:vektorio/project-id project)))
-          [common/vektorio-link {:href (common-controller/query-url :vektorio/instant-login project)
+          [common/vektorio-link {:href (common-controller/query-url
+                                         :vektorio/instant-login {:db/id (:db/id project)
+                                                                  :vektorio/project-id (:vektorio/project-id project)})
                                  :target "_blank"}
            (str (tr [:project :bim-models]) (:vektorio/project-id project))])
         [common/thk-link {:href thk-url
