@@ -86,9 +86,9 @@
               :api-secret (environment/config-value :auth :jwt-secret)}
              integration-s3/read-trigger-event
              extract-project-from-filename
-             import-file))
-    (catch Exception e
-      (log/error e)))
+             import-file)
+      (catch Exception e
+        (log/error e))))
   "{\"success\": true}")
 
 (defn scheduled-file-import* [db-connection]
@@ -100,15 +100,26 @@
         db (d/db db-connection)
         ;; we'll go thrugh model-idless file entities that haven't been just modified,
         ;; for vektorio import candidates
-        files (file-db/aged-task-files-without-model-id db threshold-in-minutes)]
+        files (file-db/aged-task-files-without-model-id db threshold-in-minutes)
+        skipped-ext (atom 0)
+        skipped-nontask (atom 0)
+        uploaded (atom 0)]
+    (log/info "total task files without model id:" (count files))
     (doseq [{:keys [file-eid file-name]} files
-            suffix (file-model/filename->suffix name)]
-      (when (and (get vektorio-handled-file-extensions suffix)
-                 (file-db/is-task-file? db file-eid))
+            suffix (file-model/filename->suffix file-name)
+            vektorio-suffix? (get vektorio-handled-file-extensions suffix)
+            task-file? (file-db/is-task-file? db file-eid)]
+      (when-not vektorio-suffix?
+        (swap! skipped-ext inc))
+      (when-not task-file?
+        (swap! skipped-nontask inc))
+      (when (and vektorio-suffix? task-file?)
         (try
           (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
+          (swap! uploaded inc)
           (catch clojure.lang.ExceptionInfo e
-            (log/info "Upload errored on file" file-eid (str "(name:" file-name ")"))))))))
+            (log/info "Upload errored on file" file-eid (str "(name:" file-name ")"))))))
+    (log/info "scheduled vektorio import finished, out of" (count files) "model-idless files we skipped" @skipped-ext "due to non-vektor file extension, " @skipped-nontask "due to non-task file type (such as attachment), total" @uploaded "uploaded")))
 
 
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
