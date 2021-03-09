@@ -11,7 +11,7 @@
 (defn- url-for-bim-viewer [vektorio-project-id]
   (let [config (environment/config-value :vektorio)
         viewer-url (:viewer-url (:config config))
-        response (vektorio-core/instant-login config vektorio-project-id)
+        response (vektorio-core/instant-login config)
         instantLogin (:instantLogin response)
         viewer-url-with-params (str viewer-url
                                  (if (not-empty vektorio-project-id) (str "&projectId=" vektorio-project-id) "")

@@ -9,6 +9,15 @@
             [teet.file.file-db :as file-db]
             [teet.file.filename-metadata :as filename-metadata]))
 
+(defn get-or-create-user!
+  [vektorio-config]
+  (or
+    (:id (vektorio-client/get-user-by-account
+           vektorio-config
+           (get-in vektorio-config [:config :api-user])))
+    (:id (vektorio-client/create-user! vektorio-config
+                                       {:account (get-in vektorio-config [:config :api-user])}))))
+
 (defn create-project-in-vektorio!
   [conn vektor-config project-eid]
   (let [db (d/db conn)
@@ -16,15 +25,18 @@
         project-name-for-vektor (or (:thk.project/project-name project)
                                     (:thk.project/name project))
         resp (vektorio-client/create-project! vektor-config {:name project-name-for-vektor})
-        vektorio-project-id (str (:id resp))]
+        vektorio-project-id (str (:id resp))
+        vektorio-user-id (get-or-create-user! vektor-config)]
     (log/info "Creating project in vektorio for project" project)
     (if-not (some? vektorio-project-id)
       (throw (ex-info "No id for project in Vektorio response"
                {:resp resp
                 :error :no-project-id-in-response}))
-      (do (d/transact conn {:tx-data [{:db/id (:db/id project)
-                                       :vektorio/project-id vektorio-project-id}]})
-          vektorio-project-id))))
+      (do
+        (vektorio-client/add-user-to-project! vektor-config vektorio-project-id vektorio-user-id)
+        (d/transact conn {:tx-data [{:db/id (:db/id project)
+                                     :vektorio/project-id vektorio-project-id}]})
+        vektorio-project-id))))
 
 (defn ensure-project-vektorio-id!
   [conn vektor-config file-eid]
@@ -91,14 +103,6 @@
 
 (defn instant-login
   "Login to VektorIO. If VektorIO project-id provided connect user to it."
-  ([vektorio-config vektorio-project-id]
-   (let [vektorio-user-id (or
-                            (:id (vektorio-client/get-user-by-account
-                                   vektorio-config
-                                   (get-in vektorio-config [:config :api-user])))
-                            (:id (vektorio-client/create-user! vektorio-config
-                                   {:account (get-in vektorio-config [:config :api-user])})))]
-     (vektorio-client/add-user-to-project! vektorio-config vektorio-project-id vektorio-user-id)
-     (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id})))
-  ([vektorio-config]
-   (instant-login vektorio-config nil)))
+  [vektorio-config]
+  (let [vektorio-user-id (get-or-create-user! vektorio-config)]
+    (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id})))
