@@ -12,81 +12,12 @@
 
 (def mock-x-road-response
   "This response does not contain address information"
-  [{:tag :SOAP-ENV:Envelope,
-    :attrs
-    {:xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance",
-     :xmlns:xsd "http://www.w3.org/2001/XMLSchema",
-     :xmlns:ZSI "http://www.zolera.com/schemas/ZSI/",
-     :xmlns:SOAP-ENV "http://schemas.xmlsoap.org/soap/envelope/",
-     :xmlns:SOAP-ENC "http://schemas.xmlsoap.org/soap/encoding/"},
-    :content
-    [{:tag :SOAP-ENV:Header,
-      :attrs {:xmlns:ns1 "http://x-road.eu/xsd/xroad.xsd"},
-      :content
-      [{:tag :ns1:userId, :attrs nil, :content ["EE12345678"]}
-       {:tag :ns1:id,
-        :attrs nil,
-        :content ["uuid"]}
-       {:tag :ns1:requestHash,
-        :attrs
-        {:algorithmId "http://www.w3.org/2001/04/xmlenc#sha512"},
-        :content
-        ["base64"]}
-       {:tag :ns1:protocolVersion, :attrs nil, :content ["4.0"]}
-       {:tag :ns1:client,
-        :attrs
-        {:ns2:objectType "SUBSYSTEM",
-         :xmlns:ns2 "http://x-road.eu/xsd/identifiers"},
-        :content
-        [{:tag :ns2:xRoadInstance, :attrs nil, :content ["ee-dev"]}
-         {:tag :ns2:memberClass, :attrs nil, :content ["GOV"]}
-         {:tag :ns2:memberCode, :attrs nil, :content ["0000000"]}
-         {:tag :ns2:subsystemCode,
-          :attrs nil,
-          :content ["teeregister"]}]}
-       {:tag :ns1:service,
-        :attrs
-        {:ns2:objectType "SERVICE",
-         :xmlns:ns2 "http://x-road.eu/xsd/identifiers"},
-        :content
-        [{:tag :ns2:xRoadInstance, :attrs nil, :content ["ee-dev"]}
-         {:tag :ns2:memberClass, :attrs nil, :content ["GOV"]}
-         {:tag :ns2:memberCode, :attrs nil, :content ["0000000"]}
-         {:tag :ns2:subsystemCode, :attrs nil, :content ["arireg"]}
-         {:tag :ns2:serviceCode,
-          :attrs nil,
-          :content ["detailandmed_v1"]}
-         {:tag :ns2:serviceVersion, :attrs nil, :content ["v1"]}]}]}
-     {:tag :SOAP-ENV:Body,
-      :attrs {:xmlns:ns1 "http://arireg.x-road.eu/producer/"},
-      :content
-      [{:tag :ns1:detailandmed_v1Response,
-        :attrs nil,
-        :content
-        [{:tag :ns1:paring,
-          :attrs nil,
-          :content
-          [{:tag :ns1:ariregistri_kood,
-            :attrs nil,
-            :content ["1234567"]}
-           {:tag :ns1:yandmed, :attrs nil, :content ["true"]}
-           {:tag :ns1:iandmed, :attrs nil, :content ["false"]}
-           {:tag :ns1:kandmed, :attrs nil, :content ["false"]}
-           {:tag :ns1:dandmed, :attrs nil, :content ["false"]}
-           {:tag :ns1:maarused, :attrs nil, :content ["false"]}]}
-         {:tag :ns1:keha,
-          :attrs nil,
-          :content
-          [{:tag :ns1:ettevotjad, :attrs nil, :content nil}
-           {:tag :ns1:leitud_ettevotjate_arv,
-            :attrs nil,
-            :content ["0"]}]}]}]}]}
-   nil])
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Header><xrd:userId xmlns:xrd=\"http://x-road.eu/xsd/xroad.xsd\">EE213</xrd:userId><xrd:id xmlns:xrd=\"http://x-road.eu/xsd/xroad.xsd\"></xrd:id><xrd:requestHash xmlns:xrd=\"\" algorithmId=\"http://www.w3.org/2001/04/xmlenc#sha512\"></xrd:requestHash><xrd:protocolVersion xmlns:xrd=\"\">4.0</xrd:protocolVersion><xrd:client id:objectType=\"SUBSYSTEM\" xmlns:xrd=\"\" xmlns:id=\"\"><id:xRoadInstance></id:xRoadInstance><id:memberClass></id:memberClass><id:memberCode></id:memberCode><id:subsystemCode>generic-consumer</id:subsystemCode></xrd:client><xrd:service id:objectType=\"SERVICE\" xmlns:xrd=\"\" xmlns:id=\"\"><id:xRoadInstance></id:xRoadInstance><id:memberClass>GOV</id:memberClass><id:memberCode></id:memberCode><id:subsystemCode></id:subsystemCode><id:serviceCode></id:serviceCode></xrd:service></s:Header><s:Body><Kinnistu_DetailandmedResponse xmlns=\"\"><detailandmed xmlns:a=\"\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><a:aluskinnistu i:nil=\"true\"></a:aluskinnistu><a:avaldused></a:avaldused><a:avamise_kp>2016-07-01T08:55:14.433</a:avamise_kp><a:digitaalne_toimik>jah</a:digitaalne_toimik><a:kinnistu_liik>1</a:kinnistu_liik><a:kinnistu_liik_tekst>Kinnisasi</a:kinnistu_liik_tekst><a:korteriyhistu_registrikood i:nil=\"true\"></a:korteriyhistu_registrikood><a:registriosa_nr></a:registriosa_nr><a:sulgemise_kp i:nil=\"true\"></a:sulgemise_kp></detailandmed><jagu0 xmlns:a=\"http://schemas.datacontract.org/2004/07/KinnistuService.DTO\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><a:Jagu0><a:kande_alguskuupaev>2016-07-01T08:55:14.433</a:kande_alguskuupaev><a:kande_liik></a:kande_liik><a:kande_liik_tekst></a:kande_liik_tekst><a:kande_loppkuupaev i:nil=\"true\"></a:kande_loppkuupaev><a:kande_tekst>&lt;table style=\"text-align:center;width:100%\"&gt;&lt;tr&gt;&lt;td&gt;&lt;div class=\"j0v1\"&gt;Tartu Maakohtu&lt;table style=\"width:100%;border-top:0.2mm solid black\"&gt;&lt;tr&gt;&lt;td align=\"center\"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=\"height:23mm\" /&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;div class=\"j0v2\"&gt;d&lt;table style=\"width:100%;border-top:0.2mm solid black\"&gt;&lt;tr&gt;&lt;td align=\"center\"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=\"height:60mm\" /&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=\"font-size:16pt\"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=\"height:18mm\" /&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td class=\"j0v3\"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style=\"font-size:18pt;width:35mm;border-bottom:0.2mm solid black\"&gt;4798850&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=\"height:16mm\" /&gt;&lt;/tr&gt;&lt;/table&gt;</a:kande_tekst><a:registriosa_nr>4798850</a:registriosa_nr><a:avaldused><a:Kinnistamisavaldus><a:aasta>0</a:aasta><a:avalduse_esitaja_liik i:nil=\"true\"></a:avalduse_esitaja_liik><a:avalduse_liik>Muu avaldus</a:avalduse_liik><a:avalduse_nr>51144201650</a:avalduse_nr><a:notar i:nil=\"true\"></a:notar><a:registreeritud>2016-06-28T13:39:07.583</a:registreeritud><a:tehingu_nr i:nil=\"true\"></a:tehingu_nr></a:Kinnistamisavaldus><a:Kinnistamisavaldus><a:aasta>2016</a:aasta><a:avalduse_esitaja_liik>notar</a:avalduse_esitaja_liik><a:avalduse_liik>Muu avaldus</a:avalduse_liik><a:avalduse_nr>51144201650</a:avalduse_nr><a:notar>Anne Priks-Toom</a:notar><a:registreeritud></a:registreeritud><a:tehingu_nr>974</a:tehingu_nr></a:Kinnistamisavaldus></a:avaldused><a:jaoskond_voi_osakond>T</a:jaoskond_voi_osakond><a:nimi i:nil=\"true\"></a:nimi><a:nimi_algus_kp i:nil=\"true\"></a:nimi_algus_kp><a:nimi_lopp_kp i:nil=\"true\"></a:nimi_lopp_kp></a:Jagu0></jagu0><jagu1 xmlns:a=\"http://schemas.datacontract.org/2004/07/KinnistuService.DTO\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><a:Jagu1><a:kande_alguskuupaev>2018-12-31T18:07:41.46</a:kande_alguskuupaev><a:kande_liik>136</a:kande_liik><a:kande_liik_tekst>Koosseis</a:kande_liik_tekst><a:kande_loppkuupaev i:nil=\"true\"></a:kande_loppkuupaev><a:kande_tekst>&lt;table&gt;&lt;tr&gt;&lt;td class=\"kandetekst j1v1\"&gt;1&lt;/td&gt;&lt;td&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=\"kandetekst j1v2\"&gt;12601:001:&lt;br /&gt;0166&lt;/td&gt;&lt;td class=\"kandetekst j1v3\"&gt;Üldkasutatav maa 100% &lt;/td&gt;&lt;td class=\"kandetekst j1v4\"&gt;4690,0 m2&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</a:kande_tekst><a:registriosa_nr>4798850</a:registriosa_nr><a:jao_nr>1</a:jao_nr><a:kande_alus>&lt;table&gt;&lt;tr&gt;&lt;td class=\"kandetekst j1v5\"&gt;1&lt;/td&gt;&lt;td class=\"kandetekst j1v6\" STYLE=\"text-align:left\"&gt;.&lt;/td&gt;&lt;td class=\"j1v7\"&gt;&lt;/td&gt;&lt;td class=\"j1v8\"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</a:kande_alus><a:kande_kehtivus>kehtiv</a:kande_kehtivus><a:kande_nr>1</a:kande_nr><a:katastriyksused><a:KinnistuKatastriyksus><a:aadressobjekt><a:ads_oid>CU03518535</a:ads_oid><a:objekti_aadressid><a:Aadressobjekt.ObjektiAadress><a:aadressinumber i:nil=\"true\"></a:aadressinumber><a:aadressinumber_kood></a:aadressinumber_kood><a:aadresstanav>Männiku tn 9</a:aadresstanav><a:adr_id>3430310</a:adr_id><a:asustus_yksus>Alatskivi alevik</a:asustus_yksus><a:asustus_yksus_kood>1181</a:asustus_yksus_kood><a:koodaadress></a:koodaadress><a:korteri_number i:nil=\"true\"></a:korteri_number><a:korteri_number_kood i:nil=\"true\"></a:korteri_number_kood><a:liikluspind i:nil=\"true\"></a:liikluspind><a:liikluspind_kood>064R</a:liikluspind_kood><a:maakond>Tartu maakond</a:maakond><a:maakond_kood>79</a:maakond_kood><a:nimetus i:nil=\"true\"></a:nimetus><a:nimetus_kood i:nil=\"true\"></a:nimetus_kood><a:omavalitsus></a:omavalitsus><a:omavalitsus_kood></a:omavalitsus_kood><a:taisaadress>testing</a:taisaadress><a:vaikekoht i:nil=\"true\"></a:vaikekoht><a:vaikekoht_kood i:nil=\"true\"></a:vaikekoht_kood></a:Aadressobjekt.ObjektiAadress></a:objekti_aadressid><a:taisaadress></a:taisaadress></a:aadressobjekt><a:katastritunnus>12601:001:0166</a:katastritunnus><a:katastriyksuse_aadress>test</a:katastriyksuse_aadress><a:pindala>4690,0</a:pindala><a:pindala_yhik>m2</a:pindala_yhik><a:plaanialusel>ei</a:plaanialusel><a:sihtotstarbed><a:Sihtotstarve><a:jrk>1</a:jrk><a:protsent>100,0000000000</a:protsent><a:sihtotstarve>017</a:sihtotstarve><a:sihtotstarve_tekst>Üldkasutatav maa</a:sihtotstarve_tekst></a:Sihtotstarve></a:sihtotstarbed></a:KinnistuKatastriyksus></a:katastriyksused><a:koormatud_kinnistud i:nil=\"true\"></a:koormatud_kinnistud><a:reaalosad></a:reaalosad></a:Jagu1></jagu1><jagu2 xmlns:a=\"http://schemas.datacontract.org/2004/07/KinnistuService.DTO\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><a:Jagu2><a:kande_alguskuupaev>2018-04-12T16:59:39.203</a:kande_alguskuupaev><a:kande_liik>139</a:kande_liik><a:kande_liik_tekst>Omand</a:kande_liik_tekst><a:kande_loppkuupaev i:nil=\"true\"></a:kande_loppkuupaev><a:kande_tekst>&lt;table&gt;&lt;tr&gt;&lt;td class=\"kandetekst j2v1\"&gt;3&lt;/td&gt;&lt;td class=\"kandetekst j2v2\"&gt;Peipsiääre vald&lt;/td&gt;&lt;td class=\"kandetekst j2v3\"&gt; 9.04.2018 kinnistamisavalduse alusel sisse kantud 12.04.2018. &lt;br /&gt;&lt;br /&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</a:kande_tekst><a:registriosa_nr>4798850</a:registriosa_nr><a:jao_nr>2</a:jao_nr><a:kande_alus>&lt;root/&gt;</a:kande_alus><a:kande_kehtivus>kehtiv</a:kande_kehtivus><a:kande_nr>3</a:kande_nr><a:omandiosad><a:Jagu2.Omandiosa><a:isikud><a:KinnistuIsik><a:eesnimi i:nil=\"true\"></a:eesnimi><a:isiku_koodid></a:isiku_koodid><a:isiku_liik>Kohalik omavalitsus</a:isiku_liik><a:isiku_liik_ID>7877</a:isiku_liik_ID><a:isiku_tyyp>Avalik-õiguslik juriidiline isik</a:isiku_tyyp><a:kodakondsus>EST</a:kodakondsus><a:nimi>Peipsiääre vald</a:nimi><a:synniaeg i:nil=\"true\"></a:synniaeg></a:KinnistuIsik></a:isikud><a:omandi_algus>2018-04-12T16:59:39.203</a:omandi_algus><a:omandi_liik>A</a:omandi_liik><a:omandi_liik_tekst>Ainuõigustatus</a:omandi_liik_tekst><a:omandi_lopp i:nil=\"true\"></a:omandi_lopp><a:omandiosa_lugeja>1</a:omandiosa_lugeja><a:omandiosa_nimetaja>1</a:omandiosa_nimetaja><a:omandiosa_suurus>1</a:omandiosa_suurus></a:Jagu2.Omandiosa></a:omandiosad></a:Jagu2></jagu2><jagu3 xmlns:a=\"http://schemas.datacontract.org/2004/07/KinnistuService.DTO\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"></jagu3><jagu4 xmlns:a=\"http://schemas.datacontract.org/2004/07/KinnistuService.DTO\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"></jagu4><kood>0</kood><teade>OK</teade></Kinnistu_DetailandmedResponse></s:Body></s:Envelope>")
 
 (deftest estate-owner-info
   (testing "estate-owner-info resturns empty contact details when they're not present in the x-road response"
     (with-redefs [x-road/perform-request (fn [_url _request-xml]
-                                           (zip/xml-zip mock-x-road-response))]
+                                           mock-x-road-response)]
       (is (= (tu/local-query tu/mock-user-boss
                              :land/estate-owner-info
                              {:thk.project/id "11111" :business-id "1234"})

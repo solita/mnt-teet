@@ -96,8 +96,7 @@
   If response status is not 200 OK, throws exception."
   [{:keys [status error] :as http-response}]
   (if (= 200 status)
-    (let [response-string (unpeel-multipart http-response)]
-      (string->zipped-xml response-string))
+    (unpeel-multipart http-response)
     (do
       (log/error "HTTP error communicating with X-road, error:" error ", status:" status)
       (throw (ex-info "SOAP response returned non OK status."
@@ -110,7 +109,7 @@
   (maybe-log-request request-xml)
   (-> url
       (http/post {:body request-xml
-                    :as :stream
-                    :headers {"Content-Type" "text/xml; charset=UTF-8"}})
+                  :as :stream
+                  :headers {"Content-Type" "text/xml; charset=UTF-8"}})
       deref
       parse-response))
