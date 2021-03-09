@@ -83,7 +83,11 @@
                                        :longitude long}}))
 
 (defn add-user-to-project!
-  [vektor-conf {:keys [project-id user-id]}]
+  "Add the given user to the vektorio project"
+  [vektor-conf project-id user-id]
+  (assert (some? project-id) "Must specify the project to which the user is added")
+  (assert (some? user-id) "Must specify the user which is added to the project")
+  (log/info "Adding vektorio user" user-id "to vektorio project:" project-id)
   (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
                              :payload {:userId user-id}}))
 
