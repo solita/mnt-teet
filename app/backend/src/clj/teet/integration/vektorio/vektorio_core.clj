@@ -24,7 +24,7 @@
         project (d/pull db [:db/id :thk.project/name :thk.project/project-name :thk.project/id] project-eid)
         project-name (or (:thk.project/project-name project)
                          (:thk.project/name project))
-        project-name-for-vektor (str "TEET " project-name " (THK" (:thk.project/id project) "#)")
+        project-name-for-vektor (str project-name " (THK" (:thk.project/id project) ")")
         resp (vektorio-client/create-project! vektor-config {:name project-name-for-vektor})
         vektorio-project-id (str (:id resp))
         vektorio-user-id (get-or-create-user! vektor-config)]
