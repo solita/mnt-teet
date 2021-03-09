@@ -106,9 +106,9 @@
         uploaded (atom 0)]
     (log/info "total task files without model id:" (count files))
     (doseq [{:keys [file-eid file-name]} files
-            suffix (file-model/filename->suffix file-name)
-            vektorio-suffix? (get vektorio-handled-file-extensions suffix)
-            task-file? (file-db/is-task-file? db file-eid)]
+            :let [suffix (file-model/filename->suffix file-name)
+                  vektorio-suffix? (get vektorio-handled-file-extensions suffix)
+                  task-file? (file-db/is-task-file? db file-eid)]]
       (when-not vektorio-suffix?
         (swap! skipped-ext inc))
       (when-not task-file?
