@@ -470,7 +470,7 @@
 
 ;; used by vektorio scheduled upload retry. considering only files that are older than threshold,
 ;; so we don't step on top of normally (by s3 trigger) started uploads.
-(defn recent-task-files-without-model-id [db threshold-in-minutes]
+(defn aged-task-files-without-model-id [db threshold-in-minutes]
   (let [modified-threshold (->> threshold-in-minutes
                                 time/minutes
                                 (time/minus (time/now))

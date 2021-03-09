@@ -77,15 +77,18 @@
 ;; entry point for s3 trigger event
 (defn import-uploaded-file [event]
   (future
-    (ctx-> {:event event
-            :vektorio-config (when (environment/feature-enabled? :vektorio)
-                               (environment/config-value :vektorio))
-            :conn (environment/datomic-connection)
-            :api-url (environment/config-value :api-url)
-            :api-secret (environment/config-value :auth :jwt-secret)}
-           integration-s3/read-trigger-event
-           extract-project-from-filename
-           import-file))
+    (try
+      (ctx-> {:event event
+              :vektorio-config (when (environment/feature-enabled? :vektorio)
+                                 (environment/config-value :vektorio))
+              :conn (environment/datomic-connection)
+              :api-url (environment/config-value :api-url)
+              :api-secret (environment/config-value :auth :jwt-secret)}
+             integration-s3/read-trigger-event
+             extract-project-from-filename
+             import-file))
+    (catch Exception e
+      (log/error e)))
   "{\"success\": true}")
 
 (defn scheduled-file-import* [db-connection]
@@ -97,8 +100,7 @@
         db (d/db db-connection)
         ;; we'll go thrugh model-idless file entities that haven't been just modified,
         ;; for vektorio import candidates
-        files (file-db/recent-task-files-without-model-id db threshold-in-minutes)]
-
+        files (file-db/aged-task-files-without-model-id db threshold-in-minutes)]
     (doseq [{:keys [file-eid file-name]} files
             suffix (file-model/filename->suffix name)]
       (when (and (get vektorio-handled-file-extensions suffix)
@@ -112,7 +114,10 @@
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
 (defn scheduled-file-import [event]
   (future
-    (scheduled-file-import*
-     (environment/datomic-connection)))
+    (try      
+      (scheduled-file-import*
+       (environment/datomic-connection))
+      (catch Exception e
+        (log/error e))))
   "{\"success\": true}")
 
