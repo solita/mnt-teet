@@ -94,7 +94,7 @@
            [:div {:style {:display :flex
                           :min-height "100vh"
                           :flex-direction :column}}
-            [navigation-view/login-header e!]
+            [navigation-view/login-header e! app]
             [login-view/login-page e! app]]
            [context/provide :user (:user app)
             [main-view-content e! nav-open? app]])

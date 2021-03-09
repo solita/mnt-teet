@@ -37,9 +37,10 @@
                        "Address in TEET: " url "\n"
                        "TEET branch: " (aget js/window "teet_branch") "\n"
                        "TEET git hash: " (aget js/window "teet_githash") "\n"
-                       "User: " (if user (str given-name " " family-name
-                                              " (person code:" person-id ")\n\n")
-                                    "User not logged in"))]
+                       "User: " (if user
+                                  (str given-name " " family-name
+                                       " (person code:" person-id ")\n\n")
+                                  "User not logged in"))]
     [:div {:class (<class navigation-style/feedback-container-style)}
      [common/Link {:class (<class navigation-style/feedback-style)
                    :href (str "mailto:teet-feedback@transpordiamet.ee"
@@ -140,10 +141,9 @@
 (defn language-selector
   []
   [select/select-with-action
-   {:container-class (herb/join (<class navigation-style/language-select-container-style)
-                                (<class navigation-style/divider-style))
-    :label (str (tr [:common :language]))
+   {:container-class (<class navigation-style/language-select-container-style)
     :class (<class navigation-style/language-select-style)
+    :empty-selection-label true
     :id "language-select"
     :name "language"
     :value (case @localization/selected-language
@@ -248,10 +248,14 @@
 
     [feedback-link user url]
     (when (not logged-in?)
-      [language-selector])
+      [:div {:class (<class navigation-style/divider-style)
+             :style {:display :flex
+                     :align-items :center}}
+       [icons/action-language {:style {:color theme-colors/primary}}]
+       [language-selector]])
     (if logged-in?
       [open-account-navigation e!]
-      [buttons/button-primary {:style {:margin "0 1rem"}
+      [buttons/button-primary {:style {:margin "0 0.5rem"}
                                :href "/oauth2/request"}
        (tr [:login :login])])]))
 
@@ -305,13 +309,13 @@
       [page-listing e! open? user page]])])
 
 (defn login-header
-  [e!]
+  [e! {:keys [url] :as _app}]
   [AppBar {:position "sticky"
            :className (herb/join (<class navigation-style/appbar))}
    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
     [:div {:class (<class navigation-style/logo-style)}
      [navigation-logo/maanteeamet-logo true]]
-    [navigation-header-links nil "login" e! false]]])
+    [navigation-header-links e! nil url false]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}

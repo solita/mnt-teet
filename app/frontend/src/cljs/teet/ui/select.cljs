@@ -124,7 +124,7 @@
              :invalid {:box-shadow :inherit
                        :outline :inherit}
              :hover {:margin-bottom "0"
-                     :border-bottom (str "2px solid " theme-colors/primary)}}}
+                     :border-bottom (str "1px solid " theme-colors/primary)}}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
    :cursor :pointer
@@ -183,10 +183,13 @@
               (format-item item)])
            items))]]]))
 
-(defn query-enums-for-attribute! [attribute]
-  (common-controller/->Query {:query :enum/values
-                              :args {:attribute attribute}
-                              :result-event (partial ->SetEnumValues attribute)}))
+(defn query-enums-for-attribute!
+  ([attribute] (query-enums-for-attribute! attribute :teet))
+  ([attribute database]
+   (common-controller/->Query {:query :enum/values
+                               :args {:attribute attribute
+                                      :database database}
+                               :result-event (partial ->SetEnumValues attribute)})))
 
 (defn valid-enums-for
   "called along the lines of (valid-enums-for :document.category/project-doc ...)"
@@ -214,17 +217,20 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required label-element sort-fn]}]
+  [{:keys [e! attribute database required label-element sort-fn]
+    :or {database :teet}}]
   (when-not (contains? @enum-values attribute)
-    (log/debug "getting enum vals for attribute" attribute)
-    (e! (query-enums-for-attribute! attribute)))
+    (e! (query-enums-for-attribute! attribute database)))
   (fn [{:keys [value label on-change name show-label? show-empty-selection?
                tiny-select? id error container-class class values-filter
-               full-value? empty-selection-label read-only? dark-theme?]
+               full-value? empty-selection-label read-only? dark-theme?
+               format-enum-fn]
         :enum/keys [valid-for]
         :or {show-label? true
              show-empty-selection? true}}]
-    (let [tr* #(tr [:enum %])
+    (let [tr* (if format-enum-fn
+                (format-enum-fn (@enum-values attribute))
+                #(tr [:enum %]))
           value (if (and (map? value)
                          (contains? value :db/ident))
                   ;; If value is a enum ref pulled from db, extract the kw value
@@ -373,7 +379,11 @@
 
   :query  function from input search text to map that specifies
           what query is to be run on the backend.
-          The returned map must contain :query and :args.
+          The returned map must contain :query and :args or be a function
+          that can directly return results.
+
+          If return value of query is a function, if is called to
+          return the new results.
 
          "
   [{:keys [e! value on-change label required error
@@ -388,10 +398,11 @@
                               :open? false
                               :input ""})
                input-ref (atom nil)
+               set-ref! #(reset! input-ref %)
                on-key-down (partial arrow-navigation state on-change)]
     (let [{:keys [loading? results open? input highlight]} @state]
       [:<>
-       [TextField {:ref #(reset! input-ref %)
+       [TextField {:ref set-ref!
                    :label label
                    :show-label? show-label?
                    :required required
@@ -422,13 +433,20 @@
                                             :loading? loading?))
 
                                   (when loading?
-                                    (e! (->CompleteSearch (query t)
-                                                          (fn [results]
-                                                            (swap! state assoc
-                                                                   :loading? false
-                                                                   :open? true
-                                                                   :results results
-                                                                   :highlight (first results))))))))
+                                    (let [result-fn-or-query-map (query t)]
+                                      (if (fn? result-fn-or-query-map)
+                                        (let [results (result-fn-or-query-map)]
+                                          (swap! state merge {:loading? false
+                                                              :open? true
+                                                              :results results
+                                                              :highlight (first results)}))
+                                        (e! (->CompleteSearch result-fn-or-query-map
+                                                              (fn [results]
+                                                                (swap! state assoc
+                                                                       :loading? false
+                                                                       :open? true
+                                                                       :results results
+                                                                       :highlight (first results))))))))))
                    :input-button-click #(do
                                           (on-change nil)
                                           (swap! state assoc :input "")

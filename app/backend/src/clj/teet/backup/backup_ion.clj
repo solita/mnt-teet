@@ -5,7 +5,6 @@
             [teet.integration.integration-s3 :as s3]
             [teet.integration.integration-context :as integration-context
              :refer [ctx-> defstep]]
-            [ring.util.io :as ring-io]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [teet.util.datomic :as du]
@@ -170,6 +169,13 @@
 (def ^:private old-tuple-attrs
     {:file-seen/file+user [:file-seen/file :file-seen/user]})
 
+(defn- progress-fn [message]
+  (let [prg (atom 0)]
+    (fn []
+      (let [p (swap! prg inc)]
+        (when (zero? (mod p 500))
+          (log/info p message))))))
+
 (defn- output-all-tx [conn out]
   (let [db (d/db conn)
         attr-ident-cache (atom {})
@@ -190,7 +196,8 @@
                                  [?attr :db/tupleAttrs ?ta]]
                                db))
         ignore-attributes (into ignore-attributes
-                                (keys tuple-attrs))]
+                                (keys tuple-attrs))
+        progress! (progress-fn "backup transactions written")]
 
     (out! {:ref-attrs ref-attrs
            :tuple-attrs tuple-attrs
@@ -199,7 +206,8 @@
             :let [tx-map (output-tx (d/as-of db (:t tx)) attr-ident-cache tx
                                     ignore-attributes)]
             :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
-      (out! tx-map))))
+      (out! tx-map)
+      (progress!))))
 
 (defn- prepare-restore-tx
   "Prepare transaction for restore.
@@ -300,20 +308,29 @@
         conn (environment/datomic-connection)
         file-key (str env "-backup-"
                       (current-iso-date)
-                      ".edn.zip")]
+                      ".edn.zip")
+        start-ms (System/currentTimeMillis)]
     (log/info "Starting TEET backup to bucket: "
               bucket ", file: " file-key)
     (try
-      (s3/write-file-to-s3 {:to {:bucket bucket
-                                 :file-key file-key}
-                            :contents (ring-io/piped-input-stream
-                                       (fn [out]
-                                         (output-zip
-                                          out
-                                          ["transactions.edn" (partial output-all-tx conn)]
-                                          (when (environment/feature-enabled? :asset-db)
-                                            ["assets.edn" (partial output-all-tx
-                                                                   (environment/asset-connection))]))))})
+      (let [file (java.io.File/createTempFile "backup" ".zip")]
+        (log/info "Generating backup zip file: " (.getAbsolutePath file))
+        (with-open [out (io/output-stream file)]
+          (output-zip out
+                      ["transactions.edn" (partial output-all-tx conn)]
+                      (when (environment/feature-enabled? :asset-db)
+                        ["assets.edn" (partial output-all-tx
+                                               (environment/asset-connection))])))
+        (log/info "Backup generated in " (int (/ (- (System/currentTimeMillis) start-ms) 1000))
+                  "seconds with size " (.length file)
+                  ". Uploading to S3.")
+
+        (with-open [in (io/input-stream file)]
+          (s3/write-file-to-s3
+           {:to {:bucket bucket
+                 :file-key file-key}
+            :contents in}))
+        (io/delete-file file))
       (log/info "TEET backup finished.")
       (catch Exception e
         (log/error e "TEET backup failed")))))
@@ -357,7 +374,7 @@
 
 
 ;; ion :delete-email-addresses-from-datomic entry point
-;; 
+;;
 (defn delete-user-email-addresses [_]
   (let [db-connection (environment/datomic-connection)
         db (d/db db-connection)
@@ -365,7 +382,7 @@
                             :where [?u :user/email ?email]]
                           db)
         retract-tx (vec (for [{:keys [user-eid email]} users-result]
-                          [:db/retract user-eid :user/email email]))]    
+                          [:db/retract user-eid :user/email email]))]
     (d/transact db-connection {:tx-data retract-tx})
     (log/info "Removed email address from" (count retract-tx) "users")
     "{\"success\": true}"))

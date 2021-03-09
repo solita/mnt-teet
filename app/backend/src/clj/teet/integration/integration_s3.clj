@@ -5,7 +5,8 @@
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.credentials :as aws-credentials]
-            [teet.util.hash :refer [sha256 hex]]))
+            [teet.util.hash :refer [sha256 hex]])
+  (:import (java.net URLDecoder)))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 
@@ -21,8 +22,8 @@
       response)))
 
 (defn- bucket-and-key [s3-data]
-  {:bucket   (get-in s3-data [:bucket :name])
-   :file-key (get-in s3-data [:object :key])})
+  {:bucket (get-in s3-data [:bucket :name])
+   :file-key (URLDecoder/decode (get-in s3-data [:object :key]))})
 
 (defn- s3-file-data [input]
   (-> input :Records first :s3 bucket-and-key))

@@ -34,17 +34,19 @@
                      child))))))
 
 (defn- asset-type-library [db]
-  (walk/postwalk
-   (fn [x]
-     (if (ctype? x)
-       (child-ctypes db x)
-       x))
+  {:ctype/common (d/pull db ctype-pattern :ctype/common)
+   :fgroups
+   (walk/postwalk
+    (fn [x]
+      (if (ctype? x)
+        (child-ctypes db x)
+        x))
 
-   (mapv first
-         (d/q '[:find (pull ?fg p)
-                :where [?fg :asset-schema/type :asset-schema.type/fgroup]
-                :in $ p]
-              db type-library-pattern))))
+    (mapv first
+          (d/q '[:find (pull ?fg p)
+                 :where [?fg :asset-schema/type :asset-schema.type/fgroup]
+                 :in $ p]
+               db type-library-pattern)))})
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -60,5 +62,6 @@
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
-  {:fgroups []
+  {:asset-type-library (asset-type-library (environment/asset-db))
+   :fgroups []
    :project (project-db/project-by-id db [:thk.project/id project-id])})

@@ -70,7 +70,11 @@
    :values "Values",
    :ctype "Component",
    :db.type/long "Integer",
-   :attributes "Attributes"}},
+   :attributes "Attributes"},
+  :add-cost-item "Add cost item",
+  :feature-group-and-class-placeholder
+  "Search feature group or class...",
+  :no-matching-feature-classes "No matching feature classes."},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -1020,7 +1024,8 @@
    :cost-items "Cost items"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
-  :download-related-info "Download related info",
+  :bim-models "BIM models",
+  :download-related-info "Download info related to the project",
   :edit-comment "Edit comment",
   :export "Export",
   :show-timeline "Show project timeline",

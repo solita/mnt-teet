@@ -44,6 +44,7 @@
      :flex-direction :column
      :transition "background-color 0.2s ease-in-out"
      :align-items :normal
+     :user-select :text
      :background-color bg-color}))
 
 (defn impact-form-style
@@ -237,7 +238,7 @@
 
         (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
           [:div
-           [form/many {:before [typography/BoldGreyText {:style {:margin-bottom "0.5rem"}}
+           [form/many {:before [typography/SubSectionLabel
                                 (tr [:fields :estate-procedure/land-exchanges])]
                        :attribute :estate-procedure/land-exchanges
                        :atleast-once? true}
@@ -472,6 +473,7 @@
    :justify-content :space-between
    :flex-direction :column
    :align-items :flex-start
+   :user-select :text
    :padding "0.5rem"})
 
 (defn estate-group

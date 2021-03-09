@@ -21,7 +21,8 @@
   (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
          :where
          [(missing? $ ?e :user/deactivated?)]
-         [?e :user/id _]]
+         [?e :user/id _]
+         [?e :user/family-name _]]
        db))
 
 (s/def ::search string?)

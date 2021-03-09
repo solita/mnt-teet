@@ -185,7 +185,7 @@
  {:db/id ":fclass/membrane",
   :db/ident :fclass/membrane,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Membraan, geovõrk" "Membrane"],
+  :asset-schema/label ["Membraan, geovõrk" "Membrane, geotextile"],
   :fclass/fgroup ":fgroup/pavement"}
  {:db/id ":fclass/unboundbasecourse",
   :db/ident :fclass/unboundbasecourse,
@@ -258,33 +258,118 @@
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Elektrikaabel" "Power network"],
   :fclass/fgroup ":fgroup/utilities"}
- {:db/id ":ctype/general",
-  :db/ident :ctype/general,
-  :db/doc "Attributes general to all assets",
+ {:db/id ":ctype/common",
+  :db/ident :ctype/common,
+  :db/doc "Attributes common to all assets and components",
   :asset-schema/type :asset-schema.type/ctype}
- {:db/id ":ctype/bridgespan",
-  :db/ident :ctype/bridgespan,
+ {:db/id ":ctype/bearingseatingpad",
+  :db/ident :ctype/bearingseatingpad,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Silla ava" "Bridge span"],
-  :asset-schema/description
-  ["Sildeehitus" "Bridge superstructure between two supports"],
-  :ctype/parent ":fclass/bridge"}
- {:db/id ":ctype/bridgesupport",
-  :db/ident :ctype/bridgesupport,
+  :asset-schema/label ["Tugilaagri aluspadi" "Bearing seating pad"],
+  :ctype/parent ":ctype/bearing"}
+ {:db/id ":ctype/girder",
+  :db/ident :ctype/girder,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Silla tugisammas" "Bridge support"],
+  :asset-schema/label ["Tala (peakandur)" "Girder"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/deckslab",
+  :db/ident :ctype/deckslab,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Tekiplaat" "Deck slab"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/waterproofingmembrane",
+  :db/ident :ctype/waterproofingmembrane,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Hüdroisolatsioon" "Waterproofing"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/edgebeam",
+  :db/ident :ctype/edgebeam,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Servapruss" "Edge beam"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/waterproofing",
+  :db/ident :ctype/waterproofing,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Hüdroisolatsioon" "Waterproofing"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/cornice",
+  :db/ident :ctype/cornice,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Karniis" "Cornice"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/cable",
+  :db/ident :ctype/cable,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Tõmb, vant, riputi" "Cable"],
   :asset-schema/description
-  ["Silla tugisammas, kaldasammas või liigend sildeehituses."
-   "Bridge supporting column, abutment, or a hinge in superstructure"],
-  :ctype/parent ":fclass/bridge"}
+  ["Ainult tõmbele töötav element, rippsilla tross või riputi, vantsilla vant, vms"
+   ""],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/truss",
+  :db/ident :ctype/truss,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Sõrestik" "Truss"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/arch",
+  :db/ident :ctype/arch,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kaar" "Arch"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/vault",
+  :db/ident :ctype/vault,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Võlv" "Vault"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/slab",
+  :db/ident :ctype/slab,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Plaat" "Slab"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/structuraljoint",
+  :db/ident :ctype/structuraljoint,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Konstruktiivne vuuk" "Structural separation joint"],
+  :asset-schema/description
+  ["Vuuk erinevate materjalide või elementide eraldamiseks, näiteks sõidutee katte ja servaprussi vaheline vuuk"
+   ""],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/structuralprotection",
+  :db/ident :ctype/structuralprotection,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Löögikaitse" "Protection of structure"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/structuralprotectorelement",
+  :db/ident :ctype/structuralprotectorelement,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["" "Protection element"],
+  :ctype/parent ":ctype/bridgespan"}
  {:db/id ":ctype/pile",
   :db/ident :ctype/pile,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Vai" "Pile"],
   :asset-schema/description ["Tugivai" ""],
+  :ctype/parent ":ctype/bridgesupport"}
+ {:db/id ":ctype/piledrilled",
+  :db/ident :ctype/piledrilled,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Puurvai" "Drilled pile"],
   :ctype/parent ":ctype/bridgesupport"}
  {:db/id ":ctype/pilecap",
   :db/ident :ctype/pilecap,
@@ -323,134 +408,12 @@
   :asset-schema/description
   ["Sildeehituselt tugisambale koormust üle kandev element." ""],
   :ctype/parent ":ctype/bridgesupport"}
- {:db/id ":ctype/girder",
-  :db/ident :ctype/girder,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Tala (peakandur)" "Girder"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/deckslab",
-  :db/ident :ctype/deckslab,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Tekiplaat" "Deck slab"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/waterproofingmembrane",
-  :db/ident :ctype/waterproofingmembrane,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Hüdroisolatsioon" "Waterproofing"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/edgebeam",
-  :db/ident :ctype/edgebeam,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Servapruss" "Edge beam"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/portal",
-  :db/ident :ctype/portal,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Portaal, Konsool" "Portal, Cantilever"],
-  :ctype/parent ":fclass/signagelocation"}
- {:db/id ":ctype/signpole",
-  :db/ident :ctype/signpole,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Märgipost" "Signpost"],
-  :ctype/parent ":fclass/signagelocation"}
- {:db/id ":ctype/trafficsign",
-  :db/ident :ctype/trafficsign,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Liiklusmärk" "Traffic sign"],
-  :ctype/parent ":fclass/signagelocation"}
- {:db/id ":ctype/trafficsignal",
-  :db/ident :ctype/trafficsignal,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Foor" "Traffic signal"],
-  :ctype/parent ":fclass/signagelocation"}
- {:db/id ":ctype/wayfindingsign",
-  :db/ident :ctype/wayfindingsign,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Suunaviit" "Guidance sign"],
-  :ctype/parent ":fclass/signagelocation"}
- {:db/id ":ctype/portalfoundation",
-  :db/ident :ctype/portalfoundation,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Portaali vundament" "Portal foundation"],
-  :ctype/parent ":ctype/portal"}
- {:db/id ":ctype/portalpost",
-  :db/ident :ctype/portalpost,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Portaali post" "Portal post"],
-  :ctype/parent ":ctype/portal"}
- {:db/id ":ctype/portalbeam",
-  :db/ident :ctype/portalbeam,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Portaali tala" "Portal beam"],
-  :ctype/parent ":ctype/portal"}
- {:db/id ":ctype/lightpole",
-  :db/ident :ctype/lightpole,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Valgustimast" "Lighting pole"],
-  :ctype/parent ":fclass/lightlocation"}
- {:db/id ":ctype/polefoundation",
-  :db/ident :ctype/polefoundation,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label
-  ["Valgustimasti vundament" "Lighting pole foundation"],
-  :ctype/parent ":fclass/lightlocation"}
- {:db/id ":ctype/lightingfixture",
-  :db/ident :ctype/lightingfixture,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Valgusti" "Light fitting (luminaire)"],
-  :ctype/parent ":fclass/lightlocation"}
- {:db/id ":ctype/barrier",
-  :db/ident :ctype/barrier,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Piire" "Safety barrier"],
-  :ctype/parent ":fclass/barrier"}
- {:db/id ":ctype/barrierterminal",
-  :db/ident :ctype/barrierterminal,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Piirde terminal" "Barrier terminal"],
-  :ctype/parent ":fclass/barrier"}
- {:db/id ":ctype/barriercushion",
-  :db/ident :ctype/barriercushion,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Põrkeleevendi" "Absorbtion device"],
-  :ctype/parent ":fclass/barrier"}
  {:db/id ":ctype/expansionjoint",
   :db/ident :ctype/expansionjoint,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Paisumisvuuk" "Expansion joint"],
   :ctype/parent ":ctype/bridgesupport"}
- {:db/id ":ctype/expansionjointsupportbeam",
-  :db/ident :ctype/expansionjointsupportbeam,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label
-  ["Paisumisvuugi tugipruss" "Expansion joint support "],
-  :ctype/parent ":ctype/expansionjoint"}
- {:db/id ":ctype/waterproofing",
-  :db/ident :ctype/waterproofing,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Hüdroisolatsioon" "Waterproofing"],
-  :ctype/parent ":ctype/bridgespan"}
  {:db/id ":ctype/bearinggirder",
   :db/ident :ctype/bearinggirder,
   :db/doc "No",
@@ -475,12 +438,6 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Jäämurdja" "Ice breaker"],
   :ctype/parent ":ctype/bridgesupport"}
- {:db/id ":ctype/cornice",
-  :db/ident :ctype/cornice,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Karniis" "Cornice"],
-  :ctype/parent ":ctype/bridgespan"}
  {:db/id ":ctype/scourprotection",
   :db/ident :ctype/scourprotection,
   :db/doc "No",
@@ -493,85 +450,228 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Nõlvakindlustus" "Slope protection"],
   :ctype/parent ":ctype/bridgesupport"}
- {:db/id ":ctype/cable",
-  :db/ident :ctype/cable,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Tõmb, vant, riputi" "Cable"],
-  :asset-schema/description
-  ["Ainult tõmbele töötav element, rippsilla tross või riputi, vantsilla vant, vms"
-   ""],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/truss",
-  :db/ident :ctype/truss,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Sõrestik" "Truss"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/trussbar",
-  :db/ident :ctype/trussbar,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Sõrestiku varras" "Truss bar"],
-  :ctype/parent ":ctype/truss"}
- {:db/id ":ctype/arch",
-  :db/ident :ctype/arch,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Kaar" "Arch"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/vault",
-  :db/ident :ctype/vault,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Võlv" "Vault"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/slab",
-  :db/ident :ctype/slab,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Plaat" "Slab"],
-  :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/bearingseatingpad",
-  :db/ident :ctype/bearingseatingpad,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Tugilaagri aluspadi" "Bearing seating pad"],
-  :ctype/parent ":ctype/bearing"}
  {:db/id ":ctype/stair",
   :db/ident :ctype/stair,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Trepp" "Stair"],
   :ctype/parent ":ctype/bridgesupport"}
- {:db/id ":ctype/structuraljoint",
-  :db/ident :ctype/structuraljoint,
+ {:db/id ":ctype/expansionjointsupportbeam",
+  :db/ident :ctype/expansionjointsupportbeam,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label
-  ["Konstruktiivne vuuk" "Structural separation joint"],
+  ["Paisumisvuugi tugipruss" "Expansion joint support "],
+  :ctype/parent ":ctype/expansionjoint"}
+ {:db/id ":ctype/portalfoundation",
+  :db/ident :ctype/portalfoundation,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Portaali vundament" "Portal foundation"],
+  :ctype/parent ":ctype/portal"}
+ {:db/id ":ctype/portalpost",
+  :db/ident :ctype/portalpost,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Portaali post" "Portal post"],
+  :ctype/parent ":ctype/portal"}
+ {:db/id ":ctype/portalbeam",
+  :db/ident :ctype/portalbeam,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Portaali tala" "Portal beam"],
+  :ctype/parent ":ctype/portal"}
+ {:db/id ":ctype/trussbar",
+  :db/ident :ctype/trussbar,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Sõrestiku varras" "Truss bar"],
+  :ctype/parent ":ctype/truss"}
+ {:db/id ":ctype/barrier",
+  :db/ident :ctype/barrier,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Piire" "Safety barrier"],
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/barrierterminal",
+  :db/ident :ctype/barrierterminal,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Piirde terminal" "Barrier terminal"],
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/barriercushion",
+  :db/ident :ctype/barriercushion,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Põrkeleevendi" "Absorbtion device"],
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/transition",
+  :db/ident :ctype/transition,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Üleminek" "Transition"],
   :asset-schema/description
-  ["Vuuk erinevate materjalide või elementide eraldamiseks, näiteks sõidutee katte ja servaprussi vaheline vuuk"
+  ["Üleminek erinevate  piirdetüüpide vahel." ""],
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/barrierjoint",
+  :db/ident :ctype/barrierjoint,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Muutuva pikkusega piirde lüli" "Barrier expansion joint"],
+  :asset-schema/description
+  ["Temperatuurivuukide kohal tuleb ka piiretele ette näha liikumisvõimalus."
    ""],
-  :ctype/parent ":ctype/bridgespan"}
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/barriersnownet",
+  :db/ident :ctype/barriersnownet,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Lumetõke" "Snow barrier"],
+  :asset-schema/description
+  ["Sildadel lisatakse piiretele lumetõkke võrgud vms et lund ei paisataks silla alla teele, raudteele, jne"
+   "Protection nets to avoid snow being ploughed to the crossing feature (road, path, railroad, etc)"],
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/barriernoisepanel",
+  :db/ident :ctype/barriernoisepanel,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Müratõkkepaneel piirdel" "Noise panel on barrier"],
+  :asset-schema/description
+  ["Müratõkke elemente kinnitatakse vahel otse  piirde konstruktsiooni külge või peale."
+   "Noise barrier elements are sometimes attached as an extension to the barrier."],
+  :ctype/parent ":fclass/barrier"}
+ {:db/id ":ctype/bridgespan",
+  :db/ident :ctype/bridgespan,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Silla ava" "Bridge span"],
+  :asset-schema/description
+  ["Sildeehitus" "Bridge superstructure between two supports"],
+  :ctype/parent ":fclass/bridge"}
+ {:db/id ":ctype/bridgesupport",
+  :db/ident :ctype/bridgesupport,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Silla tugisammas" "Bridge support"],
+  :asset-schema/description
+  ["Silla tugisammas, kaldasammas või liigend sildeehituses."
+   "Bridge supporting column, abutment, or a hinge in superstructure"],
+  :ctype/parent ":fclass/bridge"}
+ {:db/id ":ctype/culvertpipe",
+  :db/ident :ctype/culvertpipe,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Truubitoru" "Culvert pipe"],
+  :ctype/parent ":fclass/culvert"}
+ {:db/id ":ctype/culverthead",
+  :db/ident :ctype/culverthead,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Truubipäis" "Culvert head"],
+  :ctype/parent ":fclass/culvert"}
+ {:db/id ":ctype/culvertprotection",
+  :db/ident :ctype/culvertprotection,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Truubikindlustus" "Culvert protection"],
+  :ctype/parent ":fclass/culvert"}
  {:db/id ":ctype/drainageinlet",
   :db/ident :ctype/drainageinlet,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Drenaazikaev" "Drainage inlet/manhole"],
   :ctype/parent ":fclass/drainagesystem"}
- {:db/id ":ctype/boundpavinglayer",
-  :db/ident :ctype/boundpavinglayer,
+ {:db/id ":ctype/pedestriancrossing",
+  :db/ident :ctype/pedestriancrossing,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Seotud kattekiht" "Bound paving layer"],
-  :ctype/parent ":fclass/paving"}
- {:db/id ":ctype/unboundpavinglayer",
-  :db/ident :ctype/unboundpavinglayer,
+  :asset-schema/label ["Ülekäik" ""],
+  :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/lanedirectiontarrow",
+  :db/ident :ctype/lanedirectiontarrow,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Sidumata kattekiht" "Unbound paving layer"],
-  :ctype/parent ":fclass/paving"}
+  :asset-schema/label ["Nool" "Arrow"],
+  :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/roadsign",
+  :db/ident :ctype/roadsign,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Märgi kujutis" "Road sign"],
+  :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/vergestriping",
+  :db/ident :ctype/vergestriping,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Eraldusala diagonaalmarkeering" ""],
+  :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/parkinglot",
+  :db/ident :ctype/parkinglot,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Parkla" "Parking lot"],
+  :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/kerb",
+  :db/ident :ctype/kerb,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Äärekivi" "Kerbstone"],
+  :ctype/parent ":fclass/kerb"}
+ {:db/id ":ctype/kerbbase",
+  :db/ident :ctype/kerbbase,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Äärekivi tugialus/pruss" "Kerbstone base/support"],
+  :ctype/parent ":fclass/kerb"}
+ {:db/id ":ctype/lightpole",
+  :db/ident :ctype/lightpole,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Valgustimast" "Lighting pole"],
+  :ctype/parent ":fclass/lightlocation"}
+ {:db/id ":ctype/polefoundation",
+  :db/ident :ctype/polefoundation,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Valgustimasti vundament" "Lighting pole foundation"],
+  :ctype/parent ":fclass/lightlocation"}
+ {:db/id ":ctype/lightingfixture",
+  :db/ident :ctype/lightingfixture,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Valgusti" "Light fitting (luminaire)"],
+  :ctype/parent ":fclass/lightlocation"}
+ {:db/id ":ctype/lanedivider",
+  :db/ident :ctype/lanedivider,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Sõiduraja markeering" "Lane marking"],
+  :asset-schema/description
+  ["Sõiduradade vaheline pikimarkeering, kasutatakse pärisuunaliste sõiduradade eraldamiseks."
+   ""],
+  :ctype/parent ":fclass/linearmarking"}
+ {:db/id ":ctype/edgemarking",
+  :db/ident :ctype/edgemarking,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Servamarkeering" "Edge marking"],
+  :asset-schema/description
+  ["Pikimarkeering mis eraldab sõiduosa teepeenrast."
+   "Linear marking separating driving lane from the shoulder."],
+  :ctype/parent ":fclass/linearmarking"}
+ {:db/id ":ctype/centralmarking",
+  :db/ident :ctype/centralmarking,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Telje markeering" "Central marking"],
+  :asset-schema/description
+  ["Pikimarkeering mis eraldab sõidusuundi."
+   "Centreline marking that separates driving directions"],
+  :ctype/parent ":fclass/linearmarking"}
  {:db/id ":ctype/boundbasecourse",
   :db/ident :ctype/boundbasecourse,
   :db/doc "No",
@@ -602,33 +702,54 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Drenaažikiht" "Drainage layer"],
   :ctype/parent ":fclass/pavementstructure"}
- {:db/id ":ctype/lanedivider",
-  :db/ident :ctype/lanedivider,
+ {:db/id ":ctype/boundpavinglayer",
+  :db/ident :ctype/boundpavinglayer,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Sõiduraja markeering" "Lane marking"],
-  :asset-schema/description
-  ["Sõiduradade vaheline pikimarkeering, kasutatakse pärisuunaliste sõiduradade eraldamiseks."
-   ""],
-  :ctype/parent ":fclass/linearmarking"}
- {:db/id ":ctype/edgemarking",
-  :db/ident :ctype/edgemarking,
+  :asset-schema/label ["Seotud kattekiht" "Bound paving layer"],
+  :ctype/parent ":fclass/paving"}
+ {:db/id ":ctype/unboundpavinglayer",
+  :db/ident :ctype/unboundpavinglayer,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Servamarkeering" "Edge marking"],
-  :asset-schema/description
-  ["Pikimarkeering mis eraldab sõiduosa teepeenrast."
-   "Linear marking separating driving lane from the shoulder."],
-  :ctype/parent ":fclass/linearmarking"}
- {:db/id ":ctype/centralmarking",
-  :db/ident :ctype/centralmarking,
+  :asset-schema/label ["Sidumata kattekiht" "Unbound paving layer"],
+  :ctype/parent ":fclass/paving"}
+ {:db/id ":ctype/shoulderfill",
+  :db/ident :ctype/shoulderfill,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Telje markeering" "Central marking"],
-  :asset-schema/description
-  ["Pikimarkeering mis eraldab sõidusuundi."
-   "Centreline marking that separates driving directions"],
-  :ctype/parent ":fclass/linearmarking"}
+  :asset-schema/label ["Peenratäide" "Shoulder fill"],
+  :ctype/parent ":fclass/shoulder"}
+ {:db/id ":ctype/portal",
+  :db/ident :ctype/portal,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Portaal, Konsool" "Portal, Cantilever"],
+  :ctype/parent ":fclass/signagelocation"}
+ {:db/id ":ctype/signpole",
+  :db/ident :ctype/signpole,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Märgipost" "Signpost"],
+  :ctype/parent ":fclass/signagelocation"}
+ {:db/id ":ctype/trafficsign",
+  :db/ident :ctype/trafficsign,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Liiklusmärk" "Traffic sign"],
+  :ctype/parent ":fclass/signagelocation"}
+ {:db/id ":ctype/trafficsignal",
+  :db/ident :ctype/trafficsignal,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Foor" "Traffic signal"],
+  :ctype/parent ":fclass/signagelocation"}
+ {:db/id ":ctype/wayfindingsign",
+  :db/ident :ctype/wayfindingsign,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Suunaviit" "Guidance sign"],
+  :ctype/parent ":fclass/signagelocation"}
  {:db/id ":ctype/deepstabilisation",
   :db/ident :ctype/deepstabilisation,
   :db/doc "No",
@@ -646,34 +767,22 @@
   :ctype/parent ":fclass/subgrade"}
  {:db/id ":ctype/soilreplacement",
   :db/ident :ctype/soilreplacement,
+  :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Pinnase asendus" "Soil replacement"],
   :ctype/parent ":fclass/subgrade"}
- {:db/id ":ctype/pedestriancrossing",
-  :db/ident :ctype/pedestriancrossing,
+ {:db/id ":ctype/vergeplanter",
+  :db/ident :ctype/vergeplanter,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :ctype/parent ":fclass/featuremarking"}
- {:db/id ":ctype/lanedirectiontarrow",
-  :db/ident :ctype/lanedirectiontarrow,
+  :asset-schema/label ["Eraldusriba kasvualus" "Verge planting"],
+  :ctype/parent ":fclass/verge"}
+ {:db/id ":ctype/vergepaving",
+  :db/ident :ctype/vergepaving,
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
-  :ctype/parent ":fclass/featuremarking"}
- {:db/id ":ctype/roadsign",
-  :db/ident :ctype/roadsign,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :ctype/parent ":fclass/featuremarking"}
- {:db/id ":ctype/vergestriping",
-  :db/ident :ctype/vergestriping,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :ctype/parent ":fclass/featuremarking"}
- {:db/id ":ctype/parkinglot",
-  :db/ident :ctype/parkinglot,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :ctype/parent ":fclass/featuremarking"}
+  :asset-schema/label ["Eraldusriba kate" "Verge paving"],
+  :ctype/parent ":fclass/verge"}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -684,28 +793,21 @@
   :db/ident :trafficsign/signcode,
   :asset-schema/description
   ["Märgi kood vastavalt Liiklusseadusele" ""]}
- {:db/id ":boundbasecourse/recycledasphaltcontent",
-  :db/ident :boundbasecourse/recycledasphaltcontent,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["freesasfaldi sisaldus" "recycled asphalt content"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :asset-schema/unit "%",
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":backfill/backfillthickness",
-  :db/ident :backfill/backfillthickness,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["mulde paksus" "Layer thickness, mm"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
+ {:attribute/parent ":fclass/backfill",
   :asset-schema/unit "mm",
-  :attribute/parent ":fclass/backfill"}
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["mulde kihi paksus" "Layer thickness, mm"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":backfill/backfillthickness",
+  :db/ident :backfill/backfillthickness}
  {:attribute/parent ":ctype/bridgesupport",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Toe tüüp" "Support type"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridgesupport/supporttype",
   :db/ident :bridgesupport/supporttype,
   :asset-schema/description [nil "Column, amutment or hinge"]}
@@ -717,42 +819,57 @@
   :db/doc "No",
   :db/id ":barrierterminal/barrierterminaltype",
   :db/ident :barrierterminal/barrierterminaltype}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Objekti ID" "Object ID"],
-  :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":general/OID",
-  :db/ident :general/OID}
- {:db/id ":pile/pilesize",
-  :db/ident :pile/pilesize,
+ {:attribute/parent ":ctype/pile",
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Vaia läbimõõt" "Pile diameter"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm",
-  :attribute/parent ":ctype/pile"}
- {:db/id ":pavinglayer/pavinglayermaterial",
-  :db/ident :pavinglayer/pavinglayermaterial,
+  :db/doc "No",
+  :db/id ":pile/pilesize",
+  :db/ident :pile/pilesize}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["materjali nimetus" "paving material "],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayermaterial",
+  :db/ident :pavinglayer/pavinglayermaterial}
+ {:attribute/parent ":fclass/drainagelayer",
+  :asset-schema/unit "Mpa",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["vajalik elastusmoodul kihi pinnal"
+   "necessary elastic modulus on top of layer"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":drainagelayer/drainageelasticmodulus",
+  :db/ident :drainagelayer/drainageelasticmodulus}
+ {:attribute/parent ":fclass/pavinglayer",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/pavinglayer"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["kattekihi tüüp" "paving layer type"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayertype",
+  :db/ident :pavinglayer/pavinglayertype}
  {:db/id ":bridge/bridgeaxleload",
   :db/ident :bridge/bridgeaxleload,
   :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["võiks olla vahemikud ........" ""],
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/ref,
   :attribute/parent ":fclass/bridge"}
- {:db/id ":pavinglayer/pavinglayerwearingresistance",
-  :db/ident :pavinglayer/pavinglayerwearingresistance,
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["kulumiskindlus" "wearing resistance"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/pavinglayer"}
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerwearingresistance",
+  :db/ident :pavinglayer/pavinglayerwearingresistance}
  {:attribute/parent ":ctype/barrier",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -764,6 +881,23 @@
   :db/ident :barrier/barrierheight,
   :asset-schema/description
   ["Piirde ülemise serva kõrgus tee pinnast." ""]}
+ {:attribute/parent ":fclass/backfill",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["peenosiste sisaldus" "content of fine particles in fill material"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":backfill/backfillfineparticlecontent",
+  :db/ident :backfill/backfillfineparticlecontent}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["täitematerjali tera suurus" "stone size"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerstonesize",
+  :db/ident :pavinglayer/pavinglayerstonesize}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -772,6 +906,17 @@
   :db/doc "No",
   :db/id ":trafficsign/signsizeclass",
   :db/ident :trafficsign/signsizeclass}
+ {:attribute/parent ":fclass/backfill",
+  :asset-schema/unit "Mpa",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["vajalik elastusmoodul kihi pinnal"
+   "necessary elastic modulus on topp of layer"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":backfill/backfillelasticmodulus",
+  :db/ident :backfill/backfillelasticmodulus}
  {:db/id ":bridgespan/spanstructuraltype",
   :db/ident :bridgespan/spanstructuraltype,
   :asset-schema/type :asset-schema.type/attribute,
@@ -790,20 +935,23 @@
   :db/valueType :db.type/long,
   :asset-schema/unit "spans",
   :attribute/parent ":fclass/bridge"}
- {:db/id ":unboundbasecourse/unboundbasematerial",
-  :db/ident :unboundbasecourse/unboundbasematerial,
+ {:attribute/parent ":fclass/unboundbasecourse",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["sidumata aluskihi materjal" "unbound basecourse material"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":unboundbasecourse/unboundbasematerial",
+  :db/ident :unboundbasecourse/unboundbasematerial}
+ {:attribute/parent ":ctype/bridgesupport",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/unboundbasecourse"}
- {:db/id ":bridgesupport/supportjointtype",
-  :db/ident :bridgesupport/supportjointtype,
   :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Paisumisvuugi tüüp" "Expansion joint type"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref,
-  :attribute/parent ":ctype/bridgesupport"}
+  :db/doc "No",
+  :db/id ":bridgesupport/supportjointtype",
+  :db/ident :bridgesupport/supportjointtype}
  {:attribute/parent ":fclass/pavinglayer",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -812,31 +960,24 @@
   :db/doc "No",
   :db/id ":pavinglayer/pavingmaterial",
   :db/ident :pavinglayer/pavingmaterial}
- {:db/id ":boundbasecourse/compressionstrength",
-  :db/ident :boundbasecourse/compressionstrength,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["survetugevus" "comprssionstrength"],
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/pavinglayer",
+  :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
-  :asset-schema/unit "MPa",
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":pile/pilelength",
-  :db/ident :pile/pilelength,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["filleri sisaldus" "filler content"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerfillercontent",
+  :db/ident :pavinglayer/pavinglayerfillercontent}
+ {:attribute/parent ":ctype/pile",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Vaia pikkus" "Pile length"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
-  :attribute/parent ":ctype/pile"}
- {:db/id ":boundbasecourse/stonematerialcontent",
-  :db/ident :boundbasecourse/stonematerialcontent,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["kivimaterjali sisaldus" "stone material content"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "%",
-  :attribute/parent ":fclass/boundbasecourse"}
+  :db/doc "No",
+  :db/id ":pile/pilelength",
+  :db/ident :pile/pilelength}
  {:db/id ":bridge/bridgetotalwidth",
   :db/ident :bridge/bridgetotalwidth,
   :asset-schema/type :asset-schema.type/attribute,
@@ -854,24 +995,16 @@
   :db/id ":barrierterminal/terminalvehicleredirectionclass",
   :db/ident :barrierterminal/terminalvehicleredirectionclass,
   :asset-schema/description ["x1-x3" ""]}
- {:db/id ":pavinglayer/pavinglayerrecycledasphaltcontent",
-  :db/ident :pavinglayer/pavinglayerrecycledasphaltcontent,
+ {:attribute/parent ":fclass/pavinglayer",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["freespuru sisaldus" "recycled asphalt content"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "%",
-  :attribute/parent ":fclass/pavinglayer"}
- {:db/id ":drainagelayer/filtrationmodulus",
-  :db/ident :drainagelayer/filtrationmodulus,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["filtratsioonimoodul EVS-EN 901-20"
-   "filtration modulus EVS-EN 901-20"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/drainagelayer"}
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerrecycledasphaltcontent",
+  :db/ident :pavinglayer/pavinglayerrecycledasphaltcontent}
  {:db/id ":bridgespan/spanlengthanalytical",
   :db/ident :bridgespan/spanlengthanalytical,
   :asset-schema/type :asset-schema.type/attribute,
@@ -881,14 +1014,15 @@
   :db/valueType :db.type/bigdec,
   :asset-schema/unit "m",
   :attribute/parent ":ctype/bridgespan"}
- {:db/id ":backfill/backfillmaterialproducer",
-  :db/ident :backfill/backfillmaterialproducer,
+ {:attribute/parent ":fclass/backfill",
+  :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["mulde materjali tootja" "embankment fill material producer"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/backfill"}
+  :db/doc "No",
+  :db/id ":backfill/backfillmaterialproducer",
+  :db/ident :backfill/backfillmaterialproducer}
  {:attribute/parent ":ctype/barrier",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -914,21 +1048,33 @@
   :db/doc "No",
   :db/id ":girder/structuralmaterial",
   :db/ident :girder/structuralmaterial}
- {:db/id ":boundbasecourse/hydraulicbinder",
-  :db/ident :boundbasecourse/hydraulicbinder,
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "MPa",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
-  ["kasutatud hüdrauliline sideaine" "hydraulic binder used"],
+  ["vajalik elastusmoodul kihi pinnal"
+   "necessary elastic modulus on topp of layer"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":backfill/backfillmaterial",
-  :db/ident :backfill/backfillmaterial,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbaseelasticmodulus",
+  :db/ident :boundbasecourse/boundbaseelasticmodulus}
+ {:attribute/parent ":fclass/backfill",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["mulde materjal" "embankment fill material"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":backfill/backfillmaterial",
+  :db/ident :backfill/backfillmaterial}
+ {:attribute/parent ":ctype/pile",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/backfill"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Vaia ristlõike mõõt" ""],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pile/pilesizerect",
+  :db/ident :pile/pilesizerect}
  {:attribute/parent ":ctype/bridgesupport",
   :db/valueType :db.type/long,
   :asset-schema/type :asset-schema.type/attribute,
@@ -945,47 +1091,83 @@
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/ref,
   :attribute/parent ":fclass/bridge"}
- {:db/id ":pavinglayer/pavinglayerbindercontent",
-  :db/ident :pavinglayer/pavinglayerbindercontent,
+ {:attribute/parent ":fclass/pavinglayer",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["sideaine sisaldus" "binder content"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "%",
-  :attribute/parent ":fclass/pavinglayer"}
- {:db/id ":boundbasecourse/organicbinder",
-  :db/ident :boundbasecourse/organicbinder,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerbindercontent",
+  :db/ident :pavinglayer/pavinglayerbindercontent}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["kasutatud orgaaniline sideaine" "organic binder used"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":pavinglayer/pavinglayerbinderpenetration",
-  :db/ident :pavinglayer/pavinglayerbinderpenetration,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbaseorganicbinder",
+  :db/ident :boundbasecourse/boundbaseorganicbinder}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["freesasfaldi sisaldus" "recycled asphalt content"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbaserecycledasphaltcontent",
+  :db/ident :boundbasecourse/boundbaserecycledasphaltcontent}
+ {:attribute/parent ":fclass/unboundbasecourse",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Materjali purunemiskindlus LA" "Material fructure resistance LA"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":unboundbasecourse/unboundbasefructureresistance",
+  :db/ident :unboundbasecourse/unboundbasefructureresistance}
+ {:attribute/parent ":fclass/drainagelayer",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["dreenkihi tihendustegur" "Compaction factor"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":drainagelayer/drainagecompactionfactor",
+  :db/ident :drainagelayer/drainagecompactionfactor}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["sideaine penetratsioon" "binder penetration"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/pavinglayer"}
- {:attribute/parent ":ctype/general",
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerbinderpenetration",
+  :db/ident :pavinglayer/pavinglayerbinderpenetration}
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Märkused" "Remarks"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/remark",
-  :db/ident :general/remark}
- {:db/id ":drainagelayer/compactionfactor",
-  :db/ident :drainagelayer/compactionfactor,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["dreenkihi tihendustegur" "Compaction factor"],
-  :db/cardinality :db.cardinality/one,
+  :db/id ":common/remark",
+  :db/ident :common/remark}
+ {:attribute/parent ":fclass/unboundbasecourse",
+  :asset-schema/unit "MPa",
   :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/drainagelayer"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["vajalik elastusmoodul kihi pinnal"
+   "necessary elastic modulus on topp of layer"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":unboundbasecourse/unboundbaseelasticmodulus",
+  :db/ident :unboundbasecourse/unboundbaseelasticmodulus}
  {:db/id ":bridge/bridgemlc",
   :db/ident :bridge/bridgemlc,
   :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["võiks olla vahemikud ........" ""],
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/ref,
   :attribute/parent ":fclass/bridge"}
@@ -999,15 +1181,16 @@
   :db/ident :trafficsign/signgroup,
   :asset-schema/description
   ["Märgi funktsionaalne grupp vastavalt Liiklussseadusele" ""]}
- {:db/id ":unboundbasecourse/unboundbasethickness",
-  :db/ident :unboundbasecourse/unboundbasethickness,
+ {:attribute/parent ":fclass/unboundbasecourse",
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["sidumata aluskihi paksus" "Layer thickness, mm"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm",
-  :attribute/parent ":fclass/unboundbasecourse"}
+  :db/doc "No",
+  :db/id ":unboundbasecourse/unboundbasethickness",
+  :db/ident :unboundbasecourse/unboundbasethickness}
  {:attribute/parent ":ctype/girder",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1016,44 +1199,56 @@
   :db/doc "No",
   :db/id ":girder/steelgrade",
   :db/ident :girder/steelgrade}
- {:db/id ":drainagelayer/drainagematerial",
-  :db/ident :drainagelayer/drainagematerial,
+ {:attribute/parent ":fclass/drainagelayer",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["dreenkihi materjal" "drainage layer material"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/drainagelayer"}
- {:db/id ":pavinglayer/pavinglayerthickness",
-  :db/ident :pavinglayer/pavinglayerthickness,
+  :db/doc "No",
+  :db/id ":drainagelayer/drainagematerial",
+  :db/ident :drainagelayer/drainagematerial}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "MPa",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["lõhestus-tõmbetugevus" "shearstrength"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbaseshearstrength?",
+  :db/ident :boundbasecourse/boundbaseshearstrength?}
+ {:attribute/parent ":fclass/pavinglayer",
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["kihi paksus" "Layer thickness, mm"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm",
-  :attribute/parent ":fclass/pavinglayer"}
- {:db/id ":pavinglayer/pavinglayerproducer",
-  :db/ident :pavinglayer/pavinglayerproducer,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerthickness",
+  :db/ident :pavinglayer/pavinglayerthickness}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["asfaltsegu tootja" "asphalt mixture producer"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/pavinglayer"}
- {:attribute/parent ":ctype/general",
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerproducer",
+  :db/ident :pavinglayer/pavinglayerproducer}
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/long,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Kogus" "Quantity"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/quantity",
-  :db/ident :general/quantity}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Lähtemudeli faili ID" "Source model file ID"],
-  :db/cardinality :db.cardinality/one,
+  :db/id ":common/quantity",
+  :db/ident :common/quantity}
+ {:db/id ":pile/inclination",
+  :db/ident :pile/inclination,
   :db/doc "No",
-  :db/id ":general/sourcefileID",
-  :db/ident :general/sourcefileID}
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/valueType :db.type/bigdec,
+  :asset-schema/unit "deg",
+  :attribute/parent ":ctype/pile"}
  {:db/id ":bridge/bridgewidth",
   :db/ident :bridge/bridgewidth,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1061,22 +1256,42 @@
   :db/valueType :db.type/bigdec,
   :asset-schema/unit "m",
   :attribute/parent ":fclass/bridge"}
- {:db/id ":pavinglayer/pavinglayerdeformationresistance",
-  :db/ident :pavinglayer/pavinglayerdeformationresistance,
+ {:attribute/parent ":fclass/drainagelayer",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["filtratsioonimoodul EVS-EN 901-20"
+   "filtration modulus EVS-EN 901-20"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":drainagelayer/drainagefiltrationmodulus",
+  :db/ident :drainagelayer/drainagefiltrationmodulus}
+ {:attribute/parent ":fclass/unboundbasecourse",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["materjali fraktsioon" "material fraction"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":unboundbasecourse/unboundbasematerialfraction",
+  :db/ident :unboundbasecourse/unboundbasematerialfraction}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["deformatsioonikindlus" "deformation resistance"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/pavinglayer"}
- {:db/id ":boundbasecourse/boundbaseproducer",
-  :db/ident :boundbasecourse/boundbaseproducer,
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerdeformationresistance",
+  :db/ident :pavinglayer/pavinglayerdeformationresistance}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["seotud aluskihi tootja" "bound basecourse producer"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/boundbasecourse"}
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbaseproducer",
+  :db/ident :boundbasecourse/boundbaseproducer}
  {:attribute/parent ":ctype/barrier",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1085,23 +1300,15 @@
   :db/doc "No",
   :db/id ":barrier/barriertype",
   :db/ident :barrier/barriertype}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Looja" "Creator"],
-  :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":general/createdby",
-  :db/ident :general/createdby}
- {:db/id ":boundbasecourse/hydraulicbindercontent",
-  :db/ident :boundbasecourse/hydraulicbindercontent,
+ {:attribute/parent ":fclass/boundbasecourse",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
-  ["hüdraulilise sideaine sisaldus" "hydraulic binder content"],
+  ["kivimaterjali tera suurus" "stone material size"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "%",
-  :attribute/parent ":fclass/boundbasecourse"}
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasestonesize",
+  :db/ident :boundbasecourse/boundbasestonesize}
  {:db/id ":bridge/bridgedesigncode",
   :db/ident :bridge/bridgedesigncode,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1116,37 +1323,39 @@
   :db/doc "No",
   :db/id ":barrier/barrierworkingwidth",
   :db/ident :barrier/barrierworkingwidth}
- {:db/id ":membrane/membraneproducer",
-  :db/ident :membrane/membraneproducer,
+ {:attribute/parent ":fclass/membrane",
+  :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["geosünteedi tootja" "membrane producer"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/membrane"}
- {:db/id ":boundbasecourse/organicbindercontent",
-  :db/ident :boundbasecourse/organicbindercontent,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["orgaanilise sideaine sisaldus" "organic binder content"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "%",
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":boundbasecourse/boundbasetype",
-  :db/ident :boundbasecourse/boundbasetype,
+  :db/doc "No",
+  :db/id ":membrane/membraneproducer",
+  :db/ident :membrane/membraneproducer}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["seotud aluskihi tüüp - KS, BS, MUK jne" "bound basecourse type"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasetype",
+  :db/ident :boundbasecourse/boundbasetype}
+ {:attribute/parent ":ctype/pile",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":pile/piletype",
-  :db/ident :pile/piletype,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Vaia tüüp" "Pile type"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pile/piletype",
+  :db/ident :pile/piletype}
+ {:attribute/parent ":fclass/boundbasecourse",
   :db/valueType :db.type/ref,
-  :attribute/parent ":ctype/pile"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["kasutatud kivimaterjal" "stone material used"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasestonematerial",
+  :db/ident :boundbasecourse/boundbasestonematerial}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1156,48 +1365,31 @@
   :db/id ":barrierterminal/terminalimpactseverity",
   :db/ident :barrierterminal/terminalimpactseverity,
   :asset-schema/description ["A, B" ""]}
- {:db/id ":drainagelayer/drainagematerialproducer",
-  :db/ident :drainagelayer/drainagematerialproducer,
+ {:attribute/parent ":fclass/drainagelayer",
+  :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["dreenkihi materjali tootja" "drainage layer material producer"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/drainagelayer"}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Muutja" "Chenged by"],
-  :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/updatedby",
-  :db/ident :general/updatedby}
- {:attribute/parent ":ctype/general",
+  :db/id ":drainagelayer/drainagematerialproducer",
+  :db/ident :drainagelayer/drainagematerialproducer}
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Nimi" "Name"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/name",
-  :db/ident :general/name}
- {:attribute/parent ":ctype/general",
+  :db/id ":common/name",
+  :db/ident :common/name}
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Ühik" "Unit"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/unit",
-  :db/ident :general/unit}
- {:db/id ":boundbasecourse/elasticmodulus",
-  :db/ident :boundbasecourse/elasticmodulus,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["vajalik elastusmoodul kihi pinnal"
-   "necessary elastic modulus on topp of layer"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "MPa",
-  :attribute/parent ":fclass/boundbasecourse"}
+  :db/id ":common/unit",
+  :db/ident :common/unit}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1208,6 +1400,16 @@
   :db/id ":barrierterminal/terminallateraldisplacementclass",
   :db/ident :barrierterminal/terminallateraldisplacementclass,
   :asset-schema/description ["x1-x3" ""]}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["kivimaterjali sisaldus" "stone material content"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasestonematerialcontent",
+  :db/ident :boundbasecourse/boundbasestonematerialcontent}
  {:attribute/parent ":fclass/pavinglayer",
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
@@ -1218,22 +1420,16 @@
   :db/doc "No",
   :db/id ":pavinglayer/stonesize",
   :db/ident :pavinglayer/stonesize}
- {:db/id ":boundbasecourse/stonematerial",
-  :db/ident :boundbasecourse/stonematerial,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["kasutatud kivimaterjal" "stone material used"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/boundbasecourse"}
- {:db/id ":drainagelayer/fineparticlecontent",
-  :db/ident :drainagelayer/fineparticlecontent,
+ {:attribute/parent ":fclass/drainagelayer",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["peenosiste sisaldus"
    "content of fine particles in drainage layer material"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/drainagelayer"}
+  :db/doc "No",
+  :db/id ":drainagelayer/fineparticlecontent",
+  :db/ident :drainagelayer/fineparticlecontent}
  {:attribute/parent ":ctype/bridgesupport",
   :asset-schema/unit "deg",
   :db/valueType :db.type/bigdec,
@@ -1246,27 +1442,30 @@
   :asset-schema/description
   ["Tugisamba lõikumisnurk mõõdetuna silla (tee) pikitelje normaalist"
    ""]}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "MPa",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["survetugevus" "comprssionstrength"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasecompressionstrength",
+  :db/ident :boundbasecourse/boundbasecompressionstrength}
  {:db/id ":bridge/bridgeload2",
   :db/ident :bridge/bridgeload2,
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/ref,
   :attribute/parent ":fclass/bridge"}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Objekti ID mudelis" "Object ID in BIM"],
-  :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":general/modelID",
-  :db/ident :general/modelID}
- {:db/id ":pavinglayer/pavinglayerporosity",
-  :db/ident :pavinglayer/pavinglayerporosity,
+ {:attribute/parent ":fclass/pavinglayer",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["jäävpoorsus" "porosity"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/pavinglayer"}
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayerporosity",
+  :db/ident :pavinglayer/pavinglayerporosity}
  {:attribute/parent ":ctype/girder",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1277,14 +1476,35 @@
   :db/ident :girder/concreteclass,
   :asset-schema/description
   ["Betooni tugevusklass vastavalt Eurokoodeksile" ""]}
- {:db/id ":boundbasecourse/boundbasethickness",
-  :db/ident :boundbasecourse/boundbasethickness,
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["hüdraulilise sideaine sisaldus" "hydraulic binder content"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasehydraulicbindercontent",
+  :db/ident :boundbasecourse/boundbasehydraulicbindercontent}
+ {:attribute/parent ":fclass/backfill",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["filtratsioonimoodul EVS-EN 901-20"
+   "filtration modulus EVS-EN 901-20"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":backfill/backfillfiltrationmodulus",
+  :db/ident :backfill/backfillfiltrationmodulus}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["seotud aluskihi paksus" "Layer thickness, mm"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm",
-  :attribute/parent ":fclass/boundbasecourse"}
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasethickness",
+  :db/ident :boundbasecourse/boundbasethickness}
  {:attribute/parent ":ctype/girder",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1293,33 +1513,45 @@
   :db/doc "No",
   :db/id ":girder/sectiontype",
   :db/ident :girder/sectiontype}
- {:attribute/parent ":ctype/general",
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Seisund" "Status"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/status",
-  :db/ident :general/status}
- {:attribute/parent ":ctype/general",
+  :db/id ":common/status",
+  :db/ident :common/status}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["kasutatud hüdrauliline sideaine" "hydraulic binder used"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbasehydraulicbinder",
+  :db/ident :boundbasecourse/boundbasehydraulicbinder}
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Andmeallikas" "Data source"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/source",
-  :db/ident :general/source}
- {:db/id ":bridgesupport/supportbearingtype",
-  :db/ident :bridgesupport/supportbearingtype,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
+  :db/id ":common/source",
+  :db/ident :common/source}
+ {:attribute/parent ":ctype/bridgesupport",
   :db/valueType :db.type/ref,
-  :attribute/parent ":ctype/bridgesupport"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tugilaagri tüüp" "Bearing type"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridgesupport/supportbearingtype",
+  :db/ident :bridgesupport/supportbearingtype}
  {:db/id ":bridge/bridgevehicleload",
   :db/ident :bridge/bridgevehicleload,
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref,
+  :db/valueType :db.type/long,
+  :asset-schema/unit "tonn",
   :attribute/parent ":fclass/bridge"}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
@@ -1332,13 +1564,14 @@
   :db/ident :barrierterminal/terminalperformanceclass,
   :asset-schema/description
   ["EN 1317-4 > terminalide toimivusklass." ""]}
- {:db/id ":pavinglayer/pavinglayercompactionfactor",
-  :db/ident :pavinglayer/pavinglayercompactionfactor,
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["tihendustegur" "compaction factor"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :attribute/parent ":fclass/pavinglayer"}
+  :db/doc "No",
+  :db/id ":pavinglayer/pavinglayercompactionfactor",
+  :db/ident :pavinglayer/pavinglayercompactionfactor}
  {:attribute/parent ":fclass/bridge",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -1350,28 +1583,41 @@
   :asset-schema/description
   [nil
    "Total length of the bridge considering all spans and additionally abutment backwall/expansion joint location."]}
- {:db/id ":boundbasecourse/shearstrength?",
-  :db/ident :boundbasecourse/shearstrength?,
+ {:attribute/parent ":fclass/unboundbasecourse",
+  :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["lõhestus-tõmbetugevus" "shearstrength"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "MPa",
-  :attribute/parent ":fclass/boundbasecourse"}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/instant,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Loomise aeg" "Created time"],
+  :asset-schema/label
+  ["sidumata aluskihi materjali tootja"
+   "unbound basecourse material producer"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/createddate",
-  :db/ident :general/createddate}
+  :db/id ":unboundbasecourse/unboundbasematerialproducer",
+  :db/ident :unboundbasecourse/unboundbasematerialproducer}
  {:db/id ":bridgespan/spannumber",
   :db/ident :bridgespan/spannumber,
   :asset-schema/type :asset-schema.type/attribute,
   :db/cardinality :db.cardinality/one,
   :db/valueType :db.type/long,
   :attribute/parent ":ctype/bridgespan"}
+ {:attribute/parent ":fclass/boundbasecourse",
+  :asset-schema/unit "%",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["orgaanilise sideaine sisaldus" "organic binder content"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":boundbasecourse/boundbaseorganicbindercontent",
+  :db/ident :boundbasecourse/boundbaseorganicbindercontent}
+ {:attribute/parent ":ctype/bridgespan",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Ehitusviis" "Construction method"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":bridgespan/spanconstructionmethod",
+  :db/ident :bridgespan/spanconstructionmethod,
+  :asset-schema/description
+  ["Monteeritav, monoliitne, komposiit, teisaldatav, vms" ""]}
  {:db/id ":bridge/bridgelength",
   :db/ident :bridge/bridgelength,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1382,6 +1628,14 @@
   :db/valueType :db.type/bigdec,
   :asset-schema/unit "m",
   :attribute/parent ":fclass/bridge"}
+ {:attribute/parent ":fclass/backfill",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["mulde tihendustegur" "Compaction factor"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":backfill/backfillcompactionfactor",
+  :db/ident :backfill/backfillcompactionfactor}
  {:db/id ":bridgespan/spanclearanceW",
   :db/ident :bridgespan/spanclearanceW,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1391,38 +1645,23 @@
   :db/valueType :db.type/bigdec,
   :asset-schema/unit "m",
   :attribute/parent ":ctype/bridgespan"}
- {:db/id ":unboundbasecourse/unboundbasecoursematerialproducer",
-  :db/ident :unboundbasecourse/unboundbasecoursematerialproducer,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["sidumata aluskihi materjali tootja"
-   "unbound basecourse material producer"],
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/string,
-  :attribute/parent ":fclass/unboundbasecourse"}
- {:db/id ":membrane/membranematerial",
-  :db/ident :membrane/membranematerial,
+ {:attribute/parent ":fclass/membrane",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["materjali nimetus" "membrane material "],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/membrane"}
- {:db/id ":drainagelayer/drainagethickness",
-  :db/ident :drainagelayer/drainagethickness,
+  :db/doc "No",
+  :db/id ":membrane/membranematerial",
+  :db/ident :membrane/membranematerial}
+ {:attribute/parent ":fclass/drainagelayer",
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["dreenkihi paksus" "Layer thickness, mm"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "mm",
-  :attribute/parent ":fclass/drainagelayer"}
- {:attribute/parent ":ctype/general",
-  :db/valueType :db.type/instant,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Viimase muudatuse aeg" "Last update time"],
-  :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/updatedate",
-  :db/ident :general/updatedate}
+  :db/id ":drainagelayer/drainagethickness",
+  :db/ident :drainagelayer/drainagethickness}
  {:db/id ":bridgespan/spanclearanceH",
   :db/ident :bridgespan/spanclearanceH,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1443,14 +1682,14 @@
   :db/doc "No",
   :db/id ":barrier/barrierelementlength",
   :db/ident :barrier/barrierelementlength}
- {:attribute/parent ":ctype/general",
+ {:attribute/parent ":ctype/common",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["CCI klassifikatsioon" "CCI classification"],
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
-  :db/id ":general/cci_class",
-  :db/ident :general/cci_class}
+  :db/id ":common/cci_class",
+  :db/ident :common/cci_class}
  {:db/id ":item/bcl_t1",
   :db/ident :item/bcl_t1,
   :asset-schema/type :asset-schema.type/enum,
@@ -1590,50 +1829,50 @@
   :db/ident :item/planned,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Planeeritud" "Planned"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/asdesigned",
   :db/ident :item/asdesigned,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Projekteeritud" "As-designed"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/workinprogress",
   :db/ident :item/workinprogress,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Ehitamisel" "Work in progress"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/created",
   :db/ident :item/created,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Ehitatud" "As-built"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/approved",
   :db/ident :item/approved,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Heakskiidetud" "Approved"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/inuse",
   :db/ident :item/inuse,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Kasutusel" "In use"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/removed",
   :db/ident :item/removed,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Lammutatud" "Demolished"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/abandoned",
   :db/ident :item/abandoned,
   :db/doc "Not in use, but still exists",
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Maha jäetud " "Abandoned"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/stolen",
   :db/ident :item/stolen,
   :db/doc
   "Should exist and be in use, but isnt. Likely needs replacement.",
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Kadunud, varastatud, vms" "Stolen, lost etc"],
-  :enum/attribute ":general/status"}
+  :enum/attribute ":common/status"}
  {:db/id ":item/concrete",
   :db/ident :item/concrete,
   :asset-schema/type :asset-schema.type/enum,
@@ -1754,31 +1993,6 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Injektsioonvai" ""],
   :enum/attribute ":pile/piletype"}
- {:db/id ":item/pavingmaterialdendseac",
-  :db/ident :item/pavingmaterialdendseac,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Tihe asfaltbetoon" ""],
-  :enum/attribute ":pavinglayer/pavingmaterial"}
- {:db/id ":item/pavingmaterialcoarseac",
-  :db/ident :item/pavingmaterialcoarseac,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Poorne asfaltbetoon" ""],
-  :enum/attribute ":pavinglayer/pavingmaterial"}
- {:db/id ":item/pavingstonemastix",
-  :db/ident :item/pavingstonemastix,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Killustikmastiks AB" ""],
-  :enum/attribute ":pavinglayer/pavingmaterial"}
- {:db/id ":item/snip1984",
-  :db/ident :item/snip1984,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["SNiP 2.03.05-1984" "SNiP 2.03.05-1984"],
-  :enum/attribute ":bridge/bridgedesigncode"}
- {:db/id ":item/eurocode??",
-  :db/ident :item/eurocode??,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Eurokoodeks ??" "Eurocode ??"],
-  :enum/attribute ":bridge/bridgedesigncode"}
  {:db/id ":item/spangirder",
   :db/ident :item/spangirder,
   :asset-schema/type :asset-schema.type/enum,
@@ -1808,6 +2022,31 @@
   :db/ident :item/spantruss,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Sõrestik" "Truss"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spancontinuous",
+  :db/ident :item/spancontinuous,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Jätkuvtala" "Continuos girder"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanplate",
+  :db/ident :item/spanplate,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Plaat" "Plate"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanframe",
+  :db/ident :item/spanframe,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Raam" "Frame"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spanpipe",
+  :db/ident :item/spanpipe,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Toru" "soil steel composite"],
+  :enum/attribute ":bridgespan/spanstructuraltype"}
+ {:db/id ":item/spancantilever",
+  :db/ident :item/spancantilever,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Konsool" "cantilever"],
   :enum/attribute ":bridgespan/spanstructuraltype"}
  {:db/id ":item/supportcolumn",
   :db/ident :item/supportcolumn,

@@ -166,6 +166,15 @@
         (swap! the-atom update-fn %)
         app))))
 
+(defn callback-change-event
+  "Returns a tuck change event constructor that invokes a callback when processed.
+  Leaves app state unaffected."
+  [the-callback]
+  #(reify t/Event
+     (process-event [_ app]
+       (the-callback %)
+       app)))
+
 (defn reset-atom-event
   "Returns a tuck event constructor that resets the given atom when processed.
   Leaves app state unaffected."
