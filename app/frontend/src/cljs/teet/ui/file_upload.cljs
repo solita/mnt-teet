@@ -145,9 +145,8 @@
         file-row-info (merge file-row file-info)]
     (or (common-file-validation file-row-info)
       (when-let [error (or (and metadata (validate-name file-row-info))
-                          (validate-seq-number file-row-info)
-                          (file-model/validate-file file-row-info)
-                          (file-model/validate-file-metadata project-id task metadata))]
+                         (validate-seq-number file-row-info)
+                         (file-model/validate-file-metadata project-id task metadata))]
         (case (:error error)
 
           ;; Check for wrong project
