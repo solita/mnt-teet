@@ -102,7 +102,7 @@
     response))
 
 (defn instant-login
-  "Login to VektorIO. If VektorIO project-id provided connect user to it."
+  "Login to VektorIO."
   [vektorio-config]
   (let [vektorio-user-id (get-or-create-user! vektorio-config)]
     (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id})))
