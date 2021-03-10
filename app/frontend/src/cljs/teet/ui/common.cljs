@@ -546,7 +546,7 @@
      [ListItemIcon icon]
      (if link
        [Link link label]
-       [typography/Text label])]))
+       [buttons/link-button label])]))
 
 (defn context-menu
   "Shows a button that opens a context menu.
@@ -580,8 +580,9 @@
      [Popper {:open @open?
               :anchor-el @anchor
               :placement menu-placement}
-      [ClickAwayListener
-       {:on-click-away toggle!}
-       [Paper
-        (mapc (r/partial context-menu-item toggle!)
-              (remove nil? items))]]]]))
+      [:div {:style {:margin-top "0.5rem"}}
+       [ClickAwayListener
+        {:on-click-away toggle!}
+        [Paper
+         (mapc (r/partial context-menu-item toggle!)
+               (remove nil? items))]]]]]))

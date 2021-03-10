@@ -139,6 +139,7 @@
                                          :size :small}
                              [icons/navigation-close]]]
     [Dialog {:max-width max-width
+             :full-width true
              :open @open-atom
              :on-close close-fn
              :data-cy data-cy}

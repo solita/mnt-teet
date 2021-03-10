@@ -505,6 +505,7 @@
   (when (seq files)
     [{:id "export-task-files"
       :label #(tr [:file :export-files-zip :task-button])
+      :icon [icons/file-file-download-outlined {:style {:color theme-colors/primary}}]
       :on-click #(e! (task-controller/->ExportFiles task-id))}]))
 
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
