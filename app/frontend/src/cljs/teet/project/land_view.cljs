@@ -30,7 +30,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.date :as date-teet]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -476,11 +477,12 @@
    :user-select :text
    :padding "0.5rem"})
 
-(defn count-owners-opinions [estate]
-  "Counts the owners opinions about given estate"
-  (let [comments-count 1]
+(defn owners-opinions [estate]
+  "Returns owners opinions about given estate"
+  (let [opinions [{:text "This is opinion" :date date-teet/start-of-today}
+                  {:text "This is one more opinion" :date date-teet/start-of-today}]]
     ;; TODO: implement
-    comments-count))
+    opinions))
 
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
@@ -551,7 +553,7 @@
                            :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
               [common/count-chip {:label mortgage-count}]
               (tr [:land-modal-page (if (= 1 mortgage-count) :mortgage :mortgages)])]))
-         (let [land-owners-opinions-count (count-owners-opinions estate)]
+         (let [land-owners-opinions-count (count (owners-opinions estate))]
            (if (zero? land-owners-opinions-count)
              [typography/GreyText
               [common/count-chip {:label "0"
@@ -787,6 +789,22 @@
                   (-> mortgage
                       :kande_tekst
                       flatten-kande-tekst-table)]}])
+       [:p (tr [:land :no-active-mortgages])])]))
+
+(defmethod estate-modal-content :opinions
+  [{:keys [estate-info]}]
+  (let [opinions (owners-opinions estate-info)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     (if (not-empty opinions)
+       (for [opinion opinions]
+         [common/heading-and-grey-border-body
+          {:heading [:<>
+                     [typography/BoldGreyText {:style {:display :inline}}
+                      (str (:text opinion))
+                      [typography/GreyText {:style {:display :inline}}
+                       (:date opinion)]]]
+           :body [:div
+                  [:span "Land owner"]]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 

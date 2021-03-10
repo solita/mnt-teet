@@ -724,8 +724,8 @@
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
   :export-files-zip
-  {:activity-button "Tegevusega seotud dokumendid",
-   :task-button "Ülesandega seotud dokumendid",
+  {:activity-button "Saadan tegevusega seotud dokumendid e-postiga",
+   :task-button "Saadan Ülesandega seotud dokumendid e-postiga",
    :activity-success
    "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
    :task-success
@@ -842,7 +842,8 @@
    :comments "Märkused",
    :costs "Kulud",
    :files "Üksusega seotud failid",
-   :mortgages "Hüpoteegid"},
+   :mortgages "Hüpoteegid",
+   :opinions "Maade omanike arvamused"},
   :costs "Kulud",
   :mortgage "Hüpoteek",
   :owner-opinions "Arvamused",

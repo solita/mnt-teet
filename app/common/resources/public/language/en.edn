@@ -730,8 +730,8 @@
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
   :export-files-zip
-  {:activity-button "Documents related to the activity ",
-   :task-button "Documents related to the task",
+  {:activity-button "Email documents related to the activity ",
+   :task-button "Email documents related to the task ",
    :activity-success
    "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
    :task-success
@@ -851,7 +851,8 @@
    :comments "Comments",
    :costs "Acquisition costs",
    :files "Files attached to this unit",
-   :mortgages "Mortgages"},
+   :mortgages "Mortgages",
+   :opinions "Land owners opinions"},
   :costs "Acquisition costs",
   :mortgage "Mortgage",
   :owner-opinions "Opinions",
