@@ -32,7 +32,7 @@ in this directory. This will update the `authorization.edn` in
 ## Asset database schema
 
 Asset database schema is taken from `TEET_ROTL.xlsx` file in Sharepoint.
-Donload the sheet and run:
+Download the sheet and run:
 
 ```shell
 clj -A:asset-schema <path-to-downloaded-sheet>
