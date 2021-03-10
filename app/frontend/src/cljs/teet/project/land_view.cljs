@@ -476,6 +476,12 @@
    :user-select :text
    :padding "0.5rem"})
 
+(defn count-owners-opinions [estate]
+  "Counts the owners opinions about given estate"
+  (let [comments-count 1]
+    ;; TODO: implement
+    comments-count))
+
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
@@ -545,6 +551,17 @@
                            :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
               [common/count-chip {:label mortgage-count}]
               (tr [:land-modal-page (if (= 1 mortgage-count) :mortgage :mortgages)])]))
+         (let [land-owners-opinions-count (count-owners-opinions estate)]
+           (if (zero? land-owners-opinions-count)
+             [typography/GreyText
+              [common/count-chip {:label "0"
+                                  :style {:background-color theme-colors/gray-light
+                                          :color theme-colors/gray-light}}]
+              (tr [:land :owners-opinions])]
+             [common/Link {:style {:display :block}
+                           :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "opinions")}
+              [common/count-chip {:label land-owners-opinions-count}]
+              (tr [:land-modal-page (if (= 1 land-owners-opinions-count) :owner-opinion :owner-opinions)])]))
          [common/Link {:style {:display :block}
                        :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
           [query/query {:e! e! :query :comment/count
@@ -554,7 +571,7 @@
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
                                         (let [count (+ (get-in c [:comment/counts :comment/old-comments])
-                                                       (get-in c [:comment/counts :comment/new-comments]))]
+                                                      (get-in c [:comment/counts :comment/new-comments]))]
                                           [:span
                                            [common/comment-count-chip c]
                                            (tr [:land-modal-page (cond
