@@ -267,7 +267,7 @@
   (when (:activity-has-files? activity)
     [{:id "export-activity-files"
       :label #(tr [:file :export-files-zip :activity-button])
-      :icon [icons/file-file-download-outlined {:style {:color theme-colors/primary}}]
+      :icon [icons/communication-email-outlined {:style {:color theme-colors/primary}}]
       :on-click #(e! (activity-controller/->ExportFiles (:db/id activity)))}]))
 
 (defn activity-page [e! {:keys [params] :as app} project]

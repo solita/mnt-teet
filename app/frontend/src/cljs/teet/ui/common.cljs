@@ -546,7 +546,7 @@
      [ListItemIcon icon]
      (if link
        [Link link label]
-       [buttons/link-button label])]))
+       [typography/Text label])]))
 
 (defn context-menu
   "Shows a button that opens a context menu.
