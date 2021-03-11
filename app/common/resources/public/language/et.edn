@@ -1136,6 +1136,7 @@
   :edit-success-notification "Ülesanne edukalt muudetud",
   :results "Tulemused"},
  :unit-info {:owners-opinions "Maade omanike arvamused"},
+ :unit-modal-page {:add-new-owner-opinion "Lisan uue arvamuse"},
  :user
  {:autocomplete
   {:loading "Otsin kasutajaid...",

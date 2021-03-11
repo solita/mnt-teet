@@ -393,9 +393,10 @@
 (defn owners-opinions [unit]
   "Returns owners opinions about given cadastral unit"
   (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
-                  {:text "This is one more opinion" :date date-teet/start-of-today}]]
+                  {:text "This is one more opinion" :date date-teet/start-of-today}]
+        no-opinions []]
     ;; TODO: implement
-    opinions))
+    no-opinions))
 
 
 (defn cadastral-unit
@@ -1054,22 +1055,34 @@
                                 #(land-controller/->DecrementUnitCommentCount target)
                                 }])
 
+(defn- get-unit-by-teet-id
+  [project teet-id]
+  (first (filter #(= (:teet-id %) teet-id) (:land/units project))))
+
 (defmethod unit-modal-content :owners-opinions
-  [{:keys [estate-info e! target app project]}]
-  (let [opinions (owners-opinions estate-info)]
+  [{:keys [estate-info e! target app project] :as unit}]
+  (let [opinions (owners-opinions estate-info)
+        unit (get-unit-by-teet-id project target)
+        l-address (:L_AADRESS unit)
+        usage (:SIHT1 unit)]
     [:div {:class (<class common-styles/gray-container-style)}
-     [:div ]
-     (if (not-empty opinions)
-       (for [opinion opinions]
-         [common/heading-and-grey-border-body
-          {:heading [:<>
-                     [typography/BoldGreyText {:style {:display :inline}}
-                      (str (:text opinion))
-                      [typography/GreyText {:style {:display :inline}}
-                       (:date opinion)]]]
-           :body [:div
-                  [:span "Land owner"]]}])
-       [:p (tr [:land :no-owners-opinions])])]))
+     [buttons/button-primary {:start-icon (r/as-element [icons/content-add])}
+          (tr [:unit-modal-page :add-new-owner-opinion])]
+     [:div {:class (<class common-styles/gray-container-style)}
+      [:span (str "ARVAMUSED " l-address "(" usage ") " target)]]
+     [:div {:class (<class common-styles/gray-container-style)}
+
+      (if (not-empty opinions)
+        (for [opinion opinions]
+          [common/heading-and-grey-border-body
+           {:heading [:<>
+                      [typography/BoldGreyText {:style {:display :inline}}
+                       (str (:text opinion))
+                       [typography/GreyText {:style {:display :inline}}
+                        (:date opinion)]]]
+            :body [:div
+                   [:span "Land owner"]]}])
+        [:p (tr [:land :no-owners-opinions])])]]))
 
 
 (defmethod unit-modal-content :files

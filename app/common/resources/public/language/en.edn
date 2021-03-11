@@ -1140,6 +1140,7 @@
   :edit-success-notification "Task edited successfully",
   :results "Results"},
  :unit-info {:owners-opinions "Land owners opinions"},
+ :unit-modal-page {:add-new-owner-opinion "Add new opinion"},
  :user
  {:autocomplete
   {:loading "Searching users...",
