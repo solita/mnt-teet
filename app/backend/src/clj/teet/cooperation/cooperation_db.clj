@@ -157,7 +157,7 @@
   [db application-id]
   (let [tasks
         (mapv first
-          (d/q '[:find (pull ?task [*])
+          (d/q '[:find (pull ?task [* {:file.part/_task [*]}])
                  :in $ ?application-entity
                  :where
                  [?application-entity :cooperation.application/activity ?activity]
