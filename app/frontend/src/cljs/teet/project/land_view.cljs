@@ -479,7 +479,7 @@
 
 (defn owners-opinions [estate]
   "Returns owners opinions about given estate"
-  (let [opinions [{:text "This is opinion" :date date-teet/start-of-today}
+  (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
                   {:text "This is one more opinion" :date date-teet/start-of-today}]]
     ;; TODO: implement
     opinions))
@@ -556,10 +556,10 @@
          (let [land-owners-opinions-count (count (owners-opinions estate))]
            (if (zero? land-owners-opinions-count)
              [typography/GreyText
-              [common/count-chip {:label "0"
-                                  :style {:background-color theme-colors/gray-light
-                                          :color theme-colors/gray-light}}]
-              (tr [:land :owners-opinions])]
+              [common/Link {:style {:display :block}
+                            :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "owners-opinions")}
+               [common/count-chip {:label land-owners-opinions-count}]
+               (tr [:land-modal-page :no-owners-opinions])]]
              [common/Link {:style {:display :block}
                            :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "owners-opinions")}
               [common/count-chip {:label land-owners-opinions-count}]
@@ -805,7 +805,7 @@
                        (:date opinion)]]]
            :body [:div
                   [:span "Land owner"]]}])
-       [:p (tr [:land :no-active-mortgages])])]))
+       [:p (tr [:land :no-owners-opinions])])]))
 
 
 (defn create-land-acquisition-row

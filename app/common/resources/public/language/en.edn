@@ -838,7 +838,8 @@
   :fetching-land-units "Fetching land units",
   :refresh-estate-info "Refresh estates",
   :add-owner "+ Add owner",
-  :owner-data "Registry data"},
+  :owner-data "Registry data",
+  :no-owners-opinions "No opinions"},
  :land-modal-page
  {:owner-info "Owners and shares",
   :no-burdens "No burdens",
@@ -860,7 +861,8 @@
   :files "Files attached to this unit",
   :owner-opinion "Opinion",
   :burden "Burden",
-  :no-mortgages "No mortgages"},
+  :no-mortgages "No mortgages",
+  :no-owners-opinions "No opinions"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",

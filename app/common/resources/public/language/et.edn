@@ -829,7 +829,8 @@
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
   :add-owner "+ Lisan omaniku",
-  :owner-data "Registriandmed"},
+  :owner-data "Registriandmed",
+  :no-owners-opinions "Arvamusi pole"},
  :land-modal-page
  {:owner-info "Omanikud ja omandiosad",
   :no-burdens "Koormatisi pole",
@@ -851,7 +852,8 @@
   :files "Üksusega seotud failid",
   :owner-opinion "Arvamus",
   :burden "Koormatis",
-  :no-mortgages "Hüpoteeke pole"},
+  :no-mortgages "Hüpoteeke pole",
+  :no-owners-opinions "Arvamusi pole"},
  :link
  {:search
   {:placeholder "Lisan viite...",
