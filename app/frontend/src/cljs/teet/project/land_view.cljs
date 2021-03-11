@@ -561,7 +561,7 @@
                                           :color theme-colors/gray-light}}]
               (tr [:land :owners-opinions])]
              [common/Link {:style {:display :block}
-                           :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "opinions")}
+                           :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "owners-opinions")}
               [common/count-chip {:label land-owners-opinions-count}]
               (tr [:land-modal-page (if (= 1 land-owners-opinions-count) :owner-opinion :owner-opinions)])]))
          [common/Link {:style {:display :block}
@@ -791,7 +791,7 @@
                       flatten-kande-tekst-table)]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
-(defmethod estate-modal-content :opinions
+(defmethod estate-modal-content :owners-opinions
   [{:keys [estate-info]}]
   (let [opinions (owners-opinions estate-info)]
     [:div {:class (<class common-styles/gray-container-style)}
@@ -1106,7 +1106,7 @@
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :estate-data])
-                [:burdens :mortgages :costs :comments]]
+                [:burdens :mortgages :costs :comments :owners-opinions]]
    :right-panel [estate-modal-content {:e! e!
                                        :page modal-page
                                        :app app

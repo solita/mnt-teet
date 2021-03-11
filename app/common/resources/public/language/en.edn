@@ -852,7 +852,7 @@
    :costs "Acquisition costs",
    :files "Files attached to this unit",
    :mortgages "Mortgages",
-   :opinions "Land owners opinions"},
+   :owners-opinions "Land owners opinions"},
   :costs "Acquisition costs",
   :mortgage "Mortgage",
   :owner-opinions "Opinions",

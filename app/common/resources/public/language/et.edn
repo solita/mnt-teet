@@ -843,7 +843,7 @@
    :costs "Kulud",
    :files "Üksusega seotud failid",
    :mortgages "Hüpoteegid",
-   :opinions "Maade omanike arvamused"},
+   :owners-opinions "Maade omanike arvamused"},
   :costs "Kulud",
   :mortgage "Hüpoteek",
   :owner-opinions "Arvamused",
