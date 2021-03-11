@@ -110,6 +110,7 @@
 
 (def link-button
   (util/make-component Link {:component :button
+                             :underline :none
                              :type      :button}))
 
 

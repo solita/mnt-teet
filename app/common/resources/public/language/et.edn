@@ -71,7 +71,7 @@
    :ctype "Komponent",
    :db.type/long "Täisarv",
    :attributes "Tunnused"},
-  :add-cost-item "Lisan kululoend",
+  :add-cost-item "Lisan vara",
   :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
   :no-matching-feature-classes "Pole vastavata vara liik"},
  :buttons
@@ -724,8 +724,8 @@
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
   :export-files-zip
-  {:activity-button "Tegevusega seotud dokumendid",
-   :task-button "Ülesandega seotud dokumendid",
+  {:activity-button "Saadan tegevusega seotud dokumendid e-postiga",
+   :task-button "Saadan Ülesandega seotud dokumendid e-postiga",
    :activity-success
    "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
    :task-success
@@ -824,6 +824,7 @@
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
   :estate-filter-label "Kinnistu",
+  :owners-opinions "Maade omanike arvamused",
   :no-land-acquisitions "Selle kinnistu maid ei omandata",
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
@@ -844,8 +845,10 @@
    :mortgages "Hüpoteegid"},
   :costs "Kulud",
   :mortgage "Hüpoteek",
+  :owner-opinions "Arvamused",
   :comment "Märkus",
   :files "Üksusega seotud failid",
+  :owner-opinion "Arvamus",
   :burden "Koormatis",
   :no-mortgages "Hüpoteeke pole"},
  :link

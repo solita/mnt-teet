@@ -642,7 +642,9 @@
   "create_new_folder"
   "folder"
   "folder_open"
-  "folder_shared")
+  "folder_shared"
+  "file_download"
+  "download")
 
 ;; Hardware icons
 (define-font-icons {:prefix "hardware" :component Icon}

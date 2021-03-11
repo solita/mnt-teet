@@ -580,8 +580,9 @@
      [Popper {:open @open?
               :anchor-el @anchor
               :placement menu-placement}
-      [ClickAwayListener
-       {:on-click-away toggle!}
-       [Paper
-        (mapc (r/partial context-menu-item toggle!)
-              (remove nil? items))]]]]))
+      [:div {:style {:margin-top "0.5rem"}}
+       [ClickAwayListener
+        {:on-click-away toggle!}
+        [Paper
+         (mapc (r/partial context-menu-item toggle!)
+               (remove nil? items))]]]]]))

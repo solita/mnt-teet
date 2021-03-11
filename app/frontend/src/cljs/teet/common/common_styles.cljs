@@ -61,14 +61,19 @@
    :color "#005AA3"})
 
 (def link-1
-  (merge link
-         {:font-size "1rem"
-          :line-height "1.5rem"}))
+  (with-meta
+    (merge link
+           {:font-size "1rem"
+            :line-height "1.5rem"
+            :text-decoration :underline})
+    {:hover {:text-decoration :none}}))
 
 (def link-2
-  (merge link
-         {:font-size "0.875rem"
-          :line-height "1.3125rem"}))
+  (with-meta
+    (merge link
+           {:font-size "0.875rem"
+            :line-height "1.3125rem"})
+    {:hover {:text-decoration :none}}))
 
 (def body-2-bold
   {:font-family "Roboto"

@@ -26,7 +26,10 @@
 
 (def teet-theme
   {:breakpoints {:values {:xs 0
-                          :md 1024}}
+                          :sm 600
+                          :md 1024
+                          :lg 1280
+                          :xl 1920}}
    :typography {:body2 {:fontSize "1rem"}
                 :fontFamily "Roboto"}
    :palette {:primary {:main theme-colors/primary}
@@ -86,7 +89,10 @@
                :MuiIconButton {:root {:border-radius "2px"
                                       "&:focus" theme-colors/button-focus-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
-               :MuiLink {:root common-styles/link-1}
+               :MuiLink {:root common-styles/link-1
+                         :button (merge
+                                   common-styles/link-1
+                                   {"&:hover" {:text-decoration :none}})}
                :MuiButton {:sizeSmall {:padding "0 10px"
                                        :font-size "0.875rem"}
 

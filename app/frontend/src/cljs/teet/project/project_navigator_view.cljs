@@ -407,7 +407,7 @@
 (defn default-export-menu-items [project]
   [(when (project-model/has-related-info? project)
      {:label (tr [:project :download-related-info])
-      :icon [icons/file-cloud-download]
+      :icon [icons/file-file-download-outlined {:style {:color theme-colors/primary}}]
       :link {:target :_blank
              :href (common-controller/query-url :thk.project/download-related-info
                                           (select-keys project [:thk.project/id]))}})])
