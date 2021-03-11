@@ -103,7 +103,8 @@
         files (file-db/aged-task-files-without-model-id db threshold-in-minutes)
         skipped-ext (atom 0)
         skipped-nontask (atom 0)
-        uploaded (atom 0)]
+        uploaded (atom 0)
+        failed (atom 0)]
     (log/info "total task files without model id:" (count files))
     (doseq [{:keys [file-eid file-name]} files
             :let [suffix (file-model/filename->suffix file-name)
@@ -118,14 +119,18 @@
           (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
           (swap! uploaded inc)
           (catch clojure.lang.ExceptionInfo e
-            (log/info "Upload errored on file" file-eid (str "(name:" file-name ")"))))))
-    (log/info "scheduled vektorio import finished, out of" (count files) "model-idless files we skipped" @skipped-ext "due to non-vektor file extension, " @skipped-nontask "due to non-task file type (such as attachment), total" @uploaded "uploaded")))
+            (swap! failed inc)
+            (log/info "Upload errored on file" file-eid (str "(name:" file-name ")") "with exception: " (pr-str e))))))
+    (log/info "scheduled vektorio import finished, out of" (count files) "model-idless files we skipped"
+              @skipped-ext "due to non-vektor file extension, " @skipped-nontask "due to non-task file type (such as attachment), total"
+              @failed "were not uploaded because of an exception"
+              @uploaded "uploaded")))
 
 
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
 (defn scheduled-file-import [event]
   (future
-    (try      
+    (try
       (scheduled-file-import*
        (environment/datomic-connection))
       (catch Exception e
