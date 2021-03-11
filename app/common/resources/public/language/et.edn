@@ -824,7 +824,6 @@
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
   :estate-filter-label "Kinnistu",
-  :owners-opinions "Maade omanike arvamused",
   :no-land-acquisitions "Selle kinnistu maid ei omandata",
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
@@ -852,6 +851,7 @@
   :files "Üksusega seotud failid",
   :owner-opinion "Arvamus",
   :burden "Koormatis",
+  :owners-opinions "Maade omanike arvamused",
   :no-mortgages "Hüpoteeke pole",
   :no-owners-opinions "Arvamusi pole"},
  :link
@@ -1135,6 +1135,7 @@
   :no-documents "Dokumente ei ole",
   :edit-success-notification "Ülesanne edukalt muudetud",
   :results "Tulemused"},
+ :unit-info {:owners-opinions "Maade omanike arvamused"},
  :user
  {:autocomplete
   {:loading "Otsin kasutajaid...",

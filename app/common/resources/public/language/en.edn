@@ -833,7 +833,6 @@
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
   :estate-filter-label "Estate",
-  :owners-opinions "Land owners opinions",
   :no-land-acquisitions "No land acquisitions for this estate",
   :fetching-land-units "Fetching land units",
   :refresh-estate-info "Refresh estates",
@@ -861,6 +860,7 @@
   :files "Files attached to this unit",
   :owner-opinion "Opinion",
   :burden "Burden",
+  :owners-opinions "Land owners opinions",
   :no-mortgages "No mortgages",
   :no-owners-opinions "No opinions"},
  :link
@@ -1139,6 +1139,7 @@
   :no-documents "No documents",
   :edit-success-notification "Task edited successfully",
   :results "Results"},
+ :unit-info {:owners-opinions "Land owners opinions"},
  :user
  {:autocomplete
   {:loading "Searching users...",

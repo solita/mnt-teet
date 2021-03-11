@@ -390,6 +390,13 @@
             theme-colors/red
             theme-colors/orange)})
 
+(defn owners-opinions [unit]
+  "Returns owners opinions about given cadastral unit"
+  (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
+                  {:text "This is one more opinion" :date date-teet/start-of-today}]]
+    ;; TODO: implement
+    opinions))
+
 
 (defn cadastral-unit
   [{:keys [e! project-info on-change estate-procedure-type cadastral-form]} {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
@@ -449,7 +456,17 @@
                                         [common/count-chip {:label c}])]
                         :loading-state "-"}]
           (tr [:land-modal-page :files])])
-
+       (let [land-owners-opinions-count (count (owners-opinions unit))]
+         (if (zero? land-owners-opinions-count)
+           [typography/GreyText
+            [common/Link {:style {:display :block}
+                          :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
+             [common/count-chip {:label land-owners-opinions-count}]
+             (tr [:land-modal-page :no-owners-opinions])]]
+           [common/Link {:style {:display :block}
+                         :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
+            [common/count-chip {:label land-owners-opinions-count}]
+            (tr [:land-modal-page (if (= 1 land-owners-opinions-count) :owner-opinion :owner-opinions)])]))
        [common/Link {:style {:display :block}
                      :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
         [query/query {:e! e! :query :comment/count
@@ -476,13 +493,6 @@
    :align-items :flex-start
    :user-select :text
    :padding "0.5rem"})
-
-(defn owners-opinions [estate]
-  "Returns owners opinions about given estate"
-  (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
-                  {:text "This is one more opinion" :date date-teet/start-of-today}]]
-    ;; TODO: implement
-    opinions))
 
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
@@ -553,17 +563,6 @@
                            :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
               [common/count-chip {:label mortgage-count}]
               (tr [:land-modal-page (if (= 1 mortgage-count) :mortgage :mortgages)])]))
-         (let [land-owners-opinions-count (count (owners-opinions estate))]
-           (if (zero? land-owners-opinions-count)
-             [typography/GreyText
-              [common/Link {:style {:display :block}
-                            :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "owners-opinions")}
-               [common/count-chip {:label land-owners-opinions-count}]
-               (tr [:land-modal-page :no-owners-opinions])]]
-             [common/Link {:style {:display :block}
-                           :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "owners-opinions")}
-              [common/count-chip {:label land-owners-opinions-count}]
-              (tr [:land-modal-page (if (= 1 land-owners-opinions-count) :owner-opinion :owner-opinions)])]))
          [common/Link {:style {:display :block}
                        :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
           [query/query {:e! e! :query :comment/count
@@ -790,23 +789,6 @@
                       :kande_tekst
                       flatten-kande-tekst-table)]}])
        [:p (tr [:land :no-active-mortgages])])]))
-
-(defmethod estate-modal-content :owners-opinions
-  [{:keys [estate-info]}]
-  (let [opinions (owners-opinions estate-info)]
-    [:div {:class (<class common-styles/gray-container-style)}
-     (if (not-empty opinions)
-       (for [opinion opinions]
-         [common/heading-and-grey-border-body
-          {:heading [:<>
-                     [typography/BoldGreyText {:style {:display :inline}}
-                      (str (:text opinion))
-                      [typography/GreyText {:style {:display :inline}}
-                       (:date opinion)]]]
-           :body [:div
-                  [:span "Land owner"]]}])
-       [:p (tr [:land :no-owners-opinions])])]))
-
 
 (defn create-land-acquisition-row
   [la]
@@ -1072,6 +1054,23 @@
                                 #(land-controller/->DecrementUnitCommentCount target)
                                 }])
 
+(defmethod unit-modal-content :owners-opinions
+  [{:keys [estate-info e! target app project]}]
+  (let [opinions (owners-opinions estate-info)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     [:div ]
+     (if (not-empty opinions)
+       (for [opinion opinions]
+         [common/heading-and-grey-border-body
+          {:heading [:<>
+                     [typography/BoldGreyText {:style {:display :inline}}
+                      (str (:text opinion))
+                      [typography/GreyText {:style {:display :inline}}
+                       (:date opinion)]]]
+           :body [:div
+                  [:span "Land owner"]]}])
+       [:p (tr [:land :no-owners-opinions])])]))
+
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
@@ -1106,7 +1105,7 @@
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :estate-data])
-                [:burdens :mortgages :costs :comments :owners-opinions]]
+                [:burdens :mortgages :costs :comments ]]
    :right-panel [estate-modal-content {:e! e!
                                        :page modal-page
                                        :app app
@@ -1120,7 +1119,8 @@
                 modal-page
                 (tr [:land :unit-info])
                 [:files
-                 :comments]]
+                 :comments
+                 :owners-opinions]]
    :right-panel [unit-modal-content {:e! e!
                                      :modal-page modal-page
                                      :app app
