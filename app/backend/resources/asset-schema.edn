@@ -213,6 +213,14 @@
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Tugimüür" "Retaining wall"],
   :fclass/fgroup ":fgroup/structures"}
+ {:db/id ":fclass/soilsteelcomp",
+  :db/ident :fclass/soilsteelcomp,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Torusild" "Soil-Steel composite"],
+  :asset-schema/description
+  ["torusillad, kuna nende  nii tehniline kui ka konstruktsiooniline lahendus on teistest niivõrd erinev"
+   ""],
+  :fclass/fgroup ":fgroup/structures"}
  {:db/id ":fclass/signagelocation",
   :db/ident :fclass/signagelocation,
   :asset-schema/type :asset-schema.type/fclass,
@@ -258,6 +266,27 @@
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Elektrikaabel" "Power network"],
   :fclass/fgroup ":fgroup/utilities"}
+ {:db/id ":fclass/animalfencing",
+  :db/ident :fclass/animalfencing,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Ulukitara/tõke" "Animal fence/containment"],
+  :asset-schema/description
+  ["Ulukitara, konnatõke vms rajatis koos väravate, ülepääsude, jms"
+   ""],
+  :fclass/fgroup ":fgroup/landscaping"}
+ {:db/id ":fclass/animalcrossing",
+  :db/ident :fclass/animalcrossing,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Ulukite ülepääsukoht" "Animal crossing"],
+  :asset-schema/description
+  ["Spetsiaalne ülepääsukoht ulukitele, ulukitara katkestus." ""],
+  :fclass/fgroup ":fgroup/landscaping"}
+ {:db/id ":fclass/ecoduct",
+  :db/ident :fclass/ecoduct,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Ökodukt" "Ecoduct"],
+  :asset-schema/description ["Sild ulukitele." ""],
+  :fclass/fgroup ":fgroup/landscaping"}
  {:db/id ":ctype/common",
   :db/ident :ctype/common,
   :db/doc "Attributes common to all assets and components",
@@ -286,12 +315,6 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Hüdroisolatsioon" "Waterproofing"],
   :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/edgebeam",
-  :db/ident :ctype/edgebeam,
-  :db/doc "No",
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Servapruss" "Edge beam"],
-  :ctype/parent ":ctype/bridgespan"}
  {:db/id ":ctype/waterproofing",
   :db/ident :ctype/waterproofing,
   :db/doc "No",
@@ -303,6 +326,12 @@
   :db/doc "No",
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Karniis" "Cornice"],
+  :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/edgebeam",
+  :db/ident :ctype/edgebeam,
+  :db/doc "No",
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Servapruss" "Edge beam"],
   :ctype/parent ":ctype/bridgespan"}
  {:db/id ":ctype/cable",
   :db/ident :ctype/cable,
@@ -783,6 +812,27 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Eraldusriba kate" "Verge paving"],
   :ctype/parent ":fclass/verge"}
+ {:db/id ":ctype/animalfence",
+  :db/ident :ctype/animalfence,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Ulukitara" "Animal fence"],
+  :ctype/parent ":fclass/animalfencing"}
+ {:db/id ":ctype/animalfencegate",
+  :db/ident :ctype/animalfencegate,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Ulukitara värav ja lõks" "Gate and grate in animal fence"],
+  :ctype/parent ":fclass/animalfencing"}
+ {:db/id ":ctype/animalbackhopping",
+  :db/ident :ctype/animalbackhopping,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Tagasihüppe  koht" "Backhopping facility"],
+  :ctype/parent ":fclass/animalfencing"}
+ {:db/id ":ctype/animaldetector",
+  :db/ident :ctype/animaldetector,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Ulukituvastuse sensor" "Animal detector"],
+  :ctype/parent ":fclass/animalcrossing"}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -855,13 +905,14 @@
   :db/doc "No",
   :db/id ":pavinglayer/pavinglayertype",
   :db/ident :pavinglayer/pavinglayertype}
- {:db/id ":bridge/bridgeaxleload",
-  :db/ident :bridge/bridgeaxleload,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["võiks olla vahemikud ........" ""],
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/bridge"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Teljekoormus" "Axle load"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgeaxleload",
+  :db/ident :bridge/bridgeaxleload}
  {:attribute/parent ":fclass/pavinglayer",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -870,6 +921,15 @@
   :db/doc "No",
   :db/id ":pavinglayer/pavinglayerwearingresistance",
   :db/ident :pavinglayer/pavinglayerwearingresistance}
+ {:attribute/parent ":fclass/retainingwall",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Tugiseina konstruktiivne tüüp" "Retainingwall structural type"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":retainingwall/retainingwallstructuraltype",
+  :db/ident :retainingwall/retainingwallstructuraltype,
+  :asset-schema/description ["Konstruktiivne lahendus" ""]}
  {:attribute/parent ":ctype/barrier",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -917,24 +977,26 @@
   :db/doc "No",
   :db/id ":backfill/backfillelasticmodulus",
   :db/ident :backfill/backfillelasticmodulus}
- {:db/id ":bridgespan/spanstructuraltype",
-  :db/ident :bridgespan/spanstructuraltype,
+ {:attribute/parent ":ctype/bridgespan",
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Sildeehitise konstruktsiooni tüüp" "Span structural type"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/ref,
-  :attribute/parent ":ctype/bridgespan"}
- {:db/id ":bridge/bridgespansnum",
-  :db/ident :bridge/bridgespansnum,
+  :db/doc "No",
+  :db/id ":bridgespan/spanstructuraltype",
+  :db/ident :bridgespan/spanstructuraltype}
+ {:attribute/parent ":fclass/bridge",
+  :asset-schema/unit "spans",
+  :db/valueType :db.type/long,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Avade arv (sammaste ja liigendite summa)"
    "Number of spans (sum of supports and hinges)"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/long,
-  :asset-schema/unit "spans",
-  :attribute/parent ":fclass/bridge"}
+  :db/doc "No",
+  :db/id ":bridge/bridgespansnum",
+  :db/ident :bridge/bridgespansnum}
  {:attribute/parent ":fclass/unboundbasecourse",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -978,13 +1040,18 @@
   :db/doc "No",
   :db/id ":pile/pilelength",
   :db/ident :pile/pilelength}
- {:db/id ":bridge/bridgetotalwidth",
-  :db/ident :bridge/bridgetotalwidth,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
+ {:attribute/parent ":fclass/bridge",
   :asset-schema/unit "m",
-  :attribute/parent ":fclass/bridge"}
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Silla kogulaius" "Bridge total width"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgetotalwidth",
+  :db/ident :bridge/bridgetotalwidth,
+  :asset-schema/description
+  ["Sillal kogulaius mille sisse arvestatakse ka karniisid, servaprussid, müratõkked jms."
+   "Bridge deck total width includes edge beams, barries, balustrades, etc"]}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -995,6 +1062,13 @@
   :db/id ":barrierterminal/terminalvehicleredirectionclass",
   :db/ident :barrierterminal/terminalvehicleredirectionclass,
   :asset-schema/description ["x1-x3" ""]}
+ {:db/id ":bridge/bridgefunctionaltype",
+  :db/ident :bridge/bridgefunctionaltype,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Silla põhifunktsioon" "Bridge main function"],
+  :db/cardinality :db.cardinality/one,
+  :db/valueType :db.type/ref,
+  :attribute/parent ":fclass/bridge"}
  {:attribute/parent ":fclass/pavinglayer",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -1005,15 +1079,16 @@
   :db/doc "No",
   :db/id ":pavinglayer/pavinglayerrecycledasphaltcontent",
   :db/ident :pavinglayer/pavinglayerrecycledasphaltcontent}
- {:db/id ":bridgespan/spanlengthanalytical",
-  :db/ident :bridgespan/spanlengthanalytical,
+ {:attribute/parent ":ctype/bridgespan",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Ava arvutuslik pikkus" "Span analytical length"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
-  :attribute/parent ":ctype/bridgespan"}
+  :db/doc "No",
+  :db/id ":bridgespan/spanlengthanalytical",
+  :db/ident :bridgespan/spanlengthanalytical}
  {:attribute/parent ":fclass/backfill",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1031,14 +1106,15 @@
   :db/doc "No",
   :db/id ":barrier/barriercontainmentlevel",
   :db/ident :barrier/barriercontainmentlevel}
- {:db/id ":bridgespan/spanlengthtotal",
-  :db/ident :bridgespan/spanlengthtotal,
+ {:attribute/parent ":ctype/bridgespan",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Ava pikkus" "Span length"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
-  :attribute/parent ":ctype/bridgespan"}
+  :db/doc "No",
+  :db/id ":bridgespan/spanlengthtotal",
+  :db/ident :bridgespan/spanlengthtotal}
  {:attribute/parent ":ctype/girder",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1048,6 +1124,13 @@
   :db/doc "No",
   :db/id ":girder/structuralmaterial",
   :db/ident :girder/structuralmaterial}
+ {:db/id ":girder/woodmaterial",
+  :db/ident :girder/woodmaterial,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["puidu tüüp" ""],
+  :db/cardinality :db.cardinality/one,
+  :db/valueType :db.type/ref,
+  :attribute/parent ":ctype/girder"}
  {:attribute/parent ":fclass/boundbasecourse",
   :asset-schema/unit "MPa",
   :db/valueType :db.type/bigdec,
@@ -1085,12 +1168,14 @@
   :db/ident :bridgesupport/supportnumber,
   :asset-schema/description
   ["Esimese samba number on 0, viimase samba number = avade arv" ""]}
- {:db/id ":bridge/bridgeload1",
-  :db/ident :bridge/bridgeload1,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/bridge"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Arvutuslik koormus 1" "Design load 1"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgeload1",
+  :db/ident :bridge/bridgeload1}
  {:attribute/parent ":fclass/pavinglayer",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -1164,13 +1249,14 @@
   :db/doc "No",
   :db/id ":unboundbasecourse/unboundbaseelasticmodulus",
   :db/ident :unboundbasecourse/unboundbaseelasticmodulus}
- {:db/id ":bridge/bridgemlc",
-  :db/ident :bridge/bridgemlc,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["võiks olla vahemikud ........" ""],
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/bridge"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Militaarkoormusklass" "Military load class"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgemlc",
+  :db/ident :bridge/bridgemlc}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1249,13 +1335,27 @@
   :db/valueType :db.type/bigdec,
   :asset-schema/unit "deg",
   :attribute/parent ":ctype/pile"}
- {:db/id ":bridge/bridgewidth",
-  :db/ident :bridge/bridgewidth,
+ {:db/id ":bridge/bridgestructuraltype",
+  :db/ident :bridge/bridgestructuraltype,
   :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Silla pühiline konstruktiivne lahendus"
+   "Main structural solution"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
+  :db/valueType :db.type/ref,
   :attribute/parent ":fclass/bridge"}
+ {:attribute/parent ":fclass/bridge",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Silla kasulik laius" "Bridge usable width"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgewidth",
+  :db/ident :bridge/bridgewidth,
+  :asset-schema/description
+  ["Silla kasulik laius on äärmiste piirete vaheline liiklusala."
+   "Usable width is the traffic area beetween the handrails/barriers."]}
  {:attribute/parent ":fclass/drainagelayer",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1309,12 +1409,14 @@
   :db/doc "No",
   :db/id ":boundbasecourse/boundbasestonesize",
   :db/ident :boundbasecourse/boundbasestonesize}
- {:db/id ":bridge/bridgedesigncode",
-  :db/ident :bridge/bridgedesigncode,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/bridge"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Projekteerimisnorm" "Design Code"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgedesigncode",
+  :db/ident :bridge/bridgedesigncode}
  {:attribute/parent ":ctype/barrier",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1365,6 +1467,16 @@
   :db/id ":barrierterminal/terminalimpactseverity",
   :db/ident :barrierterminal/terminalimpactseverity,
   :asset-schema/description ["A, B" ""]}
+ {:attribute/parent ":fclass/retainingwall",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Tugiseina funktsionaalne tüüp" "Retainingwall functional type"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":retainingwall/retainingwallfunctionaltype",
+  :db/ident :retainingwall/retainingwallfunctionaltype,
+  :asset-schema/description
+  ["Kas tugimüür on tee muldkeha või süvendi nõlva toetav?" ""]}
  {:attribute/parent ":fclass/drainagelayer",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1451,12 +1563,14 @@
   :db/doc "No",
   :db/id ":boundbasecourse/boundbasecompressionstrength",
   :db/ident :boundbasecourse/boundbasecompressionstrength}
- {:db/id ":bridge/bridgeload2",
-  :db/ident :bridge/bridgeload2,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
-  :attribute/parent ":fclass/bridge"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Arvutuslik koormus 2" "Design load 2"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgeload2",
+  :db/ident :bridge/bridgeload2}
  {:attribute/parent ":fclass/pavinglayer",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -1466,16 +1580,13 @@
   :db/doc "No",
   :db/id ":pavinglayer/pavinglayerporosity",
   :db/ident :pavinglayer/pavinglayerporosity}
- {:attribute/parent ":ctype/girder",
-  :db/valueType :db.type/ref,
+ {:db/id ":pile/concreteclass",
+  :db/ident :pile/concreteclass,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Betooni klass" "Concrete class"],
   :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":girder/concreteclass",
-  :db/ident :girder/concreteclass,
-  :asset-schema/description
-  ["Betooni tugevusklass vastavalt Eurokoodeksile" ""]}
+  :db/valueType :db.type/ref,
+  :attribute/parent ":ctype/pile"}
  {:attribute/parent ":fclass/boundbasecourse",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -1486,6 +1597,13 @@
   :db/doc "No",
   :db/id ":boundbasecourse/boundbasehydraulicbindercontent",
   :db/ident :boundbasecourse/boundbasehydraulicbindercontent}
+ {:db/id ":expansionjoint/expansionjointtype",
+  :db/ident :expansionjoint/expansionjointtype,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Temperatuurivuugi tüüp" "Expansionjoint type"],
+  :db/cardinality :db.cardinality/one,
+  :db/valueType :db.type/ref,
+  :attribute/parent ":ctype/expansionjoint"}
  {:attribute/parent ":fclass/backfill",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1546,13 +1664,15 @@
   :db/doc "No",
   :db/id ":bridgesupport/supportbearingtype",
   :db/ident :bridgesupport/supportbearingtype}
- {:db/id ":bridge/bridgevehicleload",
-  :db/ident :bridge/bridgevehicleload,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":fclass/bridge",
+  :asset-schema/unit "t",
   :db/valueType :db.type/long,
-  :asset-schema/unit "tonn",
-  :attribute/parent ":fclass/bridge"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Sõiduki mass" "Vehicle mass"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridge/bridgevehicleload",
+  :db/ident :bridge/bridgevehicleload}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1578,6 +1698,7 @@
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Silla kogupikkus" "Bridge total length"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridge/bridgetotallength",
   :db/ident :bridge/bridgetotallength,
   :asset-schema/description
@@ -1593,12 +1714,16 @@
   :db/doc "No",
   :db/id ":unboundbasecourse/unboundbasematerialproducer",
   :db/ident :unboundbasecourse/unboundbasematerialproducer}
- {:db/id ":bridgespan/spannumber",
-  :db/ident :bridgespan/spannumber,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
+ {:attribute/parent ":ctype/bridgespan",
   :db/valueType :db.type/long,
-  :attribute/parent ":ctype/bridgespan"}
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Ava number" "Span number"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":bridgespan/spannumber",
+  :db/ident :bridgespan/spannumber,
+  :asset-schema/description
+  ["Sildeava järjekorranumber" "Span numbering"]}
  {:attribute/parent ":fclass/boundbasecourse",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -1614,20 +1739,22 @@
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Ehitusviis" "Construction method"],
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridgespan/spanconstructionmethod",
   :db/ident :bridgespan/spanconstructionmethod,
   :asset-schema/description
   ["Monteeritav, monoliitne, komposiit, teisaldatav, vms" ""]}
- {:db/id ":bridge/bridgelength",
-  :db/ident :bridge/bridgelength,
+ {:attribute/parent ":fclass/bridge",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Sildeehitise kogu pikkus (vuugist vuugini)."
    "Superstructure total length (from abutment joint to abutment joint)"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
-  :attribute/parent ":fclass/bridge"}
+  :db/doc "No",
+  :db/id ":bridge/bridgelength",
+  :db/ident :bridge/bridgelength}
  {:attribute/parent ":fclass/backfill",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1636,15 +1763,16 @@
   :db/doc "No",
   :db/id ":backfill/backfillcompactionfactor",
   :db/ident :backfill/backfillcompactionfactor}
- {:db/id ":bridgespan/spanclearanceW",
-  :db/ident :bridgespan/spanclearanceW,
+ {:attribute/parent ":ctype/bridgespan",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Sildeehitise aluse gabariidi laius" "Clearance width under span"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
-  :attribute/parent ":ctype/bridgespan"}
+  :db/doc "No",
+  :db/id ":bridgespan/spanclearanceW",
+  :db/ident :bridgespan/spanclearanceW}
  {:attribute/parent ":fclass/membrane",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1662,16 +1790,17 @@
   :db/doc "No",
   :db/id ":drainagelayer/drainagethickness",
   :db/ident :drainagelayer/drainagethickness}
- {:db/id ":bridgespan/spanclearanceH",
-  :db/ident :bridgespan/spanclearanceH,
+ {:attribute/parent ":ctype/bridgespan",
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Sildeehitise aluse gabariidi kõrgus"
    "Clearance height under span"],
   :db/cardinality :db.cardinality/one,
-  :db/valueType :db.type/bigdec,
-  :asset-schema/unit "m",
-  :attribute/parent ":ctype/bridgespan"}
+  :db/doc "No",
+  :db/id ":bridgespan/spanclearanceH",
+  :db/ident :bridgespan/spanclearanceH}
  {:attribute/parent ":ctype/barrier",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -1809,22 +1938,22 @@
   :db/ident :item/C25,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C25" "C25"],
-  :enum/attribute ":girder/concreteclass"}
+  :enum/attribute ":pile/concreteclass"}
  {:db/id ":item/C35",
   :db/ident :item/C35,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C35" "C35"],
-  :enum/attribute ":girder/concreteclass"}
+  :enum/attribute ":pile/concreteclass"}
  {:db/id ":item/C45",
   :db/ident :item/C45,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C45" "C45"],
-  :enum/attribute ":girder/concreteclass"}
+  :enum/attribute ":pile/concreteclass"}
  {:db/id ":item/C55",
   :db/ident :item/C55,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C55" "C55"],
-  :enum/attribute ":girder/concreteclass"}
+  :enum/attribute ":pile/concreteclass"}
  {:db/id ":item/planned",
   :db/ident :item/planned,
   :asset-schema/type :asset-schema.type/enum,
@@ -1897,6 +2026,11 @@
   :db/ident :item/plastic,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Plastik" "Plastic"],
+  :enum/attribute ":girder/structuralmaterial"}
+ {:db/id ":item/stone",
+  :db/ident :item/stone,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kivi" "Stone"],
   :enum/attribute ":girder/structuralmaterial"}
  {:db/id ":item/tisa",
   :db/ident :item/tisa,
