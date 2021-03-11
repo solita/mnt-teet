@@ -1064,14 +1064,13 @@
   (let [opinions (owners-opinions estate-info)
         unit (get-unit-by-teet-id project target)
         l-address (:L_AADRESS unit)
-        usage (:SIHT1 unit)]
+        purpose (:SIHT1 unit)]
     [:div {:class (<class common-styles/gray-container-style)}
      [buttons/button-primary {:start-icon (r/as-element [icons/content-add])}
-          (tr [:unit-modal-page :add-new-owner-opinion])]
+      (tr [:unit-modal-page :add-new-owner-opinion])]
      [:div {:class (<class common-styles/gray-container-style)}
-      [:span (str "ARVAMUSED " l-address "(" usage ") " target)]]
+      [:span (str "ARVAMUSED " l-address " (" purpose ") " target)]]
      [:div {:class (<class common-styles/gray-container-style)}
-
       (if (not-empty opinions)
         (for [opinion opinions]
           [common/heading-and-grey-border-body
@@ -1083,7 +1082,6 @@
             :body [:div
                    [:span "Land owner"]]}])
         [:p (tr [:land :no-owners-opinions])])]]))
-
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
@@ -1106,7 +1104,6 @@
                                      :app app
                                      :entity-type :file
                                      :entity-id (:db/id f)}])]))
-
 
 (defmethod land-view-modal :default
   [{:keys [modal]}]
