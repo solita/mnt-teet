@@ -30,7 +30,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.date :as date-teet]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -389,6 +390,14 @@
             theme-colors/red
             theme-colors/orange)})
 
+(defn owners-opinions [unit]
+  "Returns owners opinions about given cadastral unit"
+  (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
+                  {:text "This is one more opinion" :date date-teet/start-of-today}]
+        no-opinions []]
+    ;; TODO: implement
+    no-opinions))
+
 
 (defn cadastral-unit
   [{:keys [e! project-info on-change estate-procedure-type cadastral-form]} {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
@@ -448,7 +457,16 @@
                                         [common/count-chip {:label c}])]
                         :loading-state "-"}]
           (tr [:land-modal-page :files])])
-
+       (let [land-owners-opinions-count (count (owners-opinions unit))]
+         (if (zero? land-owners-opinions-count)
+           [common/Link {:style {:display :block}
+                         :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
+            [common/count-chip {:label land-owners-opinions-count}]
+            (tr [:land-modal-page :no-owners-opinions])]
+           [common/Link {:style {:display :block}
+                         :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
+            [common/count-chip {:label land-owners-opinions-count}]
+            (tr [:land-modal-page (if (= 1 land-owners-opinions-count) :owner-opinion :owner-opinions)])]))
        [common/Link {:style {:display :block}
                      :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
         [query/query {:e! e! :query :comment/count
@@ -554,7 +572,7 @@
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
                                         (let [count (+ (get-in c [:comment/counts :comment/old-comments])
-                                                       (get-in c [:comment/counts :comment/new-comments]))]
+                                                      (get-in c [:comment/counts :comment/new-comments]))]
                                           [:span
                                            [common/comment-count-chip c]
                                            (tr [:land-modal-page (cond
@@ -771,7 +789,6 @@
                       :kande_tekst
                       flatten-kande-tekst-table)]}])
        [:p (tr [:land :no-active-mortgages])])]))
-
 
 (defn create-land-acquisition-row
   [la]
@@ -1037,6 +1054,33 @@
                                 #(land-controller/->DecrementUnitCommentCount target)
                                 }])
 
+(defn- get-unit-by-teet-id
+  [project teet-id]
+  (first (filter #(= (:teet-id %) teet-id) (:land/units project))))
+
+(defmethod unit-modal-content :owners-opinions
+  [{:keys [estate-info e! target app project] :as unit}]
+  (let [opinions (owners-opinions estate-info)
+        unit (get-unit-by-teet-id project target)
+        l-address (:L_AADRESS unit)
+        purpose (:SIHT1 unit)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     [buttons/button-primary {:start-icon (r/as-element [icons/content-add])}
+      (tr [:unit-modal-page :add-new-owner-opinion])]
+     [:div {:class (<class common-styles/gray-container-style)}
+      [:span (str "ARVAMUSED " l-address " (" purpose ") " target)]]
+     [:div {:class (<class common-styles/gray-container-style)}
+      (if (not-empty opinions)
+        (for [opinion opinions]
+          [common/heading-and-grey-border-body
+           {:heading [:<>
+                      [typography/BoldGreyText {:style {:display :inline}}
+                       (str (:text opinion))
+                       [typography/GreyText {:style {:display :inline}}
+                        (:date opinion)]]]
+            :body [:div
+                   [:span "Land owner"]]}])
+        [:p (tr [:land :no-owners-opinions])])]]))
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
@@ -1060,7 +1104,6 @@
                                      :entity-type :file
                                      :entity-id (:db/id f)}])]))
 
-
 (defmethod land-view-modal :default
   [{:keys [modal]}]
   [:div "Unsupported land view dialog " modal])
@@ -1071,7 +1114,7 @@
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :estate-data])
-                [:burdens :mortgages :costs :comments]]
+                [:burdens :mortgages :costs :comments ]]
    :right-panel [estate-modal-content {:e! e!
                                        :page modal-page
                                        :app app
@@ -1085,7 +1128,8 @@
                 modal-page
                 (tr [:land :unit-info])
                 [:files
-                 :comments]]
+                 :comments
+                 :owners-opinions]]
    :right-panel [unit-modal-content {:e! e!
                                      :modal-page modal-page
                                      :app app

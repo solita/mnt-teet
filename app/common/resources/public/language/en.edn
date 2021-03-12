@@ -838,7 +838,8 @@
   :fetching-land-units "Fetching land units",
   :refresh-estate-info "Refresh estates",
   :add-owner "+ Add owner",
-  :owner-data "Registry data"},
+  :owner-data "Registry data",
+  :no-owners-opinions "No opinions"},
  :land-modal-page
  {:owner-info "Owners and shares",
   :no-burdens "No burdens",
@@ -851,7 +852,8 @@
    :comments "Comments",
    :costs "Acquisition costs",
    :files "Files attached to this unit",
-   :mortgages "Mortgages"},
+   :mortgages "Mortgages",
+   :owners-opinions "Land owners opinions"},
   :costs "Acquisition costs",
   :mortgage "Mortgage",
   :owner-opinions "Opinions",
@@ -859,7 +861,9 @@
   :files "Files attached to this unit",
   :owner-opinion "Opinion",
   :burden "Burden",
-  :no-mortgages "No mortgages"},
+  :owners-opinions "Land owners opinions",
+  :no-mortgages "No mortgages",
+  :no-owners-opinions "No opinions"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
@@ -1136,6 +1140,8 @@
   :no-documents "No documents",
   :edit-success-notification "Task edited successfully",
   :results "Results"},
+ :unit-info {:owners-opinions "Land owners opinions"},
+ :unit-modal-page {:add-new-owner-opinion "Add new opinion"},
  :user
  {:autocomplete
   {:loading "Searching users...",
