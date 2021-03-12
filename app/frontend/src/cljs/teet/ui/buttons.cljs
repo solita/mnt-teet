@@ -45,6 +45,17 @@
   {:background-color (str theme-colors/green " !important")
    :color            (str theme-colors/white " !important")})
 
+(defn- blue-button-style
+  []
+  ^{:pseudo {:hover {:background-color (str theme-colors/blue-dark " !important")}
+             :focus (str theme-colors/button-focus-style " !important")}}
+  {:background-color (str theme-colors/blue " !important")
+   :color            (str theme-colors/white " !important")
+   :line-height "1 !important"
+   :padding-left "0.875rem !important"
+   :padding-right "0.875rem !important"
+   :float "right !important"})
+
 (defn- button-text-warning-style
   []
   ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")
@@ -55,6 +66,11 @@
   []
   ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
   {:color (str theme-colors/green " !important")})
+
+(defn- button-blue-style
+  []
+  ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
+  {:color (str theme-colors/blue " !import")})
 
 
 (def button-text
@@ -75,6 +91,11 @@
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
                                :color          :primary}))
+
+(def button-blue-small
+  (util/make-component Button {:variant        :contained
+                               :disable-ripple true
+                               :class          (<class blue-button-style)}))
 
 (def button-secondary
   (util/make-component Button {:variant        :contained

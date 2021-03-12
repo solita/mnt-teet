@@ -8,6 +8,8 @@
             [teet.comments.comments-controller :as comments-controller]
             [teet.comments.comments-view :as comments-view]
             [teet.common.common-styles :as common-styles]
+            [teet.ui.icons :as icons]
+            [re-svg-icons.feather-icons :as fi]
             [teet.file.file-view :as file-view]
             [teet.land.land-model :as land-model]
             [teet.land.land-specs]
@@ -392,11 +394,11 @@
 
 (defn owners-opinions [unit]
   "Returns owners opinions about given cadastral unit"
-  (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
-                  {:text "This is one more opinion" :date date-teet/start-of-today}]
+  (let [opinions [{:text "This is the first opinion" :date "10/03/2021"}
+                  {:text "This is one more opinion" :date "11/03/2021"}]
         no-opinions []]
     ;; TODO: implement
-    no-opinions))
+    opinions))
 
 
 (defn cadastral-unit
@@ -1058,6 +1060,21 @@
   [project teet-id]
   (first (filter #(= (:teet-id %) teet-id) (:land/units project))))
 
+(defn- toggle-open []
+  ;; TODO: implement
+  )
+
+(defn- open? []
+  (let [is-open false]
+    ;; TODO: implement
+    is-open))
+
+(defn owners-opinions-container-heading
+  []
+  {:border-bottom (str "1px solid " theme-colors/gray-lighter)
+   :padding-bottom "1rem"
+   :padding-top "1rem"})
+
 (defmethod unit-modal-content :owners-opinions
   [{:keys [estate-info e! target app project] :as unit}]
   (let [opinions (owners-opinions estate-info)
@@ -1072,14 +1089,18 @@
      [:div {:class (<class common-styles/gray-container-style)}
       (if (not-empty opinions)
         (for [opinion opinions]
-          [common/heading-and-grey-border-body
+          [common/heading-and-body
            {:heading [:<>
                       [typography/BoldGreyText {:style {:display :inline}}
-                       (str (:text opinion))
-                       [typography/GreyText {:style {:display :inline}}
-                        (:date opinion)]]]
+                       (str (:text opinion))]
+                      [typography/GreyText {:style {:display :inline}}
+                       (str " " (:date opinion))]
+                      [buttons/button-blue-small
+                       {:on-click toggle-open}
+                       [(if (open?) icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+                       (if (open?) (tr [:buttons :close]) (tr [:buttons :open]))]]
             :body [:div
-                   [:span "Land owner"]]}])
+                   [:span {:class (<class common-styles/flex-align-end)}]]}])
         [:p (tr [:land :no-owners-opinions])])]]))
 
 (defmethod unit-modal-content :files

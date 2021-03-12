@@ -413,6 +413,15 @@
                   :border-left (str "solid 7px " theme-colors/gray-light)}}
     body]])
 
+(defn heading-and-body
+  [{:keys [heading body]}]
+  [:div {:style {:margin-bottom "1.5rem"}}
+   [:div {:style {:margin-bottom "0.25rem"}}
+    heading]
+   [:div {:style {:padding-bottom "0.5rem"
+                  :border-bottom (str "solid 1px " theme-colors/gray-light)}}
+    body]])
+
 (def number-formatter (js/Intl.NumberFormat "et-EE" #js {:style "currency"
                                                          :currency "EUR"}))
 

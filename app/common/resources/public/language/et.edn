@@ -77,6 +77,7 @@
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
+  :open "Laiendan",
   :continue "Jätkan",
   :edit "Muudan",
   :delete "Kustutan",
@@ -824,7 +825,6 @@
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
   :estate-filter-label "Kinnistu",
-  :owners-opinions "Maade omanike arvamused",
   :no-land-acquisitions "Selle kinnistu maid ei omandata",
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
