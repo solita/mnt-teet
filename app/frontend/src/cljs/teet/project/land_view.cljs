@@ -459,11 +459,10 @@
           (tr [:land-modal-page :files])])
        (let [land-owners-opinions-count (count (owners-opinions unit))]
          (if (zero? land-owners-opinions-count)
-           [typography/GreyText
-            [common/Link {:style {:display :block}
-                          :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
-             [common/count-chip {:label land-owners-opinions-count}]
-             (tr [:land-modal-page :no-owners-opinions])]]
+           [common/Link {:style {:display :block}
+                         :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
+            [common/count-chip {:label land-owners-opinions-count}]
+            (tr [:land-modal-page :no-owners-opinions])]
            [common/Link {:style {:display :block}
                          :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
             [common/count-chip {:label land-owners-opinions-count}]
