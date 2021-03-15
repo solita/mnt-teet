@@ -31,7 +31,8 @@
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.util.datomic :as du]
-            [teet.util.date :as date-teet]))
+            [teet.util.date :as date-teet]
+            [clojure.string :as str]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -497,6 +498,11 @@
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
+        estate-name (:nimi estate)
+        name-or-blank (if (str/blank? estate-name)
+                        ""
+                        ;; else
+                        (str " (" estate-name ")"))
         ;;these are all done just to calculate the total cost for the estate, there might be an easier way
         estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
                                                                        (:land/units project-info)
@@ -514,7 +520,7 @@
                       :on-click (e! land-controller/->ToggleOpenEstate estate-id)
                       :id (land-controller/estate-dom-id estate-id)}
 
-          [typography/SectionHeading (tr [:land :estate]) " " estate-id]
+          [typography/SectionHeading (tr [:land :estate]) " " estate-id name-or-blank]
           [:span (count units) " " (if (= 1 (count units))
                                      (tr [:land :unit])
                                      (tr [:land :units]))]]
@@ -572,7 +578,7 @@
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
                                         (let [count (+ (get-in c [:comment/counts :comment/old-comments])
-                                                      (get-in c [:comment/counts :comment/new-comments]))]
+                                                       (get-in c [:comment/counts :comment/new-comments]))]
                                           [:span
                                            [common/comment-count-chip c]
                                            (tr [:land-modal-page (cond
@@ -582,14 +588,14 @@
                         :loading-state "-"}]]]]]
       :children
       (mapc
-        (fn [unit]
-          [cadastral-unit {:e! e!
-                           :project-info project-info
-                           :on-change land-controller/->UpdateCadastralForm
-                           :estate-procedure/type (:estate-procedure/type estate-form)
-                           :cadastral-form (get cadastral-forms (:teet-id unit))}
-           unit])
-        units)}]))
+       (fn [unit]
+         [cadastral-unit {:e! e!
+                          :project-info project-info
+                          :on-change land-controller/->UpdateCadastralForm
+                          :estate-procedure/type (:estate-procedure/type estate-form)
+                          :cadastral-form (get cadastral-forms (:teet-id unit))}
+          unit])
+       units)}]))
 
 (defn- number-of-owners
   "Counts the number of owners of the shares (`omandiosad`). A single
@@ -703,6 +709,7 @@
                                   (select-keys owner [:isiku_tyyp :nimi]))))
                              (into #{}))))
                     units)]
+      ;; (def *u units)
       [:div
        (mapc
         (fn [group]
