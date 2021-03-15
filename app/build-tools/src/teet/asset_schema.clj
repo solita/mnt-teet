@@ -60,7 +60,7 @@
 (def read-ctypes
   (partial read-sheet
            "ctype"
-           [:name :part-of
+           [:name :part-of :inherits-location?
             :label-et :label-en
             :description-et :description-en
             :comment]
@@ -158,6 +158,8 @@
                                  (exists? (:part-of ct)))))]
           (merge
            (common-attrs :asset-schema.type/ctype ct)
+           (when-let [il (:inherits-location? ct)]
+             {:component/inherits-location? il})
            (when (contains? ct :part-of)
              {:ctype/parent (str (:part-of ct))})))
 
@@ -178,7 +180,9 @@
             {:db/cardinality :db.cardinality/one ; PENDING: can be many?
              :db/valueType valueType
              :asset-schema/unit (:unit p)
-             :attribute/parent (str (:ctype p))}
+             :attribute/parent (str (:ctype p))
+             :attribute/cost-grouping? (:cost-grouping? p)
+             :attribute/mandatory? (:mandatory? p)}
             (when-let [min (:min-value p)]
               {:attribute/min-value (->long min)})
             (when-let [max (:max-value p)]

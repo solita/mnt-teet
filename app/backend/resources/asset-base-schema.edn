@@ -73,6 +73,11 @@
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one}
 
+ {:db/ident :component/inherits-location?
+  :db/doc "Does this component type inherit location from parent?"
+  :db/valueType :db.type/boolean
+  :db/cardinality :db.cardinality/one}
+
  {:db/ident :attribute/min-value
   :db/doc "The minimum value of an attribute or length for strings."
   :db/valueType :db.type/long
@@ -80,5 +85,15 @@
  {:db/ident :attribute/max-value
   :db/doc "The maximum value of an attribute or length for strings."
   :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :attribute/cost-grouping?
+  :db/doc "Is this attribute part of cost grouping"
+  :db/valueType :db.type/boolean
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :attribute/mandatory?
+  :db/doc "Is this attribuet mandatory when creating cost items"
+  :db/valueType :db.type/boolean
   :db/cardinality :db.cardinality/one}
  ]
