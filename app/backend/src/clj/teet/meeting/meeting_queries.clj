@@ -240,6 +240,46 @@
                    :meta/created-at
                    {:meta/creator [:user/given-name :user/family-name]}]})
 
+(defn fetch-meeting* [db user meeting-id activity-id]
+  (let [meeting
+        (d/pull
+         db
+         `[:db/id
+           :meeting/locked?
+           :meeting/title :meeting/location
+           :meeting/start :meeting/end
+           :meeting/notifications-sent-at
+           :meeting/number :meta/created-at :meta/modified-at
+           {:meeting/organizer ~user-model/user-listing-attributes}
+           {:meeting/agenda [:db/id
+                             :meeting.agenda/topic
+                             :meeting.agenda/body
+                             :meta/created-at :meta/modified-at
+                             {:meeting.agenda/decisions
+                              [:db/id :meeting.decision/body
+                               :meta/created-at :meta/modified-at
+                               :meeting.decision/number
+                               ~attachments]}
+                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                             ~attachments]}
+           {:review/_of [:db/id
+                         :review/comment
+                         :review/decision
+                         :meta/created-at
+                         {:review/reviewer ~user-model/user-listing-attributes}]}
+           {:participation/_in
+            [:db/id
+             :participation/absent?
+             :participation/role
+             :meta/created-at :meta/modified-at
+             {:participation/participant ~user-model/user-listing-attributes}]}]
+         (meeting-db/activity-meeting-id db activity-id meeting-id))]
+    (merge
+     meeting
+     (comment-db/comment-count-of-entity-by-status
+      db user meeting-id :meeting)
+     (entity-db/entity-seen db user meeting-id))))
+
 (defquery :meeting/fetch-meeting
   {:doc "Fetch a single meeting info and project info"
    :context {:keys [db user]}
@@ -260,44 +300,7 @@
                       (meta-query/without-deleted
                        db
                        {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-                        :meeting (let [meeting
-                                       (d/pull
-                                        db
-                                        `[:db/id
-                                          :meeting/locked?
-                                          :meeting/title :meeting/location
-                                          :meeting/start :meeting/end
-                                          :meeting/notifications-sent-at
-                                          :meeting/number :meta/created-at :meta/modified-at
-                                          {:meeting/organizer ~user-model/user-listing-attributes}
-                                          {:meeting/agenda [:db/id
-                                                            :meeting.agenda/topic
-                                                            :meeting.agenda/body
-                                                            :meta/created-at :meta/modified-at
-                                                            {:meeting.agenda/decisions
-                                                             [:db/id :meeting.decision/body
-                                                              :meta/created-at :meta/modified-at
-                                                              :meeting.decision/number
-                                                              ~attachments]}
-                                                            {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                                            ~attachments]}
-                                          {:review/_of [:db/id
-                                                        :review/comment
-                                                        :review/decision
-                                                        :meta/created-at
-                                                        {:review/reviewer ~user-model/user-listing-attributes}]}
-                                          {:participation/_in
-                                           [:db/id
-                                            :participation/absent?
-                                            :participation/role
-                                            :meta/created-at :meta/modified-at
-                                            {:participation/participant ~user-model/user-listing-attributes}]}]
-                                        (meeting-db/activity-meeting-id db activity-id meeting-id))]
-                                   (merge
-                                    meeting
-                                    (comment-db/comment-count-of-entity-by-status
-                                     db user meeting-id :meeting)
-                                    (entity-db/entity-seen db user meeting-id)))}
+                        :meeting (fetch-meeting* db user meeting-id activity-id)}
 
                        (fn [entity]
                          (contains? entity :link/to))))))))
