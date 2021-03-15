@@ -127,6 +127,11 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :full},
+ :land/view-land-owner-opinions
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full},
  :projects/set-comment-visibility
  {:admin :full, :manager :full, :internal-consultant :full},
  :document/delete-all-documents {:admin :full, :manager :full},
@@ -166,6 +171,8 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
+ :land/save-land-owner-opinions
+ {:admin :full, :manager :full, :internal-consultant :full},
  :document/update-document-status
  {:admin :full,
   :manager :full,
