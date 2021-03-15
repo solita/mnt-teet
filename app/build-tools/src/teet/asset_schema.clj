@@ -63,7 +63,7 @@
            [:name :part-of :inherits-location?
             :label-et :label-en
             :description-et :description-en
-            :comment]
+            :agreed? :comment]
            #{:name :part-of}))
 
 (def read-pset
