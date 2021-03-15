@@ -120,6 +120,7 @@
                               :when (decision-ids (:db/id d))]
                           d))))))
 
+
 (defn activity-decisions
   [db user activity-id search-term]
   (let [meetings
@@ -137,6 +138,7 @@
                                         :meeting.decision/number
                                         {:file/_attached-to
                                          [:db/id :file/name
+                                          :file/upload-complete?
                                           :meta/created-at
                                           {:meta/creator [:user/given-name :user/family-name]}]}]}]}
                                   {:review/_of
@@ -155,8 +157,9 @@
                  (map #(assoc (first %) :meeting/locked-at (second %)))
                  (sort-by :meeting/start)
                  reverse)))
-        decision-ids (matching-decision-ids search-term meetings)]
-    (filter-decisions decision-ids meetings)))
+        decision-ids (matching-decision-ids search-term meetings)
+        meetings-without-incomplete-uploads (meeting-db/without-incomplete-uploads meetings)]
+    (filter-decisions decision-ids meetings-without-incomplete-uploads)))
 
 (defn project-decisions
   [db user project-id search-term]
@@ -175,6 +178,7 @@
                                                  :meeting.decision/number
                                                  {:file/_attached-to
                                                   [:db/id :file/name
+                                                   :file/upload-complete?
                                                    :meta/created-at
                                                    {:meta/creator [:user/given-name :user/family-name]}]}]}]}
                                            {:review/_of
@@ -232,7 +236,7 @@
     (fetch-project-meetings db [:thk.project/id id])))
 
 (def attachments {:file/_attached-to
-                  [:db/id :file/name
+                  [:db/id :file/name :file/upload-complete?
                    :meta/created-at
                    {:meta/creator [:user/given-name :user/family-name]}]})
 
@@ -244,58 +248,59 @@
    :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
                                        :link :thk.project/owner
                                        :access :read}}}
-  (db-api-large-text/with-large-text
-    meeting-model/rich-text-fields
-    (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
-      (link-db/fetch-links
-       db user
-       valid-external-ids
-       #(or (contains? % :meeting.agenda/topic)
-            (contains? % :meeting.decision/body))
-       (meta-query/without-deleted
-        db
-        {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-         :meeting (let [meeting
-                        (d/pull
-                         db
-                         `[:db/id
-                           :meeting/locked?
-                           :meeting/title :meeting/location
-                           :meeting/start :meeting/end
-                           :meeting/notifications-sent-at
-                           :meeting/number :meta/created-at :meta/modified-at
-                           {:meeting/organizer ~user-model/user-listing-attributes}
-                           {:meeting/agenda [:db/id
-                                             :meeting.agenda/topic
-                                             :meeting.agenda/body
-                                             :meta/created-at :meta/modified-at
-                                             {:meeting.agenda/decisions
-                                              [:db/id :meeting.decision/body
-                                               :meta/created-at :meta/modified-at
-                                               :meeting.decision/number
-                                               ~attachments]}
-                                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                             ~attachments]}
-                           {:review/_of [:db/id
-                                         :review/comment
-                                         :review/decision
-                                         :meta/created-at
-                                         {:review/reviewer ~user-model/user-listing-attributes}]}
-                           {:participation/_in
-                            [:db/id
-                             :participation/absent?
-                             :participation/role
-                             :meta/created-at :meta/modified-at
-                             {:participation/participant ~user-model/user-listing-attributes}]}]
-                         (meeting-db/activity-meeting-id db activity-id meeting-id))]
-                    (merge
-                     meeting
-                     (comment-db/comment-count-of-entity-by-status
-                      db user meeting-id :meeting)
-                     (entity-db/entity-seen db user meeting-id)))}
+  (meeting-db/without-incomplete-uploads
+                 (db-api-large-text/with-large-text
+                   meeting-model/rich-text-fields
+                   (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
+                     (link-db/fetch-links
+                      db user
+                      valid-external-ids
+                      #(or (contains? % :meeting.agenda/topic)
+                           (contains? % :meeting.decision/body))
+                      (meta-query/without-deleted
+                       db
+                       {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
+                        :meeting (let [meeting
+                                       (d/pull
+                                        db
+                                        `[:db/id
+                                          :meeting/locked?
+                                          :meeting/title :meeting/location
+                                          :meeting/start :meeting/end
+                                          :meeting/notifications-sent-at
+                                          :meeting/number :meta/created-at :meta/modified-at
+                                          {:meeting/organizer ~user-model/user-listing-attributes}
+                                          {:meeting/agenda [:db/id
+                                                            :meeting.agenda/topic
+                                                            :meeting.agenda/body
+                                                            :meta/created-at :meta/modified-at
+                                                            {:meeting.agenda/decisions
+                                                             [:db/id :meeting.decision/body
+                                                              :meta/created-at :meta/modified-at
+                                                              :meeting.decision/number
+                                                              ~attachments]}
+                                                            {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                                            ~attachments]}
+                                          {:review/_of [:db/id
+                                                        :review/comment
+                                                        :review/decision
+                                                        :meta/created-at
+                                                        {:review/reviewer ~user-model/user-listing-attributes}]}
+                                          {:participation/_in
+                                           [:db/id
+                                            :participation/absent?
+                                            :participation/role
+                                            :meta/created-at :meta/modified-at
+                                            {:participation/participant ~user-model/user-listing-attributes}]}]
+                                        (meeting-db/activity-meeting-id db activity-id meeting-id))]
+                                   (merge
+                                    meeting
+                                    (comment-db/comment-count-of-entity-by-status
+                                     db user meeting-id :meeting)
+                                    (entity-db/entity-seen db user meeting-id)))}
 
-        (fn [entity]
-          (contains? entity :link/to)))))))
+                       (fn [entity]
+                         (contains? entity :link/to))))))))
 
 
 (defquery :meeting/activity-meeting-history
