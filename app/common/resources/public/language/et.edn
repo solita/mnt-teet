@@ -77,6 +77,7 @@
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
+  :open "Laiendan",
   :continue "Jätkan",
   :edit "Muudan",
   :delete "Kustutan",
@@ -297,6 +298,8 @@
   :notification.type/cooperation-response-to-application-added
   "Taotlus ootab asutuse seisukohta",
   :task.status/canceled "Tühistatud",
+  :land-owner-opinion.type/design-conditions-draft
+  "Projekteerimistingimuste eelnõu",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
   :task.type/funding-plan "Rahastustaotlus",
@@ -328,6 +331,7 @@
   :cooperation.application.type/building-permit-draft
   "Ehitusloa eelnõu",
   :activity.status/in-review "Ülevaatamisel",
+  :land-owner-opinion.type/eia-report "KMH aruanne",
   :land-acquisition.status/in-progress-problematic "Töös - probleemne",
   :task.type/property-valuation "Hindamine",
   :notification.type/task-assigned "Määratud ülesanne",
@@ -336,6 +340,7 @@
   :file.status/ready "Valmis",
   :activity.name/detailed-design "Põhiprojekt",
   :activity.status/expired "Aegunud",
+  :land-owner-opinion.type/construction "Ehitus",
   :notification.type/task-waiting-for-review
   "Ülesanne ootab ülevaatamist",
   :file.status/approved "Kinnitatud / Kehtiv",
@@ -434,6 +439,7 @@
   :estate-compensation.reason/crops "Vili",
   :thk.task-type/design-requirements "Projekteerimistingimused",
   :cooperation.response.status/objection "Kooskõlastus tagasi lükatud",
+  :land-owner-opinion.type/ex-ante-eia "KMH eelhinnang",
   :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
   :task.type/building-permit "Ehitusluba",
@@ -450,6 +456,7 @@
   :task.type/road-safety-audit "Liiklusohutuse audit",
   :notification.type/project-manager-assigned
   "Olete määratud projektijuhiks",
+  :land-owner-opinion.type/design "Projekt",
   :task.type/geology "Geoloogia",
   :notification.type/task-review-rejected
   "Ülesande ülevaatamine tagasi lükatud",
@@ -599,6 +606,7 @@
   :meeting/title "Pealkiri",
   :estate-procedure/process-fees "Asjaajamistasud",
   :thk.project/activity-status "Olek",
+  :land-owner-opinion/type "Taotluse liik",
   :meeting/date-and-time "Kuupäev ja kellaaeg",
   :task/assignee "Vastutav isik",
   :land-exchange/price-per-sqm "Hind/m²",
@@ -608,6 +616,7 @@
   :activity/manager "Projektijuht",
   :cooperation.response/valid-months "Kehtivus kuudes",
   :cooperation.response/valid-until "Aegumiskuupäev",
+  :land-owner-opinion/authority-position "Pädeva asutuse seisukoht",
   :cooperation.opinion/status "Ametlik seisukoht",
   :activity/status "Olek",
   :cooperation.contact/id-code "Reg. nr / isikukood",
@@ -657,6 +666,8 @@
   :participation/participant "Kasutaja",
   :land-acquisition/status "Olek",
   :common {"description" "Kirjeldus", "name" "Nimi"},
+  :land-owner-opinion/respondent-connection-to-land
+  "Vastaja seotus maaga",
   :land-acquisition/pos-number "POS#",
   :meeting.agenda/responsible "Vastutav isik",
   :document/sub-category "Dokumendi alamtüüp",
@@ -674,10 +685,12 @@
   :cooperation.3rd-party/phone "Telefoni number",
   :cooperation.application/comment "Märkus",
   :comment/track? "Jälgin staatust",
+  :land-owner-opinion/body "Arvamuse sisu",
   :user/roles "Rollid",
   :document/author "Autor",
   :file/name "Nimi",
   :cooperation.contact/email "E-post",
+  :land-owner-opinion/respondent-name "Vastaja nimi",
   :thk.project/effective-km-range "Km ulatus",
   :task/description "Kirjeldus",
   :thk.project/region-name "Regioon",
@@ -685,6 +698,7 @@
   :estate-procedure/urgent-bonus "Kiirmenetluse tasu",
   :cooperation.contact/phone "Telefoni number",
   :comment/comment "Märkus",
+  :land-owner-opinion/activity "Tegevus",
   :file/timestamp "Üleslaadimise kuupäev",
   :cooperation.3rd-party/email "E-post",
   :user/email "E-post",
@@ -704,10 +718,12 @@
   :activity/name "Tegevuse nimi",
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
+  :land-owner-opinion/date "Vastuse kuupäev",
   :file/description "Kirjeldus",
   :cooperation.contact/name "Nimi",
   :file/document-group "Dokumendi grupp",
   :meeting.agenda/body "Sisu",
+  :land-owner-opinion/link-to-response "Link arvamusele",
   :estate-procedure/type "Protseduuri tüüp",
   :thk.project/road-name "Tee nimetus",
   :thk.project/estimated-date-range "Eeldatav kestus",
@@ -824,7 +840,6 @@
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
   :estate-filter-label "Kinnistu",
-  :owners-opinions "Maade omanike arvamused",
   :no-land-acquisitions "Selle kinnistu maid ei omandata",
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
@@ -855,6 +870,8 @@
   :owners-opinions "Maade omanike arvamused",
   :no-mortgages "Hüpoteeke pole",
   :no-owners-opinions "Arvamusi pole"},
+ :land-owner-opinions
+ {:opinions "Arvamused", :add-new-opinion "LISAN UUE ARVAMUSE"},
  :link
  {:search
   {:placeholder "Lisan viite...",

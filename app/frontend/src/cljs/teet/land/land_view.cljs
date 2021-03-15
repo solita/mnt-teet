@@ -1,4 +1,4 @@
-(ns teet.project.land-view
+(ns teet.land.land-view
   (:require [cljs-time.format :as tf]
             [clojure.string]
             [garden.color :refer [darken]]
@@ -12,7 +12,9 @@
             [teet.land.land-model :as land-model]
             [teet.land.land-specs]
             [teet.localization :refer [tr tr-enum tr-or]]
-            [teet.project.land-controller :as land-controller]
+            [teet.land.land-controller :as land-controller]
+            [teet.land.owner-opinion-view :as owner-opinion]
+            [teet.land.land-style :as land-style]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-colors :as theme-colors]
@@ -31,27 +33,8 @@
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.util.datomic :as du]
-            [teet.util.date :as date-teet]))
-
-(defn cadastral-unit-style
-  [selected?]
-  (let [bg-color (if selected?
-                   theme-colors/gray-lighter
-                   theme-colors/gray-lightest)]
-    ^{:pseudo {:hover {:background-color (darken bg-color 10)}}}
-    {:flex 1
-     :padding "0.5rem"
-     :display :flex
-     :flex-direction :column
-     :transition "background-color 0.2s ease-in-out"
-     :align-items :normal
-     :user-select :text
-     :background-color bg-color}))
-
-(defn impact-form-style
-  []
-  {:background-color theme-colors/gray-lighter
-   :padding "1.5rem"})
+            [teet.util.date :as date-teet]
+            [teet.ui.context :as context]))
 
 (defn impact-form-footer
   [disabled? {:keys [validate cancel]}]
@@ -68,11 +51,6 @@
                             :type :submit
                             :on-click validate}
     (tr [:buttons :save])]])
-
-(defn estate-compensation-form-style
-  []
-  {:background-color :inherit
-   :padding "1.5rem"})
 
 (defn field-with-title
   [title field-name input-opts]
@@ -234,8 +212,8 @@
                            :justify-content :center
                            :align-items :center}}
              [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/third-party-compensations %))}
-              [buttons/link-button {} [icons/action-delete {:font-size :small}]
-               ]]]]]
+              [buttons/link-button {}
+               [icons/action-delete {:font-size :small}]]]]]]
 
         (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
           [:div
@@ -371,42 +349,16 @@
              :class (<class common-styles/gray-text)}
       status-text]]))
 
-(defn cadastral-unit-container-style
-  []
-  ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
-  {:border-left "1px solid white"
-   :display :flex
-   :position :relative
-   :flex 1
-   :flex-direction :column})
-
-(defn cadastral-unit-quality-style
-  [quality]
-  {:position :absolute
-   :left "-15px"
-   :top "50%"
-   :transform "translateY(-50%)"
-   :color (if (= quality :bad)
-            theme-colors/red
-            theme-colors/orange)})
-
-(defn owners-opinions [unit]
-  "Returns owners opinions about given cadastral unit"
-  (let [opinions [{:text "This is the first opinion" :date date-teet/start-of-today}
-                  {:text "This is one more opinion" :date date-teet/start-of-today}]
-        no-opinions []]
-    ;; TODO: implement
-    no-opinions))
-
-
 (defn cadastral-unit
-  [{:keys [e! project-info on-change estate-procedure-type cadastral-form]} {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  [{:keys [e! project-info on-change estate-procedure-type cadastral-form]}
+   {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}
+   owner-comments-enabled?]
   (let [saved-pos (some #(when (= teet-id (:land-acquisition/cadastral-unit %))
                            (:land-acquisition/pos-number %))
                         (:land-acquisitions project-info))
         deleted-unit? (:deleted unit)]
-    [:div {:class (<class cadastral-unit-container-style)}
-     [:div {:class (<class cadastral-unit-quality-style quality)}
+    [:div {:class (<class land-style/cadastral-unit-container-style)}
+     [:div {:class (<class land-style/cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
                                                     :bad "!!!"
                                                     :questionable "!"
@@ -415,7 +367,7 @@
                   :on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                   :on-click (e! land-controller/->ToggleLandUnit unit)
-                  :class (<class cadastral-unit-style selected?)}
+                  :class (<class land-style/cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}}
        (str (:L_AADRESS unit)
             " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]
@@ -434,7 +386,7 @@
      [Collapse
       {:in selected?
        :mount-on-enter true}
-      [:div {:class (<class impact-form-style)}
+      [:div {:class (<class land-style/impact-form-style)}
        [land-acquisition-form
         e!
         unit
@@ -457,16 +409,22 @@
                                         [common/count-chip {:label c}])]
                         :loading-state "-"}]
           (tr [:land-modal-page :files])])
-       (let [land-owners-opinions-count (count (owners-opinions unit))]
-         (if (zero? land-owners-opinions-count)
-           [common/Link {:style {:display :block}
-                         :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
-            [common/count-chip {:label land-owners-opinions-count}]
-            (tr [:land-modal-page :no-owners-opinions])]
-           [common/Link {:style {:display :block}
-                         :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
-            [common/count-chip {:label land-owners-opinions-count}]
-            (tr [:land-modal-page (if (= 1 land-owners-opinions-count) :owner-opinion :owner-opinions)])]))
+       (when owner-comments-enabled?
+         [common/Link {:style {:display :block}
+                       :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
+          [query/query {:e! e! :query :land-owner-opinion/opinions-count
+                        :state-path [:route :project :land-owner-comment-count teet-id]
+                        :state (get-in project-info [:land-owner-comment-count teet-id])
+                        :args {:project-id (:db/id project-info)
+                               :land-unit-id teet-id}
+                        :simple-view [(fn owner-comment-counts [c]
+                                        [:span
+                                         [common/count-chip {:label c}]
+                                         (tr [:land-modal-page (cond
+                                                                 (zero? c) :no-owners-opinions
+                                                                 (= 1 c) :owner-opinion
+                                                                 :else :owner-opinions)])])]
+                        :loading-state "-"}]])
        [common/Link {:style {:display :block}
                      :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
         [query/query {:e! e! :query :comment/count
@@ -485,15 +443,6 @@
                                                                  :else :comments)])]))]
                       :loading-state "-"}]]]]]))
 
-(defn group-style
-  []
-  {:width "100%"
-   :justify-content :space-between
-   :flex-direction :column
-   :align-items :flex-start
-   :user-select :text
-   :padding "0.5rem"})
-
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
@@ -510,7 +459,7 @@
       :heading-content
       [:<>
        (if estate-id
-         [ButtonBase {:class (<class group-style)
+         [ButtonBase {:class (<class land-style/group-style)
                       :on-click (e! land-controller/->ToggleOpenEstate estate-id)
                       :id (land-controller/estate-dom-id estate-id)}
 
@@ -518,7 +467,7 @@
           [:span (count units) " " (if (= 1 (count units))
                                      (tr [:land :unit])
                                      (tr [:land :units]))]]
-         [ButtonBase {:class (<class group-style)}
+         [ButtonBase {:class (<class land-style/group-style)}
 
           [typography/SectionHeading (tr [:land :no-estate-id])]
           [:span (count units) " " (if (= 1 (count units))
@@ -527,7 +476,7 @@
        [Collapse
         {:in (boolean (open-estates estate-id))
          :mount-on-enter true}
-        [:div {:class (<class estate-compensation-form-style)}
+        [:div {:class (<class land-style/estate-compensation-form-style)}
          [estate-group-form e! estate
           (r/partial land-controller/->UpdateEstateForm estate) estate-form]
          [Divider {:style {:margin "1rem 0"}}]
@@ -572,7 +521,7 @@
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
                                         (let [count (+ (get-in c [:comment/counts :comment/old-comments])
-                                                      (get-in c [:comment/counts :comment/new-comments]))]
+                                                       (get-in c [:comment/counts :comment/new-comments]))]
                                           [:span
                                            [common/comment-count-chip c]
                                            (tr [:land-modal-page (cond
@@ -583,12 +532,14 @@
       :children
       (mapc
         (fn [unit]
-          [cadastral-unit {:e! e!
-                           :project-info project-info
-                           :on-change land-controller/->UpdateCadastralForm
-                           :estate-procedure/type (:estate-procedure/type estate-form)
-                           :cadastral-form (get cadastral-forms (:teet-id unit))}
-           unit])
+          [context/consume
+           :owner-comments-enabled?
+           [cadastral-unit {:e! e!
+                            :project-info project-info
+                            :on-change land-controller/->UpdateCadastralForm
+                            :estate-procedure/type (:estate-procedure/type estate-form)
+                            :cadastral-form (get cadastral-forms (:teet-id unit))}
+            unit]])
         units)}]))
 
 (defn- number-of-owners
@@ -611,7 +562,7 @@
       {:heading-color theme-colors/gray
        :heading-text-color theme-colors/white
        :heading-content
-       [:div {:class (<class group-style)}
+       [:div {:class (<class land-style/group-style)}
         (if owner
           [:div {:class (<class common-styles/flex-row-space-between)}
            (let [num-owners (number-of-owners shares)]
@@ -708,7 +659,9 @@
         (fn [group]
           [owner-group e!
            (select-keys project
-                        [:db/id :thk.project/id :land/units :land-acquisitions :unit-comment-count :estate-compensations :estate-comment-count])
+                        [:db/id :thk.project/id :land/units :land-acquisitions
+                         :unit-comment-count :estate-compensations :estate-comment-count
+                         :land-owner-comment-count])
            (or (:land/open-estates project) #{})
            (:land/cadastral-forms project)
            (:land/estate-forms project)
@@ -1051,36 +1004,16 @@
                                 :after-comment-added-event
                                 #(land-controller/->IncrementUnitCommentCount target)
                                 :after-comment-deleted-event
-                                #(land-controller/->DecrementUnitCommentCount target)
-                                }])
+                                #(land-controller/->DecrementUnitCommentCount target)}])
 
-(defn- get-unit-by-teet-id
-  [project teet-id]
-  (first (filter #(= (:teet-id %) teet-id) (:land/units project))))
 
 (defmethod unit-modal-content :owners-opinions
   [{:keys [estate-info e! target app project] :as unit}]
-  (let [opinions (owners-opinions estate-info)
-        unit (get-unit-by-teet-id project target)
-        l-address (:L_AADRESS unit)
-        purpose (:SIHT1 unit)]
-    [:div {:class (<class common-styles/gray-container-style)}
-     [buttons/button-primary {:start-icon (r/as-element [icons/content-add])}
-      (tr [:unit-modal-page :add-new-owner-opinion])]
-     [:div {:class (<class common-styles/gray-container-style)}
-      [:span (str "ARVAMUSED " l-address " (" purpose ") " target)]]
-     [:div {:class (<class common-styles/gray-container-style)}
-      (if (not-empty opinions)
-        (for [opinion opinions]
-          [common/heading-and-grey-border-body
-           {:heading [:<>
-                      [typography/BoldGreyText {:style {:display :inline}}
-                       (str (:text opinion))
-                       [typography/GreyText {:style {:display :inline}}
-                        (:date opinion)]]]
-            :body [:div
-                   [:span "Land owner"]]}])
-        [:p (tr [:land :no-owners-opinions])])]]))
+  [owner-opinion/owner-opinions-unit-modal {:estate-info estate-info
+                                            :e! e!
+                                            :target target
+                                            :app app
+                                            :project project}])
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
@@ -1114,7 +1047,7 @@
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :estate-data])
-                [:burdens :mortgages :costs :comments ]]
+                [:burdens :mortgages :costs :comments]]
    :right-panel [estate-modal-content {:e! e!
                                        :page modal-page
                                        :app app
@@ -1127,9 +1060,12 @@
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :unit-info])
-                [:files
-                 :comments
-                 :owners-opinions]]
+                (if (:land-owner-opinions (:enabled-features app))
+                  [:files
+                   :comments
+                   :owners-opinions]
+                  [:files
+                   :comments])]
    :right-panel [unit-modal-content {:e! e!
                                      :modal-page modal-page
                                      :app app
@@ -1158,7 +1094,7 @@
     [panels/modal+ (merge {:title (tr [:land-acquisition modal])
                            :open-atom (r/wrap (boolean modal) :_)
                            :on-close (e! project-controller/->CloseDialog)
-                           :max-width :md}
+                           :max-width "xl"}
                           (land-view-modal {:e! e!
                                             :app app
                                             :modal modal
@@ -1185,25 +1121,26 @@
                                  (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project))))))
      :reagent-render
      (fn [e! app project]
-       (let [fetching? (nil? (:land/units project))]
-         [:div
-          (when (not fetching?)
-            [land-view-modals e! app project])
-          [:div {:style {:margin-top "1rem"}
-                 :class (<class common-styles/heading-and-action-style)}
-           [authorization-check/when-authorized :land/refresh-estate-info
-            project
-            [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
-             (tr [:land :refresh-estate-info])]]]
-          (if (:land/estate-info-failure project)
-            [:div
-             [:p (tr [:land :estate-info-fetch-failure])]
-             [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates land-controller/estate-fetch-retries)}
-              "Try again"]]
-            (if fetching?
-              [:div
-               [:p (tr [:land :fetching-land-units])]
-               [CircularProgress {}]]
-              [:div
-               [filter-units e! (:land-acquisition-filters project)]
-               [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))
+       [context/provide :owner-comments-enabled? (boolean (:land-owner-opinions (:enabled-features app)))
+        (let [fetching? (nil? (:land/units project))]
+          [:div
+           (when (not fetching?)
+             [land-view-modals e! app project])
+           [:div {:style {:margin-top "1rem"}
+                  :class (<class common-styles/heading-and-action-style)}
+            [authorization-check/when-authorized :land/refresh-estate-info
+             project
+             [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+              (tr [:land :refresh-estate-info])]]]
+           (if (:land/estate-info-failure project)
+             [:div
+              [:p (tr [:land :estate-info-fetch-failure])]
+              [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates land-controller/estate-fetch-retries)}
+               "Try again"]]
+             (if fetching?
+               [:div
+                [:p (tr [:land :fetching-land-units])]
+                [CircularProgress {}]]
+               [:div
+                [filter-units e! (:land-acquisition-filters project)]
+                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])])}))
