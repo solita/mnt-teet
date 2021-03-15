@@ -4,7 +4,7 @@
             [reagent.core :as r]
             [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
-            [teet.project.land-controller :as land-controller]
+            [teet.land.land-controller :as land-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-specs]
             [teet.ui.buttons :as buttons]
