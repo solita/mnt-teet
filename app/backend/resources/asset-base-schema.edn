@@ -72,4 +72,13 @@
   :db/doc "The ctype of this component"
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one}
+
+ {:db/ident :attribute/min-value
+  :db/doc "The minimum value of an attribute or length for strings."
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
+ {:db/ident :attribute/max-value
+  :db/doc "The maximum value of an attribute or length for strings."
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
  ]
