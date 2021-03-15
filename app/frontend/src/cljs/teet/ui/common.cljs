@@ -422,6 +422,14 @@
                   :border-bottom (str "solid 1px " theme-colors/gray-light)}}
     body]])
 
+(defn text-and-buttons-list-item [{:keys [item-text item-buttons]}]
+  [:div {:style {:padding-top "1rem" :padding-bottom "1rem"
+                 :border-bottom (str "solid 1px " theme-colors/gray-light)}}
+   [:div {:style {:margin-bottom "0.25rem"}}
+    item-text]
+   [:div {:styl {:padding-bottom "0.5rem"}}
+    item-buttons]])
+
 (def number-formatter (js/Intl.NumberFormat "et-EE" #js {:style "currency"
                                                          :currency "EUR"}))
 

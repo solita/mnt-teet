@@ -395,7 +395,10 @@
 (defn owners-opinions [unit]
   "Returns owners opinions about given cadastral unit"
   (let [opinions [{:text "This is the first opinion" :date "10/03/2021"}
-                  {:text "This is one more opinion" :date "11/03/2021"}]
+                  {:text "This is one more opinion" :date "11/04/2021"}
+                  {:text "This is 3rd opinion" :date "11/05/2021"}
+                  {:text "This is 4-th opinion" :date "11/06/2021"}
+                  {:text "This is 5-th opinion" :date "11/07/2021"}]
         no-opinions []]
     ;; TODO: implement
     opinions))
@@ -1081,25 +1084,32 @@
         unit (get-unit-by-teet-id project target)
         l-address (:L_AADRESS unit)
         purpose (:SIHT1 unit)]
-    [:div {:class (<class common-styles/gray-container-style)}
+    [:div {:class (<class common-styles/yellow-style)}
      [buttons/button-primary {:start-icon (r/as-element [icons/content-add])}
       (tr [:unit-modal-page :add-new-owner-opinion])]
-     [:div {:class (<class common-styles/gray-container-style)}
+
+     [:div {:class (<class common-styles/red-style)}
       [:span (str "ARVAMUSED " l-address " (" purpose ") " target)]]
-     [:div {:class (<class common-styles/gray-container-style)}
+
+     [:div {:class (<class common-styles/green-style)}
       (if (not-empty opinions)
         (for [opinion opinions]
-          [common/heading-and-body
-           {:heading [:<>
+          [common/text-and-buttons-list-item
+           {:item-text [:<>
                       [typography/BoldGreyText {:style {:display :inline}}
                        (str (:text opinion))]
                       [typography/GreyText {:style {:display :inline}}
                        (str " " (:date opinion))]
-                      [buttons/button-blue-small
-                       {:on-click toggle-open}
-                       [(if (open?) icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
-                       (if (open?) (tr [:buttons :close]) (tr [:buttons :open]))]]
-            :body [:div
+                      [:span {:style {:display :inline}}
+                       [buttons/button-blue-small
+                        {:on-click toggle-open}
+                        [(if (open?) icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+                        (if (open?) (tr [:buttons :close]) (tr [:buttons :open]))]
+                       [buttons/button-blue-small
+                        {:on-click toggle-open}
+                        [(if (open?) icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+                        (if (open?) (tr [:buttons :close]) (tr [:buttons :open]))]]]
+            :item-buttons [:div
                    [:span {:class (<class common-styles/flex-align-end)}]]}])
         [:p (tr [:land :no-owners-opinions])])]]))
 

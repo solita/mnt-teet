@@ -50,10 +50,9 @@
   ^{:pseudo {:hover {:background-color (str theme-colors/blue-dark " !important")}
              :focus (str theme-colors/button-focus-style " !important")}}
   {:background-color (str theme-colors/blue " !important")
-   :color            (str theme-colors/white " !important")
+   :color (str theme-colors/white " !important")
+   :padding "0 1rem 0 1rem !important"
    :line-height "1 !important"
-   :padding-left "0.875rem !important"
-   :padding-right "0.875rem !important"
    :float "right !important"})
 
 (defn- button-text-warning-style

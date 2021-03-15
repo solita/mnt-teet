@@ -440,6 +440,18 @@
   {:background-color theme-colors/gray-lightest
    :padding "1.5rem"})
 
+(defn empty-style [] {})
+
+(defn yellow-style [] {:background-color :white
+                       :padding-bottom "1rem !important"})
+
+(defn red-style [] {:background-color :white
+                    :padding-bottom "2rem !important"
+                    :padding-top "3rem !important"
+                    :border-bottom (str "1px solid " theme-colors/gray-light)})
+
+(defn green-style [] {:background-color :white})
+
 (defn label-text-style
   []
   {:display :block
