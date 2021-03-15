@@ -56,6 +56,9 @@
     {:katastriyksus (mapv d-cadastral-unit* k-data-seq)}))
 
 (defn d-estate-name [kdr-xml]
+  ;; There can be several instances of jagu0 information, which represents the change history.
+  ;; Usually there seems to be only one record with the name, and possibly another time period when the name is blank.
+  ;; If the need arises, we can implement more logic here in the future.
   (let [k-data-seq (z/xml-> kdr-xml :jagu0 :a:Jagu0 :a:nimi)
         res {:nimi (str/join ", "
                              (filter (complement str/blank?)
