@@ -421,7 +421,7 @@
                                         [:span
                                          [common/count-chip {:label c}]
                                          (tr [:land-modal-page (cond
-                                                                 (zero? c) :no-owneres-opinions
+                                                                 (zero? c) :no-owners-opinions
                                                                  (= 1 c) :owner-opinion
                                                                  :else :owner-opinions)])])]
                         :loading-state "-"}]])
