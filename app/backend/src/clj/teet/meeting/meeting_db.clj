@@ -265,6 +265,28 @@
                       m))]
     (walk/postwalk walker-fn tree)))
 
+(defn export-meeting* [db id]
+  (d/pull db '[:db/id
+               :meeting/title
+               :meeting/location
+               :meeting/start
+               :meeting/end
+               :meeting/number
+               {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
+               {:meeting/agenda [:db/id
+                                 :meeting.agenda/topic
+                                 :meeting.agenda/body
+                                 {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
+                                 {:meeting.agenda/decisions [:db/id :meeting.decision/body :meeting.decision/number
+                                                             {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
+                                 {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
+               {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
+                             {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
+               {:participation/_in [:participation/role
+                                    :meta/deleted?
+                                    {:participation/participant [:db/id :user/family-name :user/given-name :user/id]}
+                                    :participation/absent?]}] id))
+
 (defn export-meeting
   "Fetch information required for export meeting PDF"
   [db user id]
@@ -278,23 +300,4 @@
    (without-incomplete-uploads 
     (meta-query/without-deleted
      db
-     (d/pull db '[:db/id
-                  :meeting/title
-                  :meeting/location
-                  :meeting/start
-                  :meeting/end
-                  :meeting/number
-                  {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
-                  {:meeting/agenda [:db/id
-                                    :meeting.agenda/topic
-                                    :meeting.agenda/body
-                                    {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
-                                    {:meeting.agenda/decisions [:db/id :meeting.decision/body :meeting.decision/number
-                                                                {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
-                                    {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
-                  {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
-                                {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
-                  {:participation/_in [:participation/role
-                                       :meta/deleted?
-                                       {:participation/participant [:db/id :user/family-name :user/given-name :user/id]}
-                                       :participation/absent?]}] id)))))
+     (export-meeting* db id)))))
