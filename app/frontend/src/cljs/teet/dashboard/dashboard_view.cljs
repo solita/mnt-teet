@@ -6,7 +6,6 @@
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-enum]]
             [teet.notification.notification-controller :as notification-controller]
-            [teet.project.land-view :as land-view]
             [teet.project.project-model :as project-model]
             [teet.project.task-model :as task-model]
             [teet.projects.projects-style :as projects-style]
@@ -18,7 +17,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.land.land-style :as land-style]))
 
 (defonce open-projects-atom (local-storage (r/atom #{}) "dashboard-open-projects"))
 
@@ -98,12 +98,12 @@
       :heading-text-color theme-colors/gray-dark
       :show-polygon? open?
       :heading-content
-      [ButtonBase {:class (<class land-view/group-style)
+      [ButtonBase {:class (<class land-style/group-style)
                    :on-click #(toggle-project (:db/id project))}
        [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
         [:div {:class (<class common-styles/space-between-center)}
          [:div {:class (<class projects-style/project-status-circle-style
-                                    (:thk.project/status project))}]
+                               (:thk.project/status project))}]
          [:div {:style {:flex-grow 10 :font-weight :bold}
                 :class (<class common-styles/inline-block)}
           (project-model/get-column project :thk.project/project-name)]]
