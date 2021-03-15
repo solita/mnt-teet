@@ -259,10 +259,9 @@
 
 
 (defn without-incomplete-uploads [tree]  
-  (let [filter-attached-to #(some? (:file/upload-complete? %))
-        walker-fn (fn [m]
+  (let [walker-fn (fn [m]
                     (if (not-empty (:file/_attached-to m))
-                      (update m :file/_attached-to #(filterv filter-attached-to %))
+                      (update m :file/_attached-to #(filterv :file/upload-complete? %))
                       m))]
     (walk/postwalk walker-fn tree)))
 
@@ -291,8 +290,8 @@
                                     :meeting.agenda/body
                                     {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
                                     {:meeting.agenda/decisions [:db/id :meeting.decision/body :meeting.decision/number
-                                                                {:file/_attached-to [:file/name :db/id]}]}
-                                    {:file/_attached-to [:file/name :db/id]}]}
+                                                                {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
+                                    {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
                   {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
                                 {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
                   {:participation/_in [:participation/role
