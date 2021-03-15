@@ -74,10 +74,17 @@
   :add-cost-item "Add cost item",
   :feature-group-and-class-placeholder
   "Search feature group or class...",
-  :no-matching-feature-classes "No matching feature classes."},
+  :no-matching-feature-classes "No matching feature classes.",
+  :validate
+  {:min-length
+   "Text too short, insert at least {min-length} characters",
+   :max-length "Text too long, insert at most {max-length} characters",
+   :min-value "Minimum allowed value: {min-value}",
+   :max-value "Maximum allowed value: {max-value}"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
+  :open "Open",
   :continue "Continue",
   :edit "Edit",
   :delete "Delete",
@@ -300,6 +307,8 @@
   :notification.type/cooperation-response-to-application-added
   "Application is waiting for authority position",
   :task.status/canceled "Canceled",
+  :land-owner-opinion.type/design-conditions-draft
+  "Draft act of Design Conditions",
   :land-acquisition.impact/purchase-not-needed
   "Acquisition not needed",
   :task.type/funding-plan "Funding plan",
@@ -329,6 +338,7 @@
   :cooperation.application.type/building-permit-draft
   "Draft act of Building Permit",
   :activity.status/in-review "In review",
+  :land-owner-opinion.type/eia-report "EIA report",
   :land-acquisition.status/in-progress-problematic
   "In progress - problematic ",
   :task.type/property-valuation "Property valuation",
@@ -338,6 +348,7 @@
   :file.status/ready "Ready",
   :activity.name/detailed-design "Detailed design",
   :activity.status/expired "Expired",
+  :land-owner-opinion.type/construction "Construction",
   :notification.type/task-waiting-for-review "Task waiting for review",
   :file.status/approved "Approved / Valid",
   :task.type/acceptances "Acceptances",
@@ -437,6 +448,7 @@
   :estate-compensation.reason/crops "Crops",
   :thk.task-type/design-requirements "Design requirements",
   :cooperation.response.status/objection "Objection",
+  :land-owner-opinion.type/ex-ante-eia "Ex-ante EIA ",
   :task.group/base-data "Base data ",
   :task.status/completed "Completed",
   :task.type/building-permit "Building permit",
@@ -455,6 +467,7 @@
   :task.type/road-safety-audit "Road Safety Audit",
   :notification.type/project-manager-assigned
   "You have been assigned as project manager",
+  :land-owner-opinion.type/design "Design",
   :task.type/geology "Geology",
   :notification.type/task-review-rejected "Task review rejected",
   :cooperation.response.status/no-response "No response",
@@ -606,6 +619,7 @@
   :meeting/title "Title",
   :estate-procedure/process-fees "Processing fees",
   :thk.project/activity-status "Status",
+  :land-owner-opinion/type "Opinion type",
   :meeting/date-and-time "Date and time",
   :task/assignee "Responsible person",
   :land-exchange/price-per-sqm "Price/m²",
@@ -615,6 +629,7 @@
   :activity/manager "Project manager",
   :cooperation.response/valid-months "Validity in months",
   :cooperation.response/valid-until "Expiration date",
+  :land-owner-opinion/authority-position "Authorities position",
   :cooperation.opinion/status "Opinion of Competent Authority",
   :activity/status "Status",
   :cooperation.contact/id-code "Business reg / personal ID code",
@@ -663,6 +678,8 @@
   :participation/participant "User",
   :land-acquisition/status "Status",
   :common {"description" "Description", "name" "Name"},
+  :land-owner-opinion/respondent-connection-to-land
+  "Respondents connection to the land",
   :land-acquisition/pos-number "POS#",
   :meeting.agenda/responsible "Responsible person",
   :document/sub-category "Document subtype",
@@ -680,10 +697,12 @@
   :cooperation.3rd-party/phone "Contact phone",
   :cooperation.application/comment "Comment",
   :comment/track? "Track status",
+  :land-owner-opinion/body "Response body",
   :user/roles "Roles",
   :document/author "Author",
   :file/name "Name",
   :cooperation.contact/email "Email",
+  :land-owner-opinion/respondent-name "Respondent name",
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
   :thk.project/region-name "Region",
@@ -691,6 +710,7 @@
   :estate-procedure/urgent-bonus "Urgent fee",
   :cooperation.contact/phone "Phone",
   :comment/comment "Comment",
+  :land-owner-opinion/activity "Activity",
   :file/timestamp "Upload date",
   :cooperation.3rd-party/email "E-mail address",
   :user/email "Email",
@@ -710,10 +730,12 @@
   :activity/name "Activity name",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
+  :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
   :cooperation.contact/name "Name",
   :file/document-group "Group",
   :meeting.agenda/body "Body",
+  :land-owner-opinion/link-to-response "Link to response",
   :estate-procedure/type "Procedure type",
   :thk.project/road-name "Road name",
   :thk.project/estimated-date-range "Estimated duration",
@@ -833,7 +855,6 @@
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
   :estate-filter-label "Estate",
-  :owners-opinions "Land owners opinions",
   :no-land-acquisitions "No land acquisitions for this estate",
   :fetching-land-units "Fetching land units",
   :refresh-estate-info "Refresh estates",
@@ -864,6 +885,8 @@
   :owners-opinions "Land owners opinions",
   :no-mortgages "No mortgages",
   :no-owners-opinions "No opinions"},
+ :land-owner-opinions
+ {:opinions "Opinions", :add-new-opinion "ADD NEW OPINION"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
