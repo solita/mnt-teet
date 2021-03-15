@@ -112,6 +112,10 @@
    :border-color theme-colors/border-dark
    :padding "1rem"})
 
+(def open? (r/atom false))
+
+(defn toggle-open [] (swap! open? not))
+
 (defn owner-opinion-row
   [e! project target opinion]
   [:div {:class (<class land-owner-opinion-row-style)}
@@ -120,7 +124,11 @@
      (:land-owner-opinion/respondent-name opinion)]
     [typography/SmallText {:style {:padding-left "0.25rem"
                                    :display :inline}}
-     (:land-owner-opinion/respondent-connection-to-land opinion)]]])
+     (:land-owner-opinion/respondent-connection-to-land opinion)]
+    [buttons/button-blue-small
+     {:on-click toggle-open}
+     [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+     (if  @open? (tr [:buttons :close]) (tr [:buttons :open]))]]])
 
 (defn owner-opinions-list
   [e! project unit target opinions]

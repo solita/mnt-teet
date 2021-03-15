@@ -264,3 +264,18 @@
        [Paper
         [MenuList {}
          (util/mapc button-with-menu-item items)]]]]]))
+
+(defn- blue-button-style
+  []
+  ^{:pseudo {:hover {:background-color (str theme-colors/blue-dark " !important")}
+             :focus (str theme-colors/button-focus-style " !important")}}
+  {:background-color (str theme-colors/blue " !important")
+   :color (str theme-colors/white " !important")
+   :padding "0 1rem 0 1rem !important"
+   :line-height "1 !important"
+   :float "right !important"})
+
+(def button-blue-small
+  (util/make-component Button {:variant        :contained
+                               :disable-ripple true
+                               :class          (<class blue-button-style)}))
