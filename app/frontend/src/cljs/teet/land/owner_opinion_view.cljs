@@ -5,7 +5,7 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.select :as select]
             teet.land.owner-opinion-specs
-            [teet.ui.material-ui :refer [Collapse Paper Grid]]
+            [teet.ui.material-ui :refer [Collapse Paper Grid Popper ButtonBase Divider IconButton]]
             [teet.ui.date-picker :as date-picker]
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.common.common-controller :as common-controller]
@@ -17,9 +17,12 @@
             [teet.ui.typography :as typography]
             [teet.land.land-controller :as land-controller]
             [teet.land.owner-opinion-controller :as opinion-controller]
+            [teet.land.owner-opinion-style :as owner-opinion-style]
             [teet.ui.query :as query]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.date :as date]
+            [teet.ui.authorization-context :as authorization-context]))
 
 (defn add-opinion-heading-style
   []
@@ -112,23 +115,101 @@
    :border-color theme-colors/border-dark
    :padding "1rem"})
 
+(defn opinion-view-container
+  [{:keys [content text-color open? heading heading-button on-toggle-open]
+    :or {open? false}} bg-color]
+  (r/with-let [open? (r/atom open?)
+               toggle-open! #(do
+                               (when on-toggle-open
+                                 (on-toggle-open))
+                               (.stopPropagation %)
+                               (swap! open? not))]
+    [:div {:class (<class common/hierarchical-heading-container2 bg-color text-color @open?)}
+     [:div
+      [:div {:class [(<class owner-opinion-style/opinion-container-heading-box)]}
+       [:div {:style {:flex-grow 1
+                      :text-align :start}}
+        heading]
+       (when (and heading-button @open?)
+         [:div {:style {:flex-grow 0}
+                :on-click (fn [e]
+                            (.stopPropagation e))}
+          heading-button])
+       [:div {:style {:margin-left "1rem"}}
+        [buttons/button-primary
+         {:size :small
+          :on-click toggle-open!}
+         [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]]
+        ]]]
+     (when content
+       [Collapse {:in @open?
+                  :mount-on-enter true}
+        [:div {:style {:padding "1rem"}}
+         content]])])
+  )
+
+(defn owner-opinion-heading []
+  ;; TODO: implement
+  )
+
+(defn opinion-form []
+  ;; TODO: implement
+  )
+
+(defn opinion-content [e! {id :db/id
+                           body :land-owner-opinion/body}
+                       edit-right? editing?]
+  [:div {:id (str "opinion-" id)}
+   (if (and body (not editing?))
+     [:div
+      [rich-text-editor/display-markdown body]]
+     (println "opinion-content is hidden"))])
+
+(defn owner-opinion-details
+  [e! {:keys [edit-rights?]}
+   {id :db/id
+    :land-owner-opinion/keys [respondent-connection-to-land]
+    :as opinion}]
+  (r/with-let [seen-at (date/start-of-today)
+               [pfrom pto] (common/portal)
+               edit-open-atom (r/atom false)]
+    [opinion-view-container
+     {:heading [owner-opinion-heading seen-at opinion]
+      :on-toggle-open #(e! (println "Opinion view toggled"))
+      :open? true
+      :heading-button [form/form-container-button
+                          {:form-component [opinion-form e! opinion]
+                           :container pfrom
+                           :open-atom edit-open-atom
+                           :id (str "edit-opinion-" id)
+                           :form-value (select-keys opinion [:land-owner-opinion/body
+                                                             :land-owner-opinion/topic :db/id
+                                                             :land-owner-opinion/respondent-connection-to-land])
+                           :button-component [buttons/button-secondary {:size :small}
+                                              (tr [:buttons :edit])]}]
+      :content
+      [:<>
+       [pto]
+       [opinion-content e! opinion edit-rights? @edit-open-atom]]
+      :children []
+      :after-children-component nil}]))
+
 (def open? (r/atom false))
 
 (defn toggle-open [] (swap! open? not))
 
 (defn owner-opinion-row
-  [e! project target opinion]
-  [:div {:class (<class land-owner-opinion-row-style)}
-   [:div
-    [typography/TextBold {:style {:display :inline}}
-     (:land-owner-opinion/respondent-name opinion)]
-    [typography/SmallText {:style {:padding-left "0.25rem"
-                                   :display :inline}}
-     (:land-owner-opinion/respondent-connection-to-land opinion)]
-    [buttons/button-blue-small
-     {:on-click toggle-open}
-     [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
-     (if  @open? (tr [:buttons :close]) (tr [:buttons :open]))]]])
+  [e! project target opinion rights]
+  (let [authorization {:edit-rights? (get rights :edit-opinion)
+                       :review-rights? (get rights :review-opinion)}]
+    [:div {:class (<class land-owner-opinion-row-style)}
+     [:div
+      [typography/TextBold {:style {:display :inline}}
+       (:land-owner-opinion/respondent-name opinion)]
+      [typography/SmallText {:style {:padding-left "0.25rem"
+                                     :display :inline}}
+       (:land-owner-opinion/respondent-connection-to-land opinion)]
+      [owner-opinion-details e! authorization opinion]]]))
 
 (defn owner-opinions-list
   [e! project unit target opinions]
@@ -151,7 +232,8 @@
        (map
          (fn [opinion]
            ^{:key (:db/id opinion)}
-           [owner-opinion-row e! project target opinion])
+           [authorization-context/consume
+            [owner-opinion-row e! project target opinion]])
          opinions))]))
 
 (defn owner-opinions-unit-modal
