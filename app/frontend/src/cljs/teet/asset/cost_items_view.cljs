@@ -20,7 +20,6 @@
             [herb.core :refer [<class]]
             [teet.ui.common :as common]
             [teet.ui.container :as container]
-            [teet.common.common-controller :as common-controller]
             [teet.asset.cost-items-controller :as cost-items-controller]
             [teet.asset.asset-type-library :as asset-type-library]))
 
