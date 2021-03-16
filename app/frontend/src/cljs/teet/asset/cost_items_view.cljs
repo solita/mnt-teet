@@ -19,7 +19,15 @@
             [teet.common.responsivity-styles :as responsivity-styles]
             [herb.core :refer [<class]]
             [teet.ui.common :as common]
-            [teet.ui.container :as container]))
+            [teet.ui.container :as container]
+            [teet.common.common-controller :as common-controller]
+            [teet.asset.cost-items-controller :as cost-items-controller]
+            [teet.asset.asset-type-library :as asset-type-library]))
+
+(defonce next-id (atom 0))
+
+(defn- next-id! [prefix]
+  (str prefix (swap! next-id inc)))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -66,7 +74,7 @@
                :xs 12
                :style {:padding "0.2rem"}}
          [form/field {:attribute ident
-                      :required? mandatory?
+                      ;:required? mandatory?
                       :validate (r/partial validate (:db/ident valueType) min-value max-value)}
           (if (= type :db.type/ref)
             ;; Selection value
@@ -219,22 +227,24 @@
             :on-change #(on-change [fg %])}])]])))
 
 (defn- add-cost-item-form [e! asset-type-library]
-  (r/with-let [form-data (r/atom {})
+  (r/with-let [form-data (r/atom {:db/id (next-id! "costitem")})
                on-change-event (form/update-atom-event
                                 form-data
-                                cu/deep-merge)]
+                                cu/deep-merge)
+               save-event (cost-items-controller/save-asset-event form-data)]
     (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
       [:<>
 
        [form/form2
         {:e! e!
          :on-change-event on-change-event
-         :value @form-data}
+         :value @form-data
+         :save-event save-event}
 
         [form/field {:attribute :feature-group-and-class}
          [group-and-class-selection {:e! e!
                                      :fgroups (:fgroups asset-type-library)
-                                     :read-only? (seq (dissoc @form-data :feature-group-and-class))
+                                     :read-only? (seq (dissoc @form-data :feature-group-and-class :db/id))
                                      :name (:common/name @form-data)}]]
 
         (when feature-class
@@ -245,45 +255,61 @@
            ;; Components
            [form/field {:attribute :asset/components}
             [components {:e! e!
-                         :allowed-components (:ctype/_parent feature-class)}]]])]
+                         :allowed-components (:ctype/_parent feature-class)}]]])
+
+        [form/footer2]
+        ]
 
        ;; FIXME: remove when finalizing form
        [df/DataFriskView @form-data]])))
 
-(defn- rotl-map
-  "Return a flat mapping of all ROTL items, by :db/ident."
-  [rotl]
-  (into {}
-        (map (juxt :db/ident identity))
-
-        ;; collect maps that have :db/ident and more fields apart from identity
-        (cu/collect #(and (map? %)
-                          (contains? % :db/ident)
-                          (seq (dissoc % :db/id :db/ident)))
-                    rotl)))
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! fgroups add?]}]
-  (r/with-let [add-cost-item! #(reset! add? true)]
+  [{:keys [e! cost-items add?]}]
+  (r/with-let [add-cost-item! #(reset! add? true)
+               open (r/atom #{})
+               toggle-open! #(swap! open cu/toggle %)]
     [:div
      [buttons/button-secondary {:on-click add-cost-item!
                                 :disabled? @add?
                                 :start-icon (r/as-element
                                              [icons/content-add])}
-      (tr [:asset :add-cost-item])]]))
+      (tr [:asset :add-cost-item])]
 
-(defn cost-items-page [e! app {:keys [fgroups project
+     [:div.cost-items-by-fgroup
+      (doall
+       (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
+         ^{:key (str ident)}
+         [container/collapsible-container
+          {:on-toggle (r/partial toggle-open! ident)
+           :open? (contains? @open ident)}
+          (tr* fgroup)
+          [:div.cost-items-by-fclass {:data-fgroup (str ident)
+                                      :style {:margin-left "0.5rem"}}
+           (doall
+            (for [[{ident :db/ident :as fclass} cost-items] fclasses]
+              ^{:key (str ident)}
+              [container/collapsible-container
+               {:on-toggle (r/partial toggle-open! ident)
+                :open? (contains? @open ident)}
+               (tr* fclass)
+               [:div.cost-items {:style {:margin-left "2rem"}}
+                (for [{id :db/id :common/keys [name]} cost-items]
+                  ^{:key (str id)}
+                  [:div name])]]))]]))]]))
+
+(defn cost-items-page [e! app {:keys [cost-items project
                                       asset-type-library]}]
   (r/with-let [add? (r/atom false)]
-    [context/provide :rotl (rotl-map asset-type-library)
+    [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
      [project-view/project-full-page-structure
       {:e! e!
        :app app
        :project project
        :left-panel [cost-item-hierarchy {:e! e!
                                          :add? add?
-                                         :fgroups fgroups}]
+                                         :cost-items cost-items}]
        :main [:div
               [typography/Heading2 (tr [:project :tabs :cost-items])]
 

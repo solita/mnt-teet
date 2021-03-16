@@ -4,64 +4,23 @@
             [teet.environment :as environment]
             [teet.util.datomic :as du]
             [clojure.walk :as walk]
-            [teet.project.project-db :as project-db]))
-
-(def ctype-pattern
-  '[*
-    {:ctype/_parent [*]}
-    {:attribute/_parent
-     [*
-      {:enum/_attribute [*]}]}])
-
-(def type-library-pattern
-  `[~'*
-    {:fclass/_fgroup
-     [~'*
-      {:attribute/_parent [~'* {:enum/_attribute [~'*]}]}
-      {:ctype/_parent ~ctype-pattern}]}])
-
-(defn- ctype? [x]
-  (and (map? x)
-       (du/enum= (:asset-schema/type x) :asset-schema.type/ctype)))
-
-(defn- child-ctypes [db ctype]
-  (update ctype :ctype/_parent
-          #(->> %
-                (mapv
-                 (fn [child]
-                   (if (ctype? child)
-                     (d/pull db ctype-pattern (:db/id child))
-                     child))))))
-
-(defn- asset-type-library [db]
-  {:ctype/common (d/pull db ctype-pattern :ctype/common)
-   :fgroups
-   (walk/postwalk
-    (fn [x]
-      (if (ctype? x)
-        (child-ctypes db x)
-        x))
-
-    (mapv first
-          (d/q '[:find (pull ?fg p)
-                 :where [?fg :asset-schema/type :asset-schema.type/fgroup]
-                 :in $ p]
-               db type-library-pattern)))})
+            [teet.project.project-db :as project-db]
+            [teet.asset.asset-db :as asset-db]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
    :context _
    :unauthenticated? true
    :args _}
-  (asset-type-library (environment/asset-db)))
+  (asset-db/asset-type-library (environment/asset-db)))
 
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
-   :context {:keys [db user]}
+   :context {:keys [db user] adb :asset-db}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
-  {:asset-type-library (asset-type-library (environment/asset-db))
-   :fgroups []
+  {:asset-type-library (asset-db/asset-type-library adb)
+   :cost-items (asset-db/project-cost-items adb project-id)
    :project (project-db/project-by-id db [:thk.project/id project-id])})

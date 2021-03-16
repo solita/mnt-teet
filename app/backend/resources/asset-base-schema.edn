@@ -93,7 +93,18 @@
   :db/cardinality :db.cardinality/one}
 
  {:db/ident :attribute/mandatory?
-  :db/doc "Is this attribuet mandatory when creating cost items"
+  :db/doc "Is this attribute mandatory when creating cost items"
   :db/valueType :db.type/boolean
+  :db/cardinality :db.cardinality/one}
+
+ ;; PENDING: one asset can be updated in many projects during
+ ;; its lifecycle. Should this be a many to many link
+ ;; or multi valued...
+ ;; probably a new cost item asset is created in all projects
+ ;; and the old asset is changed to superseded state and
+ ;; the new one will take precedence.
+ {:db/ident :asset/project
+  :db/doc "The THK project id this asset is a cost item in"
+  :db/valueType :db.type/string
   :db/cardinality :db.cardinality/one}
  ]
