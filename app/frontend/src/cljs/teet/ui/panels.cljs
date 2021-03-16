@@ -58,10 +58,9 @@
 (defn modal-container-style
   []
   {:display :flex
-   :width "70vw"
    :background-color :white
    :border-radius "3px"
-   :height "70vh"})
+   :min-height "60vh"})
 
 (defn modal-left-panel-container
   []
@@ -73,12 +72,14 @@
   []
   {:flex    1
    :overflow :hidden
-   :padding "1rem"})
+   :padding "1rem"
+   :display :flex
+   :flex-direction :column})
 
 (defn right-panel-content-container
   []
   {:overflow-y :auto
-   :max-height "60vh"})
+   :flex 1})
 
 (defn right-panel-heading-style
   []
@@ -94,15 +95,15 @@
 
 (defn modal+
   "Advanced modal container"
-  [{:keys [title on-close open-atom left-panel right-panel] :as _opts}]
+  [{:keys [title on-close open-atom left-panel right-panel max-width] :as _opts
+    :or {max-width :md}}]
   (let [close-fn #(do
                     (reset! open-atom false)
                     (when on-close
                       (on-close)))]
     [Dialog {:open @open-atom
-             :class (<class modal-style)
              :close-after-transition true
-             :max-width :lg
+             :max-width max-width
              :on-close close-fn
              :full-width true}
      [:div {:class (<class modal-container-style)}

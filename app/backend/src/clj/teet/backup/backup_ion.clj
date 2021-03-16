@@ -6,8 +6,6 @@
             [teet.integration.integration-context :as integration-context
              :refer [ctx-> defstep]]
             [clojure.java.io :as io]
-            [clojure.pprint :as pprint]
-            [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
             [cheshire.core :as cheshire])
@@ -122,22 +120,22 @@
               (fn [attrs]
                 (if (contains? attrs a)
                   attrs
-                  (assoc attrs a (d/pull db '[:db/ident :db/valueType] a)))))
+                  (assoc attrs a (d/pull @db '[:db/ident :db/valueType] a)))))
        a))
 
 (def ^:private ignore-attributes
   "Internal datomic stuff that we can skip"
   #{:db.install/attribute})
 
-(defn- output-tx [db attr-info-cache {:keys [data]} ignore-attributes]
+(defn- output-tx [db-ref attr-info-cache {:keys [data]} ignore-attributes]
   (let [datoms (for [{:keys [e a v added]} data
                      :let [{:db/keys [ident]}
-                           (attr-info db attr-info-cache a)
+                           (attr-info db-ref attr-info-cache a)
 
                            ;; Turn :db/* values into idents
                            v (if (and (str/starts-with? (str ident) ":db/")
                                       (integer? v))
-                               (:db/ident (du/entity db v))
+                               (:db/ident (attr-info db-ref attr-info-cache v))
                                v)]
                      :when (not (ignore-attributes ident))]
                  [e ident v added])
@@ -179,7 +177,7 @@
 (defn- output-all-tx [conn out]
   (let [db (d/db conn)
         attr-ident-cache (atom {})
-        out! #(pprint/pprint % out)
+        out! #(binding [*out* out] (prn %))
         ref-attrs (into old-ref-attrs
                         (comp
                          (map first)
@@ -203,7 +201,7 @@
            :tuple-attrs tuple-attrs
            :backup-timestamp (java.util.Date.)})
     (doseq [tx (all-transactions conn)
-            :let [tx-map (output-tx (d/as-of db (:t tx)) attr-ident-cache tx
+            :let [tx-map (output-tx (delay (d/as-of db (:t tx))) attr-ident-cache tx
                                     ignore-attributes)]
             :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
       (out! tx-map)
