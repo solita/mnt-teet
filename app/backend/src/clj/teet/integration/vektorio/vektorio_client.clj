@@ -73,10 +73,8 @@
   (vektor-get vektor-conf (str "users/byAccount/" email)))
 
 (defn create-project!
-  [vektor-conf {:keys [name lat long epsg epsg-x epsg-y]
-                :or {lat 58.5953
-                     long 25.0136
-                     epsg 3301
+  [vektor-conf {:keys [name epsg epsg-x epsg-y]
+                :or {epsg 3301
                      epsg-x 6587782.87
                      epsg-y 544077.31}                          ;;Estonian center coordinates
                 }]
