@@ -72,7 +72,7 @@
   [vektor-conf email]
   (vektor-get vektor-conf (str "users/byAccount/" email)))
 
-(defn create-project!v
+(defn create-project!
   [vektor-conf {:keys [name lat long epsg epsg-x epsg-y]
                 :or {lat 58.5953
                      long 25.0136
