@@ -6,7 +6,6 @@
             [teet.integration.integration-context :as integration-context
              :refer [ctx-> defstep]]
             [clojure.java.io :as io]
-            [clojure.pprint :as pprint]
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
@@ -179,7 +178,7 @@
 (defn- output-all-tx [conn out]
   (let [db (d/db conn)
         attr-ident-cache (atom {})
-        out! #(pprint/pprint % out)
+        out! #(binding [*out* out] (prn %))
         ref-attrs (into old-ref-attrs
                         (comp
                          (map first)
