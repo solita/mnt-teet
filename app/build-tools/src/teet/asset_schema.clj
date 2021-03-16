@@ -60,16 +60,17 @@
 (def read-ctypes
   (partial read-sheet
            "ctype"
-           [:name :part-of
+           [:name :part-of :inherits-location?
             :label-et :label-en
             :description-et :description-en
-            :comment]
+            :agreed? :comment]
            #{:name :part-of}))
 
 (def read-pset
   (partial read-sheet
            "pset"
-           [:name :ctype :datatype :unit :cost-grouping? :mandatory?
+           [:name :ctype :datatype :unit :min-value :max-value
+            :cost-grouping? :mandatory?
             :label-et :label-en
             :description-et :description-en
             :comment]
@@ -90,6 +91,11 @@
                            (and (string? %) (str/blank? %)))
                       second))
         m))
+
+(defn- ->long [x]
+  (if (string? x)
+    (Long/parseLong x)
+    (long x)))
 
 (defn common-attrs [type {:keys [name comment label-et label-en
                                  description-et description-en]}]
@@ -152,6 +158,8 @@
                                  (exists? (:part-of ct)))))]
           (merge
            (common-attrs :asset-schema.type/ctype ct)
+           (when-let [il (:inherits-location? ct)]
+             {:component/inherits-location? il})
            (when (contains? ct :part-of)
              {:ctype/parent (str (:part-of ct))})))
 
@@ -172,7 +180,13 @@
             {:db/cardinality :db.cardinality/one ; PENDING: can be many?
              :db/valueType valueType
              :asset-schema/unit (:unit p)
-             :attribute/parent (str (:ctype p))})))
+             :attribute/parent (str (:ctype p))
+             :attribute/cost-grouping? (:cost-grouping? p)
+             :attribute/mandatory? (:mandatory? p)}
+            (when-let [min (:min-value p)]
+              {:attribute/min-value (->long min)})
+            (when-let [max (:max-value p)]
+              {:attribute/max-value (->long max)}))))
 
         ;; Output enum values
         (for [item list-items

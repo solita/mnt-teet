@@ -74,7 +74,13 @@
   :add-cost-item "Add cost item",
   :feature-group-and-class-placeholder
   "Search feature group or class...",
-  :no-matching-feature-classes "No matching feature classes."},
+  :no-matching-feature-classes "No matching feature classes.",
+  :validate
+  {:min-length
+   "Text too short, insert at least {min-length} characters",
+   :max-length "Text too long, insert at most {max-length} characters",
+   :min-value "Minimum allowed value: {min-value}",
+   :max-value "Maximum allowed value: {max-value}"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
