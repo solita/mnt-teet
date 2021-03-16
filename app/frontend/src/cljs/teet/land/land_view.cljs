@@ -34,6 +34,7 @@
             [teet.ui.util :refer [mapc]]
             [teet.util.datomic :as du]
             [teet.util.date :as date-teet]
+            [clojure.string :as str]
             [teet.ui.context :as context]))
 
 (defn impact-form-footer
@@ -446,6 +447,11 @@
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
+        estate-name (:nimi estate)
+        name-or-blank (if (str/blank? estate-name)
+                        ""
+                        ;; else
+                        (str " (" estate-name ")"))
         ;;these are all done just to calculate the total cost for the estate, there might be an easier way
         estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
                                                                        (:land/units project-info)
@@ -463,7 +469,7 @@
                       :on-click (e! land-controller/->ToggleOpenEstate estate-id)
                       :id (land-controller/estate-dom-id estate-id)}
 
-          [typography/SectionHeading (tr [:land :estate]) " " estate-id]
+          [typography/SectionHeading (tr [:land :estate]) " " estate-id name-or-blank]
           [:span (count units) " " (if (= 1 (count units))
                                      (tr [:land :unit])
                                      (tr [:land :units]))]]
@@ -654,6 +660,7 @@
                                   (select-keys owner [:isiku_tyyp :nimi]))))
                              (into #{}))))
                     units)]
+      ;; (def *u units)
       [:div
        (mapc
         (fn [group]

@@ -55,6 +55,16 @@
   (let [k-data-seq (z/xml-> kdr-xml :jagu1 :a:Jagu1 :a:katastriyksused :a:KinnistuKatastriyksus)]
     {:katastriyksus (mapv d-cadastral-unit* k-data-seq)}))
 
+(defn d-estate-name [kdr-xml]
+  ;; There can be several instances of jagu0 information, which represents the change history.
+  ;; Usually there seems to be only one record with the name, and possibly another time period when the name is blank.
+  ;; If the need arises, we can implement more logic here in the future.
+  (let [k-data-seq (z/xml-> kdr-xml :jagu0 :a:Jagu0 :a:nimi)
+        res {:nimi (str/join ", "
+                             (filter (complement str/blank?)
+                                     (mapv #(z/xml1-> % text) k-data-seq)))}]
+    res))
+
 (defn d-property-owners [kdr-xml]
   ;;; kdr = Kinnistu_DetailamdResponse from inside the soap body
   (let [owner-xml-seq (z/xml-> kdr-xml :jagu2 :a:Jagu2 :a:omandiosad :a:Jagu2.Omandiosa)
@@ -201,6 +211,7 @@
   (merge {:status :ok}
          (d-cadastral-units d-response)
          (d-property-owners d-response)
+         (d-estate-name d-response)
          (d-jagu34 d-response :jagu3)
          (d-jagu34 d-response :jagu4)))
 
