@@ -313,6 +313,8 @@
      {:external-destination url}
      [:fo:inline {:text-decoration "underline" :color "blue"} url]]))
 
+
+;; TBD: incomplete files removal
 (defn meeting-pdf
   ([db user language meeting-id]
    (meeting-pdf db user language meeting-id default-layout-config))

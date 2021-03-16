@@ -6,6 +6,7 @@
             [teet.meeting.meeting-model :as meeting-model]
             [teet.project.project-db :as project-db]
             [teet.link.link-db :as link-db]
+            [clojure.walk :as walk]
             [teet.meta.meta-query :as meta-query]))
 
 (defn meetings
@@ -256,6 +257,36 @@
       not-empty
       boolean))
 
+
+(defn without-incomplete-uploads [tree]  
+  (let [walker-fn (fn [m]
+                    (if (not-empty (:file/_attached-to m))
+                      (update m :file/_attached-to #(filterv :file/upload-complete? %))
+                      m))]
+    (walk/postwalk walker-fn tree)))
+
+(defn export-meeting* [db id]
+  (d/pull db '[:db/id
+               :meeting/title
+               :meeting/location
+               :meeting/start
+               :meeting/end
+               :meeting/number
+               {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
+               {:meeting/agenda [:db/id
+                                 :meeting.agenda/topic
+                                 :meeting.agenda/body
+                                 {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
+                                 {:meeting.agenda/decisions [:db/id :meeting.decision/body :meeting.decision/number
+                                                             {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
+                                 {:file/_attached-to [:file/name :db/id :file/upload-complete?]}]}
+               {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
+                             {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
+               {:participation/_in [:participation/role
+                                    :meta/deleted?
+                                    {:participation/participant [:db/id :user/family-name :user/given-name :user/id]}
+                                    :participation/absent?]}] id))
+
 (defn export-meeting
   "Fetch information required for export meeting PDF"
   [db user id]
@@ -266,25 +297,7 @@
     :fetch-links-pred? #(or (contains? % :meeting.agenda/topic)
                             (contains? % :meeting.decision/body))
     :return-links-to-deleted? true}
-   (meta-query/without-deleted
-    db
-    (d/pull db '[:db/id
-                 :meeting/title
-                 :meeting/location
-                 :meeting/start
-                 :meeting/end
-                 :meeting/number
-                 {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
-                 {:meeting/agenda [:db/id
-                                   :meeting.agenda/topic
-                                   :meeting.agenda/body
-                                   {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
-                                   {:meeting.agenda/decisions [:db/id :meeting.decision/body :meeting.decision/number
-                                                               {:file/_attached-to [:file/name :db/id]}]}
-                                   {:file/_attached-to [:file/name :db/id]}]}
-                 {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
-                               {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
-                 {:participation/_in [:participation/role
-                                      :meta/deleted?
-                                      {:participation/participant [:db/id :user/family-name :user/given-name :user/id]}
-                                      :participation/absent?]}] id))))
+   (without-incomplete-uploads 
+    (meta-query/without-deleted
+     db
+     (export-meeting* db id)))))
