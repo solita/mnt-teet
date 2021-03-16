@@ -89,6 +89,14 @@
               {:tx-data [[:db/retract [:user/id user-uuid]
                           :user/permissions permission-eid]]}))
 
+(defn make-file-incomplete!
+  "reverse of local-command :file/upload-complete - for testing incomplete file handling"
+  [file-uuid]
+  (d/transact (environment/datomic-connection)
+              {:tx-data [[:db/retract [:file/id file-uuid]
+                          :file/upload-complete? true]]}))
+
+
 (defn all-comments
   []
   (q '[:find (pull ?e [*])

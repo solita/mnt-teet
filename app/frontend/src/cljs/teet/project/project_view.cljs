@@ -7,7 +7,7 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
-            [teet.project.land-view :as land-tab]
+            [teet.land.land-view :as land-tab]
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-info :as project-info]
             [teet.project.project-navigator-view :as project-navigator-view]
@@ -46,7 +46,7 @@
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
             [teet.ui.hotkeys :as hotkeys]
-            [teet.project.land-controller :as land-controller]
+            [teet.land.land-controller :as land-controller]
             [teet.project.project-menu :as project-menu]
             [teet.task.task-style :as task-style]
             [teet.navigation.navigation-style :as navigation-style]))

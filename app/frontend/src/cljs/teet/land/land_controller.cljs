@@ -1,4 +1,4 @@
-(ns teet.project.land-controller
+(ns teet.land.land-controller
   (:require [tuck.core :as t]
             [clojure.string :as str]
             [teet.util.collection :as cu]
@@ -59,6 +59,10 @@
          (filter some?)
          sort
          last)))
+
+(defn get-unit-by-teet-id
+  [project teet-id]
+  (first (filter #(= (:teet-id %) teet-id) (:land/units project))))
 
 (defn unit-new?
   "Decides whether we show it as \"NEW\" in the UI, for purposes of
@@ -329,7 +333,7 @@ FetchEstateCompensations
                           value)
                         response))))
   FetchRelatedEstates
-  (process-event [{retry-count :retry-count} {:keys [params] :as app}]    
+  (process-event [{retry-count :retry-count} {:keys [params] :as app}]
     (let [project-id (:project params)
           fetched (get-in app [:route :project :fetched-estates-count])
           estates-count (count (get-in app [:route :project :land/related-estate-ids]))]

@@ -1759,5 +1759,65 @@
           {:db/ident :vektorio/model-id
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "ID of the model in vektorio"}]]}]
+           :db/doc "ID of the model in vektorio"}]]}
+
+ {:db/ident :migration/land-modal-opinions
+  :txes [[{:db/ident :land-owner-opinion/activity
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The activity the opinion is about"}
+
+          {:db/ident :land-owner-opinion/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The project in which this opinion exists"}
+
+          {:db/ident :land-owner-opinion/land-unit
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The ID of the land unit"}
+
+          {:db/ident :land-owner-opinion/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Opinion type"}
+          {:db/ident :land-owner-opinion.type/ex-ante-eia
+           :enum/attribute :land-owner-opinion/type}
+          {:db/ident :land-owner-opinion.type/design-conditions-draft
+           :enum/attribute :land-owner-opinion/type}
+          {:db/ident :land-owner-opinion.type/design
+           :enum/attribute :land-owner-opinion/type}
+          {:db/ident :land-owner-opinion.type/eia-report
+           :enum/attribute :land-owner-opinion/type}
+          {:db/ident :land-owner-opinion.type/construction
+           :enum/attribute :land-owner-opinion/type}
+
+          {:db/ident :land-owner-opinion/respondent-name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :land-owner-opinion/respondent-connection-to-land
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :land-owner-opinion/date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :land-owner-opinion/link-to-response
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "String link to an external site about the opinion"}
+
+          {:db/ident :land-owner-opinion/body
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Rich text containing the actual opinion"}
+
+          {:db/ident :land-owner-opinion/authority-position
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Rich text containing the authoritys position on the opinion"}]]}]
+
+
 
