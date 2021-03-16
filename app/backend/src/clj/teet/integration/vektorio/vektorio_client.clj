@@ -72,15 +72,19 @@
   [vektor-conf email]
   (vektor-get vektor-conf (str "users/byAccount/" email)))
 
-(defn create-project!
-  [vektor-conf {:keys [name lat long]
+(defn create-project!v
+  [vektor-conf {:keys [name lat long epsg epsg-x epsg-y]
                 :or {lat 58.5953
-                     long 25.0136}                          ;;Estonian center coordinates
+                     long 25.0136
+                     epsg 3301
+                     epsg-x 6587782.87
+                     epsg-y 544077.31}                          ;;Estonian center coordinates
                 }]
   (vektor-post! vektor-conf {:endpoint "projects"
                              :payload {:name name
-                                       :latitude lat
-                                       :longitude long}}))
+                                       :epsg epsg
+                                       :x epsg-x
+                                       :y epsg-y}}))
 
 (defn add-user-to-project!
   "Add the given user to the vektorio project"
