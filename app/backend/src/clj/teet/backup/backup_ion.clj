@@ -197,7 +197,6 @@
                                 (keys tuple-attrs))
         progress! (progress-fn "backup transactions written")]
 
-    (def *c attr-ident-cache)
     (out! {:ref-attrs ref-attrs
            :tuple-attrs tuple-attrs
            :backup-timestamp (java.util.Date.)})
