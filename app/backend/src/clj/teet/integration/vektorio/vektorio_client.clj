@@ -1,6 +1,7 @@
 (ns teet.integration.vektorio.vektorio-client
   (:require [teet.environment :as environment]
             [org.httpkit.client :as http]
+            [clj-http.client :as clj-http]
             [cheshire.core :as cheshire]
             [teet.log :as log]))
 
@@ -37,13 +38,14 @@
                         "Content-Type" "application/json"}
                        headers)
         content-type (get headers "Content-Type")
-        resp @(http/post (str api-url endpoint)
-                           {:headers headers
-                            :body (if (= content-type "application/octet-stream")
-                                    payload
-                                    (cheshire/encode payload))})]
+        resp (try (clj-http/post (str api-url endpoint)
+                                 {:headers headers
+                                  :body (if (= content-type "application/octet-stream")
+                                          payload
+                                          (cheshire/encode payload))})
+                  (catch Exception e
+                    (log/fatal e "Exception in vektorio post for url " (str api-url endpoint))))]
     (vektor-message-handler resp)))
-
 
 (defn vektor-delete!
   [{:keys [config api-key]} {:keys [endpoint]}]
@@ -93,6 +95,7 @@
 
 (defn add-model-to-project!
   [vektor-conf {:keys [project-id model-file vektorio-filename vektorio-filepath]}]
+  (log/info "Add model:" vektorio-filename "to project for project-id:" project-id)
   (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/models")
                              :headers {"x-viewer-api-model-filename" vektorio-filename
                                        "x-viewer-api-model-filepath" vektorio-filepath
