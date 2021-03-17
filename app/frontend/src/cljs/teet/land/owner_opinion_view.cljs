@@ -118,11 +118,8 @@
    :border-color theme-colors/border-dark
    :padding "1rem"})
 
-(def open? (r/atom false))
-
 (defn opinion-view-container
-  [{:keys [content text-color open? heading heading-button on-toggle-open]
-    :or {open? false}} bg-color]
+  [{:keys [content text-color open? heading heading-button on-toggle-open]} bg-color]
   (r/with-let [open? (r/atom open?)
                toggle-open! #(do
                                (when on-toggle-open
@@ -238,16 +235,15 @@
                            authority-position :land-owner-opinion/authority-position}
                        edit-right? editing?]
   [:div {:id (str "opinion-" id)}
-   (if (not editing?)
+   (when (not editing?)
      [:div
       [:div [rich-text-editor/display-markdown body]]
-      [:div [rich-text-editor/display-markdown authority-position]]]
-     (println "opinion-content is hidden"))])
+      [:div [rich-text-editor/display-markdown authority-position]]])])
 
 (defn owner-opinion-details
   [e! {:keys [edit-rights?]}
    {id :db/id
-    :land-owner-opinion/keys [respondent-connection-to-land body authority-position]
+    :land-owner-opinion/keys [body authority-position]
     :as opinion}
    project
    target]
@@ -258,7 +254,7 @@
     [opinion-view-container
      {:heading [owner-opinion-heading seen-at opinion]
       :on-toggle-open #(e! (println "Opinion view toggled"))
-      :open? true
+      :open? false
       :heading-button [form/form-container-button
                        {:form-component [opinion-form e! form-data project target]
                         :container pfrom
