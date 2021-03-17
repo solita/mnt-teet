@@ -76,19 +76,14 @@
                :xs 12
                :style {:padding "0.2rem"}}
          [form/field {:attribute ident
-                      ;:required? mandatory?
+                      :required? mandatory?
                       :validate (r/partial validate (:db/ident valueType) min-value max-value)}
           (if (= type :db.type/ref)
             ;; Selection value
-            [select/select-enum {:e! e!
-                                 :id ident
-                                 :attribute ident
-                                 :database :asset
-                                 :format-enum-fn (fn [enum-values]
-                                                   (let [by-value (into {}
-                                                                        (map (juxt :db/ident identity))
-                                                                        enum-values)]
-                                                     #(-> % by-value label)))}]
+            [select/form-select
+             {:show-empty-selection? true
+              :items (mapv :db/ident (:enum/_attribute attr))
+              :format-item (comp label rotl)}]
 
             ;; Text field
             [text-field/TextField
@@ -338,7 +333,8 @@
                 [cost-item-form e! asset-type-library nil]
 
                 id
+                ^{:key id}
                 [edit-cost-item-form e! asset-type-library id]
 
                 :else
-                [:div "default view?"])]}]]))
+                [:div "TODO: default view"])]}]]))
