@@ -82,3 +82,12 @@
        (cu/map-vals (fn [cost-items-for-fgroup]
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
+
+(defn cost-item-project
+  "Returns THK project id for the cost item."
+  [db cost-item-id]
+  (ffirst
+   (d/q '[:find ?pid
+          :where [?e :asset/project ?pid]
+          :in $ ?e]
+        db cost-item-id)))
