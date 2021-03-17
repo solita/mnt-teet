@@ -5,6 +5,7 @@
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.credentials :as aws-credentials]
+            [clj-http.client :as clj-http]
             [teet.util.hash :refer [sha256 hex]])
   (:import (java.net URLDecoder)))
 
@@ -236,3 +237,12 @@
          signature (hex (hmac-sha256 sign-key (.getBytes string-to-sign "US-ASCII")))]
 
      (str url "?" query-string "&X-Amz-Signature=" signature))))
+
+(defn get-object-stream-http
+  "Use http-get to get the file-stream from a presigned-url"
+  [bucket file-s3-key]
+  {:pre [(string? bucket)
+         (string? file-s3-key)]
+   :post [(instance? java.io.InputStream %)]}
+  (:body (clj-http/get (presigned-url "GET" bucket file-s3-key)
+                       {:as :stream})))
