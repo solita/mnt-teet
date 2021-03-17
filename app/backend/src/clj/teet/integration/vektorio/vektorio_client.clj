@@ -38,7 +38,7 @@
                         "Content-Type" "application/json"}
                        headers)
         content-type (get headers "Content-Type")
-        resp (try (clj-http/post (str api-url endpoint) ;; Using clj-http here because httpkit doesn't automatically chunked encoding on streams
+        resp (try (clj-http/post (str api-url endpoint) ;; Using clj-http here because httpkit doesn't automatically use chunked encoding on streams
                                  {:headers headers
                                   :body (if (= content-type "application/octet-stream")
                                           payload
