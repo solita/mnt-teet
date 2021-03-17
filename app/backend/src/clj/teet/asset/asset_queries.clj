@@ -32,4 +32,7 @@
    :args {id :db/id}
    :project-id [:thk.project/id (asset-db/cost-item-project adb id)]
    :authorization {:project/read-info {}}}
-  (asset-type-library/db->form (d/pull adb '[*] id)))
+  (asset-type-library/db->form
+   (asset-type-library/rotl-map
+    (asset-db/asset-type-library adb))
+   (d/pull adb '[*] id)))

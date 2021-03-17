@@ -38,18 +38,22 @@
 #?(:clj
    (defn db->form
      "Prepare asset data fetched from db for frontend form"
-     [asset]
+     [rotl asset]
      (walk/prewalk
       (fn [x]
-        (cond
-          (and (map? x)
-               (= #{:db/id :db/ident}
-                  (into #{} (keys x))))
-          (:db/ident x)
+        (let [attr (and (map-entry? x)
+                        (get rotl (first x)))]
+          (cond
+            attr
+            (case (get-in attr [:db/valueType :db/ident])
+              (:db.type/bigdec :db.type/long)
+              (update x 1 str)
 
-          (decimal? x)
-          (str x)
+              x)
 
-          :else
-          x))
+            (and (map? x)
+                 (= #{:db/id :db/ident} (set (keys x))))
+            (:db/ident x)
+
+            :else x)))
       asset)))
