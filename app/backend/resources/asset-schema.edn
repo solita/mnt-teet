@@ -34,7 +34,10 @@
   :db/doc "Traffic signage, signals, markings, barriers",
   :asset-schema/type :asset-schema.type/fgroup,
   :asset-schema/label
-  ["Liikluskorradus" "Traffic arrangement devices"]}
+  ["Liikluskorradus" "Traffic arrangement devices"],
+  :asset-schema/description
+  ["Liikluskorralduse alla kuuluvad kõik liikluskorraldusvahendid Liiklusseaduse tähenduses (liiklusmärgid, foorid, teekattemärgised, jne) ning ohutusvahendid, nagu piirded, tõkked jms"
+   "Traffic arrangement include all traffic arrangement features as per Traffic Law (signs, signals, markings) as well as safety devices (barriers, gates, etc)."]}
  {:db/id ":fgroup/lighting",
   :db/ident :fgroup/lighting,
   :db/doc "Road area lighting and related systems",
@@ -303,6 +306,14 @@
   :asset-schema/label ["" "Markings"],
   :asset-schema/description [nil "Markings"],
   :fclass/fgroup ":fgroup/roadmarkings"}
+ {:db/id ":fclass/protectionzone",
+  :db/ident :fclass/protectionzone,
+  :asset-schema/type :asset-schema.type/fclass,
+  :fclass/fgroup ":fgroup/immaterial"}
+ {:db/id ":fclass/roadarea",
+  :db/ident :fclass/roadarea,
+  :asset-schema/type :asset-schema.type/fclass,
+  :fclass/fgroup ":fgroup/immaterial"}
  {:db/id ":ctype/common",
   :db/ident :ctype/common,
   :db/doc "Attributes common to all assets and components",
@@ -851,6 +862,21 @@
   :asset-schema/label ["Eraldusriba kate" "Verge paving"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/verge"}
+ {:db/id ":ctype/alignmentline",
+  :db/ident :ctype/alignmentline,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Tangent" "Tangent"],
+  :ctype/parent ":fclass/alignment"}
+ {:db/id ":ctype/alignmentcurve",
+  :db/ident :ctype/alignmentcurve,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Ringikaar" "Curve"],
+  :ctype/parent ":fclass/alignment"}
+ {:db/id ":ctype/alignmentclothoid",
+  :db/ident :ctype/alignmentclothoid,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Klotoid" "Clothoid"],
+  :ctype/parent ":fclass/alignment"}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2115,6 +2141,88 @@
   :db/id ":common/cci_class",
   :db/ident :common/cci_class,
   :attribute/cost-grouping? false}
+ {:db/id ":item/backfillmaterial65",
+  :db/ident :item/backfillmaterial65,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 65 - jäme kerge saviliiv"
+   "Backfill material 65 - coarse light claysand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial75",
+  :db/ident :item/backfillmaterial75,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 75 - ühtlaseteraline liiv"
+   "Backfill material 75 - uniform grain sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial90",
+  :db/ident :item/backfillmaterial90,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 90 - mõõd. ühtlaseteraline peenliiv"
+   "Backfill material 90 - moderate uniform grain fine sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial100",
+  :db/ident :item/backfillmaterial100,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 100 - peenliiv" "Backfill material 100 - fine sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial105",
+  :db/ident :item/backfillmaterial105,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 105 - mõõd. ühtlaseteraline keskliiv"
+   "Backfill material 105 - moderate uniform grain medium sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial115",
+  :db/ident :item/backfillmaterial115,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 115 - mõõd. ühtlaseteraline jämeliiv"
+   "Backfill material 115 - moderate uniform grain coarse sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial120",
+  :db/ident :item/backfillmaterial120,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 120 - keskliiv"
+   "Backfill material 120 - medium sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial130",
+  :db/ident :item/backfillmaterial130,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 130 - kruusliiv, jämeliiv"
+   "Backfill material 130 - gravel sand, coarse sand"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterial150",
+  :db/ident :item/backfillmaterial150,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 150 - kruuspinnas" "Backfill material 150 - gravel"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmateriale160",
+  :db/ident :item/backfillmateriale160,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal E(160) - liiva-kruusa-killustiku segu"
+   "Backfill material E(160) - sand-gravel-aggregate mixture"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterialf110",
+  :db/ident :item/backfillmaterialf110,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal F(110) - liiva-kruusa-killustiku-segu"
+   "Backfill material F(110) - sand-gravel-aggregate mixture"],
+  :enum/attribute ":backfill/backfillmaterial"}
+ {:db/id ":item/backfillmaterialg60",
+  :db/ident :item/backfillmaterialg60,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal G(60) - liiva-kruusa-killustiku segu"
+   "Backfill material G(60) - sand-gravel-aggregate mixture"],
+  :enum/attribute ":backfill/backfillmaterial"}
  {:db/id ":item/bcl_t1",
   :db/ident :item/bcl_t1,
   :asset-schema/type :asset-schema.type/enum,
@@ -2230,26 +2338,248 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["W8 (3.5m)" "W8 (3.5m)"],
   :enum/attribute ":barrier/barrierworkingwidth"}
- {:db/id ":item/C25",
-  :db/ident :item/C25,
+ {:db/id ":item/boundbasestonesize16",
+  :db/ident :item/boundbasestonesize16,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 16" "Stone size D 16"],
+  :enum/attribute ":boundbasecourse/boundbasestonesize"}
+ {:db/id ":item/boundbasestonesize32",
+  :db/ident :item/boundbasestonesize32,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 32" "Stone size D 32"],
+  :enum/attribute ":boundbasecourse/boundbasestonesize"}
+ {:db/id ":item/boundbasestonesize64",
+  :db/ident :item/boundbasestonesize64,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 64" "Stone size D 64"],
+  :enum/attribute ":boundbasecourse/boundbasestonesize"}
+ {:db/id ":item/boundbasetypeks",
+  :db/ident :item/boundbasetypeks,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Kompleksstabiliseeritud segu KS" "Komplex stabilisation KS"],
+  :enum/attribute ":boundbasecourse/boundbasetype"}
+ {:db/id ":item/boundbasetypebs",
+  :db/ident :item/boundbasetypebs,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Bituumenstabiliseeritud segu BS" "Bitumen stabilisation BS"],
+  :enum/attribute ":boundbasecourse/boundbasetype"}
+ {:db/id ":item/boundbasetypets",
+  :db/ident :item/boundbasetypets,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tsementstabiliseeritud segu TS" "Cement stabilisation TS"],
+  :enum/attribute ":boundbasecourse/boundbasetype"}
+ {:db/id ":item/boundbasetypemuk",
+  :db/ident :item/boundbasetypemuk,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Mustkate MUK" "MUK"],
+  :enum/attribute ":boundbasecourse/boundbasetype"}
+ {:db/id ":item/snip1984",
+  :db/ident :item/snip1984,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["SNiP 2.03.05-1984" "SNiP 2.03.05-1984"],
+  :enum/attribute ":bridge/bridgedesigncode"}
+ {:db/id ":item/eurocode??",
+  :db/ident :item/eurocode??,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Eurokoodeks ??" "Eurocode ??"],
+  :enum/attribute ":bridge/bridgedesigncode"}
+ {:db/id ":item/bridgeload1KM1",
+  :db/ident :item/bridgeload1KM1,
+  :db/doc "Main load group/class",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["KM1" ""],
+  :enum/attribute ":bridge/bridgeload1"}
+ {:db/id ":item/bridgeload1KM2",
+  :db/ident :item/bridgeload1KM2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["KM1/KM2" ""],
+  :enum/attribute ":bridge/bridgeload1"}
+ {:db/id ":item/bridgeload1KM3",
+  :db/ident :item/bridgeload1KM3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["KM1/KM3" ""],
+  :enum/attribute ":bridge/bridgeload1"}
+ {:db/id ":item/bridgeload1KM4",
+  :db/ident :item/bridgeload1KM4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["KM4" ""],
+  :enum/attribute ":bridge/bridgeload1"}
+ {:db/id ":item/bridgeload1A8",
+  :db/ident :item/bridgeload1A8,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["A8" ""],
+  :enum/attribute ":bridge/bridgeload1"}
+ {:db/id ":item/bridgeload1A11",
+  :db/ident :item/bridgeload1A11,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["A11" ""],
+  :enum/attribute ":bridge/bridgeload1"}
+ {:db/id ":item/concreteclassC25",
+  :db/ident :item/concreteclassC25,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C25" "C25"],
   :enum/attribute ":pile/concreteclass"}
- {:db/id ":item/C35",
-  :db/ident :item/C35,
+ {:db/id ":item/concreteclassC35",
+  :db/ident :item/concreteclassC35,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C35" "C35"],
   :enum/attribute ":pile/concreteclass"}
- {:db/id ":item/C45",
-  :db/ident :item/C45,
+ {:db/id ":item/concreteclassC45",
+  :db/ident :item/concreteclassC45,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C45" "C45"],
   :enum/attribute ":pile/concreteclass"}
- {:db/id ":item/C55",
-  :db/ident :item/C55,
+ {:db/id ":item/concreteclassC55",
+  :db/ident :item/concreteclassC55,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C55" "C55"],
   :enum/attribute ":pile/concreteclass"}
+ {:db/id ":item/drainagematerial100",
+  :db/ident :item/drainagematerial100,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 100 - peenliiv" "Backfill material 100"],
+  :enum/attribute ":drainagelayer/drainagematerial"}
+ {:db/id ":item/drainagematerial105",
+  :db/ident :item/drainagematerial105,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 105 - mõõd. ühtlaseteraline keskliiv"
+   "Backfill material 105"],
+  :enum/attribute ":drainagelayer/drainagematerial"}
+ {:db/id ":item/drainagematerial115",
+  :db/ident :item/drainagematerial115,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 115 - mõõd. ühtlaseteraline jämeliiv"
+   "Backfill material 115"],
+  :enum/attribute ":drainagelayer/drainagematerial"}
+ {:db/id ":item/drainagematerial120",
+  :db/ident :item/drainagematerial120,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjal 120 - keskliiv" "Backfill material 120"],
+  :enum/attribute ":drainagelayer/drainagematerial"}
+ {:db/id ":item/pavinglayermaterialgranit",
+  :db/ident :item/pavinglayermaterialgranit,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Tardkivikillustik" "Granit aggreagate"],
+  :enum/attribute ":pavinglayer/pavinglayermaterial"}
+ {:db/id ":item/pavinglayermaterialsedimentary",
+  :db/ident :item/pavinglayermaterialsedimentary,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Settekivimikillustik" "Sedimentary aggregate"],
+  :enum/attribute ":pavinglayer/pavinglayermaterial"}
+ {:db/id ":item/pavinglayermateriallimestone",
+  :db/ident :item/pavinglayermateriallimestone,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Paekivikillustik" "Limestone aggregate"],
+  :enum/attribute ":pavinglayer/pavinglayermaterial"}
+ {:db/id ":item/pavinglaystonesize20",
+  :db/ident :item/pavinglaystonesize20,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 20" "Stone size D 20"],
+  :enum/attribute ":pavinglayer/pavinglayerstonesize"}
+ {:db/id ":item/pavinglayerstonesize16",
+  :db/ident :item/pavinglayerstonesize16,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 16" "Stone size D 16"],
+  :enum/attribute ":pavinglayer/pavinglayerstonesize"}
+ {:db/id ":item/pavinglayerstonesize12",
+  :db/ident :item/pavinglayerstonesize12,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 12" "Stone size D 12"],
+  :enum/attribute ":pavinglayer/pavinglayerstonesize"}
+ {:db/id ":item/pavinglayerstonesize8",
+  :db/ident :item/pavinglayerstonesize8,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 8" "Stone size D 8"],
+  :enum/attribute ":pavinglayer/pavinglayerstonesize"}
+ {:db/id ":item/pavinglayerstonesize4",
+  :db/ident :item/pavinglayerstonesize4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Täitematerjali tera suurus D 4" "Stone size D 4"],
+  :enum/attribute ":pavinglayer/pavinglayerstonesize"}
+ {:db/id ":item/pavinglayertypesma16",
+  :db/ident :item/pavinglayertypesma16,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Kivimastiksasfalt SMA 16" "Stone mastix asphalt SMA 16"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypesma12",
+  :db/ident :item/pavinglayertypesma12,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Kivimastiksasfalt SMA 12" "Stone mastix asphalt SMA 12"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypesma8",
+  :db/ident :item/pavinglayertypesma8,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Kivimastiksasfalt SMA 8" "Stone mastix asphalt SMA 8"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypeac20surf",
+  :db/ident :item/pavinglayertypeac20surf,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tihe asfaltbetoon AC20 surf" "Dence asphalt concrete AC20 surf"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypeac16surf",
+  :db/ident :item/pavinglayertypeac16surf,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tihe asfaltbetoon AC16 surf" "Dence asphalt concrete AC16 surf"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypeac12surf",
+  :db/ident :item/pavinglayertypeac12surf,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tihe asfaltbetoon AC12 surf" "Dence asphalt concrete AC12 surf"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypeac8surf",
+  :db/ident :item/pavinglayertypeac8surf,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tihe asfaltbetoon AC8 surf" "Dence asphalt concrete AC8 surf"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertypeac4surf",
+  :db/ident :item/pavinglayertypeac4surf,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tihe asfaltbetoon AC4 surf" "Dence asphalt concrete AC4 surf"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavinglayertyperemix",
+  :db/ident :item/pavinglayertyperemix,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Asfaltkatte kuumtaastus Remix (REM)" "Pavement restoration Remix"],
+  :enum/attribute ":pavinglayer/pavinglayertype"}
+ {:db/id ":item/pavingmaterialdendseac",
+  :db/ident :item/pavingmaterialdendseac,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Tihe asfaltbetoon" ""],
+  :enum/attribute ":pavinglayer/pavingmaterial"}
+ {:db/id ":item/pavingmaterialcoarseac",
+  :db/ident :item/pavingmaterialcoarseac,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Poorne asfaltbetoon" ""],
+  :enum/attribute ":pavinglayer/pavingmaterial"}
+ {:db/id ":item/pavingstonemastix",
+  :db/ident :item/pavingstonemastix,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Killustikmastiks AB" ""],
+  :enum/attribute ":pavinglayer/pavingmaterial"}
  {:db/id ":item/piletypedrilled",
   :db/ident :item/piletypedrilled,
   :asset-schema/type :asset-schema.type/enum,
@@ -2478,6 +2808,91 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["z4" "z4"],
   :enum/attribute ":barrierterminal/terminalvehicleredirectionclass"}
+ {:db/id ":item/unboundbasematerialgranit",
+  :db/ident :item/unboundbasematerialgranit,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Tardkivikillustik" "Granit aggreagate"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerial"}
+ {:db/id ":item/unboundbasematerialsedimentary",
+  :db/ident :item/unboundbasematerialsedimentary,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Settekivimikillustik" "Sedimentary aggregate"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerial"}
+ {:db/id ":item/unboundbasemateriallimestone",
+  :db/ident :item/unboundbasemateriallimestone,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Paekivikillustik" "Limestone aggregate"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerial"}
+ {:db/id ":item/unboundbasematerialcrushedgravel",
+  :db/ident :item/unboundbasematerialcrushedgravel,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Purustatud kruus" "Crushed gravel"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerial"}
+ {:db/id ":item/unboundbasematerial",
+  :db/ident :item/unboundbasematerial,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Aheraine killustik" ""],
+  :enum/attribute ":unboundbasecourse/unboundbasematerial"}
+ {:db/id ":item/unboundbasematerialfr0_31.51",
+  :db/ident :item/unboundbasematerialfr0_31.51,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Materjali fraktsioon 0/31.5, segu (pos) 1"
+   "Material fraction 0/31.5, mixture (pos) 1"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr0_31.52",
+  :db/ident :item/unboundbasematerialfr0_31.52,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Materjali fraktsioon 0/31.5, segu (pos) 2"
+   "Material fraction 0/31.5, mixture (pos) 2"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr0_633",
+  :db/ident :item/unboundbasematerialfr0_633,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Materjali fraktsioon 0/63 segu (pos) 3"
+   "Material fraction 0/63, mixture (pos) 3"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr0_634",
+  :db/ident :item/unboundbasematerialfr0_634,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Materjali fraktsioon 0/63 segu (pos) 4"
+   "Material fraction 0/63, mixture (pos) 4"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr16_32",
+  :db/ident :item/unboundbasematerialfr16_32,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Fraktsioneeritud killustik fr 16/32"
+   "Fractionated aggregate fr 16/32"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr32_63",
+  :db/ident :item/unboundbasematerialfr32_63,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Fraktsioneeritud killustik fr 32/63"
+   "Fractionated aggregate fr 32/63"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr63_120",
+  :db/ident :item/unboundbasematerialfr63_120,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Fraktsioneeritud killustik fr 63/120"
+   "Fractionated aggregate fr 63/120"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr4_31.5",
+  :db/ident :item/unboundbasematerialfr4_31.5,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Ridakillustik fr 4/31,5" "Aggregate fr 4/31.5"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
+ {:db/id ":item/unboundbasematerialfr4_63",
+  :db/ident :item/unboundbasematerialfr4_63,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ridakillustik fr 4/63" "Aggregate fr 4/63"],
+  :enum/attribute ":unboundbasecourse/unboundbasematerialfraction"}
  {:db/id ":item/supportcolumn",
   :db/ident :item/supportcolumn,
   :db/doc "Intermediate supports below the superstructure",
@@ -2503,4 +2918,62 @@
   "Hinges in superstructure and cantilever ends of integral bridges (without supports)",
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Liigend" "Hinge"],
-  :enum/attribute ":bridgesupport/supporttype"}]
+  :enum/attribute ":bridgesupport/supporttype"}
+ {:db/id ":item/bridgeroad",
+  :db/ident :item/bridgeroad,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Sõiduteesild (autosild) / viadukt" "Road bridge / flyover"],
+  :enum/attribute ":bridge/bridgefunctionaltype"}
+ {:db/id ":item/bridgerailroad",
+  :db/ident :item/bridgerailroad,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Raudteesild / viadukt" "Railway bridge / viaduct"],
+  :enum/attribute ":bridge/bridgefunctionaltype"}
+ {:db/id ":item/bridgecycling",
+  :db/ident :item/bridgecycling,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Jalg- või rattatee sild" "Pedestrian/cyclist bridge"],
+  :enum/attribute ":bridge/bridgefunctionaltype"}
+ {:db/id ":item/bridgewildlife",
+  :db/ident :item/bridgewildlife,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ökodukt" "Ecoduct"],
+  :enum/attribute ":bridge/bridgefunctionaltype"}
+ {:db/id ":item/bridgebeam",
+  :db/ident :item/bridgebeam,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Talasild" "Simple beam"],
+  :enum/attribute ":bridge/bridgestructuraltype"}
+ {:db/id ":item/bridgecontinuousbeam",
+  :db/ident :item/bridgecontinuousbeam,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Jätkuvtalasild" "Continuous beam"],
+  :enum/attribute ":bridge/bridgestructuraltype"}
+ {:db/id ":item/bridgeframe",
+  :db/ident :item/bridgeframe,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Raamsild" "Frame bridge"],
+  :enum/attribute ":bridge/bridgestructuraltype"}
+ {:db/id ":item/bridgearch",
+  :db/ident :item/bridgearch,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kaarsild" "Arch bridge"],
+  :enum/attribute ":bridge/bridgestructuraltype"}
+ {:db/id ":item/bridgesuspension",
+  :db/ident :item/bridgesuspension,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Rippsild" "Suspension bridge"],
+  :enum/attribute ":bridge/bridgestructuraltype"}
+ {:db/id ":item/bridge:cablestayed",
+  :db/ident :item/bridge:cablestayed,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Vantsild" "Cable stayed bridge"],
+  :enum/attribute ":bridge/bridgestructuraltype"}
+ {:db/id ":item/soilsteelcomposite",
+  :db/ident :item/soilsteelcomposite,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Teraskaarsild" "Steel soil composite arch"],
+  :enum/attribute ":bridge/bridgestructuraltype"}]
