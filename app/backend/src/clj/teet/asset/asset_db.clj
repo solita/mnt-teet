@@ -31,20 +31,34 @@
                      (d/pull db ctype-pattern (:db/id child))
                      child))))))
 
-(defn asset-type-library [db]
-  {:ctype/common (d/pull db ctype-pattern :ctype/common)
-   :fgroups
-   (walk/postwalk
-    (fn [x]
-      (if (ctype? x)
-        (child-ctypes db x)
-        x))
+(defn- remove-empty-selection-attributes [x]
+  (if (and (map? x) (:attribute/_parent x))
+    (update x :attribute/_parent
+            (fn [attrs]
+              (into []
+                    (remove #(and (= (get-in % [:db/valueType :db/ident]) :db.type/ref)
+                                  (empty? (:enum/_attribute %))))
+                    attrs)))
+    x))
 
-    (mapv first
-          (d/q '[:find (pull ?fg p)
-                 :where [?fg :asset-schema/type :asset-schema.type/fgroup]
-                 :in $ p]
-               db type-library-pattern)))})
+(defn- pull-child-ctypes [db x]
+  (if (ctype? x)
+    (child-ctypes db x)
+    x))
+
+(defn asset-type-library [db]
+  (walk/postwalk
+   (fn [x]
+     (->> x
+          remove-empty-selection-attributes
+          (pull-child-ctypes db)))
+
+   {:ctype/common (d/pull db ctype-pattern :ctype/common)
+    :fgroups (mapv first
+                   (d/q '[:find (pull ?fg p)
+                          :where [?fg :asset-schema/type :asset-schema.type/fgroup]
+                          :in $ p]
+                        db type-library-pattern))}))
 
 
 (defn project-cost-items
