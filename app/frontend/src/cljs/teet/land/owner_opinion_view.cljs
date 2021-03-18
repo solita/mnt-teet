@@ -154,25 +154,16 @@
   ;; TODO: implement
   )
 
-(defn opinion-form [e! form project target close-event]
-  (r/with-let [form-state
-               (r/atom (select-keys
-                         @form [:db/id
-                                :land-owner-opinion/body
-                                :land-owner-opinion/type
-                                :land-owner-opinion/date
-                                :land-owner-opinion/respondent-connection-to-land
-                                :land-owner-opinion/authority-position
-                                :land-owner-opinion/respondent-name
-                                :land-owner-opinion/link-to-response]))
-               form-change (form/update-atom-event form-state merge)
+(defn opinion-form [e! form-state project target close-event]
+  (r/with-let [form-change (form/update-atom-event form-state merge)
                activities (get-activities project)]
     [:<>
      [form/form2 {:e! e!
                   :on-change-event form-change
                   :save-event #(common-controller/->SaveForm
                                  :land-owner-opinion/save-opinion
-                                 {:form-data (common-controller/prepare-form-data (form/to-value @form-state))
+                                 {:form-data (common-controller/prepare-form-data
+                                               (form/to-value @form-state))
                                   :project-id (:db/id project)
                                   :land-unit-id target}
                                  (fn [_response]
@@ -246,10 +237,20 @@
     :as opinion}
    project
    target]
+  ;;(cljs.pprint/pprint opinion)
   (r/with-let [seen-at (date/start-of-today)
                [pfrom pto] (common/portal)
                edit-open-atom (r/atom false)
-               form-data (r/atom opinion)]
+               form-data (r/atom
+                           (->
+                             (select-keys opinion
+                               [:db/id :land-owner-opinion/activity :land-owner-opinion/body
+                                :land-owner-opinion/type :land-owner-opinion/date
+                                :land-owner-opinion/respondent-connection-to-land
+                                :land-owner-opinion/authority-position :land-owner-opinion/respondent-name
+                                :land-owner-opinion/link-to-response])
+                             (update-in [:land-owner-opinion/activity :activity/name] du/enum->kw)))]
+    (cljs.pprint/pprint @form-data)
     [opinion-view-container
      {:heading [owner-opinion-heading seen-at opinion]
       :on-toggle-open #(e! (println "Opinion view toggled"))
@@ -259,14 +260,7 @@
                         :container pfrom
                         :open-atom edit-open-atom
                         :id (str "edit-opinion-" id)
-                        :form-value (select-keys @form-data [:db/id
-                                                             :land-owner-opinion/body
-                                                             :land-owner-opinion/type
-                                                             :land-owner-opinion/date
-                                                             :land-owner-opinion/respondent-connection-to-land
-                                                             :land-owner-opinion/authority-position
-                                                             :land-owner-opinion/respondent-name
-                                                             :land-owner-opinion/link-to-response])
+                        :form-value form-data
                         :button-component [buttons/button-secondary {:size :small}
                                            (tr [:buttons :edit])]}]
       :content

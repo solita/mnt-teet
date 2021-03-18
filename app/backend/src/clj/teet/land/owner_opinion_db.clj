@@ -4,7 +4,7 @@
 (defn owner-opinions [db project-eid land-unit-id]
   (mapv
     first
-    (d/q {:query {:find '[(pull ?opinion [*])]
+    (d/q {:query {:find '[(pull ?opinion [* {:land-owner-opinion/activity [:activity/name :db/id]}])]
                      :where
                      '[[?opinion :land-owner-opinion/project ?project]
                        [?opinion :land-owner-opinion/land-unit ?land-unit-id]]
