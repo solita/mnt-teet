@@ -28,9 +28,6 @@
         tx (into [asset]
                  (for [{deleted-id :db/id} deleted]
                    [:db/retractEntity deleted-id]))]
-    (def *asset asset)
-    (def *tx tx)
-    ;; remove :deleted? entries from tree add retractions for those
     (:tempids
      (d/transact aconn
                  {:tx-data tx}))))
