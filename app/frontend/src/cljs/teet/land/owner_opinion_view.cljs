@@ -153,9 +153,13 @@
          content]])])
   )
 
-(defn owner-opinion-heading []
-  ;; TODO: implement
-  )
+(defn owner-opinion-heading [opinion]
+  [:div
+   [typography/TextBold {:style {:display :inline}}
+               (:land-owner-opinion/respondent-name opinion)]
+   [typography/SmallText {:style {:padding-left "0.25rem"
+                                  :display :inline}}
+    (:land-owner-opinion/respondent-connection-to-land opinion)]])
 
 (defn owner-opinion-edit-form [e! form-state project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
@@ -186,7 +190,9 @@
       [:div [rich-text-editor/display-markdown body]]
       [:div [rich-text-editor/display-markdown authority-position]]])])
 
-(defn- get-opinion-data-for-update [opinion]
+(defn- get-opinion-data-for-update
+  "Select updatable data from opinion and transform activity enum to key word to be selectable"
+  [opinion]
   (->
     (select-keys opinion
       [:db/id :land-owner-opinion/activity :land-owner-opinion/body
@@ -199,12 +205,11 @@
 (defn owner-opinion-details
   "Contains Opinion details update form and \"Edit\" button to show or hide it"
   [e! {:keys [edit-rights?]} {id :db/id :as opinion} project target]
-  (r/with-let [seen-at (date/start-of-today)
-               [pfrom pto] (common/portal)
+  (r/with-let [[pfrom pto] (common/portal)
                edit-open-atom (r/atom false)
                form-data (r/atom (get-opinion-data-for-update opinion))]
     [opinion-view-container
-     {:heading [owner-opinion-heading seen-at opinion]
+     {:heading [owner-opinion-heading opinion]
       :open? false
       :heading-button [form/form-container-button
                        {:form-component [owner-opinion-edit-form e! form-data project target]
@@ -224,13 +229,7 @@
   (let [authorization {:edit-rights? (get rights :edit-opinion)
                        :review-rights? (get rights :review-opinion)}]
     [:div {:class (<class land-owner-opinion-row-style)}
-     [:div
-      [typography/TextBold {:style {:display :inline}}
-       (:land-owner-opinion/respondent-name opinion)]
-      [typography/SmallText {:style {:padding-left "0.25rem"
-                                     :display :inline}}
-       (:land-owner-opinion/respondent-connection-to-land opinion)]
-      [owner-opinion-details e! authorization opinion project target]]]))
+     [owner-opinion-details e! authorization opinion project target]]))
 
 (defn owner-opinions-list
   [e! project unit target opinions]
