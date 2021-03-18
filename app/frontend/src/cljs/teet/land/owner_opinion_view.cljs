@@ -39,6 +39,55 @@
       (:thk.project/lifecycles
         (du/idents->keywords project)))))
 
+(defn- opinion-form-controls [e! activities]
+  [Grid {:container true
+         :spacing 1}
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/activity
+     [select/form-select {:show-empty-selection? true
+                          :items (mapv #(select-keys % [:db/id :activity/name]) activities)
+                          :format-item (comp tr-enum :activity/name)}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/respondent-name
+     [TextField {}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/date
+     [date-picker/date-input {}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/type
+     [select/select-enum {:e! e! :attribute :land-owner-opinion/type}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/respondent-connection-to-land
+     [TextField {}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/link-to-response
+     [TextField {}]]]
+   [Grid {:item true
+          :md 6
+          :xs 12}
+    [form/field :land-owner-opinion/body
+     [rich-text-editor/rich-text-field {}]]]
+   [Grid {:item true
+          :md 6
+          :xs 12}
+    [form/field :land-owner-opinion/authority-position
+     [rich-text-editor/rich-text-field {}]]]
+   [Grid {:item true
+          :xs 12}
+    [form/footer2]]])
+
 (defn owner-opinion-form
   [e! project target]
   (r/with-let [form-state (r/atom {})
@@ -61,54 +110,7 @@
                                      (e! (opinion-controller/->IncreaseCommentCount target)))))
                   :value @form-state
                   :cancel-event #(opinion-controller/->OpinionFormClose)
-                  :spec :land-owner-opinion/form}
-      [Grid {:container true
-             :spacing 1}
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/activity
-         [select/form-select {:show-empty-selection? true
-                              :items (mapv #(select-keys % [:db/id :activity/name]) activities)
-                              :format-item (comp tr-enum :activity/name)}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/respondent-name
-         [TextField {}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/date
-         [date-picker/date-input {}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/type
-         [select/select-enum {:e! e! :attribute :land-owner-opinion/type}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/respondent-connection-to-land
-         [TextField {}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/link-to-response
-         [TextField {}]]]
-       [Grid {:item true
-              :md 6
-              :xs 12}
-        [form/field :land-owner-opinion/body
-         [rich-text-editor/rich-text-field {}]]]
-       [Grid {:item true
-              :md 6
-              :xs 12}
-        [form/field :land-owner-opinion/authority-position
-         [rich-text-editor/rich-text-field {}]]]
-       [Grid {:item true
-              :xs 12}
-        [form/footer2]]]]]))
+                  :spec :land-owner-opinion/form} (opinion-form-controls e! activities)]]))
 
 (defn land-owner-opinion-row-style
   []
@@ -141,7 +143,8 @@
         [buttons/button-primary
          {:size :small
           :on-click toggle-open!}
-         [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]]
+         [(if  @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+         (if  @open? (tr [:buttons :close]) (tr [:buttons :open]))]
         ]]]
      (when content
        [Collapse {:in @open?
@@ -154,7 +157,7 @@
   ;; TODO: implement
   )
 
-(defn opinion-form [e! form-state project target close-event]
+(defn owner-opinion-edit-form [e! form-state project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
                activities (get-activities project)]
     [:<>
@@ -171,54 +174,7 @@
                                      (e! (opinion-controller/->OpinionUpdateFormClose)))))
                   :value @form-state
                   :cancel-event close-event
-                  :spec :land-owner-opinion/form}
-      [Grid {:container true
-             :spacing 1}
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/activity
-         [select/form-select {:show-empty-selection? true
-                              :items (mapv #(select-keys % [:db/id :activity/name]) activities)
-                              :format-item (comp tr-enum :activity/name)}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/respondent-name
-         [TextField {}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/date
-         [date-picker/date-input {}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/type
-         [select/select-enum {:e! e! :attribute :land-owner-opinion/type}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/respondent-connection-to-land
-         [TextField {}]]]
-       [Grid {:item true
-              :md 4
-              :xs 12}
-        [form/field :land-owner-opinion/link-to-response
-         [TextField {}]]]
-       [Grid {:item true
-              :md 6
-              :xs 12}
-        [form/field :land-owner-opinion/body
-         [rich-text-editor/rich-text-field {}]]]
-       [Grid {:item true
-              :md 6
-              :xs 12}
-        [form/field :land-owner-opinion/authority-position
-         [rich-text-editor/rich-text-field {}]]]
-       [Grid {:item true
-              :xs 12}
-        [form/footer2]]]]]))
+                  :spec :land-owner-opinion/form} (opinion-form-controls e! activities)]]))
 
 (defn opinion-content [e! {id :db/id
                            body :land-owner-opinion/body
@@ -230,33 +186,28 @@
       [:div [rich-text-editor/display-markdown body]]
       [:div [rich-text-editor/display-markdown authority-position]]])])
 
+(defn- get-opinion-data-for-update [opinion]
+  (->
+    (select-keys opinion
+      [:db/id :land-owner-opinion/activity :land-owner-opinion/body
+       :land-owner-opinion/type :land-owner-opinion/date
+       :land-owner-opinion/respondent-connection-to-land
+       :land-owner-opinion/authority-position :land-owner-opinion/respondent-name
+       :land-owner-opinion/link-to-response])
+    (update-in [:land-owner-opinion/activity :activity/name] du/enum->kw)))
+
 (defn owner-opinion-details
-  [e! {:keys [edit-rights?]}
-   {id :db/id
-    :land-owner-opinion/keys [body authority-position]
-    :as opinion}
-   project
-   target]
-  ;;(cljs.pprint/pprint opinion)
+  "Contains Opinion details update form and \"Edit\" button to show or hide it"
+  [e! {:keys [edit-rights?]} {id :db/id :as opinion} project target]
   (r/with-let [seen-at (date/start-of-today)
                [pfrom pto] (common/portal)
                edit-open-atom (r/atom false)
-               form-data (r/atom
-                           (->
-                             (select-keys opinion
-                               [:db/id :land-owner-opinion/activity :land-owner-opinion/body
-                                :land-owner-opinion/type :land-owner-opinion/date
-                                :land-owner-opinion/respondent-connection-to-land
-                                :land-owner-opinion/authority-position :land-owner-opinion/respondent-name
-                                :land-owner-opinion/link-to-response])
-                             (update-in [:land-owner-opinion/activity :activity/name] du/enum->kw)))]
-    (cljs.pprint/pprint @form-data)
+               form-data (r/atom (get-opinion-data-for-update opinion))]
     [opinion-view-container
      {:heading [owner-opinion-heading seen-at opinion]
-      :on-toggle-open #(e! (println "Opinion view toggled"))
       :open? false
       :heading-button [form/form-container-button
-                       {:form-component [opinion-form e! form-data project target]
+                       {:form-component [owner-opinion-edit-form e! form-data project target]
                         :container pfrom
                         :open-atom edit-open-atom
                         :id (str "edit-opinion-" id)
