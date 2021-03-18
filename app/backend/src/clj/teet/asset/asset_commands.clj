@@ -5,7 +5,8 @@
             [teet.environment :as environment]
             [clojure.walk :as walk]
             [teet.asset.asset-db :as asset-db]
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.util.collection :as cu]))
 
 
 
@@ -21,8 +22,15 @@
   (let [asset (merge {:asset/project project-id}
                      (asset-type-library/form->db
                       (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-                      asset))]
+                      asset))
+        deleted (cu/collect :deleted? asset)
+        asset (cu/without :deleted? asset)
+        tx (into [asset]
+                 (for [{deleted-id :db/id} deleted]
+                   [:db/retractEntity deleted-id]))]
     (def *asset asset)
+    (def *tx tx)
+    ;; remove :deleted? entries from tree add retractions for those
     (:tempids
      (d/transact aconn
-                 {:tx-data [asset]}))))
+                 {:tx-data tx}))))

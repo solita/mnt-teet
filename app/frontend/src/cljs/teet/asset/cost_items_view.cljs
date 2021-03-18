@@ -113,7 +113,7 @@
                on-change-event (form/callback-change-event #(@on-change-atom %))
                expanded? (r/atom true)
                toggle-expand! #(swap! expanded? not)
-               delete! #(@on-change-atom {::deleted? true})]
+               delete! #(@on-change-atom {:deleted? true})]
     (reset! on-change-atom on-change)
     (let [ctype (get rotl (:component/ctype component))]
       [container/collapsible-container
@@ -147,7 +147,7 @@
   [:<>
    (doall
     (keep-indexed
-     (fn [i {id :db/id deleted? ::deleted? :as c}]
+     (fn [i {id :db/id deleted? :deleted? :as c}]
        (when (not deleted?)
          ^{:key (str id)}
          [context/consume :rotl
