@@ -164,8 +164,7 @@
                  {:label (label c)
                   :icon [icons/content-add]
                   :on-click (r/partial on-change (conj (or value [])
-                                                       {:ctype c
-                                                        :component/ctype (:db/ident c)}))})}]
+                                                       {:component/ctype (:db/ident c)}))})}]
       (doall
        (for [c allowed-components]
          ^{:key (str :db/ident c)}
