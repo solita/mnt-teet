@@ -294,17 +294,16 @@
          [container/collapsible-container
           {:on-toggle (r/partial toggle-open! ident)
            :open? (contains? @open ident)}
-          (tr* fgroup)
+          (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
           [:div.cost-items-by-fclass {:data-fgroup (str ident)
                                       :style {:margin-left "0.5rem"}}
            (doall
             (for [[{ident :db/ident :as fclass} cost-items] fclasses]
               ^{:key (str ident)}
-              [container/collapsible-container
-               {:on-toggle (r/partial toggle-open! ident)
-                :open? (contains? @open ident)}
-               (tr* fclass)
-               [:div.cost-items {:style {:margin-left "2rem"}}
+              [:div {:style {:margin-top "1rem"
+                             :margin-left "1rem"}}
+               [typography/Text2Bold (str/upper-case (tr* fclass))]
+               [:div.cost-items {:style {:margin-left "1rem"}}
                 (for [{id :db/id :common/keys [name]} cost-items]
                   ^{:key (str id)}
                   [:div
