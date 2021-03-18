@@ -167,7 +167,6 @@
                                 :land-owner-opinion/link-to-response]))
                form-change (form/update-atom-event form-state merge)
                activities (get-activities project)]
-    (println @form-state)
     [:<>
      [form/form2 {:e! e!
                   :on-change-event form-change
@@ -178,7 +177,7 @@
                                   :land-unit-id target}
                                  (fn [_response]
                                    (fn [e!]
-                                     (e! (opinion-controller/->OpinionFormClose)))))
+                                     (e! (opinion-controller/->OpinionUpdateFormClose)))))
                   :value @form-state
                   :cancel-event close-event
                   :spec :land-owner-opinion/form}
