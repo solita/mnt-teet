@@ -26,7 +26,8 @@
         deleted (cu/collect :deleted? asset)
         asset (cu/without :deleted? asset)
         tx (into [asset]
-                 (for [{deleted-id :db/id} deleted]
+                 (for [{deleted-id :db/id} deleted
+                       :when deleted-id]
                    [:db/retractEntity deleted-id]))]
     (:tempids
      (d/transact aconn
