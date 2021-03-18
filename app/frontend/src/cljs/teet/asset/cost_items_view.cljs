@@ -9,7 +9,7 @@
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
             [datafrisk.core :as df]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -21,7 +21,10 @@
             [teet.ui.common :as common]
             [teet.ui.container :as container]
             [teet.asset.cost-items-controller :as cost-items-controller]
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.ui.url :as url]
+            [teet.ui.query :as query]
+            [teet.common.common-controller :as common-controller]))
 
 (defonce next-id (atom 0))
 
@@ -73,19 +76,14 @@
                :xs 12
                :style {:padding "0.2rem"}}
          [form/field {:attribute ident
-                      ;:required? mandatory?
+                      :required? mandatory?
                       :validate (r/partial validate (:db/ident valueType) min-value max-value)}
           (if (= type :db.type/ref)
             ;; Selection value
-            [select/select-enum {:e! e!
-                                 :id ident
-                                 :attribute ident
-                                 :database :asset
-                                 :format-enum-fn (fn [enum-values]
-                                                   (let [by-value (into {}
-                                                                        (map (juxt :db/ident identity))
-                                                                        enum-values)]
-                                                     #(-> % by-value label)))}]
+            [select/form-select
+             {:show-empty-selection? true
+              :items (mapv :db/ident (:enum/_attribute attr))
+              :format-item (comp label rotl)}]
 
             ;; Text field
             [text-field/TextField
@@ -115,7 +113,7 @@
                on-change-event (form/callback-change-event #(@on-change-atom %))
                expanded? (r/atom true)
                toggle-expand! #(swap! expanded? not)
-               delete! #(@on-change-atom {::deleted? true})]
+               delete! #(@on-change-atom {:deleted? true})]
     (reset! on-change-atom on-change)
     (let [ctype (get rotl (:component/ctype component))]
       [container/collapsible-container
@@ -149,7 +147,7 @@
   [:<>
    (doall
     (keep-indexed
-     (fn [i {id :db/id deleted? ::deleted? :as c}]
+     (fn [i {id :db/id deleted? :deleted? :as c}]
        (when (not deleted?)
          ^{:key (str id)}
          [context/consume :rotl
@@ -225,8 +223,9 @@
             :value fc
             :on-change #(on-change [fg %])}])]])))
 
-(defn- add-cost-item-form [e! asset-type-library]
-  (r/with-let [form-data (r/atom {:db/id (next-id! "costitem")})
+(defn- cost-item-form [e! asset-type-library initial-data]
+  (r/with-let [form-data (r/atom (or initial-data
+                                     {:db/id (next-id! "costitem")}))
                on-change-event (form/update-atom-event
                                 form-data
                                 cu/deep-merge)
@@ -256,22 +255,35 @@
             [components {:e! e!
                          :allowed-components (:ctype/_parent feature-class)}]]])
 
-        [form/footer2]
-        ]
+        [form/footer2]]
 
        ;; FIXME: remove when finalizing form
        [df/DataFriskView @form-data]])))
 
+(defn- edit-cost-item-form* [e! asset-type-library {fclass-ident :asset/fclass :as cost-item-data}]
+  (let [fclass= (fn [fc] (= (:db/ident fc) fclass-ident))
+        fgroup (cu/find-> (:fgroups asset-type-library)
+                          #(cu/find-> (:fclass/_fgroup %) fclass=))
+        fclass (cu/find-> (:fclass/_fgroup fgroup) fclass=)]
+    [cost-item-form e! asset-type-library
+     (assoc cost-item-data
+            :feature-group-and-class [fgroup fclass])]))
+
+(defn- edit-cost-item-form [e! asset-type-library id]
+  [query/query {:e! e!
+                :query :asset/cost-item
+                :args {:db/id (common-controller/->long id)}
+                :simple-view [edit-cost-item-form* e! asset-type-library]}])
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
   [{:keys [e! cost-items add?]}]
-  (r/with-let [add-cost-item! #(reset! add? true)
-               open (r/atom #{})
+  (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
     [:div
-     [buttons/button-secondary {:on-click add-cost-item!
-                                :disabled? @add?
+     [buttons/button-secondary {:element "a"
+                                :href (url/set-query-param :id "new")
+                                :disabled? add?
                                 :start-icon (r/as-element
                                              [icons/content-add])}
       (tr [:asset :add-cost-item])]
@@ -296,11 +308,15 @@
                [:div.cost-items {:style {:margin-left "2rem"}}
                 (for [{id :db/id :common/keys [name]} cost-items]
                   ^{:key (str id)}
-                  [:div name])]]))]]))]]))
+                  [:div
+                   [Link {:href (url/set-query-param :id (str id))} name]])]]))]]))]]))
 
-(defn cost-items-page [e! app {:keys [cost-items project
-                                      asset-type-library]}]
-  (r/with-let [add? (r/atom false)]
+(defn cost-items-page [e!
+                       {query :query :as app}
+                       {:keys [cost-items project
+                               asset-type-library]}]
+  (let [id (:id query)
+        add? (= id "new")]
     [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
      [project-view/project-full-page-structure
       {:e! e!
@@ -312,5 +328,13 @@
        :main [:div
               [typography/Heading2 (tr [:project :tabs :cost-items])]
 
-              (when @add?
-                [add-cost-item-form e! asset-type-library])]}]]))
+              (cond
+                add?
+                [cost-item-form e! asset-type-library nil]
+
+                id
+                ^{:key id}
+                [edit-cost-item-form e! asset-type-library id]
+
+                :else
+                [:div "TODO: default view"])]}]]))
