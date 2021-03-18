@@ -1,5 +1,6 @@
 (ns user
-  (:require [datomic.client.api :as d]
+  (:require [clj-async-profiler.core :as prof]
+            [datomic.client.api :as d]
             [teet.main :as main]
             [teet.meta.meta-model :as meta-model]
             [teet.environment :as environment]
@@ -360,3 +361,17 @@
             (println
              (remove-permission (:user/id user)
                                 (:db/id perm)))))))))
+
+(intern 'user
+        (with-meta 'profile {:macro true})
+        @#'prof/profile)
+
+(def start-profiling prof/start)
+(def stop-profiling prof/stop)
+(def clear-profiling-results prof/clear-results)
+
+(defn serve-flamegraphs
+  ([] (serve-flamegraphs 8080))
+  ([port]
+   (println (str "Serving flamegraphs in http://localhost:" port))
+   (prof/serve-files port)))

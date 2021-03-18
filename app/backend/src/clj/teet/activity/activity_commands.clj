@@ -63,6 +63,11 @@
   (when-not (permission-db/has-permission? db manager project-eid :manager)
     (manager-permission-tx project-eid user manager)))
 
+(defn- burn-lotsa-cpu []
+  (dotimes [_ 10] (reduce + (range 10000000)))
+  (dotimes [_ 10] (reduce / (range 10000000)))
+  (dotimes [_ 10] (reduce * (range 10000000))))
+
 (defcommand :activity/create
   {:doc "Create new activity to lifecycle"
    :context {:keys [db user conn]}
@@ -81,6 +86,7 @@
    :audit? true}
   (let [manager (:activity/manager activity)
         project-id (project-db/lifecycle-project-id db lifecycle-id)]
+    (burn-lotsa-cpu)
     (tx-ret [(list 'teet.activity.activity-tx/ensure-activity-validity
                    lifecycle-id
                    [{:db/id lifecycle-id

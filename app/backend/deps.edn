@@ -57,10 +57,14 @@
          "common/resources"]
 
  :aliases {:ion {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}}}
-           :dev {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
+           :dev {:jvm-opts ["-Duser.timezone=UTC" ;; Match AWS env
+                            "-Djdk.attach.allowAttachSelf"
+                            "-XX:+UnlockDiagnosticVMOptions"
+                            "-XX:+DebugNonSafepoints"]
                  :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
-                              com.datomic/dev-local {:mvn/version "0.9.229"}}
+                              com.datomic/dev-local {:mvn/version "0.9.229"}
+                              com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.5.0"}}
                  :extra-paths ["dev-src" "test"]}
            :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                                      org.clojure/tools.namespace {:mvn/version "0.3.1"}}
