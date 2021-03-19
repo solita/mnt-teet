@@ -6,6 +6,7 @@
             [reagent.core :as r]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.comments.comments-controller :as comments-controller]
+            [teet.common.common-controller :refer [when-feature] :as common-controller]
             [teet.comments.comments-view :as comments-view]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-view :as file-view]
@@ -352,8 +353,7 @@
 
 (defn cadastral-unit
   [{:keys [e! project-info on-change estate-procedure-type cadastral-form]}
-   {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}
-   owner-comments-enabled?]
+   {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   (let [saved-pos (some #(when (= teet-id (:land-acquisition/cadastral-unit %))
                            (:land-acquisition/pos-number %))
                         (:land-acquisitions project-info))
@@ -410,7 +410,7 @@
                                         [common/count-chip {:label c}])]
                         :loading-state "-"}]
           (tr [:land-modal-page :files])])
-       (when owner-comments-enabled?
+       (when-feature :land-owner-opinions
          [common/Link {:style {:display :block}
                        :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "owners-opinions")}
           [query/query {:e! e! :query :land-owner-opinion/opinions-count
@@ -538,14 +538,12 @@
       :children
       (mapc
         (fn [unit]
-          [context/consume
-           :owner-comments-enabled?
-           [cadastral-unit {:e! e!
-                            :project-info project-info
-                            :on-change land-controller/->UpdateCadastralForm
-                            :estate-procedure/type (:estate-procedure/type estate-form)
-                            :cadastral-form (get cadastral-forms (:teet-id unit))}
-            unit]])
+          [cadastral-unit {:e! e!
+                           :project-info project-info
+                           :on-change land-controller/->UpdateCadastralForm
+                           :estate-procedure/type (:estate-procedure/type estate-form)
+                           :cadastral-form (get cadastral-forms (:teet-id unit))}
+           unit])
         units)}]))
 
 (defn- number-of-owners
@@ -1128,26 +1126,25 @@
                                  (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project))))))
      :reagent-render
      (fn [e! app project]
-       [context/provide :owner-comments-enabled? (boolean (:land-owner-opinions (:enabled-features app)))
-        (let [fetching? (nil? (:land/units project))]
-          [:div
-           (when (not fetching?)
-             [land-view-modals e! app project])
-           [:div {:style {:margin-top "1rem"}
-                  :class (<class common-styles/heading-and-action-style)}
-            [authorization-check/when-authorized :land/refresh-estate-info
-             project
-             [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
-              (tr [:land :refresh-estate-info])]]]
-           (if (:land/estate-info-failure project)
-             [:div
-              [:p (tr [:land :estate-info-fetch-failure])]
-              [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates land-controller/estate-fetch-retries)}
-               "Try again"]]
-             (if fetching?
-               [:div
-                [:p (tr [:land :fetching-land-units])]
-                [CircularProgress {}]]
-               [:div
-                [filter-units e! (:land-acquisition-filters project)]
-                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])])}))
+       (let [fetching? (nil? (:land/units project))]
+         [:div
+          (when (not fetching?)
+            [land-view-modals e! app project])
+          [:div {:style {:margin-top "1rem"}
+                 :class (<class common-styles/heading-and-action-style)}
+           [authorization-check/when-authorized :land/refresh-estate-info
+            project
+            [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+             (tr [:land :refresh-estate-info])]]]
+          (if (:land/estate-info-failure project)
+            [:div
+             [:p (tr [:land :estate-info-fetch-failure])]
+             [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates land-controller/estate-fetch-retries)}
+              "Try again"]]
+            (if fetching?
+              [:div
+               [:p (tr [:land :fetching-land-units])]
+               [CircularProgress {}]]
+              [:div
+               [filter-units e! (:land-acquisition-filters project)]
+               [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))

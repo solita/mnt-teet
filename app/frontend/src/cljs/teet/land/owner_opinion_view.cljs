@@ -19,13 +19,64 @@
             [teet.land.owner-opinion-controller :as opinion-controller]
             [teet.ui.query :as query]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.panels :as panels]))
 
 (defn add-opinion-heading-style
   []
   {:padding-bottom "0.5rem"
    :border-bottom (str "1px solid " theme-colors/border-dark)
    :margin-bottom "1rem"})
+
+(defn owner-opinion-export-form
+  [e! project close form-atom]
+  (r/with-let [skip-activities #{:activity.name/warranty :activity.name/land-acquisition}
+               activities (into []
+                                (comp
+                                  (mapcat :thk.lifecycle/activities)
+                                  (remove (comp skip-activities :activity/name)))
+                                (:thk.project/lifecycles
+                                  (du/idents->keywords project)))
+               form-change (form/update-atom-event form-atom merge)]
+    [form/form2 {:e! e!
+                 :on-change-event form-change
+                 :value @form-atom
+                 :cancel-fn close
+                 :spec :land-owner-opinion/export}
+     [:div {:class (<class common-styles/gray-container-style)}
+      [form/field :land-owner-opinion/activity
+       [select/form-select {:show-empty-selection? true
+                            :empty-selection-label (tr [:land-owner-opinion :choose-activity])
+                            :items (mapv #(select-keys % [:db/id :activity/name]) activities)
+                            :format-item (comp tr-enum :activity/name)}]]
+      [form/field :land-owner-opinion/type
+       [select/select-enum {:e! e!
+                            :show-empty-selection? true
+                            :empty-selection-label (tr [:land-owner-opinion :choose-type])
+                            :attribute :land-owner-opinion/type}]]]
+     [:div {:class (<class form/form-buttons :flex-end)}
+      [buttons/button-secondary {:on-click close
+                                 :style {:margin-right "1rem"}}
+       (tr [:buttons :cancel])]
+      (let [{:land-owner-opinion/keys [activity type] :as form-value} @form-atom]
+        [buttons/button-primary {:target "_blank"
+                                 :disabled (or (nil? activity) (nil? type))
+                                 :href (common-controller/query-url
+                                         :land-owner-opinion/export-opinions
+                                         (update form-value :land-owner-opinion/activity :db/id))}
+         (tr [:buttons :preview])])]]))
+
+
+(defn land-owner-opinion-export-modal
+  [e! project open-atom]
+  (r/with-let [close #(reset! open-atom false)
+               form-atom (r/atom {})]
+    [:<>
+     [panels/modal {:max-width :sm
+                    :open-atom open-atom
+                    :title (tr [:land-owner-opinion :export-modal-title])
+                    :on-close close}
+      [owner-opinion-export-form e! project close form-atom]]]))
 
 (defn owner-opinion-form
   [e! project target]
@@ -41,7 +92,7 @@
     [:div {:style {:padding "0.5rem"
                    :overflow "hidden"}}
      [:div {:class (<class add-opinion-heading-style)}
-      [typography/SmallText (tr [:land-owner-opinions :add-new-opinion])]]
+      [typography/SmallText (tr [:land-owner-opinion :add-new-opinion])]]
      [form/form2 {:e! e!
                   :on-change-event form-change
                   :save-event #(common-controller/->SaveForm
@@ -134,7 +185,7 @@
      [:div
       [:div {:class (<class common-styles/padding-bottom 1)}
        [typography/TextBold {:style {:display :inline}}
-        (tr [:land-owner-opinions :opinions])]
+        (tr [:land-owner-opinion :opinions])]
        [typography/SmallText {:style {:display :inline}}
         " " (str l-address " (" purpose ") " target)]]]
      (if (empty? opinions)

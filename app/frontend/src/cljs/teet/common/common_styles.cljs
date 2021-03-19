@@ -437,7 +437,7 @@
 
 (defn gray-container-style
   []
-  {:background-color theme-colors/gray-lightest
+  {:background-color theme-colors/background-color-light
    :padding "1.5rem"})
 
 (defn label-text-style

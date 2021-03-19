@@ -68,6 +68,7 @@
 (def page-background-dark "#E1E2E5")
 (def border-dark "#D2D3D8")
 
+(def background-color-light "#F0F0F2")
 
 ;; Text colors
 
