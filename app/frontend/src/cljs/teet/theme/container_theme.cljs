@@ -11,9 +11,7 @@
   {:display :flex
    :padding "1rem"
    :border-bottom (str "1px solid " theme-colors/gray-lighter)
-   :align-items :center
-   ;:justify-content :space-between
-   })
+   :align-items :center})
 
 (defn heading
   []
