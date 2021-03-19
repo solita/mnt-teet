@@ -80,7 +80,12 @@
    :max-length
    "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
    :min-value "Lubatud minimaalne väärtus on {min-value}",
-   :max-value "Lubatud maksimaalne väärtus on {max-value}"}},
+   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
+  :field-group
+  {:details "Üksikasjad",
+   :common "Ühine",
+   :name-and-location "Nimi ja asukoht",
+   :cost-grouping "Kulude grupeerimine"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -90,6 +95,7 @@
   :delete "Kustutan",
   :save "Salvestan",
   :close "Sulgen",
+  :preview "Eelvaade",
   :undo "Taastan",
   :back "Tagasi",
   :send "Saadan teavituse",
@@ -877,8 +883,12 @@
   :owners-opinions "Maade omanike arvamused",
   :no-mortgages "Hüpoteeke pole",
   :no-owners-opinions "Arvamusi pole"},
- :land-owner-opinions
- {:opinions "Arvamused", :add-new-opinion "LISAN UUE ARVAMUSE"},
+ :land-owner-opinion
+ {:opinions "Arvamused",
+  :add-new-opinion "LISAN UUE ARVAMUSE",
+  :export-modal-title "Maade omanike arvamuste koondtabel",
+  :choose-activity "Valin tegevuse",
+  :choose-type "Valiln tüübi"},
  :link
  {:search
   {:placeholder "Lisan viite...",
