@@ -896,7 +896,8 @@
   :add-new-opinion "ADD NEW OPINION",
   :export-modal-title "Land owners opinions summary table",
   :choose-activity "Choose an activity",
-  :choose-type "Choose a type"},
+  :choose-type "Choose a type",
+  :opinion-export "Land owners opinions"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",

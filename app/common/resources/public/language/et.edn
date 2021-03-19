@@ -888,7 +888,8 @@
   :add-new-opinion "LISAN UUE ARVAMUSE",
   :export-modal-title "Maade omanike arvamuste koondtabel",
   :choose-activity "Valin tegevuse",
-  :choose-type "Valiln tüübi"},
+  :choose-type "Valiln tüübi",
+  :opinion-export "Maade omanike arvamused"},
  :link
  {:search
   {:placeholder "Lisan viite...",
