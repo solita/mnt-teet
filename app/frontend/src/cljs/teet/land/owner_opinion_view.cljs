@@ -153,13 +153,25 @@
          content]])])
   )
 
+(defn get-activity-name [opinion]
+  (let [activity-name (get-in opinion [:land-owner-opinion/activity :activity/name])]
+    (tr-enum activity-name)))
+
+(defn get-activity-type [opinion]
+  (let [activity-type (get-in opinion [:land-owner-opinion/type])]
+    (tr-enum activity-type)))
+
 (defn owner-opinion-heading [opinion]
   [:div
    [typography/TextBold {:style {:display :inline}}
-               (:land-owner-opinion/respondent-name opinion)]
+    (:land-owner-opinion/respondent-name opinion)]
    [typography/SmallText {:style {:padding-left "0.25rem"
                                   :display :inline}}
-    (:land-owner-opinion/respondent-connection-to-land opinion)]])
+    (:land-owner-opinion/respondent-connection-to-land opinion)]
+   [:div
+    [typography/Text {:style {:display :inline}}
+     (str (get-activity-name opinion) " / "
+       (get-activity-type opinion))]]])
 
 (defn owner-opinion-edit-form [e! form-state save-event project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
@@ -206,23 +218,23 @@
                save-event (fn [_] (reset! edit-open-atom false))
                form-data (r/atom (get-opinion-data-for-update opinion))]
     [:div
-     [:span (pr-str @form-data)
-      [opinion-view-container
-       {:heading [owner-opinion-heading opinion]
-        :open? false
-        :heading-button [form/form-container-button
-                         {:form-component [owner-opinion-edit-form e! form-data
-                                           save-event project target]
-                          :container pfrom
-                          :open-atom edit-open-atom
-                          :id (str "edit-opinion-" id)
-                          :form-value form-data
-                          :button-component [buttons/button-secondary {:size :small}
-                                             (tr [:buttons :edit])]}]
-        :content
-        [:<>
-         [pto]
-         [opinion-content e! @form-data edit-rights? @edit-open-atom]]}]]]))
+     ;;[:span (pr-str @form-data)]
+     [opinion-view-container
+      {:heading [owner-opinion-heading opinion]
+       :open? false
+       :heading-button [form/form-container-button
+                        {:form-component [owner-opinion-edit-form e! form-data
+                                          save-event project target]
+                         :container pfrom
+                         :open-atom edit-open-atom
+                         :id (str "edit-opinion-" id)
+                         :form-value form-data
+                         :button-component [buttons/button-secondary {:size :small}
+                                            (tr [:buttons :edit])]}]
+       :content
+       [:<>
+        [pto]
+        [opinion-content e! @form-data edit-rights? @edit-open-atom]]}]]))
 
 (defn owner-opinion-row
   [e! project target opinion rights]
