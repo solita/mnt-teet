@@ -192,11 +192,36 @@
 
 (defn opinion-content [e! {id :db/id
                            body :land-owner-opinion/body
-                           authority-position :land-owner-opinion/authority-position}
+                           authority-position :land-owner-opinion/authority-position
+                           response-date :land-owner-opinion/date
+                           link-to-response :land-owner-opinion/link-to-response :as opinion}
                        edit-right? editing?]
   [:div {:id (str "opinion-" id)}
    (when (not editing?)
-     [:div])])
+     [:div
+      [typography/TextBold {:style {:display :inline}}
+       "Response date"]
+      [typography/SmallText {:style {:padding-left "0.25rem"
+                                     :display :inline}}
+       "Link to response"]
+      [:div
+       [typography/Text {:style {:display :inline}}
+        (str response-date " / " link-to-response)]]
+      [:div {:style {:display :flex}}
+       [:div {:style {:flex "50%"}}
+        [:div {:style {:display :flex :flex-direction :column}}
+         [:h2
+          "Arvamuse sisu"]
+         [typography/Text {:style {:display :inline}}
+          (:land-owner-opinion/body (common-controller/prepare-form-data
+                                      (form/to-value opinion)))]]]
+       [:div {:style {:flex "50%"}}
+        [:div {:style {:display :flex :flex-direction :column}}
+         [:h2
+          "Pädeva asutuse seisukoht"]
+         [typography/Text {:style {:display :inline}}
+          (:land-owner-opinion/authority-position (common-controller/prepare-form-data
+                                                    (form/to-value opinion)))]]]]])])
 
 (defn- get-opinion-data-for-update
   "Select updatable data from opinion and transform activity enum to key word to be selectable"
