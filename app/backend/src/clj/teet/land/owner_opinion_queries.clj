@@ -1,6 +1,8 @@
 (ns teet.land.owner-opinion-queries
   (:require [teet.db-api.core :refer [defquery]]
-            [teet.land.owner-opinion-db :as owner-opinion-db]))
+            [teet.land.owner-opinion-db :as owner-opinion-db]
+            [teet.land.owner-opinion-export :as owner-opinion-export]
+            [teet.project.project-db :as project-db]))
 
 (defquery :land-owner-opinion/fetch-opinions
   {:doc "Fetch all land owner opinions for a project and unit"
@@ -20,3 +22,14 @@
    :project-id [:thk.project/id project-id]
    :authorization {:land/view-land-owner-opinions {}}}
   (count (owner-opinion-db/owner-opinions db project-id land-unit-id)))
+
+(defquery :land-owner-opinion/export-opinions
+  {:doc "Fetch land owner opinions as HTML"
+   :context {:keys [db user]}
+   :args {:land-owner-opinion/keys [activity type] :as args}
+   :project-id (project-db/activity-project-id db activity)
+   :authorization {:land/view-land-owner-opinions {}}}
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Type" "text/html; charset=UTF-8"}
+   :body (owner-opinion-export/summary-table db activity type)})
