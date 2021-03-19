@@ -86,15 +86,15 @@
   (r/with-let [owner-opinion-export-open? (r/atom false)]
     (let [related-entity-type (or
                                 (project-controller/project-setup-step app)
-                                (get-in app [:query :configure]))]
+                                (get-in app [:query :configure]))
+          show-opinion-export? (and (= (get-in app [:query :tab]) "land")
+                                    (common-controller/feature-enabled? :land-owner-opinions))]
       [:div {:class (<class project-style/project-page-structure)}
-       (let [show-opinion-export? (and (= (get-in app [:query :tab]) "land")
-                                       (common-controller/feature-enabled? :land-owner-opinions))]
-         [project-navigator-view/project-header project
-          (when show-opinion-export?
-            [{:label (tr [:land-owner-opinion :opinion-export])
-              :icon [icons/action-visibility-outlined {:style {:color theme-colors/primary}}]
-              :on-click #(reset! owner-opinion-export-open? true)}])])
+       [project-navigator-view/project-header project
+        (when show-opinion-export?
+          [{:label (tr [:land-owner-opinion :opinion-export])
+            :icon [icons/action-visibility-outlined {:style {:color theme-colors/primary}}]
+            :on-click #(reset! owner-opinion-export-open? true)}])]
        [owner-opinion-view/land-owner-opinion-export-modal e! project owner-opinion-export-open?]
        [:div {:class (<class project-style/project-map-container)}
         (project-map-view/create-project-map e! app project)
