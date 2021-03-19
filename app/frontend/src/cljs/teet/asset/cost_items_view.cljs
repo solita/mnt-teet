@@ -61,40 +61,72 @@
       ;; no validation otherwise
       nil)))
 
-(defn- attributes* [e! attrs rotl]
-  (let [common-attrs (:attribute/_parent (:ctype/common rotl))]
-    [Grid {:container true
-           :justify :space-evenly
-           :alignItems :flex-end}
-     (doall
-      (for [{:db/keys [ident valueType]
-             :attribute/keys [mandatory? min-value max-value]
-             :asset-schema/keys [unit] :as attr} (concat common-attrs attrs)
-            :let [type (:db/ident valueType)]]
-        [Grid {:item true
-               :md 4
-               :xs 12
-               :style {:padding "0.2rem"}}
-         [form/field {:attribute ident
-                      :required? mandatory?
-                      :validate (r/partial validate (:db/ident valueType) min-value max-value)}
-          (if (= type :db.type/ref)
-            ;; Selection value
-            [select/form-select
-             {:show-empty-selection? true
-              :items (mapv :db/ident (:enum/_attribute attr))
-              :format-item (comp label rotl)}]
+(defn- attribute-group [{ident :db/ident
+                         cost-grouping? :attribute/cost-grouping?}]
+  (cond
+    (= :common/name ident) ; PENDING: location coming to this group
+    :name-and-location
 
-            ;; Text field
-            [text-field/TextField
-             ;; parse based on type
-             (merge
-              {:label (label attr)
-               :end-icon (when unit
-                           (text-field/unit-end-icon unit))}
-              (case type
-                (:db.type/long :db.type/bigdec) {:type :number}
-                nil))])]]))]))
+    cost-grouping?
+    :cost-grouping
+
+    (= "common" (namespace ident))
+    :common
+
+    :else
+    :details))
+
+(defn- attributes* [e! attrs rotl]
+  (r/with-let [open? (r/atom #{:name-and-location :cost-grouping :common :details})
+               toggle-open! #(swap! open? cu/toggle %)]
+    (let [common-attrs (:attribute/_parent (:ctype/common rotl))
+          attrs-groups (->> (concat common-attrs attrs)
+                            (group-by attribute-group)
+                            (cu/map-vals
+                             (partial sort-by (juxt (complement :attribute/mandatory?)
+                                                    label))))]
+      [:<>
+       (doall
+        (for [g [:name-and-location :cost-grouping :common :details]
+              :let [attrs (attrs-groups g)]
+              :when (seq attrs)]
+          [container/collapsible-container
+           {:open? (@open? g)
+            :on-toggle (r/partial toggle-open! g)
+            :size :small}
+           (tr [:asset :field-group g])
+           [Grid {:container true
+                  :justify :flex-start
+                  :alignItems :flex-end}
+            (doall
+             (for [{:db/keys [ident valueType]
+                    :attribute/keys [mandatory? min-value max-value]
+                    :asset-schema/keys [unit] :as attr} attrs
+                   :let [type (:db/ident valueType)]]
+               [Grid {:item true
+                      :md 4
+                      :xs 12
+                      :style {:padding "0.2rem"}}
+                [form/field {:attribute ident
+                             :required? mandatory?
+                             :validate (r/partial validate (:db/ident valueType) min-value max-value)}
+                 (if (= type :db.type/ref)
+                   ;; Selection value
+                   [select/form-select
+                    {:show-empty-selection? true
+                     :items (mapv :db/ident (:enum/_attribute attr))
+                     :format-item (comp label rotl)}]
+
+                   ;; Text field
+                   [text-field/TextField
+                    ;; parse based on type
+                    (merge
+                     {:label (label attr)
+                      :end-icon (when unit
+                                  (text-field/unit-end-icon unit))}
+                     (case type
+                       (:db.type/long :db.type/bigdec) {:type :number}
+                       nil))])]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."

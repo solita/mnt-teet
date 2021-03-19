@@ -80,7 +80,12 @@
    "Text too short, insert at least {min-length} characters",
    :max-length "Text too long, insert at most {max-length} characters",
    :min-value "Minimum allowed value: {min-value}",
-   :max-value "Maximum allowed value: {max-value}"}},
+   :max-value "Maximum allowed value: {max-value}"},
+  :field-group
+  {:details "Details",
+   :common "Common",
+   :name-and-location "Name and location",
+   :cost-grouping "Cost grouping"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
