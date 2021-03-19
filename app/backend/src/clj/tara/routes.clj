@@ -85,6 +85,6 @@
   [tara-endpoint client-properties]
   (routes
    (GET "/oauth2/request" req
-        (auth-request tara-endpoint client-properties req))
+        (auth-request (tara-endpoint) client-properties req))
    (GET "/oauth2/idpresponse" req
-        (auth-response tara-endpoint client-properties req))))
+        (auth-response (tara-endpoint) client-properties req))))

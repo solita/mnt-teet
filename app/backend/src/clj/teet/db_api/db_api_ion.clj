@@ -34,14 +34,21 @@
       cookies/wrap-cookies
       wrap-exception-alert))
 
+(defn cached [value-fn]
+  (let [val (atom nil)]
+    (fn []
+      (if-let [v @val]
+        v
+        (swap! val (fn [_] (value-fn)))))))
+
 (defn ring->ion [handler]
   (-> handler wrap-middleware apigw/ionize))
 
 (def db-api-query (ring->ion db-api-handlers/query-handler))
 (def db-api-command (ring->ion db-api-handlers/command-handler))
 (def tara-login (ring->ion (tara-routes/tara-routes
-                            (tara-endpoint/discover (environment/config-value :tara :endpoint-url))
+                            (cached #(tara-endpoint/discover
+                                      (environment/config-value :tara :endpoint-url)))
                             (merge
                              (environment/config-value :tara)
                              {:on-success login-commands/on-tara-login}))))
-
