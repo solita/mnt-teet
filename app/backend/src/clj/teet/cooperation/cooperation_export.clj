@@ -3,7 +3,7 @@
   (:require [datomic.client.api :as d]
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.util.collection :as cu]
-            [teet.localization :refer [tr tr-enum]]
+            [teet.localization :refer [tr with-language tr-enum]]
             [teet.util.date :as date]
             [teet.util.md :as md]
             [teet.project.project-db :as project-db]
@@ -105,13 +105,14 @@
   (let [applications (applications-by-response-type db activity type)
         project (d/pull db [:thk.project/name :thk.project/project-name]
                         (project-db/activity-project-id db activity))]
-    (html-export-util/html-export-helper
-      {:title (tr-enum type)
-       :content [:div#export
-                 [:h1 (or (:thk.project/project-name project) (:thk.project/name project))]
-                 [:h2 (tr-enum type)]
-                 (map-indexed
-                   (fn [i applications]
-                     (applications-table (inc i) applications))
-                   (remove nil?
-                           (map applications response-type-order)))]})))
+    (with-language :et
+      (html-export-util/html-export-helper
+        {:title (tr-enum type)
+         :content [:div#export
+                   [:h1 (or (:thk.project/project-name project) (:thk.project/name project))]
+                   [:h2 (tr-enum type)]
+                   (map-indexed
+                     (fn [i applications]
+                       (applications-table (inc i) applications))
+                     (remove nil?
+                             (map applications response-type-order)))]}))))

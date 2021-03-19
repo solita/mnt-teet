@@ -13,20 +13,17 @@
                                    "document.execCommand('Copy');"
                                    "}"))
 
-
-
 (defn html-export-helper
   [{:keys [title content]}]
   (h/html
-    (with-language :et
-                   (cu/eager
-                     [:html
-                      [:head
-                       [:title title]
-                       [:script
-                        [copy-to-clipboard-script]]]
-                      [:body
-                       [:button {:style "float: right;"
-                                 :onclick "copyToClipboard()"}
-                        (tr [:buttons :copy-to-clipboard])]
-                       content]]))))
+    (cu/eager
+      [:html
+       [:head
+        [:title title]
+        [:script
+         [copy-to-clipboard-script]]]
+       [:body
+        [:button {:style "float: right;"
+                  :onclick "copyToClipboard()"}
+         (tr [:buttons :copy-to-clipboard])]
+        content]])))

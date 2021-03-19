@@ -1,5 +1,5 @@
 (ns teet.land.owner-opinion-export
-  (:require [teet.localization :refer [tr tr-enum with-language]]
+  (:require [teet.localization :refer [tr-enum with-language]]
             [datomic.client.api :as d]
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.util.html-export :as html-export-util]))
@@ -19,8 +19,9 @@
 
 (defn summary-table [db activity type]
   (let [opinions (opinions-by-type db activity type)]
-    (html-export-util/html-export-helper
-      {:title (str (tr-enum type) " land owner opinions")
-       :content [:div#export
-                 [:h1 "This is the first work in progress version"]
-                 [:p (pr-str opinions)]]})))
+    (with-language :et
+      (html-export-util/html-export-helper
+        {:title (str (tr-enum type) " land owner opinions")
+         :content [:div#export
+                   [:h1 "This is the first work in progress version"]
+                   [:p (pr-str opinions)]]}))))
