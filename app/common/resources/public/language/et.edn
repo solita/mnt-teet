@@ -80,7 +80,12 @@
    :max-length
    "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
    :min-value "Lubatud minimaalne väärtus on {min-value}",
-   :max-value "Lubatud maksimaalne väärtus on {max-value}"}},
+   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
+  :field-group
+  {:details "Üksikasjad",
+   :common "Ühine",
+   :name-and-location "Nimi ja asukoht",
+   :cost-grouping "Kulude grupeerimine"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
