@@ -254,8 +254,6 @@
    :coordination-task-status-no-upload
    "Coordination task state does not allow file uploading.",
    :response-not-given "Files can be added after response is added",
-   :coordination-task-status-mismatch
-   "Task is not in a state that allows file upload.",
    :response-not-editable
    "Response has an opinion added and can't be edited."},
   :response-of-third-party "Response of involved party",
@@ -602,6 +600,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :invalid-task-status
+  "Task status does not allow for files to be added",
   :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
