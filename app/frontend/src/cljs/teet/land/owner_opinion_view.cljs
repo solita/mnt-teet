@@ -231,13 +231,11 @@
        [Grid {:item true
               :md 6
               :xs 12}
-        (when body
-          [rich-text-editor/display-markdown body])]
+        [rich-text-editor/rich-text-field {:value body :read-only? true}]]
        [Grid {:item true
               :md 6
               :xs 12}
-        (when authority-position
-          [rich-text-editor/display-markdown authority-position])]])])
+        [rich-text-editor/rich-text-field {:value authority-position :read-only? true}]]])])
 
 (defn- get-opinion-data-for-update
   "Select updatable data from opinion and transform activity enum to key word to be selectable"
