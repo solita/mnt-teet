@@ -68,10 +68,11 @@
            (:asset-schema/unit a)
            [attribute-values open a]]]])]]))
 
-(defn- ctype [open {attributes :attribute/_parent
+(defn- ctype [open {label ::label
+                    attributes :attribute/_parent
                     child-ctypes :ctype/_parent :as ct}]
   [collapsible open ct
-   (str (tr [:asset :type-library :ctype]) " " (tr* ct))
+   (or label (str (tr [:asset :type-library :ctype]) " " (tr* ct)))
    [:div
     (tr* ct :asset-schema/description)
     [attribute-table open attributes]
@@ -103,10 +104,11 @@
        ^{:key (str (:db/id fc))}
        [fclass open fc]))]])
 
-(defn asset-library-page [_e! _app {:keys [fgroups]}]
+(defn asset-library-page [_e! _app {:keys [fgroups] common :ctype/common}]
   (r/with-let [open (r/atom #{})]
     [:<>
      [typography/Heading1 (tr [:asset :type-library :header])]
+     [ctype open (assoc common ::label (tr [:asset :type-library :common-ctype]))]
      (doall
       (for [fg fgroups]
         ^{:key (str (:db/id fg))}
