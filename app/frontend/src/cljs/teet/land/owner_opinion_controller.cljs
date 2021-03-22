@@ -4,7 +4,6 @@
 
 (defrecord SubmitOpinionForm [form-data])
 (defrecord OpinionFormClose [])
-(defrecord OpinionUpdateFormClose [])
 (defrecord OpinionFormOpen [])
 (defrecord IncreaseCommentCount [land-unit-id])
 
@@ -29,8 +28,4 @@
 
   OpinionFormClose
   (process-event [_ app]
-    (update app :query dissoc :modal-new-opinion))
-
-  OpinionUpdateFormClose
-  (process-event [_ app]
-    (common-controller/refresh-page app)))
+    (update app :query dissoc :modal-new-opinion)))
