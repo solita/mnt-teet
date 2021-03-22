@@ -51,7 +51,9 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :link,
-  :external-consultant :link},
+  :external-consultant :link,
+  :authenticated-guest :link,
+  :guest :link},
  :maintenance/asset-map
  {:admin :full,
   :manager :full,
@@ -262,7 +264,9 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :link,
-  :external-consultant :link},
+  :external-consultant :link,
+  :authenticated-guest :link,
+  :guest :link},
  :maintenance/asset-filtering
  {:admin :full,
   :manager :full,
