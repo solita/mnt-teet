@@ -29,7 +29,7 @@
      (log/info "Starting TEET service in port " port)
      (-> (routes
           (if tara
-            (tara-routes/tara-routes (tara-endpoint/discover (:endpoint-url tara))
+            (tara-routes/tara-routes #(tara-endpoint/discover (:endpoint-url tara))
                                      (merge tara
                                             {:scopes ["openid" "email"]
                                              :on-error login-tara-token/tara-error-handler

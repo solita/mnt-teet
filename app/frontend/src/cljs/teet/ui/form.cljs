@@ -97,13 +97,13 @@
   ([] (form-buttons nil))
   ([justify]
    (merge
+     {:display :flex
+      :flex-wrap :wrap
+      :justify-content :center
+      :margin-top "1.5rem"
+      :padding-bottom "1rem"}
     (when justify
-      {:justify-content justify})
-    {:display :flex
-     :flex-wrap :wrap
-     :justify-content :center
-     :margin-top "1.5rem"
-     :padding-bottom "1rem"})))
+      {:justify-content justify}))))
 
 (defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
                            delete-title delete-disabled-error-text delete-link?
@@ -276,7 +276,7 @@
   [field-info _field
    {:keys [invalid-attributes required-fields current-fields] :as ctx}]
 
-  (let [{:keys [attribute]
+  (let [{:keys [attribute required?]
          validate-field :validate
          :as field-info} (if (map? field-info)
                            field-info
@@ -304,7 +304,7 @@
                      :on-change (r/partial update-attribute-fn attribute)
                      :error error?
                      :error-text error-text
-                     :required (required-field? attribute required-fields)}]
+                     :required (or required? (required-field? attribute required-fields))}]
            [:div {:data-form-attribute (str attribute)
                   :class (<class common-styles/margin-bottom 1)}
             (add-validation

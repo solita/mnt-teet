@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEET_ENV=`aws ssm get-parameters --names /teet/env --query Parameters[0].Value --output text`
+TEET_ENV=`aws ssm get-parameters --names /teet/base-url --query Parameters[0].Value --output text`
 
 if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]
 then

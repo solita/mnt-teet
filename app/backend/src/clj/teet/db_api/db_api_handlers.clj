@@ -41,6 +41,7 @@
             teet.cooperation.cooperation-queries
             teet.cooperation.cooperation-commands
             teet.asset.asset-queries
+            teet.asset.asset-commands
             teet.integration.vektorio.vektorio-queries
 
             [teet.log :as log]
@@ -55,6 +56,18 @@
        (subs auth 7)))
    (get-in req [:params "t"])))
 
+(defn- deref-delay [x]
+  (if (delay? x) @x x))
+
+;; Context map that can have "lazy" values that are only realized
+;; if they are looked up
+(deftype ContextMap [m]
+  clojure.lang.ILookup
+  (valAt [_ k]
+    (deref-delay (get m k)))
+  (valAt [_ k default-value]
+    (deref-delay (get m k default-value))))
+
 (defn- request [handler-fn]
   (fn [req]
     (try
@@ -64,8 +77,11 @@
           {:user (str (:user/id user))}
           (let [conn (environment/datomic-connection)
                 db (d/db conn)
+                aconn (delay (environment/asset-connection))
                 ctx {:conn conn
                      :db db
+                     :asset-conn aconn
+                     :asset-db (delay (d/db @aconn))
                      :user (merge user
                                   (when-let [user-id (:user/id user)]
                                     (user-db/user-info db [:user/id user-id])))
@@ -120,7 +136,7 @@
          _ (log/info "Query " query
                      ", user: " (get-in ctx [:user :db/id])
                      ", args: " args)
-         query-result (db-api/query ctx args)]
+         query-result (db-api/query (ContextMap. ctx) args)]
      (if (and (map? query-result)
               (contains? query-result :query)
               (contains? query-result :args))
@@ -143,7 +159,7 @@
          _ (log/info "Command: " command
                      ", user: " (get-in ctx [:user :db/id])
                      ", payload: " payload)
-         result (db-api/command! ctx payload)]
+         result (db-api/command! (ContextMap. ctx) payload)]
      (log/debug "  " command " result => " result)
 
      (if-let [error (:error result)]

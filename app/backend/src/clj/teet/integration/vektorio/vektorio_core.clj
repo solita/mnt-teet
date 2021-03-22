@@ -77,8 +77,9 @@
         project-vektor-id (ensure-project-vektorio-id! conn vektor-config file-id)
         file-data (d/pull db '[:file/name :db/id :file/s3-key] file-id)
         response (vektorio-client/add-model-to-project! vektor-config {:project-id project-vektor-id
-                                                                       :model-file (integration-s3/get-object (file-storage/storage-bucket)
-                                                                                                              (:file/s3-key file-data))
+                                                                       :model-file (integration-s3/get-object-stream-http
+                                                                                     (file-storage/storage-bucket)
+                                                                                     (:file/s3-key file-data))
                                                                        :vektorio-filename (vektorio-filename db file-id)
                                                                        :vektorio-filepath (vektorio-filepath db file-id)})
         vektorio-model-id (str (:id response))]

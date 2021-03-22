@@ -26,7 +26,6 @@
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
-            [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
@@ -38,6 +37,7 @@
             [teet.ui.num-range :as num-range]
             [teet.project.project-map-view :as project-map-view]
             [teet.common.common-controller :as common-controller]
+            [teet.land.owner-opinion-view :as owner-opinion-view]
             [teet.road.road-model :as road-model]
             [teet.ui.query :as query]
             [taoensso.timbre :as log]
@@ -83,29 +83,36 @@
    app
    project
    {:keys [key header body footer map-settings]}]
-  (let [related-entity-type (or
-                              (project-controller/project-setup-step app)
-                              (get-in app [:query :configure]))]
-    [:div {:class (<class project-style/project-page-structure)}
-     [project-navigator-view/project-header project]
-     [:div {:class (<class project-style/project-map-container)}
-                                        ;[project-map-view/project-map e! app project]
-      (project-map-view/create-project-map e! app project)
-      [Paper {:class (<class project-style/project-content-overlay)}
-       header
-       [:div {:class (<class project-style/content-overlay-inner)}
-        (with-meta
-          body
-          {:key key})]
-       (when footer
-         footer)]
-      (when (get-in app [:map :search-area :drawing?])
-        [drawing-indicator/drawing-indicator
-         {:save-disabled? (not (boolean (get-in app [:map :search-area :unsaved-drawing])))
-          :cancel-action #(e! (search-area-controller/->StopCustomAreaDraw))
-          :save-action #(e! (search-area-controller/->SaveDrawnArea (get-in app [:map :search-area :unsaved-drawing])))}])
-      (when (:geometry-range? map-settings)
-        [search-area-view/feature-search-area e! app project related-entity-type])]]))
+  (r/with-let [owner-opinion-export-open? (r/atom false)]
+    (let [related-entity-type (or
+                                (project-controller/project-setup-step app)
+                                (get-in app [:query :configure]))
+          show-opinion-export? (and (= (get-in app [:query :tab]) "land")
+                                    (common-controller/feature-enabled? :land-owner-opinions))]
+      [:div {:class (<class project-style/project-page-structure)}
+       [project-navigator-view/project-header project
+        (when show-opinion-export?
+          [{:label (tr [:land-owner-opinion :opinion-export])
+            :icon [icons/action-visibility-outlined {:style {:color theme-colors/primary}}]
+            :on-click #(reset! owner-opinion-export-open? true)}])]
+       [owner-opinion-view/land-owner-opinion-export-modal e! project owner-opinion-export-open?]
+       [:div {:class (<class project-style/project-map-container)}
+        (project-map-view/create-project-map e! app project)
+        [Paper {:class (<class project-style/project-content-overlay)}
+         header
+         [:div {:class (<class project-style/content-overlay-inner)}
+          (with-meta
+            body
+            {:key key})]
+         (when footer
+           footer)]
+        (when (get-in app [:map :search-area :drawing?])
+          [drawing-indicator/drawing-indicator
+           {:save-disabled? (not (boolean (get-in app [:map :search-area :unsaved-drawing])))
+            :cancel-action #(e! (search-area-controller/->StopCustomAreaDraw))
+            :save-action #(e! (search-area-controller/->SaveDrawnArea (get-in app [:map :search-area :unsaved-drawing])))}])
+        (when (:geometry-range? map-settings)
+          [search-area-view/feature-search-area e! app project related-entity-type])]])))
 
 (defmethod project-menu/project-tab-content :activities [_ e! app project]
   [:div.project-activities-tab
@@ -648,11 +655,7 @@
                                           #{:thk-project :surveys})}
                :footer [project-menu/project-tab-footer tab-name e! app project]})])))
 
-
-
-
 (defn project-page
-  "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project]
   (log/debug "project-page: project id" (:thk.project/id project))
   [project-context/provide

@@ -80,6 +80,7 @@
         soap-msg))))
 
 (defn string->zipped-xml [xml-string]
+  (assert (string? xml-string) xml-string)
   (with-open [in (io/input-stream (.getBytes xml-string "UTF-8"))]
     (zip/xml-zip (xml/parse in))))
 

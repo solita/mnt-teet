@@ -129,11 +129,14 @@
 
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
 (defn scheduled-file-import [event]
-  (future
-    (try
-      (scheduled-file-import*
-       (environment/datomic-connection))
-      (catch Exception e
-        (log/error e))))
+  (if (environment/feature-enabled? :vektorio)    
+    (future
+      (try
+        (scheduled-file-import*
+         (environment/datomic-connection))
+        (catch Exception e
+          (log/error e))))
+    ;; else
+    (log/info "Vektorio scheduled import event handler: feature is not enabled, not doing anything"))
   "{\"success\": true}")
 

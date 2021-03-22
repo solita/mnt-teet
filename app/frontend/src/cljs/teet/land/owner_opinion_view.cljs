@@ -21,9 +21,7 @@
             [teet.ui.query :as query]
             [teet.theme.theme-colors :as theme-colors]
             [teet.util.datomic :as du]
-            [teet.util.date :as date]
-            [teet.ui.authorization-context :as authorization-context]
-            [teet.ui.format :as format]))
+            [teet.ui.panels :as panels]))
 
 (defn add-opinion-heading-style
   []
@@ -31,69 +29,68 @@
    :border-bottom (str "1px solid " theme-colors/border-dark)
    :margin-bottom "1rem"})
 
-(defn get-activities [project]
-  (let [skip-activities #{:activity.name/warranty :activity.name/land-acquisition}]
-    (into []
-      (comp
-        (mapcat :thk.lifecycle/activities)
-        (remove (comp skip-activities :activity/name)))
-      (:thk.project/lifecycles
-        (du/idents->keywords project)))))
 
-(defn- opinion-form-controls [e! activities]
-  [Grid {:container true
-         :spacing 1}
-   [Grid {:item true
-          :md 4
-          :xs 12}
-    [form/field :land-owner-opinion/activity
-     [select/form-select {:show-empty-selection? true
-                          :items (mapv #(select-keys % [:db/id :activity/name]) activities)
-                          :format-item (comp tr-enum :activity/name)}]]]
-   [Grid {:item true
-          :md 4
-          :xs 12}
-    [form/field :land-owner-opinion/respondent-name
-     [TextField {}]]]
-   [Grid {:item true
-          :md 4
-          :xs 12}
-    [form/field :land-owner-opinion/date
-     [date-picker/date-input {}]]]
-   [Grid {:item true
-          :md 4
-          :xs 12}
-    [form/field :land-owner-opinion/type
-     [select/select-enum {:e! e! :attribute :land-owner-opinion/type}]]]
-   [Grid {:item true
-          :md 4
-          :xs 12}
-    [form/field :land-owner-opinion/respondent-connection-to-land
-     [TextField {}]]]
-   [Grid {:item true
-          :md 4
-          :xs 12}
-    [form/field :land-owner-opinion/link-to-response
-     [TextField {}]]]
-   [Grid {:item true
-          :md 6
-          :xs 12}
-    [form/field :land-owner-opinion/body
-     [rich-text-editor/rich-text-field {}]]]
-   [Grid {:item true
-          :md 6
-          :xs 12}
-    [form/field :land-owner-opinion/authority-position
-     [rich-text-editor/rich-text-field {}]]]
-   [Grid {:item true
-          :xs 12}
-    [form/footer2]]])
+(defn owner-opinion-export-form
+  [e! project close form-atom]
+  (r/with-let [skip-activities #{:activity.name/warranty :activity.name/land-acquisition}
+               activities (into []
+                                (comp
+                                  (mapcat :thk.lifecycle/activities)
+                                  (remove (comp skip-activities :activity/name)))
+                                (:thk.project/lifecycles
+                                  (du/idents->keywords project)))
+               form-change (form/update-atom-event form-atom merge)]
+    [form/form2 {:e! e!
+                 :on-change-event form-change
+                 :value @form-atom
+                 :cancel-fn close
+                 :spec :land-owner-opinion/export}
+     [:div {:class (<class common-styles/gray-container-style)}
+      [form/field :land-owner-opinion/activity
+       [select/form-select {:show-empty-selection? true
+                            :empty-selection-label (tr [:land-owner-opinion :choose-activity])
+                            :items (mapv #(select-keys % [:db/id :activity/name]) activities)
+                            :format-item (comp tr-enum :activity/name)}]]
+      [form/field :land-owner-opinion/type
+       [select/select-enum {:e! e!
+                            :show-empty-selection? true
+                            :empty-selection-label (tr [:land-owner-opinion :choose-type])
+                            :attribute :land-owner-opinion/type}]]]
+     [:div {:class (<class form/form-buttons :flex-end)}
+      [buttons/button-secondary {:on-click close
+                                 :style {:margin-right "1rem"}}
+       (tr [:buttons :cancel])]
+      (let [{:land-owner-opinion/keys [activity type] :as form-value} @form-atom]
+        [buttons/button-primary {:target "_blank"
+                                 :disabled (or (nil? activity) (nil? type))
+                                 :href (common-controller/query-url
+                                         :land-owner-opinion/export-opinions
+                                         (update form-value :land-owner-opinion/activity :db/id))}
+         (tr [:buttons :preview])])]]))
+
+
+(defn land-owner-opinion-export-modal
+  [e! project open-atom]
+  (r/with-let [close #(reset! open-atom false)
+               form-atom (r/atom {})]
+    [:<>
+     [panels/modal {:max-width :sm
+                    :open-atom open-atom
+                    :title (tr [:land-owner-opinion :export-modal-title])
+                    :on-close close}
+      [owner-opinion-export-form e! project close form-atom]]]))
 
 (defn owner-opinion-form
   [e! project target]
   (r/with-let [form-state (r/atom {})
                form-change (form/update-atom-event form-state merge)
-               activities (get-activities project)]
+               skip-activities #{:activity.name/warranty :activity.name/land-acquisition}
+               activities (into []
+                                (comp
+                                  (mapcat :thk.lifecycle/activities)
+                                  (remove (comp skip-activities :activity/name)))
+                                (:thk.project/lifecycles
+                                  (du/idents->keywords project)))]
     [:div {:style {:padding "0.5rem"
                    :overflow "hidden"}}
      [:div {:class (<class add-opinion-heading-style)}
@@ -111,7 +108,54 @@
                                      (e! (opinion-controller/->IncreaseCommentCount target)))))
                   :value @form-state
                   :cancel-event #(opinion-controller/->OpinionFormClose)
-                  :spec :land-owner-opinion/form} (opinion-form-controls e! activities)]]))
+                  :spec :land-owner-opinion/form}
+      [Grid {:container true
+             :spacing 1}
+       [Grid {:item true
+              :md 4
+              :xs 12}
+        [form/field :land-owner-opinion/activity
+         [select/form-select {:show-empty-selection? true
+                              :items (mapv #(select-keys % [:db/id :activity/name]) activities)
+                              :format-item (comp tr-enum :activity/name)}]]]
+       [Grid {:item true
+              :md 4
+              :xs 12}
+        [form/field :land-owner-opinion/respondent-name
+         [TextField {}]]]
+       [Grid {:item true
+              :md 4
+              :xs 12}
+        [form/field :land-owner-opinion/date
+         [date-picker/date-input {}]]]
+       [Grid {:item true
+              :md 4
+              :xs 12}
+        [form/field :land-owner-opinion/type
+         [select/select-enum {:e! e! :attribute :land-owner-opinion/type}]]]
+       [Grid {:item true
+              :md 4
+              :xs 12}
+        [form/field :land-owner-opinion/respondent-connection-to-land
+         [TextField {}]]]
+       [Grid {:item true
+              :md 4
+              :xs 12}
+        [form/field :land-owner-opinion/link-to-response
+         [TextField {}]]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [form/field :land-owner-opinion/body
+         [rich-text-editor/rich-text-field {}]]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [form/field :land-owner-opinion/authority-position
+         [rich-text-editor/rich-text-field {}]]]
+       [Grid {:item true
+              :xs 12}
+        [form/footer2]]]]]))
 
 (defn land-owner-opinion-row-style
   []
@@ -294,7 +338,7 @@
      [:div
       [:div {:class (<class common-styles/padding-bottom 1)}
        [typography/TextBold {:style {:display :inline}}
-        (tr [:land-owner-opinions :opinions])]
+        (tr [:land-owner-opinion :opinions])]
        [typography/SmallText {:style {:display :inline}}
         " " (str l-address " (" purpose ") " target)]]]
      (if (empty? opinions)

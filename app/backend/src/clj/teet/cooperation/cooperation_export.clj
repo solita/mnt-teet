@@ -3,11 +3,11 @@
   (:require [datomic.client.api :as d]
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.util.collection :as cu]
-            [hiccup.core :as h]
-            [teet.localization :refer [tr tr-enum with-language]]
+            [teet.localization :refer [tr with-language tr-enum]]
             [teet.util.date :as date]
             [teet.util.md :as md]
-            [teet.project.project-db :as project-db]))
+            [teet.project.project-db :as project-db]
+            [teet.util.html-export :as html-export-util]))
 
 (defn- applications-by-response-type [db activity type]
   (->>
@@ -105,31 +105,14 @@
   (let [applications (applications-by-response-type db activity type)
         project (d/pull db [:thk.project/name :thk.project/project-name]
                         (project-db/activity-project-id db activity))]
-    (h/html
-     (with-language :et
-       (cu/eager
-        [:html
-         [:head
-          [:title (tr-enum type)]
-          [:script
-           (str "function copyToClipboard() {"
-                "var e = document.getElementById('export');"
-                "var s = window.getSelection();"
-                "var r = document.createRange();"
-                "r.selectNodeContents(e);"
-                "s.removeAllRanges();"
-                "s.addRange(r);"
-                "document.execCommand('Copy');"
-                "}")]]
-         [:body
-          [:button {:style "float: right;"
-                    :onclick "copyToClipboard()"}
-           (tr [:buttons :copy-to-clipboard])]
-          [:div#export
-           [:h1 (or (:thk.project/project-name project) (:thk.project/name project))]
-           [:h2 (tr-enum type)]
-           (map-indexed
-            (fn [i applications]
-              (applications-table (inc i) applications))
-            (remove nil?
-                    (map applications response-type-order)))]]])))))
+    (with-language :et
+      (html-export-util/html-export-helper
+        {:title (tr-enum type)
+         :content [:div#export
+                   [:h1 (or (:thk.project/project-name project) (:thk.project/name project))]
+                   [:h2 (tr-enum type)]
+                   (map-indexed
+                     (fn [i applications]
+                       (applications-table (inc i) applications))
+                     (remove nil?
+                             (map applications response-type-order)))]}))))

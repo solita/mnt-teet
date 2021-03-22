@@ -219,3 +219,27 @@
   [coll]
   (map-indexed (fn [i x]
                  (assoc x ::i i)) coll))
+
+(defn without
+  "Return form without items that match pred.
+
+  Removes entries in maps where the value matches pred
+  and elements in sequential that match pred."
+
+  [pred form]
+  (walk/prewalk
+   (fn [x]
+     (cond
+       (map-entry? x)
+       (let [[_ v] x]
+         (if (pred v)
+           nil
+           x))
+
+       (sequential? x)
+       (into (empty x)
+             (remove pred)
+             x)
+
+       :else x))
+   form))
