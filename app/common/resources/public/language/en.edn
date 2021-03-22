@@ -95,6 +95,7 @@
   :delete "Delete",
   :save "Save",
   :close "Close",
+  :preview "Preview",
   :undo "Undo",
   :back "Back",
   :send "Send",
@@ -253,8 +254,6 @@
    :coordination-task-status-no-upload
    "Coordination task state does not allow file uploading.",
    :response-not-given "Files can be added after response is added",
-   :coordination-task-status-mismatch
-   "Task is not in a state that allows file upload.",
    :response-not-editable
    "Response has an opinion added and can't be edited."},
   :response-of-third-party "Response of involved party",
@@ -377,7 +376,7 @@
   :activity.name/other "Other",
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
-  :cooperation.opinion.status/rejected "Ignore comments",
+  :cooperation.opinion.status/rejected "Ignore",
   :document.sub-category/no-objection-letters "No-objection letters",
   :task.group/working-design "Working Design",
   :task.status/waiting-for-review "Waiting for review",
@@ -432,7 +431,7 @@
   :activity.name/warranty "Warranty",
   :task.type/construction-general-part "General part",
   :cooperation.opinion.status/partially-rejected
-  "Comments partly taken into account",
+  "Partly taken into account",
   :participation.role/organizer "Organizer",
   :task.type/design-road-safety-audit "Road safety audit",
   :thk.task-type/third-party-review "3rd party review",
@@ -521,8 +520,7 @@
   :task.status/in-progress "In progress",
   :task.type/drainage "Drainage",
   :cooperation.application.type/ex-ante-eia "Ex-ante EIA",
-  :cooperation.opinion.status/agreed
-  "Comments to be taken into account",
+  :cooperation.opinion.status/agreed "Taken into account",
   :task.type/design-requirements "Design requirements",
   :file.status/updated "Updated",
   :file.document-group/specifications "Specifications",
@@ -602,6 +600,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :invalid-task-status
+  "Task status does not allow for files to be added",
   :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
@@ -890,8 +890,13 @@
   :owners-opinions "Land owners opinions",
   :no-mortgages "No mortgages",
   :no-owners-opinions "No opinions"},
- :land-owner-opinions
- {:opinions "Opinions", :add-new-opinion "ADD NEW OPINION"},
+ :land-owner-opinion
+ {:opinions "Opinions",
+  :add-new-opinion "ADD NEW OPINION",
+  :export-modal-title "Land owners opinions summary table",
+  :choose-activity "Choose an activity",
+  :choose-type "Choose a type",
+  :opinion-export "Land owners opinions"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
