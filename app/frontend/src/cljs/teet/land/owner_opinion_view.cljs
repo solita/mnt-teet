@@ -189,7 +189,9 @@
                                  save-event)
                   :value @form-state
                   :cancel-event close-event
-                  :spec :land-owner-opinion/form} (opinion-form-controls e! activities)]]))
+                  :spec :land-owner-opinion/form
+                  :id (str "owner-opinion-" (:db/id @form-state))}
+      (opinion-form-controls e! activities)]]))
 
 (defn opinion-content [e! {id :db/id
                            body :land-owner-opinion/body
@@ -197,42 +199,45 @@
                            response-date :land-owner-opinion/date
                            link-to-response :land-owner-opinion/link-to-response :as opinion}
                        edit-right? editing?]
-  (when (not editing?)
-   [Grid {:container true
-          :spacing 1}
-    [Grid {:item true
-             :md 6
-             :xs 12}
-       [typography/TextBold "Response date"]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/SmallText "Link to response"]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/TextBold (format/date response-date)]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/SmallText [:a {:target :_blank
-                                :href link-to-response} link-to-response]]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/TextBold "Arvamuse sisu"]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/TextBold "Pädeva asutuse seisukoht"]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/Text body]]
-    [Grid {:item true
-           :md 6
-           :xs 12}
-     [typography/Text authority-position]]]))
+   [:div {:id (str "opinion-" id)}
+    (when (not editing?)
+      [Grid {:container true
+             :spacing 1}
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [typography/TextBold "Vastuse kuupäev"]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [typography/SmallText "Link to response"]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [typography/TextBold (format/date response-date)]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [typography/SmallText [:a {:target :_blank
+                                   :href link-to-response} link-to-response]]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [typography/TextBold "Arvamuse sisu"]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        [typography/TextBold "Pädeva asutuse seisukoht"]]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        (when body
+          [rich-text-editor/display-markdown body])]
+       [Grid {:item true
+              :md 6
+              :xs 12}
+        (when authority-position
+          [rich-text-editor/display-markdown authority-position])]])])
 
 (defn- get-opinion-data-for-update
   "Select updatable data from opinion and transform activity enum to key word to be selectable"
@@ -248,10 +253,10 @@
 
 (defn owner-opinion-details
   "Contains Opinion details update form and \"Edit\" button to show or hide it"
-  [e! {:keys [edit-rights?]} {id :db/id :as opinion} project target]
+  [e! {:keys [edit-rights?]} {id :db/id :as opinion} project target refresh!]
   (r/with-let [[pfrom pto] (common/portal)
                edit-open-atom (r/atom false)
-               save-event (fn [_] (reset! edit-open-atom false))
+               save-event (fn [_] (reset! edit-open-atom false) (refresh!))
                form-data (r/atom (get-opinion-data-for-update opinion))]
     [:div
      ;;[:span (pr-str @form-data)]
@@ -273,14 +278,14 @@
         [opinion-content e! @form-data edit-rights? @edit-open-atom]]}]]))
 
 (defn owner-opinion-row
-  [e! project target opinion rights]
+  [e! project target refresh! opinion rights]
   (let [authorization {:edit-rights? (get rights :edit-opinion)
                        :review-rights? (get rights :review-opinion)}]
     [:div {:class (<class land-owner-opinion-row-style)}
-     [owner-opinion-details e! authorization opinion project target]]))
+     [owner-opinion-details e! authorization opinion project target refresh!]]))
 
 (defn owner-opinions-list
-  [e! project unit target opinions]
+  [e! project unit target refresh! opinions ]
   (let [l-address (:L_AADRESS unit)
         purpose (:SIHT1 unit)]
     [:div
@@ -301,13 +306,14 @@
          (fn [opinion]
            ^{:key (:db/id opinion)}
            [authorization-context/consume
-            [owner-opinion-row e! project target opinion]])
+            [owner-opinion-row e! project target refresh! opinion]])
          opinions))]))
 
 (defn owner-opinions-unit-modal
   [{:keys [e! estate-info target app project]}]
-  (let [unit (land-controller/get-unit-by-teet-id project target)
-        new-opinion? (= (get-in app [:query :modal-new-opinion]) "true")]
+  (r/with-let [refresh (r/atom nil)
+               unit (land-controller/get-unit-by-teet-id project target)
+               new-opinion? (= (get-in app [:query :modal-new-opinion]) "true")]
     [:div
      (if new-opinion?
        [owner-opinion-form e! project target]
@@ -315,4 +321,6 @@
                      :query :land-owner-opinion/fetch-opinions
                      :args {:project-id (:db/id project)
                             :land-unit-id target}
-                     :simple-view [owner-opinions-list e! project unit target]}])]))
+                     :refresh @refresh
+                     :simple-view [owner-opinions-list e! project unit target
+                                   #(reset! refresh (.getTime (js/Date.)))]}])]))
