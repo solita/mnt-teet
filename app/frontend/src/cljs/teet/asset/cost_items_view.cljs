@@ -113,7 +113,8 @@
                  (if (= type :db.type/ref)
                    ;; Selection value
                    [select/form-select
-                    {:show-empty-selection? true
+                    {:label (label attr)
+                     :show-empty-selection? true
                      :items (mapv :db/ident (:enum/_attribute attr))
                      :format-item (comp label rotl)}]
 
