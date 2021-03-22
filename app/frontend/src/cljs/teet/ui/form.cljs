@@ -93,13 +93,13 @@
   ([] (form-buttons nil))
   ([justify]
    (merge
+     {:display :flex
+      :flex-wrap :wrap
+      :justify-content :center
+      :margin-top "1.5rem"
+      :padding-bottom "1rem"}
     (when justify
-      {:justify-content justify})
-    {:display :flex
-     :flex-wrap :wrap
-     :justify-content :center
-     :margin-top "1.5rem"
-     :padding-bottom "1rem"})))
+      {:justify-content justify}))))
 
 (defn form-footer [{:keys [delete delete-message delete-confirm-button-text delete-cancel-button-text
                            delete-title delete-disabled-error-text delete-link?
