@@ -21,7 +21,9 @@
             [teet.ui.query :as query]
             [teet.theme.theme-colors :as theme-colors]
             [teet.util.datomic :as du]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.ui.format :as format]
+            [teet.ui.authorization-context :as authorization-context]))
 
 (defn add-opinion-heading-style
   []
@@ -67,6 +69,64 @@
                                          :land-owner-opinion/export-opinions
                                          (update form-value :land-owner-opinion/activity :db/id))}
          (tr [:buttons :preview])])]]))
+
+(defn get-activities [project]
+  (let [skip-activities #{:activity.name/warranty :activity.name/land-acquisition}]
+    (into []
+      (comp
+        (mapcat :thk.lifecycle/activities)
+        (remove (comp skip-activities :activity/name)))
+      (:thk.project/lifecycles
+        (du/idents->keywords project)))))
+
+(defn- opinion-form-controls [e! activities]
+  [Grid {:container true
+         :spacing 1}
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/activity
+     [select/form-select {:show-empty-selection? true
+                          :items (mapv #(select-keys % [:db/id :activity/name]) activities)
+                          :format-item (comp tr-enum :activity/name)}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/respondent-name
+     [TextField {}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/date
+     [date-picker/date-input {}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/type
+     [select/select-enum {:e! e! :attribute :land-owner-opinion/type}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/respondent-connection-to-land
+     [TextField {}]]]
+   [Grid {:item true
+          :md 4
+          :xs 12}
+    [form/field :land-owner-opinion/link-to-response
+     [TextField {}]]]
+   [Grid {:item true
+          :md 6
+          :xs 12}
+    [form/field :land-owner-opinion/body
+     [rich-text-editor/rich-text-field {}]]]
+   [Grid {:item true
+          :md 6
+          :xs 12}
+    [form/field :land-owner-opinion/authority-position
+     [rich-text-editor/rich-text-field {}]]]
+   [Grid {:item true
+          :xs 12}
+    [form/footer2]]])
 
 
 (defn land-owner-opinion-export-modal
@@ -338,7 +398,7 @@
      [:div
       [:div {:class (<class common-styles/padding-bottom 1)}
        [typography/TextBold {:style {:display :inline}}
-        (tr [:land-owner-opinion :opinions])]
+        (tr [:land-owner-opinions :opinions])]
        [typography/SmallText {:style {:display :inline}}
         " " (str l-address " (" purpose ") " target)]]]
      (if (empty? opinions)
