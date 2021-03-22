@@ -65,6 +65,7 @@
    :db.type/bigdec "Arv",
    :fgroup "Vara grupp",
    :header "Tee olemi tüübiteek (TOTT) ",
+   :common-ctype "Ühised omadused",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
@@ -586,6 +587,8 @@
   :description-too-long
   "Faili kirjeldus on liiga pikk. Maksimaalne pikkus on {limit} tähemäki.",
   :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",
+  :comment-attachment-image-only
+  "Märkustele on lubatud lisada ainult pilte",
   :application-outside-activities
   "Taotlus kuupäev väljaspool projekti tegevuste aega.",
   :invalid-chars-in-description

@@ -65,6 +65,7 @@
    :db.type/bigdec "Number",
    :fgroup "Asset Features",
    :header "Road Object Type Library (ROTL)",
+   :common-ctype "Common properties",
    :link "ROTL",
    :label "Label",
    :values "Values",
@@ -590,6 +591,8 @@
   :description-too-long
   "The file description is too long. Allowed character limit is {limit} characters.",
   :user-already-exists "User with the given person id already exists",
+  :comment-attachment-image-only
+  "Only images can be added to comments",
   :application-outside-activities
   "Applied date not within any project activity.",
   :invalid-chars-in-description
