@@ -206,11 +206,11 @@
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/TextBold "Vastuse kuupäev"]]
+        [typography/TextBold (tr [:fields :land-owner-opinion/date])]]
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/SmallText "Link to response"]]
+        [typography/SmallText (tr [:fields :land-owner-opinion/link-to-response])]]
        [Grid {:item true
               :md 6
               :xs 12}
@@ -223,11 +223,11 @@
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/TextBold "Arvamuse sisu"]]
+        [typography/TextBold (tr [:fields :land-owner-opinion/body])]]
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/TextBold "Pädeva asutuse seisukoht"]]
+        [typography/TextBold (tr [:fields :land-owner-opinion/authority-position])]]
        [Grid {:item true
               :md 6
               :xs 12}

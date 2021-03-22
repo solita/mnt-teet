@@ -65,6 +65,7 @@
    :db.type/bigdec "Number",
    :fgroup "Asset Features",
    :header "Road Object Type Library (ROTL)",
+   :common-ctype "Common properties",
    :link "ROTL",
    :label "Label",
    :values "Values",
@@ -74,7 +75,19 @@
   :add-cost-item "Add cost item",
   :feature-group-and-class-placeholder
   "Search feature group or class...",
-  :no-matching-feature-classes "No matching feature classes."},
+  :no-matching-feature-classes "No matching feature classes.",
+  :validate
+  {:min-length
+   "Text too short, insert at least {min-length} characters",
+   :max-length "Text too long, insert at most {max-length} characters",
+   :min-value "Minimum allowed value: {min-value}",
+   :max-value "Maximum allowed value: {max-value}"},
+  :field-group
+  {:details "Details",
+   :common "Common",
+   :name-and-location "Name and location",
+   :cost-grouping "Cost grouping"},
+  :components {:label "Components"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -84,6 +97,7 @@
   :delete "Delete",
   :save "Save",
   :close "Close",
+  :preview "Preview",
   :undo "Undo",
   :back "Back",
   :send "Send",
@@ -242,8 +256,6 @@
    :coordination-task-status-no-upload
    "Coordination task state does not allow file uploading.",
    :response-not-given "Files can be added after response is added",
-   :coordination-task-status-mismatch
-   "Task is not in a state that allows file upload.",
    :response-not-editable
    "Response has an opinion added and can't be edited."},
   :response-of-third-party "Response of involved party",
@@ -366,7 +378,7 @@
   :activity.name/other "Other",
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
-  :cooperation.opinion.status/rejected "Ignore comments",
+  :cooperation.opinion.status/rejected "Ignore",
   :document.sub-category/no-objection-letters "No-objection letters",
   :task.group/working-design "Working Design",
   :task.status/waiting-for-review "Waiting for review",
@@ -421,7 +433,7 @@
   :activity.name/warranty "Warranty",
   :task.type/construction-general-part "General part",
   :cooperation.opinion.status/partially-rejected
-  "Comments partly taken into account",
+  "Partly taken into account",
   :participation.role/organizer "Organizer",
   :task.type/design-road-safety-audit "Road safety audit",
   :thk.task-type/third-party-review "3rd party review",
@@ -510,8 +522,7 @@
   :task.status/in-progress "In progress",
   :task.type/drainage "Drainage",
   :cooperation.application.type/ex-ante-eia "Ex-ante EIA",
-  :cooperation.opinion.status/agreed
-  "Comments to be taken into account",
+  :cooperation.opinion.status/agreed "Taken into account",
   :task.type/design-requirements "Design requirements",
   :file.status/updated "Updated",
   :file.document-group/specifications "Specifications",
@@ -581,6 +592,8 @@
   :description-too-long
   "The file description is too long. Allowed character limit is {limit} characters.",
   :user-already-exists "User with the given person id already exists",
+  :comment-attachment-image-only
+  "Only images can be added to comments",
   :application-outside-activities
   "Applied date not within any project activity.",
   :invalid-chars-in-description
@@ -591,6 +604,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :invalid-task-status
+  "Task status does not allow for files to be added",
   :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
@@ -639,7 +654,7 @@
   #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
-  :cooperation.response/status "Status",
+  :cooperation.response/status "Response situation",
   :estate-procedure/third-party-compensations
   "Third party compensations",
   :project/participant "Participant",
@@ -879,8 +894,13 @@
   :owners-opinions "Land owners opinions",
   :no-mortgages "No mortgages",
   :no-owners-opinions "No opinions"},
- :land-owner-opinions
- {:opinions "Opinions", :add-new-opinion "ADD NEW OPINION"},
+ :land-owner-opinion
+ {:opinions "Opinions",
+  :add-new-opinion "ADD NEW OPINION",
+  :export-modal-title "Land owners opinions summary table",
+  :choose-activity "Choose an activity",
+  :choose-type "Choose a type",
+  :opinion-export "Land owners opinions"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",

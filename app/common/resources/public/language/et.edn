@@ -65,6 +65,7 @@
    :db.type/bigdec "Arv",
    :fgroup "Vara grupp",
    :header "Tee olemi tüübiteek (TOTT) ",
+   :common-ctype "Ühised omadused",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
@@ -73,7 +74,20 @@
    :attributes "Tunnused"},
   :add-cost-item "Lisan vara",
   :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
-  :no-matching-feature-classes "Pole vastavata vara liik"},
+  :no-matching-feature-classes "Pole vastavata vara liik",
+  :validate
+  {:min-length
+   "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
+   :max-length
+   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
+   :min-value "Lubatud minimaalne väärtus on {min-value}",
+   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
+  :field-group
+  {:details "Üksikasjad",
+   :common "Ühine",
+   :name-and-location "Nimi ja asukoht",
+   :cost-grouping "Kulude grupeerimine"},
+  :components {:label "Komponendid"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -83,6 +97,7 @@
   :delete "Kustutan",
   :save "Salvestan",
   :close "Sulgen",
+  :preview "Eelvaade",
   :undo "Taastan",
   :back "Tagasi",
   :send "Saadan teavituse",
@@ -240,8 +255,6 @@
    :coordination-task-status-no-upload
    "Ülesande staatus ei luba failide lisamist.",
    :response-not-given "Faile saab lisada peale vastuse lisamist",
-   :coordination-task-status-mismatch
-   "Ülesanne ei ole failide üleslaadimist lubavas olekus.",
    :response-not-editable
    "Vastusele on seisukoht lisatud ja vastust ei saa enam muuta. "},
   :response-of-third-party "Kaasatud osapoole vastus",
@@ -287,7 +300,7 @@
   :activity.name/construction "Ehitus",
   :task.type/utilities "Tehnovõrgud",
   :cooperation.response.status/no-objection-with-terms
-  "Kooskõlastus tingimustega olemas",
+  "Tingimustega nõusolek olemas",
   :task.type/site-plan "Asendiplaan",
   :notification.type/activity-accepted
   "Tegevus on vastu võetud omaniku poolt",
@@ -365,7 +378,7 @@
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
   :activity.name/pre-design "Eskiisprojekt",
-  :cooperation.opinion.status/rejected "Märkused jätta arvestamata",
+  :cooperation.opinion.status/rejected "Eirata",
   :document.sub-category/no-objection-letters "Kooskõlastused",
   :task.group/working-design "Töö/teostuse projekt",
   :task.status/waiting-for-review "Ootab ülevaatamist",
@@ -419,7 +432,7 @@
   :activity.name/warranty "Garantii",
   :task.type/construction-general-part "Ülddokumendid",
   :cooperation.opinion.status/partially-rejected
-  "Märkused võtta arvesse osaliselt",
+  "Võtta arvesse osaliselt",
   :participation.role/organizer "Korraldaja",
   :task.type/design-road-safety-audit "Liiklusohutuse audit",
   :thk.task-type/third-party-review "Ekspertiis",
@@ -438,7 +451,8 @@
   :file.document-group/models "Mudelid",
   :estate-compensation.reason/crops "Vili",
   :thk.task-type/design-requirements "Projekteerimistingimused",
-  :cooperation.response.status/objection "Kooskõlastus tagasi lükatud",
+  :cooperation.response.status/objection
+  "Vastuväidetega arvamus olemas",
   :land-owner-opinion.type/ex-ante-eia "KMH eelhinnang",
   :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
@@ -460,8 +474,7 @@
   :task.type/geology "Geoloogia",
   :notification.type/task-review-rejected
   "Ülesande ülevaatamine tagasi lükatud",
-  :cooperation.response.status/no-response
-  "Kooskõlastustusele ei vastanud",
+  :cooperation.response.status/no-response "Arvamust ei avaldanud",
   :land-acquisition.status/completed "Lõpetatud",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
@@ -506,7 +519,7 @@
   :task.status/in-progress "Töös",
   :task.type/drainage "Drenaaž",
   :cooperation.application.type/ex-ante-eia "KMH eelhinnang",
-  :cooperation.opinion.status/agreed "Märkused võtta arvesse",
+  :cooperation.opinion.status/agreed "Võtta arvesse",
   :task.type/design-requirements "Projekteerimistingimused",
   :file.status/updated "Korrigeeritud",
   :file.document-group/specifications "Spetsifikatsioonid",
@@ -533,7 +546,7 @@
   "Ehituse kvaliteedi tagamine",
   :task.group/land-purchase "Maade omandamine",
   :activity.status/canceled "Katkestatud",
-  :cooperation.response.status/no-objection "Kooskõlastus olemas",
+  :cooperation.response.status/no-objection "Nõusolek olemas",
   :cooperation.application.type/work-permit "Töö luba",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
@@ -575,6 +588,8 @@
   :description-too-long
   "Faili kirjeldus on liiga pikk. Maksimaalne pikkus on {limit} tähemäki.",
   :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",
+  :comment-attachment-image-only
+  "Märkustele on lubatud lisada ainult pilte",
   :application-outside-activities
   "Taotlus kuupäev väljaspool projekti tegevuste aega.",
   :invalid-chars-in-description
@@ -585,6 +600,8 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :invalid-task-status
+  "Ülesande staatus ei luba selle alla faile üles laadida",
   :file-too-large "Fail on liiga suur",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
@@ -633,7 +650,7 @@
               "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
-  :cooperation.response/status "Staatus",
+  :cooperation.response/status "Vastuse seis",
   :estate-procedure/third-party-compensations
   "Hüvitis kolmandale isikule",
   :project/participant "Osaleja",
@@ -870,8 +887,13 @@
   :owners-opinions "Maade omanike arvamused",
   :no-mortgages "Hüpoteeke pole",
   :no-owners-opinions "Arvamusi pole"},
- :land-owner-opinions
- {:opinions "Arvamused", :add-new-opinion "LISAN UUE ARVAMUSE"},
+ :land-owner-opinion
+ {:opinions "Arvamused",
+  :add-new-opinion "LISAN UUE ARVAMUSE",
+  :export-modal-title "Maade omanike arvamuste koondtabel",
+  :choose-activity "Valin tegevuse",
+  :choose-type "Valin tüübi",
+  :opinion-export "Maade omanike arvamused"},
  :link
  {:search
   {:placeholder "Lisan viite...",
