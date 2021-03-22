@@ -22,7 +22,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.util.datomic :as du]
             [teet.util.date :as date]
-            [teet.ui.authorization-context :as authorization-context]))
+            [teet.ui.authorization-context :as authorization-context]
+            [teet.ui.format :as format]))
 
 (defn add-opinion-heading-style
   []
@@ -196,32 +197,42 @@
                            response-date :land-owner-opinion/date
                            link-to-response :land-owner-opinion/link-to-response :as opinion}
                        edit-right? editing?]
-  [:div {:id (str "opinion-" id)}
-   (when (not editing?)
-     [:div
-      [typography/TextBold {:style {:display :inline}}
-       "Response date"]
-      [typography/SmallText {:style {:padding-left "0.25rem"
-                                     :display :inline}}
-       "Link to response"]
-      [:div
-       [typography/Text {:style {:display :inline}}
-        (str response-date " / " link-to-response)]]
-      [:div {:style {:display :flex}}
-       [:div {:style {:flex "50%"}}
-        [:div {:style {:display :flex :flex-direction :column}}
-         [:h2
-          "Arvamuse sisu"]
-         [typography/Text {:style {:display :inline}}
-          (:land-owner-opinion/body (common-controller/prepare-form-data
-                                      (form/to-value opinion)))]]]
-       [:div {:style {:flex "50%"}}
-        [:div {:style {:display :flex :flex-direction :column}}
-         [:h2
-          "Pädeva asutuse seisukoht"]
-         [typography/Text {:style {:display :inline}}
-          (:land-owner-opinion/authority-position (common-controller/prepare-form-data
-                                                    (form/to-value opinion)))]]]]])])
+  (when (not editing?)
+   [Grid {:container true
+          :spacing 1}
+    [Grid {:item true
+             :md 6
+             :xs 12}
+       [typography/TextBold "Response date"]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/SmallText "Link to response"]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/TextBold (format/date response-date)]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/SmallText [:a {:target :_blank
+                                :href link-to-response} link-to-response]]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/TextBold "Arvamuse sisu"]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/TextBold "Pädeva asutuse seisukoht"]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/Text body]]
+    [Grid {:item true
+           :md 6
+           :xs 12}
+     [typography/Text authority-position]]]))
 
 (defn- get-opinion-data-for-update
   "Select updatable data from opinion and transform activity enum to key word to be selectable"
