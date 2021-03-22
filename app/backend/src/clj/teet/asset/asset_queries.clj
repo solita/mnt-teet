@@ -5,7 +5,8 @@
             [teet.util.datomic :as du]
             [clojure.walk :as walk]
             [teet.project.project-db :as project-db]
-            [teet.asset.asset-db :as asset-db]))
+            [teet.asset.asset-db :as asset-db]
+            [teet.asset.asset-type-library :as asset-type-library]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -24,3 +25,14 @@
   {:asset-type-library (asset-db/asset-type-library adb)
    :cost-items (asset-db/project-cost-items adb project-id)
    :project (project-db/project-by-id db [:thk.project/id project-id])})
+
+(defquery :asset/cost-item
+  {:doc "Fetch a single cost item by id"
+   :context {:keys [db user] adb :asset-db}
+   :args {id :db/id}
+   :project-id [:thk.project/id (asset-db/cost-item-project adb id)]
+   :authorization {:project/read-info {}}}
+  (asset-type-library/db->form
+   (asset-type-library/rotl-map
+    (asset-db/asset-type-library adb))
+   (d/pull adb '[*] id)))

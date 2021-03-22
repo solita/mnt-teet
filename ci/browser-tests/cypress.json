@@ -3,5 +3,6 @@
  "reporterOptions": {
      "configFile": "reporterOpts.json"
  },
- "ignoreTestFiles": "**/*.ci.spec.js"
+ "ignoreTestFiles": "**/*.ci.spec.js",
+ "retries": 5
 }

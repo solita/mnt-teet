@@ -10,6 +10,8 @@ context('Land section', () => {
     })
 
   it("select project", () => {
+    // the menu is "hidden" by default, so let's open it
+    cy.get("span").contains("menu").click({force: true});
     cy.get("span").contains("Projektide loetelu").click();
     cy.contains("Kõik projektid").click();
     cy.get('thead > tr > th:nth-child(1) > label > div > input').type("aruvalla");

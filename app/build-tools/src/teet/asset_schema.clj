@@ -110,19 +110,21 @@
     (when (or description-et description-en)
       {:asset-schema/description [(or description-et) (or description-en "")]}))))
 
-
+(defn- map-by-name [things]
+  (into {} (map (juxt :name identity)) things))
 
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
     (let [workbook (sheet/load-workbook in)
           fgroup (read-feature-groups workbook)
           fclass (read-feature-classes workbook)
+
+          fclass-by-name (map-by-name fclass)
+
           ctype (into [{:name :ctype/common
                         :comment "Attributes common to all assets and components"}]
                       (read-ctypes workbook))
-          ctypes-by-name (into {}
-                               (map (juxt :name identity))
-                               ctype)
+          ctypes-by-name (map-by-name ctype)
           pset (read-pset workbook)
           list-items (read-list-items workbook)
 
@@ -192,10 +194,12 @@
         (for [item list-items
               :let [attr (attrs-by-name (:property item))
                     attr-name (get-in attrs-by-name [(:property item) :name])
-                    ctype (get-in ctypes-by-name [(:ctype attr)])]
-              :when (and attr ctype
-                         (:name item)
-                         (exists? (:property item)))]
+                    ctype-or-fclass (or (get ctypes-by-name (:ctype attr))
+                                        (get fclass-by-name (:ctype attr)))
+                    all-exist? (and attr ctype-or-fclass
+                                    (:name item)
+                                    (exists? (:property item)))]
+              :when all-exist?]
           (merge
            (common-attrs :asset-schema.type/enum item)
            {:enum/attribute (str attr-name)})))))))
