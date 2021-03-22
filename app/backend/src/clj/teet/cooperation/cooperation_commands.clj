@@ -144,7 +144,7 @@
              application-id :application-id
              response-payload :form-data}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/application-approval {}}
+   :authorization {:cooperation/edit-application {}}
    :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
    (db-api-large-text/store-large-text!
