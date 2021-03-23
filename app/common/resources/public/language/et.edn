@@ -86,7 +86,8 @@
   {:details "Üksikasjad",
    :common "Ühine",
    :name-and-location "Nimi ja asukoht",
-   :cost-grouping "Kulude grupeerimine"}},
+   :cost-grouping "Kulude grupeerimine"},
+  :components {:label "Komponendid"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -649,7 +650,7 @@
               "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
-  :cooperation.response/status "Staatus",
+  :cooperation.response/status "Vastuse seis",
   :estate-procedure/third-party-compensations
   "Hüvitis kolmandale isikule",
   :project/participant "Osaleja",

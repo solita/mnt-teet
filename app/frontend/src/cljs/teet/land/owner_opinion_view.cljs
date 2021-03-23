@@ -398,7 +398,7 @@
      [:div
       [:div {:class (<class common-styles/padding-bottom 1)}
        [typography/TextBold {:style {:display :inline}}
-        (tr [:land-owner-opinions :opinions])]
+        (tr [:land-owner-opinion :opinions])]
        [typography/SmallText {:style {:display :inline}}
         " " (str l-address " (" purpose ") " target)]]]
      (if (empty? opinions)
@@ -413,16 +413,16 @@
 
 (defn owner-opinions-unit-modal
   [{:keys [e! estate-info target app project]}]
-  (r/with-let [refresh (r/atom nil)
-               unit (land-controller/get-unit-by-teet-id project target)
+  (let [unit (land-controller/get-unit-by-teet-id project target)
                new-opinion? (= (get-in app [:query :modal-new-opinion]) "true")]
-    [:div
-     (if new-opinion?
-       [owner-opinion-form e! project target]
-       [query/query {:e! e!
-                     :query :land-owner-opinion/fetch-opinions
-                     :args {:project-id (:db/id project)
-                            :land-unit-id target}
-                     :refresh @refresh
-                     :simple-view [owner-opinions-list e! project unit target
-                                   #(reset! refresh (.getTime (js/Date.)))]}])]))
+    (r/with-let [refresh (r/atom nil)]
+      [:div
+       (if new-opinion?
+         [owner-opinion-form e! project target]
+         [query/query {:e! e!
+                       :query :land-owner-opinion/fetch-opinions
+                       :args {:project-id (:db/id project)
+                              :land-unit-id target}
+                       :refresh @refresh
+                       :simple-view [owner-opinions-list e! project unit target
+                                     #(reset! refresh (.getTime (js/Date.)))]}])])))
