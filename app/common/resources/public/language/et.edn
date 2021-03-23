@@ -53,7 +53,20 @@
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
  :asset
- {:type-library
+ {:add-cost-item "Lisan vara",
+  :validate
+  {:min-length
+   "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
+   :max-length
+   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
+   :min-value "Lubatud minimaalne väärtus on {min-value}",
+   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
+  :no-matching-feature-classes "Pole vastavata vara liik",
+  :cost-item-saved "Kululoend salvestatud",
+  :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
+  :components {:label "Komponendid"},
+  :back-to-cost-item "< Tagasi {name}",
+  :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
    :fclass "Vara liik",
@@ -72,23 +85,11 @@
    :ctype "Komponent",
    :db.type/long "Täisarv",
    :attributes "Tunnused"},
-  :add-cost-item "Lisan vara",
-  :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
-  :no-matching-feature-classes "Pole vastavata vara liik",
-  :validate
-  {:min-length
-   "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
-   :max-length
-   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
-   :min-value "Lubatud minimaalne väärtus on {min-value}",
-   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
   :field-group
   {:details "Üksikasjad",
    :common "Ühine",
    :name-and-location "Nimi ja asukoht",
-   :cost-grouping "Kulude grupeerimine"},
-  :components {:label "Komponendid"},
-  :back-to-cost-item "< Tagasi {name}"},
+   :cost-grouping "Kulude grupeerimine"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -894,7 +895,15 @@
   :export-modal-title "Maade omanike arvamuste koondtabel",
   :choose-activity "Valin tegevuse",
   :choose-type "Valin tüübi",
-  :opinion-export "Maade omanike arvamused"},
+  :opinion-export "Maade omanike arvamused",
+  :export
+  {:jrk "JRK nr",
+   :estate-num-name "Kinnisasja number; Kinnisasja nimi",
+   :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
+   :opinion-body "Arvamuse sisu",
+   :authority-position
+   "Pädeva asutuse põhjendus ja otsus esitatud arvamuse osas",
+   :no-position-added "Seisukohta pole lisatud"}},
  :link
  {:search
   {:placeholder "Lisan viite...",
