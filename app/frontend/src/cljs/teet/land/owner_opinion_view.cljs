@@ -335,11 +335,11 @@
        [Grid {:item true
               :md 6
               :xs 12}
-        [rich-text-editor/rich-text-field {:value body :read-only? true}]]
+        [rich-text-editor/display-markdown body]]
        [Grid {:item true
               :md 6
               :xs 12}
-        [rich-text-editor/rich-text-field {:value authority-position :read-only? true}]]])])
+        [rich-text-editor/display-markdown authority-position]]])])
 
 (defn- get-opinion-data-for-update
   "Select updatable data from opinion and transform activity enum to key word to be selectable"
@@ -377,7 +377,8 @@
        :content
        [:<>
         [pto]
-        [opinion-content e! @form-data edit-rights? @edit-open-atom]]}]]))
+        [opinion-content e!
+         (get-opinion-data-for-update opinion) edit-rights? @edit-open-atom]]}]]))
 
 (defn owner-opinion-row
   [e! project target refresh! opinion rights]
