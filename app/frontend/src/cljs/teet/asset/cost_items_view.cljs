@@ -333,7 +333,10 @@
                on-change-event (form/update-atom-event
                                 form-data
                                 cu/deep-merge)
-               save-event (cost-items-controller/save-asset-event form-data)]
+               save-event (cost-items-controller/save-asset-event form-data)
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :id nil)
+                              (form/update-atom-event form-data (constantly initial-data)))]
     (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
       [:<>
 
@@ -341,7 +344,9 @@
         {:e! e!
          :on-change-event on-change-event
          :value @form-data
-         :save-event save-event}
+         :save-event save-event
+         :cancel-event cancel-event
+         :disable-buttons? (= initial-data @form-data)}
 
         [form/field {:attribute :feature-group-and-class}
          [group-and-class-selection {:e! e!
