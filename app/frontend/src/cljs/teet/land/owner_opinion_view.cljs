@@ -266,16 +266,9 @@
     (tr-enum activity-type)))
 
 (defn owner-opinion-heading [opinion]
-  [:div
-   [typography/TextBold {:style {:display :inline}}
-    (:land-owner-opinion/respondent-name opinion)]
-   [typography/SmallText {:style {:padding-left "0.25rem"
-                                  :display :inline}}
-    (:land-owner-opinion/respondent-connection-to-land opinion)]
-   [:div
-    [typography/Text {:style {:display :inline}}
-     (str (get-activity-name opinion) " / "
-       (get-activity-type opinion))]]])
+  [common/basic-information-row
+   [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion)]
+    [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion)]]])
 
 (defn owner-opinion-edit-form [e! form-state save-event project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
