@@ -233,7 +233,7 @@
                                  (on-toggle-open))
                                (.stopPropagation %)
                                (swap! open? not))]
-    [:div {:class (<class common/hierarchical-heading-container2 bg-color text-color @open?)}
+    [:div {:class (<class common/collapsable-heading-container bg-color text-color)}
      [:div
       [:div {:class [(<class owner-opinion-style/opinion-container-heading-box)]}
        [:div {:style {:flex-grow 1
