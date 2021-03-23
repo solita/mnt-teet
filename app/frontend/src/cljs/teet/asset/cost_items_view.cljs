@@ -28,7 +28,6 @@
             [teet.common.common-styles :as common-styles]
             [teet.util.datomic :as du]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.asset.asset-type-library :as asset-type-library]
             [teet.theme.theme-colors :as theme-colors]))
 
 
