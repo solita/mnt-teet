@@ -6,7 +6,8 @@
             [clojure.walk :as walk]
             [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-type-library :as asset-type-library]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]))
 
 
 
@@ -32,3 +33,16 @@
     (:tempids
      (d/transact aconn
                  {:tx-data tx}))))
+
+(defcommand :asset/delete-component
+  {:doc "Delete a component in an existing asset."
+   :context {:keys [user db]
+             adb :asset-db
+             aconn :asset-conn}
+   :payload {project-id :project-id component-id :db/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [(= project-id (asset-db/component-project adb component-id))]
+   :transact
+   ^{:db :asset}
+   [[:db/retractEntity component-id]]})

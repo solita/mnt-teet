@@ -91,3 +91,11 @@
           :where [?e :asset/project ?pid]
           :in $ ?e]
         db cost-item-id)))
+
+(defn component-project
+  "Returns the THK project id for the asset component."
+  [db component-id]
+  (loop [component (du/entity db component-id)]
+    (if-let [parent-component (:component/_components component)]
+      (recur parent-component)
+      (cost-item-project db (get-in component [:asset/_components :db/id])))))

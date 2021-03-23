@@ -1,7 +1,8 @@
 (ns teet.asset.asset-type-library
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.util.datomic :as du]))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
@@ -14,6 +15,17 @@
                           (contains? % :db/ident)
                           (seq (dissoc % :db/id :db/ident)))
                     rotl)))
+
+(defn fgroup-for-fclass
+  "Find fgroup which fclass belongs to."
+  [rotl fclass]
+  (def *r rotl)
+  (def *f fclass)
+  (some (fn [fg]
+          (when (some #(du/enum= fclass %)
+                      (:fclass/_fgroup fg))
+            fg))
+        (:fgroups rotl)))
 
 #?(:clj
    (defn form->db
