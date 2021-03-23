@@ -18,15 +18,29 @@
 
 (defn fgroup-for-fclass
   "Find fgroup which fclass belongs to."
-  [rotl fclass]
-  (def *r rotl)
-  (def *f fclass)
+  [atl fclass]
   (some (fn [fg]
           (when (some #(du/enum= fclass %)
                       (:fclass/_fgroup fg))
             fg))
-        (:fgroups rotl)))
+        (:fgroups atl)))
 
+(defn- has-type? [type x]
+  (and (map? x)
+       (= type (get-in x [:asset-schema/type :db/ident]))))
+
+(def fclass? (partial has-type? :asset-schema.type/fclass))
+(def ctype? (partial has-type? :asset-schema.type/ctype))
+
+(defn allowed-component-types
+  "Return all ctypes that are allowed for the given fclass or ctype."
+  [atl fclass-or-ctype]
+  (let [ident (if (keyword? fclass-or-ctype)
+                fclass-or-ctype
+                (:db/ident fclass-or-ctype))]
+    (:ctype/_parent (cu/find-matching #(and (or (fclass? %) (ctype? %))
+                                            (= (:db/ident %) ident))
+                                      atl))))
 #?(:clj
    (defn form->db
      "Prepare data from asset form to be saved in the database"

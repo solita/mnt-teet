@@ -31,6 +31,7 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.theme.theme-colors :as theme-colors]))
 
+
 (defonce next-id (atom 0))
 
 (defn- next-id! [prefix]
@@ -181,7 +182,7 @@
         [form/field :component/components
          [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]])))
 
-(defn- components
+(defn- components ; FIXME: remove
   "Render field for components, with add component if there are allowed components.
 
   Renders each component with it's own set
@@ -218,6 +219,25 @@
                                                                           {:component/ctype (:db/ident c)}))
                                      :start-icon (r/as-element [icons/content-add])}
            (label c)]])))]])
+
+(defn- add-component-menu [allowed-components add-component!]
+  [:<>
+   (if (> (count allowed-components) 3)
+     [common/context-menu
+      {:label "add component"
+       :icon [icons/content-add-circle-outline]
+       :items (for [c allowed-components]
+                {:label (label c)
+                 :icon [icons/content-add]
+                 :on-click (r/partial add-component! (:db/ident c))})}]
+     (doall
+      (for [c allowed-components]
+        ^{:key (str (:db/ident c))}
+        [Grid {:item true :xs 12 :md 4}
+         [buttons/button-secondary {:size :small
+                                    :on-click (r/partial add-component! (:db/ident c))
+                                    :start-icon (r/as-element [icons/content-add])}
+          (label c)]])))])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
@@ -326,7 +346,7 @@
                                 :padding "1rem"}}
    component])
 
-(defn- cost-item-form [e! asset-type-library initial-data]
+(defn- cost-item-form [e! atl initial-data]
   (r/with-let [new? (nil? initial-data)
                form-data (r/atom (or initial-data
                                      {:db/id (next-id! "costitem")}))
@@ -350,7 +370,7 @@
 
         [form/field {:attribute :feature-group-and-class}
          [group-and-class-selection {:e! e!
-                                     :fgroups (:fgroups asset-type-library)
+                                     :fgroups (:fgroups atl)
                                      :read-only? (seq (dissoc @form-data :feature-group-and-class :db/id))
                                      :name (:common/name @form-data)}]]
 
@@ -362,9 +382,14 @@
 
        ;; Components
        (when initial-data
-         [components-tree {:e! e!
-                           :asset initial-data
-                           :allowed-components (:ctype/_parent feature-class)}])
+         [:<>
+          [components-tree {:e! e!
+                            :asset initial-data
+                            :allowed-components (:ctype/_parent feature-class)}]
+
+          [add-component-menu
+           (asset-type-library/allowed-component-types atl feature-class)
+           #(e! (common-controller/->SetQueryParam :component (str "-" (name %))))]])
 
        ;; FIXME: remove when finalizing form
        [df/DataFriskView @form-data]])))
@@ -434,13 +459,25 @@
              [label-for p])
            (repeat " / "))))])
 
-(defn- component-form [e! asset-type-library asset-id component-id cost-item-data]
-  (r/with-let [component-path (find-component-path cost-item-data component-id)
+(defn- component-form [e! atl asset-id component-id cost-item-data]
+  (r/with-let [[component-id subcomponent-name] (str/split component-id #"-")
+
+               ;; If component-id is blank, adding this component to asset level
+               component-path (if (str/blank? component-id)
+                                [cost-item-data]
+                                (find-component-path cost-item-data component-id))
+
+               ;; When adding a subcomponent, add it to the path
+               component-path (if subcomponent-name
+                                (conj component-path
+                                      {:db/id (next-id! subcomponent-name)
+                                       :component/ctype (keyword "ctype" subcomponent-name)})
+                                component-path)
                component-data (last component-path)
                new? (not (number? (:db/id component-data)))
                ctype (cu/find-matching #(and (= :asset-schema.type/ctype (get-in % [:asset-schema/type :db/ident]))
                                              (= (:db/ident %) (:component/ctype component-data)))
-                                       asset-type-library)
+                                       atl)
                form-data (r/atom component-data)
                on-change-event (form/update-atom-event
                                 form-data
@@ -453,7 +490,7 @@
                               #(common-controller/->SetQueryParam :component nil)
                               (form/update-atom-event form-data (constantly component-data)))]
     [:<>
-     [component-form-navigation asset-type-library component-path]
+     [component-form-navigation atl component-path]
 
      [form/form2
       {:e! e!
@@ -476,6 +513,13 @@
                           :component nil}}
         (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
        [form/footer2]]]
+
+     (when (not new?)
+       (let [allowed-components (asset-type-library/allowed-component-types atl ctype)]
+         (when (seq allowed-components)
+           [add-component-menu allowed-components
+            #(e! (common-controller/->SetQueryParam
+                  :component (str component-id "-" (name %))))])))
 
      ;; FIXME: remove when finalizing form
      [df/DataFriskView @form-data]]))
