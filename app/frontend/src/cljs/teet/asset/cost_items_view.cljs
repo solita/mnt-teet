@@ -182,44 +182,6 @@
         [form/field :component/components
          [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]])))
 
-(defn- components ; FIXME: remove
-  "Render field for components, with add component if there are allowed components.
-
-  Renders each component with it's own set
-  allowed-components is a collection of component types this entity can have, if empty
-  no new components can be added."
-  [{:keys [e! value on-change allowed-components]}]
-  [:<>
-   (doall
-    (keep-indexed
-     (fn [i {id :db/id deleted? :deleted? :as c}]
-       (when (not deleted?)
-         ^{:key (str id)}
-         [context/consume :rotl
-          [component {:e! e!
-                      :component c
-                      :on-change #(on-change (update value i merge %))}]]))
-     value))
-   [Grid {:container true}
-    (if (> (count allowed-components) 3)
-      [common/context-menu
-       {:label "add component"
-        :icon [icons/content-add-circle-outline]
-        :items (for [c allowed-components]
-                 {:label (label c)
-                  :icon [icons/content-add]
-                  :on-click (r/partial on-change (conj (or value [])
-                                                       {:component/ctype (:db/ident c)}))})}]
-      (doall
-       (for [c allowed-components]
-         ^{:key (str :db/ident c)}
-         [Grid {:item true :xs 12 :md 4}
-          [buttons/button-secondary {:size :small
-                                     :on-click (r/partial on-change (conj (or value [])
-                                                                          {:component/ctype (:db/ident c)}))
-                                     :start-icon (r/as-element [icons/content-add])}
-           (label c)]])))]])
-
 (defn- add-component-menu [allowed-components add-component!]
   [:<>
    (if (> (count allowed-components) 3)
@@ -326,8 +288,7 @@
             (tr [:buttons :delete])]]]
          [component-rows {:e! e!
                           :components (:component/components c)
-                          :level (inc (or level 0))}]
-         ]))]))
+                          :level (inc (or level 0))}]]))]))
 
 (defn- components-tree
   "Show listing of all components (and their subcomponents recursively) for the asset."
