@@ -298,7 +298,7 @@
    [:div {:id (str "opinion-" id)}
     (when (not editing?)
       [Grid {:container true
-             :spacing 1}
+             :spacing 2}
        [Grid {:item true
               :md 6
               :xs 12}
@@ -319,11 +319,11 @@
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/TextBold (tr [:fields :land-owner-opinion/body])]]
+        [typography/Heading2 (tr [:fields :land-owner-opinion/body])]]
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/TextBold (tr [:fields :land-owner-opinion/authority-position])]]
+        [typography/Heading2 (tr [:fields :land-owner-opinion/authority-position])]]
        [Grid {:item true
               :md 6
               :xs 12}
