@@ -61,7 +61,7 @@
            :command :asset/save-component
            :payload {:project-id (get-in app [:params :project])
                      :parent-id parent-id
-                     :component form-data}
+                     :component (dissoc form-data :component/components)}
            :result-event ->SaveComponentResponse}))
 
   SaveComponentResponse
