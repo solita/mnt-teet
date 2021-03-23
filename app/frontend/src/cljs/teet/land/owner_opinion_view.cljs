@@ -248,15 +248,14 @@
         [buttons/button-primary
          {:size :small
           :on-click toggle-open!}
-         [(if  @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
-         (if  @open? (tr [:buttons :close]) (tr [:buttons :open]))]
+         [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+         (if @open? (tr [:buttons :close]) (tr [:buttons :open]))]
         ]]]
      (when content
        [Collapse {:in @open?
                   :mount-on-enter true}
         [:div {:style {:padding "1rem"}}
-         content]])])
-  )
+         content]])]))
 
 (defn get-activity-name [opinion]
   (let [activity-name (get-in opinion [:land-owner-opinion/activity :activity/name])]
