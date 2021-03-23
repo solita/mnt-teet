@@ -293,7 +293,9 @@
                            body :land-owner-opinion/body
                            authority-position :land-owner-opinion/authority-position
                            response-date :land-owner-opinion/date
-                           link-to-response :land-owner-opinion/link-to-response :as opinion}
+                           link-to-response :land-owner-opinion/link-to-response
+                           creator :meta/creator
+                           modifier :meta/modifier :as opinion}
                        edit-right? editing?]
    [:div {:id (str "opinion-" id)}
     (when (not editing?)
@@ -319,11 +321,24 @@
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/Heading2 (tr [:fields :land-owner-opinion/body])]]
+        [typography/Heading4 (tr [:fields :land-owner-opinion/body])]]
        [Grid {:item true
               :md 6
               :xs 12}
-        [typography/Heading2 (tr [:fields :land-owner-opinion/authority-position])]]
+        [Grid {:container true
+               :spacing 0
+               :direction :row
+               :align :flex-end}
+         [Grid {:item true
+                :md 6
+                :xs 12}
+          [typography/Heading4 (tr [:fields :land-owner-opinion/authority-position])]]
+         [Grid {:item true
+                :md 6
+                :xs 12}
+          [typography/Heading5 (if modifier
+                                      (str (:user/given-name modifier) " " (:user/family-name modifier))
+                                      (str (:user/given-name creator) " " (:user/family-name creator)))]]]]
        [Grid {:item true
               :md 6
               :xs 12}
@@ -342,7 +357,8 @@
        :land-owner-opinion/type :land-owner-opinion/date
        :land-owner-opinion/respondent-connection-to-land
        :land-owner-opinion/authority-position :land-owner-opinion/respondent-name
-       :land-owner-opinion/link-to-response])
+       :land-owner-opinion/link-to-response
+       :meta/creator :meta/modifier])
     (update-in [:land-owner-opinion/activity :activity/name] du/enum->kw)))
 
 (defn owner-opinion-details
@@ -353,7 +369,7 @@
                save-event (fn [_] (reset! edit-open-atom false) (refresh!))
                form-data (r/atom (get-opinion-data-for-update opinion))]
     [:div
-     ;;[:span (pr-str @form-data)]
+     ;;[:span (pr-str opinion)]
      [opinion-view-container
       {:heading [owner-opinion-heading opinion]
        :open? false
