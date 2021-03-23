@@ -86,7 +86,9 @@
   {:details "Details",
    :common "Common",
    :name-and-location "Name and location",
-   :cost-grouping "Cost grouping"}},
+   :cost-grouping "Cost grouping"},
+  :components {:label "Components"},
+  :back-to-cost-item "< Back to {name}"},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -653,7 +655,7 @@
   #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
-  :cooperation.response/status "Status",
+  :cooperation.response/status "Response situation",
   :estate-procedure/third-party-compensations
   "Third party compensations",
   :project/participant "Participant",

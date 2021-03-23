@@ -37,8 +37,7 @@
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."
    :context {:keys [user db]
-             adb :asset-db
-             aconn :asset-conn}
+             adb :asset-db}
    :payload {project-id :project-id component-id :db/id}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
@@ -46,3 +45,23 @@
    :transact
    ^{:db :asset}
    [[:db/retractEntity component-id]]})
+
+(defcommand :asset/save-component
+  {:doc "Save component for an asset or component."
+   :context {:keys [user db]
+             adb :asset-db}
+   :payload {:keys [project-id parent-id component]}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [(or (string? (:db/id component))
+             (= project-id (asset-db/component-project adb (:db/id component))))]
+   :transact
+   ^{:db :asset}
+   [;; Link this to parent
+    [:db/add parent-id (case (asset-db/item-type adb parent-id)
+                         :asset :asset/components
+                         :component :component/components) (:db/id component)]
+
+    (asset-type-library/form->db
+     (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+     component)]})

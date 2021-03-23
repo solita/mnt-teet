@@ -99,3 +99,18 @@
     (if-let [parent-component (:component/_components component)]
       (recur parent-component)
       (cost-item-project db (get-in component [:asset/_components :db/id])))))
+
+(defn item-type
+  "Return item type, :asset or :component."
+  [db id]
+  (let [item (d/pull db [:asset/fclass :component/ctype] id)]
+    (cond
+      (:asset/fclass item)
+      :asset
+
+      (:component/ctype item)
+      :component
+
+      :else
+      (throw (ex-info "Expected asset or component"
+                      {:unknown-item-id id})))))

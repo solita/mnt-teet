@@ -28,7 +28,8 @@
             [teet.common.common-styles :as common-styles]
             [teet.util.datomic :as du]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defonce next-id (atom 0))
 
@@ -317,6 +318,14 @@
    [component-rows {:e! e!
                     :components (:asset/components asset)}]])
 
+(defn- form-paper
+  "Wrap the form input portion in a light gray paper."
+  [component]
+  [:div.cost-item-form {:style {:background-color theme-colors/gray-lightest
+                                :margin-top "1rem"
+                                :padding "1rem"}}
+   component])
+
 (defn- cost-item-form [e! asset-type-library initial-data]
   (r/with-let [new? (nil? initial-data)
                form-data (r/atom (or initial-data
@@ -342,7 +351,7 @@
 
         (when feature-class
           ;; Attributes for asset
-          [attributes e! (some-> feature-class :attribute/_parent)])
+          [form-paper [attributes e! (some-> feature-class :attribute/_parent)]])
 
         [form/footer2]]
 
@@ -408,19 +417,22 @@
               (:common/name p)]
        :title (:common/name p)})]
 
-   [breadcrumbs/breadcrumbs
-    (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
-                               asset-type-library
-                               (:asset/fclass (first component-path))))]
-                  (map #(or (:asset/fclass %)
-                            (:component/ctype %)))
-                  component-path)
-          :let [type [label-for p]]]
-      {:link type :title type})]])
+   (into [:div]
+         (butlast
+          (interleave
+           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
+                                      asset-type-library
+                                      (:asset/fclass (first component-path))))]
+                         (map #(or (:asset/fclass %)
+                                   (:component/ctype %)))
+                         component-path)]
+             [label-for p])
+           (repeat " / "))))])
 
 (defn- component-form [e! asset-type-library asset-id component-id cost-item-data]
   (r/with-let [component-path (find-component-path cost-item-data component-id)
                component-data (last component-path)
+               new? (not (number? (:db/id component-data)))
                ctype (cu/find-matching #(and (= :asset-schema.type/ctype (get-in % [:asset-schema/type :db/ident]))
                                              (= (:db/ident %) (:component/ctype component-data)))
                                        asset-type-library)
@@ -428,25 +440,37 @@
                on-change-event (form/update-atom-event
                                 form-data
                                 cu/deep-merge)
-               save-event (cost-items-controller/->SaveComponent asset-id form-data)]
-    (def *c cost-item-data)
+               save-event #(cost-items-controller/->SaveComponent
+                            ;; Take id of the parent component or asset
+                            (:db/id (nth component-path (- (count component-path) 2)))
+                            @form-data)
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :component nil)
+                              (form/update-atom-event form-data (constantly component-data)))]
     [:<>
-
      [component-form-navigation asset-type-library component-path]
-
-
-     (label ctype)
 
      [form/form2
       {:e! e!
        :on-change-event on-change-event
        :value @form-data
-       :save-event save-event}
+       :save-event save-event
+       :cancel-event cancel-event
+       :disable-buttons? (= component-data @form-data)}
 
       ;; Attributes for component
-      [attributes e! (some-> ctype :attribute/_parent)]
+      [form-paper
+       [:<>
+        (label ctype)
+        [attributes e! (some-> ctype :attribute/_parent)]]]
 
-      [form/footer2]]
+      [:div {:class (<class common-styles/flex-row-space-between)
+             :style {:align-items :center}}
+       [url/Link {:page :cost-items
+                  :query {:id asset-id
+                          :component nil}}
+        (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
+       [form/footer2]]]
 
      ;; FIXME: remove when finalizing form
      [df/DataFriskView @form-data]]))

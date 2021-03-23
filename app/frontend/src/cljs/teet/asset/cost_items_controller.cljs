@@ -60,7 +60,7 @@
           {:tuck.effect/type :command!
            :command :asset/save-component
            :payload {:project-id (get-in app [:params :project])
-                     :parent parent-id
+                     :parent-id parent-id
                      :component form-data}
            :result-event ->SaveComponentResponse}))
 
