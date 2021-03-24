@@ -759,8 +759,9 @@
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
   :export-files-zip
-  {:activity-button "Saadan tegevusega seotud dokumendid e-postiga",
-   :task-button "Saadan Ülesandega seotud dokumendid e-postiga",
+  {:activity-button
+   "Saadan viite tegevusega seotud failidele e-postiga",
+   :task-button "Saadan viite ülesandega seotud failidele e-postiga",
    :activity-success
    "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
    :task-success
@@ -897,13 +898,17 @@
   :choose-type "Valin tüübi",
   :opinion-export "Maade omanike arvamused",
   :export
-  {:jrk "JRK nr",
+  {:units-with-opinions "1.1 Piirnevate kinnisasjade omanikud",
    :estate-num-name "Kinnisasja number; Kinnisasja nimi",
-   :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
-   :opinion-body "Arvamuse sisu",
    :authority-position
    "Pädeva asutuse põhjendus ja otsus esitatud arvamuse osas",
-   :no-position-added "Seisukohta pole lisatud"}},
+   :opinion-body "Arvamuse sisu",
+   :no-position-added "Seisukohta pole lisatud",
+   :title "{opinion-type} maade omanike arvamuste koondtabel",
+   :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
+   :units-without-opinions
+   "1.2 Piirnevate kinnisasjade omanikud, kes arvamust ei avaldanud",
+   :jrk "JRK nr"}},
  :link
  {:search
   {:placeholder "Lisan viite...",
