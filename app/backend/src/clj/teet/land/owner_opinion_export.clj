@@ -8,6 +8,7 @@
             [teet.util.md :as md]))
 
 (defn- opinions-by-type
+  "Fetch all opinions for given activity with the given opinion type"
   [db activity type]
   (->>
     (d/q '[:find (pull ?opinion [*])
@@ -23,6 +24,8 @@
 (def tr* #(tr [:land-owner-opinion :export %]))
 
 (defn jrk-nr
+  "String format for a running serial number of the estate and it's lands
+  Only add number of land if the estate contains more than 1 unit"
   [estate-idx unit-idx unit-count]
   (if (= 1 unit-count)
     (str (inc estate-idx))
@@ -109,7 +112,7 @@
                units)))
          estates))]]])
 
-(defn summary-table [db activity opinion-type {:keys [api-url api-secret] :as _config}]
+(defn owner-opinion-summary-table [db activity opinion-type {:keys [api-url api-secret] :as _config}]
   (let [opinions (opinions-by-type db activity opinion-type)
         project (ffirst
                   (d/q '[:find (pull ?project [:thk.project/name :thk.project/project-name
