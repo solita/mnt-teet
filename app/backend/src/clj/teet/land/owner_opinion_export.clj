@@ -109,8 +109,6 @@
                units)))
          estates))]]])
 
-(Math/round 1.2)
-
 (defn summary-table [db activity opinion-type {:keys [api-url api-secret] :as _config}]
   (let [opinions (opinions-by-type db activity opinion-type)
         project (ffirst
