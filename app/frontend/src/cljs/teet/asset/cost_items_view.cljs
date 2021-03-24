@@ -396,7 +396,7 @@
 
     (containing [] asset)))
 
-(defn- component-form-navigation [asset-type-library [asset :as component-path]]
+(defn- component-form-navigation [atl [asset :as component-path]]
   [:<>
    [breadcrumbs/breadcrumbs
     (for [p component-path]
@@ -405,13 +405,15 @@
                                 :component (when-not (:asset/fclass p)
                                              (str (:db/id p)))}}
               (:common/name p)]
-       :title (:common/name p)})]
+       :title (if-let [name (:common/name p)]
+                name
+                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
 
    (into [:div]
          (butlast
           (interleave
            (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
-                                      asset-type-library
+                                      atl
                                       (:asset/fclass (first component-path))))]
                          (map #(or (:asset/fclass %)
                                    (:component/ctype %)))

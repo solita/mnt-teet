@@ -41,6 +41,15 @@
     (:ctype/_parent (cu/find-matching #(and (or (fclass? %) (ctype? %))
                                             (= (:db/ident %) ident))
                                       atl))))
+
+(defn item-by-ident
+  "Find any type of ATL item based on ident."
+  [atl ident]
+  (cu/find-matching #(and (map? %)
+                          (contains? % :asset-schema/type)
+                          (= ident (:db/ident %)))
+                    atl))
+
 #?(:clj
    (defn form->db
      "Prepare data from asset form to be saved in the database"
