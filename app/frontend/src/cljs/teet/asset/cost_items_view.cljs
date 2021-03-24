@@ -422,6 +422,11 @@
            (repeat " / "))))])
 
 (defn- component-form [e! atl asset-id component-id cost-item-data]
+  ;; Component id can have two parts (separated by dash)
+  ;; <component id number>-<subcomponent type name>
+  ;; If subcomponent type name is specified, then we are adding a component
+  ;; of that type. If component id number is omitted, then the component
+  ;; is being added to the asset itself.
   (r/with-let [[component-id subcomponent-name] (str/split component-id #"-")
 
                ;; If component-id is blank, adding this component to asset level
