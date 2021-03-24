@@ -112,7 +112,10 @@
                units)))
          estates))]]])
 
-(defn owner-opinion-summary-table [db activity opinion-type {:keys [api-url api-secret] :as _config}]
+(defn owner-opinion-summary-table
+  "Produces a HTML page which lists all opinions matching certain activity and opinion type
+  and all the land units that are selected but don't have any matching opinions"
+  [db activity opinion-type {:keys [api-url api-secret] :as _config}]
   (let [opinions (opinions-by-type db activity opinion-type)
         project (ffirst
                   (d/q '[:find (pull ?project [:thk.project/name :thk.project/project-name
