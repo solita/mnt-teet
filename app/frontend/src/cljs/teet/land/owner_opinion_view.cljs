@@ -285,9 +285,11 @@
                   :value @form-state
                   :cancel-event close-event
                   :delete (common-controller/->SaveForm
-                             :land-owner-opinion/delete-opinion
-                             {:db/id (:db/id @form-state)}
-                             close-form-and-refresh)
+                            :land-owner-opinion/delete-opinion
+                            {:db/id (:db/id @form-state)}
+                            close-form-and-refresh)
+                  :delete-message (tr [:land-owner-opinion :delete :confirmation-text])
+                  :delete-cancel-button-text (tr [:land-owner-opinion :delete :cancel-text])
                   :spec :land-owner-opinion/form
                   :id (str "owner-opinion-" (:db/id @form-state))}
       (opinion-form-controls e! activities)]]))
