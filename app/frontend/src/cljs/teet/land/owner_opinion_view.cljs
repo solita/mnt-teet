@@ -275,19 +275,21 @@
     [:<>
      [form/form2 {:e! e!
                   :on-change-event form-change
-                  :save-event #(common-controller/->SaveForm
+                  :save-event #(common-controller/->SaveFormWithConfirmation
                                  :land-owner-opinion/save-opinion
                                  {:form-data (common-controller/prepare-form-data
                                                (form/to-value @form-state))
                                   :project-id (:db/id project)
                                   :land-unit-id target}
-                                 close-form-and-refresh)
+                                 close-form-and-refresh
+                                 (tr [:land-owner-opinion :update :success-message]))
                   :value @form-state
                   :cancel-event close-event
-                  :delete (common-controller/->SaveForm
+                  :delete (common-controller/->SaveFormWithConfirmation
                             :land-owner-opinion/delete-opinion
                             {:db/id (:db/id @form-state)}
-                            close-form-and-refresh)
+                            close-form-and-refresh
+                            (tr [:land-owner-opinion :delete :success-message]))
                   :delete-message (tr [:land-owner-opinion :delete :confirmation-text])
                   :delete-cancel-button-text (tr [:land-owner-opinion :delete :cancel-text])
                   :spec :land-owner-opinion/form

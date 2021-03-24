@@ -898,11 +898,15 @@
   :no-owners-opinions "No opinions"},
  :land-owner-opinion
  {:opinions "Opinions",
-  :add-new-opinion "ADD NEW OPINION",
   :export-modal-title "Land owners opinions summary table",
-  :choose-activity "Choose an activity",
-  :choose-type "Choose a type",
   :opinion-export "Land owners opinions",
+  :choose-activity "Choose an activity",
+  :update {:success-message "Opinion successfully edited"},
+  :delete
+  {:cancel-text "No, return back",
+   :confirmation-text
+   "All information will be deleted and cannot be recovered",
+   :success-message "Opinion deleted"},
   :export
   {:units-with-opinions nil,
    :estate-num-name nil,
@@ -913,10 +917,8 @@
    :cadastral-id-name nil,
    :units-without-opinions nil,
    :jrk nil},
-  :delete
-  {:cancel-text "No, return back",
-   :confirmation-text
-   "All information will be deleted and cannot be recovered"}},
+  :add-new-opinion "ADD NEW OPINION",
+  :choose-type "Choose a type"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",

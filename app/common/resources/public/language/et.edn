@@ -892,11 +892,14 @@
   :no-owners-opinions "Arvamusi pole"},
  :land-owner-opinion
  {:opinions "Arvamused",
-  :add-new-opinion "LISAN UUE ARVAMUSE",
   :export-modal-title "Maade omanike arvamuste koondtabel",
-  :choose-activity "Valin tegevuse",
-  :choose-type "Valin tüübi",
   :opinion-export "Maade omanike arvamused",
+  :choose-activity "Valin tegevuse",
+  :update {:success-message "Arvamuse muutmine õnnestus"},
+  :delete
+  {:cancel-text "Ei, pöördun tagasi",
+   :confirmation-text "Kogu info kustutatakse ja seda ei saa taastada",
+   :success-message "Arvamus kustutatud"},
   :export
   {:units-with-opinions "1.1 Piirnevate kinnisasjade omanikud",
    :estate-num-name "Kinnisasja number; Kinnisasja nimi",
@@ -909,10 +912,8 @@
    :units-without-opinions
    "1.2 Piirnevate kinnisasjade omanikud, kes arvamust ei avaldanud",
    :jrk "JRK nr"},
-  :delete
-  {:cancel-text "Ei, pöördun tagasi",
-   :confirmation-text
-   "Kogu info kustutatakse ja seda ei saa taastada"}},
+  :add-new-opinion "LISAN UUE ARVAMUSE",
+  :choose-type "Valin tüübi"},
  :link
  {:search
   {:placeholder "Lisan viite...",
