@@ -12,7 +12,7 @@
 (defrecord DeleteComponent [id])
 (defrecord DeleteComponentResponse [id response])
 (defrecord SaveComponent [parent-id form-data])
-(defrecord SaveComponentResponse [response])
+(defrecord SaveComponentResponse [tempid response])
 
 (extend-protocol t/Event
 
@@ -68,12 +68,19 @@
            :payload {:project-id (get-in app [:params :project])
                      :parent-id parent-id
                      :component (dissoc form-data :component/components)}
-           :result-event ->SaveComponentResponse}))
+           :result-event (partial ->SaveComponentResponse (:db/id form-data))}))
 
   SaveComponentResponse
-  (process-event [response app]
-    (log/info "save component response: " response)
-    app))
+  (process-event [{:keys [tempid response]} app]
+    (apply t/fx app
+           (remove nil?
+                   [(when (string? tempid)
+                      {:tuck.effect/type :navigate
+                       :page :cost-items
+                       :params (:params app)
+                       :query (merge (:query app)
+                                     {:component (get-in response [:tempids tempid])})})
+                    common-controller/refresh-fx]))))
 
 (defn save-asset-event [form-data]
   #(->SaveCostItem @form-data))
