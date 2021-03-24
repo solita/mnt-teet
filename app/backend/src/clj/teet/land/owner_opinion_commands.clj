@@ -30,7 +30,7 @@
      [(merge
         {:db/id (or (:db/id form-data) "new-land-owner-opinion")}
         (select-keys form-data [:land-owner-opinion/body :land-owner-opinion/type :land-owner-opinion/date
-                                :land-owner-opinion/respondent-connection-to-land
+                                :land-owner-opinion/respondent-connection-to-land :land-owner-opinion/authority-position
                                 :land-owner-opinion/respondent-name :land-owner-opinion/link-to-response])
         {:land-owner-opinion/activity (get-in form-data [:land-owner-opinion/activity :db/id])
          :land-owner-opinion/project project-id

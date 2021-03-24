@@ -184,8 +184,8 @@
                           property-registry/kinnistu-d-parse-response)
           omandiosad (:omandiosad parsed-resp)]
       (is (= :ok (:status parsed-resp)))
-      
-      
+
+
       (is (= "nimi1" (-> omandiosad first :isik first :nimi)))
       (is (= "nimi2" (-> omandiosad first :isik second :nimi)))
       (is (= "nimi3" (-> omandiosad second :isik first :nimi)))))

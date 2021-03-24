@@ -53,7 +53,20 @@
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
  :asset
- {:type-library
+ {:add-cost-item "Add cost item",
+  :validate
+  {:min-length
+   "Text too short, insert at least {min-length} characters",
+   :max-length "Text too long, insert at most {max-length} characters",
+   :min-value "Minimum allowed value: {min-value}",
+   :max-value "Maximum allowed value: {max-value}"},
+  :no-matching-feature-classes "No matching feature classes.",
+  :cost-item-saved "Cost item saved",
+  :feature-group-and-class-placeholder
+  "Search feature group or class...",
+  :components {:label "Components"},
+  :back-to-cost-item "< Back to {name}",
+  :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
    :fclass "Feature class",
@@ -72,16 +85,6 @@
    :ctype "Component",
    :db.type/long "Integer",
    :attributes "Attributes"},
-  :add-cost-item "Add cost item",
-  :feature-group-and-class-placeholder
-  "Search feature group or class...",
-  :no-matching-feature-classes "No matching feature classes.",
-  :validate
-  {:min-length
-   "Text too short, insert at least {min-length} characters",
-   :max-length "Text too long, insert at most {max-length} characters",
-   :min-value "Minimum allowed value: {min-value}",
-   :max-value "Maximum allowed value: {max-value}"},
   :field-group
   {:details "Details",
    :common "Common",
@@ -653,7 +656,7 @@
   #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
-  :cooperation.response/status "Status",
+  :cooperation.response/status "Response situation",
   :estate-procedure/third-party-compensations
   "Third party compensations",
   :project/participant "Participant",
@@ -899,7 +902,16 @@
   :export-modal-title "Land owners opinions summary table",
   :choose-activity "Choose an activity",
   :choose-type "Choose a type",
-  :opinion-export "Land owners opinions"},
+  :opinion-export "Land owners opinions",
+  :export
+  {:jrk nil,
+   :estate-num-name nil,
+   :cadastral-id-name nil,
+   :opinion-body nil,
+   :authority-position nil,
+   :no-position-added nil,
+   :units-with-opinions nil,
+   :units-without-opinions nil}},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
