@@ -21,7 +21,7 @@
     (let [project-id (get-in app [:params :project])
           fclass (get-in form-data [:feature-group-and-class 1 :db/ident])
           asset (-> form-data
-                    (dissoc :feature-group-and-class)
+                    (dissoc :feature-group-and-class :asset/components)
                     (assoc :asset/fclass fclass))]
       (t/fx app
             {:tuck.effect/type :command!
@@ -32,14 +32,16 @@
 
   SaveCostItemResponse
   (process-event [{:keys [tempid response]} app]
-    (t/fx
-     (snackbar-controller/open-snack-bar app
-                                         (tr [:asset :cost-item-saved]))
-     {:tuck.effect/type :navigate
-      :page :cost-items
-      :params (:params app)
-      :query {:id (str (get response tempid))}}
-     common-controller/refresh-fx))
+    (apply t/fx
+           (snackbar-controller/open-snack-bar app
+                                               (tr [:asset :cost-item-saved]))
+           (remove nil?
+                   [(when (string? tempid)
+                      {:tuck.effect/type :navigate
+                       :page :cost-items
+                       :params (:params app)
+                       :query {:id (str (get-in response [:tempids tempid]))}})
+                    common-controller/refresh-fx])))
 
   DeleteComponent
   (process-event [{id :id} app]

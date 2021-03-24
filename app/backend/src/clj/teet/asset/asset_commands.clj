@@ -19,20 +19,13 @@
              aconn :asset-conn}
    :payload {project-id :project-id asset :asset}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}}
-  (let [asset (merge {:asset/project project-id}
-                     (asset-type-library/form->db
-                      (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-                      asset))
-        deleted (cu/collect :deleted? asset)
-        asset (cu/without :deleted? asset)
-        tx (into [asset]
-                 (for [{deleted-id :db/id} deleted
-                       :when deleted-id]
-                   [:db/retractEntity deleted-id]))]
-    (:tempids
-     (d/transact aconn
-                 {:tx-data tx}))))
+   :authorization {:cost-items/edit-cost-items {}}
+   :transact
+   ^{:db :asset}
+   [(merge {:asset/project project-id}
+           (asset-type-library/form->db
+            (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+            asset))]})
 
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."
