@@ -89,8 +89,7 @@
   {:details "Üksikasjad",
    :common "Ühine",
    :name-and-location "Nimi ja asukoht",
-   :cost-grouping "Kulude grupeerimine"},
-  :components {:label "Komponendid"}},
+   :cost-grouping "Kulude grupeerimine"}},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -909,7 +908,11 @@
    :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
    :units-without-opinions
    "1.2 Piirnevate kinnisasjade omanikud, kes arvamust ei avaldanud",
-   :jrk "JRK nr"}},
+   :jrk "JRK nr"},
+  :delete
+  {:cancel-text "Ei, pöördun tagasi",
+   :confirmation-text
+   "Kogu info kustutatakse ja seda ei saa taastada"}},
  :link
  {:search
   {:placeholder "Lisan viite...",

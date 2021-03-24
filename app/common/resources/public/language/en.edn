@@ -89,8 +89,7 @@
   {:details "Details",
    :common "Common",
    :name-and-location "Name and location",
-   :cost-grouping "Cost grouping"},
-  :components {:label "Components"}},
+   :cost-grouping "Cost grouping"}},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -913,7 +912,11 @@
    :title nil,
    :cadastral-id-name nil,
    :units-without-opinions nil,
-   :jrk nil}},
+   :jrk nil},
+  :delete
+  {:cancel-text "No, return back",
+   :confirmation-text
+   "All information will be deleted and cannot be recovered"}},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
