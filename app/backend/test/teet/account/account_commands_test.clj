@@ -1,4 +1,4 @@
-(ns teet.account.account-commands-test
+(ns ^:db teet.account.account-commands-test
   (:require [clojure.test :refer [is deftest testing use-fixtures]]
             [teet.test.utils :as tu]
             teet.account.account-commands
