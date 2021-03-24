@@ -48,7 +48,7 @@
        (for [v values]
          ^{:key (str (:db/ident v))}
          [:li
-          (str (tr* v) " (" (str (:db/ident v)) ")")])])))
+          [tr* v] " (" (str (:db/ident v)) ")"])])))
 
 (defn- attribute-table [open attributes]
   (when (seq attributes)
