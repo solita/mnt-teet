@@ -763,8 +763,8 @@
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
   :export-files-zip
-  {:activity-button "Email documents related to the activity ",
-   :task-button "Email documents related to the task ",
+  {:activity-button "Email link to files related to the activity ",
+   :task-button "Email link to files related to the task ",
    :activity-success
    "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
    :task-success
@@ -904,14 +904,15 @@
   :choose-type "Choose a type",
   :opinion-export "Land owners opinions",
   :export
-  {:jrk nil,
+  {:units-with-opinions nil,
    :estate-num-name nil,
-   :cadastral-id-name nil,
-   :opinion-body nil,
    :authority-position nil,
+   :opinion-body nil,
    :no-position-added nil,
-   :units-with-opinions nil,
-   :units-without-opinions nil}},
+   :title nil,
+   :cadastral-id-name nil,
+   :units-without-opinions nil,
+   :jrk nil}},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",

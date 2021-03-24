@@ -71,9 +71,10 @@
        :reagent-render
        (fn [{:keys [e! query args state-path skeleton view app state refresh breadcrumbs
                     simple-view loading-state]}]
-         [context/provide :query-filter {:value @filter-atom
-                                         :on-change change-filter
-                                         :reset-filter reset-filter}
+         [context/provide :query {:value @filter-atom
+                                  :on-change change-filter
+                                  :reset-filter reset-filter
+                                  :state-atom state-atom}
           (let [state (if state-path
                         state
                         @state-atom)

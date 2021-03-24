@@ -21,6 +21,9 @@
 (defn db []
   (d/db (db-connection)))
 
+(defn adb []
+  (environment/asset-db))
+
 (def q d/q)
 (def pull d/pull)
 
