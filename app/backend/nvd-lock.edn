@@ -50,5 +50,4 @@
   "CVE-2021-23926"
 
   ;; Not using Batik swing gui
-  "CVE-2020-11987"
-  }
+  "CVE-2020-11987"}

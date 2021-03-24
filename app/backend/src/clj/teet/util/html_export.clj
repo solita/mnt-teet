@@ -21,7 +21,7 @@
        [:head
         [:title title]
         [:script
-         [copy-to-clipboard-script]]]
+         copy-to-clipboard-script]]
        [:body
         [:button {:style "float: right;"
                   :onclick "copyToClipboard()"}

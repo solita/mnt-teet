@@ -28,8 +28,17 @@
    :context {:keys [db user]}
    :args {:land-owner-opinion/keys [activity type] :as args}
    :project-id (project-db/activity-project-id db activity)
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]
+            api-url [:api-url]
+            api-secret [:auth :jwt-secret]}
    :authorization {:land/view-land-owner-opinions {}}}
   ^{:format :raw}
   {:status 200
    :headers {"Content-Type" "text/html; charset=UTF-8"}
-   :body (owner-opinion-export/summary-table db activity type)})
+   :body (owner-opinion-export/owner-opinion-summary-table db activity type {:xroad-instance xroad-instance
+                                                                             :xroad-url xroad-url
+                                                                             :xroad-subsystem xroad-subsystem
+                                                                             :api-url api-url
+                                                                             :api-secret api-secret})})
