@@ -270,7 +270,7 @@
    [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion)]
     [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion)]]])
 
-(defn owner-opinion-edit-form [e! form-state save-event project target close-event]
+(defn owner-opinion-edit-form [e! form-state close-form-and-refresh project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
                activities (get-activities project)]
     [:<>
@@ -282,18 +282,13 @@
                                                (form/to-value @form-state))
                                   :project-id (:db/id project)
                                   :land-unit-id target}
-                                 save-event)
+                                 close-form-and-refresh)
                   :value @form-state
                   :cancel-event close-event
                   :delete (common-controller/->SaveForm
                              :land-owner-opinion/delete-opinion
                              {:db/id (:db/id @form-state)}
-                             (fn [_response]
-                               (fn [e!]
-                                 (e! (close-event))
-                                 (e! (common-controller/->Refresh)))))
-                  :delete-title "Delete"
-                  :delete-message "Delete opinion"
+                             close-form-and-refresh)
                   :spec :land-owner-opinion/form
                   :id (str "owner-opinion-" (:db/id @form-state))}
       (opinion-form-controls e! activities)]]))
@@ -375,7 +370,7 @@
   [e! {:keys [edit-rights?]} {id :db/id :as opinion} project target refresh!]
   (r/with-let [[pfrom pto] (common/portal)
                edit-open-atom (r/atom false)
-               save-event (fn [_] (reset! edit-open-atom false) (refresh!))
+               close-form-and-refresh (fn [_] (reset! edit-open-atom false) (refresh!))
                form-data (r/atom (get-opinion-data-for-update opinion))]
     [:div
      ;;[:span (pr-str opinion)]
@@ -384,7 +379,7 @@
        :open? false
        :heading-button [form/form-container-button
                         {:form-component [owner-opinion-edit-form e! form-data
-                                          save-event project target]
+                                          close-form-and-refresh project target]
                          :container pfrom
                          :open-atom edit-open-atom
                          :id (str "edit-opinion-" id)
