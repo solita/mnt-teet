@@ -9,8 +9,8 @@
 
 (defrecord SaveCostItem [form-data])
 (defrecord SaveCostItemResponse [tempid response])
-(defrecord DeleteComponent [id])
-(defrecord DeleteComponentResponse [id response])
+(defrecord DeleteComponent [fetched-cost-item-atom id])
+(defrecord DeleteComponentResponse [fetched-cost-item-atom id response])
 (defrecord SaveComponent [parent-id form-data])
 (defrecord SaveComponentResponse [tempid response])
 
@@ -44,19 +44,22 @@
                     common-controller/refresh-fx])))
 
   DeleteComponent
-  (process-event [{id :id} app]
+  (process-event [{:keys [fetched-cost-item-atom id]} app]
     (let [project-id (get-in app [:params :project])]
       (t/fx app
             {:tuck.effect/type :command!
              :command :asset/delete-component
              :payload {:db/id id
                        :project-id project-id}
-             :result-event (partial ->DeleteComponentResponse id)})))
+             :result-event (partial ->DeleteComponentResponse fetched-cost-item-atom id)})))
 
   DeleteComponentResponse
-  (process-event [{id :id} app]
+  (process-event [{:keys [fetched-cost-item-atom id]} app]
+    (swap! fetched-cost-item-atom
+           (fn [cost-item]
+             (cu/without #(and (map? %) (= id (:db/id %))) cost-item)))
     (snackbar-controller/open-snack-bar
-     (cu/without #(and (map? %) (= id (:db/id %))) app)
+     app
      (tr [:asset :cost-item-component-deleted])))
 
 

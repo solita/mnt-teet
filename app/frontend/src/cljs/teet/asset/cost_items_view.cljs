@@ -259,7 +259,8 @@
                   (when (pos? i)
                     {:margin-left "-0.9rem"}))}])))])
 
-(defn- component-rows [{:keys [e! level components]}]
+(defn- component-rows [{:keys [e! level components
+                               delete-component!]}]
   (when (seq components)
     [:<>
      (doall
@@ -283,7 +284,7 @@
            [buttons/delete-button-with-confirm
             {:small? true
              :icon-position :start
-             :action (e! cost-items-controller/->DeleteComponent (:db/id c))}
+             :action (r/partial delete-component! (:db/id c))}
             (tr [:buttons :delete])]]]
          [component-rows {:e! e!
                           :components (:component/components c)
@@ -291,12 +292,13 @@
 
 (defn- components-tree
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! asset allowed-components]}]
+  [{:keys [e! asset allowed-components]} {state-atom :state-atom}]
   [:<>
    [typography/Heading3 (tr [:asset :components :label])
     (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
    [component-rows {:e! e!
-                    :components (:asset/components asset)}]])
+                    :components (:asset/components asset)
+                    :delete-component! (e! cost-items-controller/->DeleteComponent state-atom)}]])
 
 (defn- form-paper
   "Wrap the form input portion in a light gray paper."
@@ -317,6 +319,7 @@
                cancel-event (if new?
                               #(common-controller/->SetQueryParam :id nil)
                               (form/update-atom-event form-data (constantly initial-data)))]
+    (println "render cost-item-form " initial-data)
     (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
       [:<>
 
@@ -343,9 +346,10 @@
        ;; Components
        (when initial-data
          [:<>
-          [components-tree {:e! e!
-                            :asset initial-data
-                            :allowed-components (:ctype/_parent feature-class)}]
+          [context/consume :query-
+           [components-tree {:e! e!
+                             :asset initial-data
+                             :allowed-components (:ctype/_parent feature-class)}]]
 
           [add-component-menu
            (asset-type-library/allowed-component-types atl feature-class)
