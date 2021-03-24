@@ -249,8 +249,7 @@
          {:size :small
           :on-click toggle-open!}
          [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
-         (if @open? (tr [:buttons :close]) (tr [:buttons :open]))]
-        ]]]
+         (if @open? (tr [:buttons :close]) (tr [:buttons :open]))]]]]
      (when content
        [Collapse {:in @open?
                   :mount-on-enter true}
