@@ -913,15 +913,6 @@
    :cadastral-id-name nil,
    :units-without-opinions nil,
    :jrk nil}},
-
-  {:jrk nil,
-   :estate-num-name nil,
-   :cadastral-id-name nil,
-   :opinion-body nil,
-   :authority-position nil,
-   :no-position-added nil,
-   :units-with-opinions nil,
-   :units-without-opinions nil}},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
