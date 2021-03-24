@@ -40,8 +40,6 @@
 
   ;; Apache Batik vulnerability that only can be triggered if we allow user specify SVG content that we don't
   "CVE-2019-17566"
-  ;; Apache Batik we are not using NodePickerPanel, which is a Swing component in the Batik gui
-  "CVE-2020-11987"
 
   ;; Apache HttpClient misinterpret malformed authority, not using URLs like that or
   ;; doing requests to user specified URLs
