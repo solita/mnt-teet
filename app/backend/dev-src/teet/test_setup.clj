@@ -156,7 +156,7 @@
     :link/external-id "2:12601:001:0193",
     :link/type :cadastral-unit}])
 
-
+;; This is called from meetin_links.ci.spec.js through the test-setup-routes
 (defn setup-mock-cadastral-unit-link-search [_req]
   (defmethod link-queries/search-link :cadastral-unit
     [_db _user _config _project _ _lang text]

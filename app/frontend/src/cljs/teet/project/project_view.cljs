@@ -92,7 +92,8 @@
       [:div {:class (<class project-style/project-page-structure)}
        [project-navigator-view/project-header project
         (when show-opinion-export?
-          [{:label (tr [:land-owner-opinion :opinion-export])
+          [{:id "owner-opinion-export"
+            :label (tr [:land-owner-opinion :opinion-export])
             :icon [icons/action-visibility-outlined {:style {:color theme-colors/primary}}]
             :on-click #(reset! owner-opinion-export-open? true)}])]
        [owner-opinion-view/land-owner-opinion-export-modal e! project owner-opinion-export-open?]

@@ -60,6 +60,7 @@
        (tr [:buttons :cancel])]
       (let [{:land-owner-opinion/keys [activity type] :as form-value} @form-atom]
         [buttons/button-primary {:target "_blank"
+                                 :id "view-export-html"
                                  :disabled (or (nil? activity) (nil? type))
                                  :href (common-controller/query-url
                                          :land-owner-opinion/export-opinions
