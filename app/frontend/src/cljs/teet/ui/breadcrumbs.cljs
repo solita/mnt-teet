@@ -17,7 +17,8 @@
                 :separator (r/as-element [icons/navigation-chevron-right {:color :primary :size :small}])}
    (util/with-keys
      (for [crumb (butlast breadcrumbs)]
-       [common/Link {:href (routes/url-for crumb)}
-        (:title crumb)]))
+       (or (:link crumb)
+           [common/Link {:href (routes/url-for crumb)}
+            (:title crumb)])))
    (when-let [{title :title} (last breadcrumbs)]
      [:span title])])

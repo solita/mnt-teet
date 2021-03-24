@@ -53,7 +53,20 @@
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
  :asset
- {:type-library
+ {:add-cost-item "Add cost item",
+  :validate
+  {:min-length
+   "Text too short, insert at least {min-length} characters",
+   :max-length "Text too long, insert at most {max-length} characters",
+   :min-value "Minimum allowed value: {min-value}",
+   :max-value "Maximum allowed value: {max-value}"},
+  :no-matching-feature-classes "No matching feature classes.",
+  :cost-item-saved "Cost item saved",
+  :feature-group-and-class-placeholder
+  "Search feature group or class...",
+  :components {:label "Components"},
+  :back-to-cost-item "< Back to {name}",
+  :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
    :fclass "Feature class",
@@ -72,16 +85,6 @@
    :ctype "Component",
    :db.type/long "Integer",
    :attributes "Attributes"},
-  :add-cost-item "Add cost item",
-  :feature-group-and-class-placeholder
-  "Search feature group or class...",
-  :no-matching-feature-classes "No matching feature classes.",
-  :validate
-  {:min-length
-   "Text too short, insert at least {min-length} characters",
-   :max-length "Text too long, insert at most {max-length} characters",
-   :min-value "Minimum allowed value: {min-value}",
-   :max-value "Maximum allowed value: {max-value}"},
   :field-group
   {:details "Details",
    :common "Common",
@@ -761,8 +764,8 @@
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
   :export-files-zip
-  {:activity-button "Email documents related to the activity ",
-   :task-button "Email documents related to the task ",
+  {:activity-button "Email link to files related to the activity ",
+   :task-button "Email link to files related to the task ",
    :activity-success
    "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
    :task-success
@@ -900,7 +903,17 @@
   :export-modal-title "Land owners opinions summary table",
   :choose-activity "Choose an activity",
   :choose-type "Choose a type",
-  :opinion-export "Land owners opinions"},
+  :opinion-export "Land owners opinions",
+  :export
+  {:units-with-opinions nil,
+   :estate-num-name nil,
+   :authority-position nil,
+   :opinion-body nil,
+   :no-position-added nil,
+   :title nil,
+   :cadastral-id-name nil,
+   :units-without-opinions nil,
+   :jrk nil}},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",

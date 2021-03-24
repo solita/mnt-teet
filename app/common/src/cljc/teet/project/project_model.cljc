@@ -138,7 +138,7 @@
   [estimated-start-date estimated-end-date])
 
 (defmethod get-column :thk.project/project-name
-  [{:thk.project/keys [project-name name]}]
+  [{:thk.project/keys [project-name name]} _]
   (if-not (str/blank? project-name)
     project-name
     name))

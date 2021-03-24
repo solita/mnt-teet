@@ -48,7 +48,7 @@
      (merge related-cadastral-units
             {:land-acquisitions land-acquisitions}))))
 
-(defn- project-cadastral-units [db api-url api-secret project-id]
+(defn project-cadastral-units [db api-url api-secret project-id]
   (let [ctx {:api-url api-url
              :api-secret api-secret}]
     (-> (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])

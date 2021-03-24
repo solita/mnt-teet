@@ -9,7 +9,7 @@
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
             [datafrisk.core :as df]
-            [teet.ui.material-ui :refer [Grid Link]]
+            [teet.ui.material-ui :refer [Grid Link Breadcrumbs]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -24,7 +24,12 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.ui.url :as url]
             [teet.ui.query :as query]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]
+            [teet.util.datomic :as du]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.theme.theme-colors :as theme-colors]))
+
 
 (defonce next-id (atom 0))
 
@@ -36,6 +41,12 @@
     (if (str/blank? l)
       (str (:db/ident m))
       l)))
+
+(defn- label-for* [item rotl]
+  [:span (label (rotl item))])
+
+(defn- label-for [item]
+  [context/consume :rotl [label-for* item]])
 
 (defn- validate [valueType min-value max-value v]
   (when-not (str/blank? v)
@@ -170,43 +181,24 @@
         [form/field :component/components
          [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]])))
 
-(defn- components
-  "Render field for components, with add component if there are allowed components.
-
-  Renders each component with it's own set
-  allowed-components is a collection of component types this entity can have, if empty
-  no new components can be added."
-  [{:keys [e! value on-change allowed-components]}]
+(defn- add-component-menu [allowed-components add-component!]
   [:<>
-   (doall
-    (keep-indexed
-     (fn [i {id :db/id deleted? :deleted? :as c}]
-       (when (not deleted?)
-         ^{:key (str id)}
-         [context/consume :rotl
-          [component {:e! e!
-                      :component c
-                      :on-change #(on-change (update value i merge %))}]]))
-     value))
-   [Grid {:container true}
-    (if (> (count allowed-components) 3)
-      [common/context-menu
-       {:label "add component"
-        :icon [icons/content-add-circle-outline]
-        :items (for [c allowed-components]
-                 {:label (label c)
-                  :icon [icons/content-add]
-                  :on-click (r/partial on-change (conj (or value [])
-                                                       {:component/ctype (:db/ident c)}))})}]
-      (doall
-       (for [c allowed-components]
-         ^{:key (str :db/ident c)}
-         [Grid {:item true :xs 12 :md 4}
-          [buttons/button-secondary {:size :small
-                                     :on-click (r/partial on-change (conj (or value [])
-                                                                          {:component/ctype (:db/ident c)}))
-                                     :start-icon (r/as-element [icons/content-add])}
-           (label c)]])))]])
+   (if (> (count allowed-components) 3)
+     [common/context-menu
+      {:label "add component"
+       :icon [icons/content-add-circle-outline]
+       :items (for [c allowed-components]
+                {:label (label c)
+                 :icon [icons/content-add]
+                 :on-click (r/partial add-component! (:db/ident c))})}]
+     (doall
+      (for [c allowed-components]
+        ^{:key (str (:db/ident c))}
+        [Grid {:item true :xs 12 :md 4}
+         [buttons/button-secondary {:size :small
+                                    :on-click (r/partial add-component! (:db/ident c))
+                                    :start-icon (r/as-element [icons/content-add])}
+          (label c)]])))])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
@@ -255,13 +247,79 @@
             :value fc
             :on-change #(on-change [fg %])}])]])))
 
-(defn- cost-item-form [e! asset-type-library initial-data]
-  (r/with-let [form-data (r/atom (or initial-data
+(defn- component-tree-level-indent [level]
+  [:<>
+   (when level
+     (doall
+      (for [i (range level)]
+        ^{:key i}
+        [icons/navigation-chevron-right
+         {:style (merge
+                  {:color :lightgray}
+                  (when (pos? i)
+                    {:margin-left "-0.9rem"}))}])))])
+
+(defn- component-rows [{:keys [e! level components
+                               delete-component!]}]
+  (when (seq components)
+    [:<>
+     (doall
+      (for [c components]
+        ^{:key (str (:db/id c))}
+        [:span
+         [:div {:class (<class common-styles/flex-row)}
+          [:div {:class (<class common-styles/flex-table-column-style
+                                20 :flex-start 1 nil)}
+           [component-tree-level-indent level]
+           [Link {:href (url/set-query-param :component (str (:db/id c)))}
+            (:common/name c)]]
+          [:div {:class (<class common-styles/flex-table-column-style
+                                20 :flex-start 0 nil)}
+           [label-for (:component/ctype c)]]
+          [:div {:class (<class common-styles/flex-table-column-style
+                                20 :flex-start 0 nil)}
+           (str "id: " (:db/id c))]
+          [:div {:class (<class common-styles/flex-table-column-style
+                                40 :flex-end 0 nil)}
+           [buttons/delete-button-with-confirm
+            {:small? true
+             :icon-position :start
+             :action (r/partial delete-component! (:db/id c))}
+            (tr [:buttons :delete])]]]
+         [component-rows {:e! e!
+                          :components (:component/components c)
+                          :level (inc (or level 0))}]]))]))
+
+(defn- components-tree
+  "Show listing of all components (and their subcomponents recursively) for the asset."
+  [{:keys [e! asset allowed-components]} {state-atom :state-atom}]
+  [:<>
+   [typography/Heading3 (tr [:asset :components :label])
+    (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
+   [component-rows {:e! e!
+                    :components (:asset/components asset)
+                    :delete-component! (e! cost-items-controller/->DeleteComponent state-atom)}]])
+
+(defn- form-paper
+  "Wrap the form input portion in a light gray paper."
+  [component]
+  [:div.cost-item-form {:style {:background-color theme-colors/gray-lightest
+                                :margin-top "1rem"
+                                :padding "1rem"}}
+   component])
+
+(defn- cost-item-form [e! atl initial-data]
+  (r/with-let [new? (nil? initial-data)
+               form-data (r/atom (or initial-data
                                      {:db/id (next-id! "costitem")}))
                on-change-event (form/update-atom-event
                                 form-data
                                 cu/deep-merge)
-               save-event (cost-items-controller/save-asset-event form-data)]
+               save-event (cost-items-controller/save-asset-event form-data)
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :id nil)
+                              (form/update-atom-event form-data (constantly initial-data)))]
+    (println "render cost-item-form " initial-data)
     (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
       [:<>
 
@@ -269,30 +327,38 @@
         {:e! e!
          :on-change-event on-change-event
          :value @form-data
-         :save-event save-event}
+         :save-event save-event
+         :cancel-event cancel-event
+         :disable-buttons? (= initial-data @form-data)}
 
         [form/field {:attribute :feature-group-and-class}
          [group-and-class-selection {:e! e!
-                                     :fgroups (:fgroups asset-type-library)
+                                     :fgroups (:fgroups atl)
                                      :read-only? (seq (dissoc @form-data :feature-group-and-class :db/id))
                                      :name (:common/name @form-data)}]]
 
         (when feature-class
-          [:<>
-           ;; Attributes for asset
-           [attributes e! (some-> feature-class :attribute/_parent)]
-
-           ;; Components
-           [form/field {:attribute :asset/components}
-            [components {:e! e!
-                         :allowed-components (:ctype/_parent feature-class)}]]])
+          ;; Attributes for asset
+          [form-paper [attributes e! (some-> feature-class :attribute/_parent)]])
 
         [form/footer2]]
+
+       ;; Components
+       (when initial-data
+         [:<>
+          [context/consume :query-
+           [components-tree {:e! e!
+                             :asset initial-data
+                             :allowed-components (:ctype/_parent feature-class)}]]
+
+          [add-component-menu
+           (asset-type-library/allowed-component-types atl feature-class)
+           #(e! (common-controller/->SetQueryParam :component (str "-" (name %))))]])
 
        ;; FIXME: remove when finalizing form
        [df/DataFriskView @form-data]])))
 
-(defn- edit-cost-item-form* [e! asset-type-library {fclass-ident :asset/fclass :as cost-item-data}]
+(defn- edit-cost-item-form [e! asset-type-library {fclass-ident :asset/fclass :as cost-item-data}]
   (let [fclass= (fn [fc] (= (:db/ident fc) fclass-ident))
         fgroup (cu/find-> (:fgroups asset-type-library)
                           #(cu/find-> (:fclass/_fgroup %) fclass=))
@@ -301,11 +367,133 @@
      (assoc cost-item-data
             :feature-group-and-class [fgroup fclass])]))
 
-(defn- edit-cost-item-form [e! asset-type-library id]
+(defn- with-cost-item [e! id view-component]
   [query/query {:e! e!
                 :query :asset/cost-item
                 :args {:db/id (common-controller/->long id)}
-                :simple-view [edit-cost-item-form* e! asset-type-library]}])
+                :simple-view view-component}])
+
+(defn- find-component-path
+  "Return vector containing all parents of component from asset to the component.
+  For example:
+  [a c1 c2 c3]
+  where a is the asset, that has component c1
+  c1 has child component c2
+  and c2 has child component c3 (the component we want)"
+  [asset component-id]
+  (let [containing
+        (fn containing [path here]
+          (let [cs (concat (:asset/components here)
+                           (:component/components here))]
+            (if-let [c (some #(when (du/id= component-id
+                                            (:db/id %))
+                                %) cs)]
+              ;; we found the component at this level
+              (into path [here c])
+
+              ;; not found here, recurse
+              (first
+               (for [sub cs
+                     :let [sub-path (containing (conj path here) sub)]
+                     :when sub-path]
+                 sub-path)))))]
+
+    (containing [] asset)))
+
+(defn- component-form-navigation [atl [asset :as component-path]]
+  [:<>
+   [breadcrumbs/breadcrumbs
+    (for [p component-path]
+      {:link [url/Link {:page :cost-items
+                        :query {:id (str (:db/id asset))
+                                :component (when-not (:asset/fclass p)
+                                             (str (:db/id p)))}}
+              (:common/name p)]
+       :title (if-let [name (:common/name p)]
+                name
+                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
+
+   (into [:div]
+         (butlast
+          (interleave
+           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
+                                      atl
+                                      (:asset/fclass (first component-path))))]
+                         (map #(or (:asset/fclass %)
+                                   (:component/ctype %)))
+                         component-path)]
+             [label-for p])
+           (repeat " / "))))])
+
+(defn- component-form [e! atl asset-id component-id cost-item-data]
+  ;; Component id can have two parts (separated by dash)
+  ;; <component id number>-<subcomponent type name>
+  ;; If subcomponent type name is specified, then we are adding a component
+  ;; of that type. If component id number is omitted, then the component
+  ;; is being added to the asset itself.
+  (r/with-let [[component-id subcomponent-name] (str/split component-id #"-")
+
+               ;; If component-id is blank, adding this component to asset level
+               component-path (if (str/blank? component-id)
+                                [cost-item-data]
+                                (find-component-path cost-item-data component-id))
+
+               ;; When adding a subcomponent, add it to the path
+               component-path (if subcomponent-name
+                                (conj component-path
+                                      {:db/id (next-id! subcomponent-name)
+                                       :component/ctype (keyword "ctype" subcomponent-name)})
+                                component-path)
+               component-data (last component-path)
+               new? (not (number? (:db/id component-data)))
+               ctype (cu/find-matching #(and (= :asset-schema.type/ctype (get-in % [:asset-schema/type :db/ident]))
+                                             (= (:db/ident %) (:component/ctype component-data)))
+                                       atl)
+               form-data (r/atom component-data)
+               on-change-event (form/update-atom-event
+                                form-data
+                                cu/deep-merge)
+               save-event #(cost-items-controller/->SaveComponent
+                            ;; Take id of the parent component or asset
+                            (:db/id (nth component-path (- (count component-path) 2)))
+                            @form-data)
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :component nil)
+                              (form/update-atom-event form-data (constantly component-data)))]
+    [:<>
+     [component-form-navigation atl component-path]
+
+     [form/form2
+      {:e! e!
+       :on-change-event on-change-event
+       :value @form-data
+       :save-event save-event
+       :cancel-event cancel-event
+       :disable-buttons? (= component-data @form-data)}
+
+      ;; Attributes for component
+      [form-paper
+       [:<>
+        (label ctype)
+        [attributes e! (some-> ctype :attribute/_parent)]]]
+
+      [:div {:class (<class common-styles/flex-row-space-between)
+             :style {:align-items :center}}
+       [url/Link {:page :cost-items
+                  :query {:id asset-id
+                          :component nil}}
+        (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
+       [form/footer2]]]
+
+     (when (not new?)
+       (let [allowed-components (asset-type-library/allowed-component-types atl ctype)]
+         (when (seq allowed-components)
+           [add-component-menu allowed-components
+            #(e! (common-controller/->SetQueryParam
+                  :component (str component-id "-" (name %))))])))
+
+     ;; FIXME: remove when finalizing form
+     [df/DataFriskView @form-data]]))
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
@@ -340,13 +528,14 @@
                 (for [{id :db/id :common/keys [name]} cost-items]
                   ^{:key (str id)}
                   [:div
-                   [Link {:href (url/set-query-param :id (str id))} name]])]]))]]))]]))
+                   [Link {:href (url/set-query-param :id (str id)
+                                                     :component nil)} name]])]]))]]))]]))
 
 (defn cost-items-page [e!
                        {query :query :as app}
                        {:keys [cost-items project
                                asset-type-library]}]
-  (let [id (:id query)
+  (let [{:keys [id component]} query
         add? (= id "new")]
     [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
      [project-view/project-full-page-structure
@@ -360,12 +549,18 @@
               [typography/Heading2 (tr [:project :tabs :cost-items])]
 
               (cond
+                component
+                ^{:key component}
+                [with-cost-item e! id
+                 [component-form e! asset-type-library id component]]
+
                 add?
                 [cost-item-form e! asset-type-library nil]
 
                 id
                 ^{:key id}
-                [edit-cost-item-form e! asset-type-library id]
+                [with-cost-item e! id
+                 [edit-cost-item-form e! asset-type-library]]
 
                 :else
                 [:div "TODO: default view"])]}]]))

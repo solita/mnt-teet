@@ -322,7 +322,7 @@
   :shortcut-options - map with keys [:option-val :tr-path] only one selectable value under key :shortcut in value
   :search-fields - as form/field components"
   [{:keys [e! default-shortcut shortcut-options search-fields]}]
-  [context/consume :query-filter
+  [context/consume :query
    (fn [{:keys [value on-change reset-filter]}]
      [:div {:class (<class project-navigator-view/navigator-container-style true)}
       [:div {:style {:margin-right "1rem"}}
@@ -359,7 +359,7 @@
          (tr [:search :clear-filters])]]]])])
 
 (defn cooperation-application-search
-  "Uses context :query-filter created by the query component to manage the filters for the query component"
+  "Uses context :query created by the query component to manage the filters for the query component"
   [e! project-activities]
   [query-context-search
    {:e! e!
@@ -509,7 +509,7 @@
     [:<>
      [:div {:class (<class common-styles/margin-bottom 1.5)}
       [:div {:class (<class common-styles/header-with-actions)}
-       [context/consume :query-filter
+       [context/consume :query
         (fn [{:keys [value]}]
           [:div
            [typography/Heading2 (tr [:cooperation :page-title])]

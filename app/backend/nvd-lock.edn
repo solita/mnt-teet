@@ -21,7 +21,9 @@
   "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')"
   "CVE-2020-14195" "CVE-2019-14892" "CVE-2018-14718"
   "CVE-2020-24616" "CVE-2020-25649" "CVE-2020-35490" "CVE-2020-35491" "CVE-2020-35728"
-  "CVE-2020-36183" "CVE-2020-36181" "CVE-2020-36188" "CVE-2020-36186" "CVE-2020-36180" "CVE-2020-36182" "CVE-2020-36187" "CVE-2020-36185" "CVE-2020-36189" "CVE-2020-36179" "CVE-2020-36184"
+  "CVE-2020-36183" "CVE-2020-36181" "CVE-2020-36188" "CVE-2020-36186" "CVE-2020-36180"
+  "CVE-2020-36182" "CVE-2020-36187" "CVE-2020-36185" "CVE-2020-36189" "CVE-2020-36179"
+  "CVE-2020-36184" "CVE-2019-14379"
 
   ;; Github enterprise doesn't affect us
   "CVE-2020-10517" "CVE-2020-10518"
@@ -49,4 +51,7 @@
 
   ;; Apache xmlbeans are not used to parse user provided xml anywhere
   ;; Apache POi is not used for parsing user provided microsoft office files.
-  "CVE-2021-23926"}
+  "CVE-2021-23926"
+
+  ;; Not using Batik swing gui
+  "CVE-2020-11987"}
