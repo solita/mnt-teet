@@ -154,7 +154,7 @@
                                     (group-by :KINNISTU)
                                     (sort-by (fn [[estate _]]
                                                estate)))]
-    (info/log "Generating owner opinion summary for project" (:db/id project) "with activity" activity)
+    (log/info "Generating owner opinion summary for project" (:db/id project) "with activity" activity)
     (with-language :et
       (html-export-util/html-export-helper
         {:title (tr [:land-owner-opinion :export :title] {:opinion-type (tr-enum opinion-type)})
