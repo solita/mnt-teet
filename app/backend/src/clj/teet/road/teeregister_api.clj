@@ -38,7 +38,7 @@
                        :client client})))))
 
 (defn- authenticate
-  "Authenticate client needed. Returns credentials.
+  "Authenticate client if needed. Returns credentials.
   Does a token request if client does not already have a valid token."
   [{:keys [credentials-atom] :as client}]
   (let [{:keys [token expires] :as creds} @credentials-atom]
