@@ -8,7 +8,8 @@
             [teet.util.md :as md]
             [teet.log :as log]
             [teet.integration.x-road.property-registry :as property-registry]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.util.datomic :as du]))
 
 (defn- opinions-by-type
   "Fetch all opinions for given activity with the given opinion type"
@@ -119,10 +120,21 @@
                units)))
          estates))]]])
 
+(defn fetch-external-unit-infos
+  [db project-id {:keys [api-url api-secret] :as config}]
+  (let [project-thk-id (:thk.project/id (du/entity db project-id))
+        units (land-queries/project-cadastral-units db api-url api-secret project-thk-id)]
+    {:units units
+     :estate-infos (property-registry/fetch-all-estate-info
+                     config
+                     (into #{}
+                           (map :KINNISTU)
+                           units))}))
+
 (defn owner-opinion-summary-table
   "Produces a HTML page which lists all opinions matching certain activity and opinion type
   and all the land units that are selected but don't have any matching opinions"
-  [db activity opinion-type {:keys [api-url api-secret] :as config}]
+  [db activity opinion-type {:keys [units estate-infos] :as _external-info}]
   (let [opinions (opinions-by-type db activity opinion-type)
         project (ffirst
                   (d/q '[:find (pull ?project [:thk.project/name :thk.project/project-name
@@ -132,13 +144,7 @@
                          [?lifecycle :thk.lifecycle/activities ?activity]
                          [?project :thk.project/lifecycles ?lifecycle]]
                        db activity))
-        units (land-queries/project-cadastral-units db api-url api-secret (:thk.project/id project))
         opinion-unit-ids (set (map :land-owner-opinion/land-unit opinions))
-        estate-infos (property-registry/fetch-all-estate-info
-                       config
-                       (into #{}
-                             (map :KINNISTU)
-                             units))
         units-with-opinions (->> units
                                  (filter #(opinion-unit-ids (:teet-id %)))
                                  (mapv (fn [{:keys [teet-id] :as unit}]

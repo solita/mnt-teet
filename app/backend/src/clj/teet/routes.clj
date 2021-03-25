@@ -12,12 +12,14 @@
 
 (defn teet-routes [config]
   (require 'teet.test-setup)
-  (let [test-setup-routes (resolve 'teet.test-setup/test-setup-routes)]
+  (let [test-setup-routes (resolve 'teet.test-setup/test-setup-routes)
+        test-teardown-routes (resolve 'teet.test-setup/test-teardown-routes)]
     (routes
      (GET "/" _
           (index-page/index-route config))
 
      (test-setup-routes)
+     (test-teardown-routes)
 
      (POST "/userinfo" req
            {:status 200

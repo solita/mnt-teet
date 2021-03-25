@@ -152,6 +152,16 @@ Cypress.Commands.add("setup", (name, payload) => {
         })
 })
 
+Cypress.Commands.add("teardown", (name, payload) => {
+    cy.request({method: "POST",
+        url: "/testteardown/"+name,
+        body: payload})
+        .then((response) => {
+            cy.wrap(response.body).as(name)
+        })
+})
+
+
 //
 //
 // -- This is a child command --
