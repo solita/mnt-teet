@@ -1005,7 +1005,7 @@
                                  :entity application})
       :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
-                      {:functionality :cooperation/application-approval
+                      {:functionality :cooperation/edit-application
                        :entity application})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
       [cooperation-page-structure

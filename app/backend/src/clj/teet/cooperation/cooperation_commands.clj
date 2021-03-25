@@ -177,7 +177,7 @@
    :context {:keys [user db]}
    :payload {application-id :application-id}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/application-approval {}}
+   :authorization {:cooperation/edit-application {}}
    :pre [^{:error :application-has-opinion}
          (nil? (:cooperation.application/opinion (du/entity db application-id)))]
    :transact
@@ -209,7 +209,7 @@
    :context {:keys [user db]}
    :payload {:keys [application-id opinion-form]}
    :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
-   :authorization {:cooperation/application-approval {}}
+   :authorization {:cooperation/edit-application {}}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
    :transact
    (db-api-large-text/store-large-text!
