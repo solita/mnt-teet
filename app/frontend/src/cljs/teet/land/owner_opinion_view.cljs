@@ -154,7 +154,7 @@
     [:div {:style {:padding "0.5rem"
                    :overflow "hidden"}}
      [:div {:class (<class add-opinion-heading-style)}
-      [typography/SmallText (tr [:land-owner-opinions :add-new-opinion])]]
+      [typography/SmallText (tr [:land-owner-opinion :add-new-opinion])]]
      [form/form2 {:e! e!
                   :on-change-event form-change
                   :save-event #(common-controller/->SaveForm
@@ -253,7 +253,7 @@
      (when content
        [Collapse {:in @open?
                   :mount-on-enter true}
-        [:div {:style {:padding "1rem"}}
+        [:div
          content]])]))
 
 (defn get-activity-name [opinion]
