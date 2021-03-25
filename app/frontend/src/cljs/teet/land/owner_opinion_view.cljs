@@ -378,7 +378,7 @@
     [:div
      ;;[:span (pr-str opinion)]
      [opinion-view-container
-      {:heading [owner-opinion-heading opinion]
+      {:heading (when (not @edit-open-atom) [owner-opinion-heading opinion])
        :open? false
        :heading-button [form/form-container-button
                         {:form-component [owner-opinion-edit-form e! form-data
