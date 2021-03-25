@@ -5,7 +5,11 @@
             [teet.util.html-export :as html-export-util]
             [teet.land.land-queries :as land-queries]
             [teet.project.project-model :as project-model]
-            [teet.util.md :as md]))
+            [teet.util.md :as md]
+            [teet.log :as log]
+            [teet.integration.x-road.property-registry :as property-registry]
+            [clojure.string :as str]
+            [teet.util.datomic :as du]))
 
 (defn- opinions-by-type
   "Fetch all opinions for given activity with the given opinion type"
@@ -57,7 +61,7 @@
              [:i (tr* :no-position-added)]])])])))
 
 (defn unit-opinions-table
-  [estates]
+  [estates estate-infos]
   [:div
    [:table {:border "1" :cellspacing "0" :cellpadding "5"}
     [:thead
@@ -70,14 +74,16 @@
      (doall
        (map-indexed
          (fn [estate-idx [estate-id units]]
-           (let [unit-count (count units)]
+           (let [unit-count (count units)
+                 estate-name (get-in estate-infos [estate-id :nimi])]
              (map-indexed
-               (fn [unit-idx {:keys [L_AADRESS TUNNUS teet-opinions] :as unit}]
+               (fn [unit-idx {:keys [L_AADRESS TUNNUS teet-opinions] :as _unit}]
                  [:tr
                   [:td {:style "vertical-align: top"}
                    [:p (jrk-nr estate-idx unit-idx unit-count)]]
                   [:td {:style "vertical-align: top"}
-                   [:p estate-id]]
+                   [:p estate-id (when-not (str/blank? estate-name)
+                                   (str ";" estate-name))]]
                   [:td {:style "vertical-align: top"}
                    [:p (str TUNNUS ";" L_AADRESS)]]
                   [:td {:style "vertical-align: top"}
@@ -88,7 +94,7 @@
          estates))]]])
 
 (defn units-without-opinions-table
-  [estates]
+  [estates estate-infos]
   [:div
    [:table {:border "1" :cellspacing "0" :cellpadding "5"}
     [:thead
@@ -99,23 +105,36 @@
      (doall
        (map-indexed
          (fn [estate-idx [estate-id units]]
-           (let [unit-count (count units)]
+           (let [unit-count (count units)
+                 estate-name (get-in estate-infos [estate-id :nimi])]
              (map-indexed
                (fn [unit-idx {:keys [L_AADRESS TUNNUS]}]
                  [:tr
                   [:td
                    [:p (jrk-nr estate-idx unit-idx unit-count)]]
                   [:td
-                   [:p estate-id]]
+                   [:p estate-id (when-not (str/blank? estate-name)
+                                   (str ";" estate-name))]]
                   [:td
                    [:p (str TUNNUS ";" L_AADRESS)]]])
                units)))
          estates))]]])
 
+(defn fetch-external-unit-infos
+  [db project-id {:keys [api-url api-secret] :as config}]
+  (let [project-thk-id (:thk.project/id (du/entity db project-id))
+        units (land-queries/project-cadastral-units db api-url api-secret project-thk-id)]
+    {:units units
+     :estate-infos (property-registry/fetch-all-estate-info
+                     config
+                     (into #{}
+                           (map :KINNISTU)
+                           units))}))
+
 (defn owner-opinion-summary-table
   "Produces a HTML page which lists all opinions matching certain activity and opinion type
   and all the land units that are selected but don't have any matching opinions"
-  [db activity opinion-type {:keys [api-url api-secret] :as _config}]
+  [db activity opinion-type {:keys [units estate-infos] :as _external-info}]
   (let [opinions (opinions-by-type db activity opinion-type)
         project (ffirst
                   (d/q '[:find (pull ?project [:thk.project/name :thk.project/project-name
@@ -125,9 +144,7 @@
                          [?lifecycle :thk.lifecycle/activities ?activity]
                          [?project :thk.project/lifecycles ?lifecycle]]
                        db activity))
-        units (land-queries/project-cadastral-units db api-url api-secret (:thk.project/id project))
         opinion-unit-ids (set (map :land-owner-opinion/land-unit opinions))
-
         units-with-opinions (->> units
                                  (filter #(opinion-unit-ids (:teet-id %)))
                                  (mapv (fn [{:keys [teet-id] :as unit}]
@@ -143,6 +160,7 @@
                                     (group-by :KINNISTU)
                                     (sort-by (fn [[estate _]]
                                                estate)))]
+    (log/info "Generating owner opinion summary for project" (:db/id project) "with activity" activity)
     (with-language :et
       (html-export-util/html-export-helper
         {:title (tr [:land-owner-opinion :export :title] {:opinion-type (tr-enum opinion-type)})
@@ -150,6 +168,6 @@
                    [:h2 (project-model/get-column project :thk.project/project-name)]
                    [:h1 (tr-enum opinion-type)]
                    [:h3 (tr* :units-with-opinions)]
-                   (unit-opinions-table units-with-opinions)
+                   (unit-opinions-table units-with-opinions estate-infos)
                    [:h3 (tr* :units-without-opinions)]
-                   (units-without-opinions-table units-without-opinions)]}))))
+                   (units-without-opinions-table units-without-opinions estate-infos)]}))))
