@@ -6,6 +6,7 @@
             [teet.land.land-queries :as land-queries]
             [teet.project.project-model :as project-model]
             [teet.util.md :as md]
+            [teet.log :as log]
             [teet.integration.x-road.property-registry :as property-registry]
             [clojure.string :as str]))
 
