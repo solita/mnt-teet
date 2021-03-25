@@ -409,7 +409,7 @@
   (let [l-address (:L_AADRESS unit)
         purpose (:SIHT1 unit)]
     [:div
-     [buttons/button-primary {:class (<class common-styles/margin-bottom 1)
+     [buttons/button-primary {:class (<class common-styles/margin-bottom 3)
                               :on-click #(e! (opinion-controller/->OpinionFormOpen))
                               :start-icon (r/as-element [icons/content-add])}
       (tr [:unit-modal-page :add-new-owner-opinion])]
