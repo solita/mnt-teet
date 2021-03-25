@@ -14,11 +14,13 @@
 (def cached-client (memoize ->client))
 
 (defn create-client
-  "Create client for the "
+  "Create client from client configuration."
   [{:keys [endpoint username password]}]
   (cached-client endpoint username password))
 
-(defn- token-request [{:keys [endpoint username password]}]
+(defn- token-request
+  "Issue an authentication request to get API token and expiration."
+  [{:keys [endpoint username password]}]
   (let [response
         (client/post (str endpoint "/oauth2/apitoken")
                      {:headers {"Content-Type" "application/x-www-form-urlencoded"}
@@ -34,7 +36,10 @@
                       {:response response
                        :endpoint endpoint})))))
 
-(defn- authenticate [{:keys [credentials-atom] :as client}]
+(defn- authenticate
+  "Authenticate client needed. Returns credentials.
+  Does a token request if client does not already have a valid token."
+  [{:keys [credentials-atom] :as client}]
   (let [{:keys [token expires] :as creds} @credentials-atom]
     (if (and token expires (.after expires (Date.)))
       creds
@@ -52,7 +57,6 @@
               error (when (str/starts-with? (get-in d [:headers "Content-Type"])
                                             "application/json")
                       (cheshire/decode (:body d) keyword))]
-          (def *d d)
           (throw (ex-info "Exception in Teeregister API call"
                           (merge {:cause e}
                                  (when error
