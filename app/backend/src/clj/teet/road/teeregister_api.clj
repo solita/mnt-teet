@@ -20,21 +20,22 @@
 
 (defn- token-request
   "Issue an authentication request to get API token and expiration."
-  [{:keys [endpoint username password]}]
-  (let [response
-        (client/post (str endpoint "/oauth2/apitoken")
-                     {:headers {"Content-Type" "application/x-www-form-urlencoded"}
-                      :body (str "user=" username "&password=" password)
-                      :as :json})]
-    (if (= (:status response) 200)
-      (let [{:keys [access_token expires_in]} (:body response)]
-        {:token access_token
-         :expires (Date. (+ (System/currentTimeMillis)
-                            ;; Refresh after 90% of expiration time has passed
-                            (long (* 0.9 expires_in 1000))))})
+  [{:keys [endpoint username password] :as client}]
+  (try
+    (let [response
+          (client/post (str endpoint "/oauth2/apitoken")
+                       {:headers {"Content-Type" "application/x-www-form-urlencoded"}
+                        :body (str "user=" username "&password=" password)
+                        :as :json})
+          {:keys [access_token expires_in]} (:body response)]
+      {:token access_token
+       :expires (Date. (+ (System/currentTimeMillis)
+                          ;; Refresh after 90% of expiration time has passed
+                          (long (* 0.9 expires_in 1000))))})
+    (catch Exception e
       (throw (ex-info "Error in Teeregister API authentication token request"
-                      {:response response
-                       :endpoint endpoint})))))
+                      {:cause e
+                       :client client})))))
 
 (defn- authenticate
   "Authenticate client needed. Returns credentials.
