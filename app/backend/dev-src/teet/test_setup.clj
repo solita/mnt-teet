@@ -184,7 +184,6 @@
 
 ;; This is called from land_owner_opinion.ci.spec.js
 (defn setup-mock-estate-infos [_req]
-  (println "SETUP MOCK TEST CALLED=?=======================================")
   (defquery :land-owner-opinion/export-opinions
     {:doc "Fetch land owner opinions as HTML"
      :context {:keys [db user]}
