@@ -122,7 +122,10 @@
          :export-dir (->ssm [:thk :teet-to-thk :unprocesseddir] nil)
          :url (->ssm [:thk :url] nil)}
    :road-registry {:wfs-url (->ssm [:road-registry :wfs-url] nil)
-                   :wms-url (->ssm [:road-registry :wms-url] nil)}
+                   :wms-url (->ssm [:road-registry :wms-url] nil)
+                   :api {:endpoint (->ssm [:road-registry :api :endpoint] nil)
+                         :username (->ssm [:road-registry :api :username] nil)
+                         :password (->ssm [:road-registry :api :password] nil)}}
    :xroad {:query-url (->ssm [:xroad-query-url] nil)
            :instance-id (->ssm [:xroad-instance-id] nil)
            :kr-subsystem-id (->ssm [:xroad-kr-subsystem-id] nil)}
