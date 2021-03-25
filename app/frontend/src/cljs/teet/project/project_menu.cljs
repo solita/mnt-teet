@@ -7,7 +7,7 @@
             [teet.ui.material-ui :refer [MenuList MenuItem
                                          IconButton ClickAwayListener Paper
                                          Popper]]
-            [herb.core :refer [<class]]
+            [herb.core :as herb :refer [<class]]
             [teet.project.project-style :as project-style]
             [teet.common.common-styles :as common-styles]
             [teet.ui.icons :as icons]
@@ -114,13 +114,16 @@
                      (close-menu!))]
     (common/component
      (hotkeys/hotkey hotkey activate!)
-     (fn [_ _ selected? {:keys [label hotkey]} _]
+     (fn [_ _ selected? {:keys [label hotkey]
+                         page-name :name} _]
        ;; FIXME: show badge here or when tab is selected?
        [MenuItem {:on-click activate!
                   :selected selected?
+                  :id (str "navigation-item-" (name page-name))
                   :class (str "project-menu-item-" (name (:page navigate)))
                   :classes {:root (<class project-style/project-view-selection-item)}}
-        [:div {:class (<class project-style/project-view-selection-item-label)} (tr label)]
+        [:div {:class (<class project-style/project-view-selection-item-label)}
+         [:span (tr label)]]
         [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
 
 (defn project-menu [_e! _app project _dark-theme?]
@@ -143,9 +146,9 @@
                          :ref set-anchor!}
              [icons/navigation-apps (when dark-theme?
                                       {:style {:color theme-colors/white}})]]
-            [typography/Heading2 {:class [(<class common-styles/inline-block)
-                                          (<class common-styles/no-margin)
-                                          (<class common-styles/padding 0 0 0 0.5)]}
+            [typography/Heading2 {:class (herb/join (<class common-styles/inline-block)
+                                                    (<class common-styles/no-margin)
+                                                    (<class common-styles/padding 0 0 0 0.5))}
              (tr tab-label)]]
            [project-tab-action tab-name e! app project]]
           [Popper {:open @open?

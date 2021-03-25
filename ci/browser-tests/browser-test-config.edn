@@ -18,7 +18,8 @@
                      :dummy-login
                      :meetings
                      :admin-inspector
-                     :asset-db}
+                     :asset-db
+                     :land-owner-opinions}
  :email {:from "test@example.com"}
 
  :file {:image-suffixes #{"tiff"
