@@ -226,7 +226,7 @@
    :padding "1rem"})
 
 (defn opinion-view-container
-  [{:keys [content text-color open? heading heading-button on-toggle-open]} bg-color]
+  [{:keys [content text-color open? heading heading-button on-toggle-open edit-atom]} bg-color]
   (r/with-let [open? (r/atom open?)
                toggle-open! #(do
                                (when on-toggle-open
@@ -245,11 +245,12 @@
                             (.stopPropagation e))}
           heading-button])
        [:div {:style {:margin-left "1rem"}}
-        [buttons/button-primary
-         {:size :small
-          :on-click toggle-open!}
-         [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
-         (if @open? (tr [:buttons :close]) (tr [:buttons :open]))]]]]
+        (when (not @edit-atom)
+          [buttons/button-primary
+            {:size :small
+             :on-click toggle-open!}
+            [(if @open? icons/hardware-keyboard-arrow-up icons/hardware-keyboard-arrow-down)]
+            (if @open? (tr [:buttons :close]) (tr [:buttons :open]))])]]]
      (when content
        [Collapse {:in @open?
                   :mount-on-enter true}
@@ -382,6 +383,7 @@
                   [owner-opinion-heading opinion]
                   [typography/SmallText (tr [:land-owner-opinion :edit-opinion])])
        :open? false
+       :edit-atom edit-open-atom
        :heading-button [form/form-container-button
                         {:form-component [owner-opinion-edit-form e! form-data
                                           close-form-and-refresh project target]
