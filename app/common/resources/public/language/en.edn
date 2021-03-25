@@ -918,7 +918,8 @@
    :units-without-opinions nil,
    :jrk nil},
   :add-new-opinion "ADD NEW OPINION",
-  :choose-type "Choose a type"},
+  :choose-type "Choose a type",
+  :edit-opinion "EDIT OPINION"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
