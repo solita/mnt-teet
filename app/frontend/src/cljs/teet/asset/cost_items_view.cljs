@@ -28,7 +28,13 @@
             [teet.common.common-styles :as common-styles]
             [teet.util.datomic :as du]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.project.project-map-view :as project-map-view]
+            [teet.map.openlayers :as openlayers]
+            [teet.log :as log]
+            [teet.map.map-view :as map-view]
+            [teet.map.map-layers :as map-layers]
+            [teet.map.map-features :as map-features]))
 
 
 (defonce next-id (atom 0))
@@ -87,7 +93,78 @@
     :else
     :details))
 
-(defn- attributes* [e! attrs rotl]
+(defn- attribute-grid-item [content]
+  [Grid {:item true
+          :md 4
+          :xs 12
+         :style {:padding "0.2rem"}}
+   content])
+
+(defn- location-map-control [{:keys [e! on-change value]}]
+  [:<>
+   [buttons/button-text {:on-click (e! cost-items-controller/->SelectLocationOnMap
+                                       value on-change)}
+    "open map"]
+   (pr-str value)])
+
+(defn- location-entry [{:keys [e! on-change value] :as attr-opts}]
+  [:<>
+   [attribute-grid-item
+    [form/field {:attribute [:location/start :location/end
+                             :location/road-nr :location/carriageway
+                             :location/start-m :location/end-m]}
+     [location-map-control {:e! e!}]]]
+
+   [attribute-grid-item
+    [form/field :location/road-nr
+     [text-field/TextField {:type :number}]]]
+
+   [attribute-grid-item
+    [form/field :location/carriageway
+     [text-field/TextField {:type :number}]]]
+
+   [attribute-grid-item
+    [form/field :location/start-m
+     [text-field/TextField {:type :number}]]]
+
+   [attribute-grid-item
+    [form/field :location/end-m
+     [text-field/TextField {:type :number}]]]
+
+   [attribute-grid-item
+    (pr-str value)]])
+
+(defn- location-map [{:keys [e! road geojson start end on-change app project]}]
+  (r/with-let [state (r/atom {:points [nil nil] :point 0})]
+    ;;(project-map-view/create-project-map e! app project)
+    [map-view/map-view e!
+     {:on-click (fn [{c :coordinate}]
+                  (let [points
+                        (-> state
+                            (swap! (fn [{:keys [points point] :as state}]
+                                     (merge state
+                                            {:points (assoc points point c)
+                                             :point (if (zero? point) 1 0)})))
+                            :points)]
+                    (e! (cost-items-controller/->FetchLocation
+                         (remove nil? points)
+                         on-change))))
+      :layers {:selected-road-geometry
+               (when-let [g geojson]
+                 (map-layers/geojson-data-layer
+                  "selected-road-geometry"
+                  #js {:type "FeatureCollection"
+                       :features (if (= "LineString" (aget g "type"))
+                                   ;; Add start/end when linestring
+                                   #js [g
+                                        #js {:type "Point" :coordinates start}
+                                        #js {:type "Point" :coordinates end}]
+                                   ;; Single point
+                                   #js [g])}
+                  map-features/asset-road-line-style
+                  {:fit-on-load? true}))}}]))
+
+(defn- attributes* [e! attrs inherits-location? rotl]
   (r/with-let [open? (r/atom #{:name-and-location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -114,10 +191,7 @@
                     :attribute/keys [mandatory? min-value max-value]
                     :asset-schema/keys [unit] :as attr} attrs
                    :let [type (:db/ident valueType)]]
-               [Grid {:item true
-                      :md 4
-                      :xs 12
-                      :style {:padding "0.2rem"}}
+               [attribute-grid-item
                 [form/field {:attribute ident
                              :required? mandatory?
                              :validate (r/partial validate (:db/ident valueType) min-value max-value)}
@@ -138,12 +212,18 @@
                                   (text-field/unit-end-icon unit))}
                      (case type
                        (:db.type/long :db.type/bigdec) {:type :number}
-                       nil))])]]))]]))])))
+                       nil))])]]))
+
+            ;; Show location fields in the name and location group
+            ;; if we are not inheriting the location from the parent
+            (when (and (= g :name-and-location)
+                       (not inherits-location?))
+              [location-entry {:e! e!}])]]))])))
 
 (defn- attributes
   "Render grid of attributes."
-  [e! attrs]
-  [context/consume :rotl [attributes* e! attrs]])
+  [e! attrs inherits-location?]
+  [context/consume :rotl [attributes* e! attrs inherits-location?]])
 
 (declare components)
 
@@ -319,7 +399,6 @@
                cancel-event (if new?
                               #(common-controller/->SetQueryParam :id nil)
                               (form/update-atom-event form-data (constantly initial-data)))]
-    (println "render cost-item-form " initial-data)
     (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
       [:<>
 
@@ -339,7 +418,7 @@
 
         (when feature-class
           ;; Attributes for asset
-          [form-paper [attributes e! (some-> feature-class :attribute/_parent)]])
+          [form-paper [attributes e! (some-> feature-class :attribute/_parent) false]])
 
         [form/footer2]]
 
@@ -475,7 +554,8 @@
       [form-paper
        [:<>
         (label ctype)
-        [attributes e! (some-> ctype :attribute/_parent)]]]
+        [attributes e! (some-> ctype :attribute/_parent)
+         (:component/inherits-location? ctype)]]]
 
       [:div {:class (<class common-styles/flex-row-space-between)
              :style {:align-items :center}}
@@ -534,7 +614,9 @@
 (defn cost-items-page [e!
                        {query :query :as app}
                        {:keys [cost-items project
-                               asset-type-library]}]
+                               asset-type-library
+                               select-location
+                               project]}]
   (let [{:keys [id component]} query
         add? (= id "new")]
     [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
@@ -563,4 +645,9 @@
                  [edit-cost-item-form e! asset-type-library]]
 
                 :else
-                [:div "TODO: default view"])]}]]))
+                [:div "TODO: default view"])]
+       :right-panel (when select-location
+                      [location-map (merge {:e! e!
+                                            :app app
+                                            :project project}
+                                           select-location)])}]]))

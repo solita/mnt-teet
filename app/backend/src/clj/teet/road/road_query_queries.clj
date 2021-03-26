@@ -1,5 +1,5 @@
 (ns teet.road.road-query-queries
-  "Road WFS queries for frontend"
+  "Road WFS and Teeregister API queries for frontend"
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.road.road-query :as road-query]
             [teet.environment :as environment]
@@ -8,7 +8,9 @@
             [teet.road.road-model :as road-model]
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
-            [teet.map.map-services :as map-services]))
+            [teet.map.map-services :as map-services]
+            [teet.road.teeregister-api :as teeregister-api]
+            [clojure.spec.alpha :as s]))
 
 (defonce cache-options
   ;; For local development use:
@@ -155,3 +157,29 @@
                  [type {:feature-type (cu/find-first #(= (:name %) type) feature-types)
                         :objects objects}]))
           (road-query/fetch-all-intersecting-objects ctx search-area))))
+
+(s/def ::geopoint (s/cat :x number? :y number?))
+(s/def ::start ::geopoint)
+(s/def ::end ::geopoint)
+(s/def ::distance number?)
+(s/def ::point ::geopoint)
+
+(defquery :road/by-2-geopoints
+  {:doc "Return road for 2 geopoints within distance"
+   :spec (s/keys :req-un [::start ::end ::distance])
+   :config {client [:road-registry :api]}
+   :args {:keys [start end distance]}
+   :project-id nil
+   :authorization {}}
+  (teeregister-api/road-by-2-geopoints (teeregister-api/create-client client)
+                                       distance start end))
+
+(defquery :road/by-geopoint
+  {:doc "Return road for a single geopoint"
+   :spec (s/keys :req-un [::point ::distance])
+   :config {client [:road-registry :api]}
+   :args {:keys [point distance]}
+   :project-id nil
+   :authorization {}}
+  (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
+                                    distance point))

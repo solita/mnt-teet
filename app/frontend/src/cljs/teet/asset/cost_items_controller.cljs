@@ -14,6 +14,10 @@
 (defrecord SaveComponent [parent-id form-data])
 (defrecord SaveComponentResponse [tempid response])
 
+(defrecord SelectLocationOnMap [current-location on-change])
+(defrecord FetchLocation [points result-callback])
+(defrecord FetchLocationResponse [result-callback response])
+
 (extend-protocol t/Event
 
   SaveCostItem
@@ -83,7 +87,48 @@
                        :params (:params app)
                        :query (merge (:query app)
                                      {:component (get-in response [:tempids tempid])})})
-                    common-controller/refresh-fx]))))
+                    common-controller/refresh-fx])))
+
+  SelectLocationOnMap
+  (process-event [{:keys [current-location on-change]} app]
+    (common-controller/update-page-state
+     app [:select-location]
+     (constantly {:current-location current-location
+                  :on-change on-change})))
+
+  FetchLocation
+  (process-event [{:keys [points result-callback]} app]
+    (t/fx app
+          (merge
+           {:tuck.effect/type :query
+            :result-event (partial ->FetchLocationResponse result-callback)}
+           (if (> (count points) 1)
+             {:query :road/by-2-geopoints
+              :args {:start (first points)
+                     :end (second points)
+                     :distance 100}}
+             {:query :road/by-geopoint
+              :args {:point (first points)
+                     :distance 100}}))))
+
+  FetchLocationResponse
+  (process-event [{:keys [result-callback response]} app]
+    (def *r response)
+    (let [road (first (sort-by :distance response))
+          {:keys [road-nr carriageway start-m end-m geometry]} road
+          g (some-> geometry js/JSON.parse)
+          [start end] (case (aget g "type")
+                        "LineString" [(first (aget g "coordinates"))
+                                      (last (aget g "coordinates"))]
+                        "Point" [(aget g "coordinates") nil]
+                        [nil nil])]
+      (result-callback [start end road-nr carriageway start-m end-m])
+      (common-controller/update-page-state
+       app [:select-location]
+       merge {:road road
+              :start start
+              :end end
+              :geojson g}))))
 
 (defn save-asset-event [form-data]
   #(->SaveCostItem @form-data))
