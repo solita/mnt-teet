@@ -69,19 +69,34 @@
            :in $ ?t]
          db task-id))))
 
-(defn latest-task-files
+(defn latest-task-files-with-incomplete
   "Return latest versions of all files in task."
   [db task-id]
   (mapv first
-        (d/q '[:find ?f
-               :where
-               [?t :task/files ?f]
-               [?f :file/upload-complete? true]
-               [(missing? $ ?f :meta/deleted?)]
-               (not-join [?f]
-                         [?replacement :file/previous-version ?f])
-               :in $ ?t]
-             db task-id)))
+        (d/q
+          '[:find ?f
+            :where
+            [?t :task/files ?f]
+            [(missing? $ ?f :meta/deleted?)]
+            (not-join [?f]
+                      [?replacement :file/previous-version ?f])
+            :in $ ?t]
+          db task-id)))
+
+(defn latest-task-files
+  "Return latest versions of all files in task that are marked as upload complete."
+  [db task-id]
+  (mapv first
+        (d/q
+          '[:find ?f
+            :where
+            [?t :task/files ?f]
+            [?f :file/upload-complete? true]
+            [(missing? $ ?f :meta/deleted?)]
+            (not-join [?f]
+                      [?replacement :file/previous-version ?f])
+            :in $ ?t]
+          db task-id)))
 
 (defn valid-task-types? [db tasks]
   (let [task-keywords (into #{}
