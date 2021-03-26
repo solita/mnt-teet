@@ -112,4 +112,44 @@
   :db/doc "The THK project id this asset is a cost item in"
   :db/valueType :db.type/string
   :db/cardinality :db.cardinality/one}
+
+ ;; Location of an asset:
+ ;; Can be defined as start/end points which can always be
+ ;; projected to the road network via Teeregister API.
+ ;;
+ ;; We also want to store the road address stuff to show it
+ ;; and do queries based on it (like: give me assets on road 12122
+ ;; between meters 100 to 3000). The road address should be
+ ;; saved based on what Teeregister API returns.
+ {:db/ident :location/start-point
+  :db/doc "Start point [x y] coordinates."
+  :db/tupleType :db.type/bigdec
+  :db/valueType :db.type/tuple
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :location/end-point
+  :db/doc "End point [x y] coordinates."
+  :db/tupleType :db.type/bigdec
+  :db/valueType :db.type/tuple
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :location/road-nr
+  :db/doc "Road number"
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :location/carriageway
+  :db/doc "Carriageway number"
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :location/start-m
+  :db/doc "Start meters of the location"
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
+
+ {:db/ident :location/end-m
+  :db/doc "End meters of the location. Omitted for point locations."
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one}
  ]
