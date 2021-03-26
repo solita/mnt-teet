@@ -84,7 +84,9 @@
    :values "Values",
    :ctype "Component",
    :db.type/long "Integer",
-   :attributes "Attributes"},
+   :attributes "Attributes",
+   :component-inherits-location
+   "Component inherits location from parent"},
   :field-group
   {:details "Details",
    :common "Common",
@@ -898,11 +900,15 @@
   :no-owners-opinions "No opinions"},
  :land-owner-opinion
  {:opinions "Opinions",
-  :add-new-opinion "ADD NEW OPINION",
   :export-modal-title "Land owners opinions summary table",
-  :choose-activity "Choose an activity",
-  :choose-type "Choose a type",
   :opinion-export "Land owners opinions",
+  :choose-activity "Choose an activity",
+  :update {:success-message "Opinion successfully edited"},
+  :delete
+  {:cancel-text "No, return back",
+   :confirmation-text
+   "All information will be deleted and cannot be recovered",
+   :success-message "Opinion deleted"},
   :export
   {:units-with-opinions nil,
    :estate-num-name nil,
@@ -912,7 +918,10 @@
    :title nil,
    :cadastral-id-name nil,
    :units-without-opinions nil,
-   :jrk nil}},
+   :jrk nil},
+  :add-new-opinion "ADD NEW OPINION",
+  :choose-type "Choose a type",
+  :edit-opinion "EDIT OPINION"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
