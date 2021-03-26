@@ -610,6 +610,8 @@
   :bad-request "Vigane päring",
   :replaced-file-not-latest
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
+  :user-has-no-email
+  "Viidet ei saa e-postiga saata. Puudub e-posti aadress, palun lisage e-posti aadress minu konto alt.",
   :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
   :email-address-already-in-use "E-posti aadress on juba kasutusel.",
   :no-participants-with-email
@@ -794,7 +796,7 @@
   :description "Faili kirjeldus",
   :replace-file-confirm "Jah, laen üles uue versiooni",
   :description-required "Faili kirjeldus on puudu",
-  :general-part "Üldine",
+  :general-part "Yldine",
   :select-part-to-upload
   "Valige osa, kuhu üleslaaditud failid lisatakse",
   :file-will-be-added-to-part-text
@@ -907,8 +909,7 @@
    :authority-position
    "Pädeva asutuse põhjendus ja otsus esitatud arvamuse osas",
    :opinion-body "Arvamuse sisu",
-   :no-position-added "Se
-   isukohta pole lisatud",
+   :no-position-added "Seisukohta pole lisatud",
    :title "{opinion-type} maade omanike arvamuste koondtabel",
    :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
    :units-without-opinions

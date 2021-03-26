@@ -615,6 +615,8 @@
   :bad-request "Bad request",
   :replaced-file-not-latest
   "Can't replace an old version of a file. Replace newest version.",
+  :user-has-no-email
+  "The link can't be emailed. Email address has not been added, please add it through the My account page.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
   :email-address-already-in-use "Email address already in use.",
