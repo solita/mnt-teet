@@ -84,6 +84,15 @@
                                                               :opacity 0.5})
                                :zIndex 3})]))
 
+(defn asset-road-line-style [^ol.render.Feature feature res]
+  (case (-> feature .getGeometry .getType)
+    "Point" (ol.style.Style.
+             #js {:image (ol.style.Circle.
+                          #js {:fill (ol.style.Fill. #js {:color "#ff30aa"})
+                               :stroke (ol.style.Stroke. #js {:color "#ffffff"})
+                               :radius 20})})
+    "LineString" (project-line-style feature res)))
+
 (def electric-pattern
   (let [a (atom nil)
         canvas (.createElement js/document "canvas")]
