@@ -408,7 +408,7 @@
      [owner-opinion-details e! authorization opinion project target refresh!]]))
 
 (defn owner-opinions-list
-  [e! project unit target refresh! opinions ]
+  [e! project unit target refresh! opinions]
   (let [l-address (:L_AADRESS unit)
         purpose (:SIHT1 unit)]
     [:div
@@ -425,12 +425,13 @@
      (if (empty? opinions)
        [:div
         [:p (tr [:land :no-owners-opinions])]]
-       (map
-         (fn [opinion]
-           ^{:key (:db/id opinion)}
-           [authorization-context/consume
-            [owner-opinion-row e! project target refresh! opinion]])
-         opinions))]))
+       (->> opinions
+         (sort-by :meta/created-at)
+         reverse
+         (map (fn [opinion]
+                ^{:key (:db/id opinion)}
+                [authorization-context/consume
+                 [owner-opinion-row e! project target refresh! opinion]]))))]))
 
 (defn owner-opinions-unit-modal
   [{:keys [e! estate-info target app project]}]
