@@ -105,15 +105,23 @@
    [buttons/button-text {:on-click (e! cost-items-controller/->SelectLocationOnMap
                                        value on-change)}
     "open map"]
-   (pr-str value)])
+   #_(pr-str value)])
 
 (defn- location-entry [{:keys [e! on-change value] :as attr-opts}]
   [:<>
    [attribute-grid-item
-    [form/field {:attribute [:location/start :location/end
+    [form/field {:attribute [:location/start-point :location/end-point
                              :location/road-nr :location/carriageway
                              :location/start-m :location/end-m]}
      [location-map-control {:e! e!}]]]
+
+   [attribute-grid-item
+    [form/field :location/start-point
+     [text-field/TextField {}]]]
+
+   [attribute-grid-item
+    [form/field :location/end-point
+     [text-field/TextField {}]]]
 
    [attribute-grid-item
     [form/field :location/road-nr
