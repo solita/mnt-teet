@@ -453,8 +453,9 @@
        [select/select-enum {:e! e!
                             :attribute :cooperation.application/type}]]
 
-      [:div {:class (<class common-styles/space-between-center)}
-       [buttons/button-secondary {:on-click toggle-export-dialog!}
+      [:div {:class (<class form/form-buttons :flex-end)}
+       [buttons/button-secondary {:on-click toggle-export-dialog!
+                                  :class (<class common-styles/margin-right 1)}
         (tr [:buttons :cancel])]
        (let [{:cooperation.application/keys [activity type] :as fv} @form-value]
          [buttons/button-primary {:id "preview"
