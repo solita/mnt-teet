@@ -426,7 +426,8 @@
        [:div
         [:p (tr [:land :no-owners-opinions])]]
        (->> opinions
-         (sort-by :meta/created-at #(compare %2 %1))
+         (sort-by :meta/created-at)
+         reverse
          (map (fn [opinion]
                 ^{:key (:db/id opinion)}
                 [authorization-context/consume
