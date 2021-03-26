@@ -907,7 +907,8 @@
    :authority-position
    "Pädeva asutuse põhjendus ja otsus esitatud arvamuse osas",
    :opinion-body "Arvamuse sisu",
-   :no-position-added "Seisukohta pole lisatud",
+   :no-position-added "Se
+   isukohta pole lisatud",
    :title "{opinion-type} maade omanike arvamuste koondtabel",
    :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
    :units-without-opinions
