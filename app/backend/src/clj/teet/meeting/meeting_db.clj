@@ -228,7 +228,7 @@
                                  :meeting.agenda/topic
                                  :meeting.agenda/body
                                  :meeting.agenda/responsible]}
-               {:participation/_in [:participation/role
+               {:participation/_in [:meta/deleted? :participation/role
                                     {:participation/participant [:db/id :meta/deleted?]}]}] id))
 
 (defn meeting-organizer-participation
@@ -258,7 +258,7 @@
       boolean))
 
 
-(defn without-incomplete-uploads [tree]  
+(defn without-incomplete-uploads [tree]
   (let [walker-fn (fn [m]
                     (if (not-empty (:file/_attached-to m))
                       (update m :file/_attached-to #(filterv :file/upload-complete? %))
@@ -297,7 +297,7 @@
     :fetch-links-pred? #(or (contains? % :meeting.agenda/topic)
                             (contains? % :meeting.decision/body))
     :return-links-to-deleted? true}
-   (without-incomplete-uploads 
+   (without-incomplete-uploads
     (meta-query/without-deleted
      db
      (export-meeting* db id)))))
