@@ -264,9 +264,7 @@
                       :location/road-nr road-nr
                       :location/carriageway carriageway
                       :location/start-m (or m start-m)
-                      :location/end-m end-m
-                      :foo response))))))
-      )))
+                      :location/end-m end-m)))))))))
 
 (defn- process-location-change
   "Check if location fields have been edited and need to retrigger

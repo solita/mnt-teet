@@ -124,21 +124,16 @@
      [text-field/TextField {:type :number}]]]])
 
 (defn- location-map [{:keys [e! value on-change]}]
-  (r/with-let [state (r/atom {:points [nil nil] :point 0})]
+  (r/with-let [start-point (atom false)
+               current-value (atom value)]
     ;;(project-map-view/create-project-map e! app project)
-    (let [[_start _end _road-nr _carriageway _start-m _end-m geojson] value]
+    (let [geojson (last value)]
+      (reset! current-value value)
       [map-view/map-view e!
        {:on-click (fn [{c :coordinate}]
-                    (let [points
-                          (-> state
-                              (swap! (fn [{:keys [points point] :as state}]
-                                       (merge state
-                                              {:points (assoc points point c)
-                                               :point (if (zero? point) 1 0)})))
-                              :points)]
-                      (e! (cost-items-controller/->FetchLocation
-                           (remove nil? points)
-                           on-change))))
+                    (on-change (assoc @current-value
+                                      (if (swap! start-point not)
+                                        0 1) c)))
         :layers {:selected-road-geometry
                  (when-let [g geojson]
                    (map-layers/geojson-data-layer
