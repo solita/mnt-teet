@@ -183,3 +183,21 @@
    :authorization {}}
   (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
                                     distance point))
+
+(defquery :road/line-by-road
+  {:doc "Fetch line geometry based on road address from Teeregister API."
+   :config {client [:road-registry :api]}
+   :args {:keys [road-nr carriageway start-m end-m]}
+   :project-id nil
+   :authorization {}}
+  (teeregister-api/line-by-road (teeregister-api/create-client client)
+                                road-nr carriageway start-m end-m))
+
+(defquery :road/point-by-road
+  {:doc "Fetch point geometry baed on road address from Teeregister API."
+   :config {client [:road-registry :api]}
+   :args {:keys [road-nr carriageway start-m]}
+   :project-id nil
+   :authorization {}}
+  (teeregister-api/point-by-road (teeregister-api/create-client client)
+                                 road-nr carriageway start-m))

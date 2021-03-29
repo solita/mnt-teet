@@ -126,7 +126,7 @@
 (defn- location-map [{:keys [e! value on-change]}]
   (r/with-let [state (r/atom {:points [nil nil] :point 0})]
     ;;(project-map-view/create-project-map e! app project)
-    (let [[start end _road-nr _carriageway _start-m _end-m geojson] value]
+    (let [[_start _end _road-nr _carriageway _start-m _end-m geojson] value]
       [map-view/map-view e!
        {:on-click (fn [{c :coordinate}]
                     (let [points
@@ -143,14 +143,7 @@
                  (when-let [g geojson]
                    (map-layers/geojson-data-layer
                     "selected-road-geometry"
-                    #js {:type "FeatureCollection"
-                         :features (if (= "LineString" (aget g "type"))
-                                     ;; Add start/end when linestring
-                                     #js [g
-                                          #js {:type "Point" :coordinates start}
-                                          #js {:type "Point" :coordinates end}]
-                                     ;; Single point
-                                     #js [g])}
+                    geojson
                     map-features/asset-road-line-style
                     {:fit-on-load? true}))}}])))
 
