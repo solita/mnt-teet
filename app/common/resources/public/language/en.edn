@@ -660,7 +660,7 @@
   #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
-  :cooperation.response/status "Response situation",
+  :cooperation.response/status "Response summary",
   :estate-procedure/third-party-compensations
   "Third party compensations",
   :project/participant "Participant",

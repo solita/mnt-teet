@@ -303,7 +303,7 @@
   :activity.name/construction "Ehitus",
   :task.type/utilities "Tehnovõrgud",
   :cooperation.response.status/no-objection-with-terms
-  "Tingimustega nõusolek olemas",
+  "Vastus eritingimustega olemas",
   :task.type/site-plan "Asendiplaan",
   :notification.type/activity-accepted
   "Tegevus on vastu võetud omaniku poolt",
@@ -455,7 +455,7 @@
   :estate-compensation.reason/crops "Vili",
   :thk.task-type/design-requirements "Projekteerimistingimused",
   :cooperation.response.status/objection
-  "Vastuväidetega arvamus olemas",
+  "Vastus vastuväidetega olemas",
   :land-owner-opinion.type/ex-ante-eia "KMH eelhinnang",
   :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
@@ -477,7 +477,7 @@
   :task.type/geology "Geoloogia",
   :notification.type/task-review-rejected
   "Ülesande ülevaatamine tagasi lükatud",
-  :cooperation.response.status/no-response "Arvamust ei avaldanud",
+  :cooperation.response.status/no-response "Vastust ei ole",
   :land-acquisition.status/completed "Lõpetatud",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
@@ -549,7 +549,7 @@
   "Ehituse kvaliteedi tagamine",
   :task.group/land-purchase "Maade omandamine",
   :activity.status/canceled "Katkestatud",
-  :cooperation.response.status/no-objection "Nõusolek olemas",
+  :cooperation.response.status/no-objection "Vastus olemas",
   :cooperation.application.type/work-permit "Töö luba",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
@@ -655,7 +655,7 @@
               "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
-  :cooperation.response/status "Vastuse seis",
+  :cooperation.response/status "Vastuse kokkuvõte",
   :estate-procedure/third-party-compensations
   "Hüvitis kolmandale isikule",
   :project/participant "Osaleja",
