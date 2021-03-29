@@ -286,7 +286,7 @@
   [opinion-list-header-row
    [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion) true false]
     ["." "/" false true]
-    (if (nil? (:land-owner-opinion/respondent-connection-to-land opinion))
+    (if (clojure.string/blank? (:land-owner-opinion/respondent-connection-to-land opinion))
       ["." (get-activity-type opinion) false true]
       [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion) false false])]])
 
