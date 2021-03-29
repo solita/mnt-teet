@@ -88,6 +88,6 @@
       (let [in (java.util.zip.ZipInputStream. input-stream)
             first-entry (.getNextEntry in)
             second-entry (.getNextEntry in)]
-        (is (= (.getName first-entry) "KY/00_General/MA11111_MO_TL_KY_00_image.png"))
-        (is (= (some-> second-entry .getName) "KY/00_General/MA11111_MO_TL_KY_00_image (1).png"))        
+        (is (= "KY/00_General/MA11111_MO_TL_KY_00_image.png" (.getName first-entry) ))
+        (is (= "KY/00_General/MA11111_MO_TL_KY_00_image (1).png" (some-> second-entry .getName)))
         (is (nil? (.getNextEntry in)))))))
