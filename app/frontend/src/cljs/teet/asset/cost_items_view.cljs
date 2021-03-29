@@ -9,7 +9,7 @@
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
             [datafrisk.core :as df]
-            [teet.ui.material-ui :refer [Grid Link Breadcrumbs]]
+            [teet.ui.material-ui :refer [Grid Link Breadcrumbs CircularProgress]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -37,10 +37,7 @@
             [teet.map.map-features :as map-features]))
 
 
-(defonce next-id (atom 0))
 
-(defn- next-id! [prefix]
-  (str prefix (swap! next-id inc)))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -81,8 +78,8 @@
 (defn- attribute-group [{ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
   (cond
-    (= :common/name ident) ; PENDING: location coming to this group
-    :name-and-location
+    (= :common/name ident)
+    :name
 
     cost-grouping?
     :cost-grouping
@@ -100,21 +97,8 @@
          :style {:padding "0.2rem"}}
    content])
 
-(defn- location-map-control [{:keys [e! on-change value]}]
+(defn- location-entry [{:keys [e! toggle-map!] :as attr-opts}]
   [:<>
-   [buttons/button-text {:on-click (e! cost-items-controller/->SelectLocationOnMap
-                                       value on-change)}
-    "open map"]
-   #_(pr-str value)])
-
-(defn- location-entry [{:keys [e! on-change value] :as attr-opts}]
-  [:<>
-   [attribute-grid-item
-    [form/field {:attribute [:location/start-point :location/end-point
-                             :location/road-nr :location/carriageway
-                             :location/start-m :location/end-m]}
-     [location-map-control {:e! e!}]]]
-
    [attribute-grid-item
     [form/field :location/start-point
      [text-field/TextField {}]]]
@@ -137,55 +121,84 @@
 
    [attribute-grid-item
     [form/field :location/end-m
-     [text-field/TextField {:type :number}]]]
+     [text-field/TextField {:type :number}]]]])
 
-   [attribute-grid-item
-    (pr-str value)]])
-
-(defn- location-map [{:keys [e! road geojson start end on-change app project]}]
+(defn- location-map [{:keys [e! value on-change]}]
   (r/with-let [state (r/atom {:points [nil nil] :point 0})]
     ;;(project-map-view/create-project-map e! app project)
-    [map-view/map-view e!
-     {:on-click (fn [{c :coordinate}]
-                  (let [points
-                        (-> state
-                            (swap! (fn [{:keys [points point] :as state}]
-                                     (merge state
-                                            {:points (assoc points point c)
-                                             :point (if (zero? point) 1 0)})))
-                            :points)]
-                    (e! (cost-items-controller/->FetchLocation
-                         (remove nil? points)
-                         on-change))))
-      :layers {:selected-road-geometry
-               (when-let [g geojson]
-                 (map-layers/geojson-data-layer
-                  "selected-road-geometry"
-                  #js {:type "FeatureCollection"
-                       :features (if (= "LineString" (aget g "type"))
-                                   ;; Add start/end when linestring
-                                   #js [g
-                                        #js {:type "Point" :coordinates start}
-                                        #js {:type "Point" :coordinates end}]
-                                   ;; Single point
-                                   #js [g])}
-                  map-features/asset-road-line-style
-                  {:fit-on-load? true}))}}]))
+    (let [[start end _road-nr _carriageway _start-m _end-m geojson] value]
+      [map-view/map-view e!
+       {:on-click (fn [{c :coordinate}]
+                    (let [points
+                          (-> state
+                              (swap! (fn [{:keys [points point] :as state}]
+                                       (merge state
+                                              {:points (assoc points point c)
+                                               :point (if (zero? point) 1 0)})))
+                              :points)]
+                      (e! (cost-items-controller/->FetchLocation
+                           (remove nil? points)
+                           on-change))))
+        :layers {:selected-road-geometry
+                 (when-let [g geojson]
+                   (map-layers/geojson-data-layer
+                    "selected-road-geometry"
+                    #js {:type "FeatureCollection"
+                         :features (if (= "LineString" (aget g "type"))
+                                     ;; Add start/end when linestring
+                                     #js [g
+                                          #js {:type "Point" :coordinates start}
+                                          #js {:type "Point" :coordinates end}]
+                                     ;; Single point
+                                     #js [g])}
+                    map-features/asset-road-line-style
+                    {:fit-on-load? true}))}}])))
 
 (defn- attributes* [e! attrs inherits-location? rotl]
-  (r/with-let [open? (r/atom #{:name-and-location :cost-grouping :common :details})
+  (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
+          name-attr (:common/name rotl)
           attrs-groups (->> (concat common-attrs attrs)
                             (group-by attribute-group)
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
                                                     label))))]
       [:<>
+       [form/field {:attribute :common/name}
+        [text-field/TextField {:label (label name-attr)}]]
+       ;; Show location fields in the name and location group
+       ;; if we are not inheriting the location from the parent
+       (when (not inherits-location?)
+         [container/collapsible-container
+          {:open? (@open? :location)
+           :on-toggle (r/partial toggle-open! :location)
+           :size :Small}
+          [:<>
+           (tr [:asset :field-group :location])
+           [buttons/button-text {:style {:float :right}
+                                 :on-click (r/partial toggle-open! :map)}
+            (if (@open? :map)
+              "hide map"
+              "show map")]]
+          [Grid {:container true
+                 :justify :flex-start
+                 :alignItems :flex-end}
+           (when (@open? :map)
+             [Grid {:item true :xs 12 :md 12}
+              [form/field {:attribute [:location/start-point :location/end-point
+                                       :location/road-nr :location/carriageway
+                                       :location/start-m :location/end-m
+                                       :location/geojson]}
+
+               [location-map {:e! e!}]]])
+           [location-entry {:e! e!
+                            :toggle-map! (r/partial toggle-open! :map)}]]])
        (doall
-        (for [g [:name-and-location :cost-grouping :common :details]
+        (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
               :when (seq attrs)]
+          ^{:key (str g)}
           [container/collapsible-container
            {:open? (@open? g)
             :on-toggle (r/partial toggle-open! g)
@@ -199,6 +212,7 @@
                     :attribute/keys [mandatory? min-value max-value]
                     :asset-schema/keys [unit] :as attr} attrs
                    :let [type (:db/ident valueType)]]
+               ^{:key (str ident)}
                [attribute-grid-item
                 [form/field {:attribute ident
                              :required? mandatory?
@@ -206,7 +220,8 @@
                  (if (= type :db.type/ref)
                    ;; Selection value
                    [select/form-select
-                    {:label (label attr)
+                    {:id ident
+                     :label (label attr)
                      :show-empty-selection? true
                      :items (mapv :db/ident (:enum/_attribute attr))
                      :format-item (comp label rotl)}]
@@ -222,52 +237,12 @@
                        (:db.type/long :db.type/bigdec) {:type :number}
                        nil))])]]))
 
-            ;; Show location fields in the name and location group
-            ;; if we are not inheriting the location from the parent
-            (when (and (= g :name-and-location)
-                       (not inherits-location?))
-              [location-entry {:e! e!}])]]))])))
+            ]]))])))
 
 (defn- attributes
   "Render grid of attributes."
   [e! attrs inherits-location?]
   [context/consume :rotl [attributes* e! attrs inherits-location?]])
-
-(declare components)
-
-(defn- component
-  "Render one component."
-  [{:keys [e! component on-change]} rotl]
-  ;; form uses the on-change-event constructor given at the 1st render
-  ;; so we need to keep track of the on-change here and use it in the
-  ;; change event
-  (r/with-let [on-change-atom (atom on-change)
-               on-change-event (form/callback-change-event #(@on-change-atom %))
-               expanded? (r/atom true)
-               toggle-expand! #(swap! expanded? not)
-               delete! #(@on-change-atom {:deleted? true})]
-    (reset! on-change-atom on-change)
-    (let [ctype (get rotl (:component/ctype component))]
-      [container/collapsible-container
-       {:on-toggle toggle-expand!
-        :open? @expanded?
-        :side-component (when @expanded?
-                          [buttons/button-warning
-                           {:on-click delete!
-                            :start-icon (r/as-element
-                                         [icons/action-delete])}
-                           (tr [:buttons :delete])])}
-
-       [typography/Heading2 (str (label ctype)
-                                 (when-let [name (:common/name component)]
-                                   (str ": " name)))]
-       [form/form2 {:e! e!
-                    :on-change-event on-change-event
-                    :value component}
-        [attributes e! (:attribute/_parent ctype)]
-
-        [form/field :component/components
-         [components {:e! e! :allowed-components (:ctype/_parent ctype)}]]]])))
 
 (defn- add-component-menu [allowed-components add-component!]
   [:<>
@@ -396,33 +371,35 @@
                                 :padding "1rem"}}
    component])
 
-(defn- cost-item-form [e! atl initial-data]
-  (r/with-let [new? (nil? initial-data)
-               form-data (r/atom (or initial-data
-                                     {:db/id (next-id! "costitem")}))
-               on-change-event (form/update-atom-event
-                                form-data
-                                cu/deep-merge)
+(defn- cost-item-form [e! atl form-data]
+  (r/with-let [initial-data form-data
+               new? (nil? form-data)
+
+               ;; FIXME
                save-event (cost-items-controller/save-asset-event form-data)
                cancel-event (if new?
                               #(common-controller/->SetQueryParam :id nil)
-                              (form/update-atom-event form-data (constantly initial-data)))]
-    (let [[_feature-group feature-class] (some-> @form-data :feature-group-and-class)]
+
+                              ;; Update with initial data to cancel
+                              (r/partial
+                               cost-items-controller/->UpdateForm initial-data))]
+
+    (let [[_feature-group feature-class] (some-> form-data :feature-group-and-class)]
       [:<>
 
        [form/form2
         {:e! e!
-         :on-change-event on-change-event
-         :value @form-data
+         :on-change-event cost-items-controller/->UpdateForm
+         :value form-data
          :save-event save-event
          :cancel-event cancel-event
-         :disable-buttons? (= initial-data @form-data)}
+         :disable-buttons? (= initial-data form-data)}
 
         [form/field {:attribute :feature-group-and-class}
          [group-and-class-selection {:e! e!
                                      :fgroups (:fgroups atl)
-                                     :read-only? (seq (dissoc @form-data :feature-group-and-class :db/id))
-                                     :name (:common/name @form-data)}]]
+                                     :read-only? (seq (dissoc form-data :feature-group-and-class :db/id))
+                                     :name (:common/name form-data)}]]
 
         (when feature-class
           ;; Attributes for asset
@@ -440,10 +417,7 @@
 
           [add-component-menu
            (asset-type-library/allowed-component-types atl feature-class)
-           #(e! (common-controller/->SetQueryParam :component (str "-" (name %))))]])
-
-       ;; FIXME: remove when finalizing form
-       [df/DataFriskView @form-data]])))
+           #(e! (common-controller/->SetQueryParam :component (str "-" (name %))))]])])))
 
 (defn- edit-cost-item-form [e! asset-type-library {fclass-ident :asset/fclass :as cost-item-data}]
   (let [fclass= (fn [fc] (= (:db/ident fc) fclass-ident))
@@ -454,11 +428,12 @@
      (assoc cost-item-data
             :feature-group-and-class [fgroup fclass])]))
 
-(defn- with-cost-item [e! id view-component]
-  [query/query {:e! e!
-                :query :asset/cost-item
-                :args {:db/id (common-controller/->long id)}
-                :simple-view view-component}])
+(defn- with-cost-item [form view-component]
+  (if (= :loading form)
+    [CircularProgress]
+    (with-meta
+      (conj view-component form)
+      {:key (str (:db/id form))})))
 
 (defn- find-component-path
   "Return vector containing all parents of component from asset to the component.
@@ -528,7 +503,7 @@
                ;; When adding a subcomponent, add it to the path
                component-path (if subcomponent-name
                                 (conj component-path
-                                      {:db/id (next-id! subcomponent-name)
+                                      {:db/id "FIXME" ;(next-id! subcomponent-name)
                                        :component/ctype (keyword "ctype" subcomponent-name)})
                                 component-path)
                component-data (last component-path)
@@ -623,8 +598,7 @@
                        {query :query :as app}
                        {:keys [cost-items project
                                asset-type-library
-                               select-location
-                               project]}]
+                               project form]}]
   (let [{:keys [id component]} query
         add? (= id "new")]
     [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
@@ -641,21 +615,17 @@
               (cond
                 component
                 ^{:key component}
-                [with-cost-item e! id
+                [with-cost-item form
                  [component-form e! asset-type-library id component]]
 
                 add?
-                [cost-item-form e! asset-type-library nil]
+                [with-cost-item form
+                 [cost-item-form e! asset-type-library]]
 
                 id
                 ^{:key id}
-                [with-cost-item e! id
+                [with-cost-item form
                  [edit-cost-item-form e! asset-type-library]]
 
                 :else
-                [:div "TODO: default view"])]
-       :right-panel (when select-location
-                      [location-map (merge {:e! e!
-                                            :app app
-                                            :project project}
-                                           select-location)])}]]))
+                [:div "TODO: default view"])]}]]))

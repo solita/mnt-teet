@@ -4,8 +4,13 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.localization :refer [tr]]
             [teet.util.collection :as cu]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.routes :as routes]))
 
+(defonce next-id (atom 0))
+
+(defn- next-id! [prefix]
+  (str prefix (swap! next-id inc)))
 
 (defrecord SaveCostItem [form-data])
 (defrecord SaveCostItemResponse [tempid response])
@@ -17,6 +22,22 @@
 (defrecord SelectLocationOnMap [current-location on-change])
 (defrecord FetchLocation [points result-callback])
 (defrecord FetchLocationResponse [result-callback response])
+
+(defrecord NewCostItem []) ; start creating new cost item
+(defrecord FetchCostItem [id]) ; fetch cost item for editing
+
+(defrecord UpdateForm [form-data])
+
+(declare process-location-change)
+
+(defmethod routes/on-navigate-event :cost-items [{:keys [query current-app]}]
+  (println "on-navigate-event :Cost-items " query)
+  (cond
+    (= "new" (:id query))
+    (->NewCostItem)
+
+    (:id query)
+    (->FetchCostItem (:id query))))
 
 (extend-protocol t/Event
 
@@ -128,7 +149,56 @@
        merge {:road road
               :start start
               :end end
-              :geojson g}))))
+              :geojson g})))
+
+  UpdateForm
+  (process-event [{form-data :form-data} app]
+    (println "UPDATE FORM")
+    (let [old-form (common-controller/page-state app :form)
+          new-form (cu/deep-merge old-form form-data)]
+      (process-location-change
+       (common-controller/assoc-page-state app [:form] new-form)
+       old-form new-form)))
+
+  NewCostItem
+  (process-event [_ app]
+    (common-controller/assoc-page-state app [:form]
+                                        {:db/id (next-id! "costitem")}))
+
+  FetchCostItem
+  (process-event [{id :id} app]
+    (println "fetch cost item")
+    (t/fx (common-controller/assoc-page-state app [:form] :loading)
+          {:tuck.effect/type :query
+           :query :asset/cost-item
+           :args {:db/id (common-controller/->long id)}
+           :result-path (common-controller/page-state-path app :form)})))
+
+(defn- process-location-change
+  "Check if location fields have been edited and need to retrigger
+  Teeregister API calls."
+  [app old-form new-form]
+  (let [start-end-points #(select-keys % [:location/start-point :location/end-point])
+        road-address #(select-keys % [:location/road-nr :location/carriageway
+                                      :location/start-m :location/end-m])]
+
+    (cond
+      ;; Manually edited start/end points, refetch road section
+      (not= (start-end-points old-form)
+            (start-end-points new-form))
+      (do
+        (println "muutettu pisteitä")
+        app)
+
+      ;; Manually edited road location, refetch points
+      (not= (road-address old-form)
+            (road-address new-form))
+      (do
+        (println "muutettu tieosoitetta")
+        app)
+
+      :else
+      app)))
 
 (defn save-asset-event [form-data]
   #(->SaveCostItem @form-data))
