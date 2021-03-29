@@ -224,7 +224,7 @@
                             :border-bottom-color theme-colors/border-dark}}}
   {:border-top "1px solid"
    :border-color theme-colors/border-dark
-   :padding "1rem"})
+   :padding "1rem 1rem 1rem 0"})
 
 (defn opinion-view-container
   [{:keys [content text-color open? heading heading-button on-toggle-open edit-atom]} bg-color]
