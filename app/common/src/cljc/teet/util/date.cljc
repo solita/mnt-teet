@@ -50,7 +50,7 @@
          Date.)))
 
 (defn date-before-today?
-  "Converts parameter to a calendar day (lopping off time of day) and returns true if it's previous day or earlier compared to today, false if it's today or a day after today. Works according to configured local timezone of the JVM environment so yields different results in local dev env vs AWS usually."
+  "Converts parameter to a calendar day (lopping off time of day) and returns true if it's previous day or earlier compared to today, false if it's today or a day after today. Works according to configured local timezone of the JVM environment (our backend local dev dev setup uses the same UTC timezone as deploy env)."
   [date]
   #?(:clj (neg? (.compareTo (to-local-date date) (to-local-date (Date.))))
      ;; XX cljs ver untested so disabled for now - getDay is specified as local timezone already so should work
