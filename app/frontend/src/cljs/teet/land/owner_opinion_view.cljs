@@ -273,6 +273,7 @@
    (doall
      (for [[label data is-bold is-label-hidden :as row] data
            :when row]
+       ^{:key (str data "-" label)}
        [:div
         {:class [(<class common/info-row-item-style false)]}
         (if (true? is-label-hidden)
