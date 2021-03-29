@@ -256,7 +256,8 @@
                    (mapcat :activity/tasks))]
     (assoc project :thk.project/status
                    (cond
-                     (and (nil? owner) (date/date-before-today? estimated-start-date))
+                     (and (nil? owner) (or (nil? estimated-start-date)
+                                         (date/date-before-today? estimated-start-date)))
                      :unassigned-over-start-date
                      (atleast-one-activity-over-deadline? activities)
                      :activity-over-deadline
