@@ -293,7 +293,11 @@
 
 (defn owner-opinion-edit-form [e! form-state close-form-and-refresh project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
-               activities (get-activities project)]
+               activities (get-activities project)
+               decrease-opinions-count (fn [_response]
+                                         (fn [e!]
+                                           (e! (opinion-controller/->DecreaseCommentCount target))
+                                           (close-form-and-refresh)))]
     [:<>
      [form/form2 {:e! e!
                   :on-change-event form-change
@@ -310,7 +314,7 @@
                   :delete (common-controller/->SaveFormWithConfirmation
                             :land-owner-opinion/delete-opinion
                             {:db/id (:db/id @form-state)}
-                            close-form-and-refresh
+                            decrease-opinions-count
                             (tr [:land-owner-opinion :delete :success-message]))
                   :delete-message (tr [:land-owner-opinion :delete :confirmation-text])
                   :delete-cancel-button-text (tr [:land-owner-opinion :delete :cancel-text])
