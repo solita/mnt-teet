@@ -266,10 +266,29 @@
   (let [activity-type (get-in opinion [:land-owner-opinion/type])]
     (tr-enum activity-type)))
 
+(defn opinion-list-header-row
+  "[[data-title data-value is-bold is-label-hidden]...]"
+  [data]
+  [:div {:class (<class common-styles/flex-row-wrap)}
+   (doall
+     (for [[label data is-bold is-label-hidden :as row] data
+           :when row]
+       [:div
+        {:class [(<class common/info-row-item-style false)]}
+        (if (true? is-label-hidden)
+          [typography/HiddenText label]
+          (if (true? is-bold)
+            [typography/SectionHeading label]
+            [typography/Text label]))
+        [:div data]]))])
+
 (defn owner-opinion-heading [opinion]
-  [common/basic-information-row
-   [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion)]
-    [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion)]]])
+  [opinion-list-header-row
+   [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion) true false]
+    ["." "/" false true]
+    (if (nil? (:land-owner-opinion/respondent-connection-to-land opinion))
+      ["." (get-activity-type opinion) false true]
+      [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion) false false])]])
 
 (defn owner-opinion-edit-form [e! form-state close-form-and-refresh project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
