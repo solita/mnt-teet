@@ -289,7 +289,7 @@
         missing (set/difference (set estate-ids) (set (keys estates)))]
     (into estates
           (for [id missing]
-            [id (fetch-estate-info ctx id)]))))
+            [id (fetch-and-cache-estate-info ctx id)]))))
 
 (defn ensure-cached-estate-info
   "Ensure the given estates are in the cache and fetch/store it if not."
