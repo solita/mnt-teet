@@ -248,23 +248,14 @@
        kr-kinnistu-d-request-xml
        (x-road/perform-request url)))
 
-(defn- fetch-cached-estate-payload [ctx estate-id]
-  (when-let [estate (some-> (postgrest/select ctx :estate
-                                              #{:payload}
-                                              {:id estate-id})
-                            first
-                            :payload
-                            x-road/string->zipped-xml
-                            kinnistu-d-parse-response)]
-    (merge (:payload estate)
-           {:status :ok})))
-
 (defn- store-cached-estate-payload [ctx estate-id payload]
   (postgrest/upsert! ctx :estate
                      [{:id estate-id
                        :payload payload}]))
 
-(defn- fetch-and-cache-estate-info [ctx estate-id]
+(defn- fetch-and-cache-estate-info
+  "Fetch estate info from property registry, cache into db, return parsed result"
+  [ctx estate-id]
   (let [response-string
         (perform-kinnistu-d-request
           (:xroad-url ctx)
@@ -273,11 +264,10 @@
     (store-cached-estate-payload ctx estate-id response-string)
     (kinnistu-d-parse-response zipped-xml)))
 
-(defn fetch-estate-info [ctx estate-id]
-  (or (fetch-cached-estate-payload ctx estate-id)
-      (fetch-and-cache-estate-info ctx estate-id)))
-
-(defn fetch-all-estate-info [ctx estate-ids]
+(defn fetch-all-estate-info
+  "Fetch estate info for the given estate ids, trying the db cache
+  first, then fetching the missing ones from the property registry."
+  [ctx estate-ids]
   (let [estates (into {}
                       (map (juxt :id :payload))
                       (map #(update % :payload (fn [val]
