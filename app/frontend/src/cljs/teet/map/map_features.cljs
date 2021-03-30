@@ -86,11 +86,15 @@
 
 (defn asset-road-line-style [^ol.render.Feature feature res]
   (case (-> feature .getGeometry .getType)
-    "Point" (ol.style.Style.
-             #js {:image (ol.style.Circle.
-                          #js {:fill (ol.style.Fill. #js {:color "#ff30aa"})
-                               :stroke (ol.style.Stroke. #js {:color "#ffffff"})
-                               :radius 20})})
+    "Point" #js [(ol.style.Style.
+                  #js {:image (ol.style.Circle.
+                               #js {:fill (ol.style.Fill. #js {:color "black"})
+                                    :radius 2})})
+                 (ol.style.Style.
+                  #js {:image (ol.style.Circle.
+                               #js {:stroke (ol.style.Stroke. #js {:color "black"})
+                                    :fill (ol.style.Fill. #js {:color "rgba(0,0,0,0.5)"})
+                                    :radius 10})})]
     "LineString" (project-line-style feature res)))
 
 (def electric-pattern
