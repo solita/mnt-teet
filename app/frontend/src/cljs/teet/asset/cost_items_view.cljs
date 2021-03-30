@@ -31,6 +31,7 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.project-map-view :as project-map-view]
             [teet.map.openlayers :as openlayers]
+            [teet.map.openlayers.drag :as drag]
             [teet.log :as log]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
@@ -134,13 +135,25 @@
                     (on-change (assoc @current-value
                                       (if (swap! start-point not)
                                         0 1) c)))
+        :event-handlers (drag/drag-feature
+                         (comp :map/feature :geometry)
+                         drag/on-drag-set-coordinates
+                         (fn [target to]
+                           (when-let [p (some-> target :geometry :map/feature
+                                                .getProperties (aget "start/end"))]
+                             (on-change
+                              (assoc @current-value
+                                     (case p
+                                       "start" 0
+                                       "end" 1)
+                                     to)))))
         :layers {:selected-road-geometry
                  (when-let [g geojson]
                    (map-layers/geojson-data-layer
                     "selected-road-geometry"
                     geojson
                     map-features/asset-road-line-style
-                    {:fit-on-load? true}))}}])))
+                    {:fit-on-load? false #_true}))}}])))
 
 (defn- attributes* [e! attrs inherits-location? rotl]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})

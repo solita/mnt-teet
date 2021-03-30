@@ -32,6 +32,12 @@
                                (not (js/isNaN %))) nums))
         nums))))
 
+(defn point-geojson [[x y] & {:as props}]
+  #js {:type "Feature"
+       :geometry #js {:type "Point"
+                      :coordinates #js [x y]}
+       :properties (clj->js props)})
+
 (defrecord SaveCostItem [form-data])
 (defrecord SaveCostItemResponse [tempid response])
 (defrecord DeleteComponent [fetched-cost-item-atom id])
@@ -216,22 +222,23 @@
          ;; Set start/end points and GeoJSON geometry
          (if (:location/end-m address)
            ;; Line geometry
-           (assoc form
-                  :location/start-point (first response)
-                  :location/end-point (last response)
-                  :location/geojson (clj->js
-                                     {:type "FeatureCollection"
-                                      :features [{:type "LineString"
-                                                  :coordinates response}
-                                                 {:type "Point" :coordinates (first response)}
-                                                 {:type "Point" :coordinates (last response)}]}))
+           (do
+             (println "RESPONSE LINE" response)
+             (assoc form
+                    :location/start-point (first response)
+                    :location/end-point (last response)
+                    :location/geojson
+                    #js {:type "FeatureCollection"
+                         :features #js [#js {:type "LineString"
+                                             :coordinates (clj->js response)}
+                                        (point-geojson (first response) "start/end" "start")
+                                        (point-geojson (last response) "start/end" "end")]}))
            ;; Point geometry
            (-> form
                (assoc :location/start-point response
-                      :location/geojson (clj->js
-                                         {:type "FeatureCollection"
-                                          :features [{:type "Point"
-                                                      :coordinates response}]}))
+                      :location/geojson
+                      #js {:type "FeatureCollection"
+                           :features #js [(point-geojson response "start/end" "start")]})
                (dissoc :location/end-point)))))))
 
   FetchRoadResponse
@@ -258,8 +265,8 @@
                            :features
                            (if end-m
                              #js [geojson
-                                  #js {:type "Point" :coordinates start}
-                                  #js {:type "Point" :coordinates end}]
+                                  (point-geojson start "start/end" "start")
+                                  (point-geojson end "start/end" "end")]
                              #js [geojson])}
                       :location/road-nr road-nr
                       :location/carriageway carriageway
