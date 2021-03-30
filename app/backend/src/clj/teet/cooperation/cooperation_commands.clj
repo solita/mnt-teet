@@ -108,7 +108,10 @@
                  :req-un [::application])
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
-   :pre [(application-belongs-to-project? db (:db/id application) project-id)]
+   :pre [^{:error :application-outside-activities}
+         (cooperation-db/application-matched-activity-id db project-id application)
+         
+         (application-belongs-to-project? db (:db/id application) project-id)]
    :transact [(list 'teet.cooperation.cooperation-tx/edit-application user application)]})
 
 (defcommand :cooperation/delete-application
