@@ -30,37 +30,32 @@
                                  [?part :file.part/number ?num]
                                  [?part :file.part/name ?name]]
                                db file-ids))]
-     (for [{:keys [part document-group] :as f} files
-           :let [name (filename-metadata/metadata->filename f)
-                 folder (str folder-prefix part "_" (part-names part)
-                             (when document-group
-                               (str "/" document-group)))]]
-       {:folder folder
-        :name name
-        :dup-key [folder name] ;; support key for handling duplicate names in activity zip
-        :input #(let [{:keys [bucket file-key]} (file-storage/document-s3-ref f)]
-                  (integration-s3/get-object bucket file-key))}))))
+     (vec
+      (for [{:keys [part document-group] :as f} files
+            :let [name (filename-metadata/metadata->filename f)
+                  folder (str folder-prefix part "_" (part-names part)
+                              (when document-group
+                                (str "/" document-group)))]]
+        {:folder folder
+         :name name
+         :dup-key [folder name] ;; support key for handling duplicate names in activity zip
+         :input #(let [{:keys [bucket file-key]} (file-storage/document-s3-ref f)]
+                   (integration-s3/get-object bucket file-key))})))))
 
 (defn- zip-stream
   "Create an input stream where the zip file can be streamed from."
   [entries]
-  (log/debug "zip-stream: got entries" (vec entries))
   (ring-io/piped-input-stream
    (fn [ostream]
      (with-open [out (ZipOutputStream. ostream)]
-       (log/debug "entries count" (count entries))
-       (doseq [{:keys [folder name input]} entries]
-         (log/debug "zip .PutNextEntry name:" name)
-         (.putNextEntry out (ZipEntry. (str (when folder
-                                              (str folder "/"))
-                                            name)))
-         (try
-           (log/debug "calling io/copy")
-           (io/copy (input) out)
-           (log/debug "io/copy finished")
-           (catch Exception e
-             (log/debug e "caught exception in io/copy")))
-         (log/debug "finished iteration"))))))
+       (try         
+         (doseq [{:keys [folder name input]} entries]
+           (.putNextEntry out (ZipEntry. (str (when folder
+                                                (str folder "/"))
+                                              name)))
+           (io/copy (input) out))
+         (catch Throwable e
+           (log/info e "io/copy failed in zip creation")))))))
 
 (defn task-zip
   "Create zip from all the files in a task. Returns map with :filename for the zip
@@ -106,12 +101,12 @@
                ms))
 
 (defn rename-duplicates [zip-entries]
-  (def *ze zip-entries)
+  ;; (def *ze zip-entries)
   (let [dup-groups (group-by :dup-key zip-entries)
         renamed-dup-groups (mapv rename-dup-group dup-groups)
         zip-entries (mapcat identity renamed-dup-groups)]
     
-    (log/debug "rename-duplicates: got" zip-entries)
+    ;; (log/debug "rename-duplicates: got" zip-entries)
     zip-entries))
 
 (defn activity-zip

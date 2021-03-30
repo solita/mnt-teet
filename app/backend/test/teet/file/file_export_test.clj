@@ -80,14 +80,17 @@
     (tu/local-command :task/review {:task-id first-task-id
                                     :result :accept} )
     ;; 2a
-    (let [second-task-id (tu/create-task task-params)
-          ;; 2b
-          file (tu/fake-upload second-task-id #:file {:name "image.png" :file/size 666})
-          s3-file-key (:file/s3-key (du/entity (tu/db) (:db/id file)))
-          {:keys [filename input-stream]} (with-language :en (file-export/activity-zip (tu/db) activity-id))]
-      (let [in (java.util.zip.ZipInputStream. input-stream)
-            first-entry (.getNextEntry in)
-            second-entry (.getNextEntry in)]
-        (is (= "KY/00_General/MA11111_MO_TL_KY_00_image.png" (.getName first-entry) ))
-        (is (= "KY/00_General/MA11111_MO_TL_KY_00_image (1).png" (some-> second-entry .getName)))
-        (is (nil? (.getNextEntry in)))))))
+    (with-redefs [integration-s3/get-object
+                (fn [_bucket file-key]
+                  (java.io.ByteArrayInputStream. (.getBytes file-key "UTF-8")))]
+      (let [second-task-id (tu/create-task task-params)
+            ;; 2b
+            file (tu/fake-upload second-task-id #:file {:name "image.png" :file/size 666})
+            s3-file-key (:file/s3-key (du/entity (tu/db) (:db/id file)))
+            {:keys [filename input-stream]} (with-language :en (file-export/activity-zip (tu/db) activity-id))]
+        (let [in (java.util.zip.ZipInputStream. input-stream)
+              first-entry (.getNextEntry in)
+              second-entry (.getNextEntry in)]
+          (is (= "KY/00_General/MA11111_MO_TL_KY_00_image.png" (.getName first-entry) ))
+          (is (= "KY/00_General/MA11111_MO_TL_KY_00_image (1).png" (some-> second-entry .getName)))
+          (is (nil? (.getNextEntry in))))))))
