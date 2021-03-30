@@ -8,7 +8,8 @@
             [teet.localization :refer [tr with-language]]
             [teet.file.file-storage :as file-storage]
             [ring.util.io :as ring-io]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [taoensso.timbre :as log])
   (:import (java.util.zip ZipOutputStream ZipEntry)))
 
 (defn task-zip-entries
@@ -29,14 +30,17 @@
                                  [?part :file.part/number ?num]
                                  [?part :file.part/name ?name]]
                                db file-ids))]
-     (for [{:keys [part document-group] :as f} files
-           :let [name (filename-metadata/metadata->filename f)]]
-       {:folder (str folder-prefix part "_" (part-names part)
-                     (when document-group
-                       (str "/" document-group)))
-        :name name
-        :input #(let [{:keys [bucket file-key]} (file-storage/document-s3-ref f)]
-                  (integration-s3/get-object bucket file-key))}))))
+     (vec
+      (for [{:keys [part document-group] :as f} files
+            :let [name (filename-metadata/metadata->filename f)
+                  folder (str folder-prefix part "_" (part-names part)
+                              (when document-group
+                                (str "/" document-group)))]]
+        {:folder folder
+         :name name
+         :dup-key [folder name] ;; support key for handling duplicate names in activity zip
+         :input #(let [{:keys [bucket file-key]} (file-storage/document-s3-ref f)]
+                   (integration-s3/get-object bucket file-key))})))))
 
 (defn- zip-stream
   "Create an input stream where the zip file can be streamed from."
@@ -44,11 +48,14 @@
   (ring-io/piped-input-stream
    (fn [ostream]
      (with-open [out (ZipOutputStream. ostream)]
-       (doseq [{:keys [folder name input]} entries]
-         (.putNextEntry out (ZipEntry. (str (when folder
-                                              (str folder "/"))
-                                            name)))
-         (io/copy (input) out))))))
+       (try         
+         (doseq [{:keys [folder name input]} entries]
+           (.putNextEntry out (ZipEntry. (str (when folder
+                                                (str folder "/"))
+                                              name)))
+           (io/copy (input) out))
+         (catch Throwable e
+           (log/info e "io/copy failed in zip creation")))))))
 
 (defn task-zip
   "Create zip from all the files in a task. Returns map with :filename for the zip
@@ -78,6 +85,33 @@
     {:filename filename
      :input-stream (zip-stream (task-zip-entries db task-id))}))
 
+
+(defn file-name-with-sequence-number [seq fn]
+  (let [{:keys [extension description]}
+        (filename-metadata/name->description-and-extension fn)
+        new-description (str description " (" seq ")")]
+    
+    (if (not-empty extension)
+      (str new-description "." extension)
+      ;; else:
+      ;; avoid turning extensionless "foo" filename into "foo." 
+      new-description)))
+
+(defn rename-dup-group [[dup-key ms]]
+  (map-indexed (fn [index m]
+                 (if (= 0 index)
+                   m
+                   ;; else
+                   (update m :name (partial file-name-with-sequence-number index))))
+               ms))
+
+(defn rename-duplicates [zip-entries]
+  (let [dup-groups (group-by :dup-key zip-entries)
+        renamed-dup-groups (mapv rename-dup-group dup-groups)
+        zip-entries (mapcat identity renamed-dup-groups)]
+    
+    zip-entries))
+
 (defn activity-zip
   "Create zip from all the files in all tasks for an activity.
   Returns map with :filename for the zip and :input-stream where the zip file can be read from."
@@ -99,8 +133,10 @@
                      [?task :task/type ?type]
                      [?type :filename/code ?code]
                      :in $ ?act]
-                   db activity-id)]
+                   db activity-id)
+        activity-zip-entries (mapcat (fn [[task-id code]]
+                                       (task-zip-entries db task-id (str code "/")))
+                                     tasks)
+        entries-with-dups-renamed (rename-duplicates activity-zip-entries)]
     {:filename filename
-     :input-stream (zip-stream (mapcat (fn [[task-id code]]
-                                         (task-zip-entries db task-id (str code "/")))
-                                       tasks))}))
+     :input-stream (zip-stream entries-with-dups-renamed)}))
