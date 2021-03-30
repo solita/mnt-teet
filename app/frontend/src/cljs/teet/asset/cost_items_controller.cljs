@@ -38,6 +38,10 @@
                       :coordinates #js [x y]}
        :properties (clj->js props)})
 
+(defn feature-collection-geojson [& features]
+  #js {:type "FeatureCollection"
+       :features (into-array (remove nil? features))})
+
 (defrecord SaveCostItem [form-data])
 (defrecord SaveCostItemResponse [tempid response])
 (defrecord DeleteComponent [fetched-cost-item-atom id])
@@ -184,17 +188,17 @@
                     :location/start-point (first response)
                     :location/end-point (last response)
                     :location/geojson
-                    #js {:type "FeatureCollection"
-                         :features #js [#js {:type "LineString"
-                                             :coordinates (clj->js response)}
-                                        (point-geojson (first response) "start/end" "start")
-                                        (point-geojson (last response) "start/end" "end")]}))
+                    (feature-collection-geojson
+                     #js {:type "LineString"
+                          :coordinates (clj->js response)}
+                     (point-geojson (first response) "start/end" "start")
+                     (point-geojson (last response) "start/end" "end"))))
            ;; Point geometry
            (-> form
                (assoc :location/start-point response
                       :location/geojson
-                      #js {:type "FeatureCollection"
-                           :features #js [(point-geojson response "start/end" "start")]})
+                      (feature-collection-geojson
+                       (point-geojson response "start/end" "start")))
                (dissoc :location/end-point)))))))
 
   FetchRoadResponse
@@ -207,32 +211,45 @@
         app)
 
       (common-controller/update-page-state
-       app [:form]
+       (if (empty? response)
+         (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
+         app) [:form]
        (fn [form]
-         (let [{:keys [geometry road-nr carriageway start-m end-m m]}
-               (first (sort-by :distance response))]
-           (when geometry
-             (let [geojson (js/JSON.parse geometry)
-                   start (when start-m (aget geojson "coordinates" 0))
-                   end (when end-m (last (aget geojson "coordinates")))]
-               (log/debug "RECEIVED NEW START/END start: " start ", end: " end )
+         (if (empty? response)
+           (-> form
+               (dissoc :location/road-nr :location/carriageway :location/start-m :location/end-m)
+               (merge {:location/geojson (let [{:location/keys [start-point end-point]}
+                                               (cu/map-vals point start-end-points)]
+                                           (feature-collection-geojson
+                                            (clj->js {:type "LineString"
+                                                      :coordinates [start-point end-point]})
+                                            (point-geojson start-point "start/end" "start")
+                                            (point-geojson end-point "start/end" "end")))}))
+           (let [{:keys [geometry road-nr carriageway start-m end-m m]}
+                 (first (sort-by :distance response))]
 
-               (merge form
-                      (when (and start end)
-                        {:location/start-point (vec start)
-                         :location/end-point (vec end)})
-                      {:location/geojson
-                       #js {:type "FeatureCollection"
-                            :features
-                            (if end-m
-                              #js [geojson
-                                   (point-geojson start "start/end" "start")
-                                   (point-geojson end "start/end" "end")]
-                              #js [geojson])}
-                       :location/road-nr road-nr
-                       :location/carriageway carriageway
-                       :location/start-m (or m start-m)
-                       :location/end-m end-m})))))))))
+             (when geometry
+               (let [geojson (js/JSON.parse geometry)
+                     start (when start-m (aget geojson "coordinates" 0))
+                     end (when end-m (last (aget geojson "coordinates")))]
+                 (log/debug "RECEIVED NEW START/END start: " start ", end: " end )
+
+                 (merge form
+                        (when (and start end)
+                          {:location/start-point (vec start)
+                           :location/end-point (vec end)})
+                        {:location/geojson
+                         #js {:type "FeatureCollection"
+                              :features
+                              (if end-m
+                                #js [geojson
+                                     (point-geojson start "start/end" "start")
+                                     (point-geojson end "start/end" "end")]
+                                #js [geojson])}
+                         :location/road-nr road-nr
+                         :location/carriageway carriageway
+                         :location/start-m (or m start-m)
+                         :location/end-m end-m}))))))))))
 
 (defn- process-location-change
   "Check if location fields have been edited and need to retrigger
