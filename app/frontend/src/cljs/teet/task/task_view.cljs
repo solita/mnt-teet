@@ -7,6 +7,7 @@
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
             [teet.file.file-view :as file-view]
+            [teet.file.file-model :as file-model]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
@@ -211,8 +212,14 @@
                          (task-controller/->DeleteFilePart close-event part-id))}
     ^{:attribute :file.part/name
       :validate (fn [name]
-                  (when (> (count name) 99)
-                    (tr [:fields :validation-error :file.part/name])))}
+                  (cond
+                    (not (file-model/valid-chars-in-description? name))
+                    (tr [:fields :validation-error :file.part/illegal-characters] {:characters file-model/allowed-chars-string})
+
+                    (> (count name) 99)
+                    (tr [:fields :validation-error :file.part/name])
+                    :else
+                    nil))}
     [TextField {}]]])
 
 (defn file-section-view

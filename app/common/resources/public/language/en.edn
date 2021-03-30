@@ -657,7 +657,8 @@
   :user/global-role "Global role",
   :cooperation.opinion/comment "Comment",
   :validation-error
-  #:file.part{:name "Part name can have up to 99 characters."},
+  #:file.part{:name "Part name can have up to 99 characters.",
+              :illegal-characters "The name contains illegal characters. List of allowed characters: {characters}"},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
   :cooperation.response/status "Response summary",

@@ -652,7 +652,8 @@
   :cooperation.opinion/comment "Märkus",
   :validation-error
   #:file.part{:name
-              "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
+              "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. ",
+              :illegal-characters "Nimi sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}"},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
   :cooperation.response/status "Vastuse kokkuvõte",
