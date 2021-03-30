@@ -82,14 +82,16 @@
 
           ol-layer (or ol-layer
                        (ol.layer.Vector.
-                        #js {:source source
+                        #js {:updateWhileInteracting true
+                             :source source
                              :wrapX true}))]
 
 
       (.setStyle ol-layer style-fn)
 
       (when on-change
-        (.on source "change" #(on-change {:extent (.getExtent source)
+        (.on source "change" #(on-change {:layer ol-layer
+                                          :extent (.getExtent source)
                                           :source source})))
 
       (when on-select
