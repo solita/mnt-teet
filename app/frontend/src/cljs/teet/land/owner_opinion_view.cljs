@@ -266,6 +266,11 @@
   (let [activity-type (get-in opinion [:land-owner-opinion/type])]
     (tr-enum activity-type)))
 
+(defn row-item-style
+  []
+  {:margin-right "0.5rem"
+   :margin-bottom "1rem"})
+
 (defn opinion-list-header-row
   "[[data-title data-value is-bold is-label-hidden]...]"
   [data]
@@ -275,7 +280,7 @@
            :when row]
        ^{:key (str data "-" label)}
        [:div
-        {:class [(<class common/info-row-item-style false)]}
+        {:class [(<class row-item-style)]}
         (if (true? is-label-hidden)
           [typography/HiddenText label]
           (if (true? is-bold)
