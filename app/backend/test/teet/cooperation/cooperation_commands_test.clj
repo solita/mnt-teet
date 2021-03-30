@@ -133,4 +133,27 @@
              Exception
              (tu/local-command :cooperation/delete-application
                                {:thk.project/id project-id
+                                :db/id new-application-id})))))
+
+    
+    (testing "External consultant can add add responses to involved party cooperation applications (bug TEET-1416)"
+      (let [;; Create new application
+            new-application-id (-> (tu/local-command :cooperation/create-application
+                                                     application-payload)
+                                   (get-in [:tempids "new-application"]))]
+        ;; switch user to ext
+        (tu/local-login tu/mock-user-carla-consultant)
+        ;; add response
+        (tu/local-command :cooperation/save-application-response
+                          {:thk.project/id project-id
+                           :application-id new-application-id
+                           :form-data {:cooperation.response/status :cooperation.response.status/no-objection
+                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/valid-months 12}})
+
+        ;; Can't be deleted
+        (is (thrown?
+             Exception
+             (tu/local-command :cooperation/delete-application
+                               {:thk.project/id project-id
                                 :db/id new-application-id})))))))

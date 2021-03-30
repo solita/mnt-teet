@@ -232,8 +232,6 @@
   :manager :full,
   :internal-consultant :link,
   :external-consultant :link},
- :cooperation/application-approval
- {:admin :full, :manager :full, :internal-consultant :full},
  :cost-items/delete-cost-items
  {:admin :full,
   :manager :full,
