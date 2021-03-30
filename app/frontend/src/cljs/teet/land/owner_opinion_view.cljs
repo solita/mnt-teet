@@ -224,7 +224,7 @@
                             :border-bottom-color theme-colors/border-dark}}}
   {:border-top "1px solid"
    :border-color theme-colors/border-dark
-   :padding "1rem"})
+   :padding "1rem 1rem 1rem 0"})
 
 (defn opinion-view-container
   [{:keys [content text-color open? heading heading-button on-toggle-open edit-atom]} bg-color]
@@ -266,14 +266,55 @@
   (let [activity-type (get-in opinion [:land-owner-opinion/type])]
     (tr-enum activity-type)))
 
+(defn row-item-style
+  []
+  {:margin-right "0.5rem"
+   :margin-bottom "1rem"})
+
+(defn opinion-list-header-row
+  "[[data-title data-value is-bold is-label-hidden]...]"
+  [data]
+  [:div {:class (<class common-styles/flex-row-wrap)}
+   (doall
+     (for [{:keys [label item is-bold is-label-hidden] :as row} data
+           :when row]
+       ^{:key (str item "-" label)}
+       [:div
+        {:class [(<class row-item-style)]}
+        (if (true? is-label-hidden)
+          [typography/HiddenText label]
+          (if (true? is-bold)
+            [typography/SectionHeading label]
+            [typography/Text label]))
+        [:div item]]))])
+
 (defn owner-opinion-heading [opinion]
-  [common/basic-information-row
-   [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion)]
-    [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion)]]])
+  [opinion-list-header-row
+   [{:label (:land-owner-opinion/respondent-name opinion)
+     :item (get-activity-name opinion)
+     :is-bold true
+     :is-label-hidden false}
+    {:label "."
+     :item "/"
+     :is-bold false
+     :is-label-hidden true}
+    (if (clojure.string/blank? (:land-owner-opinion/respondent-connection-to-land opinion))
+      {:label "."
+       :item (get-activity-type opinion)
+       :is-bold false
+       :is-label-hidden true}
+      {:label (:land-owner-opinion/respondent-connection-to-land opinion)
+       :item (get-activity-type opinion)
+       :is-bold false
+       :is-label-hidden false})]])
 
 (defn owner-opinion-edit-form [e! form-state close-form-and-refresh project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
-               activities (get-activities project)]
+               activities (get-activities project)
+               decrease-opinions-count (fn [_response]
+                                         (fn [e!]
+                                           (e! (opinion-controller/->DecreaseCommentCount target))
+                                           (close-form-and-refresh)))]
     [:<>
      [form/form2 {:e! e!
                   :on-change-event form-change
@@ -290,7 +331,7 @@
                   :delete (common-controller/->SaveFormWithConfirmation
                             :land-owner-opinion/delete-opinion
                             {:db/id (:db/id @form-state)}
-                            close-form-and-refresh
+                            decrease-opinions-count
                             (tr [:land-owner-opinion :delete :success-message]))
                   :delete-message (tr [:land-owner-opinion :delete :confirmation-text])
                   :delete-cancel-button-text (tr [:land-owner-opinion :delete :cancel-text])

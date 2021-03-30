@@ -46,6 +46,9 @@
    :line-height    1.375
    :letter-spacing "0.25px"})
 
+(defn- hidden-text-style []
+  {:visibility :hidden})
+
 (defn- data-label-style []
   {:fontFamily    "Roboto Condensed"
    :fontWeight    400
@@ -75,6 +78,7 @@
 (def Subtitle2 (util/make-component :p {:class "subtitle2"}))
 
 (def Text (util/make-component :p {}))
+(def HiddenText (util/make-component :p {:class (<class hidden-text-style)}))
 (def TextBold (util/make-component :p {:class "body1-bold"}))
 (def Text2 (util/make-component :p {:class "body2"}))
 (def Text2Bold (util/make-component :p {:class "body2-bold"}))
