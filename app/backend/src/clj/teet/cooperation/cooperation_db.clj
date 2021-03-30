@@ -179,6 +179,7 @@
   "Given project-id and an application with a date, return an activities id that is on going during the dates"
   [db project-id application]
   (let [application-date (:cooperation.application/date application)]
+    (assert (some? application-date))
     (->> (mapv
            first
            (d/q '[:find (pull ?ac [:db/id

@@ -73,6 +73,8 @@
                              ;; Using the THK project id of another project
                              {:thk.project/id (:thk.project/id (du/entity (tu/db) (tu/->db-id "p2")))
                               :application {:db/id new-application-id
+                                            :cooperation.application/date (dateu/now)
+
                                             :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
 
@@ -81,6 +83,7 @@
       (is (some? (tu/local-command :cooperation/edit-application
                                    {:thk.project/id project-id
                                     :application {:db/id new-application-id
+                                                  :cooperation.application/date (dateu/now)
                                                   :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
 
@@ -103,6 +106,7 @@
              (tu/local-command :cooperation/edit-application
                                {:thk.project/id project-id
                                 :application {:db/id new-application-id
+                                              :cooperation.application/date (dateu/now)
                                               :cooperation.application/type :cooperation.application.type/building-permit-order}})))))
 
     ;; Application deletion
