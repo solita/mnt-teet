@@ -276,9 +276,9 @@
   [data]
   [:div {:class (<class common-styles/flex-row-wrap)}
    (doall
-     (for [[label data is-bold is-label-hidden :as row] data
+     (for [{:keys [label item is-bold is-label-hidden] :as row} data
            :when row]
-       ^{:key (str data "-" label)}
+       ^{:key (str item "-" label)}
        [:div
         {:class [(<class row-item-style)]}
         (if (true? is-label-hidden)
@@ -286,15 +286,27 @@
           (if (true? is-bold)
             [typography/SectionHeading label]
             [typography/Text label]))
-        [:div data]]))])
+        [:div item]]))])
 
 (defn owner-opinion-heading [opinion]
   [opinion-list-header-row
-   [[(:land-owner-opinion/respondent-name opinion) (get-activity-name opinion) true false]
-    ["." "/" false true]
+   [{:label (:land-owner-opinion/respondent-name opinion)
+     :item (get-activity-name opinion)
+     :is-bold true
+     :is-label-hidden false}
+    {:label "."
+     :item "/"
+     :is-bold false
+     :is-label-hidden true}
     (if (clojure.string/blank? (:land-owner-opinion/respondent-connection-to-land opinion))
-      ["." (get-activity-type opinion) false true]
-      [(:land-owner-opinion/respondent-connection-to-land opinion) (get-activity-type opinion) false false])]])
+      {:label "."
+       :item (get-activity-type opinion)
+       :is-bold false
+       :is-label-hidden true}
+      {:label (:land-owner-opinion/respondent-connection-to-land opinion)
+       :item (get-activity-type opinion)
+       :is-bold false
+       :is-label-hidden false})]])
 
 (defn owner-opinion-edit-form [e! form-state close-form-and-refresh project target close-event]
   (r/with-let [form-change (form/update-atom-event form-state merge)
