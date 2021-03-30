@@ -132,9 +132,16 @@
       (reset! current-value value)
       [map-view/map-view e!
        {:on-click (fn [{c :coordinate}]
-                    (on-change (assoc @current-value
-                                      (if (swap! start-point not)
-                                        0 1) c)))
+                    (let [[start end :as v] @current-value]
+                      (cond
+                        ;; If no start point, set it
+                        (nil? start) (on-change (assoc v 0 c))
+
+                        ;; If no end point, set it
+                        (nil? end) (on-change (assoc v 1 c))
+
+                        ;; Otherwise do nothing
+                        :else nil)))
         :event-handlers (drag/drag-feature
                          (comp :map/feature :geometry)
                          drag/on-drag-set-coordinates

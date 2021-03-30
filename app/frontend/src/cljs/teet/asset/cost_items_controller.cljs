@@ -45,9 +45,6 @@
 (defrecord SaveComponent [parent-id form-data])
 (defrecord SaveComponentResponse [tempid response])
 
-;;(defrecord SelectLocationOnMap [current-location on-change])
-(defrecord FetchLocation [points result-callback])
-;;(defrecord FetchLocationResponse [result-callback response])
 
 (defrecord NewCostItem []) ; start creating new cost item
 (defrecord FetchCostItem [id]) ; fetch cost item for editing
@@ -142,47 +139,6 @@
                                      {:component (get-in response [:tempids tempid])})})
                     common-controller/refresh-fx])))
 
-  #_SelectLocationOnMap
-  #_(process-event [{:keys [current-location on-change]} app]
-    (common-controller/update-page-state
-     app [:select-location]
-     (constantly {:current-location current-location
-                  :on-change on-change})))
-
-  #_FetchLocation
-  #_(process-event [{:keys [points result-callback]} app]
-    (t/fx app
-          (merge
-           {:tuck.effect/type :query
-            :result-event (partial ->FetchLocationResponse result-callback)}
-           (if (> (count points) 1)
-             {:query :road/by-2-geopoints
-              :args {:start (first points)
-                     :end (second points)
-                     :distance 100}}
-             {:query :road/by-geopoint
-              :args {:point (first points)
-                     :distance 100}}))))
-
-  #_FetchLocationResponse
-  #_(process-event [{:keys [result-callback response]} app]
-    (def *r response)
-    (let [road (first (sort-by :distance response))
-          {:keys [road-nr carriageway start-m end-m geometry]} road
-          g (some-> geometry js/JSON.parse)
-          [start end] (case (aget g "type")
-                        "LineString" [(first (aget g "coordinates"))
-                                      (last (aget g "coordinates"))]
-                        "Point" [(aget g "coordinates") nil]
-                        [nil nil])]
-      (result-callback [start end road-nr carriageway start-m end-m])
-      (common-controller/update-page-state
-       app [:select-location]
-       merge {:road road
-              :start start
-              :end end
-              :geojson g})))
-
   UpdateForm
   (process-event [{form-data :form-data} app]
     (println "UPDATE FORM")
@@ -257,21 +213,26 @@
                (first (sort-by :distance response))]
            (when geometry
              (let [geojson (js/JSON.parse geometry)
-                   start (when end-m (aget geojson "coordinates" 0))
+                   start (when start-m (aget geojson "coordinates" 0))
                    end (when end-m (last (aget geojson "coordinates")))]
-               (assoc form
-                      :location/geojson
-                      #js {:type "FeatureCollection"
-                           :features
-                           (if end-m
-                             #js [geojson
-                                  (point-geojson start "start/end" "start")
-                                  (point-geojson end "start/end" "end")]
-                             #js [geojson])}
-                      :location/road-nr road-nr
-                      :location/carriageway carriageway
-                      :location/start-m (or m start-m)
-                      :location/end-m end-m)))))))))
+               (log/debug "RECEIVED NEW START/END start: " start ", end: " end )
+
+               (merge form
+                      (when (and start end)
+                        {:location/start-point (vec start)
+                         :location/end-point (vec end)})
+                      {:location/geojson
+                       #js {:type "FeatureCollection"
+                            :features
+                            (if end-m
+                              #js [geojson
+                                   (point-geojson start "start/end" "start")
+                                   (point-geojson end "start/end" "end")]
+                              #js [geojson])}
+                       :location/road-nr road-nr
+                       :location/carriageway carriageway
+                       :location/start-m (or m start-m)
+                       :location/end-m end-m})))))))))
 
 (defn- process-location-change
   "Check if location fields have been edited and need to retrigger
@@ -285,7 +246,7 @@
             (start-end-points new-form))
       (let [start (point (:location/start-point new-form))
             end (point (:location/end-point new-form))]
-        (log/debug "start: " start ", end: " end)
+        (log/debug "START/END POINTS CHANGED" "start: " start ", end: " end)
         (cond
           ;; 2 geopoints specified
           (and start end)
@@ -311,6 +272,7 @@
       (not= (road-address old-form)
             (road-address new-form))
       (let [{:location/keys [road-nr carriageway start-m end-m]} (road-address new-form)]
+        (log/debug "ROAD ADDRESS CHANGED")
         (cond
           ;; All values present, fetch line geometry
           (and road-nr carriageway start-m end-m)
