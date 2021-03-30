@@ -251,11 +251,12 @@
       [:div {:class (<class navigation-style/divider-style)
              :style {:display :flex
                      :align-items :center}}
-       [icons/action-language {:style {:color theme-colors/primary}}]
+       [icons/action-language {:style {:color theme-colors/primary
+                                       :padding-right "0.5rem" :width "auto"}}]
        [language-selector]])
     (if logged-in?
       [open-account-navigation e!]
-      [buttons/button-primary {:style {:margin "0 0.5rem"}
+      [buttons/button-primary {:style {:margin "0 0 0 2rem"}
                                :href "/oauth2/request"}
        (tr [:login :login])])]))
 

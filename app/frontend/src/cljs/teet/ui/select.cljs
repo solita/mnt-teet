@@ -131,7 +131,6 @@
    :background-color :white
    :border-radius 0
    :display :block
-   :min-width "5rem"
    :border :none
    :padding-right "2rem"
    :font-size "1rem"
