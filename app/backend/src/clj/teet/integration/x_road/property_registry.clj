@@ -68,13 +68,11 @@
 (defn d-property-owners [kdr-xml]
   ;;; kdr = Kinnistu_DetailamdResponse from inside the soap body
   (let [owner-xml-seq (z/xml-> kdr-xml :jagu2 :a:Jagu2 :a:omandiosad :a:Jagu2.Omandiosa)
-        ;; _ (def *ox owner-xml-seq)
         oo-get (fn oo-get [ox & path]
                   (apply z/xml1-> (concat [ox] path)))
         omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))]
     {:omandiosad
      (mapv (fn [ox]
-             (log/debug "ki count " (count  (z/xml-> ox :a:isikud :a:KinnistuIsik z/text)))
              {:isik (mapv (fn [k-isik]
                             {:isiku_tyyp (z/xml1-> k-isik :a:isiku_tyyp z/text)
                              :isiku_liik_id (z/xml1-> k-isik :a:isiku_liik_ID z/text)
