@@ -90,7 +90,12 @@
   (let [{:keys [extension description]}
         (filename-metadata/name->description-and-extension fn)
         new-description (str description " (" seq ")")]
-    (str new-description "." extension)))
+    
+    (if (not-empty extension)
+      (str new-description "." extension)
+      ;; else
+      ;; avoid turning extensionless "foo" filename into "foo." 
+      new-description)))
 
 (defn rename-dup-group [[dup-key ms]]
   (map-indexed (fn [index m]
