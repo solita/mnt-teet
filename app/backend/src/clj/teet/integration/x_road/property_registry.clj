@@ -253,6 +253,7 @@
                                               #{:payload}
                                               {:id estate-id})
                             first
+                            :payload
                             x-road/string->zipped-xml
                             kinnistu-d-parse-response)]
     (merge (:payload estate)
