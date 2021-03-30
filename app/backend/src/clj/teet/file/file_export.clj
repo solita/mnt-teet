@@ -93,7 +93,7 @@
     
     (if (not-empty extension)
       (str new-description "." extension)
-      ;; else
+      ;; else:
       ;; avoid turning extensionless "foo" filename into "foo." 
       new-description)))
 
@@ -106,12 +106,10 @@
                ms))
 
 (defn rename-duplicates [zip-entries]
-  ;; (def *ze zip-entries)
   (let [dup-groups (group-by :dup-key zip-entries)
         renamed-dup-groups (mapv rename-dup-group dup-groups)
         zip-entries (mapcat identity renamed-dup-groups)]
     
-    ;; (log/debug "rename-duplicates: got" zip-entries)
     zip-entries))
 
 (defn activity-zip
