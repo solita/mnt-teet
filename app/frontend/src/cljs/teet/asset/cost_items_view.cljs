@@ -8,7 +8,7 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid Link]]
+            [teet.ui.material-ui :refer [Grid Link CircularProgress]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -453,7 +453,7 @@
              [label-for p])
            (repeat " / "))))])
 
-(defn- component-form [e! atl component-id cost-item-data]
+(defn- component-form* [e! atl component-id cost-item-data]
   (r/with-let [initial-component-data
                (last (cost-items-controller/find-component-path cost-item-data
                                                                 component-id))
@@ -497,6 +497,15 @@
            (when (seq allowed-components)
              [add-component-menu allowed-components
               (e! cost-items-controller/->AddComponent)])))])))
+
+(defn component-form
+  [e! atl component-id cost-item-data]
+  ;; Delay mounting of component form until it is in app state.
+  ;; This is needed when creating a new component and navigating to it
+  ;; after save, as refresh fetch will happen after navigation.
+  (if (nil? (cost-items-controller/find-component-path cost-item-data component-id))
+    [CircularProgress]
+    [component-form* e! atl component-id cost-item-data]))
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
@@ -570,10 +579,3 @@
 
        ^{:key (str (:db/id cost-item))}
        [cost-item-form e! asset-type-library cost-item])]))
-
-(defn cost-item-component-page
-  [e! {params :params :as app} {:keys [asset-type-library cost-item] :as state}]
-  (let [{:keys [component]} params]
-    [cost-items-page-structure
-     e! app state
-     [component-form e! asset-type-library component cost-item]]))

@@ -203,10 +203,9 @@
            (remove nil?
                    [(when (string? tempid)
                       {:tuck.effect/type :navigate
-                       :page :cost-items
-                       :params (merge (:params app)
-                                      {:component (get-in response [:tempids tempid])})
-                       :query {}})
+                       :page :cost-item
+                       :params (:params app)
+                       :query {:component (get-in response [:tempids tempid])}})
                     common-controller/refresh-fx])))
 
   UpdateForm
