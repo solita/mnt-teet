@@ -1017,7 +1017,7 @@
        e! app project overview
        [:<>
         [:div {:class (<class common-styles/margin-bottom 1)}
-         [common/header-with-actions "(:cooperation.3rd-party/name third-party)"
+         [common/header-with-actions (:cooperation.3rd-party/name third-party)
           [authorization-context/when-authorized :edit-application
            [form/form-modal-button
             {:max-width "sm"
