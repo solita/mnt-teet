@@ -68,13 +68,11 @@
 (defn d-property-owners [kdr-xml]
   ;;; kdr = Kinnistu_DetailamdResponse from inside the soap body
   (let [owner-xml-seq (z/xml-> kdr-xml :jagu2 :a:Jagu2 :a:omandiosad :a:Jagu2.Omandiosa)
-        ;; _ (def *ox owner-xml-seq)
         oo-get (fn oo-get [ox & path]
                   (apply z/xml1-> (concat [ox] path)))
         omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))]
     {:omandiosad
      (mapv (fn [ox]
-             (log/debug "ki count " (count  (z/xml-> ox :a:isikud :a:KinnistuIsik z/text)))
              {:isik (mapv (fn [k-isik]
                             {:isiku_tyyp (z/xml1-> k-isik :a:isiku_tyyp z/text)
                              :isiku_liik_id (z/xml1-> k-isik :a:isiku_liik_ID z/text)
@@ -248,22 +246,14 @@
        kr-kinnistu-d-request-xml
        (x-road/perform-request url)))
 
-(defn- fetch-cached-estate-payload [ctx estate-id]
-  (when-let [estate (some-> (postgrest/select ctx :estate
-                                              #{:payload}
-                                              {:id estate-id})
-                            first
-                            x-road/string->zipped-xml
-                            kinnistu-d-parse-response)]
-    (merge (:payload estate)
-           {:status :ok})))
-
 (defn- store-cached-estate-payload [ctx estate-id payload]
   (postgrest/upsert! ctx :estate
                      [{:id estate-id
                        :payload payload}]))
 
-(defn- fetch-and-cache-estate-info [ctx estate-id]
+(defn- fetch-and-cache-estate-info
+  "Fetch estate info from property registry, cache into db, return parsed result"
+  [ctx estate-id]
   (let [response-string
         (perform-kinnistu-d-request
           (:xroad-url ctx)
@@ -272,11 +262,10 @@
     (store-cached-estate-payload ctx estate-id response-string)
     (kinnistu-d-parse-response zipped-xml)))
 
-(defn fetch-estate-info [ctx estate-id]
-  (or (fetch-cached-estate-payload ctx estate-id)
-      (fetch-and-cache-estate-info ctx estate-id)))
-
-(defn fetch-all-estate-info [ctx estate-ids]
+(defn fetch-all-estate-info
+  "Fetch estate info for the given estate ids, trying the db cache
+  first, then fetching the missing ones from the property registry."
+  [ctx estate-ids]
   (let [estates (into {}
                       (map (juxt :id :payload))
                       (map #(update % :payload (fn [val]
@@ -288,7 +277,7 @@
         missing (set/difference (set estate-ids) (set (keys estates)))]
     (into estates
           (for [id missing]
-            [id (fetch-estate-info ctx id)]))))
+            [id (fetch-and-cache-estate-info ctx id)]))))
 
 (defn ensure-cached-estate-info
   "Ensure the given estates are in the cache and fetch/store it if not."
