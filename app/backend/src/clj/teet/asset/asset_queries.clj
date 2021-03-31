@@ -34,7 +34,7 @@
     :cost-items (asset-db/project-cost-items adb project-id)
     :project (project-db/project-by-id db [:thk.project/id project-id])}
    (when cost-item
-     {:form (fetch-cost-item adb cost-item)})))
+     {:cost-item (fetch-cost-item adb cost-item)})))
 
 (defquery :asset/cost-item
   {:doc "Fetch a single cost item by id"

@@ -56,7 +56,9 @@
    (defn coerce-fn [value-type]
      (case value-type
        :db.type/bigdec bigdec
-       :db.type/long #(Long/parseLong %)
+       :db.type/long #(if (string? %)
+                        (Long/parseLong %)
+                        (long %))
        ;; No parsing
        identity)))
 #?(:clj

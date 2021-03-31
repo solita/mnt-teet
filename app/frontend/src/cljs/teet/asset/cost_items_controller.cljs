@@ -44,15 +44,10 @@
 
 (defrecord SaveCostItem [])
 (defrecord SaveCostItemResponse [tempid response])
-(defrecord DeleteComponent [fetched-cost-item-atom id])
+(defrecord DeleteComponent [id])
 (defrecord DeleteComponentResponse [fetched-cost-item-atom id response])
-(defrecord SaveComponent [parent-id form-data])
+(defrecord SaveComponent [component-id])
 (defrecord SaveComponentResponse [tempid response])
-
-
-(defrecord NewCostItem []) ; start creating new cost item
-(defrecord FetchCostItem [id]) ; fetch cost item for editing
-(defrecord FetchCostItemResponse [response])
 
 (defrecord UpdateForm [form-data])
 
@@ -62,22 +57,84 @@
 ;; Response when fetching road address based on geopoints
 (defrecord FetchRoadResponse [start-end-points response])
 
+(defrecord AddComponent [type])
+
 (declare process-location-change)
 
-(defmethod routes/on-navigate-event :cost-items [{:keys [query current-app]}]
-  (println "on-navigate-event :Cost-items " query)
-  (cond
-    (= "new" (:id query))
-    (->NewCostItem)
 
-    (:id query)
-    (->FetchCostItem (:id query))))
+
+(defn- form-state
+  "Return the current form state."
+  [app]
+  (let [component-id (get-in app [:query :component])]
+    (if (nil? component-id)
+      ;; Update asset itself
+      (common-controller/page-state app :cost-item)
+
+      ;; Update some nested component by id
+      (let [by-id (fn by-id [{id :db/id :as c}]
+                    (if (= component-id (str id))
+                      c
+                      (some by-id (:component/components c))))]
+        (some by-id
+              (common-controller/page-state app :cost-item :asset/components))))))
+
+(defn- update-component [components component-id update-fn args]
+  (mapv (fn [{id :db/id :as c}]
+          (let [c (if (= component-id (str id))
+                    (apply update-fn c args)
+                    c)]
+            (if-let [sub-components (:component/components c)]
+              (assoc c :component/components
+                     (update-component sub-components component-id update-fn args))
+              c))) components))
+
+(defn- update-form
+  "Update form state, either the main asset or a component by id."
+  [app update-fn & args]
+  (let [component-id (get-in app [:query :component])]
+    (if (nil? component-id)
+      ;; Update asset itself
+      (apply common-controller/update-page-state
+             app [:cost-item] update-fn args)
+
+      ;; Update some nested component by id
+      (common-controller/update-page-state
+       app [:cost-item :asset/components]
+       update-component component-id update-fn args))))
+
+(defn find-component-path
+  "Return vector containing all parents of component from asset to the component.
+  For example:
+  [a c1 c2 c3]
+  where a is the asset, that has component c1
+  c1 has child component c2
+  and c2 has child component c3 (the component we want)"
+  [asset component-id]
+  (let [component-id (str component-id)
+        containing
+        (fn containing [path here]
+          (let [cs (concat (:asset/components here)
+                           (:component/components here))]
+            (if-let [c (some #(when (= component-id (str (:db/id %)))
+                                %) cs)]
+              ;; we found the component at this level
+              (into path [here c])
+
+              ;; not found here, recurse
+              (first
+               (for [sub cs
+                     :let [sub-path (containing (conj path here) sub)]
+                     :when sub-path]
+                 sub-path)))))]
+
+    (containing [] asset)))
 
 (extend-protocol t/Event
 
   SaveCostItem
   (process-event [_ {page :page :as app}]
-    (let [form-data (common-controller/page-state app :form)
+    (let [form-data (form-state app)
           project-id (get-in app [:params :project])
           id (if (= page :new-cost-item)
                (next-id! "costitem")
@@ -100,9 +157,10 @@
            (remove nil?
                    [(when (string? tempid)
                       {:tuck.effect/type :navigate
-                       :page :cost-items
-                       :params (:params app)
-                       :query {:id (str (get-in response [:tempids tempid]))}})
+                       :page :cost-item
+                       :params (merge
+                                (:params app)
+                                {:id (str (get-in response [:tempids tempid]))})})
                     common-controller/refresh-fx])))
 
   DeleteComponent
@@ -126,14 +184,18 @@
 
 
   SaveComponent
-  (process-event [{:keys [parent-id form-data]} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command :asset/save-component
-           :payload {:project-id (get-in app [:params :project])
-                     :parent-id parent-id
-                     :component (dissoc form-data :component/components)}
-           :result-event (partial ->SaveComponentResponse (:db/id form-data))}))
+  (process-event [_ app]
+    (let [form-data (form-state app)
+          {parent-id :db/id} (-> (common-controller/page-state app :cost-item)
+                                 (find-component-path (:db/id form-data))
+                                 butlast last)]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :asset/save-component
+             :payload {:project-id (get-in app [:params :project])
+                       :parent-id parent-id
+                       :component (dissoc form-data :component/components)}
+             :result-event (partial ->SaveComponentResponse (:db/id form-data))})))
 
   SaveComponentResponse
   (process-event [{:keys [tempid response]} app]
@@ -142,57 +204,30 @@
                    [(when (string? tempid)
                       {:tuck.effect/type :navigate
                        :page :cost-items
-                       :params (:params app)
-                       :query (merge (:query app)
-                                     {:component (get-in response [:tempids tempid])})})
+                       :params (merge (:params app)
+                                      {:component (get-in response [:tempids tempid])})
+                       :query {}})
                     common-controller/refresh-fx])))
 
   UpdateForm
-  (process-event [{form-data :form-data} app]
-    (let [old-form (common-controller/page-state app :form)
+  (process-event [{:keys [form-data]} app]
+    (let [old-form (form-state app)
           new-form (cu/deep-merge old-form form-data)]
       (process-location-change
-       (common-controller/assoc-page-state app [:form] new-form)
+       (update-form app (constantly new-form))
        old-form new-form)))
-
-  NewCostItem
-  (process-event [_ app]
-    (common-controller/assoc-page-state app [:form]
-                                        {:db/id (next-id! "costitem")}))
-
-  FetchCostItem
-  (process-event [{id :id} app]
-    (t/fx (common-controller/assoc-page-state app [:form] :loading)
-          {:tuck.effect/type :query
-           :query :asset/cost-item
-           :args {:db/id (common-controller/->long id)}
-           :result-event ->FetchCostItemResponse}))
-
-  FetchCostItemResponse
-  (process-event [{response :response} app]
-    (let [atl (common-controller/page-state app :asset-type-library)
-          fclass-ident (:asset/fclass response)
-          fclass= (fn [fc] (= (:db/ident fc) fclass-ident))
-          fgroup (cu/find-> (:fgroups atl)
-                            #(cu/find-> (:fclass/_fgroup %) fclass=))
-          fclass (cu/find-> (:fclass/_fgroup fgroup) fclass=)]
-      (println "fgroup/fclass"  fgroup " / " fclass)
-      (common-controller/assoc-page-state
-       app [:form]
-       (assoc response :feature-group-and-class [fgroup fclass]))))
-
 
   ;; When road address was changed on the form, update geometry
   ;; and start/end points from the fetched response
   FetchLocationResponse
   (process-event [{:keys [address response]} app]
-    (if-not (= address (road-address (common-controller/page-state app :form)))
+    (if-not (= address (road-address (common-controller/page-state app :cost-item)))
       (do
         (log/debug "Stale response for " address " => " response)
         app)
 
       (common-controller/update-page-state
-       app [:form]
+       app [:cost-item]
        (fn [form]
          ;; Set start/end points and GeoJSON geometry
          (if (:location/end-m address)
@@ -219,7 +254,7 @@
   FetchRoadResponse
   (process-event [{:keys [start-end-points response]} app]
     (if-not (= start-end-points
-               (select-keys (common-controller/page-state app :form)
+               (select-keys (common-controller/page-state app :cost-item)
                             [:location/start-point :location/end-point]))
       (do
         (log/debug "Stale response for " start-end-points " => " response)
@@ -228,7 +263,7 @@
       (common-controller/update-page-state
        (if (empty? response)
          (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
-         app) [:form]
+         app) [:cost-item]
        (fn [form]
          (if (empty? response)
            (-> form
@@ -264,7 +299,25 @@
                          :location/road-nr road-nr
                          :location/carriageway carriageway
                          :location/start-m (or m start-m)
-                         :location/end-m end-m}))))))))))
+                         :location/end-m end-m})))))))))
+
+  AddComponent
+  (process-event [{type :type} {:keys [page params query] :as app}]
+    ;; Can add subcomponent as well, add to correct path
+    (let [new-id (next-id! "c")]
+      (t/fx
+       (update-form app
+                    (fn [parent]
+                      (update parent (if (:asset/fclass parent)
+                                       :asset/components
+                                       :component/components)
+                              #(conj (or % [])
+                                     {:db/id new-id
+                                      :component/ctype type}))))
+       {:tuck.effect/type :navigate
+        :params params
+        :page page
+        :query (merge query {:component new-id})}))))
 
 (defn- process-location-change
   "Check if location fields have been edited and need to retrigger
@@ -329,7 +382,7 @@
 
           ;; No valid road address
           :else
-          (common-controller/update-page-state app [:form] dissoc :geojson)))
+          (common-controller/update-page-state app [:cost-item] dissoc :geojson)))
 
       :else
       app)))
