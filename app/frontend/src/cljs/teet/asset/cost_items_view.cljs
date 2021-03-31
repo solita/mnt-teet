@@ -417,11 +417,11 @@
 
         [form/footer2]]
 
-       ;; Components
+       ;; Components (show only for existing)
        (when initial-data
          [:<>
           [components-tree {:e! e!
-                            :asset initial-data
+                            :asset form-data
                             :allowed-components (:ctype/_parent feature-class)}]
 
           [add-component-menu
