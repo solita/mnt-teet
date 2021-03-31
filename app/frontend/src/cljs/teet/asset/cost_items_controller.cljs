@@ -42,7 +42,7 @@
   #js {:type "FeatureCollection"
        :features (into-array (remove nil? features))})
 
-(defrecord SaveCostItem [form-data])
+(defrecord SaveCostItem [])
 (defrecord SaveCostItemResponse [tempid response])
 (defrecord DeleteComponent [fetched-cost-item-atom id])
 (defrecord DeleteComponentResponse [fetched-cost-item-atom id response])
@@ -52,6 +52,7 @@
 
 (defrecord NewCostItem []) ; start creating new cost item
 (defrecord FetchCostItem [id]) ; fetch cost item for editing
+(defrecord FetchCostItemResponse [response])
 
 (defrecord UpdateForm [form-data])
 
@@ -75,8 +76,9 @@
 (extend-protocol t/Event
 
   SaveCostItem
-  (process-event [{form-data :form-data} app]
-    (let [project-id (get-in app [:params :project])
+  (process-event [_ app]
+    (let [form-data (common-controller/page-state app :form)
+          project-id (get-in app [:params :project])
           fclass (get-in form-data [:feature-group-and-class 1 :db/ident])
           asset (-> form-data
                     (dissoc :feature-group-and-class :asset/components)
@@ -145,7 +147,6 @@
 
   UpdateForm
   (process-event [{form-data :form-data} app]
-    (println "UPDATE FORM")
     (let [old-form (common-controller/page-state app :form)
           new-form (cu/deep-merge old-form form-data)]
       (process-location-change
@@ -159,12 +160,24 @@
 
   FetchCostItem
   (process-event [{id :id} app]
-    (println "fetch cost item")
     (t/fx (common-controller/assoc-page-state app [:form] :loading)
           {:tuck.effect/type :query
            :query :asset/cost-item
            :args {:db/id (common-controller/->long id)}
-           :result-path (common-controller/page-state-path app :form)}))
+           :result-event ->FetchCostItemResponse}))
+
+  FetchCostItemResponse
+  (process-event [{response :response} app]
+    (let [atl (common-controller/page-state app :asset-type-library)
+          fclass-ident (:asset/fclass response)
+          fclass= (fn [fc] (= (:db/ident fc) fclass-ident))
+          fgroup (cu/find-> (:fgroups atl)
+                            #(cu/find-> (:fclass/_fgroup %) fclass=))
+          fclass (cu/find-> (:fclass/_fgroup fgroup) fclass=)]
+      (println "fgroup/fclass"  fgroup " / " fclass)
+      (common-controller/assoc-page-state
+       app [:form]
+       (assoc response :feature-group-and-class [fgroup fclass]))))
 
 
   ;; When road address was changed on the form, update geometry
@@ -318,6 +331,3 @@
 
       :else
       app)))
-
-(defn save-asset-event [form-data]
-  #(->SaveCostItem @form-data))
