@@ -1,6 +1,7 @@
 (ns teet.util.md
   (:require
    [clojure.string :as str]
+   [teet.log :as log]
    [hiccup.core :as h])
   (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
            (com.vladsch.flexmark.util.data DataHolder)
@@ -10,7 +11,7 @@
            (com.vladsch.flexmark.ast
              ;; Import node types for rendering
              Paragraph BulletList OrderedList Heading Text
-             StrongEmphasis Emphasis
+             StrongEmphasis Emphasis SoftLineBreak
 
              InlineLinkNode LinkRef Image)))
 
@@ -52,6 +53,21 @@
 (defmethod md->xsl-fo Paragraph [c]
   [:fo:block
    (render-children c)])
+
+(defmethod md->xsl-fo SoftLineBreak [_c]
+  [:fo:inline])
+
+(defmethod md->html SoftLineBreak [_t]
+  [:span])
+
+(defmethod md->xsl-fo :default [c]
+  (log/warn "Unsupported node type in PDF generation " c)
+  [:fo:inline
+   (render-children c)])
+
+(defmethod md->html :default [t]
+  (log/warn "Unsupported node type in HTML generation " t)
+  [:span (render-children-html t)])
 
 (defmethod md->html Paragraph [c]
   [:p (render-children-html c)])
