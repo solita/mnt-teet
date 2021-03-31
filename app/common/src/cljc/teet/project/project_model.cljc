@@ -92,6 +92,15 @@
 
 (defmulti get-column (fn [_project column] column))
 
+(defmulti get-column-compare (fn [column] column))
+
+(defmethod get-column-compare :default [_] nil)
+
+(defmethod get-column-compare :thk.project/activity-status [_]
+  (fn [x y] (compare
+              (get-in (first x) [:db/ident :activity/status])
+              (get-in (first y) [:db/ident :activity/status]))))
+
 (defmethod get-column :default [project column]
   (get project column))
 
