@@ -1,11 +1,13 @@
 (ns teet.map.openlayers.drag
   "Drag event handling")
 
-(defn drag-feature [accept on-drag on-drop]
+(defn drag-feature [{:keys [accept on-drag on-drop
+                            dragging?]}]
   (let [drag-target (atom nil)]
     {"pointerdown"
      (fn [e]
        (when (accept e)
+         (when dragging? (reset! dragging? true))
          (reset! drag-target e)))
 
      "pointerdrag"
@@ -17,6 +19,7 @@
      "pointerup"
      (fn [e]
        (when-let [target @drag-target]
+         (when dragging? (reset! dragging? false))
          (reset! drag-target nil)
          (on-drop target (:location e))))}))
 

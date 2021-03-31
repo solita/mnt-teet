@@ -125,8 +125,8 @@
      [text-field/TextField {:type :number}]]]])
 
 (defn- location-map [{:keys [e! value on-change]}]
-  (r/with-let [start-point (atom false)
-               current-value (atom value)]
+  (r/with-let [current-value (atom value)
+               dragging? (atom false)]
     ;;(project-map-view/create-project-map e! app project)
     (let [geojson (last value)]
       (reset! current-value value)
@@ -143,24 +143,29 @@
                         ;; Otherwise do nothing
                         :else nil)))
         :event-handlers (drag/drag-feature
-                         (comp :map/feature :geometry)
-                         drag/on-drag-set-coordinates
-                         (fn [target to]
-                           (when-let [p (some-> target :geometry :map/feature
-                                                .getProperties (aget "start/end"))]
-                             (on-change
-                              (assoc @current-value
-                                     (case p
-                                       "start" 0
-                                       "end" 1)
-                                     to)))))
+                         {:accept (comp :map/feature :geometry)
+                          :on-drag drag/on-drag-set-coordinates
+                          :on-drop
+                          (fn [target to]
+                            (when-let [p (some-> target :geometry :map/feature
+                                                 .getProperties (aget "start/end"))]
+                              (on-change
+                               (assoc @current-value
+                                      (case p
+                                        "start" 0
+                                        "end" 1)
+                                      to))))
+                          :dragging? dragging?})
         :layers {:selected-road-geometry
                  (when-let [g geojson]
                    (map-layers/geojson-data-layer
                     "selected-road-geometry"
                     geojson
                     map-features/asset-road-line-style
-                    {:fit-on-load? false #_true}))}}])))
+                    {:fit-on-load? true
+                     :fit-condition
+                     (fn [_]
+                       (not @dragging?))}))}}])))
 
 (defn- attributes* [e! attrs inherits-location? rotl]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
