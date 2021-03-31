@@ -98,8 +98,8 @@
 
 (defmethod get-column-compare :thk.project/activity-status [_]
   (fn [x y] (compare
-              (get-in (first x) [:db/ident :activity/status])
-              (get-in (first y) [:db/ident :activity/status]))))
+              (get-in (first x) [:activity/status :db/ident])
+              (get-in (first y) [:activity/status :db/ident]))))
 
 (defmethod get-column :default [project column]
   (get project column))
