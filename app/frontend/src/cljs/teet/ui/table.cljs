@@ -109,10 +109,10 @@
               (doall
                 (for [row (take @show-count
                             ((if (= sort-dir :asc) identity reverse)
-                             (if get-column-compare
+                             (if (get-column-compare sort-col)
                                (sort-by #(get-column % sort-col)
                                  (fn [x y]
-                                   (apply get-column-compare [x y])) data)
+                                   (apply (get-column-compare sort-col) [x y])) data)
                                (sort-by #(get-column % sort-col) data))))]
                   ^{:key (get row key)}
                   [TableRow {:on-click #(on-row-click row)
