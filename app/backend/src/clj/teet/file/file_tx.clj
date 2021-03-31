@@ -51,8 +51,9 @@
                       ;; Existing part, just refer to it
                       {:db/id part-id}
                       ;; New part, create it
-                      (merge (select-keys part [:file.part/name :file.part/number])
+                      (merge (select-keys part [:file.part/number])
                              {:db/id "new-part"
+                              :file.part/name ""
                               :file.part/task task-id})))]))
 
      ;; No part, return tx data as is
