@@ -36,6 +36,13 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
+ :contracts/contract-listing
+ {:admin :read,
+  :manager :read,
+  :internal-consultant :read,
+  :external-consultant :read,
+  :authenticated-guest :read,
+  :guest :read},
  :document/delete-comment
  {:admin :full,
   :manager :full,
@@ -51,7 +58,9 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :link,
-  :external-consultant :link},
+  :external-consultant :link,
+  :authenticated-guest :link,
+  :guest :link},
  :maintenance/asset-map
  {:admin :full,
   :manager :full,
@@ -223,8 +232,6 @@
   :manager :full,
   :internal-consultant :link,
   :external-consultant :link},
- :cooperation/application-approval
- {:admin :full, :manager :full, :internal-consultant :full},
  :cost-items/delete-cost-items
  {:admin :full,
   :manager :full,
@@ -249,6 +256,8 @@
   :internal-consultant :full,
   :external-consultant :full,
   :authenticated-guest :link},
+ :land/delete-land-owner-opinions
+ {:admin :full, :manager :full, :internal-consultant :full},
  :maintenance/write-asset {:admin :full, :manager :full},
  :admin/set-user-role {:admin :full, :manager :link},
  :maintenance/asset-listing
@@ -262,7 +271,9 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :link,
-  :external-consultant :link},
+  :external-consultant :link,
+  :authenticated-guest :link,
+  :guest :link},
  :maintenance/asset-filtering
  {:admin :full,
   :manager :full,

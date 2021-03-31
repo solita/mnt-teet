@@ -328,6 +328,12 @@
                          :transform "rotate(90deg)"
                          :left 0}}})))
 
+(defn collapsable-heading-container
+  [bg-color font-color]
+  {:background-color bg-color
+   :position :relative
+   :color font-color})
+
 (defn hierarchical-container2
   ([param]
    [hierarchical-container2 param theme-colors/gray-light])

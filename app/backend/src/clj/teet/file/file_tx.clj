@@ -15,7 +15,7 @@
   Returns tx data."
   [db task-id speculative-tx-data]
   (let [{db :db-after} (d/with db {:tx-data speculative-tx-data})
-        task-files (task-db/latest-task-files db task-id)
+        task-files (task-db/latest-task-files-with-incomplete db task-id)
         metadata (mapv (partial file-db/file-metadata-by-id db) task-files)]
     (when (not= (count metadata)
                 (count (distinct metadata)))

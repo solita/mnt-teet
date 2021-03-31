@@ -615,6 +615,8 @@
   :bad-request "Bad request",
   :replaced-file-not-latest
   "Can't replace an old version of a file. Replace newest version.",
+  :user-has-no-email
+  "The link can't be emailed. Email address has not been added, please add it through the My account page.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
   :email-address-already-in-use "Email address already in use.",
@@ -655,10 +657,11 @@
   :user/global-role "Global role",
   :cooperation.opinion/comment "Comment",
   :validation-error
-  #:file.part{:name "Part name can have up to 99 characters."},
+  #:file.part{:name "Part name can have up to 99 characters.",
+              :illegal-characters "The name contains illegal characters. List of allowed characters: {characters}"},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
-  :cooperation.response/status "Response situation",
+  :cooperation.response/status "Response summary",
   :estate-procedure/third-party-compensations
   "Third party compensations",
   :project/participant "Participant",

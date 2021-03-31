@@ -27,7 +27,7 @@ Configuring TEET dev environment to work on Windows is a bit more struggle than 
 2. You may try to use the existing shell scripts in Windows, but it is recommended to execute the tailored db-setup-windows.bat file that can be found in .\db\ folder. Make sure to first navigate to that folder within cmd.exe.
 3. If the database objects and flyway migration have been successful, navigate in Powershell to .\app\datasource-import\ and run "clojure -A:import example-config.edn". The process should successfully import different land registry, etc. data.
 4. If there are any 401 errors (error message includes "JWTIssuedAtFuture"), you may need to edit the file .\app\common\src\clj\teet.auth\jwt_token.clj and remove the option ":iat (numeric-date (Date.))" from create-token function.
-5. If all is successful, you can create the test users by running in REPL (make-mock-users!) and afterwards grant admin access by executing (give-admin-permissions [:user/person-id "EE12345678910"]).
+5. If all is successful, you can create the test users by running in REPL (make-mock-users!) and afterwards grant admin access by executing (give-admin-permission [:user/person-id "EE12345678910"]).
 
 ## What needs to be done in IDEA / front-end
 1. If you are using IntelliJ IDEA (recommended alongside with Cursive plugin), you need to do few things in order to run the front-end and back-end.

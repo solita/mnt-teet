@@ -34,6 +34,10 @@
   (to-value [this]
     (cu/map-vals to-value* this))
 
+  cljs.core/PersistentHashMap
+  (to-value [this]
+    (cu/map-vals to-value* this))
+
   cljs.core/PersistentVector
   (to-value [this]
     (mapv to-value* this)))

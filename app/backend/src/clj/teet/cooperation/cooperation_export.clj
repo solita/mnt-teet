@@ -56,7 +56,7 @@
                        cu/indexed)]
     [:span
      [:h3 num ". " (tr* :header)]
-     [:table {:border "1", :cellspacing "0", :cellpadding "0"}
+     [:table {:border "1", :cellspacing "0", :cellpadding "5"}
       [:tbody
        [:tr
         [:td {:width "38"} (tr [:cooperation :export :seq#-column])]

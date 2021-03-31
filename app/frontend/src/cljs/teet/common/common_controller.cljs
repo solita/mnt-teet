@@ -616,7 +616,8 @@
         (t/fx app fx))
       app)))
 
-(defrecord SaveForm [command form-data on-success-fx]
+(defrecord SaveForm
+  [command form-data on-success-fx]
   t/Event
   (process-event [_ app]
     (t/fx app
@@ -624,6 +625,17 @@
            :command command
            :payload form-data
            :result-event (partial ->SaveFormResponse on-success-fx)})))
+
+(defrecord SaveFormWithConfirmation
+  [command form-data on-success-fx confirmation-message]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+      {:tuck.effect/type :command!
+       :command command
+       :payload form-data
+       :success-message confirmation-message
+       :result-event (partial ->SaveFormResponse on-success-fx)})))
 
 
 (defn ^:export test-command

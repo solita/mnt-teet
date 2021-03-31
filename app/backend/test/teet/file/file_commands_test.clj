@@ -62,7 +62,7 @@
 
     (testing "Task file vs attachment differentiation works for task files"
       (is (file-db/is-task-file? (tu/db) (:db/id (tu/get-data :original-file)))))
-    
+
     (testing "Uploading replacement moves id"
       (tu/store-data! :replacement-file
                       (fake-upload (tu/get-data :task-id)
@@ -78,15 +78,15 @@
                       (tu/fake-upload-attachment
                        {:attach-to [:test-attachment-type 42]
                         :project-id (tu/->db-id "p1")
-                        :file 
+                        :file
                         {:file/name "image.png"
                          :file/size 666}})))
 
     (testing "Task file vs attachment differentiation works for non-task files"
       (is (not (file-db/is-task-file? (tu/db) (:db/id (tu/get-data :original-file))))))
-    
 
-    
+
+
     (testing "database has correct info"
       (let [f (d/pull (tu/db)
                       '[:db/id :file/id
@@ -122,9 +122,20 @@
            (file-db/file-metadata-by-id (tu/db)
                                         (:db/id (tu/get-data :first-file))))))
 
+  (testing "Uploading file with duplicate metadata"
+    (tu/is-thrown-with-data?
+      {:teet/error :file-metadata-not-unique}
+      (tu/store-data!
+        :second-file
+        (fake-upload (tu/get-data :task-id)
+                     {:file/name "first file.png"
+                      :file/size 10240
+                      :file/document-group :file.document-group/general
+                      :file/sequence-number 666}))))
+
   (testing "Uploading another file with different metadata"
     (tu/store-data!
-     :second-file
+     :third-file
      (fake-upload (tu/get-data :task-id)
                   {:file/name "second file.png"
                    :file/size 4096
@@ -139,13 +150,13 @@
             :task "EK"
             :part "00"}
            (file-db/file-metadata-by-id (tu/db)
-                                        (:db/id (tu/get-data :second-file))))))
+                                        (:db/id (tu/get-data :third-file))))))
 
-  (testing "Changing first file to have same metadata as second"
+  (testing "Changing first file to have same metadata as third"
     (tu/is-thrown-with-data?
      {:teet/error :file-metadata-not-unique}
      (tu/local-command :file/modify
-                       {:db/id (:db/id (tu/get-data :second-file))
+                       {:db/id (:db/id (tu/get-data :third-file))
                         :file/name "first file.png"
                         :file/sequence-number 666
                         :file/document-group :file.document-group/general
@@ -166,7 +177,7 @@
       (tu/is-thrown-with-data?
        {:teet/error :file-metadata-not-unique}
        (tu/local-command :file/modify
-                         {:db/id (:db/id (tu/get-data :second-file))
+                         {:db/id (:db/id (tu/get-data :third-file))
                           :file/name "first file.png"
                           :file/document-group nil
                           :file/sequence-number nil})))))

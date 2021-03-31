@@ -73,6 +73,8 @@
                              ;; Using the THK project id of another project
                              {:thk.project/id (:thk.project/id (du/entity (tu/db) (tu/->db-id "p2")))
                               :application {:db/id new-application-id
+                                            :cooperation.application/date (dateu/now)
+
                                             :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
 
@@ -81,6 +83,7 @@
       (is (some? (tu/local-command :cooperation/edit-application
                                    {:thk.project/id project-id
                                     :application {:db/id new-application-id
+                                                  :cooperation.application/date (dateu/now)
                                                   :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
 
@@ -103,6 +106,7 @@
              (tu/local-command :cooperation/edit-application
                                {:thk.project/id project-id
                                 :application {:db/id new-application-id
+                                              :cooperation.application/date (dateu/now)
                                               :cooperation.application/type :cooperation.application.type/building-permit-order}})))))
 
     ;; Application deletion
@@ -117,6 +121,29 @@
                                                      application-payload)
                                    (get-in [:tempids "new-application"]))]
         ;; Create response
+        (tu/local-command :cooperation/save-application-response
+                          {:thk.project/id project-id
+                           :application-id new-application-id
+                           :form-data {:cooperation.response/status :cooperation.response.status/no-objection
+                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/valid-months 12}})
+
+        ;; Can't be deleted
+        (is (thrown?
+             Exception
+             (tu/local-command :cooperation/delete-application
+                               {:thk.project/id project-id
+                                :db/id new-application-id})))))
+
+    
+    (testing "External consultant can add add responses to involved party cooperation applications (bug TEET-1416)"
+      (let [;; Create new application
+            new-application-id (-> (tu/local-command :cooperation/create-application
+                                                     application-payload)
+                                   (get-in [:tempids "new-application"]))]
+        ;; switch user to ext
+        (tu/local-login tu/mock-user-carla-consultant)
+        ;; add response
         (tu/local-command :cooperation/save-application-response
                           {:thk.project/id project-id
                            :application-id new-application-id
