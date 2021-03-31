@@ -76,13 +76,15 @@
 (extend-protocol t/Event
 
   SaveCostItem
-  (process-event [_ app]
+  (process-event [_ {page :page :as app}]
     (let [form-data (common-controller/page-state app :form)
           project-id (get-in app [:params :project])
-          fclass (get-in form-data [:feature-group-and-class 1 :db/ident])
+          id (if (= page :new-cost-item)
+               (next-id! "costitem")
+               (:db/id form-data))
           asset (-> form-data
-                    (dissoc :feature-group-and-class :asset/components)
-                    (assoc :asset/fclass fclass))]
+                    (assoc :db/id id)
+                    (dissoc :fgroup :location/geojson))]
       (t/fx app
             {:tuck.effect/type :command!
              :command :asset/save-cost-item
