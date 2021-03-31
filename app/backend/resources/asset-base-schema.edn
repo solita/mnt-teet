@@ -121,35 +121,48 @@
  ;; and do queries based on it (like: give me assets on road 12122
  ;; between meters 100 to 3000). The road address should be
  ;; saved based on what Teeregister API returns.
+
+ {:db/id "loc"
+  :db/ident :ctype/location
+  :db/doc "Special location component. Location is part of any asset or component (that doesn't inherit location). The location is not a subcomponent but the fields are inlined."}
+
  {:db/ident :location/start-point
   :db/doc "Start point [x y] coordinates."
   :db/tupleType :db.type/bigdec
   :db/valueType :db.type/tuple
-  :db/cardinality :db.cardinality/one}
+  :db/cardinality :db.cardinality/one
+  :attribute/parent "loc"}
 
  {:db/ident :location/end-point
   :db/doc "End point [x y] coordinates."
   :db/tupleType :db.type/bigdec
   :db/valueType :db.type/tuple
-  :db/cardinality :db.cardinality/one}
+  :db/cardinality :db.cardinality/one
+  :attribute/parent "loc"}
 
  {:db/ident :location/road-nr
   :db/doc "Road number"
   :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one}
+  :db/cardinality :db.cardinality/one
+  :attribute/parent "loc"}
 
  {:db/ident :location/carriageway
   :db/doc "Carriageway number"
   :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one}
+  :db/cardinality :db.cardinality/one
+  :attribute/parent "loc"}
 
  {:db/ident :location/start-m
   :db/doc "Start meters of the location"
   :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one}
+  :db/cardinality :db.cardinality/one
+  :attribute/parent "loc"}
 
  {:db/ident :location/end-m
   :db/doc "End meters of the location. Omitted for point locations."
   :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one}
+  :db/cardinality :db.cardinality/one
+  :attribute/parent "loc"}
+
+
  ]

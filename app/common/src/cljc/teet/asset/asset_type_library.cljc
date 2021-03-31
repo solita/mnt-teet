@@ -2,7 +2,8 @@
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
             [clojure.walk :as walk]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [clojure.string :as str]))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
@@ -50,6 +51,23 @@
                           (= ident (:db/ident %)))
                     atl))
 
+
+#?(:clj
+   (defn coerce-fn [value-type]
+     (case value-type
+       :db.type/bigdec bigdec
+       :db.type/long #(Long/parseLong %)
+       ;; No parsing
+       identity)))
+#?(:clj
+   (defn coerce-tuple [tuple-type value]
+     (let [v (cond
+               (vector? value) value
+               (string? value) (str/split value #"\s*,\s*")
+               :else (throw (ex-info "Unsupported tuple value"
+                                     {:tuple-type tuple-type
+                                      :value value})))]
+       (mapv (coerce-fn tuple-type) v))))
 #?(:clj
    (defn form->db
      "Prepare data from asset form to be saved in the database"
@@ -58,15 +76,11 @@
       (fn [x]
         (if-let [attr (and (map-entry? x)
                            (get rotl (first x)))]
-          (case (get-in attr [:db/valueType :db/ident])
-            :db.type/bigdec
-            (update x 1 bigdec)
-
-            :db.type/long
-            (update x 1 #(Long/parseLong %))
-
-            ;; No parsing
-            x)
+          (update
+           x 1
+           (if-let [tuple-type (:db/tupleType attr)]
+             (partial coerce-tuple tuple-type)
+             (coerce-fn (get-in attr [:db/valueType :db/ident]))))
           x))
       form-data)))
 
@@ -80,11 +94,13 @@
                         (get rotl (first x)))]
           (cond
             attr
-            (case (get-in attr [:db/valueType :db/ident])
-              (:db.type/bigdec :db.type/long)
-              (update x 1 str)
-
-              x)
+            (update
+             x 1
+             (if (:db/tupleType attr)
+               #(str/join "," %)
+               (case (get-in attr [:db/valueType :db/ident])
+                 (:db.type/bigdec :db.type/long) str
+                 identity)))
 
             (and (map? x)
                  (= #{:db/id :db/ident} (set (keys x))))

@@ -54,6 +54,7 @@
           (pull-child-ctypes db)))
 
    {:ctype/common (d/pull db ctype-pattern :ctype/common)
+    :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
                           :where [?fg :asset-schema/type :asset-schema.type/fgroup]
