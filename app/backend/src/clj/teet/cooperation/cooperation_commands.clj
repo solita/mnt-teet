@@ -109,8 +109,8 @@
                  :req-un [::application])
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
-   :pre [^{:error :application-outside-activities}
-         (cooperation-db/application-matched-activity-id db project-id application)
+   :pre [^{:error :application-date-cannot-be-changed}
+         (cooperation-db/application-has-same-date-as-db? db project-id application)
          (application-belongs-to-project? db (:db/id application) project-id)]
    :transact [(list 'teet.cooperation.cooperation-tx/edit-application user application)]})
 
