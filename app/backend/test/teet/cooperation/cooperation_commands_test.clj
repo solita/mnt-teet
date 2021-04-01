@@ -80,6 +80,15 @@
 
     ;; Application editing
     (testing "Application can be edited"
+      ;; Can't have invalid date
+      (is (thrown? Exception
+             (tu/local-command :cooperation/edit-application
+                               {:thk.project/id project-id
+                                :application {:db/id new-application-id
+                                              :cooperation.application/date #inst "2100-12-12T12:12:12"
+                                              :cooperation.application/type :cooperation.application.type/building-permit-order
+                                              }})))
+      
       (is (some? (tu/local-command :cooperation/edit-application
                                    {:thk.project/id project-id
                                     :application {:db/id new-application-id
@@ -108,7 +117,7 @@
                                 :application {:db/id new-application-id
                                               :cooperation.application/date (dateu/now)
                                               :cooperation.application/type :cooperation.application.type/building-permit-order}})))))
-
+    
     ;; Application deletion
     (testing "Application can be deleted"
       (is (some? (tu/local-command :cooperation/delete-application

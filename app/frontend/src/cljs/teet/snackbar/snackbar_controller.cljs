@@ -17,7 +17,7 @@
                     :variant variant}))
   ([{:keys [app message variant hide-duration
             action]
-     :or {variant :success hide-duration 5000}}]
+     :or {variant :success hide-duration 15000}}]
    (assoc app :snackbar
           {:open? true
            :message message

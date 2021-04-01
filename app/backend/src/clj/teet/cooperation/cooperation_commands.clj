@@ -13,7 +13,8 @@
             [teet.cooperation.cooperation-notifications :as cooperation-notifications]
             [teet.activity.activity-db :as activity-db]
             [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [taoensso.timbre :as log]))
 
 (defn- third-party-is-new-or-belongs-to-project?
   "Check :db/id of new 3rd party form data and check if it is
@@ -110,7 +111,6 @@
    :authorization {:cooperation/edit-application {}}
    :pre [^{:error :application-outside-activities}
          (cooperation-db/application-matched-activity-id db project-id application)
-         
          (application-belongs-to-project? db (:db/id application) project-id)]
    :transact [(list 'teet.cooperation.cooperation-tx/edit-application user application)]})
 
