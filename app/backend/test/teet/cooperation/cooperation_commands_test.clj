@@ -73,17 +73,25 @@
                              ;; Using the THK project id of another project
                              {:thk.project/id (:thk.project/id (du/entity (tu/db) (tu/->db-id "p2")))
                               :application {:db/id new-application-id
-                                            :cooperation.application/date (dateu/now)
+                                            :cooperation.application/date valid-date-for-application
 
                                             :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
 
     ;; Application editing
-    (testing "Application can be edited"
+    (testing "Application editability"
+      ;; Can't change date
+      (is (thrown? Exception
+             (tu/local-command :cooperation/edit-application
+                               {:thk.project/id project-id
+                                :application {:db/id new-application-id
+                                              :cooperation.application/date #inst "2021-04-12T12:00:00"
+                                              :cooperation.application/type :cooperation.application.type/building-permit-order}})))
+      
       (is (some? (tu/local-command :cooperation/edit-application
                                    {:thk.project/id project-id
                                     :application {:db/id new-application-id
-                                                  :cooperation.application/date (dateu/now)
+                                                  :cooperation.application/date valid-date-for-application
                                                   :cooperation.application/type :cooperation.application.type/building-permit-order}}))))
 
 
@@ -97,7 +105,7 @@
                           {:thk.project/id project-id
                            :application-id new-application-id
                            :form-data {:cooperation.response/status :cooperation.response.status/no-objection
-                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/date valid-date-for-application
                                        :cooperation.response/valid-months 12}})
 
         ;; Can't be edited
@@ -106,9 +114,9 @@
              (tu/local-command :cooperation/edit-application
                                {:thk.project/id project-id
                                 :application {:db/id new-application-id
-                                              :cooperation.application/date (dateu/now)
+                                              :cooperation.application/date valid-date-for-application
                                               :cooperation.application/type :cooperation.application.type/building-permit-order}})))))
-
+    
     ;; Application deletion
     (testing "Application can be deleted"
       (is (some? (tu/local-command :cooperation/delete-application
@@ -125,7 +133,7 @@
                           {:thk.project/id project-id
                            :application-id new-application-id
                            :form-data {:cooperation.response/status :cooperation.response.status/no-objection
-                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/date valid-date-for-application
                                        :cooperation.response/valid-months 12}})
 
         ;; Can't be deleted
@@ -148,7 +156,7 @@
                           {:thk.project/id project-id
                            :application-id new-application-id
                            :form-data {:cooperation.response/status :cooperation.response.status/no-objection
-                                       :cooperation.response/date (dateu/now)
+                                       :cooperation.response/date valid-date-for-application
                                        :cooperation.response/valid-months 12}})
 
         ;; Can't be deleted

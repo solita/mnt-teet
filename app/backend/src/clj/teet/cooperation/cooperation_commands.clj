@@ -12,7 +12,8 @@
             [clojure.spec.alpha :as s]
             [teet.cooperation.cooperation-notifications :as cooperation-notifications]
             [teet.activity.activity-db :as activity-db]
-            [teet.db-api.db-api-large-text :as db-api-large-text]))
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [taoensso.timbre :as log]))
 
 (defn- third-party-is-new-or-belongs-to-project?
   "Check :db/id of new 3rd party form data and check if it is
@@ -104,9 +105,8 @@
                  :req-un [::application])
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
-   :pre [^{:error :application-outside-activities}
-         (cooperation-db/application-matched-activity-id db project-id application)
-
+   :pre [^{:error :application-date-cannot-be-changed}
+         (cooperation-db/application-has-same-date-as-db? db project-id application)
          (application-belongs-to-project? db (:db/id application) project-id)]
    :transact [(list 'teet.cooperation.cooperation-tx/edit-application user application)]})
 
