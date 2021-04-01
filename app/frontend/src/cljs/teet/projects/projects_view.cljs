@@ -133,6 +133,7 @@
                    :data (filtered-by row-filter @app-state/user all-projects)
                    :columns project-model/project-listing-display-columns
                    :get-column project-model/get-column
+                   :get-column-compare project-model/get-column-compare
                    :format-column format-column-value
                    :filter-type {:thk.project/project-name :string
                                  :thk.project/owner-info :string

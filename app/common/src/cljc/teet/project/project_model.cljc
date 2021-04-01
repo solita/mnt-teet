@@ -90,7 +90,33 @@
    :thk.project/activity-status
    :thk.project/owner-info])
 
+(def project-status-order
+  {:activity.status/in-preparation 1
+   :activity.status/not-started 2
+   :activity.status/in-progress 3
+   :activity.status/in-review 4
+   :activity.status/completed 5
+   :activity.status/archived 6
+   :activity.status/canceled 7} )
+
 (defmulti get-column (fn [_project column] column))
+
+(defmulti get-column-compare (fn [column] column))
+
+(defmethod get-column-compare :default [_] nil)
+
+(defmethod get-column-compare :thk.project/activity-status [_]
+  (fn [x y]
+    (let
+      [x-activity (get-in (first x) [:activity/status :db/ident])
+       y-activity (get-in (first y) [:activity/status :db/ident])]
+      (compare
+        (if (str/blank? x-activity)
+         nil
+         (x-activity project-status-order))
+        (if (str/blank? y-activity)
+         nil
+         (y-activity project-status-order))))))
 
 (defmethod get-column :default [project column]
   (get project column))
