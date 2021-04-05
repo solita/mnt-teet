@@ -96,8 +96,8 @@
    :activity.status/in-progress 3
    :activity.status/in-review 4
    :activity.status/completed 5
-   :activity.status/archived 6
-   :activity.status/canceled 7} )
+   :activity.status/canceled 6
+   :activity.status/archived 7} )
 
 (defmulti get-column (fn [_project column] column))
 
