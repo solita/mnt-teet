@@ -8,10 +8,11 @@
             [clojure.data.json :as json]))
 
 
-(defn- url-for-bim-viewer [vektorio-project-id]
+(defn- url-for-bim-viewer [vektorio-project-id user]
+  (println (str "url-for-bim-viewer: " "[" vektorio-project-id "]" "[" user "]"))
   (let [config (environment/config-value :vektorio)
         viewer-url (:viewer-url (:config config))
-        response (vektorio-core/instant-login config)
+        response (vektorio-core/instant-login config user)
         instantLogin (:instantLogin response)
         viewer-url-with-params (str viewer-url
                                  (if (not-empty vektorio-project-id) (str "&projectId=" vektorio-project-id) "")
@@ -22,9 +23,9 @@
 
 (defquery :vektorio/instant-login
   {:doc "Get instant login hash for the default user id to access BIM viewer"
-   :context {db :db}
+   :context {:keys [db user]}
    :args {vektorio-project-id :vektorio/project-id project-id :db/id}
    :project-id project-id
    :vektorio-project-id vektorio-project-id
    :authorization {}}
-  (url-for-bim-viewer vektorio-project-id))
+  (url-for-bim-viewer vektorio-project-id  user))

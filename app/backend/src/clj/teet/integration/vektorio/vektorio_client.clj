@@ -111,7 +111,8 @@
   (vektor-delete! vektorio-config {:endpoint (str "projects/" project-id "/models/" model-id)}))
 
 (defn instant-login
-  [vektorio-conf {:keys [user-id]}]
-  (let [resp (vektor-post! vektorio-conf {:endpoint (str "users/" user-id "/instantLogins")
-                                          :headers {"Content-Type" "application/x-www-form-urlencoded"}})]
+  [vektorio-conf user]
+  (let [resp (vektor-post! vektorio-conf
+               {:endpoint (str "users/" (:user/person-id user) "/instantLogins")
+                :headers {"Content-Type" "application/x-www-form-urlencoded"}})]
     resp))
