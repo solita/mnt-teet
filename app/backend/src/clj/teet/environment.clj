@@ -207,8 +207,7 @@
    (migrate conn schema false))
   ([conn schema force?]
    (try
-     (let [schema @schema
-           applied-migrations (into #{}
+     (let [applied-migrations (into #{}
                                     (map first)
                                     (d/q '[:find ?ident
                                            :where [_ :db/ident ?ident]
@@ -243,9 +242,10 @@
   if the hash of the schema file has changed."
   [conn]
   (try
+    (migrate conn @asset-base-schema)
     (let [schema-source (-> "asset-schema.edn" io/resource slurp)
           hash (sha-256 schema-source)
-          db (migrate conn @asset-base-schema)
+          db (d/db conn)
           last-hash (->>
                      (d/q '[:find ?hash ?txi
                             :where
