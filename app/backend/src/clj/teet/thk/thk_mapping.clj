@@ -95,16 +95,15 @@
 
 (def object-integration-info-fields
   #{:object/groupfk :object/groupname
-    :object/regionfk :object/thkupdstamp
-    :object/statusfk :object/statusname})
+    :object/regionfk :object/statusfk :object/statusname})
 
 (def phase-integration-info-fields
-  #{:phase/thkupdstamp :phase/cost :phase/typefk})
+  #{:phase/cost :phase/typefk})
 
 (def activity-integration-info-fields
   #{:activity/typefk :activity/shortname :activity/statusname
     :activity/contract
-    :activity/guaranteeexpired :activity/thkupdstamp :activity/cost})
+    :activity/guaranteeexpired :activity/cost})
 
 (def csv-column-names
   ["object_id"

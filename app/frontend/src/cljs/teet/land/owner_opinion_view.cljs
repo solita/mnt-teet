@@ -165,8 +165,8 @@
                                   :land-unit-id target}
                                  (fn [_response]
                                    (fn [e!]
-                                     (e! (opinion-controller/->OpinionFormClose))
-                                     (e! (opinion-controller/->IncreaseCommentCount target)))))
+                                     (e! (opinion-controller/->IncreaseCommentCount target))
+                                     (e! (opinion-controller/->OpinionFormClose)))))
                   :value @form-state
                   :cancel-event #(opinion-controller/->OpinionFormClose)
                   :spec :land-owner-opinion/form}

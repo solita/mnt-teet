@@ -953,8 +953,6 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
-;; entrypoint from route /projects/:project/cooperation/:third-party/:application
-
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
@@ -990,24 +988,30 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
+;; entrypoint from route /projects/:project/cooperation/:third-party/:application
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
-  (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
+  (let [application (get-in third-party [:cooperation.3rd-party/applications 0])
+        project-db-id (:db/id project)]
     [authorization-context/with
      {:edit-application (and (authorization-check/authorized?
                                {:functionality :cooperation/edit-application
-                                :entity application})
+                                :entity application
+                                :project-id project-db-id})
                              (cooperation-model/application-editable? application))
       :edit-response (and (authorization-check/authorized?
                            {:functionality :cooperation/edit-application
-                            :entity application})
+                            :entity application
+                            :project-id project-db-id})
                           (cooperation-model/application-response-editable? application))
       :edit-application-right (authorization-check/authorized?
                                 {:functionality :cooperation/edit-application
-                                 :entity application})
+                                 :entity application
+                                 :project-id project-db-id})
       :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
                       {:functionality :cooperation/edit-application
-                       :entity application})}
+                       :entity application
+                       :project-id project-db-id})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
       [cooperation-page-structure
        e! app project overview

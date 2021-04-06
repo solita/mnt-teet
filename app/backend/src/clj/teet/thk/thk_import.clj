@@ -42,7 +42,9 @@
 
 
 (defn integration-info [row fields]
-  (pr-str (select-keys row fields)))
+  (pr-str
+   (into (sorted-map)
+         (select-keys row fields))))
 
 (defn task-updates [rows]
   (into []

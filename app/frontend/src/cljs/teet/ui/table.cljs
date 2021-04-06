@@ -88,37 +88,39 @@
 
         show-more! #(swap! show-count + 20)]
     (r/create-class
-     {:component-will-receive-props (fn [_this _new-props]
-                                      ;; When props change, reset show count
-                                      ;; filters/results have changed
-                                      (reset! show-count 20))
-      :reagent-render
-      (fn [{:keys [on-row-click filters data columns filter-type get-column format-column key]
-            :or {filter-type {}
-                 get-column get}}]
-        (let [[sort-col sort-dir] @sort-column]
-          [:<>
-           [Table {}
-            [listing-header {:sort! sort!
-                             :sort-column sort-col
-                             :sort-direction sort-dir
-                             :filters filters
-                             :columns columns
-                             :filter-type filter-type}]
-            [TableBody {}
-             (doall
-              (for [row (take @show-count
-                              ((if (= sort-dir :asc) identity reverse)
-                               (sort-by #(get-column % sort-col) data)))]
-                ^{:key (get row key)}
-                [TableRow {:on-click #(on-row-click row)
-                           :class (<class row-style)}
-                 (doall
-                  (for [column columns]
-                    ^{:key (name column)}
-                    [TableCell {}
-                     (format-column column (get-column row column) row)]))]))]]
-           [scroll-sensor/scroll-sensor show-more!]]))})))
+      {:component-will-receive-props (fn [_this _new-props]
+                                       ;; When props change, reset show count
+                                       ;; filters/results have changed
+                                       (reset! show-count 20))
+       :reagent-render
+       (fn [{:keys [on-row-click filters data columns filter-type get-column get-column-compare format-column key]
+             :or {filter-type {}
+                  get-column get}}]
+         (let [[sort-col sort-dir] @sort-column]
+           [:<>
+            [Table {}
+             [listing-header {:sort! sort!
+                              :sort-column sort-col
+                              :sort-direction sort-dir
+                              :filters filters
+                              :columns columns
+                              :filter-type filter-type}]
+             [TableBody {}
+              (doall
+                (for [row (take @show-count
+                            ((if (= sort-dir :asc) identity reverse)
+                             (sort-by #(get-column % sort-col)
+                               (or (get-column-compare sort-col) compare)
+                               data)))]
+                  ^{:key (get row key)}
+                  [TableRow {:on-click #(on-row-click row)
+                             :class (<class row-style)}
+                   (doall
+                     (for [column columns]
+                       ^{:key (name column)}
+                       [TableCell {}
+                        (format-column column (get-column row column) row)]))]))]]
+            [scroll-sensor/scroll-sensor show-more!]]))})))
 
 (defn- filtered-data [get-column data filters]
   (filter (fn [row]
@@ -139,7 +141,7 @@
                     filters))
           data))
 
-(defn table [{:keys [get-column data label after-title title-class]
+(defn table [{:keys [get-column get-column-compare data label after-title title-class]
               :as opts}]
   (r/with-let [filters (r/atom {})
                clear-filters! #(reset! filters {})]
