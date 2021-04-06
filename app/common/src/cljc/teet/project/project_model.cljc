@@ -91,13 +91,13 @@
    :thk.project/owner-info])
 
 (def project-status-order
-  {:activity.status/in-preparation 1
-   :activity.status/not-started 2
-   :activity.status/in-progress 3
+  {:activity.status/in-preparation 7
+   :activity.status/not-started 6
+   :activity.status/in-progress 5
    :activity.status/in-review 4
-   :activity.status/completed 5
-   :activity.status/canceled 6
-   :activity.status/archived 7} )
+   :activity.status/completed 3
+   :activity.status/canceled 2
+   :activity.status/archived 1} )
 
 (defmulti get-column (fn [_project column] column))
 
