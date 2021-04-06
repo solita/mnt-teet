@@ -1819,76 +1819,76 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Rich text containing the authoritys position on the opinion"}]]}
 
- {:db/ident :migration/contracts
-  :txes [[{:db/ident :contract/number
+ {:db/ident :migration/thk-contracts
+  :txes [[{:db/ident :thk.contract/number
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Link to contract file in document management system for procurement part"}
 
-          {:db/ident :contract/procurement-number
+          {:db/ident :thk.contract/procurement-number
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Link to State procurement registry"}
 
-          {:db/ident :contract/thk-procurement-link
+          {:db/ident :thk.contract/thk-procurement-link
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Link to THK procurement, not editable"}
 
           ;; Contract statuses
-          {:db/ident :contract.status/contract-signed
-           :enum/attribute :contract/status}
-          {:db/ident :contract.status/in-progress
-           :enum/attribute :contract/status}
-          {:db/ident :contract.status/warranty-period
-           :enum/attribute :contract/status}
-          {:db/ident :contract.status/completed
-           :enum/attribute :contract.response/status}
+          {:db/ident :thk.contract.status/contract-signed
+           :enum/attribute :thk.contract/status}
+          {:db/ident :thk.contract.status/in-progress
+           :enum/attribute :thk.contract/status}
+          {:db/ident :thk.contract.status/warranty-period
+           :enum/attribute :thk.contract/status}
+          {:db/ident :thk.contract.status/completed
+           :enum/attribute :thk.contract.response/status}
 
-          {:db/ident :contract/status
+          {:db/ident :thk.contract/status
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Enum reference to contract status"}
 
-          {:db/ident :contract/region
+          {:db/ident :thk.contract/region
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "The region of the object is displayed"}
 
           ;; Contract types
-          {:db/ident :contract.type/construction-works
-           :enum/attribute :contract/type}
-          {:db/ident :contract.type/services
-           :enum/attribute :contract/type}
-          {:db/ident :contract.type/things
-           :enum/attribute :contract/type}
+          {:db/ident :thk.contract.type/construction-works
+           :enum/attribute :thk.contract/type}
+          {:db/ident :thk.contract.type/services
+           :enum/attribute :thk.contract/type}
+          {:db/ident :thk.contract.type/things
+           :enum/attribute :thk.contract/type}
 
-          {:db/ident :contract/type
+          {:db/ident :thk.contract/type
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Comes from THK, not editable (activity_procurementType, activity_procurementTypeFK"}
 
-          {:db/ident :contract/signed
+          {:db/ident :thk.contract/signed
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "Then contract signed, added manually in the detail view of contract"}
 
-          {:db/ident :contract/deadline
+          {:db/ident :thk.contract/deadline
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "The first deadline, added manually in the detail view of contract"}
 
-          {:db/ident :contract/ta-contact
+          {:db/ident :thk.contract/ta-contact
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Added manually in the detail view of contract"}
 
-          {:db/ident :contract/partner
+          {:db/ident :thk.contract/partner
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Added manually in the detail view of contract. Lead partner only."}
 
-          {:db/ident :contract/cost
+          {:db/ident :thk.contract/cost
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Added manually, the same as in the detail view: capital amount"}]]}]
