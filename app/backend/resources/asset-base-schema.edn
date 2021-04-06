@@ -1,168 +1,189 @@
-[{:db/ident :tx/author
-  :db/valueType :db.type/uuid
-  :db/cardinality :db.cardinality/one
-  :db/doc "Id of the user who made this transaction"}
-
- {:db/ident :tx/schema-hash
-  :db/valueType :db.type/string
-  :db/cardinality :db.cardinality/one
-  :db/doc "SHA-256 hash of asset schema file"}
-
- {:db/ident :asset-schema/label
-  :db/valueType :db.type/tuple
-  :db/tupleType :db.type/string
-  :db/cardinality :db.cardinality/one
-  :db/doc "Labels in estonian and english"}
- {:db/ident :asset-schema/description
-  :db/valueType :db.type/tuple
-  :db/tupleType :db.type/string
-  :db/cardinality :db.cardinality/one
-  :db/doc "Description in estonian and english"}
-
- {:db/ident :fclass/fgroup
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one
-  :db/doc "The feature group this feature class belongs to."}
-
- {:db/ident :ctype/parent
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one
-  :db/doc "Ref to feature class or parent ctype this belongs to."}
-
- {:db/ident :enum/attribute
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one
-  :db/doc "Reference to attribute this list item belongs to."}
-
- {:db/ident :asset-schema/unit
-  :db/valueType :db.type/string
-  :db/cardinality :db.cardinality/one
-  :db/doc "SI unit for an attribute"}
-
- {:db/ident :asset-schema/type
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one
-  :db/doc "Schema item type of this entity"}
-
- {:db/ident :asset-schema.type/fgroup :db/doc "Feature group type"}
- {:db/ident :asset-schema.type/fclass :db/doc "Feature class type"}
- {:db/ident :asset-schema.type/ctype :db/doc "Component type"}
- {:db/ident :asset-schema.type/attribute :db/doc "Attribute type"}
- {:db/ident :asset-schema.type/enum :db/doc "Enum (list item) type"}
-
- {:db/ident :attribute/parent
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one
-  :db/doc "The fclass or ctype this attribute belongs to"}
-
- ;; Base attributes of an asset
- {:db/ident :asset/fclass
-  :db/doc "The feature class of this asset."
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one}
-
- {:db/ident :asset/components
-  :db/doc "Components of this asset"
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/many
-  :db/isComponent true}
-
- {:db/ident :component/components
-  :db/doc "Subcomponents of this component"
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/many
-  :db/isComponent true}
-
- {:db/ident :component/ctype
-  :db/doc "The ctype of this component"
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/one}
-
- {:db/ident :component/inherits-location?
-  :db/doc "Does this component type inherit location from parent?"
-  :db/valueType :db.type/boolean
-  :db/cardinality :db.cardinality/one}
-
- {:db/ident :attribute/min-value
-  :db/doc "The minimum value of an attribute or length for strings."
-  :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one}
- {:db/ident :attribute/max-value
-  :db/doc "The maximum value of an attribute or length for strings."
-  :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one}
-
- {:db/ident :attribute/cost-grouping?
-  :db/doc "Is this attribute part of cost grouping"
-  :db/valueType :db.type/boolean
-  :db/cardinality :db.cardinality/one}
-
- {:db/ident :attribute/mandatory?
-  :db/doc "Is this attribute mandatory when creating cost items"
-  :db/valueType :db.type/boolean
-  :db/cardinality :db.cardinality/one}
-
- ;; PENDING: one asset can be updated in many projects during
- ;; its lifecycle. Should this be a many to many link
- ;; or multi valued...
- ;; probably a new cost item asset is created in all projects
- ;; and the old asset is changed to superseded state and
- ;; the new one will take precedence.
- {:db/ident :asset/project
-  :db/doc "The THK project id this asset is a cost item in"
-  :db/valueType :db.type/string
-  :db/cardinality :db.cardinality/one}
-
- ;; Location of an asset:
- ;; Can be defined as start/end points which can always be
- ;; projected to the road network via Teeregister API.
- ;;
- ;; We also want to store the road address stuff to show it
- ;; and do queries based on it (like: give me assets on road 12122
- ;; between meters 100 to 3000). The road address should be
- ;; saved based on what Teeregister API returns.
-
- {:db/id "loc"
-  :db/ident :ctype/location
-  :db/doc "Special location component. Location is part of any asset or component (that doesn't inherit location). The location is not a subcomponent but the fields are inlined."}
-
- {:db/ident :location/start-point
-  :db/doc "Start point [x y] coordinates."
-  :db/tupleType :db.type/bigdec
-  :db/valueType :db.type/tuple
-  :db/cardinality :db.cardinality/one
-  :attribute/parent "loc"}
-
- {:db/ident :location/end-point
-  :db/doc "End point [x y] coordinates."
-  :db/tupleType :db.type/bigdec
-  :db/valueType :db.type/tuple
-  :db/cardinality :db.cardinality/one
-  :attribute/parent "loc"}
-
- {:db/ident :location/road-nr
-  :db/doc "Road number"
-  :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one
-  :attribute/parent "loc"}
-
- {:db/ident :location/carriageway
-  :db/doc "Carriageway number"
-  :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one
-  :attribute/parent "loc"}
-
- {:db/ident :location/start-m
-  :db/doc "Start meters of the location"
-  :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one
-  :attribute/parent "loc"}
-
- {:db/ident :location/end-m
-  :db/doc "End meters of the location. Omitted for point locations."
-  :db/valueType :db.type/long
-  :db/cardinality :db.cardinality/one
-  :attribute/parent "loc"}
+[{:db/ident :asset-schema/initial-base-schema
+  :txes
+  [[{:db/ident :tx/author
+     :db/valueType :db.type/uuid
+     :db/cardinality :db.cardinality/one
+     :db/doc "Id of the user who made this transaction"}
 
 
+    {:db/ident :tx/schema-hash
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/doc "SHA-256 hash of asset schema file"}
+
+
+    {:db/ident :asset/oid
+     :db/doc "Asset/component OID. Format N40-<FCLASS>-<SEQ#>(-<COMPONENT SEQ#>).
+For example N40-SLD-1 for the first asset in feature class whose OID prefix is SLD."
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity}
+
+
+    {:db/ident :fclass/oid-prefix
+     :db/doc "OID prefix for a feature class"
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one}
+
+    {:db/ident :fclass/oid-sequence-number
+     :db/doc "Last used OID sequence number"
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :db/noHistory true}
+
+
+    {:db/ident :asset-schema/label
+     :db/valueType :db.type/tuple
+     :db/tupleType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/doc "Labels in estonian and english"}
+    {:db/ident :asset-schema/description
+     :db/valueType :db.type/tuple
+     :db/tupleType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/doc "Description in estonian and english"}
+
+    {:db/ident :fclass/fgroup
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/doc "The feature group this feature class belongs to."}
+
+    {:db/ident :ctype/parent
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/doc "Ref to feature class or parent ctype this belongs to."}
+
+    {:db/ident :enum/attribute
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/doc "Reference to attribute this list item belongs to."}
+
+    {:db/ident :asset-schema/unit
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/doc "SI unit for an attribute"}
+
+    {:db/ident :asset-schema/type
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/doc "Schema item type of this entity"}
+
+    {:db/ident :asset-schema.type/fgroup :db/doc "Feature group type"}
+    {:db/ident :asset-schema.type/fclass :db/doc "Feature class type"}
+    {:db/ident :asset-schema.type/ctype :db/doc "Component type"}
+    {:db/ident :asset-schema.type/attribute :db/doc "Attribute type"}
+    {:db/ident :asset-schema.type/enum :db/doc "Enum (list item) type"}
+
+    {:db/ident :attribute/parent
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/doc "The fclass or ctype this attribute belongs to"}
+
+    ;; Base attributes of an asset
+    {:db/ident :asset/fclass
+     :db/doc "The feature class of this asset."
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one}
+
+    {:db/ident :asset/components
+     :db/doc "Components of this asset"
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db/isComponent true}
+
+    {:db/ident :component/components
+     :db/doc "Subcomponents of this component"
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db/isComponent true}
+
+    {:db/ident :component/ctype
+     :db/doc "The ctype of this component"
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one}
+
+    {:db/ident :component/inherits-location?
+     :db/doc "Does this component type inherit location from parent?"
+     :db/valueType :db.type/boolean
+     :db/cardinality :db.cardinality/one}
+
+    {:db/ident :attribute/min-value
+     :db/doc "The minimum value of an attribute or length for strings."
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one}
+    {:db/ident :attribute/max-value
+     :db/doc "The maximum value of an attribute or length for strings."
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one}
+
+    {:db/ident :attribute/cost-grouping?
+     :db/doc "Is this attribute part of cost grouping"
+     :db/valueType :db.type/boolean
+     :db/cardinality :db.cardinality/one}
+
+    {:db/ident :attribute/mandatory?
+     :db/doc "Is this attribute mandatory when creating cost items"
+     :db/valueType :db.type/boolean
+     :db/cardinality :db.cardinality/one}
+
+    ;; PENDING: one asset can be updated in many projects during
+    ;; its lifecycle. Should this be a many to many link
+    ;; or multi valued...
+    ;; probably a new cost item asset is created in all projects
+    ;; and the old asset is changed to superseded state and
+    ;; the new one will take precedence.
+    {:db/ident :asset/project
+     :db/doc "The THK project id this asset is a cost item in"
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one}
+
+    ;; Location of an asset:
+    ;; Can be defined as start/end points which can always be
+    ;; projected to the road network via Teeregister API.
+    ;;
+    ;; We also want to store the road address stuff to show it
+    ;; and do queries based on it (like: give me assets on road 12122
+    ;; between meters 100 to 3000). The road address should be
+    ;; saved based on what Teeregister API returns.
+    {:db/ident :ctype/location
+     :db/doc "Special location component. Location is part of any asset or component (that doesn't inherit location). The location is not a subcomponent but the fields are inlined."}
+    ]
+
+   [{:db/ident :location/start-point
+     :db/doc "Start point [x y] coordinates."
+     :db/tupleType :db.type/bigdec
+     :db/valueType :db.type/tuple
+     :db/cardinality :db.cardinality/one
+     :attribute/parent :ctype/location}
+
+    {:db/ident :location/end-point
+     :db/doc "End point [x y] coordinates."
+     :db/tupleType :db.type/bigdec
+     :db/valueType :db.type/tuple
+     :db/cardinality :db.cardinality/one
+     :attribute/parent :ctype/location}
+
+    {:db/ident :location/road-nr
+     :db/doc "Road number"
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :attribute/parent :ctype/location}
+
+    {:db/ident :location/carriageway
+     :db/doc "Carriageway number"
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :attribute/parent :ctype/location}
+
+    {:db/ident :location/start-m
+     :db/doc "Start meters of the location"
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :attribute/parent :ctype/location}
+
+    {:db/ident :location/end-m
+     :db/doc "End meters of the location. Omitted for point locations."
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :attribute/parent :ctype/location}]]}
  ]
