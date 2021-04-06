@@ -2,6 +2,8 @@
   (:require [goog.string :as gstring]
             [goog.string.format]
             [reagent.core :as r]
+            [reagent.ratom :as ratom]
+            [teet.app-state :as app-state]
             [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
             [teet.land.land-controller :as land-controller]
@@ -55,18 +57,23 @@
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
-(defn draw-selection [e! related-feature-type features draw-selection-features]
+(defn- draw-selection [e! related-feature-type features]
   (r/with-let [select? (r/atom true)
-               current-open (r/atom false)]
+               current-open (r/atom false)
+               ;; The cursor and reaction are needed because we need
+               ;; to provide `panels/modal` with a Reagent atom like
+               ;; construct.
+               features-cursor (r/cursor app-state/app [:route :project :draw-selection-features])
+               open-reaction (ratom/make-reaction #(and (not (nil? @features-cursor)) @current-open))]
     [:<>
-     [panels/modal {:title (str (count draw-selection-features) " "
+     [panels/modal {:title (str (count @features-cursor) " "
                                 (case related-feature-type
                                   :restrictions (tr [:project :restrictions-tab])
                                   :cadastral-units (tr [:project :cadastral-units-tab])))
                     :on-close #(do
                                  (reset! current-open false)
                                  (e! project-controller/->DrawSelectionCancel))
-                    :open-atom (r/wrap (and (not (nil? draw-selection-features)) @current-open) :_)}
+                    :open-atom open-reaction}
       [:div
        [select/radio {:value @select?
                       :on-change #(reset! select? %)
@@ -91,8 +98,7 @@
 
 (defn restrictions-listing
   [e! open-types road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction
-                                             draw-selection-features search-type
-                                             on-mouse-enter on-mouse-leave]}]
+                                            search-type on-mouse-enter on-mouse-leave]}]
   [:<>
    (if loading?
      [fetching-features-skeletons 10]
@@ -136,7 +142,7 @@
               [itemlist/checkbox-list
                {:on-select-all #(e! (project-controller/->SelectRestrictions (set restrictions)))
                 :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))
-                :actions (list [draw-selection e! :restrictions restrictions draw-selection-features group])}
+                :actions (list [draw-selection e! :restrictions restrictions])}
                (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                      :let [checked? (boolean (group-checked restriction))]]
                  (merge {:id (:teet-id restriction)
@@ -150,8 +156,7 @@
 
 (defn cadastral-units-listing
   [e! road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units
-                                  draw-selection-features search-type
-                                  toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
+                                 search-type toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
     (if loading?
       [fetching-features-skeletons 10]
@@ -181,7 +186,7 @@
         [itemlist/checkbox-list
          {:on-select-all #(e! (project-controller/->SelectCadastralUnits (set cadastral-units)))
           :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))
-          :actions (list [draw-selection e! :cadastral-units cadastral-units draw-selection-features])}
+          :actions (list [draw-selection e! :cadastral-units cadastral-units])}
          (doall
            (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
                  :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]
