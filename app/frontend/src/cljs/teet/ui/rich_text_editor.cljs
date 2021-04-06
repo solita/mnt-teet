@@ -1,7 +1,6 @@
 (ns teet.ui.rich-text-editor
   (:require ["draft-js" :as draft-js]
-            ["draft-js-export-markdown" :as export-markdown]
-            ["draft-js-import-markdown" :as import-markdown]
+            ["markdown-draft-js" :as mkdraft-js]
             ["react" :as react]
             [alandipert.storage-atom :refer [local-storage]]
             [herb.core :refer [<class]]
@@ -159,22 +158,19 @@
 (defn focus! [editor-id]
   (.focus (js/document.querySelector (str "#" editor-id " .DraftEditor-editorContainer div:nth-child(1)"))))
 
-(defn- fix-underline-plusses
-  "Markdown parser has bug with underlined things ending in whitespace, like
-  ++some text ++  (whitespace at end).
-
-  Move the whitespace to after the ++ ending.
-
-  This ugly hack is needed as the markdown parsing library hasn't been updated
-  in a long time and this is the easiest way to fix it for now."
-  [text]
-  (if-let [[_ before underlined spaces after] (re-find #"(.*?)\+\+(.+?)(\s+)\+\+(.*)" text)]
-    (str before "++" underlined "++" spaces (fix-underline-plusses after))
-    text))
+;; example of how to extend draft-to-markdown from: https://github.com/Rosey/markdown-draft-js/issues/94
+(def style-items #js {:UNDERLINE #js {"open" (fn []
+                                               "++")
+                                      "close" (fn []
+                                                "++")}})
 
 (defn editor-state->markdown [^draft-js/EditorState editor-state]
   (js>
-   (fix-underline-plusses (export-markdown/stateToMarkdown (.getCurrentContent editor-state)))))
+    (mkdraft-js/draftToMarkdown
+      (draft-js/convertToRaw
+        (.getCurrentContent editor-state))
+      #js {:preserveNewlines true
+           :styleItems style-items})))
 
 (defn validate-rich-text-form-field-not-empty
   [value]
@@ -192,7 +188,12 @@
                                           :component (r/reactify-component link-comp)}]))
 
 (defn markdown->editor-state [markdown]
-  (.createWithContent draft-js/EditorState (import-markdown/stateFromMarkdown markdown) decorator))
+  (.createWithContent draft-js/EditorState
+                      (draft-js/convertFromRaw
+                        (mkdraft-js/markdownToDraft markdown #js {:preserveNewlines true
+                                                                  :blockStyles #js {"ins_open" "UNDERLINE"}
+                                                                  :remarkableOptions #js {:enable #js {:inline "ins"}}}))
+                      decorator))
 
 
 (defn wysiwyg-editor

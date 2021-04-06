@@ -78,7 +78,7 @@
   (log/hook-onerror! e!)
   (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
-  (fn [e! {:keys [page navigation  snackbar] :as app}]
+  (fn [e! {:keys [page navigation snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]
       [url/provide-navigation-info
        (select-keys app [:page :params :query])
