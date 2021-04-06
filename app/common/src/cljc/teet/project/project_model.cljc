@@ -97,7 +97,8 @@
    :activity.status/in-review 4
    :activity.status/completed 5
    :activity.status/canceled 6
-   :activity.status/archived 7} )
+   :activity.status/archived 7
+   :activity.status/empty 100} )
 
 (defmulti get-column (fn [_project column] column))
 
@@ -105,18 +106,24 @@
 
 (defmethod get-column-compare :default [_] nil)
 
+(defn- blank?
+  "Prevent error if x is not a string (keyword)"
+  [x]
+  (or (nil? x)
+    (and (string? x) (str/blank? x))))
+
 (defmethod get-column-compare :thk.project/activity-status [_]
   (fn [x y]
     (let
       [x-activity (get-in (first x) [:activity/status :db/ident])
        y-activity (get-in (first y) [:activity/status :db/ident])]
       (compare
-        (if (str/blank? x-activity)
-         nil
-         (x-activity project-status-order))
-        (if (str/blank? y-activity)
-         nil
-         (y-activity project-status-order))))))
+        (if (blank? x-activity)
+          (:activity.status/empty project-status-order)
+          (x-activity project-status-order))
+        (if (blank? y-activity)
+          (:activity.status/empty project-status-order)
+          (y-activity project-status-order))))))
 
 (defmethod get-column :default [project column]
   (get project column))
