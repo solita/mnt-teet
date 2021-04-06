@@ -106,16 +106,22 @@
 
 (defmethod get-column-compare :default [_] nil)
 
+(defn- blank?
+  "Prevent error if x is not a string (keyword)"
+  [x]
+  (or (nil? x)
+    (and (string? x) (str/blank? x))))
+
 (defmethod get-column-compare :thk.project/activity-status [_]
   (fn [x y]
     (let
       [x-activity (get-in (first x) [:activity/status :db/ident])
        y-activity (get-in (first y) [:activity/status :db/ident])]
       (compare
-        (if (str/blank? x-activity)
+        (if (blank? x-activity)
           (:activity.status/empty project-status-order)
           (x-activity project-status-order))
-        (if (str/blank? y-activity)
+        (if (blank? y-activity)
           (:activity.status/empty project-status-order)
           (y-activity project-status-order))))))
 
