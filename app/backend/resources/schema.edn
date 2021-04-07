@@ -1884,9 +1884,9 @@
            :db/doc "Added manually in the detail view of contract. Lead partner only."}
 
           {:db/ident :thk.contract/cost
-           :db/valueType :db.type/string
+           :db/valueType :db.type/bigdec
            :db/cardinality :db.cardinality/one
-           :db/doc "Added manually, the same as in the detail view: capital amount"}
+           :db/doc "Added manually, the same as in the detail view: capital amount in euro"}
 
           {:db/ident :thk.contract/project
            :db/valueType :db.type/ref
