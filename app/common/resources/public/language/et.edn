@@ -60,7 +60,9 @@
    :max-length
    "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
    :min-value "Lubatud minimaalne väärtus on {min-value}",
-   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
+   :max-value "Lubatud maksimaalne väärtus on {max-value}",
+   :integer-format "Sisesta täisarv",
+   :decimal-format "Sisestage kümnendväärtus"},
   :no-matching-feature-classes "Pole vastavata vara liik",
   :cost-item-saved "Kululoend salvestatud",
   :feature-group-and-class-placeholder "Otsi vara grupp tai liik",

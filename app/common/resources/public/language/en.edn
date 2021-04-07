@@ -59,7 +59,9 @@
    "Text too short, insert at least {min-length} characters",
    :max-length "Text too long, insert at most {max-length} characters",
    :min-value "Minimum allowed value: {min-value}",
-   :max-value "Maximum allowed value: {max-value}"},
+   :max-value "Maximum allowed value: {max-value}",
+   :integer-format "Insert integer value",
+   :decimal-format "Insert decimal value"},
   :no-matching-feature-classes "No matching feature classes.",
   :cost-item-saved "Cost item saved",
   :feature-group-and-class-placeholder

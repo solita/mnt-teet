@@ -46,6 +46,9 @@
 (defn- label-for [item]
   [context/consume :rotl [label-for* item]])
 
+(def ^:private integer-pattern #"^\d*$")
+(def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
+
 (defn- validate [valueType min-value max-value v]
   (when-not (str/blank? v)
     (case valueType
@@ -59,13 +62,24 @@
         (tr [:asset :validate :max-length] {:max-length max-value}))
 
       (:db.type/long :db.type/bigdec)
-      (let [n (js/parseFloat v)]
+      (let [v (str/trim v)]
         (cond
-          (and min-value (< n min-value))
-          (tr [:asset :validate :min-value] {:min-value min-value})
+          (and (= valueType :db.type/long)
+               (not (re-matches integer-pattern v)))
+          (tr [:asset :validate :integer-format])
 
-          (and max-value (> n max-value))
-          (tr [:asset :validate :max-value] {:max-value max-value})))
+          (and (= valueType :db.type/bigdec)
+               (not (re-matches decimal-pattern v)))
+          (tr [:asset :validate :decimal-format])
+
+          :else
+          (let [n (js/parseFloat v)]
+            (cond
+              (and min-value (< n min-value))
+              (tr [:asset :validate :min-value] {:min-value min-value})
+
+              (and max-value (> n max-value))
+              (tr [:asset :validate :max-value] {:max-value max-value})))))
 
       ;; no validation otherwise
       nil)))
@@ -233,14 +247,9 @@
 
                    ;; Text field
                    [text-field/TextField
-                    ;; parse based on type
-                    (merge
-                     {:label (label attr)
-                      :end-icon (when unit
-                                  (text-field/unit-end-icon unit))}
-                     (case type
-                       (:db.type/long :db.type/bigdec) {:type :number}
-                       nil))])]]))
+                    {:label (label attr)
+                     :end-icon (when unit
+                                 (text-field/unit-end-icon unit))}])]]))
 
             ]]))])))
 

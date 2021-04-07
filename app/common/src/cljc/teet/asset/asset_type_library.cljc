@@ -55,9 +55,12 @@
 #?(:clj
    (defn coerce-fn [value-type]
      (case value-type
-       :db.type/bigdec bigdec
+       :db.type/bigdec (comp bigdec
+                             #(if (string? %)
+                                (-> % str/trim (str/replace "," "."))
+                                %))
        :db.type/long #(if (string? %)
-                        (Long/parseLong %)
+                        (Long/parseLong (str/trim %))
                         (long %))
        ;; No parsing
        identity)))
