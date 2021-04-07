@@ -1,6 +1,8 @@
 (ns teet.integration.vektorio.vektorio-client
   (:require [teet.environment :as environment]
+            [datomic.client.api :as d]
             [org.httpkit.client :as http]
+            [teet.user.user-model :as user-model]
             [clj-http.client :as clj-http]
             [cheshire.core :as cheshire]
             [teet.log :as log]))
@@ -72,8 +74,16 @@
 (def config (environment/config-value :vektorio))
 
 (defn get-user-by-account
-  [vektor-conf email]
-  (vektor-get vektor-conf (str "users/byAccount/" email)))
+  [vektor-conf userid]
+  (try
+    (vektor-get vektor-conf (str "users/byAccount/" userid))
+    (catch Exception e
+      (if
+        (= (get-in (ex-data e) [:response :status]) 404)
+        (do
+          (log/info "User " userid " not found from Vektor.")
+            nil)
+        (throw e)))))
 
 (defn create-project!
   [vektor-conf {:keys [name epsg epsg-x epsg-y]
@@ -89,12 +99,18 @@
 
 (defn add-user-to-project!
   "Add the given user to the vektorio project"
-  [vektor-conf project-id user-id]
+  [conn user vektor-conf project-id user-id]
   (assert (some? project-id) "Must specify the project to which the user is added")
   (assert (some? user-id) "Must specify the user which is added to the project")
   (log/info "Adding vektorio user" user-id "to vektorio project:" project-id)
-  (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
-                             :payload {:userId user-id}}))
+  (when
+    (empty?
+      (d/q '[:find ?pid :where [?u :vektorio/granted-projects ?pid] :in $ ?u ?pid]
+         (d/db conn) (user-model/user-ref user) project-id))
+      (vektor-post! vektor-conf {:endpoint (str "projects/" project-id "/users")
+                             :payload {:userId user-id}})
+             (d/transact conn {:tx-data [{:db/id (:db/id user)
+                                          :vektorio/granted-projects project-id}]})))
 
 (defn add-model-to-project!
   [vektor-conf {:keys [project-id model-file vektorio-filename vektorio-filepath]}]
