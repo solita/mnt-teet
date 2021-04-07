@@ -200,6 +200,24 @@
       [])))
 
 #?(:clj
+   (defn modify-entity-retract-nils
+     "Create transaction data that asserts updated entity map
+     and retracts any attribute whose value is nil.
+
+     If entity :db/id is not a number, no retractions are issued."
+     [db {id :db/id :as new-entity}]
+     (let [entity-values (cu/without-nils new-entity)
+           nil-attributes (into []
+                                (comp
+                                 (filter (comp nil? val))
+                                 (map key))
+                                new-entity)]
+       (into [entity-values]
+             (when (number? id)
+               (for [[attr val] (d/pull db nil-attributes id)]
+                 [:db/retract id attr val]))))))
+
+#?(:clj
    (do
      (defn- symbols [form]
        (cu/collect symbol? form))
