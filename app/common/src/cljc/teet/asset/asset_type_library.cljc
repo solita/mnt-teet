@@ -63,6 +63,10 @@
                         (when-not (str/blank? %)
                           (-> % str/trim Long/parseLong))
                         (long %))
+
+       ;; Remove blank values (will be retracted)
+       :db.type/string #(when-not (str/blank? %) %)
+
        ;; No parsing
        identity)))
 #?(:clj
