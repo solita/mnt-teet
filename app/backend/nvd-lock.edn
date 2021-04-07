@@ -7,6 +7,7 @@
 
   "CVE-2019-17638" ; jetty bytebuffer release (not using jetty to serve requests)
   "CVE-2020-27223" ; Jetty not used to serve requests
+  "CVE-2021-28165" ; jetty high cpu with incorrect tls frame
 
   ;; multiple jackson databind vulnerabilities about classes not being in blocklist
   ;; jackson is included via AWS sdk, but we are not using it to deserialize user provided data

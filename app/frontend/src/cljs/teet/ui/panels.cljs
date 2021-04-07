@@ -141,7 +141,7 @@
                              [icons/navigation-close]]]
     [Dialog {:max-width max-width
              :full-width true
-             :open @open-atom
+             :open (boolean @open-atom)
              :on-close close-fn
              :data-cy data-cy}
      (if title

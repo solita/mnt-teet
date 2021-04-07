@@ -231,11 +231,13 @@
   [this e]
   (let [c (.-coordinate e)
         type (.-type e)]
-    {:type     (case type
+    {:event e
+     :type     (case type
                  "pointermove" :hover
                  "click" :click
                  "singleclick" :click
-                 "dblclick" :dbl-click)
+                 "dblclick" :dbl-click
+                 (keyword type))
      :geometry (event-geometry this e)
      :location [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
@@ -546,7 +548,9 @@
     (set-drag-handler this ol3 (:on-drag mapspec))
     (set-zoom-handler this ol3 (:on-zoom mapspec))
     (set-postrender-handler this ol3 (:on-postrender mapspec))
-
+    (doseq [[event handler] (:event-handlers mapspec)]
+      (.on ol3 event (fn [e]
+                       (handler (event-description this e)))))
     (update-ol3-geometries this (:geometries mapspec))
     (update-ol3-overlays this (:overlays mapspec))
 

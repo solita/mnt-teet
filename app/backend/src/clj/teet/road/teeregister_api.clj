@@ -71,7 +71,8 @@
    :teeNimi :road-name
    :algus :start-m
    :lopp :end-m
-   :kaugus :distance})
+   :kaugus :distance
+   :maadress :m})
 
 (def ^:private remap-response-keys-xf (map #(set/rename-keys % key-remapping)))
 

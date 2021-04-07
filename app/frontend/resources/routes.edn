@@ -167,10 +167,26 @@
 
  :cost-items
  {:path "/projects/:project/cost-items"
-  :parent ::project
+  :parent :project
   :view teet.asset.cost-items-view/cost-items-page
   :state {:query :asset/project-cost-items
+          :args {:thk.project/id project
+                 :cost-item (get query-params :id)}}}
+
+ :new-cost-item
+ {:path "/projects/:project/cost-items/new"
+  :parent :cost-items
+  :view teet.asset.cost-items-view/new-cost-item-page
+  :state {:query :asset/project-cost-items
           :args {:thk.project/id project}}}
+
+ :cost-item
+ {:path "/projects/:project/cost-items/:id(\\d+)"
+  :parent :cost-items
+  :view teet.asset.cost-items-view/cost-item-page
+  :state {:query :asset/project-cost-items
+          :args {:thk.project/id project
+                 :cost-item (->long id)}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}

@@ -66,6 +66,8 @@
   :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
+  :location
+  {:no-road-found-for-points "Punktide jaoks ei leitud teed"},
   :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
@@ -89,7 +91,7 @@
   :field-group
   {:details "Üksikasjad",
    :common "Ühine",
-   :name-and-location "Nimi ja asukoht",
+   :location "Asukoht",
    :cost-grouping "Kulude grupeerimine"}},
  :buttons
  {:confirm "Kinnitan",
@@ -263,6 +265,7 @@
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
+  :edit-application-title "Muuda taotlust",
   :application-terms-expire-warning
   "Esitatud tingimused aeguvad peagi / on aegunud!",
   :edit-third-party-title "Muudan kaasatud osapoolt",
@@ -380,8 +383,8 @@
   :notification.type/meeting-updated "Koosolekut on uuendatud",
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
-  :activity.name/pre-design "Eskiisprojekt",
-  :cooperation.opinion.status/rejected "Eirata",
+  :activity.name/pre-design "Eskiis",
+  :cooperation.opinion.status/rejected "Mitte arvestada",
   :document.sub-category/no-objection-letters "Kooskõlastused",
   :task.group/working-design "Töö/teostuse projekt",
   :task.status/waiting-for-review "Ootab ülevaatamist",
@@ -653,7 +656,8 @@
   :validation-error
   #:file.part{:name
               "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. ",
-              :illegal-characters "Nimi sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}"},
+              :illegal-characters
+              "Nimi sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}"},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
   :cooperation.response/status "Vastuse kokkuvõte",
@@ -917,7 +921,7 @@
    "1.2 Piirnevate kinnisasjade omanikud, kes arvamust ei avaldanud",
    :jrk "JRK nr"},
   :add-new-opinion "LISAN UUE ARVAMUSE",
-  :choose-type "Valin tüübi",
+  :choose-type "Valin liigi",
   :edit-opinion "MUUDAN ARVAMUST"},
  :link
  {:search

@@ -20,7 +20,7 @@ context("Meetings", () => {
 
 
         cy.visit(`#/projects/${this.projectID}/meetings`)
-        cy.get("[data-cy='activity-link:activity.name/pre-design']").click()
+        cy.get("[data-cy='activity-link:activity.name/pre-design'] a").click()
         cy.get(".project-navigator-add-meeting").click()
         cy.get(`input[class*=':date-input']`).type(new Date().toLocaleDateString("et-EE"))
         cy.get("[class*=start-time]").type("10:00")
