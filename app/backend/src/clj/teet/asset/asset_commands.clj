@@ -20,6 +20,9 @@
    :payload {project-id :project-id asset :asset}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
+   :pre [^{:error :asset-does-not-belong-to-project}
+         (or (string? (:db/id asset))
+             (= project-id (:asset/project (du/entity adb (:db/id asset)))))]
    :transact
    (with-meta
      (du/modify-entity-retract-nils
