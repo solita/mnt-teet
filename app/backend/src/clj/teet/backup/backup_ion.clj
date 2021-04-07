@@ -334,7 +334,7 @@
         (log/error e "TEET backup failed")))))
 
 (defn- migrate [{conn :conn :as ctx}]
-  (environment/migrate conn)
+  (environment/migrate conn @environment/schema)
   ctx)
 
 (defn backup
