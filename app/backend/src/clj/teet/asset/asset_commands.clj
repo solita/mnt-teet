@@ -27,7 +27,7 @@
       (merge {:asset/project project-id}
              (asset-type-library/form->db
               (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-              asset)))
+              (dissoc asset :asset/components))))
      {:db :asset})})
 
 (defcommand :asset/delete-component
