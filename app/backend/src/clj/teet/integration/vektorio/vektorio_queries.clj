@@ -1,17 +1,25 @@
 (ns teet.integration.vektorio.vektorio-queries
   (:require [teet.db-api.core :refer [defquery audit]]
             [teet.integration.vektorio.vektorio-core :as vektorio-core]
+            [teet.integration.vektorio.vektorio-client :as vektorio-client]
             [teet.environment :as environment]
-            [teet.util.datomic :as du]
-            [clojure.tools.logging :as log]
-            [clojure.string :as str]
-            [clojure.data.json :as json]))
+            [datomic.client.api :as d]
+            [teet.user.user-model :as user-model]))
 
+(defn- add-user-to-project!
+  [conn user config vektorio-project-id user-id]
+  (when
+    (empty?
+      (d/q '[:find ?pid :where [?u :vektorio/granted-projects ?pid] :in $ ?u ?pid]
+           (d/db conn) (user-model/user-ref user) vektorio-project-id))
+    (do (vektorio-client/add-user-to-project! conn user config vektorio-project-id user-id)
+        (d/transact conn {:tx-data [{:db/id (:db/id user)
+                                :vektorio/granted-projects vektorio-project-id}]}))))
 
 (defn- url-for-bim-viewer [conn user vektorio-project-id]
   (let [config (environment/config-value :vektorio)
         user-id (vektorio-core/get-or-create-user! user config)
-        _ (teet.integration.vektorio.vektorio-client/add-user-to-project! conn user config vektorio-project-id user-id)
+        _ (add-user-to-project! conn user config vektorio-project-id user-id)
         viewer-url (:viewer-url (:config config))
         response (vektorio-core/instant-login config user-id)
         instantLogin (:instantLogin response)
