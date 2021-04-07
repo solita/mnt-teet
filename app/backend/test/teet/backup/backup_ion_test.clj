@@ -181,11 +181,22 @@
       (fn []
         (is (= items-before (list-items)))))))
 
+(defn no-empty-transactions []
+  (let [uuid (java.util.UUID/randomUUID)]
+    (tu/tx {:db/id "datomic.tx" :tx/author uuid})
+    (fn []
+      (is (empty? (d/q '[:find ?e
+                         :in $ ?uuid
+                         :where
+                         [?e :tx/author ?uuid]]
+                       (tu/db) uuid))))))
+
 ;; Add any new test setup/verify functions here
 (def test-parts [#'file-user-seen
                  #'task-and-comment
                  #'compare-project-pull
-                 #'asset-db-schema])
+                 #'asset-db-schema
+                 #'no-empty-transactions])
 
 (deftest restore-tx-backup
   (let [with-populated-db (tu/with-db)
