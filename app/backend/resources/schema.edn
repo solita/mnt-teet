@@ -1886,7 +1886,17 @@
           {:db/ident :thk.contract/cost
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Added manually, the same as in the detail view: capital amount"}]]}]
+           :db/doc "Added manually, the same as in the detail view: capital amount"}
+
+          {:db/ident :thk.contract/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The project of the contract"}
+
+          {:db/ident :thk.contract/start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Administrative Strat date of the Contract"}]]}]
 
 
 
