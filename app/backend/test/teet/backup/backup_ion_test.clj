@@ -181,7 +181,11 @@
       (fn []
         (is (= items-before (list-items)))))))
 
-(defn no-empty-transactions []
+(defn no-empty-transactions
+  "Add a transaction containing only transaction metadata, return a
+  function which ensures that said transaction is not present in the
+  restored db"
+  []
   (let [uuid (java.util.UUID/randomUUID)]
     (tu/tx {:db/id "datomic.tx" :tx/author uuid})
     (fn []
