@@ -2,7 +2,8 @@
   (:require [clojure.walk :as walk]
             [datomic.client.api :as d]
             [teet.util.datomic :as du]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.string :as str]))
 
 (def ctype-pattern
   '[*
@@ -54,6 +55,7 @@
           (pull-child-ctypes db)))
 
    {:ctype/common (d/pull db ctype-pattern :ctype/common)
+    :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
                           :where [?fg :asset-schema/type :asset-schema.type/fgroup]
@@ -114,3 +116,42 @@
       :else
       (throw (ex-info "Expected asset or component"
                       {:unknown-item-id id})))))
+
+(defn next-oid
+  "Get next OID for the given fclass.
+  Returns vector of [update-seq-tx oid] where update-seq-tx is a
+  transaction data map to update the seq# of the fclass and oid
+  is the string oid for the feature."
+  [db fclass]
+  {:pre [(keyword? fclass)]}
+  (let [{:fclass/keys [oid-prefix oid-sequence-number]}
+        (d/pull db [:fclass/oid-prefix :fclass/oid-sequence-number] fclass)]
+    (when-not oid-prefix
+      (throw (ex-info "No OID prefix found for fclass"
+                      {:fclass fclass})))
+    (let [seq-number (inc (or oid-sequence-number 0))]
+      [{:db/ident fclass
+        :fclass/oid-sequence-number seq-number}
+       (str "N40-" oid-prefix "-" seq-number)])))
+
+(defn next-component-oid
+  "Get next OID for a new component in feature."
+  [db feature-oid]
+  {:pre (string? feature-oid)}
+  (str feature-oid "-"
+       (inc
+        (reduce (fn [max-num [component-oid]]
+                  (let [[_ _ _ n] (str/split component-oid #"\-")
+                        num (Long/parseLong n)]
+                    (max max-num num)))
+                0
+                (d/q '[:find ?oid
+                       :where
+                       [_ :asset/oid ?oid]
+                       [(> ?oid ?start)]
+                       [(< ?oid ?end)]
+                       :in $ ?start ?end]
+                     db
+                     ;; Finds all OIDs for this asset
+                     (str feature-oid "-")
+                     (str feature-oid "."))))))

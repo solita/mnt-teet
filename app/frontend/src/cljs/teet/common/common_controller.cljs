@@ -525,11 +525,21 @@
              (fn [page-state]
                (apply update-fn page-state args))))
 
+(defn assoc-page-state
+  "Assoc value to current page state."
+  [{page :page :as app} path value]
+  (assoc-in app (into [:route page] path) value))
+
 (defn page-state
   "Get the state of the current page.
   If path components are given, takes that path from page-state."
   [{page :page :as app} & path]
   (get-in app (into [:route page] path)))
+
+(defn page-state-path
+  "Return path in app state for the page state."
+  [{page :page} & path]
+  (into [:route page] path))
 
 (defn feature-enabled? [feature]
   {:pre [(keyword? feature)]}
