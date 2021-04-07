@@ -179,15 +179,14 @@
        (when (not inherits-location?)
          [container/collapsible-container
           {:open? (@open? :location)
-           :on-toggle (r/partial toggle-open! :location)
-           :size :Small}
+           :on-toggle (r/partial toggle-open! :location)}
           [:<>
            (tr [:asset :field-group :location])
            [buttons/button-text {:style {:float :right}
                                  :on-click (r/partial toggle-open! :map)}
             (if (@open? :map)
-              "hide map"
-              "show map")]]
+              (tr [:asset :location :hide-map])
+              (tr [:asset :location :show-map]))]]
           [Grid {:container true
                  :justify :flex-start
                  :alignItems :flex-end}

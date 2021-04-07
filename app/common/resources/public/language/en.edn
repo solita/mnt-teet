@@ -66,6 +66,10 @@
   "Search feature group or class...",
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
+  :location
+  {:no-road-found-for-points "No road found for points",
+   :show-map "Show map",
+   :hide-map "Hide map"},
   :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
@@ -90,7 +94,7 @@
   :field-group
   {:details "Details",
    :common "Common",
-   :name-and-location "Name and location",
+   :location "Location",
    :cost-grouping "Cost grouping"}},
  :buttons
  {:confirm "Confirm",
@@ -265,6 +269,7 @@
   :response-of-third-party "Response of involved party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
+  :edit-application-title "Edit application",
   :application-terms-expire-warning
   "The application terms will expire soon/have expired!",
   :edit-third-party-title "Edit involved party",
@@ -658,7 +663,8 @@
   :cooperation.opinion/comment "Comment",
   :validation-error
   #:file.part{:name "Part name can have up to 99 characters.",
-              :illegal-characters "The name contains illegal characters. List of allowed characters: {characters}"},
+              :illegal-characters
+              "The name contains illegal characters. List of allowed characters: {characters}"},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
   :cooperation.response/status "Response summary",
@@ -685,6 +691,9 @@
   :land-exchange/area "Area",
   :file/position-number "POS#",
   :meeting.decision/body "Decision",
+  :location/end-m "Lõpp m",
+  :location/start-point "Alguspunkt",
+  :location/road-nr "Tee",
   :meeting/agenda "Agenda",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
@@ -750,10 +759,13 @@
   :file/description "Description",
   :cooperation.contact/name "Name",
   :file/document-group "Group",
+  :location/carriageway "Sõidutee",
   :meeting.agenda/body "Body",
   :land-owner-opinion/link-to-response "Link to response",
   :estate-procedure/type "Procedure type",
   :thk.project/road-name "Road name",
+  :location/start-m "Algus m",
+  :location/end-point "Lõpp-punkt",
   :thk.project/estimated-date-range "Estimated duration",
   :participation/role "Role",
   :file/status "Status",
