@@ -1830,33 +1830,35 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Procurement no /Hanke nr - (if starts with number then converted into link to State procurement registry as https://riigihanked.riik.ee/rhr-web/#/procurement/<proc_No>), if starts with other symbol then leave it as a number)"}
 
-          ;; Contract statuses
-          {:db/ident :thk.contract.status/contract-signed
-           :enum/attribute :thk.contract/status}
-          {:db/ident :thk.contract.status/in-progress
-           :enum/attribute :thk.contract/status}
-          {:db/ident :thk.contract.status/warranty-period
-           :enum/attribute :thk.contract/status}
-          {:db/ident :thk.contract.status/completed
-           :enum/attribute :thk.contract.response/status}
-
           {:db/ident :thk.contract/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Enum reference to contract status"}
-
-          {:db/ident :thk.contract/region
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "The region of the object is displayed"}
+           :db/doc "Calculated contract status"}
+
+          ;; THK Regions
+          {:db/ident :thk.region/center
+           :thk/code "Keskus" :enum/attribute :thk.contract/region}
+          {:db/ident :thk.region/north
+           :thk/code "Põhja" :enum/attribute :thk.contract/region}
+          {:db/ident :thk.region/south
+           :thk/code "Lõuna" :enum/attribute :thk.contract/region}
+          {:db/ident :thk.region/west
+           :thk/code "Lääne" :enum/attribute :thk.contract/region}
+          {:db/ident :thk.region/east
+           :thk/code "Ida" :enum/attribute :thk.contract/region}
+
+          {:db/ident :thk.contract/region
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The region of the Project is displayed"}
 
           ;; Contract types
           {:db/ident :thk.contract.type/construction-works
-           :enum/attribute :thk.contract/type}
-          {:db/ident :thk.contract.type/services
-           :enum/attribute :thk.contract/type}
+           :thk/code "3500" :enum/attribute :thk.contract/type}
           {:db/ident :thk.contract.type/things
-           :enum/attribute :thk.contract/type}
+           :thk/code "3501" :enum/attribute :thk.contract/type}
+          {:db/ident :thk.contract.type/services
+           :thk/code "3502" :enum/attribute :thk.contract/type}
 
           {:db/ident :thk.contract/type
            :db/valueType :db.type/ref
@@ -1888,10 +1890,10 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Added manually, the same as in the detail view: capital amount in euro"}
 
-          {:db/ident :thk.contract/project
+          {:db/ident :thk.contract/targets
            :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "The project of the contract"}
+           :db/cardinality :db.cardinality/many
+           :db/doc "Targets of the contract, can be activities or tasks"}
 
           {:db/ident :thk.contract/start-date
            :db/valueType :db.type/instant
