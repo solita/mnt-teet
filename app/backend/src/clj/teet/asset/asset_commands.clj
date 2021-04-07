@@ -52,12 +52,16 @@
    :pre [(or (string? (:db/id component))
              (= project-id (asset-db/component-project adb (:db/id component))))]
    :transact
-   ^{:db :asset}
-   [;; Link this to parent
-    [:db/add parent-id (case (asset-db/item-type adb parent-id)
-                         :asset :asset/components
-                         :component :component/components) (:db/id component)]
-
-    (asset-type-library/form->db
-     (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-     component)]})
+   (with-meta
+     (conj
+      (du/modify-entity-retract-nils
+       adb
+       (asset-type-library/form->db
+        (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+        (dissoc component :component/components)))
+      ;; Link this to parent
+      [:db/add parent-id
+       (case (asset-db/item-type adb parent-id)
+         :asset :asset/components
+         :component :component/components) (:db/id component)])
+     {:db :asset})})
