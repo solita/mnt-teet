@@ -1026,7 +1026,7 @@
              :form-value (select-keys application
                                       (conj cooperation-model/editable-application-attributes
                                             :db/id))
-             :modal-title (tr [:cooperation :new-application-title])
+             :modal-title (tr [:cooperation :edit-application-title])
              :button-component [buttons/button-secondary {:data-cy "edit-application"}
                                 (tr [:buttons :edit])]}]]]
          [typography/Heading2
