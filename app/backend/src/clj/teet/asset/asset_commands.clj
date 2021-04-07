@@ -21,11 +21,14 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
    :transact
-   ^{:db :asset}
-   [(merge {:asset/project project-id}
-           (asset-type-library/form->db
-            (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-            asset))]})
+   (with-meta
+     (du/modify-entity-retract-nils
+      adb
+      (merge {:asset/project project-id}
+             (asset-type-library/form->db
+              (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+              asset)))
+     {:db :asset})})
 
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."
