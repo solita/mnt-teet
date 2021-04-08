@@ -51,7 +51,7 @@
 (def read-feature-classes
   (partial read-sheet
            "fclass"
-           [:name :fgroup
+           [:name :fgroup :oid-prefix
             :label-et :label-en
             :description-et :description-en
             :agreed?]
@@ -60,7 +60,7 @@
 (def read-ctypes
   (partial read-sheet
            "ctype"
-           [:name :part-of :inherits-location?
+           [:name :part-of :inherits-location? :quantity-unit
             :label-et :label-en
             :description-et :description-en
             :agreed? :comment]
@@ -93,9 +93,14 @@
         m))
 
 (defn- ->long [x]
-  (if (string? x)
-    (Long/parseLong x)
-    (long x)))
+  (when x
+    (if (string? x)
+      (try
+        (Long/parseLong x)
+        (catch NumberFormatException e
+          (println "Can't parse number: " x)
+          nil))
+      (long x))))
 
 (defn common-attrs [type {:keys [name comment label-et label-en
                                  description-et description-en]}]
@@ -162,6 +167,8 @@
            (common-attrs :asset-schema.type/ctype ct)
            (when-let [il (:inherits-location? ct)]
              {:component/inherits-location? il})
+           (when-let [qu (:quantity-unit ct)]
+             {:component/quantity-unit (str/trim qu)})
            (when (contains? ct :part-of)
              {:ctype/parent (str (:part-of ct))})))
 
@@ -185,10 +192,10 @@
              :attribute/parent (str (:ctype p))
              :attribute/cost-grouping? (:cost-grouping? p)
              :attribute/mandatory? (:mandatory? p)}
-            (when-let [min (:min-value p)]
-              {:attribute/min-value (->long min)})
-            (when-let [max (:max-value p)]
-              {:attribute/max-value (->long max)}))))
+            (when-let [min (->long (:min-value p))]
+              {:attribute/min-value min})
+            (when-let [max (->long (:max-value p))]
+              {:attribute/max-value max}))))
 
         ;; Output enum values
         (for [item list-items
