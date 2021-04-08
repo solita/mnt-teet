@@ -131,8 +131,8 @@
   [:div {:class class}
    [:div {:class (herb/join (<class container-style)
                             class)}
-    [Text {:component :span
-           :classes {:root (<class label-style)}}
+    [typography/TextBold {:component :span
+                          :classes {:root (<class label-style)}}
 
      (str label ":")]
     [Text {:component :span

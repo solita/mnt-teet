@@ -26,7 +26,8 @@
             [teet.project.project-info :as project-info]
             [teet.project.project-model :as project-model]
             [teet.common.common-controller :as common-controller]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (defn- svg-style
   [bottom?]
@@ -265,13 +266,15 @@
 
 
 (defn- activity
-  [{:keys [params dark-theme? activity-section-content activity-link-page] :as ctx}
+  [{:keys [params dark-theme? activity-section-content activity-link-page navigation-data] :as ctx}
    {activity-id :db/id
     activity-est-end :activity/estimated-end-date
     activity-est-start :activity/estimated-start-date
     :as activity}]
   (let [activity-state (activity-step-state activity)
-        activity-open? (= (str activity-id) (:activity params))]
+        activity-open? (= (str activity-id)
+                          (str (or (:activity navigation-data)
+                                   (:activity params))))]
     ^{:key (str (:db/id activity))}
     [:ol.project-navigator-activity {:class (<class ol-class)}
      [:li
@@ -306,7 +309,8 @@
        {:keys [dark-theme? activity-section-content add-activity? activity-link-page] :as _opts}]
     (let [rect-button (if dark-theme?
                         buttons/rect-white
-                        buttons/rect-primary)]
+                        buttons/rect-primary)
+          navigation-data (:navigation project)]
       [:div.project-navigator {:class (<class navigator-container-style dark-theme?)}
        [:ol {:class (<class ol-class)}
         (doall
@@ -337,6 +341,7 @@
                  [:div
                   [Collapse {:in open?}
                    (mapc (partial activity {:e! e!
+                                            :navigation-data navigation-data
                                             :user user
                                             :stepper stepper
                                             :activity-link-page activity-link-page
@@ -443,7 +448,7 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths show-map? export-menu-items]
+  [{:keys [e! project app column-widths show-map? export-menu-items content-padding]
     :or {column-widths [3 6 :auto]
          show-map? true}
     :as opts} content]
@@ -468,20 +473,18 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style (merge {:padding "2rem 1.5rem"
-                               :overflow-y :auto
-                               :max-height "100%"
-                               ;; content area should scroll, not the whole page because we
-                               ;; want map to stay in place without scrolling it
-                               }
-                              (when (not show-map?)
-                                {:flex 1}))}
+                :style {:padding (or content-padding "2rem 1.5rem")
+                        :overflow-y :auto
+                        :max-height "100%"
+                        ;; content area should scroll, not the whole page because we
+                        ;; want map to stay in place without scrolling it
+                        }}
           content]
          (when show-map?
            [Grid {:item true
                   :xs 12
                   :md :auto
-                  :class (<class teet.common.responsivity-styles/mobile-only-style
+                  :class (<class responsivity-styles/mobile-only-style
                                  {:flex-direction :column
                                   :flex-basis "400px"}      ;; Needs minimum height for the container when in mobile so the map is visible.
                                  {:display :flex

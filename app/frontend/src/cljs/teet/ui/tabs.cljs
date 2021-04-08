@@ -45,7 +45,7 @@
 (defn tab-links-container-style
   []
   {:display :flex
-   :margin-bottom "2rem"
+   :margin-bottom "1rem"
    :padding-bottom "0"
    :border-bottom (str "solid " theme-colors/blue-tab " 1px")})
 
@@ -55,12 +55,14 @@
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
      (fn [{:keys [app tab-wrapper comment-link-comp comment-counts]
-           :or {tab-wrapper :span}
+           :or {tab-wrapper :div}
            :as opts} details]
        (let [query (:query app)
+             comments-open? (= (:tab query) "comments")
              comments-component [:div
                                  (when (responsivity-styles/wide-display?)
-                                   [typography/Heading2 {:class (<class common-styles/margin-bottom 2)} (tr [:document :comments])])
+                                   [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
+                                    (tr [:document :comments])])
                                  [comments-view/lazy-comments
                                   (select-keys opts [:e! :app :entity-id :entity-type
                                                      :show-comment-form? :after-comment-list-rendered-event
@@ -77,19 +79,21 @@
             [tab-wrapper
              [:div.tab-links {:class (<class tab-links-container-style)}
 
-              [:div {:class (<class (if (= (:tab query) "comments") tab-element-style tab-element-style-selected))}
-               (if (= (:tab query) "comments")
-                 [common/Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
-                 [typography/SectionHeading (tr [:project :tabs :details])])]
+              [:div {:class (<class (if comments-open? tab-element-style tab-element-style-selected))}
+               (if comments-open?
+                 [common/Link {:href (url/remove-query-param :tab)}
+                  (tr [:project :tabs :details])]
+                 [typography/SectionHeading
+                  (tr [:project :tabs :details])])]
 
-              [:div {:class (<class (if (= (:tab query) "comments") tab-element-style-selected tab-element-style))}
-               (if (= (:tab query) "comments")
+              [:div {:class (<class (if comments-open? tab-element-style-selected tab-element-style))}
+               (if comments-open?
                  [typography/SectionHeading
                   [comments-link-content comment-counts]]
                  (or comment-link-comp
                      [common/Link {:href (url/set-query-param :tab "comments")}
                       [comments-link-content comment-counts]]))]]]
-            (if (= (:tab query) "comments")
+            (if comments-open?
               comments-component
               (with-meta
                 details

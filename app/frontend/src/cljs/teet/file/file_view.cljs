@@ -1,7 +1,7 @@
 (ns teet.file.file-view
   (:require [clojure.string :as str]
             [goog.string :as gstr]
-            [herb.core :refer [<class]]
+            [herb.core :refer [<class] :as herb]
             [re-svg-icons.feather-icons :as fi]
             [re-svg-icons.tabler-icons :as ti]
             [reagent.core :as r]
@@ -42,7 +42,8 @@
 (defn file-identifying-info
   "Show file identifying info: document group, seq# and version."
   [land-acquisition? {:file/keys [document-group sequence-number version]}]
-  [:strong.file-identifying-info {:data-version version}
+  [:strong.file-identifying-info {:data-version version
+                                  :class (<class common-styles/margin-bottom 0.2)}
    (str/join " / "
              (remove nil?
                      [(when document-group
@@ -179,7 +180,7 @@
    [file-comments-text file]])
 
 (defn file-replacement-modal-button
-  [{:keys [e! task file small?]}]
+  [{:keys [e! task file small? icon-button?]}]
   ;; The progress? and open-atom atoms are expected to go false automatically after uploading happens
   ;; since the app state is either refreshed or navigation happens
   (r/with-let [selected-file (r/atom nil)
@@ -247,13 +248,15 @@
         :multiple? false}
 
 
-       (if small?
+       (if icon-button?
          [IconButton {:component :span
                       :size :small}
           [icons/file-cloud-upload-outlined {:style {:color theme-colors/primary}}]]
          [buttons/button-secondary
-          {:component :span
-           :start-icon (r/as-element [icons/file-cloud-upload-outlined])}
+          (merge {:component :span
+                  :start-icon (r/as-element [icons/file-cloud-upload-outlined])}
+                 (when small?
+                   {:size :small}))
           (tr [:file :upload-new-version])])]]]))
 
 (defn file-row2
@@ -330,7 +333,7 @@
            (with-meta
              [file-replacement-modal-button (merge allow-replacement-opts
                                                    {:file file
-                                                    :small? true})]
+                                                    :icon-button? true})]
              {:key (str "file-replace-button-" (:db/id file))}))
          [IconButton
           {:target :_blank
@@ -405,7 +408,8 @@
   (let [parts (sort-by :file.part/number
                        (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
                                parts))]
-    [:div.file-list {:style {:margin-right "0.5rem"
+    [:div.file-list {:style {:flex 1
+                             :padding "1rem 0 1rem 1rem"
                              :border-right (str "2px solid " theme-colors/black-coral-1)}}
      (mapc
       (fn [{part-id :db/id :file.part/keys [name number]}]
@@ -418,8 +422,8 @@
             [:<>
              [:div {:style {:padding "1rem 0"}
                     :class (<class common-styles/flex-row-end)}
-              [typography/Heading2 name]
-              [typography/GreyText {:style {:padding-left "0.25rem"}} (str "#" number)]]
+              [typography/Heading2 name
+               [typography/GrayText {:style {:padding-left "0.25rem"}} (str "#" number)]]]
              [:div
               (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
                       (let [{:keys [description extension]}
@@ -466,13 +470,21 @@
     [modifier modified-at]
     [creator created-at]))
 
-(defn- file-details [e! app project-id task {:keys [replacement-upload-progress] :as file}
-                     latest-file can-replace-file? replace-form]
+(defn- file-part-sub-heading [{:file.part/keys [name number]}]
+  [:div
+   [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+    name
+    [typography/GrayText {:class (<class common-styles/margin-left 0.5)}
+     (gstr/format "#%02d" number)]]])
+
+(defn- file-details [{:keys [e! app project-id task file file-part
+                             latest-file can-submit? replace-form]}]
   (r/with-let [selected-file (r/atom nil)
                select-file #(reset! selected-file (if (= @selected-file %)
                                                     nil
                                                     %))]
-    (let [old? (some? latest-file)
+    (let [{:keys [replacement-upload-progress]} file
+          old? (some? latest-file)
           other-versions (if old?
                            (into [latest-file]
                                  (filter #(not= (:db/id file) (:db/id %))
@@ -481,12 +493,17 @@
       ^{:key (str (:db/id file))}
       [:div.file-details
        [:div {:class (<class common-styles/margin-bottom 1)}
-        [:div.file-details-full-name
-         [typography/BoldGreyText
-          (str (tr [:file :full-name]) ": " (:file/full-name file))]]
-        [:div.file-details-original-name
-         [typography/GreyText
-          [:strong (str (tr [:fields :file/original-name]) ": ")]
+        [file-part-sub-heading file-part]
+        [:div.file-details-full-name {:class (herb/join (<class common-styles/flex-row)
+                                                        (<class common-styles/margin-bottom 0.2))}
+         [typography/TextBold {:class (<class common-styles/margin-right 0.25)}
+          (tr [:file :full-name]) ":"]
+         [typography/Text (:file/full-name file)]]
+        [:div.file-details-original-name {:class (herb/join (<class common-styles/flex-row)
+                                                            (<class common-styles/margin-bottom 0.2))}
+         [typography/SmallBoldText {:class (<class common-styles/margin-right 0.25)}
+          (tr [:fields :file/original-name]) ":"]
+         [typography/Text2
           [:span (:file/original-name file)]]]
 
         (let [first-version (or (last other-versions) file)
@@ -496,14 +513,16 @@
                 (when (:meta/modified-at first-version)
                   (edited first-version)))]
           [:<>
-           [:div.file-details-upload-info
-            (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
-                                      :date (format/date-time (:meta/created-at file))})]
+           [:div.file-details-upload-info {:class (<class common-styles/margin-bottom 0.2)}
+            [typography/SmallText
+             (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                       :date (format/date-time (:meta/created-at file))})]]
 
            (when edited?
-             [:div.file-details-edit-info
-              (tr [:file :edit-info] {:author (user-model/user-name edited-by)
-                                      :date (format/date-time edited-at)})])])]
+             [:div.file-details-edit-info {:class (<class common-styles/margin-bottom 0.2)}
+              [typography/SmallText
+               (tr [:file :edit-info] {:author (user-model/user-name edited-by)
+                                       :date (format/date-time edited-at)})]])])]
 
 
 
@@ -512,25 +531,29 @@
         [common/labeled-data {:class "file-details-size"
                               :label (tr [:fields :file/size])
                               :data (format/file-size (:file/size file))}]
-        (if replacement-upload-progress
-          [LinearProgress {:variant :determinate
-                           :value replacement-upload-progress}]
-          [:<>
-           (when (and can-replace-file?
-                      (nil? latest-file)
-                      (du/enum= :file.status/draft (:file/status file)))
-             [file-replacement-modal-button {:e! e!
-                                             :project-id project-id
-                                             :task task
-                                             :file file
-                                             :replace-form replace-form}])])
-        [buttons/button-primary {:element "a"
-                                 :href (common-controller/query-url :file/download-file
-                                                                    {:file-id (:db/id file)})
-                                 :target "_blank"
-                                 :start-icon (r/as-element
-                                               [icons/file-cloud-download])}
-         (tr [:file :download])]]
+        [:div {:class (<class common-styles/flex-row)}
+         (if replacement-upload-progress
+           [LinearProgress {:variant :determinate
+                            :value replacement-upload-progress}]
+           [:<>
+            (when (and can-submit?
+                       (nil? latest-file)
+                       (du/enum= :file.status/draft (:file/status file)))
+              [file-replacement-modal-button {:e! e!
+                                              :project-id project-id
+                                              :task task
+                                              :file file
+                                              :replace-form replace-form
+                                              :small? true}])])
+         [:div {:class (<class common-styles/margin-left 0.5)}
+          [buttons/button-primary {:element "a"
+                                   :href (common-controller/query-url :file/download-file
+                                                                      {:file-id (:db/id file)})
+                                   :size :small
+                                   :target "_blank"
+                                   :start-icon (r/as-element
+                                                 [icons/file-cloud-download-outlined])}
+           (tr [:file :download])]]]]
 
        (when (file-model/image? file)
          [:div {:class (<class preview-style)}
@@ -583,7 +606,7 @@
 
 (defn file-part-heading
   [{heading :heading
-       number :number} opts]
+    number :number} opts]
   [:div {:style {:margin-bottom "1.5rem"
                  :display :flex
                  :justify-content :space-between}}
@@ -592,7 +615,7 @@
     [typography/Heading2 {:style {:margin-right "0.5rem"}}
      heading]
     (when number
-      [typography/GreyText
+      [typography/GrayText
        {:style {:white-space :nowrap}}
        (goog.string/format "#%02d" number)])]
    [:div
@@ -601,13 +624,13 @@
 
 (defn no-files
   []
-  [typography/GreyText {:class [(<class typography/grey-text-style)
+  [typography/GrayText {:class [(<class typography/gray-text-style)
                                 (<class common-styles/flex-row)
                                 (<class common-styles/margin-bottom 1)]}
    [ti/file {:style {:margin-right "0.5rem"}}]
    [:span (tr [:file :no-files])]])
 
-(defn- file-edit-name [{:keys [value on-change error error-text] :as opts}]
+(defn- file-edit-name [{:keys [value on-change error error-text]}]
   (let [[name original-name] value
         {:keys [description extension]} (filename-metadata/name->description-and-extension name)]
     [:<>
@@ -686,12 +709,6 @@
                          nil)))}
        [file-edit-name {}]]]]))
 
-(defn- file-tab-wrapper [{:file.part/keys [name number]} tab-links]
-  [:div {:class (<class common-styles/flex-row-space-between)
-         :style {:align-items :center}}
-   [typography/Heading3 (gstr/format "%s #%02d" name number)]
-   [:div tab-links]])
-
 (defn- file-db-id
   "Get the file's actual :db/id from page queried state."
   [state]
@@ -732,51 +749,59 @@
                                        (:file.part/_task task))
                                  {:file.part/name (tr [:file-upload :general-part])
                                   :file.part/number 0})]
-               [project-navigator-view/project-navigator-with-content
-                {:e! e!
-                 :app app
-                 :project project
-                 :column-widths [3 :auto :auto]
-                 :show-map? false}
-                [Grid {:container true}
-                 [Grid {:item true :xs 3}
-                  [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
-                 [Grid {:item true :xs 9}
-                  [:<>
-                   (when @edit-open?
-                     [file-edit-dialog {:e! e!
-                                        :on-close #(reset! edit-open? false)
-                                        :activity activity
-                                        :file file
-                                        :parts (:file.part/_task task)}])]
+               [:div
+                [project-navigator-view/project-navigator-with-content
+                 {:e! e!
+                  :app app
+                  :project project
+                  :column-widths [3 9 :auto]
+                  :show-map? false
+                  :content-padding "0rem"}
+                 [Grid {:container true :spacing 0}
+                  [Grid {:item true :xs 3
+                         :class (<class common-styles/flex-column-1)}
+                   [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
+                  [Grid {:item true :xs 9
+                         :class (<class common-styles/padding 2 2 2 1.75)}
+                   [:<>
+                    (when @edit-open?
+                      [file-edit-dialog {:e! e!
+                                         :on-close #(reset! edit-open? false)
+                                         :activity activity
+                                         :file file
+                                         :parts (:file.part/_task task)}])]
 
-                  [:div {:class (<class common-styles/flex-row)}
-                   [typography/Heading2
-                    [:span description]
-                    [typography/GreyText {:style {:display :inline-block
-                                                  :margin "0 0.5rem"}}
-                     (str/upper-case extension)]]
-                   [:div {:style {:flex-grow 1
-                                  :text-align :end}}
-                    [buttons/button-secondary {:on-click #(reset! edit-open? true)
-                                               :data-cy "edit-file-button"}
-                     (tr [:buttons :edit])]]]
-                  [file-identifying-info (du/enum= :activity.name/land-acquisition
-                                                   (:activity/name activity))
-                   file]
-                  [typography/SmallText [:strong (tr-enum (:file/status file))]]
-                  ^{:key (str (:db/id file) "-details-and-comments")}
-                  [tabs/details-and-comments-tabs
-                   {:e! e!
-                    :app app
-                    :after-comment-list-rendered-event common-controller/->Refresh
-                    :comment-link-comp [file-comments-link file]
-                    :after-comment-added-event common-controller/->Refresh
-                    :entity-id (:db/id file)
-                    :entity-type :file
-                    :show-comment-form? (not old?)
-                    :tab-wrapper (r/partial file-tab-wrapper file-part)}
-                   (when file
-                     [file-details e! app project-id task file latest-file
-                      (task-model/can-submit? task)
-                      (:files-form project)])]]]]))))})))
+                   [:div {:class (<class common-styles/flex-row)}
+                    [typography/Heading1 {:class (<class common-styles/margin-bottom 0.5)}
+                     [:span description]
+                     [typography/GrayText {:style {:display :inline-block
+                                                   :margin "0 0.5rem"}}
+                      (str/upper-case extension)]]
+                    [:div {:style {:flex-grow 1
+                                   :text-align :end}}
+                     [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                                :data-cy "edit-file-button"}
+                      (tr [:buttons :edit])]]]
+                   [file-identifying-info (du/enum= :activity.name/land-acquisition
+                                                    (:activity/name activity))
+                    file]
+                   [:div {:class (<class common-styles/margin-bottom 0.5)}
+                    [typography/Text3
+                     (tr-enum (:file/status file))]]
+
+                   ^{:key (str (:db/id file) "-details-and-comments")}
+                   [tabs/details-and-comments-tabs
+                    {:e! e!
+                     :app app
+                     :after-comment-list-rendered-event common-controller/->Refresh
+                     :comment-link-comp [file-comments-link file]
+                     :after-comment-added-event common-controller/->Refresh
+                     :entity-id (:db/id file)
+                     :entity-type :file
+                     :show-comment-form? (not old?)}
+                    (when file
+                      [file-details {:e! e! :app app :project-id project-id :task task
+                                     :file file :latest-file latest-file
+                                     :file-part file-part
+                                     :can-submit? (task-model/can-submit? task)
+                                     :replace-form (:files-form project)}])]]]]]))))})))
