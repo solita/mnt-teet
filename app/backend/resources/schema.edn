@@ -1874,12 +1874,27 @@
           {:db/ident :thk.contract/signed-at
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "Then contract signed, added manually in the detail view of contract"}
+           :db/doc "Date when contract was signed, added manually in the detail view of contract"}
 
           {:db/ident :thk.contract/deadline
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "The first deadline, added manually in the detail view of contract"}
+
+          {:db/ident :thk.contract/extended-deadline
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The extended deadline, added manually in the detail view of contract"}
+
+          {:db/ident :thk.contract/warranty-period
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "The length of warranty period in months"}
+
+          {:db/ident :thk.contract/warranty-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The end date of warranty period"}
 
           {:db/ident :thk.contract/authority-contact
            :db/valueType :db.type/string
@@ -1904,7 +1919,7 @@
           {:db/ident :thk.contract/start-date
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "Administrative Strat date of the Contract"}]]}]
+           :db/doc "Administrative Start date of the Contract"}]]}]
 
 
 
