@@ -1144,7 +1144,7 @@
            :db/cardinality :db.cardinality/many
            :db/doc "Entities this file is attached to."}]]}
 
-  {:db/ident :migration/stable-integration-id
+ {:db/ident :migration/stable-integration-id
   :txes [[{:db/ident :integration/id
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/uuid
@@ -1817,10 +1817,10 @@
           {:db/ident :land-owner-opinion/authority-position
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Rich text containing the authoritys position on the opinion"}
+           :db/doc "Rich text containing the authoritys position on the opinion"}]]}
 
-          {:db/ident :migration/vektorio-user-projects
-           :txes [[{:db/ident :vektorio/granted-projects
+ {:db/ident :migration/vektorio-user-projects
+  :txes [[{:db/ident :vektorio/granted-projects
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/many
            :db/doc "ID-s of the Vektor projects the user has granted access to"}]]}
