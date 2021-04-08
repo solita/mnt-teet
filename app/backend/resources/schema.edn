@@ -1836,22 +1836,30 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Procurement no /Hanke nr - (if starts with number then converted into link to State procurement registry as https://riigihanked.riik.ee/rhr-web/#/procurement/<proc_No>), if starts with other symbol then leave it as a number)"}
 
+          {:db/ident :thk.contract/procurement-id
+           :db/valueType :db.type/string
+           :db/unique :db.unique/identity
+           :db/cardinality :db.cardinality/one
+           :db/doc "Procurement id, has to be unique as it is used in web links"}
+
+
           {:db/ident :thk.contract/status
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Calculated contract status"}
 
-          ;; THK Regions
-          {:db/ident :thk.region/center
-           :thk/code "Keskus" :enum/attribute :thk.contract/region}
-          {:db/ident :thk.region/north
-           :thk/code "Põhja" :enum/attribute :thk.contract/region}
-          {:db/ident :thk.region/south
-           :thk/code "Lõuna" :enum/attribute :thk.contract/region}
-          {:db/ident :thk.region/west
-           :thk/code "Lääne" :enum/attribute :thk.contract/region}
-          {:db/ident :thk.region/east
-           :thk/code "Ida" :enum/attribute :thk.contract/region}
+          ;; TA Regions
+          {:db/ident :ta.region/north
+           :thk/code "1800" :enum/attribute :ta/region}
+          {:db/ident :ta.region/east
+           :thk/code "1801" :enum/attribute :ta/region}
+          {:db/ident :ta.region/south
+           :thk/code "1802" :enum/attribute :ta/region}
+          {:db/ident :ta.region/west
+           :thk/code "1803" :enum/attribute :ta/region}
+          {:db/ident :ta.region/center
+           :thk/code "1804" :enum/attribute :ta/region}
+
 
           {:db/ident :thk.contract/region
            :db/valueType :db.type/ref
