@@ -31,9 +31,6 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]))
 
-
-
-
 (defn- label [m]
   (let [l (tr* m)]
     (if (str/blank? l)
@@ -249,9 +246,7 @@
                    [text-field/TextField
                     {:label (label attr)
                      :end-icon (when unit
-                                 (text-field/unit-end-icon unit))}])]]))
-
-            ]]))])))
+                                 (text-field/unit-end-icon unit))}])]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
