@@ -1901,7 +1901,7 @@
           {:db/ident :thk.contract/authority-contact
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Added manually in the detail view of contract"}
+           :db/doc "TA responsible person. Added manually in the detail view of contract"}
 
           {:db/ident :thk.contract/partner-name
            :db/valueType :db.type/ref
