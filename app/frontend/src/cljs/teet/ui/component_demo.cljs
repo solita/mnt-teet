@@ -114,13 +114,19 @@
         :on-toggle (on-toggle checkbox-items "One")}]]]))
 
 (defn- rte-demo []
-  (r/with-let [editor-state (r/atom nil)]
+  (r/with-let [editor-state (r/atom nil)
+               saved-state (r/atom nil)]
     [:<>
      [:div
-      [:f> rich-text-editor/wysiwyg-editor {:value @editor-state}]]
+      [rich-text-editor/display-markdown @saved-state]]
      [:div {:style {:margin "2rem"}}
-      [:f> rich-text-editor/wysiwyg-editor {:value @editor-state
-                                            :on-change #(reset! editor-state %)}]]]))
+       [rich-text-editor/rich-text-field {:value @editor-state
+                                         :on-change #(reset! editor-state %)}]
+
+      [buttons/button-primary {:on-click (fn [_]
+                                           (reset! saved-state (rich-text-editor/editor-state->markdown
+                                                                 (:editor-state @editor-state))))}
+       "Save"]]]))
 
 (defn- typography-demo []
   [:div

@@ -715,9 +715,9 @@
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx (update app :stepper dissoc :dialog)
           {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (dissoc query :modal :add :edit :activity :lifecycle :modal-target :modal-page)}))
+           :page page
+           :params params
+           :query (dissoc query :modal :add :edit :activity :lifecycle :modal-target :modal-page :modal-new-opinion)}))
 
   OpenEditDetailsDialog
   (process-event [_ {:keys [page params query] :as app}]
