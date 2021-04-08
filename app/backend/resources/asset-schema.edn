@@ -1935,12 +1935,6 @@
   :db/id ":pavinglayer/stonesize",
   :db/ident :pavinglayer/stonesize,
   :attribute/cost-grouping? true}
- {:attribute/parent ":ctype/structuralelement",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/id ":structuralelement/structuralelementtype",
-  :db/ident :structuralelement/structuralelementtype}
  {:attribute/parent ":fclass/pavinglayer",
   :db/valueType :db.type/instant,
   :asset-schema/type :asset-schema.type/attribute,

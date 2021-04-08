@@ -29,15 +29,27 @@
   (mapv (comp keyword str char)
         (range (int \A) (int \Z))))
 
-(defn- read-sheet [name columns name-keys workbook]
-  (->> workbook
-       (sheet/select-sheet name)
-       (sheet/select-columns
-        (zipmap column-keys columns))
-       ;; First row is the header
-       (drop 1)
-       ;; Parse name columns
-       (update-name-columns name-keys)))
+(defn filter-required-columns [required-columns rows]
+  (filter (fn [row]
+            (every? #(let [v (row %)]
+                       (and (some? v)
+                            (or (not (string? v))
+                                (not (str/blank? v))))) required-columns))
+          rows))
+
+(defn- read-sheet
+  ([name columns name-keys workbook]
+   (read-sheet name columns name-keys #{} workbook))
+  ([name columns name-keys required-columns workbook]
+   (->> workbook
+        (sheet/select-sheet name)
+        (sheet/select-columns
+         (zipmap column-keys columns))
+        ;; First row is the header
+        (drop 1)
+        (filter-required-columns required-columns)
+        ;; Parse name columns
+        (update-name-columns name-keys))))
 
 (def read-feature-groups
   (partial read-sheet
@@ -64,6 +76,7 @@
             :label-et :label-en
             :description-et :description-en
             :agreed? :comment]
+           #{:name :part-of}
            #{:name :part-of}))
 
 (def read-pset
@@ -163,6 +176,7 @@
                         (and (:name ct)
                              (or (not (contains? ct :part-of))
                                  (exists? (:part-of ct)))))]
+
           (merge
            (common-attrs :asset-schema.type/ctype ct)
            (when-let [il (:inherits-location? ct)]
