@@ -252,7 +252,7 @@
           (sort-by (comp task-model/task-group-order :db/ident first)
                    (group-by :task/group tasks)))]
        [:div {:class (<class empty-section-style)}
-        [typography/GreyText (tr [:project :activity :no-tasks])]])
+        [typography/GrayText (tr [:project :activity :no-tasks])]])
      [:div #_{:class (<class item-class (= :done activity-state) dark-theme?)}
       [when-authorized :activity/add-tasks
        activity

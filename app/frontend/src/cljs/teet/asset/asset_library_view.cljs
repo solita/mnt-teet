@@ -25,11 +25,11 @@
            :data-ident (str (:db/ident item))}
      [CardHeader {:disableTypography true
                   :title (r/as-element
-                          (condp du/enum= (:asset-schema/type item)
-                            :asset-schema.type/fgroup [typography/Heading2 header]
-                            :asset-schema.type/fclass [typography/Heading4 header]
-                            :asset-schema.type/ctype [typography/Heading5 header]
-                            [typography/BoldGreyText header]))
+                           (condp du/enum= (:asset-schema/type item)
+                             :asset-schema.type/fgroup [typography/Heading2 header]
+                             :asset-schema.type/fclass [typography/Heading4 header]
+                             :asset-schema.type/ctype [typography/Heading5 header]
+                             [typography/BoldGrayText header]))
                   :action (r/as-element
                            [IconButton {:on-click #(swap! open cu/toggle (:db/ident item))}
                             (if open?
@@ -53,7 +53,7 @@
 (defn- attribute-table [open attributes]
   (when (seq attributes)
     [:<>
-     [typography/BoldGreyText (tr [:asset :type-library :attributes])]
+     [typography/BoldGrayText (tr [:asset :type-library :attributes])]
      [table/simple-table
       [[(tr [:asset :type-library :name])]
        [(tr [:asset :type-library :datatype])]

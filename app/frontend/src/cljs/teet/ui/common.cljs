@@ -410,7 +410,7 @@
                                        theme-colors/red
                                        theme-colors/primary)}}]))
 
-(defn heading-and-grey-border-body
+(defn heading-and-gray-border-body
   [{:keys [heading body]}]
   [:div {:style {:margin-bottom "1.5rem"}}
    [:div {:style {:margin-bottom "0.25rem"}}

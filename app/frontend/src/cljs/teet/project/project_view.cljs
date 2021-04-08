@@ -383,7 +383,7 @@
        [people-modal e! project]]
 
       (if (empty? permitted-users)
-        [typography/GreyText (tr [:people-tab :no-other-users])]
+        [typography/GrayText (tr [:people-tab :no-other-users])]
         [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
                                  {:primary-text (user-description user)
                                   :secondary-text (tr [:roles (:permission/role permission)])
@@ -444,7 +444,7 @@
                         [:span (:VOOND restriction)]])
                      restrictions)])])
              grouped-restrictions)]
-          [typography/GreyText (tr [:project :no-selected-restrictions])])))))
+          [typography/GrayText (tr [:project :no-selected-restrictions])])))))
 
 (defmethod project-menu/project-tab-content :restrictions
   [_ e! _ {:thk.project/keys [related-restrictions] :as _project}]

@@ -131,14 +131,14 @@
   [{:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
   [:div.task-basic-info {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
    [:div.task-basic-info-end-date
-    [typography/BoldGreyText (tr [:common :deadline])]
+    [typography/BoldGrayText (tr [:common :deadline])]
     [:span.task-basic-info-value (format/date estimated-end-date)]]
    (when actual-end-date
      [:div.task-basic-info-end-date
-      [typography/BoldGreyText (tr [:fields :task/actual-end-date])]
+      [typography/BoldGrayText (tr [:fields :task/actual-end-date])]
       [:span.task-basic-info-value (format/date actual-end-date)]])
    [:div.task-basic-info-assignee
-    [typography/BoldGreyText (tr [:fields :task/assignee])]
+    [typography/BoldGrayText (tr [:fields :task/assignee])]
     [:span.task-basic-info-value (user-model/user-name assignee)]]
    [:div.task-basic-info-status
     (tr-enum status)]])
@@ -238,7 +238,7 @@
                    :modal-title [:div {:style {:display :flex}}
                                  [:p {:class (<class common-styles/margin-right 0.5)}
                                   (tr [:task :edit-part-modal-title])]
-                                 [typography/GreyText (gstr/format "#%02d" (:file.part/number file-part))]]
+                                 [typography/GrayText (gstr/format "#%02d" (:file.part/number file-part))]]
                    :button-component
                    [buttons/button-secondary
                     {:size :small
@@ -361,7 +361,7 @@
                       :max-width "lg"
                       :title [:<>
                               (tr [:task :upload-files])
-                              [typography/GreyText {:style {:display :inline
+                              [typography/GrayText {:style {:display :inline
                                                             :margin-left "1rem"}}
                                (str (tr-enum (:activity/name activity))
                                     " / "
