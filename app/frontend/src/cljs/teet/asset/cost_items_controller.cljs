@@ -60,8 +60,6 @@
 
 (declare process-location-change)
 
-
-
 (defn- form-state
   "Return the current form state."
   [app]
@@ -183,7 +181,9 @@
              :command :asset/save-component
              :payload {:project-id (get-in app [:params :project])
                        :parent-id parent-id
-                       :component (dissoc form-data :component/components)}
+                       :component (dissoc form-data
+                                          :component/components
+                                          :location/geojson)}
              :result-event (partial ->SaveComponentResponse (:db/id form-data))})))
 
   SaveComponentResponse
@@ -209,28 +209,26 @@
   ;; and start/end points from the fetched response
   FetchLocationResponse
   (process-event [{:keys [address response]} app]
-    (if-not (= address (road-address (common-controller/page-state app :cost-item)))
+    (if-not (= address (road-address (form-state app)))
       (do
         (log/debug "Stale response for " address " => " response)
         app)
 
-      (common-controller/update-page-state
-       app [:cost-item]
+      (update-form
+       app
        (fn [form]
          ;; Set start/end points and GeoJSON geometry
          (if (:location/end-m address)
            ;; Line geometry
-           (do
-             (println "RESPONSE LINE" response)
-             (assoc form
-                    :location/start-point (first response)
-                    :location/end-point (last response)
-                    :location/geojson
-                    (feature-collection-geojson
-                     #js {:type "LineString"
-                          :coordinates (clj->js response)}
-                     (point-geojson (first response) "start/end" "start")
-                     (point-geojson (last response) "start/end" "end"))))
+           (assoc form
+                  :location/start-point (first response)
+                  :location/end-point (last response)
+                  :location/geojson
+                  (feature-collection-geojson
+                   #js {:type "LineString"
+                        :coordinates (clj->js response)}
+                   (point-geojson (first response) "start/end" "start")
+                   (point-geojson (last response) "start/end" "end")))
            ;; Point geometry
            (-> form
                (assoc :location/start-point response
@@ -242,16 +240,16 @@
   FetchRoadResponse
   (process-event [{:keys [start-end-points response]} app]
     (if-not (= start-end-points
-               (select-keys (common-controller/page-state app :cost-item)
+               (select-keys (form-state app)
                             [:location/start-point :location/end-point]))
       (do
         (log/debug "Stale response for " start-end-points " => " response)
         app)
 
-      (common-controller/update-page-state
+      (update-form
        (if (empty? response)
          (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
-         app) [:cost-item]
+         app)
        (fn [form]
          (if (empty? response)
            (-> form
