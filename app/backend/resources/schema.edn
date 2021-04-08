@@ -1842,12 +1842,6 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Procurement id, has to be unique as it is used in web links"}
 
-
-          {:db/ident :thk.contract/status
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/doc "Calculated contract status"}
-
           ;; TA Regions
           {:db/ident :ta.region/north
            :thk/code "1800" :enum/attribute :ta/region}
@@ -1861,7 +1855,7 @@
            :thk/code "1804" :enum/attribute :ta/region}
 
 
-          {:db/ident :thk.contract/region
+          {:db/ident :ta/region
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "The region of the Project is displayed"}
@@ -1905,12 +1899,12 @@
            :db/doc "The end date of warranty period"}
 
           {:db/ident :thk.contract/authority-contact
-           :db/valueType :db.type/string
+           :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Added manually in the detail view of contract"}
 
           {:db/ident :thk.contract/partner-name
-           :db/valueType :db.type/string
+           :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Added manually in the detail view of contract. Lead partner only."}
 
