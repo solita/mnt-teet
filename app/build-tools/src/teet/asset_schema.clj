@@ -11,12 +11,16 @@
                    (str/replace "/" "_"))]
     (keyword (clean pfx) (clean name))))
 
+(defn- parse-prefix-and-name [s]
+  (when-let [[_ pfx name] (re-matches #"\[([^:]+):([^]]+)\]" s)]
+    [pfx name]))
+
 (defn- parse-name
   "Turn string name like \"[property:size]\" into keyword :property/size"
   [s]
-  (when s
-    (when-let [[_ pfx name] (re-matches #"\[([^:]+):([^]]+)\]" s)]
-      (keywordize pfx name))))
+  (some-> s
+          parse-prefix-and-name
+          (apply keywordize)))
 
 (defn- update-name-columns [name-keys rows]
   (mapv #(reduce
@@ -131,6 +135,30 @@
 (defn- map-by-name [things]
   (into {} (map (juxt :name identity)) things))
 
+(defn- attribute-name
+  "Builds the attribute name from its `:name` and `:ctype`.
+   `(attribute-name {:name :barrier :ctype :barrierworkingwidth}) => :barrier/barrierworkingwidth`"
+  ;; TODO: Why is datatype needed here?
+  [{n :name :keys [ctype datatype] :as _attr}]
+  (when (and n ctype datatype)
+    (keyword (name ctype) (name n))))
+
+(defn- min-and-max-values [p]
+  (merge (when-let [min (->long (:min-value p))]
+           {:attribute/min-value min}
+           ;; TODO: Handle min-value-ref
+
+           ;; TODO: `attribute-name` can be used with the attribute
+           ;; itself since we know the ctype. We don't know that for
+           ;; the reference. Can we assume it's a property of parent?
+           ;; Or we could build a kv-store mapping raw attributes to
+           ;; their namespaces. This assumes that the raw attributes
+           ;; are globally unique, not only within a given namespace.n
+           ;; Example value "[property:barrierworkingwidth]"
+           )
+         (when-let [max (->long (:max-value p))]
+           {:attribute/max-value max})))
+
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
     (let [workbook (sheet/load-workbook in)
@@ -148,10 +176,10 @@
 
           attrs-by-name
           (into {}
-                (keep (fn [{n :name :keys [ctype datatype] :as attr}]
-                        (when (and n ctype datatype)
-                          [n
-                           (assoc attr :name (keyword (name ctype) (name n)))])))
+                (keep (fn [attr]
+                        (when-let [attr-name (attribute-name attr)]
+                          [(:name attr)
+                           (assoc attr :name attr-name)])))
                 pset)
           exists? (into #{}
                         (map :name)
@@ -208,10 +236,7 @@
              :attribute/parent (str (:ctype p))
              :attribute/cost-grouping? (:cost-grouping? p)
              :attribute/mandatory? (:mandatory? p)}
-            (when-let [min (->long (:min-value p))]
-              {:attribute/min-value min})
-            (when-let [max (->long (:max-value p))]
-              {:attribute/max-value max}))))
+            (min-and-max-values p))))
 
         ;; Output enum values
         (for [item list-items
