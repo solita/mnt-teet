@@ -10,13 +10,14 @@
             [teet.file.filename-metadata :as filename-metadata]))
 
 (defn get-or-create-user!
-  [vektorio-config]
+  [user vektorio-config]
   (or
     (:id (vektorio-client/get-user-by-account
            vektorio-config
-           (get-in vektorio-config [:config :api-user])))
+           (:user/person-id user)))
     (:id (vektorio-client/create-user! vektorio-config
-                                       {:account (get-in vektorio-config [:config :api-user])}))))
+                                       {:account (:user/person-id user)
+                                        :name (str (:user/given-name user) " " (:user/family-name user))}))))
 
 (defn create-project-in-vektorio!
   [conn vektor-config project-eid]
@@ -26,15 +27,13 @@
                          (:thk.project/name project))
         project-name-for-vektor (str project-name " (THK" (:thk.project/id project) ")")
         resp (vektorio-client/create-project! vektor-config {:name project-name-for-vektor})
-        vektorio-project-id (str (:id resp))
-        vektorio-user-id (get-or-create-user! vektor-config)]
-    (log/info "Creating project in vektorio for project" project)
+        vektorio-project-id (str (:id resp))]
+    (log/info "Creating project in vektorio for project" project vektorio-project-id)
     (if-not (some? vektorio-project-id)
       (throw (ex-info "No id for project in Vektorio response"
                {:resp resp
                 :error :no-project-id-in-response}))
       (do
-        (vektorio-client/add-user-to-project! vektor-config vektorio-project-id vektorio-user-id)
         (d/transact conn {:tx-data [{:db/id (:db/id project)
                                      :vektorio/project-id vektorio-project-id}]})
         vektorio-project-id))))
@@ -44,7 +43,8 @@
   (let [db (d/db conn)
         project-id (project-db/file-project-id db file-eid)]
     (log/info "Ensure the project exists in vektorio for project:" project-id)
-    (if-let [project-vektorio-id (:vektorio/project-id (d/pull db [:vektorio/project-id] project-id))]
+    (if-let
+      [project-vektorio-id (:vektorio/project-id (d/pull db [:vektorio/project-id] project-id))]
       project-vektorio-id
       (create-project-in-vektorio! conn vektor-config project-id))))
 
@@ -105,6 +105,5 @@
 
 (defn instant-login
   "Login to VektorIO."
-  [vektorio-config]
-  (let [vektorio-user-id (get-or-create-user! vektorio-config)]
-    (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id})))
+  [vektorio-config vektorio-user-id]
+  (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id}))

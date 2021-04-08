@@ -1067,8 +1067,8 @@
                 (tr [:land :unit-info])
                 (if (:land-owner-opinions (:enabled-features app))
                   [:files
-                   :comments
-                   :owners-opinions]
+                   :owners-opinions
+                   :comments]
                   [:files
                    :comments])]
    :right-panel [unit-modal-content {:e! e!

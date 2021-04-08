@@ -31,9 +31,6 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]))
 
-
-
-
 (defn- label [m]
   (let [l (tr* m)]
     (if (str/blank? l)
@@ -45,6 +42,9 @@
 
 (defn- label-for [item]
   [context/consume :rotl [label-for* item]])
+
+(def ^:private integer-pattern #"^\d*$")
+(def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
 
 (defn- validate [valueType min-value max-value v]
   (when-not (str/blank? v)
@@ -59,13 +59,24 @@
         (tr [:asset :validate :max-length] {:max-length max-value}))
 
       (:db.type/long :db.type/bigdec)
-      (let [n (js/parseFloat v)]
+      (let [v (str/trim v)]
         (cond
-          (and min-value (< n min-value))
-          (tr [:asset :validate :min-value] {:min-value min-value})
+          (and (= valueType :db.type/long)
+               (not (re-matches integer-pattern v)))
+          (tr [:asset :validate :integer-format])
 
-          (and max-value (> n max-value))
-          (tr [:asset :validate :max-value] {:max-value max-value})))
+          (and (= valueType :db.type/bigdec)
+               (not (re-matches decimal-pattern v)))
+          (tr [:asset :validate :decimal-format])
+
+          :else
+          (let [n (js/parseFloat v)]
+            (cond
+              (and min-value (< n min-value))
+              (tr [:asset :validate :min-value] {:min-value min-value})
+
+              (and max-value (> n max-value))
+              (tr [:asset :validate :max-value] {:max-value max-value})))))
 
       ;; no validation otherwise
       nil)))
@@ -161,12 +172,12 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [e! attrs inherits-location? rotl]
+(defn- attributes* [{:keys [e! attributes inherits-location? common?]} rotl]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
           name-attr (:common/name rotl)
-          attrs-groups (->> (concat common-attrs attrs)
+          attrs-groups (->> (concat (when common? common-attrs) attributes)
                             (group-by attribute-group)
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
@@ -179,15 +190,14 @@
        (when (not inherits-location?)
          [container/collapsible-container
           {:open? (@open? :location)
-           :on-toggle (r/partial toggle-open! :location)
-           :size :Small}
+           :on-toggle (r/partial toggle-open! :location)}
           [:<>
            (tr [:asset :field-group :location])
            [buttons/button-text {:style {:float :right}
                                  :on-click (r/partial toggle-open! :map)}
             (if (@open? :map)
-              "hide map"
-              "show map")]]
+              (tr [:asset :location :hide-map])
+              (tr [:asset :location :show-map]))]]
           [Grid {:container true
                  :justify :flex-start
                  :alignItems :flex-end}
@@ -234,21 +244,14 @@
 
                    ;; Text field
                    [text-field/TextField
-                    ;; parse based on type
-                    (merge
-                     {:label (label attr)
-                      :end-icon (when unit
-                                  (text-field/unit-end-icon unit))}
-                     (case type
-                       (:db.type/long :db.type/bigdec) {:type :number}
-                       nil))])]]))
-
-            ]]))])))
+                    {:label (label attr)
+                     :end-icon (when unit
+                                 (text-field/unit-end-icon unit))}])]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
-  [e! attrs inherits-location?]
-  [context/consume :rotl [attributes* e! attrs inherits-location?]])
+  [opts]
+  [context/consume :rotl [attributes* opts]])
 
 (defn- add-component-menu [allowed-components add-component!]
   [:<>
@@ -413,7 +416,11 @@
 
         (when feature-class
           ;; Attributes for asset
-          [form-paper [attributes e! (some-> feature-class :attribute/_parent) false]])
+          [form-paper [attributes
+                       {:e! e!
+                        :attributes (some-> feature-class :attribute/_parent)
+                        :common? false
+                        :inherits-location? false}]])
 
         [form/footer2]]
 
@@ -482,8 +489,10 @@
         [form-paper
          [:<>
           (label ctype)
-          [attributes e! (some-> ctype :attribute/_parent)
-           (:component/inherits-location? ctype)]]]
+          [attributes {:e! e!
+                       :attributes (some-> ctype :attribute/_parent)
+                       :inherits-location? (:component/inherits-location? ctype)
+                       :common? true}]]]
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
