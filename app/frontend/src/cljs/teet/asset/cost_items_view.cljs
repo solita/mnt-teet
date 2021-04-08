@@ -172,7 +172,7 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [{:keys [e! attributes inherits-location? common?]} rotl]
+(defn- attributes* [{:keys [e! attributes inherits-location? common? ctype]} rotl]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -227,7 +227,10 @@
              (for [{:db/keys [ident valueType]
                     :attribute/keys [mandatory? min-value max-value]
                     :asset-schema/keys [unit] :as attr} attrs
-                   :let [type (:db/ident valueType)]]
+                   :let [type (:db/ident valueType)
+                         unit (if (= ident :common/quantity)
+                                (:component/quantity-unit ctype)
+                                unit)]]
                ^{:key (str ident)}
                [attribute-grid-item
                 [form/field {:attribute ident
@@ -492,7 +495,8 @@
           [attributes {:e! e!
                        :attributes (some-> ctype :attribute/_parent)
                        :inherits-location? (:component/inherits-location? ctype)
-                       :common? true}]]]
+                       :common? true
+                       :ctype ctype}]]]
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
