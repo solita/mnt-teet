@@ -88,6 +88,7 @@
    :link "ROTL",
    :label "Label",
    :values "Values",
+   :component-quantity-unit "Component quantity unit: {unit}",
    :ctype "Component",
    :db.type/long "Integer",
    :attributes "Attributes",

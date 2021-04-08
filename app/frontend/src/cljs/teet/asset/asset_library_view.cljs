@@ -71,7 +71,7 @@
 (defn- ctype [open {label ::label
                     attributes :attribute/_parent
                     child-ctypes :ctype/_parent
-                    inherits-location? :component/inherits-location?
+                    :component/keys [inherits-location? quantity-unit]
                     :as ct}]
   [collapsible open ct
    (or label (str (tr [:asset :type-library :ctype]) " " (tr* ct)))
@@ -80,6 +80,9 @@
     (when inherits-location?
       [typography/SmallGrayText
        (tr [:asset :type-library :component-inherits-location])])
+    (when quantity-unit
+      [typography/SmallGrayText
+       (tr [:asset :type-library :component-quantity-unit] {:unit quantity-unit})])
     [attribute-table open attributes]
     (when (seq child-ctypes)
       [:div.child-ctypes

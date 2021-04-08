@@ -88,6 +88,7 @@
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
+   :component-quantity-unit "Komponent koguse ühik: {unit}",
    :ctype "Komponent",
    :db.type/long "Täisarv",
    :attributes "Tunnused",
