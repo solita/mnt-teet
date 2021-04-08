@@ -172,12 +172,12 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [e! attrs inherits-location? rotl]
+(defn- attributes* [{:keys [e! attributes inherits-location? common?]} rotl]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
           name-attr (:common/name rotl)
-          attrs-groups (->> (concat common-attrs attrs)
+          attrs-groups (->> (concat (when common? common-attrs) attributes)
                             (group-by attribute-group)
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
@@ -250,8 +250,8 @@
 
 (defn- attributes
   "Render grid of attributes."
-  [e! attrs inherits-location?]
-  [context/consume :rotl [attributes* e! attrs inherits-location?]])
+  [opts]
+  [context/consume :rotl [attributes* opts]])
 
 (defn- add-component-menu [allowed-components add-component!]
   [:<>
@@ -416,7 +416,11 @@
 
         (when feature-class
           ;; Attributes for asset
-          [form-paper [attributes e! (some-> feature-class :attribute/_parent) false]])
+          [form-paper [attributes
+                       {:e! e!
+                        :attributes (some-> feature-class :attribute/_parent)
+                        :common? false
+                        :inherits-location? false}]])
 
         [form/footer2]]
 
@@ -485,8 +489,10 @@
         [form-paper
          [:<>
           (label ctype)
-          [attributes e! (some-> ctype :attribute/_parent)
-           (:component/inherits-location? ctype)]]]
+          [attributes {:e! e!
+                       :attributes (some-> ctype :attribute/_parent)
+                       :inherits-location? (:component/inherits-location? ctype)
+                       :common? true}]]]
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
