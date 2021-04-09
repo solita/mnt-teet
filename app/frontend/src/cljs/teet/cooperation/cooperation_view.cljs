@@ -953,6 +953,22 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
+(def custom-date-formatter
+  (cljs-time.format/formatter "dd.MM.yyyy"))
+
+(defn format-date
+  "Format date to dd.MM.yyyy"
+  [date]
+  (cljs-time.format/unparse custom-date-formatter date))
+
+(defn date-label-component
+  [{value :value label :label}]
+  [:div {:style (merge {:color "#5D6071"} common-styles/body-2-bold)} label
+   [:div {:style common-styles/body-1-bold}
+    [common/popper-tooltip {:title "Date of application can not be changed"
+                            :variant :info}
+     (format-date (cljs-time.core/date-time value))]]])
+
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
@@ -978,7 +994,7 @@
 
    ^{:attribute :cooperation.application/date
      :xs 8}
-   [date-picker/date-input {}]
+   [date-label-component {:label (tr [:fields :cooperation.application/date])}]
 
    ^{:attribute :cooperation.application/response-deadline
      :xs 8}
