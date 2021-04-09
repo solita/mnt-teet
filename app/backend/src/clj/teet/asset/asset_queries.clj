@@ -6,7 +6,8 @@
             [clojure.walk :as walk]
             [teet.project.project-db :as project-db]
             [teet.asset.asset-db :as asset-db]
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.asset.asset-model :as asset-model]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -34,4 +35,11 @@
     :cost-items (asset-db/project-cost-items adb project-id)
     :project (project-db/project-by-id db [:thk.project/id project-id])}
    (when cost-item
-     {:cost-item (fetch-cost-item adb cost-item)})))
+     {:cost-item (fetch-cost-item
+                  adb
+                  ;; Always pull the full asset even when focusing on a
+                  ;; specific subcomponent.
+                  ;; PENDING: what if there are thousands?
+                  (if (asset-model/component-oid? cost-item)
+                    (asset-model/component-asset-oid cost-item)
+                    cost-item))})))
