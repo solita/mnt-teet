@@ -3,7 +3,8 @@
             [datomic.client.api :as d]
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.asset.asset-model :as asset-model]))
 
 (def ctype-pattern
   '[*
@@ -132,27 +133,27 @@
     (let [seq-number (inc (or oid-sequence-number 0))]
       [{:db/ident fclass
         :fclass/oid-sequence-number seq-number}
-       (format "N40-%s-%06d" oid-prefix seq-number)])))
+       (asset-model/asset-oid oid-prefix seq-number)])))
 
 (defn next-component-oid
   "Get next OID for a new component in feature."
   [db feature-oid]
   {:pre (string? feature-oid)}
-  (format "%s-%05d"
-          feature-oid
-          (inc
-           (reduce (fn [max-num [component-oid]]
-                     (let [[_ _ _ n] (str/split component-oid #"\-")
-                           num (Long/parseLong n)]
-                       (max max-num num)))
-                   0
-                   (d/q '[:find ?oid
-                          :where
-                          [_ :asset/oid ?oid]
-                          [(> ?oid ?start)]
-                          [(< ?oid ?end)]
-                          :in $ ?start ?end]
-                        db
-                        ;; Finds all OIDs for this asset
-                        (str feature-oid "-")
-                        (str feature-oid "."))))))
+  (asset-model/component-oid
+   feature-oid
+   (inc
+    (reduce (fn [max-num [component-oid]]
+              (let [[_ _ _ n] (str/split component-oid #"\-")
+                    num (Long/parseLong n)]
+                (max max-num num)))
+            0
+            (d/q '[:find ?oid
+                   :where
+                   [_ :asset/oid ?oid]
+                   [(> ?oid ?start)]
+                   [(< ?oid ?end)]
+                   :in $ ?start ?end]
+                 db
+                 ;; Finds all OIDs for this asset
+                 (str feature-oid "-")
+                 (str feature-oid "."))))))
