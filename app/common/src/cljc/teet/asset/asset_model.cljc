@@ -27,3 +27,38 @@
   "Check if given OID refers to a component."
   [oid]
   (boolean (re-matches component-pattern oid)))
+
+(defn component-asset-oid
+  "Given component OID, return the OID of the parent asset."
+  [component-oid]
+  {:pre [(component-oid? component-oid)]}
+  (-> component-oid
+      (str/split #"-")
+      butlast
+      (->> (str/join "-"))))
+
+(defn find-component-path
+  "Return vector containing all parents of component from asset to the component.
+  For example:
+  [a c1 c2 c3]
+  where a is the asset, that has component c1
+  c1 has child component c2
+  and c2 has child component c3 (the component we want)"
+  [asset component-oid]
+  (let [containing
+        (fn containing [path here]
+          (let [cs (concat (:asset/components here)
+                           (:component/components here))]
+            (if-let [c (some #(when (= component-oid (:asset/oid %))
+                                %) cs)]
+              ;; we found the component at this level
+              (into path [here c])
+
+              ;; not found here, recurse
+              (first
+               (for [sub cs
+                     :let [sub-path (containing (conj path here) sub)]
+                     :when sub-path]
+                 sub-path)))))]
+
+    (containing [] asset)))

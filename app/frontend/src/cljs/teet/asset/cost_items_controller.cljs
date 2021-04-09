@@ -6,7 +6,8 @@
             [teet.util.collection :as cu]
             [teet.log :as log]
             [teet.routes :as routes]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.asset.asset-model :as asset-model]))
 
 (defonce next-id (atom 0))
 
@@ -100,33 +101,6 @@
        app [:cost-item :asset/components]
        update-component component-id update-fn args))))
 
-(defn find-component-path
-  "Return vector containing all parents of component from asset to the component.
-  For example:
-  [a c1 c2 c3]
-  where a is the asset, that has component c1
-  c1 has child component c2
-  and c2 has child component c3 (the component we want)"
-  [asset component-id]
-  (let [component-id (str component-id)
-        containing
-        (fn containing [path here]
-          (let [cs (concat (:asset/components here)
-                           (:component/components here))]
-            (if-let [c (some #(when (= component-id (str (:db/id %)))
-                                %) cs)]
-              ;; we found the component at this level
-              (into path [here c])
-
-              ;; not found here, recurse
-              (first
-               (for [sub cs
-                     :let [sub-path (containing (conj path here) sub)]
-                     :when sub-path]
-                 sub-path)))))]
-
-    (containing [] asset)))
-
 (extend-protocol t/Event
 
   SaveCostItem
@@ -174,9 +148,10 @@
   SaveComponent
   (process-event [_ app]
     (let [form-data (form-state app)
-          {parent-id :db/id} (-> (common-controller/page-state app :cost-item)
-                                 (find-component-path (:db/id form-data))
-                                 butlast last)]
+          {parent-id :asset/oid}
+          (-> (common-controller/page-state app :cost-item)
+              (asset-model/find-component-path (:asset/oid form-data))
+              butlast last)]
       (t/fx app
             {:tuck.effect/type :command!
              :command :asset/save-component
@@ -300,6 +275,7 @@
                                        :component/components)
                               #(conj (or % [])
                                      {:db/id new-id
+                                      :asset/oid new-id
                                       :component/ctype type}))))
        {:tuck.effect/type :navigate
         :params params

@@ -178,7 +178,8 @@
   :view teet.asset.cost-items-view/cost-item-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
-                 :cost-item (params :id)}}}
+                 :cost-item (let [oid (params :id)]
+                              (when (not= oid "new") oid))}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}

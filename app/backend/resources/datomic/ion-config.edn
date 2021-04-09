@@ -17,7 +17,8 @@
          teet.user.user-tx/ensure-unique-email
          clojure.string/includes?
          teet.task.task-tx/delete-task
-         teet.asset.asset-tx/save-asset]
+         teet.asset.asset-tx/save-asset
+         teet.asset.asset-tx/save-component]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
