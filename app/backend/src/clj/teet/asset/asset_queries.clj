@@ -15,11 +15,11 @@
    :args _}
   (asset-db/asset-type-library (environment/asset-db)))
 
-(defn- fetch-cost-item [adb id]
+(defn- fetch-cost-item [adb oid]
   (asset-type-library/db->form
    (asset-type-library/rotl-map
     (asset-db/asset-type-library adb))
-   (d/pull adb '[*] id)))
+   (d/pull adb '[*] [:asset/oid oid])))
 
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
@@ -35,11 +35,3 @@
     :project (project-db/project-by-id db [:thk.project/id project-id])}
    (when cost-item
      {:cost-item (fetch-cost-item adb cost-item)})))
-
-(defquery :asset/cost-item
-  {:doc "Fetch a single cost item by id"
-   :context {:keys [db user] adb :asset-db}
-   :args {id :db/id}
-   :project-id [:thk.project/id (asset-db/cost-item-project adb id)]
-   :authorization {:project/read-info {}}}
-  (fetch-cost-item adb id))

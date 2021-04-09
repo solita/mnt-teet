@@ -352,7 +352,7 @@
           [:div {:class (<class common-styles/flex-table-column-style
                                 20 :flex-start 1 nil)}
            [component-tree-level-indent level]
-           [Link {:href (url/set-query-param :component (str (:db/id c)))}
+           [url/Link {:params {:id (:asset/oid c)}}
             (:common/name c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 20 :flex-start 0 nil)}
@@ -442,10 +442,8 @@
   [:<>
    [breadcrumbs/breadcrumbs
     (for [p component-path]
-      {:link [url/Link {:page :cost-items
-                        :query {:id (str (:db/id asset))
-                                :component (when-not (:asset/fclass p)
-                                             (str (:db/id p)))}}
+      {:link [url/Link {:page :cost-item
+                        :params {:id (:asset/oid asset)}}
               (:common/name p)]
        :title (if-let [name (:common/name p)]
                 name
@@ -501,7 +499,7 @@
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
          [url/Link {:page :cost-item
-                    :query {:component nil}}
+                    :params {:id (:asset/oid cost-item-data)}}
           (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
          [form/footer2]]]
 
@@ -527,7 +525,7 @@
                toggle-open! #(swap! open cu/toggle %)]
     [:div
      [buttons/button-secondary {:element "a"
-                                :href (url/new-cost-item (get-in app [:params :project]))
+                                :href (url/cost-item "new")
                                 :disabled add?
                                 :start-icon (r/as-element
                                              [icons/content-add])}
@@ -550,11 +548,11 @@
                              :margin-left "1rem"}}
                [typography/Text2Bold (str/upper-case (tr* fclass))]
                [:div.cost-items {:style {:margin-left "1rem"}}
-                (for [{id :db/id :common/keys [name]} cost-items]
-                  ^{:key (str id)}
+                (for [{oid :asset/oid :common/keys [name]} cost-items]
+                  ^{:key oid}
                   [:div
                    [url/Link {:page :cost-item
-                              :params {:id id}} name]])]]))]]))]]))
+                              :params {:id oid}} name]])]]))]]))]]))
 
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}

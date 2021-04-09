@@ -1,6 +1,6 @@
 (ns teet.asset.asset-commands
   "Commands to store asset information"
-  (:require [teet.db-api.core :refer [defcommand] :as db-api]
+  (:require [teet.db-api.core :refer [defcommand tx] :as db-api]
             [datomic.client.api :as d]
             [teet.environment :as environment]
             [clojure.walk :as walk]
@@ -22,16 +22,17 @@
    :authorization {:cost-items/edit-cost-items {}}
    :pre [^{:error :asset-does-not-belong-to-project}
          (or (string? (:db/id asset))
-             (= project-id (:asset/project (du/entity adb (:db/id asset)))))]
-   :transact
-   (with-meta
-     (du/modify-entity-retract-nils
-      adb
-      (merge {:asset/project project-id}
-             (asset-type-library/form->db
-              (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-              (dissoc asset :asset/components))))
-     {:db :asset})})
+             (= project-id (:asset/project (du/entity adb (:db/id asset)))))]}
+  (let [{:keys [db-after tempids]}
+        (tx
+         ^{:db :asset}
+         [(list 'teet.asset.asset-tx/save-asset
+                (merge {:asset/project project-id}
+                       (asset-type-library/form->db
+                        (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+                        (dissoc asset :asset/components))))])]
+    {:asset/oid (or (:asset/oid asset)
+                    (:asset/oid (du/entity db-after (tempids (:db/id asset)))))}))
 
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."

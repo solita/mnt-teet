@@ -43,7 +43,7 @@
        :features (into-array (remove nil? features))})
 
 (defrecord SaveCostItem [])
-(defrecord SaveCostItemResponse [tempid response])
+(defrecord SaveCostItemResponse [response])
 (defrecord DeleteComponent [id])
 (defrecord SaveComponent [component-id])
 (defrecord SaveComponentResponse [tempid response])
@@ -144,21 +144,22 @@
              :command :asset/save-cost-item
              :payload {:asset asset
                        :project-id project-id}
-             :result-event (partial ->SaveCostItemResponse (:db/id asset))})))
+             :result-event ->SaveCostItemResponse})))
 
   SaveCostItemResponse
-  (process-event [{:keys [tempid response]} app]
-    (apply t/fx
-           (snackbar-controller/open-snack-bar app
-                                               (tr [:asset :cost-item-saved]))
-           (remove nil?
-                   [(when (string? tempid)
-                      {:tuck.effect/type :navigate
-                       :page :cost-item
-                       :params (merge
-                                (:params app)
-                                {:id (str (get-in response [:tempids tempid]))})})
-                    common-controller/refresh-fx])))
+  (process-event [{:keys [response]} {params :params :as app}]
+    (let [oid (:asset/oid response)]
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app
+                                                 (tr [:asset :cost-item-saved]))
+             (remove nil?
+                     [(when (not= oid (:id params))
+                        {:tuck.effect/type :navigate
+                         :page :cost-item
+                         :params (merge
+                                  (:params app)
+                                  {:id oid})})
+                      common-controller/refresh-fx]))))
 
   DeleteComponent
   (process-event [{:keys [fetched-cost-item-atom id]} app]
