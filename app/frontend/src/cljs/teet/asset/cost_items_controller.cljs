@@ -47,7 +47,7 @@
 (defrecord SaveCostItemResponse [response])
 (defrecord DeleteComponent [id])
 (defrecord SaveComponent [component-id])
-(defrecord SaveComponentResponse [tempid response])
+(defrecord SaveComponentResponse [response])
 
 (defrecord UpdateForm [form-data])
 
@@ -160,18 +160,20 @@
                        :component (dissoc form-data
                                           :component/components
                                           :location/geojson)}
-             :result-event (partial ->SaveComponentResponse (:db/id form-data))})))
+             :result-event ->SaveComponentResponse})))
 
   SaveComponentResponse
-  (process-event [{:keys [tempid response]} app]
-    (apply t/fx app
-           (remove nil?
-                   [(when (string? tempid)
-                      {:tuck.effect/type :navigate
-                       :page :cost-item
-                       :params (:params app)
-                       :query {:component (get-in response [:tempids tempid])}})
-                    common-controller/refresh-fx])))
+  (process-event [{:keys [response]} {params :params :as app}]
+    (let [oid (:asset/oid response)]
+      (apply t/fx app
+             (remove nil?
+                     [(when (not= oid (params :id))
+                        {:tuck.effect/type :navigate
+                         :page :cost-item
+                         :params (merge (:params app)
+                                        {:id oid})
+                         :query nil})
+                      common-controller/refresh-fx]))))
 
   UpdateForm
   (process-event [{:keys [form-data]} app]
