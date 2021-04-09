@@ -10,16 +10,21 @@
    :color theme-colors/gray-light
    :font-size "0.875rem"})
 
+(defn- small-bold-gray-text-style
+  []
+  {:color theme-colors/gray-light
+   :font-size "0.875rem"
+   :font-weight :bold})
+
 (defn- small-text-style
   []
   {:font-size "0.875rem"})
 
-(defn grey-text-style
+(defn gray-text-style
   []
-  {:display :block
-   :color theme-colors/gray-light})
+  {:color theme-colors/gray-light})
 
-(defn- dark-grey-text-style
+(defn- dark-gray-text-style
   []
   {:display :block
    :color theme-colors/gray
@@ -103,9 +108,11 @@
 
 (def SmallGrayText (util/make-component :span {:class (<class small-gray-text-style)}))
 
-(def GreyText (util/make-component :span {:class (<class grey-text-style)}))
+(def SmallBoldGrayText (util/make-component :span {:class (<class small-bold-gray-text-style)}))
 
-(def BoldGreyText (util/make-component :span {:class (<class dark-grey-text-style)}))
+(def GrayText (util/make-component :span {:class (<class gray-text-style)}))
+
+(def BoldGrayText (util/make-component :span {:class (<class dark-gray-text-style)}))
 
 (def WarningText (util/make-component :p {:class (<class warning-text-style)}))
 

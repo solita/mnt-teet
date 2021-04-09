@@ -131,8 +131,8 @@
   [:div {:class class}
    [:div {:class (herb/join (<class container-style)
                             class)}
-    [Text {:component :span
-           :classes {:root (<class label-style)}}
+    [typography/TextBold {:component :span
+                          :classes {:root (<class label-style)}}
 
      (str label ":")]
     [Text {:component :span
@@ -410,7 +410,7 @@
                                        theme-colors/red
                                        theme-colors/primary)}}]))
 
-(defn heading-and-grey-border-body
+(defn heading-and-gray-border-body
   [{:keys [heading body]}]
   [:div {:style {:margin-bottom "1.5rem"}}
    [:div {:style {:margin-bottom "0.25rem"}}

@@ -118,14 +118,14 @@
       [typography/SmallText
        (:user/person-id user)]]
      [:div {:style {:flex 1}}
-      [typography/GreyText
+      [typography/GrayText
        (tr [:admin :user-global-role])]
       [typography/SmallText
        (if global-role
          (name global-role)
          (tr [:admin :user-no-global-role]))]]
      [:div {:style {:flex 3}}
-      [typography/GreyText
+      [typography/GrayText
        (tr [:admin :user-contact-information])]
       [typography/SmallText
        (if (seq contact-info)
@@ -153,7 +153,7 @@
       :save-event #(admin-controller/->EditUser @form-value)}
      [:div {:style {:background-color theme-colors/gray-lightest
                     :padding "1rem"}}
-      [typography/GreyText {:style {:margin-bottom "1rem"}}
+      [typography/GrayText {:style {:margin-bottom "1rem"}}
        (tr [:admin :role-and-contact-information])]
       [:div {:style {:display :flex
                      :flex-direction :row}}
@@ -211,7 +211,7 @@
                                         (date/in-past? (:permission/valid-until %)))))]
       [:div {:class (<class common-styles/margin-bottom 1.5)}
        [:div
-        [typography/GreyText (tr [:admin :current-permissions])]
+        [typography/GrayText (tr [:admin :current-permissions])]
         (if (seq current-perms)
           (mapc
             permission-row
@@ -220,7 +220,7 @@
            (tr [:admin :no-current-permissions])])]
        (when @show-history?
          [:div
-          [typography/GreyText (tr [:admin :past-permissions])]
+          [typography/GrayText (tr [:admin :past-permissions])]
           (mapc
             permission-row
             past-perms)])

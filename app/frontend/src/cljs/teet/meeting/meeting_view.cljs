@@ -290,7 +290,7 @@
                                false                        ;; In history view we are never editing
                                ]}))}
                theme-colors/white]))]))]
-    [typography/GreyText (tr [:meeting :no-decisions-found])]))
+    [typography/GrayText (tr [:meeting :no-decisions-found])]))
 
 (defn activity-meetings-decisions
   [e! activity]
@@ -332,7 +332,7 @@
        [typography/SmallText
         (tr-enum activity-name)])]]
    [:div {:style {:text-align :right}}
-    [typography/GreyText location]]])
+    [typography/GrayText location]]])
 
 
 (defn meetings-by-month-year
@@ -432,7 +432,7 @@
           (for [meeting today]
             ^{:key (:db/id meeting)}
             [meeting-information meeting]))
-        [typography/GreyText (tr [:meeting :no-meetings])])]
+        [typography/GrayText (tr [:meeting :no-meetings])])]
      [:div {:class (<class common-styles/margin-bottom 1)}
       [typography/Heading2 {:class (<class common-styles/margin-bottom 0.5)}
        (tr [:common :this-week])]
@@ -445,13 +445,13 @@
               [:div {:class (<class common-styles/flex-align-center)}
                [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
                 (str/capitalize (format/localized-day-of-the-week (format/date-string->date date)))]
-               [typography/GreyText {:style {:margin-left "0.5rem"}}
+               [typography/GrayText {:style {:margin-left "0.5rem"}}
                 date]]
               (doall
                 (for [meeting meetings]
                   ^{:key (:db/id meeting)}
                   [meeting-information meeting]))]))
-         [typography/GreyText (tr [:meeting :no-meetings])])]]
+         [typography/GrayText (tr [:meeting :no-meetings])])]]
      [meetings-by-month-year rest false]]))
 
 (defn activity-meetings-page-content
@@ -507,7 +507,7 @@
                         ))
                     (sort-by :meeting/start meetings)))]
        [:div {:class (<class project-navigator-view/empty-section-style)}
-        [typography/GreyText (tr [:meeting :no-meetings])]])
+        [typography/GrayText (tr [:meeting :no-meetings])]])
      [:div
       [:div.project-navigator-add-meeting
 
@@ -701,7 +701,7 @@
        [:div
         [context/consume :reviews?
          [update-meeting-warning?]]
-        [typography/BoldGreyText {:style {:margin-bottom "1rem"}}
+        [typography/BoldGrayText {:style {:margin-bottom "1rem"}}
          (tr [:meeting :add-person])]
         ;; Split in to 2 forms so we can have separate specs for each
         (if non-teet?
@@ -784,7 +784,7 @@
                                           :change-absence (when edit-rights?
                                                             change-absence)}
                participation]))
-          [typography/GreyText (tr [:meeting :no-absentees])])]
+          [typography/GrayText (tr [:meeting :no-absentees])])]
        (when edit-rights?
          [:div.notification {:style {:margin "1rem 0"}}
           [typography/Heading2 {:class [(<class common-styles/margin-bottom 1)
@@ -892,9 +892,9 @@
       [:div.participant-comment {:class (<class common-styles/flex-table-column-style 70 :space-between)}
        (if comment
          [:p comment]
-         [typography/GreyText {:style {:font-style :italic}}
+         [typography/GrayText {:style {:font-style :italic}}
           (tr [:meeting :no-review-comment])])
-       [typography/GreyText
+       [typography/GrayText
         {:style {:margin-left "0.5rem"}}
         (format/date-time (:meta/created-at review))]]]]))
 
