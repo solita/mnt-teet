@@ -340,8 +340,11 @@
   "
   [tx-data & more-tx-data]
   (assert (vector? tx-data) "tx-data must be a vector!")
-  (let [{:keys [user conn]} *request-ctx*
-        command *request-name*]
+  (let [{:keys [user]} *request-ctx*
+        command *request-name*
+        conn (case (or (:db (meta tx-data)) :teet)
+               :teet (:conn *request-ctx*)
+               :asset (:asset-conn *request-ctx*))]
     (assert *request-name* "tx can only be called within defcommand")
     (log/info "tx  command: " command ", user: " user)
 

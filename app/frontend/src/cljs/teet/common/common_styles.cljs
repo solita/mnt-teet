@@ -363,18 +363,24 @@
   ([basis justify-content]
    (flex-table-column-style basis justify-content 0))
   ([basis justify-content grow]
-   ^{:pseudo {:first-child {:border-left 0}
-              :last-child {:border-right 0}}}
-   {:flex-basis (str basis "%")
-    :border-color (darken theme-colors/gray-lighter 10)
-    :border-style :solid
-    :border-width "2px 2px 0 0"
-    :flex-grow grow
-    :flex-shrink 0
-    :display :flex
-    :align-items :center
-    :padding "0.5rem 0.25rem"
-    :justify-content justify-content}))
+   (flex-table-column-style basis justify-content grow
+                            (darken theme-colors/gray-lighter 10)))
+  ([basis justify-content grow border-color]
+   (with-meta
+     (merge
+      {:flex-basis (str basis "%")
+       :flex-grow grow
+       :flex-shrink 0
+       :display :flex
+       :align-items :center
+       :padding "0.5rem 0.25rem"
+       :justify-content justify-content}
+      (when border-color
+        {:border-color border-color
+         :border-style :solid
+         :border-width "2px 2px 0 0"}))
+     {:pseudo {:first-child {:border-left 0}
+                         :last-child {:border-right 0}}})))
 
 (defn heading-and-action-style
   []
@@ -454,9 +460,9 @@
   ([vertical horizontal]
    (padding vertical horizontal vertical horizontal))
   ([up right down left]
-   {:padding-up (str up "rem")
+   {:padding-top (str up "rem")
     :padding-right (str right "rem")
-    :padding-down (str down "rem")
+    :padding-bottom (str down "rem")
     :padding-left (str left "rem")}))
 
 (defn no-margin []

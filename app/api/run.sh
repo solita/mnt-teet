@@ -2,4 +2,4 @@
 set -eu
 
 echo STARTING PostgREST
-postgrest /etc/postgrest.conf
+postgrest postgrest.conf

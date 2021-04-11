@@ -38,7 +38,7 @@
       [:div
       (if deleted?
         [:<>
-         [typography/GreyText
+         [typography/GrayText
           (tr-enum type)]
          [typography/SmallText
           (tr [:link :target-deleted]

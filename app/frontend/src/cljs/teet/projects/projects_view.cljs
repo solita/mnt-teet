@@ -36,7 +36,7 @@
           :title status}]
    [:p
     [:strong {:class (<class projects-style/project-name-style)} name]
-    [typography/GreyText (str "THK" thk-id)]]])
+    [typography/GrayText (str "THK" thk-id)]]])
 
 (defn format-column-value [column value row]
   (case column
@@ -133,6 +133,7 @@
                    :data (filtered-by row-filter @app-state/user all-projects)
                    :columns project-model/project-listing-display-columns
                    :get-column project-model/get-column
+                   :get-column-compare project-model/get-column-compare
                    :format-column format-column-value
                    :filter-type {:thk.project/project-name :string
                                  :thk.project/owner-info :string

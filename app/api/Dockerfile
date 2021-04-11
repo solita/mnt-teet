@@ -51,6 +51,7 @@ USER 1000
 
 # PostgREST reads /etc/postgrest.conf so map the configuration
 # file in when you run this container
+WORKDIR /etc
 ENTRYPOINT /etc/postgrest.sh
 
 EXPOSE 3000

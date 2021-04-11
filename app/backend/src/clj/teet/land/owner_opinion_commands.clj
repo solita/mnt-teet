@@ -3,7 +3,8 @@
             teet.land.owner-opinion-specs
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.meta.meta-model :as meta-model]
-            [teet.project.project-db :as project-db]))
+            [teet.project.project-db :as project-db]
+            [teet.land.owner-opinion-db :as owner-opinion-db]))
 
 
 (def land-owner-opinion-rich-text-fields
@@ -30,7 +31,7 @@
      [(merge
         {:db/id (or (:db/id form-data) "new-land-owner-opinion")}
         (select-keys form-data [:land-owner-opinion/body :land-owner-opinion/type :land-owner-opinion/date
-                                :land-owner-opinion/respondent-connection-to-land
+                                :land-owner-opinion/respondent-connection-to-land :land-owner-opinion/authority-position
                                 :land-owner-opinion/respondent-name :land-owner-opinion/link-to-response])
         {:land-owner-opinion/activity (get-in form-data [:land-owner-opinion/activity :db/id])
          :land-owner-opinion/project project-id
@@ -38,3 +39,12 @@
         (if (:db/id form-data)
           (meta-model/modification-meta user)
           (meta-model/creation-meta user)))])})
+
+(defcommand :land-owner-opinion/delete-opinion
+  {:doc "Delete a land owner opinion"
+   :context {user :user
+             db :db}
+   :payload {opinion-id :db/id}
+   :project-id (owner-opinion-db/get-project-id db opinion-id)
+   :authorization {:land/delete-land-owner-opinions {}}
+   :transact [(meta-model/deletion-tx user opinion-id)]})

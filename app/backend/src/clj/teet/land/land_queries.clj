@@ -48,7 +48,7 @@
      (merge related-cadastral-units
             {:land-acquisitions land-acquisitions}))))
 
-(defn- project-cadastral-units [db api-url api-secret project-id]
+(defn project-cadastral-units [db api-url api-secret project-id]
   (let [ctx {:api-url api-url
              :api-secret api-secret}]
     (-> (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])
@@ -57,34 +57,6 @@
             (features/geojson-features-by-id ctx units)
           (map :properties
                (:features units))))))
-
-(defquery :land/estate-info
-  {:doc "Fetch estate info from local cache or X-road"
-   :context {:keys [user]}
-   :args {estate-id :estate-id
-          project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :config {xroad-instance [:xroad :instance-id]
-            xroad-url [:xroad :query-url]
-            xroad-subsystem [:xroad :kr-subsystem-id]
-            api-url [:api-url]
-            api-secret [:auth :jwt-secret]}
-   :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
-                                              :link :thk.project/owner}}}
-  (let [x-road-response (property-registry/fetch-estate-info
-                         {:xroad-url xroad-url
-                          :xroad-kr-subsystem-id xroad-subsystem
-                          :instance-id xroad-instance
-                          :requesting-eid (str "EE" (:user/person-id user))
-                          :api-url api-url
-                          :api-secret api-secret}
-                         estate-id)]
-    (if (= (:status x-road-response) :ok)
-      (-> x-road-response
-          property-registry/active-jagu34-only
-          (assoc :estate-id estate-id))
-      (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
-                                                :response x-road-response})))))
 
 (defn- with-quality [{:keys [MOOTVIIS MUUDET] :as unit}]
   (assoc unit :quality
@@ -201,6 +173,4 @@ and the compensation info as the value."
           db user [:thk.project/id id] sequence-number)))
 
 (defmethod link-db/fetch-external-link-info :estate [_user _ id]
-  ;; PENDING: estates have no name, show just the id
-  #_(property-registry/fetch-estate-info (property-registry-context user) id)
   {:estate-id id})

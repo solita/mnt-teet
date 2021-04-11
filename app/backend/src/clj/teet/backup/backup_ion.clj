@@ -127,6 +127,7 @@
   "Internal datomic stuff that we can skip"
   #{:db.install/attribute})
 
+
 (defn- output-tx [db-ref attr-info-cache {:keys [data]} ignore-attributes]
   (let [datoms (for [{:keys [e a v added]} data
                      :let [{:db/keys [ident]}
@@ -203,7 +204,8 @@
     (doseq [tx (all-transactions conn)
             :let [tx-map (output-tx (delay (d/as-of db (:t tx))) attr-ident-cache tx
                                     ignore-attributes)]
-            :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
+            :when (and (seq (:data tx-map))
+                       (.after (get-in tx-map [:tx :db/txInstant]) backup-start))]
       (out! tx-map)
       (progress!))))
 
@@ -300,6 +302,14 @@
            :asset-old->new (result "assets.edn"))))
 
 
+(defn- write-backup-to-zip-file [conn file]
+  (with-open [out (io/output-stream file)]
+    (output-zip out
+                ["transactions.edn" (partial output-all-tx conn)]
+                (when (environment/feature-enabled? :asset-db)
+                  ["assets.edn" (partial output-all-tx
+                                         (environment/asset-connection))]))))
+
 (defn- backup* [_event]
   (let [bucket (environment/config-value :backup :bucket-name)
         env (environment/config-value :env)
@@ -313,12 +323,7 @@
     (try
       (let [file (java.io.File/createTempFile "backup" ".zip")]
         (log/info "Generating backup zip file: " (.getAbsolutePath file))
-        (with-open [out (io/output-stream file)]
-          (output-zip out
-                      ["transactions.edn" (partial output-all-tx conn)]
-                      (when (environment/feature-enabled? :asset-db)
-                        ["assets.edn" (partial output-all-tx
-                                               (environment/asset-connection))])))
+        (write-backup-to-zip-file conn file)
         (log/info "Backup generated in " (int (/ (- (System/currentTimeMillis) start-ms) 1000))
                   "seconds with size " (.length file)
                   ". Uploading to S3.")
@@ -334,7 +339,7 @@
         (log/error e "TEET backup failed")))))
 
 (defn- migrate [{conn :conn :as ctx}]
-  (environment/migrate conn)
+  (environment/migrate conn @environment/schema)
   ctx)
 
 (defn backup

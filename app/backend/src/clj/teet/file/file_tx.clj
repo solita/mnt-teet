@@ -15,7 +15,7 @@
   Returns tx data."
   [db task-id speculative-tx-data]
   (let [{db :db-after} (d/with db {:tx-data speculative-tx-data})
-        task-files (task-db/latest-task-files db task-id)
+        task-files (task-db/latest-task-files-with-incomplete db task-id)
         metadata (mapv (partial file-db/file-metadata-by-id db) task-files)]
     (when (not= (count metadata)
                 (count (distinct metadata)))
@@ -40,6 +40,7 @@
                              :where
                              [?part :file.part/task ?task]
                              [?part :file.part/number ?n]
+                             [(missing? $ ?part :meta/deleted?)]
                              :in $ ?task ?n]
                            db task-id part-number)))]
        (if (zero? part-number)
@@ -51,7 +52,8 @@
                       ;; Existing part, just refer to it
                       {:db/id part-id}
                       ;; New part, create it
-                      (merge (select-keys part [:file.part/name :file.part/number])
+                      (merge {:file.part/name ""}
+                             (cu/without-nils (select-keys part [:file.part/name :file.part/number]))
                              {:db/id "new-part"
                               :file.part/task task-id})))]))
 

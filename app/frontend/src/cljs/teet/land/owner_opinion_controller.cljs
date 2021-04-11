@@ -6,6 +6,7 @@
 (defrecord OpinionFormClose [])
 (defrecord OpinionFormOpen [])
 (defrecord IncreaseCommentCount [land-unit-id])
+(defrecord DecreaseCommentCount [land-unit-id])
 
 (extend-protocol t/Event
   SubmitOpinionForm
@@ -21,6 +22,10 @@
   IncreaseCommentCount
   (process-event [{:keys [land-unit-id]} app]
     (update-in app [:route :project :land-owner-comment-count land-unit-id] inc))
+
+  DecreaseCommentCount
+  (process-event [{:keys [land-unit-id]} app]
+    (update-in app [:route :project :land-owner-comment-count land-unit-id] dec))
 
   OpinionFormOpen
   (process-event [_ app]

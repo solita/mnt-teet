@@ -525,11 +525,21 @@
              (fn [page-state]
                (apply update-fn page-state args))))
 
+(defn assoc-page-state
+  "Assoc value to current page state."
+  [{page :page :as app} path value]
+  (assoc-in app (into [:route page] path) value))
+
 (defn page-state
   "Get the state of the current page.
   If path components are given, takes that path from page-state."
   [{page :page :as app} & path]
   (get-in app (into [:route page] path)))
+
+(defn page-state-path
+  "Return path in app state for the page state."
+  [{page :page} & path]
+  (into [:route page] path))
 
 (defn feature-enabled? [feature]
   {:pre [(keyword? feature)]}
@@ -606,7 +616,8 @@
         (t/fx app fx))
       app)))
 
-(defrecord SaveForm [command form-data on-success-fx]
+(defrecord SaveForm
+  [command form-data on-success-fx]
   t/Event
   (process-event [_ app]
     (t/fx app
@@ -614,6 +625,17 @@
            :command command
            :payload form-data
            :result-event (partial ->SaveFormResponse on-success-fx)})))
+
+(defrecord SaveFormWithConfirmation
+  [command form-data on-success-fx confirmation-message]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+      {:tuck.effect/type :command!
+       :command command
+       :payload form-data
+       :success-message confirmation-message
+       :result-event (partial ->SaveFormResponse on-success-fx)})))
 
 
 (defn ^:export test-command

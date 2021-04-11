@@ -42,7 +42,7 @@
 (def green-dark "#25BE25")
 (def yellow "#F2C94C")
 
-(def primary blue)
+(def primary "#005AA3")
 (def secondary blue-dark)
 (def success green)
 (def error red)

@@ -11,7 +11,10 @@
             [teet.link.link-queries :as link-queries]
             [teet.util.string :as string]
             [teet.log :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.db-api.core :refer [defquery]]
+            [teet.project.project-db :as project-db]
+            [teet.land.owner-opinion-export :as owner-opinion-export]))
 
 (defn- read-json-body [req]
   (-> req :body io/reader
@@ -156,7 +159,7 @@
     :link/external-id "2:12601:001:0193",
     :link/type :cadastral-unit}])
 
-
+;; This is called from meetin_links.ci.spec.js through the test-setup-routes
 (defn setup-mock-cadastral-unit-link-search [_req]
   (defmethod link-queries/search-link :cadastral-unit
     [_db _user _config _project _ _lang text]
@@ -176,6 +179,27 @@
 
   {:status 200 :body "ok"})
 
+(defonce original-land-owner-export-query
+         (get-method teet.db-api.core/query :land-owner-opinion/export-opinions))
+
+;; This is called from land_owner_opinion.ci.spec.js
+(defn setup-mock-estate-infos [_req]
+  (defquery :land-owner-opinion/export-opinions
+    {:doc "Fetch land owner opinions as HTML"
+     :context {:keys [db user]}
+     :args {:land-owner-opinion/keys [activity type test?] :as args}
+     :project-id (project-db/activity-project-id db activity)
+     :authorization {:land/view-land-owner-opinions {}}}
+    ^{:format :raw}
+    {:status 200
+     :headers {"Content-Type" "text/html; charset=UTF-8"}
+     :body (owner-opinion-export/owner-opinion-summary-table
+             db activity type
+             {:units []
+              :estate-info []})})
+
+  {:status 200 :body "ok"})
+
 (defn test-setup-routes []
   (routes
    (POST "/testsetup/:setup" [setup :as req]
@@ -186,3 +210,23 @@
                              deref)]
            (assert (fn? setup-fn))
            (setup-fn req)))))
+
+;; This is called from land_owner_opinion.ci.spec.js
+;; This is only needed because in the setup-mock-estate-infos we transform the export-opinions method
+;; and it doesn't use actual data anymore, and we want to return it to the original state
+(defn teardown-mock-estate-infos [_req]
+  (defmethod teet.db-api.core/query :land-owner-opinion/export-opinions
+    [& args] (apply original-land-owner-export-query args))
+  {:status 200 :body "ok"})
+
+;; If some test setup stuff needs to be torndown after tests use these routes
+(defn test-teardown-routes []
+  (routes
+    (POST "/testteardown/:teardown" [teardown :as req]
+      (let [teardown-fn (->> teardown
+                             (str "teardown-")
+                             (symbol "teet.test-setup")
+                             resolve
+                             deref)]
+        (assert (fn? teardown-fn))
+        (teardown-fn req)))))

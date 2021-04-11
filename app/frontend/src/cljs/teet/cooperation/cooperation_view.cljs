@@ -179,7 +179,7 @@
           edit-button]
          (when-let [date (or modified-at created-at)]
            [:div
-            [typography/BoldGreyText {:style {:display :inline-block}}
+            [typography/BoldGrayText {:style {:display :inline-block}}
              (str (tr [:common :date]) ":")]
             (str " " (format/date-time date))])]]]
       (when comment
@@ -263,7 +263,7 @@
     [:div {:class [(<class common-styles/flex-row)
                    (<class common-styles/margin-bottom 1)]}
      [application-link application]
-     [typography/GreyText {:style {:margin-left "0.5rem"}}
+     [typography/GrayText {:style {:margin-left "0.5rem"}}
       (tr-enum (:activity/name activity))]]
     [application-information application]]
    [Grid {:item true
@@ -322,7 +322,7 @@
   :shortcut-options - map with keys [:option-val :tr-path] only one selectable value under key :shortcut in value
   :search-fields - as form/field components"
   [{:keys [e! default-shortcut shortcut-options search-fields]}]
-  [context/consume :query-filter
+  [context/consume :query
    (fn [{:keys [value on-change reset-filter]}]
      [:div {:class (<class project-navigator-view/navigator-container-style true)}
       [:div {:style {:margin-right "1rem"}}
@@ -359,7 +359,7 @@
          (tr [:search :clear-filters])]]]])])
 
 (defn cooperation-application-search
-  "Uses context :query-filter created by the query component to manage the filters for the query component"
+  "Uses context :query created by the query component to manage the filters for the query component"
   [e! project-activities]
   [query-context-search
    {:e! e!
@@ -453,8 +453,9 @@
        [select/select-enum {:e! e!
                             :attribute :cooperation.application/type}]]
 
-      [:div {:class (<class common-styles/space-between-center)}
-       [buttons/button-secondary {:on-click toggle-export-dialog!}
+      [:div {:class (<class form/form-buttons :flex-end)}
+       [buttons/button-secondary {:on-click toggle-export-dialog!
+                                  :class (<class common-styles/margin-right 1)}
         (tr [:buttons :cancel])]
        (let [{:cooperation.application/keys [activity type] :as fv} @form-value]
          [buttons/button-primary {:id "preview"
@@ -509,7 +510,7 @@
     [:<>
      [:div {:class (<class common-styles/margin-bottom 1.5)}
       [:div {:class (<class common-styles/header-with-actions)}
-       [context/consume :query-filter
+       [context/consume :query
         (fn [{:keys [value]}]
           [:div
            [typography/Heading2 (tr [:cooperation :page-title])]
@@ -877,7 +878,7 @@
          [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
           (tr [:fields :activity/manager])]]
         [:div
-         [typography/GreyText (tr [:cooperation :no-activity-manager])]])]
+         [typography/GrayText (tr [:cooperation :no-activity-manager])]])]
 
      (if @edit-contact?
        [form/form {:e! e!
@@ -952,8 +953,6 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
-;; entrypoint from route /projects/:project/cooperation/:third-party/:application
-
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
@@ -989,24 +988,30 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
+;; entrypoint from route /projects/:project/cooperation/:third-party/:application
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
-  (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
+  (let [application (get-in third-party [:cooperation.3rd-party/applications 0])
+        project-db-id (:db/id project)]
     [authorization-context/with
      {:edit-application (and (authorization-check/authorized?
                                {:functionality :cooperation/edit-application
-                                :entity application})
+                                :entity application
+                                :project-id project-db-id})
                              (cooperation-model/application-editable? application))
       :edit-response (and (authorization-check/authorized?
                            {:functionality :cooperation/edit-application
-                            :entity application})
+                            :entity application
+                            :project-id project-db-id})
                           (cooperation-model/application-response-editable? application))
       :edit-application-right (authorization-check/authorized?
                                 {:functionality :cooperation/edit-application
-                                 :entity application})
+                                 :entity application
+                                 :project-id project-db-id})
       :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
-                      {:functionality :cooperation/application-approval
-                       :entity application})}
+                      {:functionality :cooperation/edit-application
+                       :entity application
+                       :project-id project-db-id})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
       [cooperation-page-structure
        e! app project overview
@@ -1021,7 +1026,7 @@
              :form-value (select-keys application
                                       (conj cooperation-model/editable-application-attributes
                                             :db/id))
-             :modal-title (tr [:cooperation :new-application-title])
+             :modal-title (tr [:cooperation :edit-application-title])
              :button-component [buttons/button-secondary {:data-cy "edit-application"}
                                 (tr [:buttons :edit])]}]]]
          [typography/Heading2

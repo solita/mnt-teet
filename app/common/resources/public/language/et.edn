@@ -53,7 +53,26 @@
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
  :asset
- {:type-library
+ {:add-cost-item "Lisan vara",
+  :validate
+  {:min-length
+   "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
+   :max-length
+   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
+   :min-value "Lubatud minimaalne väärtus on {min-value}",
+   :max-value "Lubatud maksimaalne väärtus on {max-value}",
+   :integer-format "Sisesta täisarv",
+   :decimal-format "Sisestage kümnendväärtus"},
+  :no-matching-feature-classes "Pole vastavata vara liik",
+  :cost-item-saved "Kululoend salvestatud",
+  :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
+  :components {:label "Komponendid"},
+  :back-to-cost-item "< Tagasi {name}",
+  :location
+  {:no-road-found-for-points "Punktide jaoks ei leitud teed",
+   :show-map "Näita kaarti",
+   :hide-map "Peida kaart"},
+  :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
    :fclass "Vara liik",
@@ -69,23 +88,15 @@
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
+   :component-quantity-unit "Komponent koguse ühik: {unit}",
    :ctype "Komponent",
    :db.type/long "Täisarv",
-   :attributes "Tunnused"},
-  :add-cost-item "Lisan vara",
-  :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
-  :no-matching-feature-classes "Pole vastavata vara liik",
-  :validate
-  {:min-length
-   "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
-   :max-length
-   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
-   :min-value "Lubatud minimaalne väärtus on {min-value}",
-   :max-value "Lubatud maksimaalne väärtus on {max-value}"},
+   :attributes "Tunnused",
+   :component-inherits-location "Komponent pärib asukoha vanemalt"},
   :field-group
   {:details "Üksikasjad",
    :common "Ühine",
-   :name-and-location "Nimi ja asukoht",
+   :location "Asukoht",
    :cost-grouping "Kulude grupeerimine"}},
  :buttons
  {:confirm "Kinnitan",
@@ -259,6 +270,7 @@
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
+  :edit-application-title "Muuda taotlust",
   :application-terms-expire-warning
   "Esitatud tingimused aeguvad peagi / on aegunud!",
   :edit-third-party-title "Muudan kaasatud osapoolt",
@@ -299,7 +311,7 @@
   :activity.name/construction "Ehitus",
   :task.type/utilities "Tehnovõrgud",
   :cooperation.response.status/no-objection-with-terms
-  "Tingimustega nõusolek olemas",
+  "Vastus eritingimustega olemas",
   :task.type/site-plan "Asendiplaan",
   :notification.type/activity-accepted
   "Tegevus on vastu võetud omaniku poolt",
@@ -376,8 +388,8 @@
   :notification.type/meeting-updated "Koosolekut on uuendatud",
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
-  :activity.name/pre-design "Eskiisprojekt",
-  :cooperation.opinion.status/rejected "Eirata",
+  :activity.name/pre-design "Eskiis",
+  :cooperation.opinion.status/rejected "Mitte arvestada",
   :document.sub-category/no-objection-letters "Kooskõlastused",
   :task.group/working-design "Töö/teostuse projekt",
   :task.status/waiting-for-review "Ootab ülevaatamist",
@@ -451,7 +463,7 @@
   :estate-compensation.reason/crops "Vili",
   :thk.task-type/design-requirements "Projekteerimistingimused",
   :cooperation.response.status/objection
-  "Vastuväidetega arvamus olemas",
+  "Vastus vastuväidetega olemas",
   :land-owner-opinion.type/ex-ante-eia "KMH eelhinnang",
   :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
@@ -473,7 +485,7 @@
   :task.type/geology "Geoloogia",
   :notification.type/task-review-rejected
   "Ülesande ülevaatamine tagasi lükatud",
-  :cooperation.response.status/no-response "Arvamust ei avaldanud",
+  :cooperation.response.status/no-response "Vastust ei ole",
   :land-acquisition.status/completed "Lõpetatud",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
@@ -545,7 +557,7 @@
   "Ehituse kvaliteedi tagamine",
   :task.group/land-purchase "Maade omandamine",
   :activity.status/canceled "Katkestatud",
-  :cooperation.response.status/no-objection "Nõusolek olemas",
+  :cooperation.response.status/no-objection "Vastus olemas",
   :cooperation.application.type/work-permit "Töö luba",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
@@ -606,6 +618,8 @@
   :bad-request "Vigane päring",
   :replaced-file-not-latest
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
+  :user-has-no-email
+  "Viidet ei saa e-postiga saata. Puudub e-posti aadress, palun lisage e-posti aadress minu konto alt.",
   :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
   :email-address-already-in-use "E-posti aadress on juba kasutusel.",
   :no-participants-with-email
@@ -646,10 +660,12 @@
   :cooperation.opinion/comment "Märkus",
   :validation-error
   #:file.part{:name
-              "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
+              "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. ",
+              :illegal-characters
+              "Nimi sisaldab keelatud tähemärke. Lubatud tähemärgid on: {characters}"},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
-  :cooperation.response/status "Staatus",
+  :cooperation.response/status "Vastuse kokkuvõte",
   :estate-procedure/third-party-compensations
   "Hüvitis kolmandale isikule",
   :project/participant "Osaleja",
@@ -673,6 +689,9 @@
   :land-exchange/area "Pindala",
   :file/position-number "POS#",
   :meeting.decision/body "Otsus",
+  :location/end-m "End m",
+  :location/start-point "Start point",
+  :location/road-nr "Road",
   :meeting/agenda "Päevakava",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
@@ -738,10 +757,13 @@
   :file/description "Kirjeldus",
   :cooperation.contact/name "Nimi",
   :file/document-group "Dokumendi grupp",
+  :location/carriageway "Carriageway",
   :meeting.agenda/body "Sisu",
   :land-owner-opinion/link-to-response "Link arvamusele",
   :estate-procedure/type "Protseduuri tüüp",
   :thk.project/road-name "Tee nimetus",
+  :location/start-m "Start m",
+  :location/end-point "End point",
   :thk.project/estimated-date-range "Eeldatav kestus",
   :participation/role "Roll",
   :file/status "Olek",
@@ -756,8 +778,9 @@
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
   :export-files-zip
-  {:activity-button "Saadan tegevusega seotud dokumendid e-postiga",
-   :task-button "Saadan Ülesandega seotud dokumendid e-postiga",
+  {:activity-button
+   "Saadan viite tegevusega seotud failidele e-postiga",
+   :task-button "Saadan viite ülesandega seotud failidele e-postiga",
    :activity-success
    "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
    :task-success
@@ -789,7 +812,7 @@
   :description "Faili kirjeldus",
   :replace-file-confirm "Jah, laen üles uue versiooni",
   :description-required "Faili kirjeldus on puudu",
-  :general-part "Üldine",
+  :general-part "Yldine",
   :select-part-to-upload
   "Valige osa, kuhu üleslaaditud failid lisatakse",
   :file-will-be-added-to-part-text
@@ -888,11 +911,29 @@
   :no-owners-opinions "Arvamusi pole"},
  :land-owner-opinion
  {:opinions "Arvamused",
-  :add-new-opinion "LISAN UUE ARVAMUSE",
   :export-modal-title "Maade omanike arvamuste koondtabel",
+  :opinion-export "Maade omanike arvamused",
   :choose-activity "Valin tegevuse",
-  :choose-type "Valin tüübi",
-  :opinion-export "Maade omanike arvamused"},
+  :update {:success-message "Arvamuse muutmine õnnestus"},
+  :delete
+  {:cancel-text "Ei, pöördun tagasi",
+   :confirmation-text "Kogu info kustutatakse ja seda ei saa taastada",
+   :success-message "Arvamus kustutatud"},
+  :export
+  {:units-with-opinions "1.1 Piirnevate kinnisasjade omanikud",
+   :estate-num-name "Kinnisasja number; Kinnisasja nimi",
+   :authority-position
+   "Pädeva asutuse põhjendus ja otsus esitatud arvamuse osas",
+   :opinion-body "Arvamuse sisu",
+   :no-position-added "Seisukohta pole lisatud",
+   :title "{opinion-type} maade omanike arvamuste koondtabel",
+   :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
+   :units-without-opinions
+   "1.2 Piirnevate kinnisasjade omanikud, kes arvamust ei avaldanud",
+   :jrk "JRK nr"},
+  :add-new-opinion "LISAN UUE ARVAMUSE",
+  :choose-type "Valin liigi",
+  :edit-opinion "MUUDAN ARVAMUST"},
  :link
  {:search
   {:placeholder "Lisan viite...",

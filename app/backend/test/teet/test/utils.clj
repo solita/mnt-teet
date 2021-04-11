@@ -193,7 +193,7 @@
                       *data-fixture-ids* (atom {})]
               (binding [environment/*connection* *connection*]
                 (when migrate?
-                  (environment/migrate *connection*)
+                  (environment/migrate *connection* @environment/schema)
                   (when asset-db?
                     (environment/migrate-asset-db *asset-connection*)))
 

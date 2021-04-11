@@ -33,6 +33,31 @@
               1
               0))))
 
+(defn find-matching
+  "Walk form and find item matching pred. Returns the last match
+  or nil if not found.
+  "
+  [pred form]
+  (let [matching (volatile! nil)]
+    (walk/prewalk
+     (fn [x]
+       (when (pred x)
+         (vreset! matching x))
+       x)
+     form)
+    @matching))
+
+(defn count-matching-deep
+  "Walk form and count how many items match pred."
+  [pred form]
+  (let [matching (volatile! 0)]
+    (walk/prewalk
+     (fn [x]
+       (when (pred x)
+         (vswap! matching inc))
+       x) form)
+    @matching))
+
 (def ^{:doc "Nonrecursively remove keys with nil values"}
   without-nils
   (partial keep-matching-vals some?))
@@ -181,6 +206,8 @@
                     x)
                   form)
     (-> items deref persistent!)))
+
+
 
 (defn replace-deep
   "Walk form and replace any items in replacements.

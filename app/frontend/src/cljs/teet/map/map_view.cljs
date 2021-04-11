@@ -350,11 +350,7 @@
          :class class
          :extent (or extent default-extent)
          :center default-center
-         ;:selection          nav/valittu-hallintayksikko
-         :on-drag (fn [_item _event]
-                    #_(log/debug "drag" item event)
-                    #_(paivita-extent item event)
-                    #_(t/julkaise! {:aihe :karttaa-vedetty}))
+         :event-handlers (:event-handlers opts)
          :on-postrender (fn [e]
                           (let [old-z @current-zoom
                                 new-z (some->> e openlayers/event-map openlayers/map-zoom js/Math.round)

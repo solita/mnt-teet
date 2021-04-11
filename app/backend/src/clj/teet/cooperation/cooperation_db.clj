@@ -6,7 +6,8 @@
             [teet.util.datomic :as du]
             [teet.project.task-model :as task-model]
             [teet.entity.entity-db :as entity-db]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [taoensso.timbre :as log]))
 
 (defn filters->query-parts
   [filters]
@@ -179,6 +180,7 @@
   "Given project-id and an application with a date, return an activities id that is on going during the dates"
   [db project-id application]
   (let [application-date (:cooperation.application/date application)]
+    (assert (some? application-date))
     (->> (mapv
            first
            (d/q '[:find (pull ?ac [:db/id
@@ -199,6 +201,14 @@
                                       [estimated-start-date estimated-end-date])
                activity)))
          :db/id)))
+
+(defn application-has-same-date-as-db?
+  "Given project-id and an application with a date, return an activities id that is on going during the dates"
+  [db project-id application]
+  (let [provided-application-date (:cooperation.application/date application)
+        db-application-date (:cooperation.application/date (du/entity db (:db/id application)))]
+    (log/debug "comparing dates" provided-application-date db-application-date)
+    (= provided-application-date db-application-date)))
 
 (defn application-project-id [db application-id]
   (get-in (du/entity db application-id)

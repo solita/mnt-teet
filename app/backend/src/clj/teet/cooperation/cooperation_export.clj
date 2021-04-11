@@ -29,15 +29,13 @@
    (group-by :cooperation.application/response-type)
    (cu/map-keys :db/ident)))
 
-(defn- render-response [{:cooperation.response/keys [status content]}]
+(defn- render-response [{:cooperation.response/keys [content]}]
   [:span
-   [:b (tr-enum status)]
    (when content
      (md/render-md-html content))])
 
-(defn- render-opinion [{:cooperation.opinion/keys [status comment]}]
+(defn- render-opinion [{:cooperation.opinion/keys [comment]}]
   [:span
-   [:b (tr-enum status)]
    (when comment
      (md/render-md-html comment))])
 
@@ -58,7 +56,7 @@
                        cu/indexed)]
     [:span
      [:h3 num ". " (tr* :header)]
-     [:table {:border "1", :cellspacing "0", :cellpadding "0"}
+     [:table {:border "1", :cellspacing "0", :cellpadding "5"}
       [:tbody
        [:tr
         [:td {:width "38"} (tr [:cooperation :export :seq#-column])]

@@ -57,7 +57,7 @@
 (defn field-with-title
   [title field-name input-opts]
   [:<>
-   [typography/BoldGreyText title]
+   [typography/BoldGrayText title]
    [Grid {:container true :spacing 3}
     [Grid {:item true :xs 7}
      [TextField {:read-only? true :value title}]]
@@ -109,11 +109,11 @@
         (when-not public?
           [form/field :estate-procedure/type
            [select/select-enum {:e! e!
-                                :label-element typography/BoldGreyText
+                                :label-element typography/BoldGrayText
                                 :attribute :estate-procedure/type}]])
         (when (= procedure-type :estate-procedure.type/acquisition-negotiation)
           [form/many {:attribute :estate-procedure/process-fees
-                      :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
+                      :before [typography/BoldGrayText (tr [:fields :estate-procedure/process-fees])]
                       :after [buttons/link-button
                               {:on-click #(add-row! :estate-procedure/process-fees)}
                               (tr [:land :add-owner])]}
@@ -163,7 +163,7 @@
 
         (when (#{:estate-procedure.type/acquisition-negotiation :estate-procedure.type/expropriation} procedure-type)
           [form/many {:attribute :estate-procedure/compensations
-                      :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
+                      :before [typography/BoldGrayText (tr [:fields :estate-procedure/compensations])]
                       :after [buttons/link-button
                               {:on-click #(add-row! :estate-procedure/compensations)}
                               (tr [:land :add-compensation])]
@@ -191,7 +191,7 @@
               [buttons/link-button {} [icons/action-delete {:font-size :small}]]]]]])
 
         [form/many {:attribute :estate-procedure/third-party-compensations
-                    :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
+                    :before [typography/BoldGrayText (tr [:fields :estate-procedure/third-party-compensations])]
                     :after [buttons/link-button
                             {:on-click #(add-row! :estate-procedure/third-party-compensations)}
                             (tr [:land :add-compensation])]
@@ -226,11 +226,11 @@
             [Grid {:container true :spacing 3}
              [Grid {:item true :xs 12}
               [form/field {:attribute :land-exchange/cadastral-unit-id}
-               [TextField {:label-element typography/BoldGreyText
+               [TextField {:label-element typography/BoldGrayText
                            :placeholder (tr [:land :cadastral-unit-number])}]]]
              [Grid {:item true :xs 6}
               [form/field {:attribute :land-exchange/area}
-               [TextField {:label-element typography/BoldGreyText
+               [TextField {:label-element typography/BoldGrayText
                            :type :number
                            :lang "et"
                            :placeholder 0
@@ -244,7 +244,7 @@
                            :min "0"
                            :lang "et"
                            :end-icon text-field/euro-end-icon
-                           :label-element typography/BoldGreyText}]]]]]])]
+                           :label-element typography/BoldGrayText}]]]]]])]
        (form/footer2 form/form-footer)]]]))
 
 
@@ -396,7 +396,7 @@
         on-change
         cadastral-form]
        [Divider {:style {:margin "1rem 0"}}]
-       [typography/BoldGreyText {:style {:text-transform :uppercase}}
+       [typography/BoldGrayText {:style {:text-transform :uppercase}}
         (tr [:land :unit-info])]
        ;; add when the pos number exists
        (when saved-pos
@@ -486,7 +486,7 @@
          [estate-group-form e! estate
           (r/partial land-controller/->UpdateEstateForm estate) estate-form]
          [Divider {:style {:margin "1rem 0"}}]
-         [typography/BoldGreyText {:style {:text-transform :uppercase}}
+         [typography/BoldGrayText {:style {:text-transform :uppercase}}
           (tr [:land :estate-acquisition-cost])]
          [:div {:class (<class common-styles/flex-row-space-between)}
           [:span (str (tr [:common :total]) ": ") (common/readable-currency total-estate-cost)]
@@ -494,11 +494,11 @@
                         :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "costs")}
            (tr [:common :show-details])]]
          [Divider {:style {:margin "1rem 0"}}]
-         [typography/BoldGreyText {:style {:text-transform :uppercase}}
+         [typography/BoldGrayText {:style {:text-transform :uppercase}}
           (tr [:land :estate-data])]
          (let [burden-count (count (:jagu3 estate))]
            (if (zero? burden-count)
-             [typography/GreyText
+             [typography/GrayText
               [common/count-chip {:label "0"
                                   :style {:background-color theme-colors/gray-light
                                           :color theme-colors/gray-light}}]
@@ -509,7 +509,7 @@
               (tr [:land-modal-page (if (= 1 burden-count) :burden :burdens)])]))
          (let [mortgage-count (count (:jagu4 estate))]
            (if (zero? mortgage-count)
-             [typography/GreyText
+             [typography/GrayText
               [common/count-chip {:label "0"
                                   :style {:background-color theme-colors/gray-light
                                           :color theme-colors/gray-light}}]
@@ -711,11 +711,11 @@
     [:div {:class (<class common-styles/gray-container-style)}
      (if (not-empty burdens)
        (for [burden burdens]
-         [common/heading-and-grey-border-body
+         [common/heading-and-gray-border-body
           {:heading [:<>
-                     [typography/BoldGreyText {:style {:display :inline}}
+                     [typography/BoldGrayText {:style {:display :inline}}
                       (:kande_liik_tekst burden) " "]
-                     [typography/GreyText {:style {:display :inline}}
+                     [typography/GrayText {:style {:display :inline}}
                       (format/parse-date-string (:kande_alguskuupaev burden))]]
            :body (-> burden
                      :kande_tekst
@@ -728,9 +728,9 @@
     [:div {:class (<class common-styles/gray-container-style)}
      (if (not-empty mortgages)
        (for [mortgage mortgages]
-         [common/heading-and-grey-border-body
+         [common/heading-and-gray-border-body
           {:heading [:<>
-                     [typography/BoldGreyText {:style {:display :inline}}
+                     [typography/BoldGrayText {:style {:display :inline}}
                       (str
                         (:kande_liik_tekst mortgage)
                         " "
@@ -738,7 +738,7 @@
                         " "
                         (:koormatise_rahalise_vaartuse_valuuta mortgage)
                         " ")
-                      [typography/GreyText {:style {:display :inline}}
+                      [typography/GrayText {:style {:display :inline}}
                        (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
            :body [:div
                   (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
@@ -787,13 +787,13 @@
           [[[:div
              [:span {:style {:display :block}}
               (get-in data [:name-id :address])]
-             [typography/GreyText
+             [typography/GrayText
               (get-in data [:name-id :id])]]
             {:align :left}]
            [(common/readable-currency (:price-per-sqm data)) {:align :right}]
            [(str (:area-to-obtain data) " m²") {:align :right}]
            [(common/readable-currency (:total data)) {:align :right}]])]
-       [typography/GreyText (tr [:land :no-land-acquisitions])])
+       [typography/GrayText (tr [:land :no-land-acquisitions])])
 
 
      (when (not-empty parsed-process-fees)
@@ -819,7 +819,7 @@
            [[(or description (tr-or [:enum reason] [:fields reason] (str reason))) {:align :left}]
             [(common/readable-currency amount) {:align :right}]])]
 
-        [typography/GreyText (tr [:land :no-estate-compensations])])]
+        [typography/GrayText (tr [:land :no-estate-compensations])])]
 
      (when land-exchanges
        [:div
@@ -834,7 +834,7 @@
            [[[:div
               [:span {:style {:display :block}}
                (tr [:land :land-exchange])]
-              [typography/GreyText
+              [typography/GrayText
                (:land-exchange/cadastral-unit-id land-exchange)]]
              {:align :left}]
             [(common/readable-currency (:land-exchange/price-per-sqm land-exchange)) {:align :right}]
@@ -846,7 +846,7 @@
             :class (<class common-styles/flex-row-space-between)}
       [typography/Heading3
        (tr [:land :total-cost])]
-      [typography/BoldGreyText (common/readable-currency total-estate-cost)]]]))
+      [typography/BoldGrayText (common/readable-currency total-estate-cost)]]]))
 
 
 (defmethod estate-modal-content :comments
@@ -924,13 +924,13 @@
   [:div {:class (<class project-style/owner-info)}
    [:div {:class (<class project-style/owner-info-header)}
     [:div {:class (<class project-style/owner-info-name-and-code)}
-     [typography/BoldGreyText (if person?
+     [typography/BoldGrayText (if person?
                                 (str eesnimi " " nimi)
                                 nimi)]
-     [typography/GreyText (str (tr [:land :owner-code]) " " r_kood)]]
+     [typography/GrayText (str (tr [:land :owner-code]) " " r_kood)]]
     [:div
      (when omandiosa_suurus
-       [typography/BoldGreyText
+       [typography/BoldGrayText
         (when first-in-joint?
           (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
             "1"
@@ -1067,8 +1067,8 @@
                 (tr [:land :unit-info])
                 (if (:land-owner-opinions (:enabled-features app))
                   [:files
-                   :comments
-                   :owners-opinions]
+                   :owners-opinions
+                   :comments]
                   [:files
                    :comments])]
    :right-panel [unit-modal-content {:e! e!

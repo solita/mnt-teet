@@ -92,7 +92,8 @@
       [:div {:class (<class project-style/project-page-structure)}
        [project-navigator-view/project-header project
         (when show-opinion-export?
-          [{:label (tr [:land-owner-opinion :opinion-export])
+          [{:id "owner-opinion-export"
+            :label (tr [:land-owner-opinion :opinion-export])
             :icon [icons/action-visibility-outlined {:style {:color theme-colors/primary}}]
             :on-click #(reset! owner-opinion-export-open? true)}])]
        [owner-opinion-view/land-owner-opinion-export-modal e! project owner-opinion-export-open?]
@@ -382,7 +383,7 @@
        [people-modal e! project]]
 
       (if (empty? permitted-users)
-        [typography/GreyText (tr [:people-tab :no-other-users])]
+        [typography/GrayText (tr [:people-tab :no-other-users])]
         [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
                                  {:primary-text (user-description user)
                                   :secondary-text (tr [:roles (:permission/role permission)])
@@ -443,7 +444,7 @@
                         [:span (:VOOND restriction)]])
                      restrictions)])])
              grouped-restrictions)]
-          [typography/GreyText (tr [:project :no-selected-restrictions])])))))
+          [typography/GrayText (tr [:project :no-selected-restrictions])])))))
 
 (defmethod project-menu/project-tab-content :restrictions
   [_ e! _ {:thk.project/keys [related-restrictions] :as _project}]
@@ -568,7 +569,7 @@
         {:thk.project/keys [related-restrictions]} project]
     (e! (project-controller/->FetchRelatedCandidates buffer-m "restrictions"))
     (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions)))
-  (fn [e! app {:keys [open-types checked-restrictions feature-candidates draw-selection-features] :or {open-types #{}} :as _project}]
+  (fn [e! app {:keys [open-types checked-restrictions feature-candidates] :or {open-types #{}} :as _project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])
           search-type (get-in app [:map :search-area :tab])
           {:keys [loading? restriction-candidates]} feature-candidates]
@@ -576,7 +577,6 @@
        open-types
        buffer-m
        {:restrictions restriction-candidates
-        :draw-selection-features draw-selection-features
         :search-type search-type
         :loading? loading?
         :checked-restrictions (or checked-restrictions #{})
@@ -590,7 +590,7 @@
         {:thk.project/keys [related-cadastral-units]} project]
     (e! (project-controller/->FetchRelatedCandidates buffer-m "cadastral-units"))
     (e! (project-controller/->FetchRelatedFeatures related-cadastral-units :cadastral-units)))
-  (fn [e! app {:keys [feature-candidates checked-cadastral-units draw-selection-features] :as _project}]
+  (fn [e! app {:keys [feature-candidates checked-cadastral-units] :as _project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])
           search-type (get-in app [:map :search-area :tab])
           {:keys [loading? cadastral-candidates]} feature-candidates]
@@ -598,7 +598,6 @@
        e!
        buffer-m
        {:cadastral-units cadastral-candidates
-        :draw-selection-features draw-selection-features
         :loading? loading?
         :search-type search-type
         :checked-cadastral-units (or checked-cadastral-units #{})

@@ -90,7 +90,40 @@
    :thk.project/activity-status
    :thk.project/owner-info])
 
+(def project-status-order
+  {:activity.status/in-preparation 1
+   :activity.status/not-started 2
+   :activity.status/in-progress 3
+   :activity.status/in-review 4
+   :activity.status/completed 5
+   :activity.status/canceled 6
+   :activity.status/archived 7
+   :activity.status/empty 100} )
+
 (defmulti get-column (fn [_project column] column))
+
+(defmulti get-column-compare (fn [column] column))
+
+(defmethod get-column-compare :default [_] nil)
+
+(defn- blank?
+  "Prevent error if x is not a string (keyword)"
+  [x]
+  (or (nil? x)
+    (and (string? x) (str/blank? x))))
+
+(defmethod get-column-compare :thk.project/activity-status [_]
+  (fn [x y]
+    (let
+      [x-activity (get-in (first x) [:activity/status :db/ident])
+       y-activity (get-in (first y) [:activity/status :db/ident])]
+      (compare
+        (if (blank? x-activity)
+          (:activity.status/empty project-status-order)
+          (x-activity project-status-order))
+        (if (blank? y-activity)
+          (:activity.status/empty project-status-order)
+          (y-activity project-status-order))))))
 
 (defmethod get-column :default [project column]
   (get project column))
@@ -138,7 +171,7 @@
   [estimated-start-date estimated-end-date])
 
 (defmethod get-column :thk.project/project-name
-  [{:thk.project/keys [project-name name]}]
+  [{:thk.project/keys [project-name name]} _]
   (if-not (str/blank? project-name)
     project-name
     name))
@@ -256,7 +289,8 @@
                    (mapcat :activity/tasks))]
     (assoc project :thk.project/status
                    (cond
-                     (and (nil? owner) (date/date-before-today? estimated-start-date))
+                     (and (nil? owner) (or (nil? estimated-start-date)
+                                         (date/date-before-today? estimated-start-date)))
                      :unassigned-over-start-date
                      (atleast-one-activity-over-deadline? activities)
                      :activity-over-deadline

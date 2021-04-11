@@ -122,7 +122,10 @@
          :export-dir (->ssm [:thk :teet-to-thk :unprocesseddir] nil)
          :url (->ssm [:thk :url] nil)}
    :road-registry {:wfs-url (->ssm [:road-registry :wfs-url] nil)
-                   :wms-url (->ssm [:road-registry :wms-url] nil)}
+                   :wms-url (->ssm [:road-registry :wms-url] nil)
+                   :api {:endpoint (->ssm [:road-registry :api :endpoint] nil)
+                         :username (->ssm [:road-registry :api :username] nil)
+                         :password (->ssm [:road-registry :api :password] nil)}}
    :xroad {:query-url (->ssm [:xroad-query-url] nil)
            :instance-id (->ssm [:xroad-instance-id] nil)
            :kr-subsystem-id (->ssm [:xroad-kr-subsystem-id] nil)}
@@ -193,15 +196,18 @@
 (def datomic-client
   (memoize #(d/client (config-value :datomic :client))))
 
-(def schema (delay (-> "schema.edn" io/resource slurp read-string)))
+(defn- read-schema [f]
+  (delay (-> f io/resource slurp read-string)))
+
+(def schema (read-schema "schema.edn"))
+(def asset-base-schema (read-schema "asset-base-schema.edn"))
 
 (defn migrate
-  ([conn]
-   (migrate conn false))
-  ([conn force?]
+  ([conn schema]
+   (migrate conn schema false))
+  ([conn schema force?]
    (try
-     (let [schema @schema
-           applied-migrations (into #{}
+     (let [applied-migrations (into #{}
                                     (map first)
                                     (d/q '[:find ?ident
                                            :where [_ :db/ident ?ident]
@@ -231,31 +237,15 @@
         (.digest (java.security.MessageDigest/getInstance "SHA-256")
                  (.getBytes string "UTF-8")))))
 
-(defn- migrate-asset-base-schema
-  "Base schema for asset-db, must be transacted before the loaded schema."
-  [conn]
-  (let [schema (-> "asset-base-schema.edn" io/resource slurp read-string)
-        db (d/db conn)
-        attrs (map :db/ident schema)
-        exists? (= (count attrs)
-                   (ffirst
-                    (d/q '[:find (count ?e)
-                           :where [?e :db/ident ?id]
-                           :in $ [?id ...]]
-                         db attrs)))]
-    (if exists?
-      db
-      (:db-after
-       (d/transact conn {:tx-data schema})))))
-
 (defn migrate-asset-db
   "Migrate asset databse. The whole schema is transacted in one go
   if the hash of the schema file has changed."
   [conn]
   (try
+    (migrate conn @asset-base-schema)
     (let [schema-source (-> "asset-schema.edn" io/resource slurp)
           hash (sha-256 schema-source)
-          db (migrate-asset-base-schema conn)
+          db (d/db conn)
           last-hash (->>
                      (d/q '[:find ?hash ?txi
                             :where
@@ -300,7 +290,7 @@
         conn (d/connect client {:db-name db})]
     (log/debug "Using database: " db db-status)
     (when migrate?
-      (migrate conn))
+      (migrate conn @schema))
     conn))
 
 (defn datomic-connection
@@ -313,7 +303,7 @@
             conn (d/connect client {:db-name db})]
         (log/info "Using database: " db db-status)
         (when-not @db-migrated?
-          (migrate conn)
+          (migrate conn @schema)
           (reset! db-migrated? true))
         conn)))
 

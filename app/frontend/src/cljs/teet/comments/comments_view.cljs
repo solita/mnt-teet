@@ -334,7 +334,7 @@
     [:div
      (if (empty? comments)
        [:div {:class (<class common-styles/margin-bottom 1.5)}
-        [typography/GreyText (tr [:comment :no-comments])]]
+        [typography/GrayText (tr [:comment :no-comments])]]
        (let [unresolved-comments (filterv comment-model/unresolved? comments)]
          [:<>
           (when (seq unresolved-comments)
