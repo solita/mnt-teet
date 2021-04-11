@@ -122,7 +122,11 @@
 
 (defn language-select-style
   []
-  {:color theme-colors/blue})
+  ^{:pseudo {:focus {:min-width "3rem" :width :auto}}}
+  {:color               theme-colors/blue
+   :width               :auto
+   :background-position "right .2em top 50% !important"
+   :padding-right       "1.2rem !important"})
 
 (defn divider-style
   []

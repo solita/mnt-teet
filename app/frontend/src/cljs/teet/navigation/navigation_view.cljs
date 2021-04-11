@@ -231,6 +231,19 @@
                 :on-click #(e! (navigation-controller/->ToggleExtraPanel :account-control))}
     [icons/social-person-outlined {:color :primary}]]])
 
+(defn login-button
+  []
+  [:<>
+   [buttons/large-button-primary {:class (<class
+                                     responsivity-styles/visible-desktop-only)
+                            :style {:margin "0 0 0 2rem"}
+                            :href  "/oauth2/request"}
+    (tr [:login :login])]
+   [IconButton {:size :small
+                :id "open-mobile-search"
+                :class [(<class responsivity-styles/visible-mobile-only) (<class navigation-style/divider-style)]}
+    [icons/social-person-outlined {:color :primary}]]])
+
 (defn navigation-header-links
   ([e! user url]
    [navigation-header-links e! user url true])
@@ -250,15 +263,14 @@
     (when (not logged-in?)
       [:div {:class (<class navigation-style/divider-style)
              :style {:display :flex
-                     :align-items :center}}
+                     :align-items :center
+                     :padding-right "0.8rem"}}
        [icons/action-language {:style {:color theme-colors/primary
                                        :padding-right "0.5rem" :width "auto"}}]
        [language-selector]])
     (if logged-in?
       [open-account-navigation e!]
-      [buttons/button-primary {:style {:margin "0 0 0 2rem"}
-                               :href "/oauth2/request"}
-       (tr [:login :login])])]))
+      [login-button])]))
 
 (defn header-extra-panel-container
   [e! user quick-search extra-panel extra-panel-open?]

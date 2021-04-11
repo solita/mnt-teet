@@ -87,7 +87,8 @@
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"
-                                      "&:focus" theme-colors/button-focus-style}}
+                                      "&:focus" theme-colors/icon-button-on-style
+                                      "&:hover" theme-colors/icon-button-on-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
                :MuiLink {:root common-styles/link-1
                          :button (merge
@@ -116,12 +117,16 @@
                                               "&:disabled" {:opacity "0.8"
                                                             :background-color theme-colors/primary
                                                             :color theme-colors/white}}
+                           :containedSizeLarge {:border-radius "1.5rem"
+                                                :font-size "1rem"
+                                                :height "3rem"
+                                                :padding "0 1.5rem"}
                            :root {:text-transform :none
                                   :font-weight 400
                                   :padding "4px 1.875rem"
                                   :font-size "1rem"
                                   :white-space :nowrap
-                                  :max-height "40px"
+                                  :max-height "50px"
                                   :box-shadow "none"
                                   "&:hover" {:box-shadow "none"}}}
                :MuiDrawer {:paper {:background-color theme-colors/blue

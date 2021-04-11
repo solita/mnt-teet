@@ -123,7 +123,7 @@
   ^{:pseudo {:focus theme-colors/focus-style
              :invalid {:box-shadow :inherit
                        :outline :inherit}
-             :hover {:margin-bottom "0"
+             :hover {:margin-bottom "1px"
                      :border-bottom (str "1px solid " theme-colors/primary)}}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
