@@ -953,21 +953,13 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
-(def custom-date-formatter
-  (cljs-time.format/formatter "dd.MM.yyyy"))
-
-(defn format-date
-  "Format date to dd.MM.yyyy"
-  [date]
-  (cljs-time.format/unparse custom-date-formatter date))
-
 (defn date-label-component
   [{value :value label :label}]
   [:div {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)} label
    [:div {:style common-styles/body-1-bold}
-    [common/popper-tooltip {:title "Date of application can not be changed"
+    [common/popper-tooltip {:title (tr [:cooperation :application-date-can-not-be-edited])
                             :variant :info}
-     (format-date (cljs-time.core/date-time value))]]])
+     (format/date value)]]])
 
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!
