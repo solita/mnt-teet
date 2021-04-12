@@ -2,8 +2,6 @@
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
             [teet.environment :as environment]
-            [teet.util.datomic :as du]
-            [clojure.walk :as walk]
             [teet.project.project-db :as project-db]
             [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-type-library :as asset-type-library]
