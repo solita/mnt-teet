@@ -588,7 +588,6 @@
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
-    (println "query: " query ", COMPONENT: " component)
     (if (= "new" oid)
       [new-cost-item-page e! app state]
 
