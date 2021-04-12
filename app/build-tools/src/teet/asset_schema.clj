@@ -18,9 +18,9 @@
 (defn- parse-name
   "Turn string name like \"[property:size]\" into keyword :property/size"
   [s]
-  (some-> s
-          parse-prefix-and-name
-          (apply keywordize)))
+  (some->> s
+           parse-prefix-and-name
+           (apply keywordize)))
 
 (defn- update-name-columns [name-keys rows]
   (mapv #(reduce
@@ -143,21 +143,37 @@
   (when (and n ctype datatype)
     (keyword (name ctype) (name n))))
 
-(defn- min-and-max-values [p]
-  (merge (when-let [min (->long (:min-value p))]
-           {:attribute/min-value min}
-           ;; TODO: Handle min-value-ref
+(defn- bound-value-ref [value attribute unnamespaced->namespaced]
+  (when-let [value-ref (some->> value
+                                parse-prefix-and-name
+                                (apply keywordize)
+                                unnamespaced->namespaced)]
+    {attribute value-ref}))
 
-           ;; TODO: `attribute-name` can be used with the attribute
-           ;; itself since we know the ctype. We don't know that for
-           ;; the reference. Can we assume it's a property of parent?
-           ;; Or we could build a kv-store mapping raw attributes to
-           ;; their namespaces. This assumes that the raw attributes
-           ;; are globally unique, not only within a given namespace.n
-           ;; Example value "[property:barrierworkingwidth]"
-           )
-         (when-let [max (->long (:max-value p))]
-           {:attribute/max-value max})))
+
+(defn- min-and-max-values
+  "Build a map containing min and max value attributes. If `(:min-valuep)` can
+  be parsed as a number, then `{:attribute/min-value <parsed value>}` is
+  returned. If it can be parsed as a `:db/ident` referencing another attribute,
+  `{:attribute/min-value-ref <parsed kw>}` is returned. Likewise for max values."
+  [p unnamespaced->namespaced]
+  (merge (if-let [min (->long (:min-value p))]
+           {:attribute/min-value min}
+           (bound-value-ref (:min-value p)
+                            :attribute/min-value-ref
+                            unnamespaced->namespaced))
+         (if-let [max (->long (:max-value p))]
+           {:attribute/max-value max}
+           (bound-value-ref (:max-value p)
+                            :attribute/max-value-ref
+                            unnamespaced->namespaced))))
+
+(defn- unnamespaced-attr->namespaced-attr
+  "construct map from unnamespaced attribute name strings to namespaced keywords"
+  [pset]
+  (->> pset
+       (map (juxt :name attribute-name))
+       (into {})))
 
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
@@ -173,6 +189,8 @@
           ctypes-by-name (map-by-name ctype)
           pset (read-pset workbook)
           list-items (read-list-items workbook)
+
+          unnamespaced->namespaced (unnamespaced-attr->namespaced-attr pset)
 
           attrs-by-name
           (into {}
@@ -236,7 +254,7 @@
              :attribute/parent (str (:ctype p))
              :attribute/cost-grouping? (:cost-grouping? p)
              :attribute/mandatory? (:mandatory? p)}
-            (min-and-max-values p))))
+            (min-and-max-values p unnamespaced->namespaced))))
 
         ;; Output enum values
         (for [item list-items
