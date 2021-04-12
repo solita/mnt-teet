@@ -1750,13 +1750,6 @@
   :db/id ":pile/inclination",
   :db/ident :pile/inclination,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/pavinglayer",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Katte liik" "Pavement general type"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":pavinglayer/pavinglayertype",
-  :db/ident :pavinglayer/pavinglayertype}
  {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
