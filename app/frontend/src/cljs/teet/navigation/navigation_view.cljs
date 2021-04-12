@@ -239,10 +239,9 @@
                             :style {:margin "0 0 0 2rem"}
                             :href  "/oauth2/request"}
     (tr [:login :login])]
-   [IconButton {:size :small
-                :id "open-mobile-search"
-                :class [(<class responsivity-styles/visible-mobile-only) (<class navigation-style/divider-style)]}
-    [icons/social-person-outlined {:color :primary}]]])
+   [buttons/stand-alone-icon-button {:id "mobile-login-button-n"
+                                     :class [(<class responsivity-styles/visible-mobile-only) (<class navigation-style/divider-style)]
+                                     :icon [icons/social-person-outlined {:color :primary}]}]])
 
 (defn navigation-header-links
   ([e! user url]

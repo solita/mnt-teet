@@ -12,7 +12,7 @@
   (str "rgb(0, 94, 135, " alpha ")"))
 (def blue-tab "#005AA3")
 (def blue-light "#007BAF")
-(def blue-lighter "##A2C3DD")
+(def blue-lighter "#A2C3DD")
 (def blue-lightest (lighten blue-lighter 10))
 (def orange "#FF8000")
 
@@ -76,9 +76,3 @@
 (def text-disabled "#9799A4")
 
 (def text-medium-emphasis "#4D4f5D")
-
-(def icon-button-on-style
-  {:outline :none
-   :border-radius "50%"
-   :background-color background-color-light
-   :padding "10px"})

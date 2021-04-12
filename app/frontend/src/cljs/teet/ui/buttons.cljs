@@ -118,7 +118,14 @@
                              :underline :none
                              :type      :button}))
 
-
+(defn stand-alone-icon-button
+  [{:keys [id on-click icon class]}]
+  [IconButton {:size :small
+               :class (conj class (<class common-styles/stand-alone-icon-button-style))
+               :on-click on-click
+               :id id
+               }
+   icon])
 (defn link-button-with-icon
   [{:keys [on-click icon]} label]
   [link-button {:class (<class common-styles/white-link-button-style)

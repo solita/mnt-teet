@@ -87,8 +87,7 @@
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"
-                                      "&:focus" theme-colors/icon-button-on-style
-                                      "&:hover" theme-colors/icon-button-on-style}}
+                                      "&:focus" theme-colors/button-focus-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
                :MuiLink {:root common-styles/link-1
                          :button (merge

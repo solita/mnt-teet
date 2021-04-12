@@ -438,6 +438,13 @@
    :text-decoration :underline
    :align-items :center})
 
+(defn stand-alone-icon-button-style
+  []
+  ^{:pseudo {:hover {:background-color theme-colors/background-color-light}}}
+  {:outline :none
+   :border-radius "50%"
+   :background-color theme-colors/white
+   :padding "10px"})
 (defn gray-lightest-background-style []
   {:background-color theme-colors/gray-lightest})
 

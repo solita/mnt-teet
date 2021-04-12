@@ -158,7 +158,9 @@
                   :margin-bottom "2rem"
                   :justify-content "space-evenly"
                   :flex-wrap :wrap}}
-    [buttons/button-primary "Button compoenent"]
+    [buttons/button-primary "Button component"]
+    [buttons/large-button-primary "Large button"]
+
     [Button {:color "secondary"}
      "Foo bar baz"]
     [Button {:color :primary :variant :contained
