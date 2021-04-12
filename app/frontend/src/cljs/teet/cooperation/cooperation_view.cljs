@@ -980,7 +980,7 @@
      :xs 8}
    ;; :value implicitly added by form
    [common/date-label-component {:label (tr [:fields :cooperation.application/date])
-                          :tooltip {:title [:span (tr [:cooperation :application-date-can-not-be-edited-1-line])
+                                 :tooltip {:title [:span (tr [:cooperation :application-date-can-not-be-edited-1-line])
                                             [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-2-line])]
                                             [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-3-line])]]
                                     :variant :info}}]
