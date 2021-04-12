@@ -155,7 +155,8 @@
 (defn navigator-left-panel-style
   []
   {:display :flex
-   :flex-direction :column})
+   :flex-direction :column
+   :max-height "100%"})
 
 (defn feedback-style
   []

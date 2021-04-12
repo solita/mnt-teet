@@ -1144,7 +1144,7 @@
            :db/cardinality :db.cardinality/many
            :db/doc "Entities this file is attached to."}]]}
 
-  {:db/ident :migration/stable-integration-id
+ {:db/ident :migration/stable-integration-id
   :txes [[{:db/ident :integration/id
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/uuid
@@ -1823,7 +1823,105 @@
   :txes [[{:db/ident :vektorio/granted-projects
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/many
-           :db/doc "ID-s of the Vektor projects the user has granted access to"}]]}]
+           :db/doc "ID-s of the Vektor projects the user has granted access to"}]]}
+
+ {:db/ident :migration/thk-contracts
+  :txes [[{:db/ident :thk.contract/number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Link to contract file in document management system for procurement part"}
+
+          {:db/ident :thk.contract/procurement-number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Procurement no /Hanke nr - (if starts with number then converted into link to State procurement registry as https://riigihanked.riik.ee/rhr-web/#/procurement/<proc_No>), if starts with other symbol then leave it as a number)"}
+
+          {:db/ident :thk.contract/procurement-id
+           :db/valueType :db.type/string
+           :db/unique :db.unique/identity
+           :db/cardinality :db.cardinality/one
+           :db/doc "Procurement id, has to be unique as it is used in web links"}
+
+          ;; TA Regions
+          {:db/ident :ta.region/north
+           :thk/code "1800" :enum/attribute :ta/region}
+          {:db/ident :ta.region/east
+           :thk/code "1801" :enum/attribute :ta/region}
+          {:db/ident :ta.region/south
+           :thk/code "1802" :enum/attribute :ta/region}
+          {:db/ident :ta.region/west
+           :thk/code "1803" :enum/attribute :ta/region}
+          {:db/ident :ta.region/center
+           :thk/code "1804" :enum/attribute :ta/region}
+
+
+          {:db/ident :ta/region
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The region of the Project is displayed"}
+
+          ;; Contract types
+          {:db/ident :thk.contract.type/construction-works
+           :thk/code "3500" :enum/attribute :thk.contract/type}
+          {:db/ident :thk.contract.type/things
+           :thk/code "3501" :enum/attribute :thk.contract/type}
+          {:db/ident :thk.contract.type/services
+           :thk/code "3502" :enum/attribute :thk.contract/type}
+
+          {:db/ident :thk.contract/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Comes from THK, not editable (activity_procurementType, activity_procurementTypeFK"}
+
+          {:db/ident :thk.contract/signed-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Date when contract was signed, added manually in the detail view of contract"}
+
+          {:db/ident :thk.contract/deadline
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The first deadline, added manually in the detail view of contract"}
+
+          {:db/ident :thk.contract/extended-deadline
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The extended deadline, added manually in the detail view of contract"}
+
+          {:db/ident :thk.contract/warranty-period
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "The length of warranty period in months"}
+
+          {:db/ident :thk.contract/warranty-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The end date of warranty period"}
+
+          {:db/ident :thk.contract/authority-contact
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "TA responsible person. Added manually in the detail view of contract"}
+
+          {:db/ident :thk.contract/partner-name
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Added manually in the detail view of contract. Lead partner only."}
+
+          {:db/ident :thk.contract/cost
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :db/doc "Added manually, the same as in the detail view: capital amount in euro"}
+
+          {:db/ident :thk.contract/targets
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Targets of the contract, can be activities or tasks"}
+
+          {:db/ident :thk.contract/start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Administrative Start date of the Contract"}]]}]
 
 
 

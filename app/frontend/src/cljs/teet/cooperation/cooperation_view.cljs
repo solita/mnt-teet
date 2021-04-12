@@ -179,7 +179,7 @@
           edit-button]
          (when-let [date (or modified-at created-at)]
            [:div
-            [typography/BoldGreyText {:style {:display :inline-block}}
+            [typography/BoldGrayText {:style {:display :inline-block}}
              (str (tr [:common :date]) ":")]
             (str " " (format/date-time date))])]]]
       (when comment
@@ -263,7 +263,7 @@
     [:div {:class [(<class common-styles/flex-row)
                    (<class common-styles/margin-bottom 1)]}
      [application-link application]
-     [typography/GreyText {:style {:margin-left "0.5rem"}}
+     [typography/GrayText {:style {:margin-left "0.5rem"}}
       (tr-enum (:activity/name activity))]]
     [application-information application]]
    [Grid {:item true
@@ -878,7 +878,7 @@
          [:div.activity-manager-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
           (tr [:fields :activity/manager])]]
         [:div
-         [typography/GreyText (tr [:cooperation :no-activity-manager])]])]
+         [typography/GrayText (tr [:cooperation :no-activity-manager])]])]
 
      (if @edit-contact?
        [form/form {:e! e!

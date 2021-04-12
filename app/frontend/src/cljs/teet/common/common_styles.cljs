@@ -460,9 +460,9 @@
   ([vertical horizontal]
    (padding vertical horizontal vertical horizontal))
   ([up right down left]
-   {:padding-up (str up "rem")
+   {:padding-top (str up "rem")
     :padding-right (str right "rem")
-    :padding-down (str down "rem")
+    :padding-bottom (str down "rem")
     :padding-left (str left "rem")}))
 
 (defn no-margin []
