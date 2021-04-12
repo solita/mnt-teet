@@ -5,7 +5,6 @@
             [teet.localization :refer [tr]]
             [teet.util.collection :as cu]
             [teet.log :as log]
-            [teet.routes :as routes]
             [clojure.string :as str]
             [teet.asset.asset-model :as asset-model]))
 
