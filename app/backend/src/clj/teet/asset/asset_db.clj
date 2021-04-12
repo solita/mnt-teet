@@ -138,7 +138,7 @@
 (defn next-component-oid
   "Get next OID for a new component in feature."
   [db feature-oid]
-  {:pre (string? feature-oid)}
+  {:pre [(asset-model/asset-oid? feature-oid)]}
   (asset-model/component-oid
    feature-oid
    (inc

@@ -22,12 +22,14 @@
 (defn asset-oid?
   "Check if given OID refers to asset."
   [oid]
-  (boolean (re-matches asset-pattern oid)))
+  (and (string? oid)
+       (boolean (re-matches asset-pattern oid))))
 
 (defn component-oid?
   "Check if given OID refers to a component."
   [oid]
-  (boolean (re-matches component-pattern oid)))
+  (and (string? oid)
+       (boolean (re-matches component-pattern oid))))
 
 (defn asset-oid
   "Format asset OID for feature class prefix and seq number."
