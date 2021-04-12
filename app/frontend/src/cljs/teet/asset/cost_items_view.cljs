@@ -85,9 +85,6 @@
 (defn- attribute-group [{ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
   (cond
-    (= :common/name ident)
-    :name
-
     cost-grouping?
     :cost-grouping
 
@@ -177,17 +174,13 @@
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
-          name-attr (:common/name rotl)
           attrs-groups (->> (concat (when common? common-attrs) attributes)
                             (group-by attribute-group)
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
                                                     label))))]
       [:<>
-       [form/field {:attribute :common/name}
-        [text-field/TextField {:label (label name-attr)}]]
-       ;; Show location fields in the name and location group
-       ;; if we are not inheriting the location from the parent
+       ;; Show location group if not inherited from parent
        (when (not inherits-location?)
          [container/collapsible-container
           {:open? (@open? :location)
@@ -549,11 +542,11 @@
                              :margin-left "1rem"}}
                [typography/Text2Bold (str/upper-case (tr* fclass))]
                [:div.cost-items {:style {:margin-left "1rem"}}
-                (for [{oid :asset/oid :common/keys [name]} cost-items]
+                (for [{oid :asset/oid} cost-items]
                   ^{:key oid}
                   [:div
                    [url/Link {:page :cost-item
-                              :params {:id oid}} name]])]]))]]))]]))
+                              :params {:id oid}} oid]])]]))]]))]]))
 
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}
