@@ -379,7 +379,7 @@
 
 (defn- file-icon-style []
   {:display :inline-block
-   :margin-right "0.25rem"
+   :margin-right "0.5rem"
    :position :relative
    :top "6px"})
 
@@ -395,14 +395,40 @@
      :else
      [ti/file])])
 
-(defn- file-list-field-style []
-  {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
-
-
 (defn file-list-entry-style
   []
-  {:padding "0.5rem 0"
+  {:padding "0.5rem 0.5rem 0.5rem 0"
+   :max-width "100%"
    :border-top (str "2px solid " theme-colors/black-coral-1)})
+
+(defn- file-listing-entry
+  [{:file/keys [name version number status] :as f} active?]
+  (let [{:keys [description extension]}
+        (filename-metadata/name->description-and-extension name)]
+    [:div.file-list-entry {:class (<class file-list-entry-style)}
+     [:div {:class (<class common-styles/flex-row)}
+      [file-icon (assoc f :class "file-list-icon")]
+      [:div {:class (<class common-styles/min-width-0)}
+       [:div {:class (<class common-styles/flex-align-center)}
+        [:div.file-list-name {:class (<class file-style/file-name-truncated)
+                              :title description}
+         (if active?
+           [:strong description]
+           [url/Link {:page :file
+                      :params {:file (:file/id f)}
+                      :class "file-list-name"}
+            description])]
+        [typography/SmallGrayText (if extension
+                                    (str/upper-case extension)
+                                    "")]]
+       [:div
+        [:span.file-list-number
+         number]
+        [typography/Text2Bold {:class (<class common-styles/inline-block)}
+         (str "V" version)]
+        (when status
+          [typography/Text2 {:class (<class common-styles/inline-block)}
+           " / " (tr-enum status)])]]]]))
 
 (defn- file-list [parts files current-file-id]
   (let [parts (sort-by :file.part/number
@@ -422,35 +448,14 @@
             [:<>
              [:div {:style {:padding "1rem 0"}
                     :class (<class common-styles/flex-row-end)}
-              [typography/Heading2 name
-               [typography/GrayText {:style {:padding-left "0.25rem"}} (str "#" number)]]]
+              [typography/Heading2
+               name
+               [typography/GrayText {:style {:padding-left "0.25rem"}}
+                (gstr/format "#%02d" number)]]]
              [:div
-              (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
-                      (let [{:keys [description extension]}
-                            (filename-metadata/name->description-and-extension name)
-                            active? (= current-file-id id)]
-                        [:div.file-list-entry {:class (<class file-list-entry-style)}
-                         [:div {:class (<class common-styles/flex-row-center)}
-                          [file-icon (assoc f :class "file-list-icon")]
-                          [:div.file-list-name {:class (<class file-style/file-name-truncated)
-                                                :title description}
-                           (if active?
-                             [:strong description]
-                             [url/Link {:page :file
-                                        :params {:file (:file/id f)}
-                                        :class "file-list-name"}
-                              description])]]
-                         [:div {:style {:font-size "12px" :display :flex
-                                        :justify-content :space-between
-                                        :margin "0 1rem 1rem 1rem"}}
-                          [:span.file-list-suffix {:class (<class file-list-field-style)}
-                           (if extension
-                             (str/upper-case extension)
-                             "")]
-                          [:span.file-list-number {:class (<class file-list-field-style)} number]
-                          [:span.file-list-version {:class (<class file-list-field-style)} (str "V" version)]
-                          (when status
-                            [:span.file-list-status {:class (<class file-list-field-style)} (tr-enum status)])]]))
+              (mapc (fn [{id :db/id :as f}]
+                      (let [active? (= current-file-id id)]
+                        [file-listing-entry f active?]))
                     files)]])))
       parts)]))
 
@@ -678,7 +683,7 @@
                             :format-item #(gstr/format "%s #%02d"
                                                        (:file.part/name %)
                                                        (:file.part/number %))
-                            :empty-selection-label (tr [:file-upload :general-part])
+                            :empty-selection-label (str (tr [:file-upload :general-part]) " #00")
                             :show-empty-selection? true}]
        ^{:attribute :file/document-group :xs 8}
        [select/select-enum {:e! e!
@@ -758,10 +763,10 @@
                   :show-map? false
                   :content-padding "0rem"}
                  [Grid {:container true :spacing 0}
-                  [Grid {:item true :xs 3
+                  [Grid {:item true :xs 4
                          :class (<class common-styles/flex-column-1)}
                    [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
-                  [Grid {:item true :xs 9
+                  [Grid {:item true :xs 8
                          :class (<class common-styles/padding 2 2 2 1.75)}
                    [:<>
                     (when @edit-open?
@@ -772,8 +777,11 @@
                                          :parts (:file.part/_task task)}])]
 
                    [:div {:class (<class common-styles/flex-row)}
-                    [typography/Heading1 {:class (<class common-styles/margin-bottom 0.5)}
-                     [:span description]
+                    [typography/Heading1 {:title description
+                                          :class (herb/join (<class common-styles/margin-bottom 0.5)
+                                                            (<class common-styles/flex-shrink-no-wrap))}
+                     [:span {:class (<class common-styles/overflow-ellipsis)}
+                      description]
                      [typography/GrayText {:style {:display :inline-block
                                                    :margin "0 0.5rem"}}
                       (str/upper-case extension)]]
