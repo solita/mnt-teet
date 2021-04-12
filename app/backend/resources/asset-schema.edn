@@ -84,70 +84,93 @@
  {:db/id ":fclass/chipping",
   :db/ident :fclass/chipping,
   :asset-schema/type :asset-schema.type/fclass,
-  :fclass/fgroup ":fgroup/carriageway"}
+  :asset-schema/label ["Pindamine" "Chipping"],
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "PIN"}
  {:db/id ":fclass/paving",
   :db/ident :fclass/paving,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Kate" "Paving layer"],
-  :fclass/fgroup ":fgroup/carriageway"}
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "KAT"}
  {:db/id ":fclass/pavementstructure",
   :db/ident :fclass/pavementstructure,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Katendi konstruktsioon" "Pavement structure"],
-  :fclass/fgroup ":fgroup/carriageway"}
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "KTK"}
  {:db/id ":fclass/kerb",
   :db/ident :fclass/kerb,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Äärekivi" "Kerb"],
-  :fclass/fgroup ":fgroup/carriageway"}
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "KIV"}
  {:db/id ":fclass/shoulder",
   :db/ident :fclass/shoulder,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Peenar" "Shoulder"],
-  :fclass/fgroup ":fgroup/carriageway"}
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "PNR"}
  {:db/id ":fclass/verge",
   :db/ident :fclass/verge,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Eraldusriba" "Verge"],
-  :fclass/fgroup ":fgroup/carriageway"}
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "ERA"}
  {:db/id ":fclass/culvert",
   :db/ident :fclass/culvert,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Truup" "Culvert"],
   :asset-schema/description
   [nil "Tubular structure to let water pass the embankment."],
-  :fclass/fgroup ":fgroup/drainage"}
+  :fclass/fgroup ":fgroup/drainage",
+  :fclass/oid-prefix "TRP"}
  {:db/id ":fclass/ditch",
   :db/ident :fclass/ditch,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Kraav" "Ditch"],
   :asset-schema/description
   [nil "Scour protection for the water body"],
-  :fclass/fgroup ":fgroup/drainage"}
+  :fclass/fgroup ":fgroup/drainage",
+  :fclass/oid-prefix "KRV"}
  {:db/id ":fclass/drainagesystem",
   :db/ident :fclass/drainagesystem,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Kuivendussüsteem" "Drainage system"],
+  :asset-schema/label ["Drenaaž" "Drainage system"],
   :asset-schema/description
   [nil "System of draiange pipes and inlets"],
-  :fclass/fgroup ":fgroup/drainage"}
- {:db/id ":fclass/pond",
-  :db/ident :fclass/pond,
+  :fclass/fgroup ":fgroup/drainage",
+  :fclass/oid-prefix "DRN"}
+ {:db/id ":fclass/impregnationsystem",
+  :db/ident :fclass/impregnationsystem,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label
-  ["Immutus, puhastus tiik või kaev"
-   "Infiltration or cleaning pond, well."],
-  :fclass/fgroup ":fgroup/drainage"}
+  :asset-schema/label ["Imbsüsteem" "Impregnation system"],
+  :fclass/fgroup ":fgroup/drainage",
+  :fclass/oid-prefix "IMB"}
+ {:db/id ":fclass/sedimentarypool",
+  :db/ident :fclass/sedimentarypool,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Settebassein" "Sedimentary pool"],
+  :fclass/fgroup ":fgroup/drainage",
+  :fclass/oid-prefix "SET"}
+ {:db/id ":fclass/pumpingstation",
+  :db/ident :fclass/pumpingstation,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Pumpla" "Pumping station"],
+  :fclass/fgroup ":fgroup/drainage",
+  :fclass/oid-prefix "PMP"}
  {:db/id ":fclass/subgrade",
   :db/ident :fclass/subgrade,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Aluskiht" "Subgrade"],
-  :fclass/fgroup ":fgroup/embankment"}
+  :fclass/fgroup ":fgroup/embankment",
+  :fclass/oid-prefix "ALK"}
  {:db/id ":fclass/backfill",
   :db/ident :fclass/backfill,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Mulde täide" "Engineered backfill"],
-  :fclass/fgroup ":fgroup/embankment"}
+  :fclass/fgroup ":fgroup/embankment",
+  :fclass/oid-prefix "MLT"}
  {:db/id ":fclass/alignment",
   :db/ident :fclass/alignment,
   :asset-schema/type :asset-schema.type/fclass,
@@ -155,17 +178,30 @@
   :asset-schema/description
   [nil
    "Alignment is a geometrical feature combined of lines, curves and spirals. It is used for project linear referencing and comes from design."],
-  :fclass/fgroup ":fgroup/immaterial"}
+  :fclass/fgroup ":fgroup/immaterial",
+  :fclass/oid-prefix "TEE"}
  {:db/id ":fclass/profile",
   :db/ident :fclass/profile,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Tee profiil" "Centreline profile"],
+  :fclass/fgroup ":fgroup/immaterial",
+  :fclass/oid-prefix "PRF"}
+ {:db/id ":fclass/protectionzone",
+  :db/ident :fclass/protectionzone,
+  :asset-schema/type :asset-schema.type/fclass,
   :fclass/fgroup ":fgroup/immaterial"}
+ {:db/id ":fclass/roadarea",
+  :db/ident :fclass/roadarea,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Tee maa-ala" "Right of Way (Road area)"],
+  :fclass/fgroup ":fgroup/immaterial",
+  :fclass/oid-prefix "TMA"}
  {:db/id ":fclass/noisebarrier",
   :db/ident :fclass/noisebarrier,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Mürasein või vall" "Noise barrier"],
-  :fclass/fgroup ":fgroup/landscaping"}
+  :fclass/fgroup ":fgroup/landscaping",
+  :fclass/oid-prefix "MYR"}
  {:db/id ":fclass/animalfencing",
   :db/ident :fclass/animalfencing,
   :asset-schema/type :asset-schema.type/fclass,
@@ -173,31 +209,36 @@
   :asset-schema/description
   ["Ulukitara, konnatõke vms rajatis koos väravate, ülepääsude, jms"
    ""],
-  :fclass/fgroup ":fgroup/landscaping"}
+  :fclass/fgroup ":fgroup/landscaping",
+  :fclass/oid-prefix "ULT"}
  {:db/id ":fclass/animalcrossing",
   :db/ident :fclass/animalcrossing,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Ulukite ülepääsukoht" "Animal crossing"],
   :asset-schema/description
   ["Spetsiaalne ülepääsukoht ulukitele, ulukitara katkestus." ""],
-  :fclass/fgroup ":fgroup/landscaping"}
+  :fclass/fgroup ":fgroup/landscaping",
+  :fclass/oid-prefix "ULY"}
  {:db/id ":fclass/ecoduct",
   :db/ident :fclass/ecoduct,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Ökodukt" "Ecoduct"],
   :asset-schema/description ["Sild ulukitele." ""],
-  :fclass/fgroup ":fgroup/landscaping"}
+  :fclass/fgroup ":fgroup/landscaping",
+  :fclass/oid-prefix "DKT"}
  {:db/id ":fclass/lightlocation",
   :db/ident :fclass/lightlocation,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Valgusallika koht" "Lighting pole location"],
-  :fclass/fgroup ":fgroup/lighting"}
+  :fclass/fgroup ":fgroup/lighting",
+  :fclass/oid-prefix "VAK"}
  {:db/id ":fclass/lightpowercable",
   :db/ident :fclass/lightpowercable,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label
   ["Valgustuse toitekaabel" "Lighting power cabling"],
-  :fclass/fgroup ":fgroup/lighting"}
+  :fclass/fgroup ":fgroup/lighting",
+  :fclass/oid-prefix "VKB"}
  {:db/id ":fclass/pavinglayer",
   :db/ident :fclass/pavinglayer,
   :asset-schema/type :asset-schema.type/fclass,
@@ -208,17 +249,20 @@
   :db/ident :fclass/boundbasecourse,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Aluskiht, seotud" "Base layer, bound"],
-  :fclass/fgroup ":fgroup/pavement"}
+  :fclass/fgroup ":fgroup/pavement",
+  :fclass/oid-prefix "KAK"}
  {:db/id ":fclass/subbase",
   :db/ident :fclass/subbase,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Aluse aluskoht" "Subbase layer"],
-  :fclass/fgroup ":fgroup/pavement"}
+  :fclass/fgroup ":fgroup/pavement",
+  :fclass/oid-prefix "AAK"}
  {:db/id ":fclass/membrane",
   :db/ident :fclass/membrane,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Membraan, geovõrk" "Membrane, geotextile"],
-  :fclass/fgroup ":fgroup/pavement"}
+  :fclass/fgroup ":fgroup/pavement",
+  :fclass/oid-prefix "KMB"}
  {:db/id ":fclass/unboundbasecourse",
   :db/ident :fclass/unboundbasecourse,
   :asset-schema/type :asset-schema.type/fclass,
@@ -228,77 +272,8 @@
   :db/ident :fclass/drainagelayer,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Drenaažikiht" "Drainage layer"],
-  :fclass/fgroup ":fgroup/pavement"}
- {:db/id ":fclass/bridge",
-  :db/ident :fclass/bridge,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Sild" "Bridge"],
-  :asset-schema/description ["Sild, viadukt, estakaad, vms" ""],
-  :fclass/fgroup ":fgroup/structures"}
- {:db/id ":fclass/tunnel",
-  :db/ident :fclass/tunnel,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Tunnel" "Tunnel"],
-  :fclass/fgroup ":fgroup/structures"}
- {:db/id ":fclass/retainingwall",
-  :db/ident :fclass/retainingwall,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Tugimüür" "Retaining wall"],
-  :fclass/fgroup ":fgroup/structures"}
- {:db/id ":fclass/soilsteelcomp",
-  :db/ident :fclass/soilsteelcomp,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Torusild" "Soil-Steel composite"],
-  :asset-schema/description
-  ["torusillad, kuna nende  nii tehniline kui ka konstruktsiooniline lahendus on teistest niivõrd erinev"
-   ""],
-  :fclass/fgroup ":fgroup/structures"}
- {:db/id ":fclass/signagelocation",
-  :db/ident :fclass/signagelocation,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label
-  ["Liikluskorraldusvahendi koht (märk, foor, vms)"
-   "Traffic signage location (sign, signal, etc)"],
-  :fclass/fgroup ":fgroup/trafficarrangement"}
- {:db/id ":fclass/linearmarking",
-  :db/ident :fclass/linearmarking,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label
-  ["Lineaarne kattemärgis" "Linear pavement marking"],
-  :asset-schema/description
-  ["Sõiduradasid markeerivad joonmärgised" ""],
-  :fclass/fgroup ":fgroup/trafficarrangement"}
- {:db/id ":fclass/featuremarking",
-  :db/ident :fclass/featuremarking,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Kohtmärgis" "Feature marking"],
-  :asset-schema/description ["Nooled, sebrad, jms kohtmärgised" ""],
-  :fclass/fgroup ":fgroup/trafficarrangement"}
- {:db/id ":fclass/barrier",
-  :db/ident :fclass/barrier,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Piire" "Barrier"],
-  :fclass/fgroup ":fgroup/trafficarrangement"}
- {:db/id ":fclass/sewerage",
-  :db/ident :fclass/sewerage,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Reoveekanalisatsioon" "Sewerage"],
-  :fclass/fgroup ":fgroup/utilities"}
- {:db/id ":fclass/waternetwork",
-  :db/ident :fclass/waternetwork,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Veevarustus" "Potable water"],
-  :fclass/fgroup ":fgroup/utilities"}
- {:db/id ":fclass/gasline",
-  :db/ident :fclass/gasline,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Gaasitorustik" "Gas pipeline"],
-  :fclass/fgroup ":fgroup/utilities"}
- {:db/id ":fclass/powernetwork",
-  :db/ident :fclass/powernetwork,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Elektrikaabel" "Power network"],
-  :fclass/fgroup ":fgroup/utilities"}
+  :fclass/fgroup ":fgroup/pavement",
+  :fclass/oid-prefix "DRK"}
  {:db/id ":fclass/linemarkings",
   :db/ident :fclass/linemarkings,
   :asset-schema/type :asset-schema.type/fclass,
@@ -311,26 +286,96 @@
   :asset-schema/label ["" "Markings"],
   :asset-schema/description [nil "Markings"],
   :fclass/fgroup ":fgroup/roadmarkings"}
- {:db/id ":fclass/protectionzone",
-  :db/ident :fclass/protectionzone,
+ {:db/id ":fclass/bridge",
+  :db/ident :fclass/bridge,
   :asset-schema/type :asset-schema.type/fclass,
-  :fclass/fgroup ":fgroup/immaterial"}
- {:db/id ":fclass/roadarea",
-  :db/ident :fclass/roadarea,
+  :asset-schema/label ["Sild" "Bridge"],
+  :asset-schema/description ["Sild, viadukt, estakaad, vms" ""],
+  :fclass/fgroup ":fgroup/structures",
+  :fclass/oid-prefix "SLD"}
+ {:db/id ":fclass/tunnel",
+  :db/ident :fclass/tunnel,
   :asset-schema/type :asset-schema.type/fclass,
-  :fclass/fgroup ":fgroup/immaterial"}
+  :asset-schema/label ["Tunnel" "Tunnel"],
+  :fclass/fgroup ":fgroup/structures",
+  :fclass/oid-prefix "TNL"}
+ {:db/id ":fclass/retainingwall",
+  :db/ident :fclass/retainingwall,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Tugimüür" "Retaining wall"],
+  :fclass/fgroup ":fgroup/structures",
+  :fclass/oid-prefix "TGM"}
+ {:db/id ":fclass/soilsteelcomp",
+  :db/ident :fclass/soilsteelcomp,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Torusild" "Soil-Steel composite"],
+  :asset-schema/description
+  ["torusillad, kuna nende  nii tehniline kui ka konstruktsiooniline lahendus on teistest niivõrd erinev"
+   ""],
+  :fclass/fgroup ":fgroup/structures",
+  :fclass/oid-prefix "TRS"}
+ {:db/id ":fclass/signagelocation",
+  :db/ident :fclass/signagelocation,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label
+  ["Liikluskorraldusvahendi koht (märk, foor, vms)"
+   "Traffic signage location (sign, signal, etc)"],
+  :fclass/fgroup ":fgroup/trafficarrangement",
+  :fclass/oid-prefix "LAK"}
+ {:db/id ":fclass/linearmarking",
+  :db/ident :fclass/linearmarking,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label
+  ["Lineaarne kattemärgis" "Linear pavement marking"],
+  :asset-schema/description
+  ["Sõiduradasid markeerivad joonmärgised" ""],
+  :fclass/fgroup ":fgroup/trafficarrangement",
+  :fclass/oid-prefix "TKM"}
+ {:db/id ":fclass/featuremarking",
+  :db/ident :fclass/featuremarking,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Kohtmärgis" "Feature marking"],
+  :asset-schema/description ["Nooled, sebrad, jms kohtmärgised" ""],
+  :fclass/fgroup ":fgroup/trafficarrangement",
+  :fclass/oid-prefix "KOM"}
+ {:db/id ":fclass/barrier",
+  :db/ident :fclass/barrier,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Piire" "Barrier"],
+  :fclass/fgroup ":fgroup/trafficarrangement",
+  :fclass/oid-prefix "PRE"}
  {:db/id ":fclass/markerposts",
   :db/ident :fclass/markerposts,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Tähispost(id)" "Marker post(s)"],
   :asset-schema/description
   ["Teeserva tähispostid." "Roadside markerposts."],
-  :fclass/fgroup ":fgroup/trafficarrangement"}
- {:db/id ":fclass/markingitems",
-  :db/ident :fclass/markingitems,
+  :fclass/fgroup ":fgroup/trafficarrangement",
+  :fclass/oid-prefix "TPS"}
+ {:db/id ":fclass/sewerage",
+  :db/ident :fclass/sewerage,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Teekattemärhistuse kirjed ja kujutised" ""],
-  :fclass/fgroup ":fgroup/trafficarrangement"}
+  :asset-schema/label ["Reoveekanalisatsioon" "Sewerage"],
+  :fclass/fgroup ":fgroup/utilities",
+  :fclass/oid-prefix "RKS"}
+ {:db/id ":fclass/waternetwork",
+  :db/ident :fclass/waternetwork,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Veevarustus" "Potable water"],
+  :fclass/fgroup ":fgroup/utilities",
+  :fclass/oid-prefix "VET"}
+ {:db/id ":fclass/gasline",
+  :db/ident :fclass/gasline,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Gaasitorustik" "Gas pipeline"],
+  :fclass/fgroup ":fgroup/utilities",
+  :fclass/oid-prefix "GAS"}
+ {:db/id ":fclass/powernetwork",
+  :db/ident :fclass/powernetwork,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Elektritoitevõrk" "Power network"],
+  :fclass/fgroup ":fgroup/utilities",
+  :fclass/oid-prefix "ELK"}
  {:db/id ":ctype/common",
   :db/ident :ctype/common,
   :db/doc "Attributes common to all assets and components",
@@ -934,8 +979,10 @@
  {:attribute/parent ":fclass/featuremarking",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Materjali tüüp" "Materila type"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":featuremarking/featuremarkingmaterial",
   :db/ident :featuremarking/featuremarkingmaterial,
   :attribute/cost-grouping? true}
@@ -1013,13 +1060,6 @@
   :db/id ":pavinglayer/pavinglayerwearingresistance",
   :db/ident :pavinglayer/pavinglayerwearingresistance,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/markingitems",
-  :db/valueType :db.type/long,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Paigaldamsie aasta" ""],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemsinstallationyear",
-  :db/ident :markingitems/markingitemsinstallationyear}
  {:attribute/parent ":fclass/retainingwall",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1031,6 +1071,14 @@
   :db/ident :retainingwall/retainingwallstructuraltype,
   :attribute/cost-grouping? false,
   :asset-schema/description ["Konstruktiivne lahendus" ""]}
+ {:attribute/parent ":fclass/impregnationsystem",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":impregnationsystem/impregnationsystemmanufacturer",
+  :db/ident :impregnationsystem/impregnationsystemmanufacturer}
  {:attribute/parent ":ctype/barrier",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -1106,6 +1154,23 @@
   :db/id ":bridgespan/spanstructuraltype",
   :db/ident :bridgespan/spanstructuraltype,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/featuremarking",
+  :asset-schema/unit "m2",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Maht m2" "Feature marking area"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkingarea",
+  :db/ident :featuremarking/featuremarkingarea}
+ {:attribute/parent ":fclass/pumpingstation",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Pumpade arv" "Number of pumps"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pumpingstation/pumpingstationpumpnumber",
+  :db/ident :pumpingstation/pumpingstationpumpnumber}
  {:attribute/parent ":fclass/bridge",
   :asset-schema/unit "spans",
   :db/valueType :db.type/long,
@@ -1395,9 +1460,19 @@
   :asset-schema/type :asset-schema.type/attribute,
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":featuremarking/featuremarkingtype",
   :db/ident :featuremarking/featuremarkingtype,
   :attribute/cost-grouping? true}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Materjali paigaldusviis" "Installation method"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkinginstallationmethod",
+  :db/ident :featuremarking/featuremarkinginstallationmethod}
  {:attribute/parent ":fclass/linemarkings",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1422,6 +1497,14 @@
   :db/id ":unboundbasecourse/unboundbasefructureresistance",
   :db/ident :unboundbasecourse/unboundbasefructureresistance,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Värv" "Colour"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkingcolour",
+  :db/ident :featuremarking/featuremarkingcolour}
  {:attribute/parent ":fclass/drainagelayer",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1432,6 +1515,14 @@
   :db/id ":drainagelayer/drainagecompactionfactor",
   :db/ident :drainagelayer/drainagecompactionfactor,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Liigi number" "Type number"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkingtypenumber",
+  :db/ident :featuremarking/featuremarkingtypenumber}
  {:attribute/parent ":fclass/pavinglayer",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1460,6 +1551,14 @@
   :db/id ":common/remark",
   :db/ident :common/remark,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/pumpingstation",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pumpingstation/pumpingstationname",
+  :db/ident :pumpingstation/pumpingstationname}
  {:attribute/parent ":ctype/barrier",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1503,6 +1602,15 @@
   :db/id ":waterproofing/waterproofingelongation",
   :db/ident :waterproofing/waterproofingelongation,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/ditch",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Maarandussüsteemi tunnus" "Land improvement system identifier"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":ditch/ditchlandimprovementsystem",
+  :db/ident :ditch/ditchlandimprovementsystem}
  {:attribute/parent ":fclass/shoulder",
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
@@ -1575,6 +1683,14 @@
   :db/id ":waterproofing/waterproofingtype",
   :db/ident :waterproofing/waterproofingtype,
   :attribute/cost-grouping? true}
+ {:attribute/parent ":fclass/impregnationsystem",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Ehitamise aasta" "Building year"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":impregnationsystem/impregnationsystemyear",
+  :db/ident :impregnationsystem/impregnationsystemyear}
  {:attribute/parent ":fclass/boundbasecourse",
   :asset-schema/unit "MPa",
   :db/valueType :db.type/bigdec,
@@ -1608,7 +1724,7 @@
   :db/ident :pavinglayer/pavinglayerproducer,
   :attribute/cost-grouping? false}
  {:attribute/parent ":ctype/common",
-  :db/valueType :db.type/long,
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Kogus" "Quantity"],
   :attribute/mandatory? true,
@@ -1634,6 +1750,13 @@
   :db/id ":pile/inclination",
   :db/ident :pile/inclination,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Katte liik" "Pavement general type"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":pavinglayer/pavinglayertype",
+  :db/ident :pavinglayer/pavinglayertype}
  {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1659,6 +1782,15 @@
   :asset-schema/description
   ["Silla kasulik laius on äärmiste piirete vaheline liiklusala."
    "Usable width is the traffic area beetween the handrails/barriers."]}
+ {:attribute/parent ":fclass/impregnationsystem",
+  :asset-schema/unit "m3",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Mahutavus" "Cubage"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":impregnationsystem/impregnationsystemcubage",
+  :db/ident :impregnationsystem/impregnationsystemcubage}
  {:attribute/parent ":fclass/drainagelayer",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1691,13 +1823,6 @@
   :db/id ":shoulder/shouldermaterial",
   :db/ident :shoulder/shouldermaterial,
   :attribute/cost-grouping? true}
- {:attribute/parent ":fclass/markingitems",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Värv" ""],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemscolour",
-  :db/ident :markingitems/markingitemscolour}
  {:attribute/parent ":fclass/unboundbasecourse",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1772,6 +1897,14 @@
   :db/id ":boundbasecourse/boundbasestonesize",
   :db/ident :boundbasecourse/boundbasestonesize,
   :attribute/cost-grouping? true}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Märkused" "Remarks"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkingremark",
+  :db/ident :featuremarking/featuremarkingremark}
  {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1802,6 +1935,14 @@
   :db/id ":membrane/membraneproducer",
   :db/ident :membrane/membraneproducer,
   :attribute/cost-grouping? true}
+ {:attribute/parent ":fclass/impregnationsystem",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Imsüsteemi tüüp" "Impregnationsystem type"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":impregnationsystem/impregnationsystemtype",
+  :db/ident :impregnationsystem/impregnationsystemtype}
  {:attribute/parent ":fclass/boundbasecourse",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1813,6 +1954,14 @@
   :db/id ":boundbasecourse/boundbasetype",
   :db/ident :boundbasecourse/boundbasetype,
   :attribute/cost-grouping? true}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Paigaldamsie aasta" "Installation year"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkinginstallationyear",
+  :db/ident :featuremarking/featuremarkinginstallationyear}
  {:attribute/parent ":ctype/pile",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1881,17 +2030,6 @@
   :db/id ":drainagelayer/drainagematerialproducer",
   :db/ident :drainagelayer/drainagematerialproducer,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/common",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :attribute/max-value 50,
-  :asset-schema/label ["Nimi" "Name"],
-  :attribute/mandatory? true,
-  :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":common/name",
-  :db/ident :common/name,
-  :attribute/cost-grouping? false}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1936,13 +2074,23 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":pavinglayer/pavinglayerbuildingdate",
   :db/ident :pavinglayer/pavinglayerbuildingdate}
- {:attribute/parent ":fclass/markingitems",
-  :db/valueType :db.type/ref,
+ {:attribute/parent ":fclass/sedimentarypool",
+  :asset-schema/unit "m2",
+  :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Liigi kirjeldus" ""],
+  :asset-schema/label ["Pindala" "Area"],
   :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemstypenumberdescriprtion",
-  :db/ident :markingitems/markingitemstypenumberdescriprtion}
+  :db/doc "No",
+  :db/id ":sedimentarypool/sedimentarypoolarea",
+  :db/ident :sedimentarypool/sedimentarypoolarea}
+ {:attribute/parent ":fclass/ditch",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Rajamise aasta" "Building year"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":ditch/ditchyear",
+  :db/ident :ditch/ditchyear}
  {:attribute/parent ":fclass/drainagelayer",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1955,13 +2103,14 @@
   :db/id ":drainagelayer/fineparticlecontent",
   :db/ident :drainagelayer/fineparticlecontent,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/markingitems",
+ {:attribute/parent ":fclass/ditch",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Materjali paigaldusviis" ""],
+  :asset-schema/label ["Põhjakindlustus" "Botton reinforcement"],
   :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemsinstallationmethod",
-  :db/ident :markingitems/markingitemsinstallationmethod}
+  :db/doc "No",
+  :db/id ":ditch/ditchbottomreinforcement",
+  :db/ident :ditch/ditchbottomreinforcement}
  {:attribute/parent ":ctype/boundpavinglayer",
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
@@ -1995,6 +2144,14 @@
   :db/id ":boundbasecourse/boundbasecompressionstrength",
   :db/ident :boundbasecourse/boundbasecompressionstrength,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/sedimentarypool",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Märkused" "Remarks"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":sedimentarypool/sedimentarypoolfenceremark",
+  :db/ident :sedimentarypool/sedimentarypoolfenceremark}
  {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2005,21 +2162,14 @@
   :db/id ":bridge/bridgeload2",
   :db/ident :bridge/bridgeload2,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/markingitems",
-  :asset-schema/unit "m2",
-  :db/valueType :db.type/bigdec,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Maht m2" ""],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemsarea",
-  :db/ident :markingitems/markingitemsarea}
- {:attribute/parent ":fclass/markingitems",
+ {:attribute/parent ":fclass/sedimentarypool",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Liigi number" ""],
+  :asset-schema/label ["Piirdeaia materjal" "Fence material"],
   :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemstypenumber",
-  :db/ident :markingitems/markingitemstypenumber}
+  :db/doc "No",
+  :db/id ":sedimentarypool/sedimentarypoolfencematerial",
+  :db/ident :sedimentarypool/sedimentarypoolfencematerial}
  {:attribute/parent ":fclass/pavinglayer",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -2063,23 +2213,14 @@
   :db/id ":boundbasecourse/boundbasehydraulicbindercontent",
   :db/ident :boundbasecourse/boundbasehydraulicbindercontent,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/common",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Ühik" "Unit"],
-  :attribute/mandatory? true,
-  :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":common/quantityunit",
-  :db/ident :common/quantityunit,
-  :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/markingitems",
+ {:attribute/parent ":fclass/impregnationsystem",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Toote nimetus" ""],
+  :asset-schema/label ["Märkused" "Remarks"],
   :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemsproductname",
-  :db/ident :markingitems/markingitemsproductname}
+  :db/doc "No",
+  :db/id ":impregnationsystem/impregnationsystemremark",
+  :db/ident :impregnationsystem/impregnationsystemremark}
  {:attribute/parent ":ctype/expansionjoint",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2150,13 +2291,6 @@
   :db/id ":boundbasecourse/boundbasehydraulicbinder",
   :db/ident :boundbasecourse/boundbasehydraulicbinder,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/markingitems",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Materjali tüüp" ""],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemsmaterialtype",
-  :db/ident :markingitems/markingitemsmaterialtype}
  {:attribute/parent ":ctype/common",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2176,6 +2310,14 @@
   :db/id ":bearing/bearingtype",
   :db/ident :bearing/bearingtype,
   :attribute/cost-grouping? true}
+ {:attribute/parent ":fclass/pumpingstation",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Märkused" "Remarks"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pumpingstation/pumpingstationremark",
+  :db/ident :pumpingstation/pumpingstationremark}
  {:attribute/parent ":ctype/bridgesupport",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2246,6 +2388,14 @@
   :asset-schema/description
   [nil
    "Total length of the bridge considering all spans and additionally abutment backwall/expansion joint location."]}
+ {:attribute/parent ":fclass/pumpingstation",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Ehistamise aasta" "Building year"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":pumpingstation/pumpingstationyear",
+  :db/ident :pumpingstation/pumpingstationyear}
  {:attribute/parent ":fclass/unboundbasecourse",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2306,6 +2456,14 @@
   :attribute/cost-grouping? false,
   :asset-schema/description
   ["Monteeritav, monoliitne, komposiit, teisaldatav, vms" ""]}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Liigi kirjeldus" "Type number explanation"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkingtypenumberdescriprtion",
+  :db/ident :featuremarking/featuremarkingtypenumberdescriprtion}
  {:attribute/parent ":fclass/bridge",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -2336,6 +2494,14 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":boundpavinglayer/pavinglayermanufacturer",
   :db/ident :boundpavinglayer/pavinglayermanufacturer}
+ {:attribute/parent ":fclass/ditch",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Märkused" "Remarks"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":ditch/ditchremark",
+  :db/ident :ditch/ditchremark}
  {:attribute/parent ":ctype/bridgespan",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -2369,13 +2535,6 @@
   :db/id ":drainagelayer/drainagethickness",
   :db/ident :drainagelayer/drainagethickness,
   :attribute/cost-grouping? true}
- {:attribute/parent ":fclass/markingitems",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Märkused" ""],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":markingitems/markingitemsnotes",
-  :db/ident :markingitems/markingitemsnotes}
  {:attribute/parent ":ctype/barrier",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2446,6 +2605,14 @@
   :db/id ":common/cci_class",
   :db/ident :common/cci_class,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/featuremarking",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toote nimetus" "Product name"],
+  :db/cardinality :db.cardinality/one,
+  :db/doc "No",
+  :db/id ":featuremarking/featuremarkingproductname",
+  :db/ident :featuremarking/featuremarkingproductname}
  {:db/id ":item/backfillmaterial65",
   :db/ident :item/backfillmaterial65,
   :asset-schema/type :asset-schema.type/enum,
