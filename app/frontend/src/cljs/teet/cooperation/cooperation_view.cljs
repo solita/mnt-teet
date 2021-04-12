@@ -961,7 +961,7 @@
                                     [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-2-line])]
                                     [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-3-line])]]
                             :variant :info}
-     [icons/action-info {:style (common-styles/info-icon-style theme-colors/blue-light "5px" "5px")}]]
+     [icons/action-info-outlined {:style (common-styles/info-icon-style theme-colors/blue-light "5px" "5px")}]]
     (format/date value)]])
 
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
