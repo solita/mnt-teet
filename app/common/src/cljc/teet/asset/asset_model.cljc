@@ -15,16 +15,6 @@
 
 #?(:cljs (def ^:private format gstr/format))
 
-(defn asset-oid
-  "Format asset OID for feature class prefix and seq number."
-  [owner-code fclass-oid-prefix sequence-number]
-  (format "%s-%s-%06d" owner-code fclass-oid-prefix sequence-number))
-
-(defn component-oid
-  "Format component OID for asset OID and seq number."
-  [asset-oid sequence-number]
-  (format "%s-%05d" asset-oid sequence-number))
-
 
 (def ^:private asset-pattern #"^...-\w{3}-\d{6}$")
 (def ^:private component-pattern #"^...-\w{3}-\d{6}-\d{5}$")
@@ -38,6 +28,18 @@
   "Check if given OID refers to a component."
   [oid]
   (boolean (re-matches component-pattern oid)))
+
+(defn asset-oid
+  "Format asset OID for feature class prefix and seq number."
+  [owner-code fclass-oid-prefix sequence-number]
+  {:post [(asset-oid? %)]}
+  (format "%s-%s-%06d" owner-code fclass-oid-prefix sequence-number))
+
+(defn component-oid
+  "Format component OID for asset OID and seq number."
+  [asset-oid sequence-number]
+  {:post [(component-oid? %)]}
+  (format "%s-%05d" asset-oid sequence-number))
 
 (defn component-asset-oid
   "Given component OID, return the OID of the parent asset."
