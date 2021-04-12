@@ -957,9 +957,15 @@
   [{value :value label :label}]
   [:div {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)} label
    [:div {:style common-styles/body-1-bold}
-    [common/popper-tooltip {:title (tr [:cooperation :application-date-can-not-be-edited])
+    [common/popper-tooltip {:title [:div (tr [:cooperation :application-date-can-not-be-edited-1-line])
+                                    [:div (tr [:cooperation :application-date-can-not-be-edited-2-line])]
+                                    [:div (tr [:cooperation :application-date-can-not-be-edited-3-line])]]
                             :variant :info}
-     (format/date value)]]])
+     [icons/action-info {:style {:color theme-colors/blue-light
+                                 :position :relative
+                                 :top "5px"
+                                 :right "5px"}}]]
+    (format/date value)]])
 
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!

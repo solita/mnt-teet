@@ -192,6 +192,8 @@
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",
+  :application-date-can-not-be-edited-1-line
+  "Taotlemise kuupäeva ei saa muuta. ",
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
@@ -213,7 +215,6 @@
   :cant-delete-third-party-with-applications
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
-  :application-date-can-not-be-edited "Taotluse kuupäeva ei saa muuta",
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
@@ -253,6 +254,10 @@
   :filter
   {:newest-applications "Uusim pöördumine",
    :all-applications "Kõik pöördumised"},
+  :application-date-can-not-be-edited-3-line
+  "kustutage taoutlus ja sisestage uus.",
+  :application-date-can-not-be-edited-2-line
+  "Kui kuupäevaga tehti viga,",
   :unanswered "Vastuseta",
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
