@@ -5,8 +5,8 @@
             [teet.localization :refer [tr]]
             [teet.util.collection :as cu]
             [teet.log :as log]
-            [teet.routes :as routes]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.asset.asset-model :as asset-model]))
 
 (defonce next-id (atom 0))
 
@@ -43,10 +43,10 @@
        :features (into-array (remove nil? features))})
 
 (defrecord SaveCostItem [])
-(defrecord SaveCostItemResponse [tempid response])
+(defrecord SaveCostItemResponse [response])
 (defrecord DeleteComponent [id])
 (defrecord SaveComponent [component-id])
-(defrecord SaveComponentResponse [tempid response])
+(defrecord SaveComponentResponse [response])
 
 (defrecord UpdateForm [form-data])
 
@@ -60,25 +60,34 @@
 
 (declare process-location-change)
 
+(defn- form-component-id [app]
+  (let [id (get-in app [:params :id])]
+    (or
+     ;; component query parameter specifies new component to add
+     (get-in app [:query :component])
+
+     ;; editing existing component itself
+     (and (asset-model/component-oid? id)
+          id))))
+
 (defn- form-state
   "Return the current form state."
   [app]
-  (let [component-id (get-in app [:query :component])]
-    (if (nil? component-id)
-      ;; Update asset itself
-      (common-controller/page-state app :cost-item)
+  (if-let [component-id (form-component-id app)]
+    ;; Get some nested component by id
+    (let [by-id (fn by-id [{oid :asset/oid :as c}]
+                  (if (= component-id oid)
+                    c
+                    (some by-id (:component/components c))))]
+      (some by-id
+            (common-controller/page-state app :cost-item :asset/components)))
 
-      ;; Update some nested component by id
-      (let [by-id (fn by-id [{id :db/id :as c}]
-                    (if (= component-id (str id))
-                      c
-                      (some by-id (:component/components c))))]
-        (some by-id
-              (common-controller/page-state app :cost-item :asset/components))))))
+    ;; Get asset itself
+    (common-controller/page-state app :cost-item)))
 
 (defn- update-component [components component-id update-fn args]
-  (mapv (fn [{id :db/id :as c}]
-          (let [c (if (= component-id (str id))
+  (mapv (fn [{oid :asset/oid :as c}]
+          (let [c (if (= component-id oid)
                     (apply update-fn c args)
                     c)]
             (if-let [sub-components (:component/components c)]
@@ -89,43 +98,16 @@
 (defn- update-form
   "Update form state, either the main asset or a component by id."
   [app update-fn & args]
-  (let [component-id (get-in app [:query :component])]
-    (if (nil? component-id)
-      ;; Update asset itself
-      (apply common-controller/update-page-state
-             app [:cost-item] update-fn args)
 
-      ;; Update some nested component by id
-      (common-controller/update-page-state
-       app [:cost-item :asset/components]
-       update-component component-id update-fn args))))
+  (if-let [component-id (form-component-id app)]
+    ;; Update some nested component by id
+    (common-controller/update-page-state
+     app [:cost-item :asset/components]
+     update-component component-id update-fn args)
 
-(defn find-component-path
-  "Return vector containing all parents of component from asset to the component.
-  For example:
-  [a c1 c2 c3]
-  where a is the asset, that has component c1
-  c1 has child component c2
-  and c2 has child component c3 (the component we want)"
-  [asset component-id]
-  (let [component-id (str component-id)
-        containing
-        (fn containing [path here]
-          (let [cs (concat (:asset/components here)
-                           (:component/components here))]
-            (if-let [c (some #(when (= component-id (str (:db/id %)))
-                                %) cs)]
-              ;; we found the component at this level
-              (into path [here c])
-
-              ;; not found here, recurse
-              (first
-               (for [sub cs
-                     :let [sub-path (containing (conj path here) sub)]
-                     :when sub-path]
-                 sub-path)))))]
-
-    (containing [] asset)))
+    ;; Update asset itself
+    (apply common-controller/update-page-state
+           app [:cost-item] update-fn args)))
 
 (extend-protocol t/Event
 
@@ -133,7 +115,7 @@
   (process-event [_ {page :page :as app}]
     (let [form-data (form-state app)
           project-id (get-in app [:params :project])
-          id (if (= page :new-cost-item)
+          id (if (= "new" (get-in app [:params :id]))
                (next-id! "costitem")
                (:db/id form-data))
           asset (-> form-data
@@ -144,21 +126,22 @@
              :command :asset/save-cost-item
              :payload {:asset asset
                        :project-id project-id}
-             :result-event (partial ->SaveCostItemResponse (:db/id asset))})))
+             :result-event ->SaveCostItemResponse})))
 
   SaveCostItemResponse
-  (process-event [{:keys [tempid response]} app]
-    (apply t/fx
-           (snackbar-controller/open-snack-bar app
-                                               (tr [:asset :cost-item-saved]))
-           (remove nil?
-                   [(when (string? tempid)
-                      {:tuck.effect/type :navigate
-                       :page :cost-item
-                       :params (merge
-                                (:params app)
-                                {:id (str (get-in response [:tempids tempid]))})})
-                    common-controller/refresh-fx])))
+  (process-event [{:keys [response]} {params :params :as app}]
+    (let [oid (:asset/oid response)]
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app
+                                                 (tr [:asset :cost-item-saved]))
+             (remove nil?
+                     [(when (not= oid (:id params))
+                        {:tuck.effect/type :navigate
+                         :page :cost-item
+                         :params (merge
+                                  (:params app)
+                                  {:id oid})})
+                      common-controller/refresh-fx]))))
 
   DeleteComponent
   (process-event [{:keys [fetched-cost-item-atom id]} app]
@@ -173,9 +156,10 @@
   SaveComponent
   (process-event [_ app]
     (let [form-data (form-state app)
-          {parent-id :db/id} (-> (common-controller/page-state app :cost-item)
-                                 (find-component-path (:db/id form-data))
-                                 butlast last)]
+          {parent-id :asset/oid}
+          (-> (common-controller/page-state app :cost-item)
+              (asset-model/find-component-path (:asset/oid form-data))
+              butlast last)]
       (t/fx app
             {:tuck.effect/type :command!
              :command :asset/save-component
@@ -184,18 +168,20 @@
                        :component (dissoc form-data
                                           :component/components
                                           :location/geojson)}
-             :result-event (partial ->SaveComponentResponse (:db/id form-data))})))
+             :result-event ->SaveComponentResponse})))
 
   SaveComponentResponse
-  (process-event [{:keys [tempid response]} app]
-    (apply t/fx app
-           (remove nil?
-                   [(when (string? tempid)
-                      {:tuck.effect/type :navigate
-                       :page :cost-item
-                       :params (:params app)
-                       :query {:component (get-in response [:tempids tempid])}})
-                    common-controller/refresh-fx])))
+  (process-event [{:keys [response]} {params :params :as app}]
+    (let [oid (:asset/oid response)]
+      (apply t/fx app
+             (remove nil?
+                     [(when (not= oid (params :id))
+                        {:tuck.effect/type :navigate
+                         :page :cost-item
+                         :params (merge (:params app)
+                                        {:id oid})
+                         :query nil})
+                      common-controller/refresh-fx]))))
 
   UpdateForm
   (process-event [{:keys [form-data]} app]
@@ -299,6 +285,7 @@
                                        :component/components)
                               #(conj (or % [])
                                      {:db/id new-id
+                                      :asset/oid new-id
                                       :component/ctype type}))))
        {:tuck.effect/type :navigate
         :params params

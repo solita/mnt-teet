@@ -168,7 +168,9 @@
               :when (:name fc)]
           (merge
            (common-attrs :asset-schema.type/fclass fc)
-           {:fclass/fgroup (str (:fgroup fc))}))
+           {:fclass/fgroup (str (:fgroup fc))}
+           (when-let [op (:oid-prefix fc)]
+             {:fclass/oid-prefix op})))
 
         ;; Output component types
         (for [ct ctype
