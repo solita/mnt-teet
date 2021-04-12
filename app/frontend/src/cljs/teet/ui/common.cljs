@@ -598,7 +598,8 @@
   "Shows :label with formatted date from :value with an info icon and :tooltip"
   [{value :value label :label tooltip :tooltip}]
   [:div
-   {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)}
+   {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)
+    :data-cy "date-label-component"}
    label
    [:div
     {:style common-styles/body-1-bold}
