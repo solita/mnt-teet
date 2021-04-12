@@ -953,17 +953,6 @@
                                     :data-cy "add-contact"}
             (tr [:cooperation :add-application-contact])])]])]))
 
-(defn date-label-component
-  [{value :value label :label}]
-  [:div {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)} label
-   [:div {:style common-styles/body-1-bold}
-    [common/popper-tooltip {:title [:span (tr [:cooperation :application-date-can-not-be-edited-1-line])
-                                    [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-2-line])]
-                                    [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-3-line])]]
-                            :variant :info}
-     [icons/action-info-outlined {:style (common-styles/info-icon-style theme-colors/blue-light "5px" "5px")}]]
-    (format/date value)]])
-
 (defn- edit-application-form [{:keys [e! project-id]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
@@ -989,7 +978,12 @@
 
    ^{:attribute :cooperation.application/date
      :xs 8}
-   [date-label-component {:label (tr [:fields :cooperation.application/date])}]
+   ;; :value implicitly added by form
+   [common/date-label-component {:label (tr [:fields :cooperation.application/date])
+                          :tooltip {:title [:span (tr [:cooperation :application-date-can-not-be-edited-1-line])
+                                            [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-2-line])]
+                                            [:br] [:span (tr [:cooperation :application-date-can-not-be-edited-3-line])]]
+                                    :variant :info}}]
 
    ^{:attribute :cooperation.application/response-deadline
      :xs 8}

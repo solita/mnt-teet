@@ -530,8 +530,7 @@
 
 (defn info-icon-style
   "Styles to align info font icon in front of label"
-  [color top right]
+  [color top]
   {:color color
    :position :relative
-   :top top
-   :right right})
+   :top top})

@@ -11,7 +11,8 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
             [re-svg-icons.feather-icons :as fi]
-            [teet.ui.util :refer [mapc]]))
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.format :as format]))
 
 (def Link typography/Link)
 (def Link2 typography/Link2)
@@ -592,3 +593,18 @@
         [Paper
          (mapc (r/partial context-menu-item toggle!)
                (remove nil? items))]]]]]))
+
+(defn date-label-component
+  "Shows :label with formatted date from :value with an info icon and :tooltip"
+  [{value :value label :label tooltip :tooltip}]
+  [:div
+   {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)}
+   label
+   [:div
+    {:style common-styles/body-1-bold}
+    [popper-tooltip tooltip
+     [icons/action-info-outlined
+      {:style (common-styles/info-icon-style theme-colors/blue-tab "5px")}]]
+    [:span
+     {:style {:padding-left "0.5em"}}
+     (format/date value)]]])
