@@ -403,9 +403,7 @@
                                cost-items-controller/->UpdateForm initial-data))]
     (let [feature-class (when fclass
                           (asset-type-library/item-by-ident atl fclass))]
-      (println "IniTIAL data" initial-data)
       [:<>
-
        [form/form2
         {:e! e!
          :on-change-event cost-items-controller/->UpdateForm

@@ -60,21 +60,30 @@
 
 (declare process-location-change)
 
+(defn- form-component-id [app]
+  (let [id (get-in app [:params :id])]
+    (or
+     ;; component query parameter specifies new component to add
+     (get-in app [:query :component])
+
+     ;; editing existing component itself
+     (and (asset-model/component-oid? id)
+          id))))
+
 (defn- form-state
   "Return the current form state."
   [app]
-  (let [id (get-in app [:params :id])]
-    (if (asset-model/asset-oid? id)
-      ;; Update asset itself
-      (common-controller/page-state app :cost-item)
+  (if-let [component-id (form-component-id app)]
+    ;; Get some nested component by id
+    (let [by-id (fn by-id [{oid :asset/oid :as c}]
+                  (if (= component-id oid)
+                    c
+                    (some by-id (:component/components c))))]
+      (some by-id
+            (common-controller/page-state app :cost-item :asset/components)))
 
-      ;; Update some nested component by id
-      (let [by-id (fn by-id [{oid :asset/oid :as c}]
-                    (if (= id oid)
-                      c
-                      (some by-id (:component/components c))))]
-        (some by-id
-              (common-controller/page-state app :cost-item :asset/components))))))
+    ;; Get asset itself
+    (common-controller/page-state app :cost-item)))
 
 (defn- update-component [components component-id update-fn args]
   (mapv (fn [{oid :asset/oid :as c}]
@@ -89,16 +98,16 @@
 (defn- update-form
   "Update form state, either the main asset or a component by id."
   [app update-fn & args]
-  (let [id (get-in app [:params :id])]
-    (if (asset-model/asset-oid? id)
-      ;; Update asset itself
-      (apply common-controller/update-page-state
-             app [:cost-item] update-fn args)
 
-      ;; Update some nested component by id
-      (common-controller/update-page-state
-       app [:cost-item :asset/components]
-       update-component id update-fn args))))
+  (if-let [component-id (form-component-id app)]
+    ;; Update some nested component by id
+    (common-controller/update-page-state
+     app [:cost-item :asset/components]
+     update-component component-id update-fn args)
+
+    ;; Update asset itself
+    (apply common-controller/update-page-state
+           app [:cost-item] update-fn args)))
 
 (extend-protocol t/Event
 
@@ -106,7 +115,7 @@
   (process-event [_ {page :page :as app}]
     (let [form-data (form-state app)
           project-id (get-in app [:params :project])
-          id (if (= page :new-cost-item)
+          id (if (= "new" (get-in app [:params :id]))
                (next-id! "costitem")
                (:db/id form-data))
           asset (-> form-data
