@@ -18,6 +18,7 @@
              adb :asset-db
              aconn :asset-conn}
    :payload {project-id :project-id asset :asset}
+   :config {owner-code [:asset :default-owner-code]}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
    :pre [^{:error :asset-does-not-belong-to-project}
@@ -28,6 +29,7 @@
         (tx
          ^{:db :asset}
          [(list 'teet.asset.asset-tx/save-asset
+                owner-code
                 (merge {:asset/project project-id}
                        (asset-type-library/form->db
                         (asset-type-library/rotl-map (asset-db/asset-type-library adb))

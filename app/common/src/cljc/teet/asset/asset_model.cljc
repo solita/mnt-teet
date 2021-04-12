@@ -1,5 +1,15 @@
 (ns teet.asset.asset-model
-  "Asset model stuff"
+  "Asset model stuff
+
+  Asset/component id pattern:
+  N40-NNN-FFFFFF(-CCCCC)
+  where
+  N40 is owner code, default is N40 = Transport authority
+  NNN is a three-letter Feature class code, shortened from the Estonian version of the feature class. The values to be provided by TA next week in the ROTL definition
+  FFFFFF is a 6 digit zero padded numeric feature counter within a Feature class.
+
+  For components:
+  CCCCC is a 5 digit zero padded numeric component counter within a particular Feature."
   (:require #?(:cljs [goog.string :as gstr])
             [clojure.string :as str]))
 
@@ -7,16 +17,17 @@
 
 (defn asset-oid
   "Format asset OID for feature class prefix and seq number."
-  [fclass-oid-prefix sequence-number]
-  (format "N40-%s-%06d" fclass-oid-prefix sequence-number))
+  [owner-code fclass-oid-prefix sequence-number]
+  (format "%s-%s-%06d" owner-code fclass-oid-prefix sequence-number))
 
 (defn component-oid
   "Format component OID for asset OID and seq number."
   [asset-oid sequence-number]
   (format "%s-%05d" asset-oid sequence-number))
 
-(def ^:private asset-pattern #"^N40-\w{3}-\d{6}$")
-(def ^:private component-pattern #"^N40-\w{3}-\d{6}-\d{5}$")
+
+(def ^:private asset-pattern #"^...-\w{3}-\d{6}$")
+(def ^:private component-pattern #"^...-\w{3}-\d{6}-\d{5}$")
 
 (defn asset-oid?
   "Check if given OID refers to asset."

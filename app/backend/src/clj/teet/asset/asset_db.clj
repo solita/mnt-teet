@@ -123,7 +123,7 @@
   Returns vector of [update-seq-tx oid] where update-seq-tx is a
   transaction data map to update the seq# of the fclass and oid
   is the string oid for the feature."
-  [db fclass]
+  [db owner-code fclass]
   {:pre [(keyword? fclass)]}
   (let [{:fclass/keys [oid-prefix oid-sequence-number]}
         (d/pull db [:fclass/oid-prefix :fclass/oid-sequence-number] fclass)]
@@ -133,7 +133,7 @@
     (let [seq-number (inc (or oid-sequence-number 0))]
       [{:db/ident fclass
         :fclass/oid-sequence-number seq-number}
-       (asset-model/asset-oid oid-prefix seq-number)])))
+       (asset-model/asset-oid owner-code oid-prefix seq-number)])))
 
 (defn next-component-oid
   "Get next OID for a new component in feature."

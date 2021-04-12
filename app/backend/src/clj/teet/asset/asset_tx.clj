@@ -3,18 +3,17 @@
   (:require [teet.asset.asset-db :as asset-db]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.asset.asset-model :as asset-model]
-            [datomic.client.api :as d]))
+            [teet.asset.asset-model :as asset-model]))
 
 (defn save-asset
   "Create or update asset. Creates new OID based on the fclass."
-  [db {id :db/id :asset/keys [fclass] :as asset}]
+  [db owner-code {id :db/id :asset/keys [fclass] :as asset}]
   (if (number? id)
     ;; update existing
     (du/modify-entity-retract-nils db asset)
 
     ;; Create new OID and asset
-    (let [[update-counter-tx oid] (asset-db/next-oid db fclass)]
+    (let [[update-counter-tx oid] (asset-db/next-oid db owner-code fclass)]
       [update-counter-tx
        (cu/without-nils
         (assoc asset :asset/oid oid))])))
