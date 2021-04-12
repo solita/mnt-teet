@@ -527,3 +527,11 @@
                    theme-colors/black-coral)}
          (when disabled?
            {:color theme-colors/text-disabled})))
+
+(defn info-icon-style
+  "Styles to align info font icon in front of label"
+  [color top right]
+  {:color color
+   :position :relative
+   :top top
+   :right right})
