@@ -963,7 +963,7 @@
 
 (defn date-label-component
   [{value :value label :label}]
-  [:div {:style (merge {:color "#5D6071"} common-styles/body-2-bold)} label
+  [:div {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)} label
    [:div {:style common-styles/body-1-bold}
     [common/popper-tooltip {:title "Date of application can not be changed"
                             :variant :info}
