@@ -53,7 +53,7 @@
    :overflow :hidden
    :text-overflow :ellipsis
    :white-space :nowrap
-   :padding "4px"})
+   :padding "4px 8px 4px 0"})
 
 (defn file-list-entity-name-style
   []
