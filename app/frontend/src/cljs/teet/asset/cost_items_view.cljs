@@ -85,9 +85,6 @@
 (defn- attribute-group [{ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
   (cond
-    (= :common/name ident)
-    :name
-
     cost-grouping?
     :cost-grouping
 
@@ -177,17 +174,13 @@
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
-          name-attr (:common/name rotl)
           attrs-groups (->> (concat (when common? common-attrs) attributes)
                             (group-by attribute-group)
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
                                                     label))))]
       [:<>
-       [form/field {:attribute :common/name}
-        [text-field/TextField {:label (label name-attr)}]]
-       ;; Show location fields in the name and location group
-       ;; if we are not inheriting the location from the parent
+       ;; Show location group if not inherited from parent
        (when (not inherits-location?)
          [container/collapsible-container
           {:open? (@open? :location)
@@ -282,7 +275,7 @@
     ""
     (str (label fg) " / " (label fc))))
 
-(defn group-and-class-selection [{:keys [e! on-change value atl read-only? name]}]
+(defn group-and-class-selection [{:keys [e! on-change value atl read-only?]}]
   (let [[fg-ident fc-ident] value
         fg (if fg-ident
              (asset-type-library/item-by-ident atl fg-ident)
@@ -291,9 +284,7 @@
         fc (and fc-ident (asset-type-library/item-by-ident atl fc-ident))
         fgroups (:fgroups atl)]
     (if read-only?
-      [typography/Heading3 (str (format-fg-and-fc [fg fc])
-                                (when name
-                                  (str ": " name)))]
+      [typography/Heading3 (format-fg-and-fc [fg fc])]
       [Grid {:container true}
        [Grid {:item true :xs 12 :class (<class responsivity-styles/visible-desktop-only)}
         [select/select-search
@@ -355,7 +346,7 @@
            [component-tree-level-indent level]
            [url/Link {:page :cost-item
                       :params {:id (:asset/oid c)}}
-            (:common/name c)]]
+            (:asset/oid c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 20 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
@@ -413,10 +404,10 @@
          :disable-buttons? (= initial-data form-data)}
 
         [form/field {:attribute [:fgroup :asset/fclass]}
-         [group-and-class-selection {:e! e!
-                                     :atl atl
-                                     :read-only? (seq (dissoc form-data :asset/fclass :fgroup :db/id))
-                                     :name (:common/name form-data)}]]
+         [group-and-class-selection
+          {:e! e!
+           :atl atl
+           :read-only? (seq (dissoc form-data :asset/fclass :fgroup :db/id))}]]
 
         (when feature-class
           ;; Attributes for asset
@@ -445,9 +436,9 @@
     (for [p component-path]
       {:link [url/Link {:page :cost-item
                         :params {:id (:asset/oid asset)}}
-              (:common/name p)]
-       :title (if-let [name (:common/name p)]
-                name
+              (:asset/oid p)]
+       :title (if (number? (:db/id p))
+                (:asset/oid p)
                 (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
 
    (into [:div]
@@ -549,11 +540,11 @@
                              :margin-left "1rem"}}
                [typography/Text2Bold (str/upper-case (tr* fclass))]
                [:div.cost-items {:style {:margin-left "1rem"}}
-                (for [{oid :asset/oid :common/keys [name]} cost-items]
+                (for [{oid :asset/oid} cost-items]
                   ^{:key oid}
                   [:div
                    [url/Link {:page :cost-item
-                              :params {:id oid}} name]])]]))]]))]]))
+                              :params {:id oid}} oid]])]]))]]))]]))
 
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}
