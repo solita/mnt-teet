@@ -32,7 +32,7 @@
                              :properties properties}))})]
     (when (not= (:status response) 200)
       (throw (ex-info "entity info upsert failed" {:response response
-                                                   :entity-id entity-id
+                                                   :entity-id (str entity-id)
                                                    :features features})))
     :ok))
 
