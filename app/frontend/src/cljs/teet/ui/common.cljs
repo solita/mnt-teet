@@ -605,7 +605,7 @@
     {:style common-styles/body-1-bold}
     [popper-tooltip tooltip
      [icons/action-info-outlined
-      {:style (common-styles/info-icon-style theme-colors/blue-tab "5px")}]]
+      {:style (common-styles/info-icon-style {:color theme-colors/blue-tab :top "5px"})}]]
     [:span
      {:style {:padding-left "0.5em"}}
      (format/date value)]]])
