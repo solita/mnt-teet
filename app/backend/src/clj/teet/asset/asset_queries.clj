@@ -41,3 +41,11 @@
                   (if (asset-model/component-oid? cost-item)
                     (asset-model/component-asset-oid cost-item)
                     cost-item))})))
+
+(defquery :asset/project-summary
+  {:doc "Summary of project cost items grouped by cost groupings."
+   :context {:keys [db user] adb :asset-db}
+   :args {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/read-info {}}}
+  :fixme)

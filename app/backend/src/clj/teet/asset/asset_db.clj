@@ -86,6 +86,43 @@
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
 
+(defn asset-with-components
+  "Pull asset and all its components with all attributes."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (map first
+       (d/q '[:find (pull ?e [*])
+              :where
+              [?e :asset/oid ?oid]
+              [(>= ?oid ?start)]
+              [(< ?oid ?end)]
+              :in $ ?start ?end]
+            db asset-oid (str asset-oid "."))))
+
+(defn cost-item-summary
+  "Summarize cost items for project. Take all components for all assets
+  and group them by cost-grouping attributes."
+  [db thk-project-id]
+  (let [cost-grouping-attrs
+        (into #{:asset/fclass :component/ctype}
+              (map first)
+              (d/q '[:find ?ident
+                     :where
+                     [?e :attribute/cost-grouping? true]
+                     [?e :db/ident ?ident]] db))
+        items (->>
+               (d/q '[:find ?oid
+                      :where
+                      [?a :asset/project ?p]
+                      [?a :asset/oid ?oid]
+                      :in $ ?p]
+                    db thk-project-id)
+               (map first)
+               (mapcat (partial asset-with-components db))
+               (group-by #(select-keys % cost-grouping-attrs)))
+        ]
+    items))
+
 (defn cost-item-project
   "Returns THK project id for the cost item."
   [db cost-item-id]
