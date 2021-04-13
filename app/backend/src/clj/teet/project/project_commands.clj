@@ -16,6 +16,7 @@
             [teet.user.user-model :as user-model]
             [teet.user.user-spec :as user-spec]
             [teet.util.datomic :as du]
+            [teet.integration.integration-id :as integration-id]
             [teet.integration.x-road.property-registry :as property-registry]
             [teet.integration.postgrest :as postgrest])
   (:import (java.util Date UUID)))
@@ -189,7 +190,9 @@
    :pre [(string? id)]}
   (let [config (environment/config-map {:api-url [:api-url]
                                         :api-secret [:auth :jwt-secret]})
-        entity-id (:db/id (du/entity db [:thk.project/id id]))
+        entity-id (-> (du/entity db [:thk.project/id id])
+                      :integration/id
+                      integration-id/uuid->number)
         features [{:label geometry-label
                    :id (str (UUID/randomUUID))
                    :geometry geometry
