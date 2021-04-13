@@ -342,19 +342,16 @@
         [:span
          [:div {:class (<class common-styles/flex-row)}
           [:div {:class (<class common-styles/flex-table-column-style
-                                20 :flex-start 1 nil)}
+                                40 :flex-start 1 nil)}
            [component-tree-level-indent level]
            [url/Link {:page :cost-item
                       :params {:id (:asset/oid c)}}
             (:asset/oid c)]]
           [:div {:class (<class common-styles/flex-table-column-style
-                                20 :flex-start 0 nil)}
+                                35 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
           [:div {:class (<class common-styles/flex-table-column-style
-                                20 :flex-start 0 nil)}
-           (str "id: " (:db/id c))]
-          [:div {:class (<class common-styles/flex-table-column-style
-                                40 :flex-end 0 nil)}
+                                25 :flex-end 0 nil)}
            [buttons/delete-button-with-confirm
             {:small? true
              :icon-position :start
