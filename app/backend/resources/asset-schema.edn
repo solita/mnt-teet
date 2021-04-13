@@ -91,12 +91,18 @@
   :db/ident :fclass/paving,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Kate" "Paving layer"],
+  :asset-schema/description
+  ["Kulumiskiht või kihid (komponentidena)."
+   "Wearing course or courses (as components)"],
   :fclass/fgroup ":fgroup/carriageway",
   :fclass/oid-prefix "KAT"}
  {:db/id ":fclass/pavementstructure",
   :db/ident :fclass/pavementstructure,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Katendi konstruktsioon" "Pavement structure"],
+  :asset-schema/description
+  ["Kõik katendikonstruktsiooni kihid va kulumiskiht(id)."
+   "All pavement layers except wearing course(s)."],
   :fclass/fgroup ":fgroup/carriageway",
   :fclass/oid-prefix "KTK"}
  {:db/id ":fclass/kerb",
@@ -768,8 +774,8 @@
   :asset-schema/label ["Valgustimast" "Lighting pole"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/lightlocation"}
- {:db/id ":ctype/polefoundation",
-  :db/ident :ctype/polefoundation,
+ {:db/id ":ctype/lightpolefoundation",
+  :db/ident :ctype/lightpolefoundation,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label
   ["Valgustimasti vundament" "Lighting pole foundation"],
@@ -942,6 +948,10 @@
    "Electrical overhead line protection panel"],
   :component/inherits-location? true,
   :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/lightpolecatenary",
+  :db/ident :ctype/lightpolecatenary,
+  :asset-schema/type :asset-schema.type/ctype,
+  :ctype/parent ":fclass/lightlocation"}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2023,6 +2033,13 @@
   :db/id ":drainagelayer/drainagematerialproducer",
   :db/ident :drainagelayer/drainagematerialproducer,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Katte liik" "Pavement general type"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":pavinglayer/pavinglayertypeDUPLICATE",
+  :db/ident :pavinglayer/pavinglayertypeDUPLICATE}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2502,6 +2519,7 @@
   :asset-schema/label
   ["Sildeehitise aluse gabariidi laius" "Clearance width under span"],
   :attribute/mandatory? false,
+  :attribute/max-value-ref ":barrier/barrierworkingwidth",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridgespan/spanclearanceW",
