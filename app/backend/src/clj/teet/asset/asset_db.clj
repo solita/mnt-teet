@@ -99,31 +99,6 @@
               :in $ ?start ?end]
             db asset-oid (str asset-oid "."))))
 
-(defn cost-item-summary
-  "Summarize cost items for project. Take all components for all assets
-  and group them by cost-grouping attributes."
-  [db thk-project-id]
-  (let [cost-grouping-attrs
-        (into #{:asset/fclass :component/ctype}
-              (map first)
-              (d/q '[:find ?ident
-                     :where
-                     [?e :attribute/cost-grouping? true]
-                     [?e :db/ident ?ident]] db))
-        items (->>
-               (d/q '[:find ?oid
-                      :where
-                      [?a :asset/project ?p]
-                      [?a :asset/oid ?oid]
-                      :in $ ?p]
-                    db thk-project-id)
-               (map first)
-               (mapcat (partial asset-with-components db))
-               (group-by #(select-keys % cost-grouping-attrs))
-               (cu/map-vals count))
-        ]
-    items))
-
 (defn- asset-component-oids
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
@@ -187,7 +162,12 @@
                db thk-project-id
                (dissoc cost-group-map :type))))))
 
-(defn cost-group-items
+(defn project-cost-groups-totals
+  "Summarize totals for project cost items.
+  Take all components for all assets and group them by cost-grouping attributes.
+
+  Counts quantities and total prices (if price info is known for
+  a group)."
   [db thk-project-id]
   (let [items
         ;; Group by feature/component id
@@ -231,7 +211,8 @@
                        :quantity-unit (type-qty-unit type)}
 
                       (when p
-                        {:total-cost (* p quantity)}))))))))
+                        {:cost-per-quantity-unit p
+                         :total-cost (* p quantity)}))))))))
 
 (defn cost-item-project
   "Returns THK project id for the cost item."

@@ -24,7 +24,8 @@
   {:doc "Query project cost items"
    :context {:keys [db user] adb :asset-db}
    :args {project-id :thk.project/id
-          cost-item :cost-item}
+          cost-item :cost-item
+          cost-totals :cost-totals}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
@@ -32,6 +33,8 @@
    {:asset-type-library (asset-db/asset-type-library adb)
     :cost-items (asset-db/project-cost-items adb project-id)
     :project (project-db/project-by-id db [:thk.project/id project-id])}
+   (when cost-totals
+     {:cost-totals (asset-db/project-cost-groups-totals adb project-id)})
    (when cost-item
      {:cost-item (fetch-cost-item
                   adb

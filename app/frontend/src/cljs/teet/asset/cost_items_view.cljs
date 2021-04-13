@@ -30,7 +30,8 @@
             [teet.map.openlayers.drag :as drag]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
-            [teet.map.map-features :as map-features]))
+            [teet.map.map-features :as map-features]
+            [teet.ui.table :as table]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -561,10 +562,49 @@
                                        :cost-items cost-items}]
      :main main-content}]])
 
+(defn- format-properties [atl properties]
+  (let [id->def (partial asset-type-library/item-by-ident atl)
+        attr->val (dissoc (cu/map-keys id->def properties) nil)]
+    (into [:<>]
+          (map (fn [[k v]]
+                 [:div
+                  [typography/BoldGrayText (label k) ": "]
+                  (case (get-in k [:db/valueType :db/ident])
+                    :db.type/ref (some-> v :db/ident id->def label)
+                    (str v))
+                  (when-let [u (:asset-schema/unit k)]
+                    (str " " u))]))
+          (sort-by (comp label key) attr->val))))
+
+(defn format-euro [val]
+  (when val
+    (str val " €")))
+
+(defn cost-items-totals-page
+  [e! app {atl :asset-type-library totals :cost-totals :as state}]
+  [cost-items-page-structure
+   e! app state
+   [:div.cost-items-totals
+    [table/table
+     {:label "Cost summary"
+      :data totals
+      :columns asset-model/cost-totals-table-columns
+      :column-align asset-model/cost-totals-table-align
+      :format-column (fn [column value row]
+                       (case column
+                         :type (label (asset-type-library/item-by-ident atl value))
+                         :properties (format-properties atl row)
+                         :quantity (str value
+                                        (when-let [qu (:quantity-unit row)]
+                                          (str " " qu)))
+                         :cost-per-quantity-unit (format-euro value)
+                         :total-cost (format-euro value)
+                         (str value)))}]]])
+
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
    e! app state
-   [:div "TODO: default view"]])
+   [:div "TODO: map here"]])
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item :as state}]

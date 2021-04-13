@@ -77,3 +77,11 @@
                  sub-path)))))]
 
     (containing [] asset)))
+
+(def cost-totals-table-columns
+  [:type :properties :quantity :cost-per-quantity-unit :total-cost])
+
+(def cost-totals-table-align
+  {:quantity "right"
+   :cost-per-quantity-unit "right"
+   :total-cost "right"})
