@@ -1,7 +1,7 @@
 context("Admin inspector", () => {
     before(() => {
-        cy.dummyLogin("Danny")
-        cy.visit("#/admin/inspect/user-EE12345678900") // inspect danny user entity
+        cy.dummyLogin("benjamin")
+        cy.visit("#/admin/inspect/user-EE12345678900") // inspect Danny's user entity
     })
 
     it("has expected content", () => {
