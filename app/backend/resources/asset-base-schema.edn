@@ -191,4 +191,14 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :db/doc "The SI unit for specifying quantity of this. If omitted, quantity is in number of pieces."
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/cost-group-price
+  :txes [[{:db/ident :cost-group/project
+           :db/doc "THK project id for this cost group price"
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :cost-group/price
+           :db/doc "Price (€) per quantity unit for this cost group"
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}]]}
  ]
