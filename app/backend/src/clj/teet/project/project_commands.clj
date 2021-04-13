@@ -177,40 +177,49 @@
          :msg "User is already added"
          :error :permission-already-granted}))))
 
+(defn- thk-id->integration-id
+  "given project's `:thk.project/id`, fetch the said project's
+  `:integration/id` number form"
+  [db thk-id]
+  (-> (du/entity db [:thk.project/id thk-id])
+      :integration/id
+      integration-id/uuid->number))
+
 (defcommand :thk.project/add-search-geometry
   {:doc "Add a new geometry to use in the related restriction search"
    :context {:keys [user db]}
    :payload {geometry :geometry
              geometry-label :geometry-label
              id :thk.project/id}
-   :spec (s/keys :req-un [::geometry])
+   :spec (s/keys :req [:thk.project/id]
+                 :req-un [::geometry])
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
    :pre [(string? id)]}
-  (let [config (environment/config-map {:api-url [:api-url]
-                                        :api-secret [:auth :jwt-secret]})
-        entity-id (-> (du/entity db [:thk.project/id id])
-                      :integration/id
-                      integration-id/uuid->number)
-        features [{:label geometry-label
-                   :id (str (UUID/randomUUID))
-                   :geometry geometry
-                   :type "search-area"}]]
-    (entity-features/upsert-entity-features! config entity-id features)))
+  (when-let [entity-id (thk-id->integration-id db id)]
+    (let [config (environment/config-map {:api-url [:api-url]
+                                         :api-secret [:auth :jwt-secret]})
+          features [{:label geometry-label
+                     :id (str (UUID/randomUUID))
+                     :geometry geometry
+                     :type "search-area"}]]
+      (entity-features/upsert-entity-features! config entity-id features))))
 
 
 (defcommand :thk.project/delete-search-geometry
   {:doc "Delete a single search geometry used in a project"
-   :context {:keys [user]}
-   :payload {entity-id :entity-id
+   :context {:keys [user db]}
+   :payload {id :thk.project/id
              geometry-id :geometry-id}
-   :spec (s/keys :req-un [::entity-id ::geometry-id])
-   :project-id [:thk.project/id entity-id]
-   :authorization {:project/update-info {:eid [:thk.project/id entity-id]
+   :spec (s/keys :req [:thk.project/id]
+                 :req-un [::geometry-id])
+   :project-id [:thk.project/id id]
+   :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
-   :pre [(number? entity-id)
+   :pre [(string? id)
          (string? geometry-id)]}
-  (let [config (environment/config-map {:api-url [:api-url]
-                                        :api-secret [:auth :jwt-secret]})]
-    (entity-features/delete-entity-feature! config entity-id geometry-id)))
+  (when-let [entity-id (thk-id->integration-id db id)]
+    (let [config (environment/config-map {:api-url [:api-url]
+                                         :api-secret [:auth :jwt-secret]})]
+     (entity-features/delete-entity-feature! config entity-id geometry-id))))
