@@ -528,9 +528,3 @@
          (when disabled?
            {:color theme-colors/text-disabled})))
 
-(defn info-icon-style
-  "Styles to align info font icon in front of label"
-  [{:keys [color top]}]
-  {:color color
-   :position :relative
-   :top top})

@@ -5,7 +5,7 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal
+            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal Grid
                                          Paper Menu MenuItem ListItemIcon ClickAwayListener]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
@@ -597,15 +597,16 @@
 (defn date-label-component
   "Shows :label with formatted date from :value with an info icon and :tooltip"
   [{value :value label :label tooltip :tooltip}]
-  [:div
-   {:style (merge {:color theme-colors/gray} common-styles/body-2-bold)
-    :data-cy "date-label-component"}
-   label
-   [:div
-    {:style common-styles/body-1-bold}
+  [Grid
+   {:container true
+    :data-cy "date-label-component"} label
+   [Grid
+    {:container true
+     :align-items :center}
     [popper-tooltip tooltip
      [icons/action-info-outlined
-      {:style (common-styles/info-icon-style {:color theme-colors/blue-tab :top "5px"})}]]
-    [:span
-     {:style {:padding-left "0.5em"}}
-     (format/date value)]]])
+      {:style {:color theme-colors/blue-tab}}]]
+    [Grid
+     {:item true
+      :style {:padding-left "0.3em"}}]
+    (format/date value)]])
