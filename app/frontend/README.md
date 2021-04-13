@@ -11,7 +11,7 @@ Most important external libraries:
   of Reagent components for interfacing with databases using
   [PostgREST](http://postgrest.org)
 - [Openlayers](https://openlayers.org/) is used for map functionality
-- npm
+- npm, minimun version 7
 - npx
 
 # Running locally
