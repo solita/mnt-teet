@@ -29,7 +29,7 @@
 
 (defn fetch-drawn-areas
   [app]
-  (let [entity-id (str (get-in app [:route :project :db/id]))]
+  (let [entity-id (str (get-in app [:route :project :integration/id]))]
     {:tuck.effect/type :rpc
      :rpc "geojson_entity_features_by_type"
      :endpoint (get-in app [:config :api-url])
