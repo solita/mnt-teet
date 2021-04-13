@@ -10,8 +10,13 @@
                    in)]
     (t/read (t/reader in :json))))
 
+(def write-options
+  {:handlers
+   {;; Always send bigdecimals as strings to frontend
+    java.math.BigDecimal (t/write-handler (constantly "s") str)}})
+
 (defn write-transit [out data]
-  (t/write (t/writer out :json) data))
+  (t/write (t/writer out :json write-options) data))
 
 (defn clj->transit
   "Convert given Clojure `data` to transit+json string."
