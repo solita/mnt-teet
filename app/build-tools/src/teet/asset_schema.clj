@@ -148,7 +148,8 @@
                                 parse-prefix-and-name
                                 (apply keywordize)
                                 unnamespaced->namespaced)]
-    {attribute value-ref}))
+    ;; str used here to match the id
+    {attribute (str value-ref)}))
 
 
 (defn- min-and-max-values
