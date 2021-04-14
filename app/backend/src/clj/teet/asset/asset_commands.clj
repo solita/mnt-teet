@@ -7,7 +7,8 @@
             [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.euro :as euro]))
 
 
 
@@ -92,8 +93,8 @@
      ;; Compare and swap the price if there is an existing one
      ^{:db :asset}
      [[:db/cas id :cost-group/price
-       (asset-type-library/->bigdec (:cost-group/price cost-group))
-       (asset-type-library/->bigdec price)]]
+       (euro/parse (:cost-group/price cost-group))
+       (euro/parse price)]]
 
      ;; Create new cost group price
      ^{:db :asset}
@@ -102,6 +103,6 @@
                                      (asset-db/asset-type-library adb))
                                     cost-group)
        {:db/id "new-cost-group-price"
-        :cost-group/price (asset-type-library/->bigdec price)
+        :cost-group/price (euro/parse price)
         :cost-group/project project-id})]))
   :ok)
