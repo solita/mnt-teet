@@ -605,7 +605,7 @@
     {:class (<class common-styles/flex-row-center)}
     [popper-tooltip tooltip
      [icons/action-info-outlined
-      {:style {:color :prime}}]]
+      {:style {:color :primary}}]]
     [:div
-     {:style {:padding-left "0.3em"}}]
-    [typography/Text (format/date value)]]])
+     {:style {:padding-left "0.3em"}}
+     [typography/Text (format/date value)]]]])
