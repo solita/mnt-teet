@@ -106,7 +106,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :thk.project/delete-search-geometry
-           :payload {:entity-id entity-id
+           :payload {:thk.project/id entity-id
                      :geometry-id geometry-id}
            :result-event ->DeleteSuccess}))
 
