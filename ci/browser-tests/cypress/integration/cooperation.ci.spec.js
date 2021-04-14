@@ -249,4 +249,20 @@ context('Cooperation', function() {
         cy.get(".edit-response").should("not.exist")
 
     })
+
+    it("is only possible to read application date", function() {
+        let company = "edit application ltd";
+        navigateToProjectCooperations(this.projectID);
+        createCooperation(company);
+        cy.get(`.cooperation-overview-page [data-third-party='${company}'] a`).click()
+
+        createApplication.call(this)
+
+        cy.get("[data-cy=edit-application]").click()
+
+        cy.get("div[data-form-attribute=':cooperation.application/date'] div[data-cy=date-label-component]")
+            .should("exist")
+        cy.get("div[data-form-attribute=':cooperation.application/date'] input")
+            .should("not.exist")
+    })
 })

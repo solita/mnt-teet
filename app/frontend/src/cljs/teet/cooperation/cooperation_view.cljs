@@ -978,7 +978,10 @@
 
    ^{:attribute :cooperation.application/date
      :xs 8}
-   [date-picker/date-input {}]
+   ;; :value implicitly added by form
+   [common/date-label-component {:label (tr [:fields :cooperation.application/date])
+                                 :tooltip {:title [:span (tr [:cooperation :application-date-can-not-be-edited])]
+                                           :variant :info}}]
 
    ^{:attribute :cooperation.application/response-deadline
      :xs 8}

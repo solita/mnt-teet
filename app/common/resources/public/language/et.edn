@@ -53,7 +53,14 @@
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
  :asset
- {:add-cost-item "Lisan vara",
+ {:totals-table
+  {:properties "Omadused",
+   :type "Tüüp",
+   :quantity "Kogus",
+   :price-per-quantity-unit "Ühiku hind (€)",
+   :total-price "Kokku (€)",
+   :project-total "Kokku {total} EUR"},
+  :add-cost-item "Lisan vara",
   :validate
   {:min-length
    "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
@@ -213,6 +220,8 @@
   :cant-delete-third-party-with-applications
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
+  :application-date-can-not-be-edited
+  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taoutlus ja sisestage uus.",
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
@@ -725,7 +734,7 @@
   :document/author "Autor",
   :file/name "Nimi",
   :cooperation.contact/email "E-post",
-  :land-owner-opinion/respondent-name "Vastaja nimi",
+  :land-owner-opinion/respondent-name "Vastaja initsiaalid",
   :thk.project/effective-km-range "Km ulatus",
   :task/description "Kirjeldus",
   :thk.project/region-name "Regioon",
@@ -759,7 +768,7 @@
   :file/document-group "Dokumendi grupp",
   :location/carriageway "Carriageway",
   :meeting.agenda/body "Sisu",
-  :land-owner-opinion/link-to-response "Link arvamusele",
+  :land-owner-opinion/link-to-response "Link arvamusele (Delta URL)",
   :estate-procedure/type "Protseduuri tüüp",
   :thk.project/road-name "Tee nimetus",
   :location/start-m "Start m",
@@ -864,7 +873,7 @@
   :no-active-burdens "Aktiivsed koormatised puuduvad",
   :owner-filter-label "Omanik",
   :unit-valuations "Üksuse hindamine",
-  :cadastral-filter-label "Katastriüksus",
+  :cadastral-filter-label "Katastriüksuse number",
   :unit-name-id "Üksuse nimi ja tunnus",
   :quality
   {:any "Kõik",
@@ -878,7 +887,7 @@
   :units "üksust",
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
-  :estate-filter-label "Kinnistu",
+  :estate-filter-label "Kinnistu number",
   :no-land-acquisitions "Selle kinnistu maid ei omandata",
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
@@ -927,7 +936,7 @@
    :opinion-body "Arvamuse sisu",
    :no-position-added "Seisukohta pole lisatud",
    :title "{opinion-type} maade omanike arvamuste koondtabel",
-   :cadastral-id-name "Katastriüksuse tunnus; Katastriüksikuse nimi",
+   :cadastral-id-name "Katastriüksuse tunnus; Katastriüksuse nimi",
    :units-without-opinions
    "1.2 Piirnevate kinnisasjade omanikud, kes arvamust ei avaldanud",
    :jrk "JRK nr"},
