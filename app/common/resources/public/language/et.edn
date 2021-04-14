@@ -53,7 +53,14 @@
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
  :asset
- {:add-cost-item "Lisan vara",
+ {:totals-table
+  {:properties "Omadused",
+   :type "Tüüp",
+   :quantity "Kogus",
+   :price-per-quantity-unit "Ühiku hind (€)",
+   :total-price "Kokku (€)",
+   :project-total "Kokku {total} EUR"},
+  :add-cost-item "Lisan vara",
   :validate
   {:min-length
    "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
@@ -192,8 +199,6 @@
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",
-  :application-date-can-not-be-edited-1-line
-  "Taotlemise kuupäeva ei saa muuta. ",
   :competent-authority-name "Transpordiamet",
   :conclusion "Järeldus",
   :applications "Taotlused",
@@ -215,6 +220,8 @@
   :cant-delete-third-party-with-applications
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
+  :application-date-can-not-be-edited
+  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taoutlus ja sisestage uus.",
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
@@ -254,10 +261,6 @@
   :filter
   {:newest-applications "Uusim pöördumine",
    :all-applications "Kõik pöördumised"},
-  :application-date-can-not-be-edited-3-line
-  "kustutage taoutlus ja sisestage uus.",
-  :application-date-can-not-be-edited-2-line
-  "Kui kuupäevaga tehti viga,",
   :unanswered "Vastuseta",
   :responsible-person "Vastutav : {user-name}",
   :response-saved "Vastus edukalt salvestatud",
@@ -731,7 +734,7 @@
   :document/author "Autor",
   :file/name "Nimi",
   :cooperation.contact/email "E-post",
-  :land-owner-opinion/respondent-name "Vastaja nimi",
+  :land-owner-opinion/respondent-name "Vastaja initsiaalid",
   :thk.project/effective-km-range "Km ulatus",
   :task/description "Kirjeldus",
   :thk.project/region-name "Regioon",

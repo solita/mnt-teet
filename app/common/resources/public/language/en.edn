@@ -53,7 +53,14 @@
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
  :asset
- {:add-cost-item "Add cost item",
+ {:totals-table
+  {:properties "Properties",
+   :type "Type",
+   :quantity "Quantity",
+   :price-per-quantity-unit "Unit price (€)",
+   :total-price "Total (€)",
+   :project-total "Total {total} EUR"},
+  :add-cost-item "Add cost item",
   :validate
   {:min-length
    "Text too short, insert at least {min-length} characters",
@@ -193,8 +200,6 @@
  :cooperation
  {:response "Response",
   :application-delete-confirm "Delete the application?",
-  :application-date-can-not-be-edited-1-line
-  "The date of application can't be edited. ",
   :competent-authority-name "Transport Administration ",
   :conclusion "Conclusion",
   :applications "Applications",
@@ -216,6 +221,8 @@
   :cant-delete-third-party-with-applications
   "Involved party can be deleted if it has applications added to it",
   :create-opinion-title "Add opinion",
+  :application-date-can-not-be-edited
+  "The date of application can't be edited. If a mistake was made with the date please delete the application and enter a new one.",
   :waiting-for-response "Waiting for response",
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
@@ -255,10 +262,6 @@
   :filter
   {:newest-applications "Newest application",
    :all-applications "All applications"},
-  :application-date-can-not-be-edited-3-line
-  "delete the application and enter a new one.",
-  :application-date-can-not-be-edited-2-line
-  "If a mistake was made with the date please ",
   :unanswered "Unanswered",
   :responsible-person "Responsible: {user-name}",
   :response-saved "Response saved successfully",
@@ -736,7 +739,7 @@
   :document/author "Author",
   :file/name "Name",
   :cooperation.contact/email "Email",
-  :land-owner-opinion/respondent-name "Respondent name",
+  :land-owner-opinion/respondent-name "Respondent initials",
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
   :thk.project/region-name "Region",

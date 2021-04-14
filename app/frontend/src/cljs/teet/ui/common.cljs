@@ -597,16 +597,15 @@
 (defn date-label-component
   "Shows :label with formatted date from :value with an info icon and :tooltip"
   [{value :value label :label tooltip :tooltip}]
-  [Grid
-   {:container true
-    :data-cy "date-label-component"} label
-   [Grid
-    {:container true
-     :align-items :center}
+  [:div
+   {:data-cy "date-label-component"}
+   [:label {:class (<class common-styles/input-label-style false false)}
+    [typography/Text2Bold label]]
+   [:div
+    {:class (<class common-styles/flex-row-center)}
     [popper-tooltip tooltip
      [icons/action-info-outlined
-      {:style {:color theme-colors/blue-tab}}]]
-    [Grid
-     {:item true
-      :style {:padding-left "0.3em"}}]
-    (format/date value)]])
+      {:style {:color :prime}}]]
+    [:div
+     {:style {:padding-left "0.3em"}}]
+    [typography/Text (format/date value)]]])
