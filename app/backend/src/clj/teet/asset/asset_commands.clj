@@ -1,6 +1,6 @@
 (ns teet.asset.asset-commands
   "Commands to store asset information"
-  (:require [teet.db-api.core :refer [defcommand] :as db-api]
+  (:require [teet.db-api.core :refer [defcommand tx] :as db-api]
             [datomic.client.api :as d]
             [teet.environment :as environment]
             [clojure.walk :as walk]
@@ -18,20 +18,26 @@
              adb :asset-db
              aconn :asset-conn}
    :payload {project-id :project-id asset :asset}
+   :config {owner-code [:asset :default-owner-code]}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
    :pre [^{:error :asset-does-not-belong-to-project}
          (or (string? (:db/id asset))
-             (= project-id (:asset/project (du/entity adb (:db/id asset)))))]
-   :transact
-   (with-meta
-     (du/modify-entity-retract-nils
-      adb
-      (merge {:asset/project project-id}
-             (asset-type-library/form->db
-              (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-              (dissoc asset :asset/components))))
-     {:db :asset})})
+             (= project-id (:asset/project (du/entity adb (:db/id asset)))))]}
+  (let [id (:db/id asset)
+        {:keys [db-after tempids]}
+        (tx
+         ^{:db :asset}
+         [(list 'teet.asset.asset-tx/save-asset
+                owner-code
+                (merge {:asset/project project-id}
+                       (asset-type-library/form->db
+                        (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+                        (dissoc asset :asset/components))))])]
+    (d/pull db-after [:asset/oid]
+            (if (string? id)
+              (tempids id)
+              id))))
 
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."
@@ -53,18 +59,17 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
    :pre [(or (string? (:db/id component))
-             (= project-id (asset-db/component-project adb (:db/id component))))]
-   :transact
-   (with-meta
-     (conj
-      (du/modify-entity-retract-nils
-       adb
-       (asset-type-library/form->db
-        (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-        (dissoc component :component/components)))
-      ;; Link this to parent
-      [:db/add parent-id
-       (case (asset-db/item-type adb parent-id)
-         :asset :asset/components
-         :component :component/components) (:db/id component)])
-     {:db :asset})})
+             (= project-id (asset-db/component-project adb (:db/id component))))]}
+  (let [id (:db/id component)
+        {:keys [db-after tempids]}
+        (tx
+         ^{:db :asset}
+         [(list 'teet.asset.asset-tx/save-component
+                parent-id
+                (asset-type-library/form->db
+                 (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+                 (dissoc component :component/components)))])]
+    (d/pull db-after [:asset/oid]
+            (if (string? id)
+              (tempids id)
+              id))))

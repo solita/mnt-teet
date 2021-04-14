@@ -2,11 +2,10 @@
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
             [teet.environment :as environment]
-            [teet.util.datomic :as du]
-            [clojure.walk :as walk]
             [teet.project.project-db :as project-db]
             [teet.asset.asset-db :as asset-db]
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.asset.asset-model :as asset-model]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -15,11 +14,11 @@
    :args _}
   (asset-db/asset-type-library (environment/asset-db)))
 
-(defn- fetch-cost-item [adb id]
+(defn- fetch-cost-item [adb oid]
   (asset-type-library/db->form
    (asset-type-library/rotl-map
     (asset-db/asset-type-library adb))
-   (d/pull adb '[*] id)))
+   (d/pull adb '[*] [:asset/oid oid])))
 
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
@@ -34,12 +33,11 @@
     :cost-items (asset-db/project-cost-items adb project-id)
     :project (project-db/project-by-id db [:thk.project/id project-id])}
    (when cost-item
-     {:cost-item (fetch-cost-item adb cost-item)})))
-
-(defquery :asset/cost-item
-  {:doc "Fetch a single cost item by id"
-   :context {:keys [db user] adb :asset-db}
-   :args {id :db/id}
-   :project-id [:thk.project/id (asset-db/cost-item-project adb id)]
-   :authorization {:project/read-info {}}}
-  (fetch-cost-item adb id))
+     {:cost-item (fetch-cost-item
+                  adb
+                  ;; Always pull the full asset even when focusing on a
+                  ;; specific subcomponent.
+                  ;; PENDING: what if there are thousands?
+                  (if (asset-model/component-oid? cost-item)
+                    (asset-model/component-asset-oid cost-item)
+                    cost-item))})))

@@ -519,6 +519,21 @@
    :flex-direction :column
    :flex 1})
 
+(defn min-width-0
+  []
+  {:min-width "0%"})
+
+(defn overflow-ellipsis
+  []
+  {:overflow :hidden
+   :text-overflow :ellipsis})
+
+(defn flex-shrink-no-wrap
+  []
+  {:display :flex
+   :min-width "0%"
+   :white-space :nowrap})
+
 (defn input-label-style
   [disabled? dark-theme?]
   (merge {:display :block
