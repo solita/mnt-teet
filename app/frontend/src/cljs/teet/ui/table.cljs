@@ -80,7 +80,9 @@
 (defn- default-format-column [_column-name value _row]
   (str value))
 
-(defn- listing-table [{:keys [default-sort-column]}]
+(defn listing-table
+  "Raw table without panel and title."
+  [{:keys [default-sort-column]}]
   (let [sort-column (r/atom [default-sort-column :asc])
         show-count (r/atom 20)
         sort! (fn [col]
@@ -155,7 +157,7 @@
                     filters))
           data))
 
-(defn table [{:keys [get-column get-column-compare data label after-title title-class]
+(defn table [{:keys [get-column data label after-title title-class]
               :as opts}]
   (r/with-let [filters (r/atom {})
                clear-filters! #(reset! filters {})]
