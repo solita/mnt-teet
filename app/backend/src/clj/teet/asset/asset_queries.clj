@@ -34,7 +34,10 @@
     :cost-items (asset-db/project-cost-items adb project-id)
     :project (project-db/project-by-id db [:thk.project/id project-id])}
    (when cost-totals
-     {:cost-totals (asset-db/project-cost-groups-totals adb project-id)})
+     (let [cost-groups (asset-db/project-cost-groups-totals adb project-id)]
+       {:cost-totals
+        {:cost-groups cost-groups
+         :total-cost (str (reduce + (keep :total-cost cost-groups)))}}))
    (when cost-item
      {:cost-item (fetch-cost-item
                   adb

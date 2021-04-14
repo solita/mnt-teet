@@ -58,6 +58,9 @@
 
 (defrecord AddComponent [type])
 
+(defrecord SaveCostGroupPrice [cost-group price])
+(defrecord SaveCostGroupPriceResponse [response])
+
 (declare process-location-change)
 
 (defn- form-component-id [app]
@@ -359,3 +362,27 @@
 
       :else
       app)))
+
+
+;; Cost group related events
+(extend-protocol t/Event
+
+  SaveCostGroupPrice
+  (process-event [{:keys [cost-group price]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :asset/save-cost-group-price
+           :payload {:project-id (get-in app [:params :project])
+                     :cost-group (dissoc cost-group
+                                         :quantity :count
+                                         :cost-per-quantity-unit
+                                         :total-cost
+                                         :quantity-unit :type)
+                     :price price}
+           :result-event ->SaveCostGroupPriceResponse}))
+
+  SaveCostGroupPriceResponse
+  (process-event [{response :response} app]
+    (println "Response: " response)
+    (t/fx app
+          common-controller/refresh-fx)))

@@ -8,7 +8,7 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid Link CircularProgress]]
+            [teet.ui.material-ui :refer [Grid Link CircularProgress IconButton]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -580,26 +580,46 @@
   (when val
     (str val " €")))
 
+(defn cost-group-unit-price [e! initial-value row]
+  (r/with-let [price (r/atom initial-value)
+               change! #(reset! price (-> % .-target .-value))
+               save! #(when (not= initial-value @price)
+                        (e! (cost-items-controller/->SaveCostGroupPrice row @price)))
+               save-on-enter! #(when (= "Enter" (.-key %))
+                                 (save!))]
+    (let [changed? (not= @price initial-value)]
+      [:div {:class (<class common-styles/flex-row)}
+       [text-field/TextField {:value @price
+                              :on-change change!
+                              :on-key-down save-on-enter!
+                              :end-icon [text-field/euro-end-icon]}]
+       (when changed?
+         [IconButton {:size :small
+                      :on-click save!}
+          [icons/action-done {:font-size :small}]])])))
+
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals :as state}]
   [cost-items-page-structure
    e! app state
    [:div.cost-items-totals
-    [table/table
-     {:label "Cost summary"
-      :data totals
-      :columns asset-model/cost-totals-table-columns
-      :column-align asset-model/cost-totals-table-align
-      :format-column (fn [column value row]
-                       (case column
-                         :type (label (asset-type-library/item-by-ident atl value))
-                         :properties (format-properties atl row)
-                         :quantity (str value
-                                        (when-let [qu (:quantity-unit row)]
-                                          (str " " qu)))
-                         :cost-per-quantity-unit (format-euro value)
-                         :total-cost (format-euro value)
-                         (str value)))}]]])
+    [:div {:style {:float :right}} "total cost: " (:total-cost totals) " €"]
+    [:div
+     [table/listing-table
+      {:label "Cost summary"
+       :data (:cost-groups totals)
+       :columns asset-model/cost-totals-table-columns
+       :column-align asset-model/cost-totals-table-align
+       :format-column (fn [column value row]
+                        (case column
+                          :type (label (asset-type-library/item-by-ident atl value))
+                          :properties (format-properties atl row)
+                          :quantity (str value
+                                         (when-let [qu (:quantity-unit row)]
+                                           (str " " qu)))
+                          :cost-per-quantity-unit [cost-group-unit-price e! value row]
+                          :total-cost (format-euro value)
+                          (str value)))}]]]])
 
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
