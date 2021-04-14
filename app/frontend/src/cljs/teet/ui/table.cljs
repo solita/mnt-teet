@@ -29,8 +29,7 @@
 (defn- listing-header
   ([] (listing-header {:filters (r/wrap {} :_)}))
   ([{:keys [sort! sort-column sort-direction filters columns filter-type
-            column-align column-label-fn]
-     :or {column-label-fn #(tr [:fields %])}}]
+            column-align column-label-fn]}]
    [TableHead {}
     [TableRow {}
      (doall
@@ -48,7 +47,9 @@
            :direction (if (= sort-direction :asc)
                         "asc" "desc")
            :on-click (r/partial sort! column)}
-          (column-label-fn column)]
+          (if column-label-fn
+            (column-label-fn column)
+            (tr [:fields column]))]
          (case (filter-type column)
            :string
            [TextField {:value (or (get @filters column) "")
@@ -105,7 +106,7 @@
        :reagent-render
        (fn [{:keys [on-row-click filters data columns column-align
                     filter-type get-column get-column-compare format-column
-                    key]
+                    key column-label-fn]
              :or {filter-type {}
                   get-column get
                   get-column-compare (constantly compare)
@@ -119,7 +120,8 @@
                               :filters filters
                               :columns columns
                               :filter-type filter-type
-                              :column-align column-align}]
+                              :column-align column-align
+                              :column-label-fn column-label-fn}]
              [TableBody {}
               (doall
                 (for [row (take @show-count
