@@ -547,6 +547,13 @@
                    [url/Link {:page :cost-item
                               :params {:id oid}} oid]])]]))]]))]]))
 
+(defn- cost-items-navigation [e! {:keys [page params]}]
+  [select/form-select
+   {:on-change #(e! (common-controller/->Navigate % params nil))
+    :items [:cost-items :cost-items-totals]
+    :value page
+    :format-item #(tr [:asset :page %])}])
+
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}
    main-content]
@@ -555,11 +562,14 @@
     {:e! e!
      :app app
      :project project
-     :left-panel [cost-item-hierarchy {:e! e!
-                                       :app app
-                                       :add? (= :new-cost-item (:page app))
-                                       :project project
-                                       :cost-items cost-items}]
+     :left-panel
+     [:<>
+      [cost-items-navigation e! app]
+      [cost-item-hierarchy {:e! e!
+                            :app app
+                            :add? (= :new-cost-item (:page app))
+                            :project project
+                            :cost-items cost-items}]]
      :main main-content}]])
 
 (defn- format-properties [atl properties]
@@ -578,7 +588,7 @@
 
 (defn format-euro [val]
   (when val
-    (str val " €")))
+    (str val "\u00A0€")))
 
 (defn cost-group-unit-price [e! initial-value row]
   (r/with-let [price (r/atom initial-value)
@@ -589,7 +599,8 @@
                                  (save!))]
     (let [changed? (not= @price initial-value)]
       [:div {:class (<class common-styles/flex-row)}
-       [text-field/TextField {:value @price
+       [text-field/TextField {:input-style {:text-align :right}
+                              :value @price
                               :on-change change!
                               :on-key-down save-on-enter!
                               :end-icon [text-field/euro-end-icon]}]
@@ -603,13 +614,17 @@
   [cost-items-page-structure
    e! app state
    [:div.cost-items-totals
-    [:div {:style {:float :right}} "total cost: " (:total-cost totals) " €"]
+    [:div {:style {:float :right}}
+     [:b
+      (tr [:asset :totals-table :project-total]
+          {:total (:total-cost totals)})]]
     [:div
      [table/listing-table
       {:label "Cost summary"
        :data (:cost-groups totals)
        :columns asset-model/cost-totals-table-columns
        :column-align asset-model/cost-totals-table-align
+       :column-label-fn #(tr [:asset :totals-table %])
        :format-column (fn [column value row]
                         (case column
                           :type (label (asset-type-library/item-by-ident atl value))

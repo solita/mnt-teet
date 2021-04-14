@@ -172,7 +172,7 @@
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project}}}
 
- :cost-items-summary
+ :cost-items-totals
  {:path "/projects/:project/cost-items-totals"
   :parent :project
   :view teet.asset.cost-items-view/cost-items-totals-page
