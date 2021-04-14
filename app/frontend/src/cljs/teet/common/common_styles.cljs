@@ -503,7 +503,7 @@
      :line-height 1
      :background-color background
      :padding "0.5rem"
-     :max-width "400px"}))
+     :max-width "315px"}))
 
 (defn text-ellipsis [max-width]
   {:text-overflow :ellipsis
