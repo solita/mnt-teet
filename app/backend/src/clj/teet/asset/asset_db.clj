@@ -4,7 +4,8 @@
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.util.euro :as euro]))
 
 (def ctype-pattern
   '[*

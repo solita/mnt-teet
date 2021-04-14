@@ -27,6 +27,10 @@
   [s]
   (-> s
       (str/replace #"\h" "")
+      (str/replace #"\s" "")
       (str/replace "€" "")
       (str/replace "," ".")
       #?(:clj bigdec :cljs js/parseFloat)))
+
+#?(:clj (def transit-type-handlers
+          {java.math.BigDecimal format-no-sign}))
