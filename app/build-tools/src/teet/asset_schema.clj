@@ -143,12 +143,13 @@
   (when (and n ctype datatype)
     (keyword (name ctype) (name n))))
 
-(defn- bound-value-ref [value attribute unnamespaced->namespaced]
+(defn- extremum-value-ref
+  [value attribute unnamespaced->namespaced]
   (if-let [value-ref (some->> value
                               parse-prefix-and-name
                               (apply keywordize)
                               unnamespaced->namespaced)]
-    ;; str used here to match the id
+    ;; str used here to match the Datomic temporary id
     {attribute (str value-ref)}
     (when value ;; There is a value but we couldn't find the namespaced version -> possible typo
       (throw (ex-info (str "invalid property as ref: " value) {:value value :attribute attribute})))))
@@ -162,14 +163,14 @@
   [p unnamespaced->namespaced]
   (merge (if-let [min (->long (:min-value p))]
            {:attribute/min-value min}
-           (bound-value-ref (:min-value p)
-                            :attribute/min-value-ref
-                            unnamespaced->namespaced))
+           (extremum-value-ref (:min-value p)
+                               :attribute/min-value-ref
+                               unnamespaced->namespaced))
          (if-let [max (->long (:max-value p))]
            {:attribute/max-value max}
-           (bound-value-ref (:max-value p)
-                            :attribute/max-value-ref
-                            unnamespaced->namespaced))))
+           (extremum-value-ref (:max-value p)
+                               :attribute/max-value-ref
+                               unnamespaced->namespaced))))
 
 (defn- unnamespaced-attr->namespaced-attr
   "construct map from unnamespaced attribute name strings to namespaced keywords"

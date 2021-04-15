@@ -49,9 +49,13 @@
 (def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
 
 (defn- extremum-value-by-ref
-  [component-oid cost-item-data bound-value-ref]
+  "Find the extremum (min or max) value by searching for the given
+  `extremum-value-ref` attribute, starting from the current component
+  defined by `component-oid` and walking up the hierarchy up to the
+  asset. Return the first value of the attribute encountered."
+  [component-oid cost-item-data extremum-value-ref]
   (let [path (reverse (asset-model/find-component-path cost-item-data component-oid))]
-    (some (du/enum->kw bound-value-ref) path)))
+    (some (du/enum->kw extremum-value-ref) path)))
 
 (defn- validate [valueType component-oid cost-item-data {:attribute/keys [min-value max-value min-value-ref max-value-ref]} v]
   (when-not (str/blank? v)
