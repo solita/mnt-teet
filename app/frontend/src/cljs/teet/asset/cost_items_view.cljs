@@ -13,6 +13,7 @@
             [clojure.string :as str]
             [teet.util.string :as string]
             [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
             [teet.common.responsivity-styles :as responsivity-styles]
@@ -47,40 +48,62 @@
 (def ^:private integer-pattern #"^\d*$")
 (def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
 
-(defn- validate [valueType {:attribute/keys [min-value max-value]} v]
+(defn- extremum-value-by-ref
+  [component-oid cost-item-data bound-value-ref]
+  (let [path (reverse (asset-model/find-component-path cost-item-data component-oid))]
+    (some (du/enum->kw bound-value-ref) path)))
+
+(defn- validate [valueType component-oid cost-item-data {:attribute/keys [min-value max-value min-value-ref max-value-ref]} v]
   (when-not (str/blank? v)
-    (case valueType
-      ;; Check length for strings
-      :db.type/string
-      (cond
-        (and min-value (< (count v) min-value))
-        (tr [:asset :validate :min-length] {:min-length min-value})
+    (let [min-value-by-ref (when min-value-ref (extremum-value-by-ref component-oid cost-item-data min-value-ref))
+          max-value-by-ref (when max-value-ref (extremum-value-by-ref component-oid cost-item-data max-value-ref))]
+      (println min-value-by-ref max-value-by-ref)
+      (case valueType
+       ;; Check length for strings
+       :db.type/string
+       (cond
+         (and min-value (< (count v) min-value))
+         (tr [:asset :validate :min-length] {:min-length min-value})
 
-        (and max-value (> (count v) max-value))
-        (tr [:asset :validate :max-length] {:max-length max-value}))
+         (and max-value (> (count v) max-value))
+         (tr [:asset :validate :max-length] {:max-length max-value})
 
-      (:db.type/long :db.type/bigdec)
-      (let [v (str/trim v)]
-        (cond
-          (and (= valueType :db.type/long)
-               (not (re-matches integer-pattern v)))
-          (tr [:asset :validate :integer-format])
+         ;; TODO: own error messages for refs?
+         (and min-value-by-ref (< (count v) min-value-by-ref))
+         (tr [:asset :validate :min-length] {:min-length min-value-by-ref})
 
-          (and (= valueType :db.type/bigdec)
-               (not (re-matches decimal-pattern v)))
-          (tr [:asset :validate :decimal-format])
+         (and max-value-by-ref (> (count v) max-value-by-ref))
+         (tr [:asset :validate :max-length] {:max-length max-value-by-ref}))
 
-          :else
-          (let [n (js/parseFloat v)]
-            (cond
-              (and min-value (< n min-value))
-              (tr [:asset :validate :min-value] {:min-value min-value})
+       (:db.type/long :db.type/bigdec)
+       (let [v (str/trim v)]
+         (cond
+           (and (= valueType :db.type/long)
+                (not (re-matches integer-pattern v)))
+           (tr [:asset :validate :integer-format])
 
-              (and max-value (> n max-value))
-              (tr [:asset :validate :max-value] {:max-value max-value})))))
+           (and (= valueType :db.type/bigdec)
+                (not (re-matches decimal-pattern v)))
+           (tr [:asset :validate :decimal-format])
 
-      ;; no validation otherwise
-      nil)))
+           :else
+           (let [n (js/parseFloat v)]
+             (cond
+               (and min-value (< n min-value))
+               (tr [:asset :validate :min-value] {:min-value min-value})
+
+               (and max-value (> n max-value))
+               (tr [:asset :validate :max-value] {:max-value max-value})
+
+               ;; TODO: own error messages for refs?
+               (and min-value-by-ref (< n min-value-by-ref))
+               (tr [:asset :validate :min-value] {:min-value min-value-by-ref})
+
+               (and max-value-by-ref (> n max-value-by-ref))
+               (tr [:asset :validate :max-value] {:max-value max-value-by-ref})))))
+
+       ;; no validation otherwise
+       nil))))
 
 (defn- attribute-group [{ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
@@ -170,7 +193,7 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [{:keys [e! attributes inherits-location? common? ctype]} rotl]
+(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype]} rotl]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -229,8 +252,11 @@
                [attribute-grid-item
                 [form/field {:attribute ident
                              :required? mandatory?
-                             :validate (r/partial validate (:db/ident valueType)
-                                                  (select-keys attrs
+                             :validate (r/partial validate
+                                                  (:db/ident valueType)
+                                                  component-oid
+                                                  cost-item-data
+                                                  (select-keys attr
                                                                [:attribute/min-value
                                                                 :attribute/max-value
                                                                 :attribute/min-value-ref
@@ -416,6 +442,7 @@
           [form-paper [attributes
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
+                        ;; TODO: cost-item-data here as well
                         :common? false
                         :inherits-location? false}]])
 
@@ -487,6 +514,8 @@
           [attributes {:e! e!
                        :attributes (some-> ctype :attribute/_parent)
                        :inherits-location? (:component/inherits-location? ctype)
+                       :component-oid component-oid
+                       :cost-item-data cost-item-data
                        :common? true
                        :ctype ctype}]]]
 
