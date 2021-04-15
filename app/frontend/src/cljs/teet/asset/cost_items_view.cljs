@@ -47,7 +47,7 @@
 (def ^:private integer-pattern #"^\d*$")
 (def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
 
-(defn- validate [valueType min-value max-value v]
+(defn- validate [valueType {:attribute/keys [min-value max-value]} v]
   (when-not (str/blank? v)
     (case valueType
       ;; Check length for strings
@@ -219,7 +219,7 @@
                   :alignItems :flex-end}
             (doall
              (for [{:db/keys [ident valueType]
-                    :attribute/keys [mandatory? min-value max-value]
+                    :attribute/keys [mandatory?]
                     :asset-schema/keys [unit] :as attr} attrs
                    :let [type (:db/ident valueType)
                          unit (if (= ident :common/quantity)
@@ -229,7 +229,12 @@
                [attribute-grid-item
                 [form/field {:attribute ident
                              :required? mandatory?
-                             :validate (r/partial validate (:db/ident valueType) min-value max-value)}
+                             :validate (r/partial validate (:db/ident valueType)
+                                                  (select-keys attrs
+                                                               [:attribute/min-value
+                                                                :attribute/max-value
+                                                                :attribute/min-value-ref
+                                                                :attribute/max-value-ref]))}
                  (if (= type :db.type/ref)
                    ;; Selection value
                    [select/form-select
