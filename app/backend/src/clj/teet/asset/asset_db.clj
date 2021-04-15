@@ -143,25 +143,24 @@
          :in $ [?oid ...]]
        db (project-asset-and-component-oids db thk-project-id)))
 
-(defn cost-group-price [db thk-project-id cost-group-map]
-  (let [keyset (set (keys (dissoc cost-group-map :type)))]
-    (some
-     ;; select the cost group that has the same keys
-     ;; as some price may be a subset of another
-     #(when (= keyset
-               (set (keys (dissoc %
-                                  :db/id
-                                  :cost-group/project
-                                  :cost-group/price))))
-        %)
-     (map first
-          (d/q '[:find (pull ?price [*])
-                 :where
-                 [?price :cost-group/project ?project]
-                 [?price ?attr ?val]
-                 :in $ ?project [[?attr ?val]]]
-               db thk-project-id
-               (dissoc cost-group-map :type))))))
+(defn project-cost-group-prices
+  "Return all cost group prices for project."
+  [db thk-project-id]
+  (let [cost-group-keys [:db/id :cost-group/price :cost-group/project]]
+    (cu/map-keys
+     (fn [attrs]
+       ;; Turn enum {:db/id 123 :db/ident :foo} maps into just db id values
+       ;; because that's how they are represented in cost groups
+       (cu/map-vals #(or (:db/id %) %) attrs))
+     (into {}
+           (comp
+            (map first)
+            (map (juxt #(apply dissoc % cost-group-keys)
+                       #(select-keys % cost-group-keys))))
+           (d/q '[:find (pull ?e [*])
+                  :where [?e :cost-group/project ?project]
+                  :in $ ?project]
+                db thk-project-id)))))
 
 (defn project-cost-groups-totals
   "Summarize totals for project cost items.
@@ -183,7 +182,8 @@
                             (d/q '[:find ?e ?u
                                    :where [?e :component/quantity-unit ?u]
                                    :in $ [?e ...]]
-                                 db types))]
+                                 db types))
+        cost-group-prices (project-cost-group-prices db thk-project-id)]
     (->>
      items
 
@@ -193,7 +193,7 @@
      ;; Determine quantity and price information for cost group
      (mapv (fn [[{type :type :as item} items]]
              (let [{p :cost-group/price :as cost-group}
-                   (cost-group-price db thk-project-id item)
+                   (cost-group-prices (dissoc item :type))
 
                    quantity (if (= "fclass" (namespace type))
                               ;; count number of features
