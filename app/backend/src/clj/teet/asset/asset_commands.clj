@@ -85,9 +85,6 @@
          (or (nil? (:db/id cost-group))
              (= project-id
                 (:cost-group/project (du/entity adb (:db/id cost-group)))))]}
-  (def *save {:project-id project-id
-              :cost-group cost-group
-              :price price})
   (tx
    (if-let [id (:db/id cost-group)]
      ;; Compare and swap the price if there is an existing one
