@@ -129,42 +129,61 @@
 (defn- cost-group-attrs-q
   "Return all item attributes marked as cost grouping."
   [db thk-project-id]
-  (d/q '[:find ?a ?type-ident ?attr-ident ?val
-         :keys id type attr val
-         :where
-         [?a :asset/oid ?oid]
-         (or
-          [?a :asset/fclass ?type]
-          [?a :component/ctype ?type])
-         [?a ?attr ?val]
-         [?attr :attribute/cost-grouping? true]
-         [?attr :db/ident ?attr-ident]
-         [?type :db/ident ?type-ident]
-         :in $ [?oid ...]]
-       db (project-asset-and-component-oids db thk-project-id)))
+  (let [entity-attr-vals
+        (d/q '[:find ?a ?type-ident ?attr-ident ?val ?value-type-ident
+               :keys id type attr val val-type
+               :where
+               [?a :asset/oid ?oid]
+               (or
+                [?a :asset/fclass ?type]
+                [?a :component/ctype ?type])
+               [?a ?attr ?val]
+               [?attr :attribute/cost-grouping? true]
+               [?attr :db/ident ?attr-ident]
+               [?type :db/ident ?type-ident]
+               [?attr :db/valueType ?value-type]
+               [?value-type :db/ident ?value-type-ident]
+               :in $ [?oid ...]]
+             db (project-asset-and-component-oids db thk-project-id))
+
+        ;; Fetch all list item ref ids
+        list-item-ids (into #{}
+                         (keep (fn [{:keys [val-type val]}]
+                                 (when (= val-type :db.type/ref)
+                                   val)))
+                         entity-attr-vals)
+
+        ;; Fetch map from db id => map of id and ident
+        list-item-vals (into {}
+                             (comp
+                              (map first)
+                              (map (juxt :db/id identity)))
+                             (d/q '[:find (pull ?val [:db/id :db/ident])
+                                    :in $ [?val ...]]
+                                  db list-item-ids))]
+    (for [{val-type :val-type :as r} entity-attr-vals]
+      (if (= val-type :db.type/ref)
+        ;; Update ref vals to point to map with ident
+        (update r :val list-item-vals)
+        r))))
 
 (defn project-cost-group-prices
   "Return all cost group prices for project."
   [db thk-project-id]
   (let [cost-group-keys [:db/id :cost-group/price :cost-group/project]]
-    (cu/map-keys
-     (fn [attrs]
-       ;; Turn enum {:db/id 123 :db/ident :foo} maps into just db id values
-       ;; because that's how they are represented in cost groups
-       (cu/map-vals #(or (:db/id %) %) attrs))
-     (into {}
-           (comp
-            (map first)
+    (into {}
+          (comp
+           (map first)
 
-            ;; Split the map into key and value maps where the
-            ;; key contains all the cost grouping attributes
-            ;; and the value contains the pricing information
-            (map (juxt #(apply dissoc % cost-group-keys)
-                       #(select-keys % cost-group-keys))))
-           (d/q '[:find (pull ?e [*])
-                  :where [?e :cost-group/project ?project]
-                  :in $ ?project]
-                db thk-project-id)))))
+           ;; Split the map into key and value maps where the
+           ;; key contains all the cost grouping attributes
+           ;; and the value contains the pricing information
+           (map (juxt #(apply dissoc % cost-group-keys)
+                      #(select-keys % cost-group-keys))))
+          (d/q '[:find (pull ?e [*])
+                 :where [?e :cost-group/project ?project]
+                 :in $ ?project]
+               db thk-project-id))))
 
 (defn project-cost-groups-totals
   "Summarize totals for project cost items.
