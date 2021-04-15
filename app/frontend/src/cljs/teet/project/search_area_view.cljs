@@ -43,7 +43,7 @@
                {:button-label (tr [:buttons :delete])
                 :on-mouse-enter #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" true feature))
                 :on-mouse-leave #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" false feature))
-                :action #(e! (search-area-controller/->DeleteDrawnArea id (:db/id project)))}]))
+                :action #(e! (search-area-controller/->DeleteDrawnArea id (:thk.project/id project)))}]))
           [buttons/add-button {:on-click #(e! (search-area-controller/->InitializeCustomAreaDraw))
                                :disabled? drawing?}
            (if drawing?
