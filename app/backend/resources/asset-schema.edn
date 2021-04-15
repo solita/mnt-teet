@@ -637,6 +637,7 @@
   :db/ident :ctype/barrier,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Piire" "Safety barrier"],
+  :component/quantity-unit "m",
   :ctype/parent ":fclass/barrier"}
  {:db/id ":ctype/barrierterminal",
   :db/ident :ctype/barrierterminal,
@@ -673,6 +674,7 @@
   :asset-schema/description
   ["Sildadel lisatakse piiretele lumetõkke võrgud vms et lund ei paisataks silla alla teele, raudteele, jne"
    "Protection nets to avoid snow being ploughed to the crossing feature (road, path, railroad, etc)"],
+  :component/quantity-unit "m",
   :ctype/parent ":fclass/barrier"}
  {:db/id ":ctype/barriernoisepanel",
   :db/ident :ctype/barriernoisepanel,
@@ -683,6 +685,7 @@
   ["Müratõkke elemente kinnitatakse vahel otse  piirde konstruktsiooni külge või peale."
    "Noise barrier elements are sometimes attached as an extension to the barrier."],
   :component/inherits-location? true,
+  :component/quantity-unit "m",
   :ctype/parent ":fclass/barrier"}
  {:db/id ":ctype/bridgespan",
   :db/ident :ctype/bridgespan,
@@ -819,30 +822,35 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Aluskiht, seotud" "Base layer, bound"],
   :component/inherits-location? true,
+  :component/quantity-unit "m2",
   :ctype/parent ":fclass/pavementstructure"}
  {:db/id ":ctype/subbase",
   :db/ident :ctype/subbase,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Aluse aluskoht" "Subbase layer"],
   :component/inherits-location? true,
+  :component/quantity-unit "m2",
   :ctype/parent ":fclass/pavementstructure"}
  {:db/id ":ctype/membrane",
   :db/ident :ctype/membrane,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Membraan, geovõrk" "Membrane"],
   :component/inherits-location? true,
+  :component/quantity-unit "m2",
   :ctype/parent ":fclass/pavementstructure"}
  {:db/id ":ctype/unboundbasecourse",
   :db/ident :ctype/unboundbasecourse,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Aluskiht sidumata" "Base layer, unbound"],
   :component/inherits-location? true,
+  :component/quantity-unit "m2",
   :ctype/parent ":fclass/pavementstructure"}
  {:db/id ":ctype/drainagelayer",
   :db/ident :ctype/drainagelayer,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Drenaažikiht" "Drainage layer"],
   :component/inherits-location? true,
+  :component/quantity-unit "m2",
   :ctype/parent ":fclass/pavementstructure"}
  {:db/id ":ctype/boundpavinglayer",
   :db/ident :ctype/boundpavinglayer,
@@ -952,6 +960,21 @@
   :db/ident :ctype/lightpolecatenary,
   :asset-schema/type :asset-schema.type/ctype,
   :ctype/parent ":fclass/lightlocation"}
+ {:db/id ":ctype/boundlayer",
+  :db/ident :ctype/boundlayer,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Seotud katendikiht" "Bound pavement layer"],
+  :component/inherits-location? true,
+  :component/quantity-unit "m2",
+  :ctype/parent ":fclass/pavementstructure"}
+ {:db/id ":ctype/unboundlayer",
+  :db/ident :ctype/unboundlayer,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Sidumata katendikiht" "Unbound pavement layer"],
+  :component/inherits-location? true,
+  :component/quantity-unit "m2",
+  :ctype/parent ":fclass/pavementstructure"}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -985,7 +1008,8 @@
   :db/id ":bridgesupport/supporttype",
   :db/ident :bridgesupport/supporttype,
   :attribute/cost-grouping? false,
-  :asset-schema/description [nil "Column, amutment or hinge"]}
+  :asset-schema/description
+  ["Kaldasammas, vahesammas või liigend." "Column, abutment or hinge"]}
  {:attribute/parent ":fclass/featuremarking",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1017,16 +1041,13 @@
   :db/id ":pile/pilesize",
   :db/ident :pile/pilesize,
   :attribute/cost-grouping? true}
- {:attribute/parent ":fclass/pavinglayer",
+ {:attribute/parent ":ctype/boundpavinglayer",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["materjali nimetus" "paving material "],
-  :attribute/mandatory? true,
+  :asset-schema/label ["Segu nimetus" "Pavement material"],
   :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":pavinglayer/pavinglayermaterial",
-  :db/ident :pavinglayer/pavinglayermaterial,
-  :attribute/cost-grouping? true}
+  :db/id ":boundpavinglayer/pavinglayermaterial",
+  :db/ident :boundpavinglayer/pavinglayermaterial}
  {:attribute/parent ":fclass/drainagelayer",
   :asset-schema/unit "Mpa",
   :db/valueType :db.type/bigdec,
@@ -1153,6 +1174,13 @@
   :db/id ":backfill/backfillelasticmodulus",
   :db/ident :backfill/backfillelasticmodulus,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":ctype/boundpavinglayer",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kihi ehitamise aasta" "Layer building year"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":boundpavinglayer/pavinglayerbuildingyear",
+  :db/ident :boundpavinglayer/pavinglayerbuildingyear}
  {:attribute/parent ":ctype/bridgespan",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1186,14 +1214,16 @@
   :db/valueType :db.type/long,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
-  ["Avade arv (sammaste ja liigendite summa)"
-   "Number of spans (sum of supports and hinges)"],
+  ["Avade arv (sammaste ja liigendite summa miinus 1)"
+   "Number of spans (sum of supports and hinges minus 1)"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridge/bridgespansnum",
   :db/ident :bridge/bridgespansnum,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Avadeks loetakse ka konsoolid ning liigendite korral ka " ""]}
  {:attribute/parent ":fclass/unboundbasecourse",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1214,7 +1244,10 @@
   :db/doc "No",
   :db/id ":bridgesupport/supportjointtype",
   :db/ident :bridgesupport/supportjointtype,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Üldinfo paisumisvuugi kohta kui see on olemas. Konkreetse vuugi informatsioon esitatakse vastava komponendi atribuutides."
+   ""]}
  {:attribute/parent ":fclass/pavinglayer",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1279,9 +1312,13 @@
   :asset-schema/label ["Silla põhifunktsioon" "Bridge main function"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridge/bridgefunctionaltype",
   :db/ident :bridge/bridgefunctionaltype,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Sillal võib olla mitu funktsiooni kandes erinevaid funktsionaalseid nähtusi, kuid üks neist on peamine. Näiteks maantee (sõidutee) sillal võib olla ka rattatee."
+   ""]}
  {:attribute/parent ":fclass/pavinglayer",
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -1294,13 +1331,6 @@
   :db/id ":pavinglayer/pavinglayerrecycledasphaltcontent",
   :db/ident :pavinglayer/pavinglayerrecycledasphaltcontent,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :db/valueType :db.type/string,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Märkus" "Notes"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/pavinglayernotes",
-  :db/ident :boundpavinglayer/pavinglayernotes}
  {:attribute/parent ":ctype/bridgespan",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -1312,7 +1342,10 @@
   :db/doc "No",
   :db/id ":bridgespan/spanlengthanalytical",
   :db/ident :bridgespan/spanlengthanalytical,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Arvutuslik pikkus on tugede vaheline kaugus"
+   "Analytical length is measured between support lines."]}
  {:attribute/parent ":fclass/backfill",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1344,7 +1377,10 @@
   :db/doc "No",
   :db/id ":bridgespan/spanlengthtotal",
   :db/ident :bridgespan/spanlengthtotal,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Puhta ava pikkus piki silla (tee) telge."
+   "Clear span between supports measured along the bridge (road) centerline."]}
  {:attribute/parent ":ctype/girder",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1415,12 +1451,28 @@
   :asset-schema/label
   ["Tugisamba/liigendi number" "Support/hinge number"],
   :attribute/mandatory? true,
+  :attribute/max-value-ref ":bridge/bridgespansnum",
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridgesupport/supportnumber",
   :db/ident :bridgesupport/supportnumber,
   :attribute/cost-grouping? false,
   :asset-schema/description
   ["Esimese samba number on 0, viimase samba number = avade arv" ""]}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Ehitamise meetod" "Pavement building method"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":pavinglayer/pavinglayerbuildingmethod",
+  :db/ident :pavinglayer/pavinglayerbuildingmethod}
+ {:attribute/parent ":ctype/boundpavinglayer",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kihi number" "Pavinglayer number"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":boundpavinglayer/pavinglayernumber",
+  :db/ident :boundpavinglayer/pavinglayernumber}
  {:attribute/parent ":fclass/bridge",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1543,14 +1595,6 @@
   :db/id ":pavinglayer/pavinglayerbinderpenetration",
   :db/ident :pavinglayer/pavinglayerbinderpenetration,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["Omadusi parandavad lisandid" "Pavement additives"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/pavinglayeradditive",
-  :db/ident :boundpavinglayer/pavinglayeradditive}
  {:attribute/parent ":ctype/common",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1569,6 +1613,13 @@
   :db/doc "No",
   :db/id ":pumpingstation/pumpingstationname",
   :db/ident :pumpingstation/pumpingstationname}
+ {:attribute/parent ":ctype/boundpavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":boundpavinglayer/pavinglayermanufacturer",
+  :db/ident :boundpavinglayer/pavinglayermanufacturer}
  {:attribute/parent ":ctype/barrier",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1631,15 +1682,6 @@
   :db/id ":shoulder/shoulderthickness",
   :db/ident :shoulder/shoulderthickness,
   :attribute/cost-grouping? true}
- {:attribute/parent ":fclass/pavinglayer",
-  :asset-schema/unit "Mpa",
-  :db/valueType :db.type/long,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["Projekteeritud elastsusmoodul" "Calculated E-module"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":pavinglayer/pavinglayercalcualtedemodule",
-  :db/ident :pavinglayer/pavinglayercalcualtedemodule}
  {:attribute/parent ":ctype/trafficsign",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1674,6 +1716,13 @@
   :db/id ":girder/steelgrade",
   :db/ident :girder/steelgrade,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Katte liik" "Pavement general type"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":pavinglayer/pavinglayertypeDUPLICATE",
+  :db/ident :pavinglayer/pavinglayertypeDUPLICATE}
  {:attribute/parent ":fclass/drainagelayer",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1743,13 +1792,6 @@
   :db/id ":common/quantity",
   :db/ident :common/quantity,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Segu nimetus" "Pavement material"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/pavinglayermaterial",
-  :db/ident :boundpavinglayer/pavinglayermaterial}
  {:attribute/parent ":ctype/pile",
   :asset-schema/unit "deg",
   :db/valueType :db.type/bigdec,
@@ -1768,9 +1810,17 @@
    "Main structural solution"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridge/bridgestructuraltype",
   :db/ident :bridge/bridgestructuraltype,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":ctype/boundpavinglayer",
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Märkus" "Notes"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":boundpavinglayer/pavinglayernotes",
+  :db/ident :boundpavinglayer/pavinglayernotes}
  {:attribute/parent ":fclass/bridge",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -1816,7 +1866,10 @@
   :db/doc "No",
   :db/id ":bridge/bridgename",
   :db/ident :bridge/bridgename,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Silla ehk sillakoha nimi. Samas kohas võib eri aegadel olla erinevaid sildu sama nimega."
+   "Bridge or actually bridge location name. Throughout history there could be different bridge structures in the same bridge location."]}
  {:attribute/parent ":fclass/shoulder",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1870,7 +1923,16 @@
   :db/ident :bridge/bridgenumber,
   :attribute/cost-grouping? false,
   :asset-schema/description
-  ["Silla(koha) number." "Bridge location number."]}
+  ["Silla(koha) number. Sarnaselt sillakoha nimega, tegemist on varasemalt sildadele omistatud registrinumbriga. "
+   "Bridge location number. Similar to bridge (location) name, this is a former registration number for bridges."]}
+ {:attribute/parent ":ctype/boundpavinglayer",
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Omadusi parandavad lisandid" "Pavement additives"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":boundpavinglayer/pavinglayeradditive",
+  :db/ident :boundpavinglayer/pavinglayeradditive}
  {:attribute/parent ":fclass/markings",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1882,13 +1944,6 @@
   :db/ident :markings/markingtype,
   :attribute/cost-grouping? false,
   :asset-schema/description [nil "line type"]}
- {:attribute/parent ":fclass/pavinglayer",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Ehitamise meetod" "Pavement building method"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":pavinglayer/pavinglayerbuildingmethod",
-  :db/ident :pavinglayer/pavinglayerbuildingmethod}
  {:attribute/parent ":fclass/boundbasecourse",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2033,13 +2088,6 @@
   :db/id ":drainagelayer/drainagematerialproducer",
   :db/ident :drainagelayer/drainagematerialproducer,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/pavinglayer",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Katte liik" "Pavement general type"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":pavinglayer/pavinglayertypeDUPLICATE",
-  :db/ident :pavinglayer/pavinglayertypeDUPLICATE}
  {:attribute/parent ":ctype/barrierterminal",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2076,14 +2124,6 @@
   :db/id ":pavinglayer/stonesize",
   :db/ident :pavinglayer/stonesize,
   :attribute/cost-grouping? true}
- {:attribute/parent ":fclass/pavinglayer",
-  :db/valueType :db.type/instant,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["Katte ehitamise kuupäev" "Pavement building date"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":pavinglayer/pavinglayerbuildingdate",
-  :db/ident :pavinglayer/pavinglayerbuildingdate}
  {:attribute/parent ":fclass/sedimentarypool",
   :asset-schema/unit "m2",
   :db/valueType :db.type/bigdec,
@@ -2121,14 +2161,6 @@
   :db/doc "No",
   :db/id ":ditch/ditchbottomreinforcement",
   :db/ident :ditch/ditchbottomreinforcement}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :asset-schema/unit "mm",
-  :db/valueType :db.type/bigdec,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Kihi paksus, mm" "Layer thickness, mm"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/thickness",
-  :db/ident :boundpavinglayer/thickness}
  {:attribute/parent ":ctype/bridgesupport",
   :asset-schema/unit "deg",
   :db/valueType :db.type/bigdec,
@@ -2137,6 +2169,7 @@
   ["Tugisamba nurk (viltusild)" "Skew angle of the support"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
+  :db/doc "No",
   :db/id ":bridgesupport/supportskewangle",
   :db/ident :bridgesupport/supportskewangle,
   :attribute/cost-grouping? false,
@@ -2154,6 +2187,15 @@
   :db/id ":boundbasecourse/boundbasecompressionstrength",
   :db/ident :boundbasecourse/boundbasecompressionstrength,
   :attribute/cost-grouping? false}
+ {:attribute/parent ":fclass/pavinglayer",
+  :asset-schema/unit "Mpa",
+  :db/valueType :db.type/long,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Projekteeritud elastsusmoodul" "Calculated E-module"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":pavinglayer/pavinglayercalcualtedemodule",
+  :db/ident :pavinglayer/pavinglayercalcualtedemodule}
  {:attribute/parent ":fclass/sedimentarypool",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2166,7 +2208,7 @@
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Arvutuslik koormus 2" "Design load 2"],
-  :attribute/mandatory? false,
+  :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridge/bridgeload2",
@@ -2240,13 +2282,6 @@
   :db/id ":expansionjoint/expansionjointtype",
   :db/ident :expansionjoint/expansionjointtype,
   :attribute/cost-grouping? true}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :db/valueType :db.type/long,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Kihi ehitamise aasta" "Layer building year"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/pavinglayerbuildingyear",
-  :db/ident :boundpavinglayer/pavinglayerbuildingyear}
  {:attribute/parent ":fclass/backfill",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2337,7 +2372,10 @@
   :db/doc "No",
   :db/id ":bridgesupport/supportbearingtype",
   :db/ident :bridgesupport/supportbearingtype,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Siin üldinfo tugilaagrite kohta, konkreetse tugilaagri andmed antakse vastava komponendi atribuutides."
+   ""]}
  {:attribute/parent ":ctype/waterproofing",
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
@@ -2424,6 +2462,7 @@
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Ava number" "Span number"],
   :attribute/mandatory? true,
+  :attribute/max-value-ref ":bridge/bridgespansnum",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridgespan/spannumber",
@@ -2443,17 +2482,14 @@
   :db/id ":boundbasecourse/boundbaseorganicbindercontent",
   :db/ident :boundbasecourse/boundbaseorganicbindercontent,
   :attribute/cost-grouping? false}
- {:attribute/parent ":fclass/pavinglayer",
+ {:attribute/parent ":ctype/boundpavinglayer",
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Kihi paksus, mm" "Layer thickness, mm"],
-  :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
-  :db/doc "No",
-  :db/id ":pavinglayer/thickness",
-  :db/ident :pavinglayer/thickness,
-  :attribute/cost-grouping? true}
+  :db/id ":boundpavinglayer/thickness",
+  :db/ident :boundpavinglayer/thickness}
  {:attribute/parent ":ctype/bridgespan",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2497,13 +2533,6 @@
   :db/id ":backfill/backfillcompactionfactor",
   :db/ident :backfill/backfillcompactionfactor,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Tootja" "Manufacturer"],
-  :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/pavinglayermanufacturer",
-  :db/ident :boundpavinglayer/pavinglayermanufacturer}
  {:attribute/parent ":fclass/ditch",
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2519,12 +2548,14 @@
   :asset-schema/label
   ["Sildeehitise aluse gabariidi laius" "Clearance width under span"],
   :attribute/mandatory? false,
-  :attribute/max-value-ref ":barrier/barrierworkingwidth",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridgespan/spanclearanceW",
   :db/ident :bridgespan/spanclearanceW,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Kui silde all on mingi nähtus, millel on gabariidi nõuded (tee, raudtee, veetee, vms), siis siin saab anda laiusgabariidi tegeliku väärtuse."
+   "When there is a functional feature (road, railway, waterway, etc) under the span then its actual width clearance value can be given here."]}
  {:attribute/parent ":fclass/membrane",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2575,7 +2606,10 @@
   :db/doc "No",
   :db/id ":bridgespan/spanclearanceH",
   :db/ident :bridgespan/spanclearanceH,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Kui silde all on mingi nähtus, millel on gabariidi nõuded (tee, raudtee, veetee, vms), siis siin saab anda kõrgusgabariidi tegeliku väärtuse."
+   "When there is a functional feature (road, railway, waterway, etc) under the span then its actual height clearance value can be given here."]}
  {:attribute/parent ":ctype/barrier",
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -2588,13 +2622,14 @@
   :db/id ":barrier/barrierelementlength",
   :db/ident :barrier/barrierelementlength,
   :attribute/cost-grouping? false}
- {:attribute/parent ":ctype/boundpavinglayer",
-  :db/valueType :db.type/long,
+ {:attribute/parent ":fclass/pavinglayer",
+  :db/valueType :db.type/instant,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Kihi number" "Pavinglayer number"],
+  :asset-schema/label
+  ["Katte ehitamise kuupäev" "Pavement building date"],
   :db/cardinality :db.cardinality/one,
-  :db/id ":boundpavinglayer/pavinglayernumber",
-  :db/ident :boundpavinglayer/pavinglayernumber}
+  :db/id ":pavinglayer/pavinglayerbuildingdate",
+  :db/ident :pavinglayer/pavinglayerbuildingdate}
  {:attribute/parent ":fclass/linemarkings",
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -3001,17 +3036,17 @@
   :db/ident :item/pavinglayermaterialgranit,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Tardkivikillustik" "Granit aggreagate"],
-  :enum/attribute ":pavinglayer/pavinglayermaterial"}
+  :enum/attribute ":boundpavinglayer/pavinglayermaterial"}
  {:db/id ":item/pavinglayermaterialsedimentary",
   :db/ident :item/pavinglayermaterialsedimentary,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Settekivimikillustik" "Sedimentary aggregate"],
-  :enum/attribute ":pavinglayer/pavinglayermaterial"}
+  :enum/attribute ":boundpavinglayer/pavinglayermaterial"}
  {:db/id ":item/pavinglayermateriallimestone",
   :db/ident :item/pavinglayermateriallimestone,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Paekivikillustik" "Limestone aggregate"],
-  :enum/attribute ":pavinglayer/pavinglayermaterial"}
+  :enum/attribute ":boundpavinglayer/pavinglayermaterial"}
  {:db/id ":item/pavinglaystonesize20",
   :db/ident :item/pavinglaystonesize20,
   :asset-schema/type :asset-schema.type/enum,
