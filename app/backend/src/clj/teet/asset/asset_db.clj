@@ -155,6 +155,10 @@
      (into {}
            (comp
             (map first)
+
+            ;; Split the map into key and value maps where the
+            ;; key contains all the cost grouping attributes
+            ;; and the value contains the pricing information
             (map (juxt #(apply dissoc % cost-group-keys)
                        #(select-keys % cost-group-keys))))
            (d/q '[:find (pull ?e [*])
