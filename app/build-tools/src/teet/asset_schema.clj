@@ -144,12 +144,14 @@
     (keyword (name ctype) (name n))))
 
 (defn- bound-value-ref [value attribute unnamespaced->namespaced]
-  (when-let [value-ref (some->> value
-                                parse-prefix-and-name
-                                (apply keywordize)
-                                unnamespaced->namespaced)]
+  (if-let [value-ref (some->> value
+                              parse-prefix-and-name
+                              (apply keywordize)
+                              unnamespaced->namespaced)]
     ;; str used here to match the id
-    {attribute (str value-ref)}))
+    {attribute (str value-ref)}
+    (when value ;; There is a value but we couldn't find the namespaced version -> possible typo
+      (throw (ex-info (str "invalid property as ref: " value) {:value value :attribute attribute})))))
 
 
 (defn- min-and-max-values
