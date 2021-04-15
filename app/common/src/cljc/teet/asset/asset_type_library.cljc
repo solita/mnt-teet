@@ -53,16 +53,23 @@
 
 
 #?(:clj
+   (defn ->bigdec [x]
+     (if (string? x)
+       (when-not (str/blank? x)
+         (-> x str/trim (str/replace "," ".") bigdec))
+       (bigdec x))))
+
+#?(:clj
+   (defn ->long [x]
+     (if (string? x)
+       (when-not (str/blank? x)
+         (-> x str/trim Long/parseLong))
+       (long x))))
+#?(:clj
    (defn coerce-fn [value-type]
      (case value-type
-       :db.type/bigdec #(if (string? %)
-                          (when-not (str/blank? %)
-                            (-> % str/trim (str/replace "," ".") bigdec))
-                          (bigdec %))
-       :db.type/long #(if (string? %)
-                        (when-not (str/blank? %)
-                          (-> % str/trim Long/parseLong))
-                        (long %))
+       :db.type/bigdec ->bigdec
+       :db.type/long ->long
 
        ;; Remove blank values (will be retracted)
        :db.type/string #(when-not (str/blank? %) %)

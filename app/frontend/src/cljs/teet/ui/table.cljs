@@ -28,22 +28,28 @@
 
 (defn- listing-header
   ([] (listing-header {:filters (r/wrap {} :_)}))
-  ([{:keys [sort! sort-column sort-direction filters columns filter-type]}]
+  ([{:keys [sort! sort-column sort-direction filters columns filter-type
+            column-align column-label-fn]}]
    [TableHead {}
     [TableRow {}
      (doall
       (for [column columns]
         ^{:key (name column)}
-        [TableCell {:style {:vertical-align :top}
-                    :sortDirection (if (= sort-column column)
-                                     (name sort-direction)
-                                     false)}
+        [TableCell
+         (merge {:style {:vertical-align :top}
+                 :sortDirection (if (= sort-column column)
+                                  (name sort-direction)
+                                  false)}
+                (when-let [a (get column-align column)]
+                  {:align a}))
          [TableSortLabel
           {:active (= column sort-column)
            :direction (if (= sort-direction :asc)
                         "asc" "desc")
            :on-click (r/partial sort! column)}
-          (tr [:fields column])]
+          (if column-label-fn
+            (column-label-fn column)
+            (tr [:fields column]))]
          (case (filter-type column)
            :string
            [TextField {:value (or (get @filters column) "")
@@ -73,7 +79,12 @@
                                               (js/parseInt v))))}]
            [:span])]))]]))
 
-(defn- listing-table [{:keys [default-sort-column]}]
+(defn- default-format-column [_column-name value _row]
+  (str value))
+
+(defn listing-table
+  "Raw table without panel and title."
+  [{:keys [default-sort-column]}]
   (let [sort-column (r/atom [default-sort-column :asc])
         show-count (r/atom 20)
         sort! (fn [col]
@@ -93,9 +104,13 @@
                                        ;; filters/results have changed
                                        (reset! show-count 20))
        :reagent-render
-       (fn [{:keys [on-row-click filters data columns filter-type get-column get-column-compare format-column key]
+       (fn [{:keys [on-row-click filters data columns column-align
+                    filter-type get-column get-column-compare format-column
+                    key column-label-fn]
              :or {filter-type {}
-                  get-column get}}]
+                  get-column get
+                  get-column-compare (constantly compare)
+                  format-column default-format-column}}]
          (let [[sort-col sort-dir] @sort-column]
            [:<>
             [Table {}
@@ -104,21 +119,27 @@
                               :sort-direction sort-dir
                               :filters filters
                               :columns columns
-                              :filter-type filter-type}]
+                              :filter-type filter-type
+                              :column-align column-align
+                              :column-label-fn column-label-fn}]
              [TableBody {}
               (doall
                 (for [row (take @show-count
-                            ((if (= sort-dir :asc) identity reverse)
-                             (sort-by #(get-column % sort-col)
-                               (or (get-column-compare sort-col) compare)
-                               data)))]
+                                ((if (= sort-dir :asc) identity reverse)
+                                 (sort-by #(get-column % sort-col)
+                                          (or (get-column-compare sort-col) compare)
+                                          data)))]
                   ^{:key (get row key)}
-                  [TableRow {:on-click #(on-row-click row)
-                             :class (<class row-style)}
+                  [TableRow (merge
+                             {:class (<class row-style)}
+                             (when on-row-click
+                               {:on-click (r/partial on-row-click row)}))
                    (doall
                      (for [column columns]
                        ^{:key (name column)}
-                       [TableCell {}
+                       [TableCell (if-let [a (get column-align column)]
+                                    {:align a}
+                                    {})
                         (format-column column (get-column row column) row)]))]))]]
             [scroll-sensor/scroll-sensor show-more!]]))})))
 
@@ -141,7 +162,7 @@
                     filters))
           data))
 
-(defn table [{:keys [get-column get-column-compare data label after-title title-class]
+(defn table [{:keys [get-column data label after-title title-class]
               :as opts}]
   (r/with-let [filters (r/atom {})
                clear-filters! #(reset! filters {})]

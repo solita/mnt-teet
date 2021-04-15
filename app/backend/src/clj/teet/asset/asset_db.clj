@@ -4,7 +4,8 @@
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.util.euro :as euro]))
 
 (def ctype-pattern
   '[*
@@ -85,6 +86,138 @@
        (cu/map-vals (fn [cost-items-for-fgroup]
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
+
+(defn asset-with-components
+  "Pull asset and all its components with all attributes."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (map first
+       (d/q '[:find (pull ?e [*])
+              :where
+              [?e :asset/oid ?oid]
+              [(>= ?oid ?start)]
+              [(< ?oid ?end)]
+              :in $ ?start ?end]
+            db asset-oid (str asset-oid "."))))
+
+(defn- asset-component-oids
+  "Return all OIDs of components (at any level) contained in asset."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (mapv :v
+        (d/index-range db {:attrid :asset/oid
+                           :start (str asset-oid "-")
+                           :end (str asset-oid ".")})))
+
+(defn project-asset-oids
+  "Return all OIDs of assets in the given THK project."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               [?asset :asset/project ?project]
+               [?asset :asset/oid ?oid]
+               :in $ ?project]
+             db thk-project-id)))
+
+(defn project-asset-and-component-oids
+  "Return all OIDs of assets and their components for the given THK project."
+  [db thk-project-id]
+  (mapcat #(into [%] (asset-component-oids db %))
+          (project-asset-oids db thk-project-id)))
+
+(defn- cost-group-attrs-q
+  "Return all item attributes marked as cost grouping."
+  [db thk-project-id]
+  (d/q '[:find ?a ?type-ident ?attr-ident ?val
+         :keys id type attr val
+         :where
+         [?a :asset/oid ?oid]
+         (or
+          [?a :asset/fclass ?type]
+          [?a :component/ctype ?type])
+         [?a ?attr ?val]
+         [?attr :attribute/cost-grouping? true]
+         [?attr :db/ident ?attr-ident]
+         [?type :db/ident ?type-ident]
+         :in $ [?oid ...]]
+       db (project-asset-and-component-oids db thk-project-id)))
+
+(defn project-cost-group-prices
+  "Return all cost group prices for project."
+  [db thk-project-id]
+  (let [cost-group-keys [:db/id :cost-group/price :cost-group/project]]
+    (cu/map-keys
+     (fn [attrs]
+       ;; Turn enum {:db/id 123 :db/ident :foo} maps into just db id values
+       ;; because that's how they are represented in cost groups
+       (cu/map-vals #(or (:db/id %) %) attrs))
+     (into {}
+           (comp
+            (map first)
+
+            ;; Split the map into key and value maps where the
+            ;; key contains all the cost grouping attributes
+            ;; and the value contains the pricing information
+            (map (juxt #(apply dissoc % cost-group-keys)
+                       #(select-keys % cost-group-keys))))
+           (d/q '[:find (pull ?e [*])
+                  :where [?e :cost-group/project ?project]
+                  :in $ ?project]
+                db thk-project-id)))))
+
+(defn project-cost-groups-totals
+  "Summarize totals for project cost items.
+  Take all components for all assets and group them by cost-grouping attributes.
+
+  Counts quantities and total prices (if price info is known for
+  a group)."
+  [db thk-project-id]
+  (let [items
+        ;; Group by feature/component id
+        (reduce
+         (fn [items {:keys [id type attr val]}]
+           (update items id merge {:type type attr val}))
+         {}
+         (cost-group-attrs-q db thk-project-id))
+
+        types (into #{} (map (comp :type val)) items)
+        type-qty-unit (into {}
+                            (d/q '[:find ?e ?u
+                                   :where [?e :component/quantity-unit ?u]
+                                   :in $ [?e ...]]
+                                 db types))
+        cost-group-prices (project-cost-group-prices db thk-project-id)]
+    (->>
+     items
+
+     ;; group by the same value
+     (group-by val)
+
+     ;; Determine quantity and price information for cost group
+     (mapv (fn [[{type :type :as item} items]]
+             (let [{p :cost-group/price :as cost-group}
+                   (cost-group-prices (dissoc item :type))
+
+                   quantity (if (= "fclass" (namespace type))
+                              ;; count number of features
+                              (count items)
+
+                              ;; count the quantity field values
+                              (or (ffirst
+                                   (d/q '[:find (sum ?q)
+                                          :where [?item :common/quantity ?q]
+                                          :in $ [?item ...]]
+                                        db (map key items))) 0))]
+               (merge item
+                      cost-group
+                      {:count (count items)
+                       :quantity quantity
+                       :quantity-unit (type-qty-unit type)}
+
+                      (when p
+                        {:cost-per-quantity-unit p
+                         :total-cost (* p quantity)}))))))))
 
 (defn cost-item-project
   "Returns THK project id for the cost item."
