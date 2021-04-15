@@ -639,7 +639,7 @@
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
    e! app state
-   [:div "TODO: map here"]])
+   [map-view/map-view {}]])
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item :as state}]
