@@ -1,11 +1,14 @@
 (ns teet.asset.asset-db
+  "Asset database Datomic queries.
+
+  See [[teet.asset.asset-model]] namespace docstring for domain concept
+  documentation."
   (:require [clojure.walk :as walk]
             [datomic.client.api :as d]
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]
-            [teet.util.euro :as euro]))
+            [teet.asset.asset-model :as asset-model]))
 
 (def ctype-pattern
   '[*
