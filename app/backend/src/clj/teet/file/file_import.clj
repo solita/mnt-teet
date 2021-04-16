@@ -134,11 +134,11 @@
       (log/info "Vektorio scheduled import event handler: Feature enabled, starting import at"
                 (str (dt/format-date (dt/now)) " " (dt/format-time-sec (dt/now))))
       (future
-      (try
-        (scheduled-file-import*
-         (environment/datomic-connection))
-        (catch Exception e
-          (log/error e)))))
+        (try
+          (scheduled-file-import*
+           (environment/datomic-connection))
+          (catch Exception e
+            (log/error e)))))
     ;; else
     (log/info "Vektorio scheduled import event handler: feature is not enabled, not doing anything"))
   "{\"success\": true}")
