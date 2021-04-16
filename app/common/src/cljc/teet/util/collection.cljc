@@ -173,10 +173,23 @@
 (defn map-vals
   "Given map `m` returns a map where each value `v` is replaced by `(f v)`"
   [f m]
-  {:pre [(map? m)]}
+  {:pre [(map? m)
+         (ifn? f)]}
   (into {}
         (for [[k v] m]
           [k (f v)])))
+
+(defn keep-vals
+  "Same as [[map-vals]] but if `f` returns nil, the mapping is not
+   included in the resulting map."
+  [f m]
+  {:pre [(map? m)
+         (ifn? f)]}
+  (into {}
+        (for [[k v] m
+              :let [new-v (f v)]
+              :when (some? new-v)]
+          [k new-v])))
 
 (defn contains-in?
   [m ks]

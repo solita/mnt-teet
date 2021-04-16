@@ -570,7 +570,9 @@
      :main main-content}]])
 
 (defn- format-properties [atl properties]
-  (let [id->def (partial asset-type-library/item-by-ident atl)
+  (let [;; status is part of cost grouping, but shown in a separate column
+        properties (dissoc properties :common/status)
+        id->def (partial asset-type-library/item-by-ident atl)
         attr->val (dissoc (cu/map-keys id->def properties) nil)]
     (into [:<>]
           (map (fn [[k v]]
@@ -595,8 +597,12 @@
                save-on-enter! #(when (= "Enter" (.-key %))
                                  (save!))]
     (let [changed? (not= @price initial-value)]
-      [:div {:class (<class common-styles/flex-row)}
-       [text-field/TextField {:input-style {:text-align :right}
+      [:div {:class (<class common-styles/flex-row)
+             :style {:justify-content :flex-end
+                     ;; to have same padding as header for alignment
+                     :padding-right "16px"}}
+       [text-field/TextField {:input-style {:text-align :right
+                                            :width "8rem"}
                               :value @price
                               :on-change change!
                               :on-key-down save-on-enter!
@@ -617,21 +623,25 @@
           {:total (:total-cost totals)})]]
     [:div
      [table/listing-table
-      {:label "Cost summary"
-       :data (:cost-groups totals)
+      {:data (:cost-groups totals)
        :columns asset-model/cost-totals-table-columns
        :column-align asset-model/cost-totals-table-align
-       :column-label-fn #(tr [:asset :totals-table %])
-       :format-column (fn [column value row]
-                        (case column
-                          :type (label (asset-type-library/item-by-ident atl value))
-                          :properties (format-properties atl row)
-                          :quantity (str value
-                                         (when-let [qu (:quantity-unit row)]
-                                           (str " " qu)))
-                          :cost-per-quantity-unit [cost-group-unit-price e! value row]
-                          :total-cost (format-euro value)
-                          (str value)))}]]]])
+       :column-label-fn #(if (= % :common/status)
+                           (label (asset-type-library/item-by-ident atl %))
+                           (tr [:asset :totals-table %]))
+       :format-column
+       (fn [column value row]
+         (case column
+           :type (label (asset-type-library/item-by-ident atl value))
+           :common/status (label (asset-type-library/item-by-ident
+                                  atl (:db/ident value)))
+           :properties (format-properties atl row)
+           :quantity (str value
+                          (when-let [qu (:quantity-unit row)]
+                            (str " " qu)))
+           :cost-per-quantity-unit [cost-group-unit-price e! value row]
+           :total-cost (format-euro value)
+           (str value)))}]]]])
 
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
