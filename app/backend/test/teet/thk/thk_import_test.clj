@@ -19,39 +19,37 @@
     ;; Skip data fixtures, we want clean migrated db
     {:data-fixtures []}))
 
-(def test-csv
-  (str/join
-   "\n"
-   ["object_id;object_groupfk;object_groupshortname;object_groupname;object_roadnr;object_carriageway;object_kmstart;object_kmend;object_bridgenr;object_name;object_projectname;object_owner;object_regionfk;object_regionname;object_thkupdstamp;object_teetupdstamp;object_statusfk;object_statusname;phase_id;phase_teetid;phase_typefk;phase_shortname;phase_eststart;phase_estend;phase_thkupdstamp;phase_teetupdstamp;phase_cost;activity_id;activity_teetid;activity_taskid;activity_taskdescr;activity_typefk;activity_shortname;activity_statusfk;activity_statusname;activity_contract;activity_eststart;activity_estend;activity_actualstart;activity_actualend;activity_guaranteeexpired;activity_thkupdstamp;activity_teetupdstamp;activity_teetdelstamp;activity_cost;activity_procurementno;activity_procurementid"
-    "11111;1107;SILD;silla remont;15128;1;19.057;19.117;176;test sild project 1;;12345678900;1801;Ida;2020-04-07 12:25:54.166;2020-04-07 13:35:08.0;1605;Kinnitatud;13906;;4099;projetapp;2020-04-07;2022-06-25;2020-04-07 13:43:28.959;2020-04-07 13:35:08.0;2.00;15906;;;;4004;Maaost;4100;Ettevalmistamisel;false;2021-04-12;2022-06-25;;;;2020-03-02 17:57:15.0;2020-04-07 13:35:08.0;;0.00;;"
-    "11111;1107;SILD;silla remont;15128;1;19.057;19.117;176;test sild project 1;;12345678900;1801;Ida;2020-04-07 12:25:54.166;2020-04-07 13:35:08.0;1605;Kinnitatud;13906;;4099;projetapp;2020-04-07;2022-06-25;2020-04-07 13:43:28.959;2020-04-07 13:35:08.0;2.00;6594;;;;4003;Põhiprojekt;4102;Töös;true;2021-01-01;2020-06-12;2020-01-14;;;2020-03-11 21:40:26.603836;2020-04-07 13:35:08.0;;111000.00;666666;666"
-    "11111;1107;SILD;silla remont;15128;1;19.057;19.117;176;test sild project 1;;12345678900;1801;Ida;2020-04-07 12:25:54.166;2020-04-07 13:35:08.0;1605;Kinnitatud;13905;;4098;ehitetapp;2021-01-01;2022-12-31;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;685000.00;5455;;;;4005;Teostus;4106;Hankeplaanis;false;2021-01-01;2022-12-31;;;;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;;640000.00;;777"
-    "22222;1104;REK;rekonstrueerimine;6;1;69.937;72.162;;test rek project 2;;3344556677;1803;Lääne;2019-11-01 09:37:44.915;2020-03-12 11:39:01.0;1605;Kinnitatud;13958;;4099;projetapp;2020-07-06;2021-11-30;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;60000.00;6000;;;;4003;Põhiprojekt;4106;Hankeplaanis;false;2020-07-06;2021-08-24;;;;2020-03-11 21:40:26.603836;2020-04-07 13:35:08.0;;215000.00;;888"
-    "22222;1104;REK;rekonstrueerimine;6;1;69.937;72.162;;test rek project 2;;3344556677;1803;Lääne;2019-11-01 09:37:44.915;2020-03-12 11:39:01.0;1605;Kinnitatud;13957;;4098;ehitetapp;2022-06-27;2023-11-30;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;2446500.00;5488;;;;4005;Teostus;4100;Ettevalmistamisel;false;2022-06-27;2023-11-30;;;;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;;2350000.00;;"
-    "33333;1108;LOK;liiklusohtliku koha kõrvaldamine;23;1;2.300;2.700;;test lok project 3;;9483726473;1801;Ida;2020-04-07 11:48:42.279;2020-04-07 13:35:08.0;1605;Kinnitatud;15921;;4099;projetapp;2020-04-13;2021-04-21;2020-04-07 08:19:28.791;;16000.00;;;;;;;;;;;;;;;;;;;;"
-    "44444;1104;REK;rekonstrueerimine;20;1;2.000;4.000;;test rek project 4;;;1801;Ida;2020-04-07 11:24:10.297;2020-04-07 13:35:08.0;1605;Kinnitatud;15927;;4099;projetapp;2020-04-07;2020-07-07;2020-04-07 11:23:25.742;;44000.00;;;;;;;;;;;;;;;;;;;;"
-    "55555;1104;REK;rekonstrueerimine;20;1;0.000;10.000;;test rek project 5;;66666666666;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15932;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"
-    ;; This last one does not represent realistic THK data. Insead, it's
-    ;; slightly modified from the above line. The relevant part is that it's
-    ;; `object_groupshortname` is TUGI, and it's therefore excluded from imports
-    "66666;1104;TUGI;tugi;20;1;0.000;10.000;;test rek project 6;;66666666667;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15933;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"
-
-
-    ;; Project without road address (object_roadnr, _carraigeway, _kmstart and _kmend are all empty)
-    "77777;1108;LOK;liiklusohtliku koha kõrvaldamine;;;;;;test lok project 3;;9483726473;1801;Ida;2020-04-07 11:48:42.279;2020-04-07 13:35:08.0;1605;Kinnitatud;75727;;4099;projetapp;2020-04-13;2021-04-21;2020-04-07 08:19:28.791;;16000.00;;;;;;;;;;;;;;;;;;;;"
-    ]))
-
-(defn import-csv!
-  ([] (import-csv! (.getBytes test-csv)))
+(defn import-projects-csv!
+  ([] (import-projects-csv! (.getBytes (slurp "test/teet/thk/thk-test-data.csv"))))
   ([csv-data]
    (let [conn (tu/connection)
          projects (thk-import/parse-thk-export-csv
-                   (java.io.ByteArrayInputStream.
-                    csv-data))
+                    {:input (java.io.ByteArrayInputStream.
+                             csv-data)
+                     :column-mapping thk-mapping/thk->teet-project
+                     :group-by-fn #(get % :thk.project/id)})
          import-result (thk-import/import-thk-projects! conn "test://test-csv" projects)]
      (tu/store-data! :projects-csv projects)
      (d/sync conn (get-in import-result [:db-after :t]))
      import-result)))
+
+(defn import-contracts-csv!
+  ([] (import-contracts-csv! (.getBytes (slurp "test/teet/thk/thk-test-data.csv"))))
+  ([csv-data]
+   (let [conn (tu/connection)
+         contracts
+         (thk-import/parse-thk-export-csv
+           {:input (java.io.ByteArrayInputStream.
+                     csv-data)
+            :column-mapping thk-mapping/thk->teet-contract
+            :group-by-fn (fn [val]
+                           (select-keys val [:thk.contract/procurement-part-id
+                                             :thk.contract/procurement-id]))})
+         import-contract-result (thk-import/import-thk-contracts! conn "test://test-csv" contracts)]
+     (def contracts* contracts)
+     (tu/store-data! :contract-rows contracts)
+     (d/sync conn (get-in import-contract-result [:db-after :t]))
+     import-contract-result)))
 
 (defn ->csv-data [csv]
   (:file (thk-integration-ion/csv->file {:csv csv})))
@@ -87,7 +85,8 @@
     (is (empty? (d/q '[:find ?e :where [?e :thk.project/id _]]
                      (tu/db)))))
   (testing "THK -> TEET import"
-    (import-csv!)
+    (import-projects-csv!)
+    (import-contracts-csv!)
     (is (= 7 (count (tu/get-data :projects-csv))))
 
     (testing "Imported projects information is correct"
@@ -127,7 +126,22 @@
             (is (= {:user/person-id "EE66666666666"}
                    (select-keys owner [:user/person-id])))
             (is (= #{:db/id :user/person-id}
-                   (set (keys owner)))))))))
+                   (set (keys owner))))))))
+
+    (testing "Imported contracts information is correct"
+      (let [db (tu/db)]
+        (testing "Amount of contracts found is correct"
+          (is (= 2 (count (d/q '[:find (pull ?c [*])
+                                 :where [?c :thk.contract/procurement-id _]]
+                               db)))))
+        (testing "One of the contracts has a part name and the contract target exists"
+          (is (= 1 (count (d/q '[:find ?c
+                                 :where
+                                 [?c :thk.contract/procurement-id _]
+                                 [?c :thk.contract/procurement-part-id _]
+                                 [?c :thk.contract/targets ?t]
+                                 [?t :thk.activity/id "5455"]]
+                               db))))))))
 
   ;; Create tasks for p1 activity that is sent to THK
   (let [act-id (ffirst
@@ -212,7 +226,7 @@
           csv)))
 
 (deftest activity-id-round-trip
-  (import-csv!)
+  (import-projects-csv!)
 
   ;; Create new activity
   (let [{:keys [tempids]}
@@ -257,7 +271,7 @@
           csv-data (->csv-data csv-with-id)
           lc->act->task-before (lc->act->task)]
       (println "BEF:" lc->act->task-before)
-      (import-csv! csv-data)
+      (import-projects-csv! csv-data)
       (is (= lc->act->task-before (lc->act->task))
           "lifecycle/activity/task counts hasn't changed")
       (is (= "99999" (-> :act-id tu/get-data tu/entity :thk.activity/id))
@@ -289,7 +303,7 @@
           hierarchy-before (lc->act->task)]
       (io/copy (java.io.ByteArrayInputStream. (->csv-data csv-with-task-id))
                (io/file "testi.csv"))
-      (import-csv! (->csv-data csv-with-task-id))
+      (import-projects-csv! (->csv-data csv-with-task-id))
       (is (= hierarchy-before (lc->act->task)) "hierarchy hasn't changed")
       (let [lifecycle-tasks (mapv first
                                   (d/q '[:find (pull ?task [*])
@@ -302,14 +316,15 @@
       (io/delete-file "testi.csv"))))
 
 (deftest activity-procurement-data ;; TEET-605
-  (import-csv!)
+  (import-projects-csv!)
 
   (testing "procurement nr and procurement id are imported"
     (let [activity (ffirst (d/q '[:find (pull ?a [*])
                                   :where [?a :thk.activity/id "6594"]]
                                 (tu/db)))]
-      (is (= (:activity/procurement-id activity) "666"))
-      (is (= (:activity/procurement-nr activity) "666666"))))
+      (def activity* activity)
+      (is (= (:activity/procurement-id activity) "1"))
+      (is (= (:activity/procurement-nr activity) "3434"))))
 
   (testing "procurement nr and id are exported"
     (export-csv)
@@ -317,17 +332,21 @@
           activity-row (cu/find-first #(= (get % "activity_id")
                                           "6594")
                                       export-rows)]
-      (is (= (get activity-row "activity_procurementid") "666"))
-      (is (= (get activity-row "activity_procurementno") "666666")))))
+      (is (= (get activity-row "activity_procurementid") "1"))
+      (is (= (get activity-row "activity_procurementno") "3434")))))
 
 (deftest activity-deletion-timestamp
-  (import-csv!)
+  (import-projects-csv!)
 
-  (tu/tx (meta-model/deletion-tx tu/mock-user-boss (:db/id (tu/entity [:thk.activity/id "6594"]))))
+  (tu/tx (meta-model/deletion-tx tu/mock-user-boss
+                                 (:db/id (tu/entity [:thk.activity/id "6594"]))))
 
+  (println "testing export:")
   (testing "Exported row has deletion timestamp"
     (export-csv)
-    (let [{:strs [activity_teetdelstamp] :as row} (cu/find-first #(= (get % "activity_id") "6594")
-                                                                 (tu/get-data :export-rows))]
+    (println "export csv success")
+    (let [{:strs [activity_teetdelstamp] :as row}
+          (cu/find-first #(= (get % "activity_id") "6594")
+                         (tu/get-data :export-rows))]
       (println "activity teet del stamp: " row)
       (is (some? activity_teetdelstamp) "Activity deletion stamp is present"))))
