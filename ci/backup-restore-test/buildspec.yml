@@ -18,4 +18,5 @@ phases:
       - ./install-babashka
   build:
     commands:
+      - ci/backup-restore-test/backup.bash
       - sleep 60
