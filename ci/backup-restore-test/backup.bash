@@ -2,6 +2,8 @@
 
 echo "Backup started"
 
+cd app/backend
+
 # create backup using existing default config
 clojure -A:dev - <<EOF
 (teet.environment/load-local-config!)
