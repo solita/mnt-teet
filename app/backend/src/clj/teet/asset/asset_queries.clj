@@ -7,7 +7,9 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.asset.asset-model :as asset-model]
             [teet.util.euro :as euro]
-            [teet.transit :as transit]))
+            [teet.transit :as transit]
+            [ring.util.io :as ring-io]
+            [teet.asset.asset-boq :as asset-boq]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -52,10 +54,17 @@
                       (asset-model/component-asset-oid cost-item)
                       cost-item))}))))
 
-(defquery :asset/project-summary
-  {:doc "Summary of project cost items grouped by cost groupings."
+(defquery :asset/export-boq
+  {:doc "Export Bill of Quantities Excel for the project"
    :context {:keys [db user] adb :asset-db}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
-  :fixme)
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Disposition"
+             (str "attachment; filename=THK" project-id "-bill-of-quantities.xlsx")}
+   :body (let [cost-groups (asset-db/project-cost-groups-totals adb project-id)]
+           (ring-io/piped-input-stream
+            (fn [out]
+              (asset-boq/export-boq out cost-groups))))})

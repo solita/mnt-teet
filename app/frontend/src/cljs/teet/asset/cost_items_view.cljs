@@ -508,41 +508,43 @@
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
 
+(defn- add-cost-item [app]
+  (let [add? (= "new" (get-in app [:params :id]))
+        project (get-in app [:params :project])]
+    [buttons/button-secondary {:element "a"
+                               :href (url/cost-item project "new")
+                               :disabled add?
+                               :start-icon (r/as-element
+                                            [icons/content-add])}
+     (tr [:asset :add-cost-item])]))
+
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items add? project]}]
+  [{:keys [e! app cost-items]}]
   (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
-    [:div
-     [buttons/button-secondary {:element "a"
-                                :href (url/cost-item (:thk.project/id project) "new")
-                                :disabled add?
-                                :start-icon (r/as-element
-                                             [icons/content-add])}
-      (tr [:asset :add-cost-item])]
-
-     [:div.cost-items-by-fgroup
-      (doall
-       (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
-         ^{:key (str ident)}
-         [container/collapsible-container
-          {:on-toggle (r/partial toggle-open! ident)
-           :open? (contains? @open ident)}
-          (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
-          [:div.cost-items-by-fclass {:data-fgroup (str ident)
-                                      :style {:margin-left "0.5rem"}}
-           (doall
-            (for [[{ident :db/ident :as fclass} cost-items] fclasses]
-              ^{:key (str ident)}
-              [:div {:style {:margin-top "1rem"
-                             :margin-left "1rem"}}
-               [typography/Text2Bold (str/upper-case (tr* fclass))]
-               [:div.cost-items {:style {:margin-left "1rem"}}
-                (for [{oid :asset/oid} cost-items]
-                  ^{:key oid}
-                  [:div
-                   [url/Link {:page :cost-item
-                              :params {:id oid}} oid]])]]))]]))]]))
+    [:div.cost-items-by-fgroup
+     (doall
+      (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
+        ^{:key (str ident)}
+        [container/collapsible-container
+         {:on-toggle (r/partial toggle-open! ident)
+          :open? (contains? @open ident)}
+         (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
+         [:div.cost-items-by-fclass {:data-fgroup (str ident)
+                                     :style {:margin-left "0.5rem"}}
+          (doall
+           (for [[{ident :db/ident :as fclass} cost-items] fclasses]
+             ^{:key (str ident)}
+             [:div {:style {:margin-top "1rem"
+                            :margin-left "1rem"}}
+              [typography/Text2Bold (str/upper-case (tr* fclass))]
+              [:div.cost-items {:style {:margin-left "1rem"}}
+               (for [{oid :asset/oid} cost-items]
+                 ^{:key oid}
+                 [:div
+                  [url/Link {:page :cost-item
+                             :params {:id oid}} oid]])]]))]]))]))
 
 (defn- cost-items-navigation [e! {:keys [page params]}]
   [select/form-select
@@ -553,7 +555,7 @@
 
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}
-   main-content]
+   left-panel-action main-content]
   [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
    [project-view/project-full-page-structure
     {:e! e!
@@ -562,6 +564,7 @@
      :left-panel
      [:<>
       [cost-items-navigation e! app]
+      left-panel-action
       [cost-item-hierarchy {:e! e!
                             :app app
                             :add? (= :new-cost-item (:page app))
@@ -612,10 +615,22 @@
                       :on-click save!}
           [icons/action-done {:font-size :small}]])])))
 
+(defn- export-boq [app]
+  (let [project (get-in app [:params :project])]
+    [buttons/button-secondary {:element "a"
+                               :target :_blank
+                               :href (common-controller/query-url
+                                      :asset/export-boq
+                                      {:thk.project/id project})
+                               :start-icon (r/as-element
+                                            [icons/file-download])}
+     (tr [:asset :export-boq])]))
+
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals :as state}]
   [cost-items-page-structure
    e! app state
+   [export-boq app]
    [:div.cost-items-totals
     [:div {:style {:float :right}}
      [:b
@@ -646,12 +661,14 @@
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
    e! app state
+   [add-cost-item app]
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item :as state}]
   [cost-items-page-structure
    e! app state
+   [add-cost-item app]
    [cost-item-form e! atl cost-item]])
 
 (defn cost-item-page
@@ -664,6 +681,7 @@
 
       [cost-items-page-structure
        e! app state
+       [add-cost-item app]
        (if component
          ^{:key component}
          [component-form e! asset-type-library component cost-item]

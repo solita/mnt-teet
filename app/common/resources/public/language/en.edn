@@ -61,6 +61,7 @@
    :total-cost "Total (€)",
    :project-total "Total {total} EUR"},
   :add-cost-item "Add cost item",
+  :export-boq "Export BOQ",
   :validate
   {:min-length
    "Text too short, insert at least {min-length} characters",
