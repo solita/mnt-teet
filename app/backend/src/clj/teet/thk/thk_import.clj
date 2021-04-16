@@ -19,7 +19,7 @@
 
 (def excluded-project-types #{"TUGI"})
 
-(defn parse-thk-export-csv [input]
+(defn parse-thk-export-csv [{:keys [input column-mapping group-by-fn]}]
   (with-open [raw-input-stream (io/input-stream input)
               input-stream (BOMInputStream. raw-input-stream)]
     (let [[headers & rows]
@@ -27,18 +27,20 @@
               (io/reader :encoding "UTF-8")
               (csv/read-csv :separator \;))]
       ;; There are multiple rows per project. One for each project lifecycle phase.
-      (group-by #(get % :thk.project/id)
-                (into []
-                      (comp
-                       (map #(zipmap headers %))
-                       (map #(into {}
-                                   (for [[header value] %
-                                         :let [{:keys [attribute parse]}
-                                               (thk-mapping/thk->teet header)]
-                                         :when (and attribute
-                                                    (not (str/blank? value)))]
-                                     [attribute ((or parse identity) value)]))))
-                      rows)))))
+      (dissoc (group-by group-by-fn
+                        (into []
+                              (comp
+                                (map #(zipmap headers %))
+                                (map #(into {}
+                                            (for [[header value] %
+                                                  :let [{:keys [attribute parse]}
+                                                        (column-mapping header)]
+                                                  :when (and attribute
+                                                             (not (str/blank? value)))]
+
+                                              [attribute ((or parse identity) value)]))))
+                              rows))
+              nil))))
 
 
 (defn integration-info [row fields]
@@ -74,7 +76,7 @@
     (when (:db/id result)
       result)))
 
-(defn project-datomic-attributes [db [project-id rows]]
+(defn project-tx-data [db [project-id rows]]
   (let [prj (first rows)
         phases (group-by :thk.lifecycle/id rows)
         phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
@@ -222,13 +224,71 @@
   (and p1
        (not (excluded-project-types (:thk.project/repair-method p1)))))
 
-(defn- thk-project-tx [db url projects-csv]
+(defn contract-exists?
+  [db {:thk.contract/keys [procurement-id procurement-part-id] :as _contract-ids}]
+  (if procurement-part-id
+    (ffirst (d/q
+              '[:find ?c
+                :where
+                [?c :thk.contract/procurement-id ?procurement-id]
+                [?c :thk.contract/procurement-part-id ?procurement-part-id]
+                :in $ ?procurement-id ?procurement-part-id]
+              db procurement-id procurement-part-id))
+    (ffirst (d/q
+              '[:find ?c
+                :where
+                [?c :thk.contract/procurement-id ?procurement-id]
+                [(missing? $ ?c :thk.contract/procurement-part-id)]
+                :in $ ?procurement-id]
+              db procurement-id))))
+
+(defn contract-tx-data
+  [db [contract-ids rows]]                                  ;; contract can have multiple targets, each row duplicates the information
+  (let [{:thk.contract/keys [procurement-id procurement-part-id]
+         :as contract-info}
+        (first rows)]
+    (if-not (contract-exists? db contract-ids)                                              ;; check the contract-ids if they exist already
+      (let [targets (->> rows
+                         (mapv
+                           (fn [target]
+                             (if-let [target-id (or (:activity/task-id target) (:activity-db-id target))]
+                               (:db/id (lookup db [:integration/id target-id]))
+                               (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)])))))
+                         (filterv some?))]
+        (if (not-empty targets)
+          [(merge {:db/id (str procurement-id "-" procurement-part-id "-new-contract")
+                   :thk.contract/targets targets}
+                  (select-keys contract-info [:thk.contract/procurement-id
+                                              :thk.contract/name
+                                              :thk.contract/part-name
+                                              :thk.contract/procurement-part-id
+                                              :thk.contract/type]))]
+          (log/warn "No targets found for contract with ids: " contract-ids)))
+      (log/info "Contract with ids: " contract-ids " already exists nothing is done"))))
+
+(defn final-contract?
+  [[procurement-id [info & _]]]
+  (and (some? procurement-id)
+       (= (:thk.contract/procurement-status-fk info) "3202")))
+
+(defn thk-import-contracts-tx
+  [db url contract-rows]
+  (into [{:db/id "datomic.tx-contracts"
+          :integration/source-uri url}]
+        (mapcat
+          (fn [contract-row]
+            (when (final-contract? contract-row)
+              (let [contract-tx-map (contract-tx-data db contract-row)]
+                contract-tx-map))))
+        contract-rows))
+
+(defn- thk-import-projects-tx [db url projects-csv]
   (into [{:db/id "datomic.tx"
           :integration/source-uri url}]
         (mapcat
-         (fn [prj]
+         (fn [prj]                                          ;; {"project-id" [{"rows"}..]}
            (when (teet-project? prj)
-             (let [project-tx-maps (project-datomic-attributes db prj)
+             (let [project-tx-maps (project-tx-data db prj)
                    {:thk.project/keys [id lifecycles] :as _project}
                    (first project-tx-maps)]
                (log/info "THK project " id
@@ -263,6 +323,11 @@
                      lifecycle-ids]))))
         projects))
 
+(defn import-thk-contracts! [connection url contracts]
+  (let [db (d/db connection)]
+    (d/transact connection
+                {:tx-data (thk-import-contracts-tx db url contracts)})))
+
 (defn import-thk-projects! [connection url projects]
   (let [duplicate-activity-id-projects
         (check-unique-activity-ids projects)
@@ -277,4 +342,4 @@
                       {:projects-with-duplicate-lifecycle-ids duplicate-lifecycle-id-projects})))
     (let [db (d/db connection)]
       (d/transact connection
-                  {:tx-data (thk-project-tx db url projects)}))))
+                  {:tx-data (thk-import-projects-tx db url projects)}))))

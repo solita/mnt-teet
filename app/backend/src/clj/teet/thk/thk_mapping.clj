@@ -152,7 +152,12 @@
    "activity_teetdelstamp"
    "activity_cost"
    "activity_procurementno"
-   "activity_procurementid"])
+   "activity_procurementid"
+   "activity_procurementname"
+   "activity_procurementtypefk"
+   "activity_procurementstatusfk"
+   "activity_procurementpartid"
+   "activity_procurementpartname"])
 
 (defn estonian-person-id->user [id]
   (when-not (str/blank? id)
@@ -177,7 +182,17 @@
       (throw (ex-info "Can't find estonian translation"
                       {:enum value})))))
 
-(def thk->teet
+
+(def thk-contract-type-code->contract-type-enum
+  {"3500" :thk.contract.type/construction-works
+   "3501" :thk.contract.type/things
+   "3502" :thk.contract.type/services})
+
+(def contract-type-enum->thk-contract-type-code
+  (reverse-mapping thk-contract-type-code->contract-type-enum))
+
+
+(def thk->teet-project
   {;; Object/project fields
    "object_id" {:attribute :thk.project/id}
    "object_groupfk" {:attribute :object/groupfk}
@@ -289,4 +304,33 @@
                             :task {:attribute (juxt :meta/deleted? :meta/modified-at)}}
    "activity_cost" {:attribute :activity/cost}
    "activity_procurementno" {:attribute :activity/procurement-nr}
-   "activity_procurementid" {:attribute :activity/procurement-id}})
+   "activity_procurementid" {:attribute :activity/procurement-id}
+   "activity_procurementstatusfk" {:attribute :thk.contract/procurement-status-fk}
+   "activity_procurementtypefk" {:attribute :thk.contract/type
+                                 :parse thk-contract-type-code->contract-type-enum
+                                 :format (comp contract-type-enum->thk-contract-type-code :db/ident)}
+   "activity_procurementname" {:attribute :thk.contract/name}
+   "activity_procurementpartname" {:attribute :thk.contract/part-name}
+   "activity_procurementpartid" {:attribute :thk.contract/procurement-part-id}})
+
+(def thk->teet-contract
+  {"activity_id" {:attribute :thk.activity/id}
+   "activity_teetid" {:attribute :activity-db-id
+                      :parse ->numeric-uuid}
+   "activity_taskid" {:attribute :activity/task-id
+                      :parse ->numeric-uuid}
+   "activity_procurementno" {:attribute :thk.contract/procurement-number}
+   "activity_procurementid" {:attribute :thk.contract/procurement-id}
+   "activity_procurementstatusfk" {:attribute :thk.contract/procurement-status-fk}
+   "activity_procurementtypefk" {:attribute :thk.contract/type
+                                 :parse thk-contract-type-code->contract-type-enum
+                                 :format (comp contract-type-enum->thk-contract-type-code :db/ident)}
+   "activity_procurementname" {:attribute :thk.contract/name}
+   "activity_procurementpartname" {:attribute :thk.contract/part-name}
+   "activity_procurementpartid" {:attribute :thk.contract/procurement-part-id}
+   })
+
+
+
+
+;;

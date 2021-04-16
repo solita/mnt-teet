@@ -110,7 +110,7 @@
 
                  ;; Regular columns
                  (let [{task-mapping :task :as mapping}
-                       (thk-mapping/thk->teet csv-column)
+                       (thk-mapping/thk->teet-project csv-column)
 
                        {:keys [attribute format override-kw]}
                        (if (or (= activity activity-or-task)
