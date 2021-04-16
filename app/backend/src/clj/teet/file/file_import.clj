@@ -5,6 +5,7 @@
             [teet.integration.integration-s3 :as integration-s3]
             [clojure.string :as str]
             [teet.log :as log]
+            [teet.util.date :as dt]
             [teet.environment :as environment]
             [teet.project.project-model :as project-model]
             [teet.file.file-db :as file-db]
@@ -110,10 +111,10 @@
             :let [suffix (file-model/filename->suffix file-name)
                   vektorio-suffix? (get vektorio-handled-file-extensions suffix)
                   task-file? (file-db/is-task-file? db file-eid)]]
-      (when-not vektorio-suffix?
-        (swap! skipped-ext inc))
-      (when-not task-file?
-        (swap! skipped-nontask inc))
+      (if (not vektorio-suffix?)
+        (swap! skipped-ext inc)
+        (when-not task-file?
+                  (swap! skipped-nontask inc)))
       (when (and vektorio-suffix? task-file?)
         (try
           (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
@@ -121,21 +122,26 @@
           (catch clojure.lang.ExceptionInfo e
             (swap! failed inc)
             (log/info "Upload errored on file" file-eid (str "(name:" file-name ")") "with exception: " (pr-str e))))))
-    (log/info "scheduled vektorio import finished, out of" (count files) "model-idless files we skipped"
-              @skipped-ext "due to non-vektor file extension, " @skipped-nontask "due to non-task file type (such as attachment), total"
-              @failed "were not uploaded because of an exception"
-              @uploaded "uploaded")))
+    (log/info "Scheduled vektorio import finished. Found in total"(count files) "files without model-id. Ignored"
+              @skipped-ext "due to non-vektor file extension,"@skipped-nontask "due to non-task file type (such as attachment)."
+              @failed "files were not uploaded because of an exception. Successfully uploaded" @uploaded "files.")))
 
 
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports
 (defn scheduled-file-import [event]
   (if (environment/feature-enabled? :vektorio)    
-    (future
+    (do
+      (log/info "Vektorio scheduled import event handler: Feature enabled, starting import at"
+                (str
+                  (dt/format-date (dt/now))
+                  " "
+                  (dt/format-time-sec (dt/now))))
+      (future
       (try
         (scheduled-file-import*
          (environment/datomic-connection))
         (catch Exception e
-          (log/error e))))
+          (log/error e)))))
     ;; else
     (log/info "Vektorio scheduled import event handler: feature is not enabled, not doing anything"))
   "{\"success\": true}")
