@@ -8,7 +8,7 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid Link CircularProgress IconButton]]
+            [teet.ui.material-ui :refer [Grid CircularProgress]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -592,28 +592,32 @@
   (when val
     (str val "\u00A0€")))
 
-(defn cost-group-unit-price [e! initial-value row]
-  (r/with-let [price (r/atom initial-value)
+(defn cost-group-unit-price [e! value row]
+  (r/with-let [initial-value value
+               price (r/atom initial-value)
                change! #(reset! price (-> % .-target .-value))
-               save! #(when (not= initial-value @price)
-                        (e! (cost-items-controller/->SaveCostGroupPrice row @price)))
-               save-on-enter! #(when (= "Enter" (.-key %))
-                                 (save!))]
-    (let [changed? (not= @price initial-value)]
-      [:div {:class (<class common-styles/flex-row)
-             :style {:justify-content :flex-end
-                     ;; to have same padding as header for alignment
-                     :padding-right "16px"}}
-       [text-field/TextField {:input-style {:text-align :right
-                                            :width "8rem"}
-                              :value @price
-                              :on-change change!
-                              :on-key-down save-on-enter!
-                              :end-icon [text-field/euro-end-icon]}]
-       (when changed?
-         [IconButton {:size :small
-                      :on-click save!}
-          [icons/action-done {:font-size :small}]])])))
+               saving? (r/atom false)
+               save! (fn [row]
+                       (when (not= initial-value @price)
+                         (reset! saving? true)
+                         (e! (cost-items-controller/->SaveCostGroupPrice row @price))))
+               save-on-enter! (fn [row e]
+                                (when (= "Enter" (.-key e))
+                                  (save! row)))]
+    (when (not= value initial-value)
+      (reset! saving? false))
+    [:div {:class (<class common-styles/flex-row)
+           :style {:justify-content :flex-end
+                   ;; to have same padding as header for alignment
+                   :padding-right "16px"}}
+     [text-field/TextField {:input-style {:text-align :right
+                                          :width "8rem"}
+                            :value @price
+                            :on-change change!
+                            :on-key-down (r/partial save-on-enter! row)
+                            :on-blur (r/partial save! row)
+                            :disabled @saving?
+                            :end-icon [text-field/euro-end-icon]}]]))
 
 (defn- export-boq [app]
   (let [project (get-in app [:params :project])]
