@@ -20,4 +20,4 @@ phases:
     commands:
       - sh ./ci/backup-restore-test/backup.bash
       - sleep 60
-      - aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d)
+      - sh ./ci/backup-restore-test/restore.bash
