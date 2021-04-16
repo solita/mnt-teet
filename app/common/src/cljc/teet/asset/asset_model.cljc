@@ -34,7 +34,7 @@
   **Cost groups**
 
   The ROTL defines some properties with `:attribute/cost-grouping?` true.
-  Components in the project with the same type and set of cost grouping
+  Components in the project with the same type, status and set of cost grouping
   attribute values constitute a \"cost group\". The cost groups are
   automatically determined from the attribute values when summarizing costs.
 
@@ -117,7 +117,7 @@
     (containing [] asset)))
 
 (def cost-totals-table-columns
-  [:type :properties :quantity :cost-per-quantity-unit :total-cost])
+  [:type :properties :common/status :quantity :cost-per-quantity-unit :total-cost])
 
 (def cost-totals-table-align
   {:quantity "right"

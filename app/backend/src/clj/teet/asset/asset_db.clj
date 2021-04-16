@@ -130,7 +130,9 @@
           (project-asset-oids db thk-project-id)))
 
 (defn- cost-group-attrs-q
-  "Return all item attributes marked as cost grouping."
+  "Return all items in project with type, status and cost grouping attributes.
+  Returns map where key is item id and value is map of the values.
+  Only returns items that have some cost grouping attributes."
   [db thk-project-id]
   (let [entity-attr-vals
         (d/q '[:find ?a ?type-ident ?attr-ident ?val ?value-type-ident
@@ -141,7 +143,8 @@
                 [?a :asset/fclass ?type]
                 [?a :component/ctype ?type])
                [?a ?attr ?val]
-               [?attr :attribute/cost-grouping? true]
+               (or [?attr :attribute/cost-grouping? true]
+                   [?attr :db/ident :common/status])
                [?attr :db/ident ?attr-ident]
                [?type :db/ident ?type-ident]
                [?attr :db/valueType ?value-type]
@@ -164,11 +167,25 @@
                              (d/q '[:find (pull ?val [:db/id :db/ident])
                                     :in $ [?val ...]]
                                   db list-item-ids))]
-    (for [{val-type :val-type :as r} entity-attr-vals]
-      (if (= val-type :db.type/ref)
-        ;; Update ref vals to point to map with ident
-        (update r :val list-item-vals)
-        r))))
+
+
+    (cu/keep-vals
+     ;; Keep only items that have cost grouping fields
+     ;; not just type and status
+     (fn [v]
+       (when (seq (dissoc v :type :common/status))
+         v))
+     ;; Group by feature/component id
+     (reduce
+      (fn [items {:keys [id type attr val val-type]}]
+        (update items id merge
+                {:type type
+                 attr (if (= val-type :db.type/ref)
+                        ;; Update ref vals to point to map with ident
+                        (list-item-vals val)
+                        val)}))
+      {}
+      entity-attr-vals))))
 
 (defn project-cost-group-prices
   "Return all cost group prices for project."
@@ -195,14 +212,7 @@
   Counts quantities and total prices (if price info is known for
   a group)."
   [db thk-project-id]
-  (let [items
-        ;; Group by feature/component id
-        (reduce
-         (fn [items {:keys [id type attr val]}]
-           (update items id merge {:type type attr val}))
-         {}
-         (cost-group-attrs-q db thk-project-id))
-
+  (let [items (cost-group-attrs-q db thk-project-id)
         types (into #{} (map (comp :type val)) items)
         type-qty-unit (into {}
                             (d/q '[:find ?e ?u
