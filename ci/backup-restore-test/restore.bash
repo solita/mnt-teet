@@ -17,6 +17,8 @@ echo $BACKUP_FILE_NAME
 
 aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{\"input\":{\"bucket\":\"teet-dev2-documents\",\"file-key\":\"$BACKUP_FILE_NAME\"}}" out
 
+echo $(cat out)
+
 echo "Restore completed"
 
 
