@@ -6,7 +6,7 @@ echo "Backup started"
 clojure -A:dev - <<EOF
 (teet.environment/load-local-config!)
 (require '[teet.backup.backup-ion :as bu])
-(bu/backup* {:input "{\"bucket\":\"teet-dev-documents\",\"file-key\":\"teet-dev-backup-Fri Apr 16 13:00:00 EEST 2021.edn.zip\"}"})
+(println "Backup is here")
 
 (System/exit 0)
 EOF
