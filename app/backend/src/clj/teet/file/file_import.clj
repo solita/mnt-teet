@@ -114,7 +114,7 @@
       (if (not vektorio-suffix?)
         (swap! skipped-ext inc)
         (when-not task-file?
-                  (swap! skipped-nontask inc)))
+          (swap! skipped-nontask inc)))
       (when (and vektorio-suffix? task-file?)
         (try
           (vektorio-core/upload-file-to-vektor! db-connection vektorio-config file-eid)
@@ -132,10 +132,7 @@
   (if (environment/feature-enabled? :vektorio)    
     (do
       (log/info "Vektorio scheduled import event handler: Feature enabled, starting import at"
-                (str
-                  (dt/format-date (dt/now))
-                  " "
-                  (dt/format-time-sec (dt/now))))
+                (str (dt/format-date (dt/now)) " " (dt/format-time-sec (dt/now))))
       (future
       (try
         (scheduled-file-import*
