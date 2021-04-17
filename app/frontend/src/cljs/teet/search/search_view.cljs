@@ -32,6 +32,7 @@
          [TextField
           {:id          "quick-search"
            :style       {:width sw}
+           :type        :search
            :variant     :outlined
            :value       (:term quick-search)
            :placeholder (tr [:search :quick-search])

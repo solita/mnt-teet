@@ -158,7 +158,9 @@
                   :margin-bottom "2rem"
                   :justify-content "space-evenly"
                   :flex-wrap :wrap}}
+
     [buttons/button-primary "Button component"]
+
     [buttons/large-button-primary "Large button"]
 
     [Button {:color "secondary"}
@@ -183,6 +185,7 @@
      "Foo bar baz"]
     [Button {:color "secondary" :variant "outlined"}
      "Foo bar baz"]]
+   [buttons/stand-alone-icon-button {:icon [icons/social-person-outlined {:color :primary}]}]
    [:div {:style {:display "flex"
                   :justify-content "space-evenly"
                   :margin-bottom "2rem"}}

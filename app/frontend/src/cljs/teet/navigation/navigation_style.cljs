@@ -37,7 +37,11 @@
     {:display         :flex
      :justify-content :space-around
      :min-height      theme-spacing/appbar-height}
-    (responsivity-styles/mobile-only-meta {})))
+    (responsivity-styles/mobile-only-meta
+      {:height theme-spacing/appbar-height-mobile
+       :min-height theme-spacing/appbar-height-mobile
+       :padding-left ".4rem"
+       :padding-right ".4rem"})))
 
 (defn maanteeamet-logo
   []
@@ -52,24 +56,27 @@
   {:padding "0"})
 
 (defn appbar []
-  {:display :flex
-   :top 0
-   :bottom :auto
-   :background-color theme-colors/white
-   :color theme-colors/gray-dark
-   :height theme-spacing/appbar-height
-   :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
-   :transition "all 0.2s ease-in-out"})
-
-(def appbar-height "90px")
+  (with-meta
+    {:display :flex
+      :top 0
+      :bottom :auto
+      :background-color theme-colors/white
+      :color theme-colors/gray-dark
+      :height theme-spacing/appbar-height
+      :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
+      :transition "all 0.2s ease-in-out"}
+    (responsivity-styles/mobile-only-meta
+      {:height theme-spacing/appbar-height-mobile})
+    ))
 
 (defn appbar-position [drawer-open?]
   (with-meta
     {:z-index 10
-     :height appbar-height}
+     :height theme-spacing/appbar-height-mobile}
     (responsivity-styles/desktop-only-meta
       (let [dw (drawer-width drawer-open?)]
         {:width (str "calc(100% - " dw "px)")
+         :height theme-spacing/appbar-height
          :margin-left (str dw "px")}))))
 
 (defn main-container [drawer-open?]
@@ -103,7 +110,7 @@
    :flex-direction :column
    :align-items :center
    :justify-content :center
-   :min-height appbar-height
+   :min-height theme-spacing/appbar-height
    :transition "background-color 0.2s ease-in-out"
    :background-color (if current-page?
                        theme-colors/blue-light
@@ -137,23 +144,37 @@
      :padding "0 1rem 0 1rem"}
     (merge {:pseudo {:last-child {:border :none}}}
            (responsivity-styles/mobile-only-meta {:border-width 0
-                                                  :padding "0 0.25rem"}))))
+                                                  :padding "0"}))))
 
 (defn logo-style
   []
-  {:display :flex
-   :flex-direction :row
-   :justify-content :flex-start
-   :flex-basis "200px"
-   :margin-right :auto
-   :height "100%"})
+  (with-meta
+    {:display :flex
+     :flex-direction :row
+     :justify-content :flex-start
+     :flex-basis "200px"
+     :margin-right :auto
+     :height "100%"}
+    (responsivity-styles/mobile-only-meta
+      {:margin-left ".2rem"
+       :flex-basis :auto})))
+
+(defn logo-shield-style []
+  (with-meta
+    {:max-height "100%"
+     :width :auto
+     :height "100%"}
+    (responsivity-styles/mobile-only-meta
+      {:max-height "110%"
+       :height "110%"
+       :margin-top "-0.2rem"})))
 
 (defn feedback-container-style []
   (with-meta
     (merge {:display :flex
             :justify-content :center}
            (divider-style))
-    (responsivity-styles/mobile-only-meta {:border-width 0})))
+    (responsivity-styles/mobile-only-meta {:display :none})))
 
 (defn navigator-left-panel-style
   []
@@ -173,10 +194,16 @@
 
 (defn extra-nav-element-style
   []
-  {:border-bottom (str "1px solid " theme-colors/border-dark)
-   :padding "1rem"})
+  {:padding-left "1rem"
+   :height "3.1rem"
+   :display :flex})
 
-(defn extran-nav-heading-element-style
+(defn extra-nav-element-title-style
+  []
+  {:flex 2
+   :border-bottom (str "1px solid " theme-colors/border-dark)
+   })
+(defn extra-nav-heading-element-style
   []
   {:background-color theme-colors/card-background-extra-light
    :padding "0.5rem"

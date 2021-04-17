@@ -1,12 +1,12 @@
-(ns teet.navigation.navigation-logo)
+(ns teet.navigation.navigation-logo
+  (:require [teet.navigation.navigation-style :as navigation-style]
+            [herb.core :as herb :refer [<class]]))
 
 (defn logo-shield
   [{:keys [width height]
     :or {width ""
          height "100%"}}]
-  [:svg#Layer_1 {:style {:max-height "100%"
-                         :width "auto"
-                         :height "100%"}
+  [:svg#Layer_1 {:class (<class navigation-style/logo-shield-style)
                  :height height
                  :width width
                  :version "1.1" :xmlns "http://www.w3.org/2000/svg"
