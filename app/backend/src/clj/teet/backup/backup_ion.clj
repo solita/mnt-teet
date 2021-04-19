@@ -125,7 +125,8 @@
 
 (def ^:private ignore-attributes
   "Internal datomic stuff that we can skip"
-  #{:db.install/attribute})
+  #{:db.install/attribute
+    :db.alter/attribute})
 
 
 (defn- output-tx [db-ref attr-info-cache {:keys [data]} ignore-attributes]
