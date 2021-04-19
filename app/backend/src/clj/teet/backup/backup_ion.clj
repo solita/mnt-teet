@@ -1,5 +1,12 @@
 (ns teet.backup.backup-ion
-  "Backup Ion for exporting an .edn file backup to S3 bucket."
+  "Backup Ion for exporting an .edn file backup to S3 bucket.
+
+  When backing up the datomic we go through all the transactions that have happened to the db
+  and write them to a file.
+
+  Some of the transactions will be Datomic internal, which we can't transact again,
+  these should be in the `ignore-attributes` set.
+  "
   (:require [datomic.client.api :as d]
             [teet.environment :as environment]
             [teet.integration.integration-s3 :as s3]
@@ -126,6 +133,13 @@
 (def ^:private ignore-attributes
   "Internal datomic stuff that we can skip"
   #{:db.install/attribute
+
+    ; :db.alter/attribute added because of [:db/retract :thk.contract/procurement-id :db/unique :db.unique/identity]
+    ; caused issues in the backup
+    ; ERROR:
+    ; {:cognitect.anomalies/category :cognitect.anomalies/incorrect,
+    ; :cognitect.anomalies/message ":db.alter/attribute must be set on entity :db.part/db,
+    ; found 79164837200314", :a 79164837200314, :e 79164837200314, :db/error :db.error/invalid-datom}
     :db.alter/attribute})
 
 
