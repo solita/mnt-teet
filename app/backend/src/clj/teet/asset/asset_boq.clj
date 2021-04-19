@@ -10,44 +10,60 @@
 
 (defn- header-row [atl language]
   (into [nil]
-        (for [c asset-model/cost-totals-table-columns]
-          (if (= c :common/status)
-            (asset-type-library/label language (asset-type-library/item-by-ident atl c))
-            (tr [:asset :totals-table c])))))
+        (mapcat
+         (fn [c]
+           (cond
+             (= c :common/status)
+             [(asset-type-library/label language (asset-type-library/item-by-ident atl c))]
+
+             ;; quantity and unit shown separately so quantity can be used in formula
+             (= c :quantity)
+             [(tr [:asset :totals-table :quantity])
+              (tr [:asset :type-library :unit])]
+
+             :else
+             [(tr [:asset :totals-table c])]))
+                asset-model/cost-totals-table-columns)))
 
 (defn- cost-group-rows [atl language cost-groups]
   (let [ident->label #(asset-type-library/label language (asset-type-library/item-by-ident atl %))]
-    (map-indexed
-     (fn [i {:keys [type quantity cost-per-quantity-unit total-cost]
-             status :common/status :as row}]
-       (println "ROW: " row)
-       (let [r (+ 5 i)]
-         [nil
-          (ident->label type)
-          [(str/join "\n"
-                     (map (fn [[k v u]]
-                            (str k ": " v
-                                 (when u
-                                   (str "\u00a0" u))))
-                          (asset-type-library/format-properties language atl row)))
-           {:wrap true}]
-          (ident->label (:db/ident status))
-          quantity
-          cost-per-quantity-unit
-          {:formula (str "E" r "*F" r)
-           ;;"R[0]C[-2]*R[0]C[-1]"
-           :value total-cost}]))
-      cost-groups)))
+    (concat
+     (map-indexed
+      (fn [i {:keys [type quantity quantity-unit cost-per-quantity-unit]
+              status :common/status :as row}]
+        (let [r (+ 5 i)]
+          [nil
+           (ident->label type)
+           [(str/join "\n"
+                      (map (fn [[k v u]]
+                             (str k ": " v
+                                  (when u
+                                    (str "\u00a0" u))))
+                           (asset-type-library/format-properties language atl row)))
+            {:wrap true}]
+           (ident->label (:db/ident status))
+           quantity
+           quantity-unit
+           cost-per-quantity-unit
+           {:formula (str "E" r "*G" r)}]))
+      cost-groups)
+
+     ;; Add summary row
+     (list
+      (conj (vec (repeat 7 nil))
+            [{:formula (str "SUM(H5:H" (+ 4 (count cost-groups)) ")")}
+             {:font {:bold true}}])))))
 
 (def ^:private
   column-widths-in-chars
-  "column widths in chars for different cost"
+  "widths in chars for different cost table columns"
   {1 20 ; B=type
    2 50 ; C=properties
    3 25 ; D=status
    4 10 ; E=amount
-   5 10 ; F=unit price
-   6 12 ; G=total price
+   5 5  ; F=unit
+   6 10 ; G=unit price
+   7 12 ; H=total price
    })
 
 (defn- set-widths! [sheet widths]
