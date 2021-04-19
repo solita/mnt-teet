@@ -502,7 +502,8 @@
      :border-radius "3px"
      :line-height 1
      :background-color background
-     :padding "0.5rem"}))
+     :padding "0.5rem"
+     :max-width "315px"}))
 
 (defn text-ellipsis [max-width]
   {:text-overflow :ellipsis
@@ -542,3 +543,4 @@
                    theme-colors/black-coral)}
          (when disabled?
            {:color theme-colors/text-disabled})))
+

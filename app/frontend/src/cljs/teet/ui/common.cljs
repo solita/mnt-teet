@@ -5,13 +5,14 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal
+            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal Grid
                                          Paper Menu MenuItem ListItemIcon ClickAwayListener]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
             [re-svg-icons.feather-icons :as fi]
-            [teet.ui.util :refer [mapc]]))
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.format :as format]))
 
 (def Link typography/Link)
 (def Link2 typography/Link2)
@@ -592,3 +593,19 @@
         [Paper
          (mapc (r/partial context-menu-item toggle!)
                (remove nil? items))]]]]]))
+
+(defn date-label-component
+  "Shows :label with formatted date from :value with an info icon and :tooltip"
+  [{value :value label :label tooltip :tooltip}]
+  [:div
+   {:data-cy "date-label-component"}
+   [:label {:class (<class common-styles/input-label-style false false)}
+    [typography/Text2Bold label]]
+   [:div
+    {:class (<class common-styles/flex-row-center)}
+    [popper-tooltip tooltip
+     [icons/action-info-outlined
+      {:style {:color :primary}}]]
+    [:div
+     {:style {:padding-left "0.3em"}}
+     [typography/Text (format/date value)]]]])

@@ -8,7 +8,7 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid Link CircularProgress]]
+            [teet.ui.material-ui :refer [Grid Link CircularProgress IconButton]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -31,7 +31,8 @@
             [teet.map.openlayers.drag :as drag]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
-            [teet.map.map-features :as map-features]))
+            [teet.map.map-features :as map-features]
+            [teet.ui.table :as table]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -581,6 +582,13 @@
                    [url/Link {:page :cost-item
                               :params {:id oid}} oid]])]]))]]))]]))
 
+(defn- cost-items-navigation [e! {:keys [page params]}]
+  [select/form-select
+   {:on-change #(e! (common-controller/->Navigate % params nil))
+    :items [:cost-items :cost-items-totals]
+    :value page
+    :format-item #(tr [:asset :page %])}])
+
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}
    main-content]
@@ -589,17 +597,94 @@
     {:e! e!
      :app app
      :project project
-     :left-panel [cost-item-hierarchy {:e! e!
-                                       :app app
-                                       :add? (= :new-cost-item (:page app))
-                                       :project project
-                                       :cost-items cost-items}]
+     :left-panel
+     [:<>
+      [cost-items-navigation e! app]
+      [cost-item-hierarchy {:e! e!
+                            :app app
+                            :add? (= :new-cost-item (:page app))
+                            :project project
+                            :cost-items cost-items}]]
      :main main-content}]])
+
+(defn- format-properties [atl properties]
+  (let [;; status is part of cost grouping, but shown in a separate column
+        properties (dissoc properties :common/status)
+        id->def (partial asset-type-library/item-by-ident atl)
+        attr->val (dissoc (cu/map-keys id->def properties) nil)]
+    (into [:<>]
+          (map (fn [[k v]]
+                 [:div
+                  [typography/BoldGrayText (label k) ": "]
+                  (case (get-in k [:db/valueType :db/ident])
+                    :db.type/ref (some-> v :db/ident id->def label)
+                    (str v))
+                  (when-let [u (:asset-schema/unit k)]
+                    (str " " u))]))
+          (sort-by (comp label key) attr->val))))
+
+(defn format-euro [val]
+  (when val
+    (str val "\u00A0€")))
+
+(defn cost-group-unit-price [e! initial-value row]
+  (r/with-let [price (r/atom initial-value)
+               change! #(reset! price (-> % .-target .-value))
+               save! #(when (not= initial-value @price)
+                        (e! (cost-items-controller/->SaveCostGroupPrice row @price)))
+               save-on-enter! #(when (= "Enter" (.-key %))
+                                 (save!))]
+    (let [changed? (not= @price initial-value)]
+      [:div {:class (<class common-styles/flex-row)
+             :style {:justify-content :flex-end
+                     ;; to have same padding as header for alignment
+                     :padding-right "16px"}}
+       [text-field/TextField {:input-style {:text-align :right
+                                            :width "8rem"}
+                              :value @price
+                              :on-change change!
+                              :on-key-down save-on-enter!
+                              :end-icon [text-field/euro-end-icon]}]
+       (when changed?
+         [IconButton {:size :small
+                      :on-click save!}
+          [icons/action-done {:font-size :small}]])])))
+
+(defn cost-items-totals-page
+  [e! app {atl :asset-type-library totals :cost-totals :as state}]
+  [cost-items-page-structure
+   e! app state
+   [:div.cost-items-totals
+    [:div {:style {:float :right}}
+     [:b
+      (tr [:asset :totals-table :project-total]
+          {:total (:total-cost totals)})]]
+    [:div
+     [table/listing-table
+      {:data (:cost-groups totals)
+       :columns asset-model/cost-totals-table-columns
+       :column-align asset-model/cost-totals-table-align
+       :column-label-fn #(if (= % :common/status)
+                           (label (asset-type-library/item-by-ident atl %))
+                           (tr [:asset :totals-table %]))
+       :format-column
+       (fn [column value row]
+         (case column
+           :type (label (asset-type-library/item-by-ident atl value))
+           :common/status (label (asset-type-library/item-by-ident
+                                  atl (:db/ident value)))
+           :properties (format-properties atl row)
+           :quantity (str value
+                          (when-let [qu (:quantity-unit row)]
+                            (str " " qu)))
+           :cost-per-quantity-unit [cost-group-unit-price e! value row]
+           :total-cost (format-euro value)
+           (str value)))}]]]])
 
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
    e! app state
-   [:div "TODO: default view"]])
+   [map-view/map-view {}]])
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item :as state}]

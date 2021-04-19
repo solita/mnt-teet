@@ -53,7 +53,14 @@
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
  :asset
- {:add-cost-item "Add cost item",
+ {:totals-table
+  {:properties "Properties",
+   :type "Type",
+   :quantity "Quantity",
+   :cost-per-quantity-unit "Unit cost (€)",
+   :total-cost "Total (€)",
+   :project-total "Total {total} EUR"},
+  :add-cost-item "Add cost item",
   :validate
   {:min-length
    "Text too short, insert at least {min-length} characters",
@@ -64,6 +71,7 @@
    :decimal-format "Insert decimal value"},
   :no-matching-feature-classes "No matching feature classes.",
   :cost-item-saved "Cost item saved",
+  :page {:cost-items "Assets", :cost-items-totals "Totals"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
   :components {:label "Components"},
@@ -214,6 +222,8 @@
   :cant-delete-third-party-with-applications
   "Involved party can be deleted if it has applications added to it",
   :create-opinion-title "Add opinion",
+  :application-date-can-not-be-edited
+  "The date of application can't be edited. If a mistake was made with the date please delete the application and enter a new one.",
   :waiting-for-response "Waiting for response",
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
@@ -694,9 +704,9 @@
   :land-exchange/area "Area",
   :file/position-number "POS#",
   :meeting.decision/body "Decision",
-  :location/end-m "Lõpp m",
-  :location/start-point "Alguspunkt",
-  :location/road-nr "Tee",
+  :location/end-m "End m",
+  :location/start-point "Start point",
+  :location/road-nr "Road",
   :meeting/agenda "Agenda",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
@@ -730,7 +740,7 @@
   :document/author "Author",
   :file/name "Name",
   :cooperation.contact/email "Email",
-  :land-owner-opinion/respondent-name "Respondent name",
+  :land-owner-opinion/respondent-name "Respondent initials",
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
   :thk.project/region-name "Region",
@@ -762,13 +772,13 @@
   :file/description "Description",
   :cooperation.contact/name "Name",
   :file/document-group "Group",
-  :location/carriageway "Sõidutee",
+  :location/carriageway "Carriageway",
   :meeting.agenda/body "Body",
-  :land-owner-opinion/link-to-response "Link to response",
+  :land-owner-opinion/link-to-response "Link to response (Delta URL)",
   :estate-procedure/type "Procedure type",
   :thk.project/road-name "Road name",
-  :location/start-m "Algus m",
-  :location/end-point "Lõpp-punkt",
+  :location/start-m "Start m",
+  :location/end-point "End point",
   :thk.project/estimated-date-range "Estimated duration",
   :participation/role "Role",
   :file/status "Status",
@@ -871,7 +881,7 @@
   :no-active-burdens "This estate does not have any active burdens",
   :owner-filter-label "Owner",
   :unit-valuations "Unit valuations",
-  :cadastral-filter-label "Cadastral",
+  :cadastral-filter-label "Cadastral unit number",
   :unit-name-id "Unit name and id",
   :quality
   {:any "Any",
@@ -885,7 +895,7 @@
   :units "units",
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
-  :estate-filter-label "Estate",
+  :estate-filter-label "Estate number",
   :no-land-acquisitions "No land acquisitions for this estate",
   :fetching-land-units "Fetching land units",
   :refresh-estate-info "Refresh estates",

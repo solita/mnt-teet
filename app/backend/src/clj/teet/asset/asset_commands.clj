@@ -7,7 +7,8 @@
             [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.euro :as euro]))
 
 
 
@@ -73,3 +74,32 @@
             (if (string? id)
               (tempids id)
               id))))
+
+(defcommand :asset/save-cost-group-price
+  {:doc "Save cost group price"
+   :context {:keys [user db] adb :asset-db}
+   :payload {:keys [project-id cost-group price]}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [^{:error :cost-group-price-does-not-belong-to-project}
+         (or (nil? (:db/id cost-group))
+             (= project-id
+                (:cost-group/project (du/entity adb (:db/id cost-group)))))]}
+  (tx
+   (if-let [id (:db/id cost-group)]
+     ;; Compare and swap the price if there is an existing one
+     ^{:db :asset}
+     [[:db/cas id :cost-group/price
+       (euro/parse (:cost-group/price cost-group))
+       (euro/parse price)]]
+
+     ;; Create new cost group price
+     ^{:db :asset}
+     [(merge
+       (asset-type-library/form->db (asset-type-library/rotl-map
+                                     (asset-db/asset-type-library adb))
+                                    cost-group)
+       {:db/id "new-cost-group-price"
+        :cost-group/price (euro/parse price)
+        :cost-group/project project-id})]))
+  :ok)
