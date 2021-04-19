@@ -104,7 +104,9 @@
                       (spreadsheet/set-cell! cell v))
                     (when style
                       (spreadsheet/set-cell-style! cell (style! style))))))]
-       (r! ["KULULOEND" nil nil nil nil nil nil "Versioon:" "H0"])
+       (r! [(tr [:project :tabs :cost-items]) nil nil nil nil nil
+            ;; PENDING: versioning&locking not implemented yet, this is dummy
+            "Versioon:" "H0"])
        (r! [nil "Objekti nr:" project-id])
        (r! [])
        (r! (header-row atl language))
