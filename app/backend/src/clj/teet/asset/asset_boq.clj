@@ -112,14 +112,6 @@
          (r! row))
        wb)))
 
-(comment
-  (do
-    (require 'clojure.java.io)
-    (require 'clojure.java.shell)
-    (with-open [out (clojure.java.io/output-stream (clojure.java.io/file "boq.xlsx"))]
-      (export-boq out *a))
-    (clojure.java.shell/sh "open" "boq.xlsx")))
-
 (defn export-boq
   "Create BOQ Excel and write it into the `out` stream.
   Takes `boq-data` map of information to export, see [[boq-spreadsheet]]."
