@@ -9,7 +9,9 @@
             [teet.util.euro :as euro]
             [teet.transit :as transit]
             [ring.util.io :as ring-io]
-            [teet.asset.asset-boq :as asset-boq]))
+            [teet.asset.asset-boq :as asset-boq]
+            [teet.localization :as localization]
+            [teet.log :as log]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -64,7 +66,15 @@
   {:status 200
    :headers {"Content-Disposition"
              (str "attachment; filename=THK" project-id "-bill-of-quantities.xlsx")}
-   :body (let [cost-groups (asset-db/project-cost-groups-totals adb project-id)]
+   :body (let [atl (asset-db/asset-type-library adb)
+               cost-groups (asset-db/project-cost-groups-totals adb project-id)]
            (ring-io/piped-input-stream
             (fn [out]
-              (asset-boq/export-boq out cost-groups))))})
+              (try
+                (asset-boq/export-boq out {:atl atl
+                                           :cost-groups cost-groups
+                                           :project-id project-id
+                                           :language :et})
+                (catch Throwable t
+                  (log/error t "Exception generating BOQ excel"
+                             {:project-id project-id}))))))})

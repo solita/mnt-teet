@@ -2,7 +2,7 @@
   "Cost items view"
   (:require [teet.project.project-view :as project-view]
             [teet.ui.typography :as typography]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr] :as localization]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [teet.ui.form :as form]
@@ -573,20 +573,15 @@
      :main main-content}]])
 
 (defn- format-properties [atl properties]
-  (let [;; status is part of cost grouping, but shown in a separate column
-        properties (dissoc properties :common/status)
-        id->def (partial asset-type-library/item-by-ident atl)
-        attr->val (dissoc (cu/map-keys id->def properties) nil)]
-    (into [:<>]
-          (map (fn [[k v]]
-                 [:div
-                  [typography/BoldGrayText (label k) ": "]
-                  (case (get-in k [:db/valueType :db/ident])
-                    :db.type/ref (some-> v :db/ident id->def label)
-                    (str v))
-                  (when-let [u (:asset-schema/unit k)]
-                    (str " " u))]))
-          (sort-by (comp label key) attr->val))))
+  (into [:<>]
+        (map (fn [[k v u]]
+               [:div
+                [typography/BoldGrayText k ": "]
+                v
+                (when u
+                  (str "\u00a0" u))]))
+        (asset-type-library/format-properties @localization/selected-language
+                                              atl properties)))
 
 (defn format-euro [val]
   (when val
