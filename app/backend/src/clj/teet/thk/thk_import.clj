@@ -19,6 +19,8 @@
 
 (def excluded-project-types #{"TUGI"})
 
+(def procurement-status-completed-fk "3202")
+
 (defn parse-thk-export-csv [{:keys [input column-mapping group-by-fn]}]
   (with-open [raw-input-stream (io/input-stream input)
               input-stream (BOMInputStream. raw-input-stream)]
@@ -269,7 +271,8 @@
 (defn final-contract?
   [[procurement-id [info & _]]]
   (and (some? procurement-id)
-       (= (:thk.contract/procurement-status-fk info) "3202")))
+       (= (:thk.contract/procurement-status-fk info)
+          procurement-status-completed-fk)))
 
 (defn thk-import-contracts-tx
   [db url contract-rows]
