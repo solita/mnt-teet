@@ -1940,7 +1940,7 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Procurement part id, is expected to be unique"}
 
-          [:db/retract [:db/ident :thk.contract/procurement-id] :db/unique :db.unique/identity]]]}]
+          [:db/retract :thk.contract/procurement-id :db/unique :db.unique/identity]]]}]
 
 
 
