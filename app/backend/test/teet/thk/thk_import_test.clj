@@ -46,7 +46,6 @@
                            (select-keys val [:thk.contract/procurement-part-id
                                              :thk.contract/procurement-id]))})
          import-contract-result (thk-import/import-thk-contracts! conn "test://test-csv" contracts)]
-     (def contracts* contracts)
      (tu/store-data! :contract-rows contracts)
      (d/sync conn (get-in import-contract-result [:db-after :t]))
      import-contract-result)))
@@ -131,7 +130,7 @@
     (testing "Imported contracts information is correct"
       (let [db (tu/db)]
         (testing "Amount of contracts found is correct"
-          (is (= 2 (count (d/q '[:find (pull ?c [*])
+          (is (= 3 (count (d/q '[:find (pull ?c [*])
                                  :where [?c :thk.contract/procurement-id _]]
                                db)))))
         (testing "One of the contracts has a part name and the contract target exists"
