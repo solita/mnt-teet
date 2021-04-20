@@ -39,6 +39,7 @@
             teet.asset.asset-library-view
             teet.account.account-view
             teet.asset.cost-items-view
+            teet.contract.contracts-view
 
             teet.ui.query
             [teet.ui.url :as url]
