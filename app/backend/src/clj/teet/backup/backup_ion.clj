@@ -107,7 +107,7 @@
     (try
       (let [file (java.io.File/createTempFile file-key ".log")]
         (log/info "Generating restore log file: " (.getAbsolutePath file))
-        (with-open [w (clojure.java.io/writer  (.getAbsolutePath file) :append true)]
+        (with-open [w (io/writer file :append true)]
                    (.write w (str "Backup " file-key " was restored successfully.")))
         (with-open [in (io/input-stream file)]
                    (s3/write-file-to-s3
