@@ -19,11 +19,11 @@ export BACKUP_FILE_NAME=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | g
 
 echo $BACKUP_FILE_NAME
 
-aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{\"input\":{
+aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{
   \"bucket\":\"teet-dev2-documents\",
   \"file-key\":\"$BACKUP_FILE_NAME\",
   \"create-database\":\"$RESTORE_DB_NAME\",
-  \"create-asset-database\":\"$RESTORE_ASSET_DB_NAME\"}}" out
+  \"create-asset-database\":\"$RESTORE_ASSET_DB_NAME\"}" out
 
 echo $(cat out)
 
