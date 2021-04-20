@@ -176,23 +176,29 @@
                                    (reset! localization/selected-language
                                            language))))]
     [:div {:class (<class common-styles/flex-row)}
-     [:div {:style {:padding-right "0.5rem"
+     [:div {:style {:padding-right "1rem"
+                    :display :flex
                     :border-right (str "1px solid " theme-colors/border-dark)}}
       (if (= @localization/selected-language :et)
-        [typography/TextBold "EST"]
-        [buttons/link-button {:id "ET"
+        [typography/Text2Bold "EST"]
+        [buttons/link-button {:style {:font-size "0.875rem"
+                                      :line-height "1.3125rem"}
+                              :id "ET"
                               :on-click #(change-lan-fn "et")}
          "EST"])]
-     [:div {:style {:padding-left "0.5rem"}}
+     [:div {:style {:padding-left "1rem"
+                    :display :flex}}
       (if (= @localization/selected-language :en)
-        [typography/TextBold "ENG"]
-        [buttons/link-button {:id "EN"
+        [typography/Text2Bold "ENG"]
+        [buttons/link-button {:style {:font-size "0.875rem"
+                                      :line-height "1.3125rem"}
+                              :id "EN"
                               :on-click #(change-lan-fn "en")}
          "ENG"])]]))
 
 (defn extra-nav-element
-  [{:keys [icon href content on-click link-id]}]
-  [:div {:class (<class navigation-style/extra-nav-element-style)}
+  [{:keys [icon href content on-click link-id link-text last-item?]}]
+  [:div {:class (<class navigation-style/extra-nav-element-style last-item?)}
    [:div {:class (<class common-styles/flex-row-center)}
     [common/Link {:href href
                   :class (<class common-styles/flex-align-center)
@@ -200,14 +206,17 @@
                   :id link-id}
      [icon {:color :primary
             :style {:margin-right "1rem"}}]
-     [:div {:class (<class navigation-style/extra-nav-element-title-style)}
-      content]]]]
-  )
+     link-text]
+    content]])
+
 (defmethod header-extra-panel :search
   [e! user opts _]
   [:div {:style {:min-width "300px"}}
-   [:div {:class (<class navigation-style/extra-nav-heading-element-style)}
-    [search-view/quick-search e! (:quick-search opts)]]])
+   [:div {:class (<class navigation-style/extra-nav-search-container-style)}
+    [search-view/quick-search
+     e!
+     (:quick-search opts)
+     (<class navigation-style/search-input-style)]]])
 
 (defmethod header-extra-panel :login-control
   [e! _ _ _]
@@ -216,7 +225,8 @@
                        :content [language-options]}]
    [extra-nav-element {:icon icons/action-login
                        :href "/oauth2/request"
-                       :content (tr [:login :login])}]])
+                       :link-text (tr [:login :login])
+                       :last-item? true}]])
 
 (defmethod header-extra-panel :account-control
   [e! user _ _]
@@ -227,7 +237,7 @@
    [extra-nav-element {:icon icons/social-person-outlined
                        :href "#/account"
                        :on-click (e! navigation-controller/->CloseExtraPanel)
-                       :content (tr [:account :my-account])
+                       :link-text (tr [:account :my-account])
                        :link-id "account-page-link"}]
    [extra-nav-element {:icon icons/action-language
                        :content [language-options]}]
@@ -235,8 +245,9 @@
                        :href "/#/login"
                        :on-click #(do (e! (login-controller/->Logout))
                                       (e! (navigation-controller/->CloseExtraPanel)))
-                       :content (tr [:account :logout])
-                       :link-id "account-page-link"}]])
+                       :link-text (tr [:account :logout])
+                       :link-id "account-page-link"
+                       :last-item? true}]])
 
 (defn user-info [user]
   [common/labeled-data {:class (<class navigation-style/divider-style)
@@ -245,7 +256,9 @@
 
 (defn open-account-navigation
   [e!]
-  [:div {:class (<class common-styles/flex-row-center)}
+  [:div {:class (herb/join
+                  (<class common-styles/flex-row-center)
+                  (<class navigation-style/open-account-navigation-style))}
    [buttons/stand-alone-icon-button {:id "open-account-navigation"
                                      :icon [icons/social-person-outlined {:color :primary}]
                                      :on-click #(e! (navigation-controller/->ToggleExtraPanel :account-control))}]])
@@ -327,7 +340,10 @@
                              :flex-basis "400px"
                              :display    :block}
                             {:display :none})}
-       [search-view/quick-search e! quick-search]]
+       [search-view/quick-search
+        e!
+        quick-search
+        (<class navigation-style/search-input-style)]]
       [navigation-header-links e! user url]]
      [header-extra-panel-container e!
       {:user user
@@ -366,7 +382,7 @@
      :extra-panel-open? extra-panel-open?}]])
 
 (defn main-container [navigation-open? content]
-  [:main {:class (<class responsivity-styles/visible-mobile-only)}
+  [:main {:class (<class navigation-style/main-container navigation-open?)}
    (when (common-controller/in-flight-requests?)
      [:div {:style {:position :absolute :width "100%"
                     :overflow :hidden}}

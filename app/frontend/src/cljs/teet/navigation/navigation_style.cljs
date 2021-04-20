@@ -6,6 +6,8 @@
 (def drawer-width {true 200   ; width when open
                    false 80}) ; width when closed
 
+(def mobile-search-height "3.125rem")
+
 (defn mobile-drawer
   [open?]
   (with-meta
@@ -90,7 +92,6 @@
     (responsivity-styles/desktop-only-meta
       (let [dw (drawer-width drawer-open?)]
         {:width (str "calc(100% - " dw "px)")
-         ;:height (str "calc(100vh - " theme-spacing/appbar-height "px)")
          :margin-left (str dw "px")}))))
 
 (defn drawer-projects-style
@@ -146,6 +147,13 @@
            (responsivity-styles/mobile-only-meta {:border-width 0
                                                   :padding "0"}))))
 
+(defn open-account-navigation-style
+  []
+  (with-meta
+    {}
+    (responsivity-styles/desktop-only-meta
+      {:padding-left "1rem"}))
+  )
 (defn logo-style
   []
   (with-meta
@@ -193,18 +201,50 @@
    :background-color theme-colors/white})
 
 (defn extra-nav-element-style
-  []
+  [last-item?]
+  ^{:pseudo {:after {:content "''"
+                     :height "1px"
+                     :position :absolute
+                     :bottom "0"
+                     :right "0"
+                     :left "3.4rem"
+                     :display :inline-block
+                     :background-color (if last-item?
+                                         theme-colors/white
+                                         theme-colors/border-dark)}}}
   {:padding-left "1rem"
    :height "3.1rem"
-   :display :flex})
+   :display :flex
+   :position :relative})
 
-(defn extra-nav-element-title-style
+(defn extra-nav-search-container-style
   []
-  {:flex 2
-   :border-bottom (str "1px solid " theme-colors/border-dark)
-   })
+  (with-meta
+    {}
+    (responsivity-styles/mobile-only-meta
+      {:height mobile-search-height})))
+
+(defn search-input-style
+  []
+  (with-meta
+    {:width "18.75rem"
+     :display :block
+     :margin :auto}
+    (responsivity-styles/mobile-only-meta
+      {:height mobile-search-height
+       :width "100%"
+       :border :none
+       :border-radius "0"
+       :outline :none
+       :border-top (str "1px solid " theme-colors/border-dark)
+       :border-bottom (str "1px solid " theme-colors/border-dark)})))
+
 (defn extra-nav-heading-element-style
   []
   {:background-color theme-colors/card-background-extra-light
-   :padding "0.5rem"
+   :height "2.25rem"
+   :display :flex
+   :align-items :center
+   :padding-left "1rem"
+   :border-top (str "1px solid " theme-colors/border-dark)
    :border-bottom (str "1px solid " theme-colors/border-dark)})
