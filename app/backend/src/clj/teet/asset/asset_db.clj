@@ -331,7 +331,8 @@
           :where
           [?e :boq-version/project ?project]
           [?e :boq-version/created-at ?at]
-          (not-join [?at]
+          (not-join [?project ?at]
+                    [?newer-lock :boq-version/project ?project]
                     [?newer-lock :boq-version/created-at ?newer-at]
                     [(> ?newer-at ?at)])
           :in $ ?project]
