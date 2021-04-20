@@ -26,11 +26,13 @@ aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{
   \"create-asset-database\":\"$RESTORE_ASSET_DB_NAME\"}" out
 
 export SECONDS=$(date +%s)
+export END_TIME=$((${SECONDS}+300))
 interval=10
 
-((end_time=${SECONDS}+300))
+echo $SECONDS
+echo $END_TIME
 # polling 5 min for .log file
-while [ "$SECONDS" -lt "$end_time" ]
+while [[ $SECONDS -lt $END_TIME ]]
 do
   aws s3api head-object --bucket $S3_BUCKET --key "$BACKUP_FILE_NAME" || not_exist=true
   echo $API_RESPONSE
