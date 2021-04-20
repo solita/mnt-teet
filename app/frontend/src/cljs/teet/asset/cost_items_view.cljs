@@ -561,6 +561,14 @@
     {:e! e!
      :app app
      :project project
+     :export-menu-items
+     [{:id "export-boq"
+       :label (tr [:asset :export-boq])
+       :icon [icons/file-download]
+       :link {:target :_blank
+              :href (common-controller/query-url
+                     :asset/export-boq
+                     {:thk.project/id (:thk.project/id project)})}}]
      :left-panel
      [:<>
       [cost-items-navigation e! app]
@@ -614,22 +622,12 @@
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
-(defn- export-boq [app]
-  (let [project (get-in app [:params :project])]
-    [buttons/button-secondary {:element "a"
-                               :target :_blank
-                               :href (common-controller/query-url
-                                      :asset/export-boq
-                                      {:thk.project/id project})
-                               :start-icon (r/as-element
-                                            [icons/file-download])}
-     (tr [:asset :export-boq])]))
 
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals :as state}]
   [cost-items-page-structure
    e! app state
-   [export-boq app]
+   nil
    [:div.cost-items-totals
     [:div {:style {:float :right}}
      [:b
