@@ -2,6 +2,7 @@
 
  ;; Use dev-local https://docs.datomic.com/cloud/dev-local.html
  {:db-name "teet-local-dev"
+  :asset-db-name "asset-local-dev"
   :client {:server-type :dev-local
            :system "teet"}}
 
