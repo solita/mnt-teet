@@ -102,22 +102,21 @@
 
 (defn log-restore-result
   "Write log to bucket into the same file name from which the restore was started"
-  [ctx]
-  (let [{{bucket :bucket file-key :file-key} :s3} ctx]
-    (try
-      (let [file (java.io.File/createTempFile file-key ".log")]
-        (log/info "Generating restore log file: " (.getAbsolutePath file))
-        (with-open [w (io/writer file :append true)]
-                   (.write w (str "Backup " file-key " was restored successfully.")))
-        (with-open [in (io/input-stream file)]
-                   (s3/write-file-to-s3
-                     {:to {:bucket bucket
-                           :file-key (str file-key ".log")}
-                      :contents in}))
-        (io/delete-file file))
-      (log/info "Backup restore log created.")
-      (catch Exception e
-        (log/error e "Backup restore logging failed")))))
+  [{{bucket :bucket file-key :file-key} :s3}]
+  (try
+    (let [file (java.io.File/createTempFile file-key ".log")]
+      (log/info "Generating restore log file: " (.getAbsolutePath file))
+      (with-open [w (io/writer file :append true)]
+                 (.write w (str "Backup " file-key " was restored successfully.")))
+      (with-open [in (io/input-stream file)]
+                 (s3/write-file-to-s3
+                   {:to {:bucket bucket
+                         :file-key (str file-key ".log")}
+                    :contents in}))
+      (io/delete-file file))
+    (log/info "Backup restore log created.")
+    (catch Exception e
+      (log/error e "Backup restore logging failed"))))
 
 (defn- read-restore-config [{event :event :as ctx}]
   (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
