@@ -28,9 +28,9 @@ aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{
 export SECONDS=$(date +%s)
 interval=10
 
-((end_time=${SECONDS}+600))
-# polling 10 min for .log file
-while ((${SECONDS} < ${end_time}))
+((end_time=${SECONDS}+300))
+# polling 5 min for .log file
+while [ "$SECONDS" -lt "$end_time" ]
 do
   aws s3api head-object --bucket $S3_BUCKET --key "$BACKUP_FILE_NAME" || not_exist=true
   echo $API_RESPONSE
