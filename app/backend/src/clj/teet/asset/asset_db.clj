@@ -322,3 +322,17 @@
                  ;; Finds all OIDs for this asset
                  (str feature-oid "-")
                  (str feature-oid "."))))))
+
+(defn project-boq-version
+  "Fetch the latest BOQ version entity for the given THK project."
+  [db thk-project-id]
+  (ffirst
+   (d/q '[:find (pull ?e [*])
+          :where
+          [?e :boq-version/project ?project]
+          [?e :boq-version/created-at ?at]
+          (not-join [?at]
+                    [?newer-lock :boq-version/created-at ?newer-at]
+                    [(> ?newer-at ?at)])
+          :in $ ?project]
+        db thk-project-id)))
