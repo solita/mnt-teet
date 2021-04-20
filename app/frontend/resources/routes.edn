@@ -218,4 +218,10 @@
   :crumb (tr [:asset :type-library-label])
   :state {:query :asset/type-library
           :args {}}}
+
+ :contracts
+ {:path "/contracts"
+  :view teet.contract.contracts-view/contracts-listing-view
+  :crumb (tr [:contracts :contracts-listing])
+  :title (tr [:contracts :contracts-listing])}
  }
