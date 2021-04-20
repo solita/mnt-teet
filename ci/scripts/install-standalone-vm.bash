@@ -32,8 +32,18 @@ function start-teet-app {
     # tmux a -t "$uuid"
 }
 
+function start-datomic-portforward {
+    uuid="$(uuidgen)"
+    tmux new -d -s "$uuid"
+    tmux send-keys -t "${uuid}" "datomic client access teet-datomic" ENTER
+}
+
+
+
 function import-datomic-to-dev-local {
-    clojure -e "
+    # run in backend directory, needs the deps
+    clojure -A:dev -e "
+     (require 'datomic.dev-local)
      (datomic.dev-local/import-cloud
     	    {:source {:system \"teet-datomic\"
               :db-name \"$DATOMIC_SOURCE_DB_NAME\" ; use SSM /teet/datomic/db-name 
@@ -56,7 +66,7 @@ function install_deps_and_app {
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
@@ -82,11 +92,31 @@ function install_deps_and_app {
     docker exec teetdb sed -i -e '1i host all all 172.16.0.0/14 trust' /var/lib/postgresql/data/pg_hba.conf
     docker restart teetdb    
 
-    test -f dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
+    test -f cognitect-dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
     unzip cognitect-dev-tools.zip
     cd cognitect-dev-tools-*
     ./install
     cd ..      
+
+    test -f datomic-deps.tar.gz || aws s3 cp s3://${TEET_ENV}-build/datomic-deps.tar.gz .
+    tar -C ~ -zxf datomic-deps.tar.gz
+    test -f datomic-deps2.tar.gz || aws s3 cp s3://${TEET_ENV}-build/datomic-deps2.tar.gz .
+    tar -C ~ -zxf datomic-deps2.tar.gz
+
+    wget https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.82.zip
+    unzip datomic-cli*.zip
+    install --mode=755 datomic-cli/datomic* /usr/local/bin/ 
+
+    # datomic-cli in tmux
+    start-datomic-protforward
+    until netstat -pant | egrep -q '^tcp.*:8666\b.*LISTEN'; do
+	echo "waiting for ssh forward to come up (attach to tmux and check there if stuck here)"
+	sleep 1
+    done
+    
+    
+
+    import-datomic-to-dev-local
     
     cd mnt-teet
     cd db
@@ -97,7 +127,7 @@ function install_deps_and_app {
 
     start-teet-app # backend, frontend & postgrest
     
-    sleep 10
+    sleep 10 # fixme, wait for some sensible signal (poll backend tcp port with netstat?)
         
     ## unneeded when restoring pg backup
     # cd app/datasource-import
