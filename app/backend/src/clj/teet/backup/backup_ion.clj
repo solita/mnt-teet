@@ -349,10 +349,11 @@
     (let [file (java.io.File/createTempFile file-key ".log")]
       (log/info "Generating restore log file: " (.getAbsolutePath file))
       (with-open [w (io/writer file :append true)]
-        (.write w (str "Backup " file-key
-                    (if (empty? error)
-                      " was restored successfully."
-                      (str " was failed with error " (:message error))))))
+        (.write w
+          (if (empty? error)
+            "SUCCESS"
+            (str "FAILURE"
+              (:message error)))))
       (with-open [in (io/input-stream file)]
         (s3/write-file-to-s3
           {:to {:bucket bucket
