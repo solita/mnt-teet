@@ -68,9 +68,6 @@
   (valAt [_ k default-value]
     (deref-delay (get m k default-value))))
 
-(defn ->context-map [m]
-  (ContextMap. m))
-
 (defn- request [handler-fn]
   (fn [req]
     (try
