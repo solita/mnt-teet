@@ -14,11 +14,12 @@
 (deftest locking-denies-edits
   (tu/local-login tu/mock-user-boss)
   (testing "Initially assets can be created"
-    (let [{oid :asset/oid}
+    (let [{oid :asset/oid :as resp}
           (tu/local-command :asset/save-cost-item
                             {:project-id "11111"
                              :asset {:db/id "bridge"
                                      :asset/fclass :fclass/bridge}})]
+      (println "SAVE COST ITEM RESPONSE: " (pr-str resp))
       (is (asset-model/asset-oid? oid))))
 
   (testing "Locking creates new lock entity"
