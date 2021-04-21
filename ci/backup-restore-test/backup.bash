@@ -2,8 +2,30 @@
 
 echo "Backup started"
 
+S3_BUCKET="teet-dev2-documents"
+BACKUP_FILE_NAME="teet-dev2-backup-"$(date +%Y-%m-%d)".edn.zip"
+
 aws lambda invoke --function-name teet-datomic-Compute-backup --payload '{"key": "value"}' out
 
-echo $(cat out)
+echo "New backup file name " $BACKUP_FILE_NAME
 
-echo "Backup completed"
+SECONDS=$(date +%s)
+END_TIME=$((${SECONDS}+600))
+interval=10
+
+echo $SECONDS
+echo $END_TIME
+# polling 10 min for .zip file
+while [ "$SECONDS" -lt "$END_TIME" ]; do
+  aws s3api head-object --bucket $S3_BUCKET --key "$BACKUP_FILE_NAME" || not_exist=true
+  if [ $not_exist ]; then
+    echo "Polling for .zip"
+  else
+    echo "Backup successfully completed."
+    exit 0
+  fi
+  sleep ${interval}
+done
+
+echo "Backup timeout exceeded."
+exit 1
