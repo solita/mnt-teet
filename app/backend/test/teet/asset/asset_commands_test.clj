@@ -7,7 +7,8 @@
 
 (t/use-fixtures :each
   tu/with-environment
-  (tu/with-config {:enabled-features #{:asset-db :cost-items}})
+  (tu/with-config {:asset {:default-owner-code "TST"}
+                   :enabled-features #{:asset-db :cost-items}})
   (tu/with-db)
   tu/with-global-data)
 
