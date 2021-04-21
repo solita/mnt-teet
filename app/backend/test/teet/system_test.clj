@@ -6,11 +6,10 @@
 
 (use-fixtures :once
   tu/with-environment
+  (tu/with-config {:enabled-features #{:asset-db}})
   (tu/with-db))
 
 (deftest db-query
-  (tu/run-with-config
-   {:enabled-features #{:asset-db}}
-   (testing ":teet.system/db can be called by anonymous user"
-     (let [resp (tu/local-query nil :teet.system/db {})]
-       (is (= (:status resp) 200))))))
+  (testing ":teet.system/db can be called by anonymous user"
+    (let [resp (tu/local-query nil :teet.system/db {})]
+      (is (= (:status resp) 200)))))
