@@ -152,6 +152,12 @@
                         (io/copy stream file)
                         file))))
 
+(defn delete-temp-file-from-ctx
+  "Deletes the temp file created in the earlier step"
+  [ctx]
+  (io/delete-file (:file ctx))
+  (dissoc ctx :file))
+
 (defn- process-thk-file* [event]
   (try
     (let [result (ctx-> {:event event
@@ -164,6 +170,7 @@
                         read-to-temp-file
                         file->project-rows
                         file->contract-rows
+                        delete-temp-file-from-ctx
                         upsert-projects
                         upsert-contracts
                         update-entity-info
@@ -192,6 +199,7 @@
            read-to-temp-file
            file->project-rows
            file->contract-rows
+           delete-temp-file-from-ctx
            upsert-projects
            upsert-contracts
            update-entity-info)
