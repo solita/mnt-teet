@@ -483,8 +483,11 @@
            [?f :file/id _]
            [?f :file/name ?name]
            [?f :meta/created-at ?created]
+           [?f :file/size ?file-size]
            [(get-else $ ?f :meta/modified-at ?created) ?mctime]
            [(< ?mctime ?modified-threshold)]
+           [?f :file/upload-complete? true]
+           [(> ?file-size 0)]
            [(missing? $ ?f :vektorio/model-id)]
            [(missing? $ ?f :meta/deleted?)]]
          db modified-threshold)))

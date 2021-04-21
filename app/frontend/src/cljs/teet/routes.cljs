@@ -86,7 +86,10 @@
                      event-leave (on-leave-event {:current-app app
                                                   :page (:page app)
                                                   :params (:params app)
-                                                  :query (:query app)})
+                                                  :query (:query app)
+                                                  :new-page route-name
+                                                  :new-params params
+                                                  :new-query query})
                      event-leave (if (vector? event-leave) event-leave [event-leave])
                      event-to (on-navigate-event navigation-data)
                      event-to (if (vector? event-to) event-to [event-to])

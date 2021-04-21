@@ -6,7 +6,16 @@
             [teet.util.collection :as cu]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.routes :as routes]))
+
+(defrecord AddComponentCancel [id])
+
+(defmethod routes/on-leave-event :cost-item [{:keys [query new-query]}]
+  (when (and (:component query)
+             (not (:component new-query)))
+    ;; Navigated away from component add form, cleanup state
+    (->AddComponentCancel (:component query))))
 
 (defonce next-id (atom 0))
 
@@ -57,6 +66,9 @@
 (defrecord FetchRoadResponse [start-end-points response])
 
 (defrecord AddComponent [type])
+
+(defrecord SaveCostGroupPrice [cost-group price])
+(defrecord SaveCostGroupPriceResponse [response])
 
 (declare process-location-change)
 
@@ -290,7 +302,18 @@
        {:tuck.effect/type :navigate
         :params params
         :page page
-        :query (merge query {:component new-id})}))))
+        :query (merge query {:component new-id})})))
+
+  AddComponentCancel
+  (process-event [{id :id} app]
+    (update-form
+     app
+     (fn [parent]
+       (update parent (if (:asset/fclass parent)
+                        :asset/components
+                        :component/components)
+               (fn [cs]
+                 (filterv #(not= (:asset/oid %) id) cs)))))))
 
 (defn- process-location-change
   "Check if location fields have been edited and need to retrigger
@@ -359,3 +382,27 @@
 
       :else
       app)))
+
+
+;; Cost group related events
+(extend-protocol t/Event
+
+  SaveCostGroupPrice
+  (process-event [{:keys [cost-group price]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :asset/save-cost-group-price
+           :payload {:project-id (get-in app [:params :project])
+                     :cost-group (dissoc cost-group
+                                         :quantity :count
+                                         :cost-per-quantity-unit
+                                         :total-cost
+                                         :quantity-unit :type)
+                     :price price}
+           :result-event ->SaveCostGroupPriceResponse}))
+
+  SaveCostGroupPriceResponse
+  (process-event [{response :response} app]
+    (println "Response: " response)
+    (t/fx app
+          common-controller/refresh-fx)))

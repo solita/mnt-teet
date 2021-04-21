@@ -1,6 +1,8 @@
 (ns teet.transit
   "Transit format utilities"
-  (:require [cognitect.transit :as t]))
+  (:require [cognitect.transit :as t]
+            [teet.util.collection :as cu])
+  (:import (com.cognitect.transit WriteHandler)))
 
 (defn transit->clj
   "Parse transit+json `in` to Clojure data."
@@ -10,8 +12,23 @@
                    in)]
     (t/read (t/reader in :json))))
 
+(defn stringify-handler [format-fn]
+  (t/write-handler (constantly "s") format-fn))
+
+(defn write-options [type->handler]
+  {:handlers
+   (cu/map-vals
+    (fn [handler]
+      (cond
+        (instance? WriteHandler handler) handler
+        (fn? handler) (stringify-handler handler)
+        :else (throw (ex-info "Expected write handler to be instance of WriteHandler or a formatting function."
+                              {:handler handler}))))
+    type->handler)})
+
 (defn write-transit [out data]
-  (t/write (t/writer out :json) data))
+  (let [opts (some-> data meta :transit write-options)]
+    (t/write (t/writer out :json opts) data)))
 
 (defn clj->transit
   "Convert given Clojure `data` to transit+json string."
@@ -29,3 +46,6 @@
   (case request-method
     :get (transit->clj (get params "q"))
     :post (transit->clj body)))
+
+(defn with-write-options [type->handler data]
+  (vary-meta data update :transit merge type->handler))
