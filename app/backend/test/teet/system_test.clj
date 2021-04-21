@@ -1,5 +1,5 @@
 (ns ^:db teet.system-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [use-fixtures deftest testing is]]
             [teet.test.utils :as tu]
             teet.system.system-queries
             teet.environment))
