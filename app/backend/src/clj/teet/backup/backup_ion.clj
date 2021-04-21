@@ -344,17 +344,20 @@
 
 (defn log-restore-result
   "Write log to bucket into the same file name from which the restore was started"
-  [{{bucket :bucket file-key :file-key} :s3}]
+  [{{bucket :bucket file-key :file-key} :s3 error :error}]
   (try
     (let [file (java.io.File/createTempFile file-key ".log")]
       (log/info "Generating restore log file: " (.getAbsolutePath file))
       (with-open [w (io/writer file :append true)]
-                 (.write w (str "Backup " file-key " was restored successfully.")))
+        (.write w (str "Backup " file-key
+                    (if (empty? error)
+                      " was restored successfully."
+                      (str " was failed with error " (:message error))))))
       (with-open [in (io/input-stream file)]
-                 (s3/write-file-to-s3
-                   {:to {:bucket bucket
-                         :file-key (str file-key ".log")}
-                    :contents in}))
+        (s3/write-file-to-s3
+          {:to {:bucket bucket
+                :file-key (str file-key ".log")}
+           :contents in}))
       (io/delete-file file))
     (log/info "Backup restore log created.")
     (catch Exception e
@@ -385,7 +388,8 @@
              log-restore-result
              delete-backup-file)
       (catch Exception e
-        (log/error e "ERROR IN RESTORE" (ex-data e)))))
+        (log/error e "ERROR IN RESTORE" (ex-data e))
+        (log-restore-result (ex-data e)))))
 
 (defn restore
   "Lambda function endpoint for restoring database from transaction log in S3"
