@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 echo "Restore started"
+S3_BUCKET="teet-dev2-documents"
 
-BACKUP_FILE_NAME=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $4}')
+BACKUP_FILE_NAME=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $4}')
 [ -z "$BACKUP_FILE_NAME" ] && echo "Backup file not found for " $(date +%Y-%m-%d) && exit 1
 
 MIN_BACKUP_SIZE=1000000
-BACKUP_SIZE=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $3}')
+BACKUP_SIZE=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $3}')
 RESTORE_DB_NAME="teet"$(date +%Y%m%d)"debug2"
 RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)"debug2"
 
@@ -17,12 +18,11 @@ if [ "$BACKUP_SIZE" -lt "$MIN_BACKUP_SIZE" ]; then
   echo "Backup is too small"
   exit 1;
 fi
-S3_BUCKET="teet-dev2-documents"
 
 echo "Backup file name " $BACKUP_FILE_NAME
 
 aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{
-  \"bucket\":\"teet-dev2-documents\",
+  \"bucket\":\"$S3_BUCKET\",
   \"file-key\":\"$BACKUP_FILE_NAME\",
   \"create-database\":\"$RESTORE_DB_NAME\",
   \"create-asset-database\":\"$RESTORE_ASSET_DB_NAME\"}" out
