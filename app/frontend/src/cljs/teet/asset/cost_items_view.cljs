@@ -32,7 +32,10 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
-            [teet.ui.table :as table]))
+            [teet.ui.table :as table]
+            [teet.user.user-model :as user-model]
+            [teet.util.date :as date]
+            [teet.ui.format :as fmt]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -591,8 +594,20 @@
     :value page
     :format-item #(tr [:asset :page %])}])
 
+(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+  (let [{:keys [user timestamp]} latest-change]
+    [:div {:class (<class common-styles/flex-row)
+           :style {:background-color theme-colors/gray-light
+                   :width "100%"}}
+     (when timestamp
+       (fmt/date-time timestamp))
+     (when user (user-model/user-name user))
+
+
+     (pr-str version)])
+  )
 (defn cost-items-page-structure
-  [e! app {:keys [cost-items asset-type-library project]}
+  [e! app {:keys [cost-items asset-type-library project] :as page-state}
    left-panel-action main-content]
   [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
    [project-view/project-full-page-structure
@@ -616,7 +631,10 @@
                             :add? (= :new-cost-item (:page app))
                             :project project
                             :cost-items cost-items}]]
-     :main main-content}]])
+     :main
+     [:<>
+      [boq-version-statusline e! page-state]
+      main-content]}]])
 
 (defn- format-properties [atl properties]
   (into [:<>]
