@@ -2,13 +2,13 @@
   "Cost items view"
   (:require [teet.project.project-view :as project-view]
             [teet.ui.typography :as typography]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr] :as localization]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid Link CircularProgress IconButton]]
+            [teet.ui.material-ui :refer [Grid CircularProgress]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -546,41 +546,43 @@
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
 
+(defn- add-cost-item [app]
+  (let [add? (= "new" (get-in app [:params :id]))
+        project (get-in app [:params :project])]
+    [buttons/button-secondary {:element "a"
+                               :href (url/cost-item project "new")
+                               :disabled add?
+                               :start-icon (r/as-element
+                                            [icons/content-add])}
+     (tr [:asset :add-cost-item])]))
+
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items add? project]}]
+  [{:keys [e! app cost-items]}]
   (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
-    [:div
-     [buttons/button-secondary {:element "a"
-                                :href (url/cost-item (:thk.project/id project) "new")
-                                :disabled add?
-                                :start-icon (r/as-element
-                                             [icons/content-add])}
-      (tr [:asset :add-cost-item])]
-
-     [:div.cost-items-by-fgroup
-      (doall
-       (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
-         ^{:key (str ident)}
-         [container/collapsible-container
-          {:on-toggle (r/partial toggle-open! ident)
-           :open? (contains? @open ident)}
-          (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
-          [:div.cost-items-by-fclass {:data-fgroup (str ident)
-                                      :style {:margin-left "0.5rem"}}
-           (doall
-            (for [[{ident :db/ident :as fclass} cost-items] fclasses]
-              ^{:key (str ident)}
-              [:div {:style {:margin-top "1rem"
-                             :margin-left "1rem"}}
-               [typography/Text2Bold (str/upper-case (tr* fclass))]
-               [:div.cost-items {:style {:margin-left "1rem"}}
-                (for [{oid :asset/oid} cost-items]
-                  ^{:key oid}
-                  [:div
-                   [url/Link {:page :cost-item
-                              :params {:id oid}} oid]])]]))]]))]]))
+    [:div.cost-items-by-fgroup
+     (doall
+      (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
+        ^{:key (str ident)}
+        [container/collapsible-container
+         {:on-toggle (r/partial toggle-open! ident)
+          :open? (contains? @open ident)}
+         (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
+         [:div.cost-items-by-fclass {:data-fgroup (str ident)
+                                     :style {:margin-left "0.5rem"}}
+          (doall
+           (for [[{ident :db/ident :as fclass} cost-items] fclasses]
+             ^{:key (str ident)}
+             [:div {:style {:margin-top "1rem"
+                            :margin-left "1rem"}}
+              [typography/Text2Bold (str/upper-case (tr* fclass))]
+              [:div.cost-items {:style {:margin-left "1rem"}}
+               (for [{oid :asset/oid} cost-items]
+                 ^{:key oid}
+                 [:div
+                  [url/Link {:page :cost-item
+                             :params {:id oid}} oid]])]]))]]))]))
 
 (defn- cost-items-navigation [e! {:keys [page params]}]
   [select/form-select
@@ -591,15 +593,24 @@
 
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project]}
-   main-content]
+   left-panel-action main-content]
   [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
    [project-view/project-full-page-structure
     {:e! e!
      :app app
      :project project
+     :export-menu-items
+     [{:id "export-boq"
+       :label (tr [:asset :export-boq])
+       :icon [icons/file-download]
+       :link {:target :_blank
+              :href (common-controller/query-url
+                     :asset/export-boq
+                     {:thk.project/id (:thk.project/id project)})}}]
      :left-panel
      [:<>
       [cost-items-navigation e! app]
+      left-panel-action
       [cost-item-hierarchy {:e! e!
                             :app app
                             :add? (= :new-cost-item (:page app))
@@ -608,52 +619,53 @@
      :main main-content}]])
 
 (defn- format-properties [atl properties]
-  (let [;; status is part of cost grouping, but shown in a separate column
-        properties (dissoc properties :common/status)
-        id->def (partial asset-type-library/item-by-ident atl)
-        attr->val (dissoc (cu/map-keys id->def properties) nil)]
-    (into [:<>]
-          (map (fn [[k v]]
-                 [:div
-                  [typography/BoldGrayText (label k) ": "]
-                  (case (get-in k [:db/valueType :db/ident])
-                    :db.type/ref (some-> v :db/ident id->def label)
-                    (str v))
-                  (when-let [u (:asset-schema/unit k)]
-                    (str " " u))]))
-          (sort-by (comp label key) attr->val))))
+  (into [:<>]
+        (map (fn [[k v u]]
+               [:div
+                [typography/BoldGrayText k ": "]
+                v
+                (when u
+                  (str "\u00a0" u))]))
+        (asset-type-library/format-properties @localization/selected-language
+                                              atl properties)))
 
 (defn format-euro [val]
   (when val
     (str val "\u00A0€")))
 
-(defn cost-group-unit-price [e! initial-value row]
-  (r/with-let [price (r/atom initial-value)
+(defn cost-group-unit-price [e! value row]
+  (r/with-let [initial-value value
+               price (r/atom initial-value)
                change! #(reset! price (-> % .-target .-value))
-               save! #(when (not= initial-value @price)
-                        (e! (cost-items-controller/->SaveCostGroupPrice row @price)))
-               save-on-enter! #(when (= "Enter" (.-key %))
-                                 (save!))]
-    (let [changed? (not= @price initial-value)]
-      [:div {:class (<class common-styles/flex-row)
-             :style {:justify-content :flex-end
-                     ;; to have same padding as header for alignment
-                     :padding-right "16px"}}
-       [text-field/TextField {:input-style {:text-align :right
-                                            :width "8rem"}
-                              :value @price
-                              :on-change change!
-                              :on-key-down save-on-enter!
-                              :end-icon [text-field/euro-end-icon]}]
-       (when changed?
-         [IconButton {:size :small
-                      :on-click save!}
-          [icons/action-done {:font-size :small}]])])))
+               saving? (r/atom false)
+               save! (fn [row]
+                       (when (not= initial-value @price)
+                         (reset! saving? true)
+                         (e! (cost-items-controller/->SaveCostGroupPrice row @price))))
+               save-on-enter! (fn [row e]
+                                (when (= "Enter" (.-key e))
+                                  (save! row)))]
+    (when (not= value initial-value)
+      (reset! saving? false))
+    [:div {:class (<class common-styles/flex-row)
+           :style {:justify-content :flex-end
+                   ;; to have same padding as header for alignment
+                   :padding-right "16px"}}
+     [text-field/TextField {:input-style {:text-align :right
+                                          :width "8rem"}
+                            :value @price
+                            :on-change change!
+                            :on-key-down (r/partial save-on-enter! row)
+                            :on-blur (r/partial save! row)
+                            :disabled @saving?
+                            :end-icon [text-field/euro-end-icon]}]]))
+
 
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals :as state}]
   [cost-items-page-structure
    e! app state
+   nil
    [:div.cost-items-totals
     [:div {:style {:float :right}}
      [:b
@@ -684,12 +696,14 @@
 (defn cost-items-page [e! app state]
   [cost-items-page-structure
    e! app state
+   [add-cost-item app]
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item :as state}]
   [cost-items-page-structure
    e! app state
+   [add-cost-item app]
    [cost-item-form e! atl cost-item]])
 
 (defn cost-item-page
@@ -702,6 +716,7 @@
 
       [cost-items-page-structure
        e! app state
+       [add-cost-item app]
        (if component
          ^{:key component}
          [component-form e! asset-type-library component cost-item]

@@ -125,3 +125,27 @@
 
             :else x)))
       asset)))
+
+(defn label [language schema-item]
+  (get-in schema-item [:asset-schema/label (case language
+                                             :et 0
+                                             :en 1)]))
+
+(defn format-properties
+  "Format properties map for summary view.
+  Returns collection of property values with name, value and
+  optional unit."
+  [language atl properties]
+  (let [;; status is part of cost grouping, but shown in a separate column
+        properties (dissoc properties :common/status)
+        id->def (partial item-by-ident atl)
+        attr->val (dissoc (cu/map-keys id->def properties) nil)
+        label (partial label language)]
+    (map (fn [[k v]]
+           (let [u (:asset-schema/unit k)]
+             [(label k)
+              (case (get-in k [:db/valueType :db/ident])
+                :db.type/ref (some-> v :db/ident id->def label)
+                (str v))
+              u]))
+         (sort-by (comp label key) attr->val))))
