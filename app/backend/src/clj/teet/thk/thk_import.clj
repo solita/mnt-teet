@@ -29,20 +29,21 @@
               (io/reader :encoding "UTF-8")
               (csv/read-csv :separator \;))]
       ;; There are multiple rows per project. One for each project lifecycle phase.
-      (dissoc (group-by group-by-fn
-                        (into []
-                              (comp
-                                (map #(zipmap headers %))
-                                (map #(into {}
-                                            (for [[header value] %
-                                                  :let [{:keys [attribute parse]}
-                                                        (column-mapping header)]
-                                                  :when (and attribute
-                                                             (not (str/blank? value)))]
+      (dissoc
+        (group-by group-by-fn
+                  (into []
+                        (comp
+                          (map #(zipmap headers %))
+                          (map #(into {}
+                                      (for [[header value] %
+                                            :let [{:keys [attribute parse]}
+                                                  (column-mapping header)]
+                                            :when (and attribute
+                                                       (not (str/blank? value)))]
 
-                                              [attribute ((or parse identity) value)]))))
-                              rows))
-              nil))))
+                                        [attribute ((or parse identity) value)]))))
+                        rows))
+        nil))))
 
 
 (defn integration-info [row fields]
@@ -245,7 +246,7 @@
               db procurement-id))))
 
 (defn contract-tx-data
-  [db [contract-ids rows]]                                  ;; contract can have multiple targets, each row duplicates the information
+  [db [contract-ids rows]]                                  ;; a contract can have multiple targets, each row has same contract information
   (let [{:thk.contract/keys [procurement-id procurement-part-id]
          :as contract-info}
         (first rows)]
@@ -256,10 +257,16 @@
                              (if-let [target-id (or (:activity/task-id target) (:activity-db-id target))]
                                (:db/id (lookup db [:integration/id target-id]))
                                (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)])))))
-                         (filterv some?))]
+                         (filterv some?))
+            regions (->> rows
+                        (map :ta/region)
+                        set)
+            region-tx (when (= (count regions) 1)           ;; Only TX region when targets only have 1 region
+                        {:ta/region (first regions)})]
         (if (not-empty targets)
           [(merge {:db/id (str procurement-id "-" procurement-part-id "-new-contract")
                    :thk.contract/targets targets}
+                  region-tx
                   (select-keys contract-info [:thk.contract/procurement-id
                                               :thk.contract/name
                                               :thk.contract/part-name

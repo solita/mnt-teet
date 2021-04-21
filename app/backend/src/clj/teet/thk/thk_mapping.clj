@@ -191,6 +191,15 @@
 (def contract-type-enum->thk-contract-type-code
   (reverse-mapping thk-contract-type-code->contract-type-enum))
 
+(def thk-object-region-fk->ta-region-enum
+  {"1800" :ta.region/north
+   "1801" :ta.region/east
+   "1802" :ta.region/south
+   "1803" :ta.region/west
+   "1804" :ta.region/center})
+
+(def ta-region-enum->thk-object-region-fk
+  (reverse-mapping thk-object-region-fk->ta-region-enum))
 
 (def thk->teet-project
   {;; Object/project fields
@@ -217,7 +226,10 @@
    "object_owner" {:attribute :thk.project/owner
                    :parse estonian-person-id->user
                    :format :user/person-id}
-   "object_regionfk" {:attribute :object/regionfk}
+   "object_regionfk" {:attribute :ta/region
+                      :parse thk-object-region-fk->ta-region-enum
+                      :format (comp ta-region-enum->thk-object-region-fk :db/ident)}
+
    "object_regionname" {:attribute :thk.project/region-name}
    "object_thkupdstamp" {:attribute :object/thkupdstamp}
    ;;"object_teetupdstamp"
@@ -328,6 +340,9 @@
    "activity_procurementname" {:attribute :thk.contract/name}
    "activity_procurementpartname" {:attribute :thk.contract/part-name}
    "activity_procurementpartid" {:attribute :thk.contract/procurement-part-id}
+   "object_regionfk" {:attribute :ta/region
+                      :parse thk-object-region-fk->ta-region-enum
+                      :format (comp ta-region-enum->thk-object-region-fk :db/ident)}
    })
 
 
