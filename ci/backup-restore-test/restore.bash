@@ -2,20 +2,22 @@
 
 echo "Restore started"
 
-export min_backup_size=1000000
-export BACKUP_SIZE=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d) | awk '{print $3}')
-export RESTORE_DB_NAME="teet"$(date +%Y%m%d)"debug2"
-export RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)"debug2"
+BACKUP_FILE_NAME=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $4}')
+[ -z "$BACKUP_FILE_NAME" ] && echo "Backup file not found for " $(date +%Y-%m-%d) && exit 1
+
+MIN_BACKUP_SIZE=1000000
+BACKUP_SIZE=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $3}')
+RESTORE_DB_NAME="teet"$(date +%Y%m%d)"debug2"
+RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)"debug2"
 
 echo $RESTORE_DB_NAME
 echo $RESTORE_ASSET_DB_NAME
 
-if [ "$BACKUP_SIZE" -lt "$min_backup_size" ]; then
+if [ "$BACKUP_SIZE" -lt "$MIN_BACKUP_SIZE" ]; then
   echo "Backup is too small"
   exit 1;
 fi
-export S3_BUCKET="teet-dev2-documents"
-export BACKUP_FILE_NAME=$(aws s3 ls s3://teet-dev2-documents | grep "backup" | grep $(date +%Y-%m-%d) | awk '{print $4}')
+S3_BUCKET="teet-dev2-documents"
 
 echo "Backup file name " $BACKUP_FILE_NAME
 
@@ -25,25 +27,30 @@ aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{
   \"create-database\":\"$RESTORE_DB_NAME\",
   \"create-asset-database\":\"$RESTORE_ASSET_DB_NAME\"}" out
 
-export BACKUP_LOG_NAME=$BACKUP_FILE_NAME".log"
+BACKUP_LOG_NAME=$BACKUP_FILE_NAME".log"
 
 echo "Restore log file name " $BACKUP_LOG_NAME
 
-export SECONDS=$(date +%s)
-export END_TIME=$((${SECONDS}+300))
+SECONDS=$(date +%s)
+END_TIME=$((${SECONDS}+600))
 interval=10
 
 echo $SECONDS
 echo $END_TIME
-# polling 5 min for .log file
+# polling 10 min for .log file
 while [ "$SECONDS" -lt "$END_TIME" ]; do
   aws s3api head-object --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME" || not_exist=true
-  echo $API_RESPONSE
   if [ $not_exist ]; then
-    echo "Polling for successfully completed restore log"
+    echo "Polling for restore log"
   else
-    echo "Restore successfully completed."
-    exit 0
+    first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
+    if [ "$first_line_bytes" = "SUCCESS{" ]; then
+      echo "Restore successfully completed."
+      exit 0
+    else
+      echo "Restore failed"
+      exit 1
+    fi
   fi
   sleep ${interval}
 done
