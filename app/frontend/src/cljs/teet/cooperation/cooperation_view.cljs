@@ -1012,7 +1012,7 @@
                                  :project-id project-db-id})
       :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
-                      {:functionality :cooperation/edit-application
+                      {:functionality :cooperation/edit-opinion
                        :entity application
                        :project-id project-db-id})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
