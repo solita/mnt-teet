@@ -43,7 +43,7 @@
       :cost-items (asset-db/project-cost-items adb project-id)
       :version (asset-db/project-boq-version adb project-id)
       :latest-change (when-let [[timestamp author] (asset-db/latest-change-in-project adb project-id)]
-                       {:user (user-db/user-info db [:user/id author])
+                       {:user (user-db/user-display-info db [:user/id author])
                         :timestamp timestamp})
       :project (project-db/project-by-id db [:thk.project/id project-id])}
      (when cost-totals
