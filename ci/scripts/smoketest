@@ -1,0 +1,26 @@
+#!/usr/bin/env bb
+
+(require '[datomic.client.api :as d])
+(require '[teet.environment :as environment])
+(require '[clojure.string :as str])
+
+(def today-date-formatted
+  (let [date (java.util.Date.)]
+    (.format (java.text.SimpleDateFormat. "yyyyMMdd") date)))
+
+(defn test-query
+  "Query given DB to make sure it is working"
+  [database-name]
+  (d/q '[:find ?opinions
+         :where [?opinions :land-owner-opinion/project _]]
+    (d/db (environment/datomic-connection database-name))))
+
+(let [database-name (str "teet" today-date-formatted)]
+  (println "Smoke test of restored db:" database-name)
+  (try
+    (let [results (test-query database-name)]
+      (println "Query results:" results)
+      (System/exit 0))
+    (catch Exception e
+      (println e)
+      (System/exit 1))))
