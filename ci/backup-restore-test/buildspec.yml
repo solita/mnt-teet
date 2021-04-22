@@ -20,5 +20,5 @@ phases:
     commands:
       #- sh ./ci/backup-restore-test/backup.bash
       #- sh ./ci/backup-restore-test/restore.bash
-      - ./ci/scripts/smoketest
+      - bb ./ci/scripts/smoketest
       - sh ./ci/backup-restore-test/dbswitch.bash
