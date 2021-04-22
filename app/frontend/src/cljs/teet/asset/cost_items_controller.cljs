@@ -70,6 +70,11 @@
 (defrecord SaveCostGroupPrice [cost-group price])
 (defrecord SaveCostGroupPriceResponse [response])
 
+;; Locking and versioning
+(defrecord SaveBOQVersion [type explanation])
+(defrecord UnlockForEdits [])
+
+
 (declare process-location-change)
 
 (defn- form-component-id [app]
