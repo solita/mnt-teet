@@ -53,7 +53,9 @@
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
  :asset
- {:totals-table
+ {:unlock-contract-boq-warning
+  "unlock contract warning (translate me)",
+  :totals-table
   {:properties "Kulude grupeerimine",
    :type "Tüüp",
    :quantity "Kogus",
@@ -73,6 +75,7 @@
    :decimal-format "Sisestage kümnendväärtus",
    :only-whitespace nil},
   :no-matching-feature-classes "Pole vastavat vara liiki",
+  :unlock-tender-boq-warning "unlock tender warning (translate me)",
   :cost-item-saved "Vara salvestatud",
   :page {:cost-items "Varad", :cost-items-totals "Kokku"},
   :feature-group-and-class-placeholder "Otsi vara grupp või liik",
@@ -713,6 +716,7 @@
   :meeting/agenda "Päevakava",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
+  :boq-version/explanation "Selgitus",
   :user/phone-number "Telefoni number",
   :thk.project/carriageway "SO",
   :cooperation.application/activity "Tegevuse",
@@ -771,6 +775,7 @@
   :activity/name "Tegevuse nimi",
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
+  :boq-version/type "Värskenda versiooni olekut",
   :land-owner-opinion/date "Vastuse kuupäev",
   :file/description "Kirjeldus",
   :cooperation.contact/name "Nimi",

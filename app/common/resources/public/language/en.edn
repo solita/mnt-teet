@@ -53,7 +53,9 @@
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
  :asset
- {:totals-table
+ {:unlock-contract-boq-warning
+  "The Cost Item list is in the Contract phase, are you sure that you want to change it, and are you aware that you need to change the budget and inform the management",
+  :totals-table
   {:properties "Cost grouping",
    :type "Type",
    :quantity "Quantity",
@@ -72,6 +74,8 @@
    :decimal-format "Insert decimal value",
    :only-whitespace "Field cannot contain only whitespace"},
   :no-matching-feature-classes "No matching feature classes.",
+  :unlock-tender-boq-warning
+  "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
   :cost-item-saved "Cost item saved",
   :page {:cost-items "Assets", :cost-items-totals "Totals"},
   :feature-group-and-class-placeholder
@@ -718,6 +722,7 @@
   :meeting/agenda "Agenda",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
+  :boq-version/explanation "Explanation",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
   :cooperation.application/activity "Activity",
@@ -776,6 +781,7 @@
   :activity/name "Activity name",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
+  :boq-version/type "Update version status",
   :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
   :cooperation.contact/name "Name",
