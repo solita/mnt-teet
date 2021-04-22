@@ -14,7 +14,7 @@
 ;; checking whether the db is alive.
 (defquery :teet.system/db
   {:doc "Check database status"
-   :context {db :db}
+   :context {db :db :as ctx}
    :spec empty?
    :args _
    :unauthenticated? true}
@@ -25,4 +25,4 @@
                   [?e :thk.project/project-name "non-existent"]]
                 db)}
     (when (environment/feature-enabled? :asset-db)
-      {:asset (d/pull (environment/asset-db) [:db/doc] :tx/schema-hash)}))))
+      {:asset (d/pull (:asset-db ctx) [:db/doc] :tx/schema-hash)}))))

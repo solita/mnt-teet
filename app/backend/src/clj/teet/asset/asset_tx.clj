@@ -3,7 +3,9 @@
   (:require [teet.asset.asset-db :as asset-db]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [datomic.client.api :as d]
+            [teet.meta.meta-model :as meta-model]))
 
 (defn save-asset
   "Create or update asset. Creates new OID based on the fclass."
@@ -38,3 +40,23 @@
 
        (cu/without-nils
         (assoc component :asset/oid component-oid))])))
+
+(defn lock
+  "Create new lock for project BOQ."
+  [db {:boq-version/keys [project type] :as lock}]
+  (let [number
+        (inc (or (ffirst (d/q '[:find (max ?n)
+                                :where
+                                [?e :boq-version/project ?project]
+                                [?e :boq-version/type ?type]
+                                [?e :boq-version/number ?n]
+                                :in $ ?project ?type]
+                              db project type))
+                 0))]
+    [(merge
+      {:db/id "lock"
+       :boq-version/number number
+       :boq-version/created-at (java.util.Date.)
+       :boq-version/locked? true}
+      (select-keys lock [:boq-version/type :boq-version/explanation
+                         :boq-version/project]))]))
