@@ -2,7 +2,7 @@
   "Cost items view"
   (:require [teet.project.project-view :as project-view]
             [teet.ui.typography :as typography]
-            [teet.localization :refer [tr] :as localization]
+            [teet.localization :refer [tr tr-enum] :as localization]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [teet.ui.form :as form]
@@ -650,18 +650,25 @@
       [:div {:class (<class common-styles/flex-row)
              :style {:background-color theme-colors/gray-lightest
                      :width "100%"}}
-       (when chg
+
+       (cond
+         (asset-model/locked? version)
+         [:<>
+          (tr-enum (:boq-version/type version))
+          " v." (:boq-version/number version)]
+         chg
          [:<>
           [:b (tr [:common :last-modified]) ": "]
           (fmt/date-time timestamp)])
 
-       [common/popper-tooltip
-        {:title "foo"
-         :variant :info
-         :body [:div
-                (user-model/user-name user)
-                (pr-str version)]}
-        [icons/alert-error-outline]]
+       (when chg
+         [common/popper-tooltip
+          {:title (tr [:common :last-modified])
+           :variant :info
+           :body [:<>
+                  [:div (fmt/date-time timestamp)]
+                  [:div (user-model/user-name user)]]}
+          [icons/alert-error-outline]])
 
        ;; Save or unlock button
        [buttons/button-secondary
