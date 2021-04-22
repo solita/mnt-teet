@@ -19,7 +19,5 @@ phases:
   build:
     commands:
       - sh ./ci/backup-restore-test/backup.bash
-      - sleep 60
       - sh ./ci/backup-restore-test/restore.bash
-      - sleep 60
       - sh ./ci/backup-restore-test/check.bash

@@ -39,7 +39,7 @@ echo $SECONDS
 echo $END_TIME
 # polling 10 min for .log file
 while [ "$SECONDS" -lt "$END_TIME" ]; do
-  aws s3api head-object --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME" || not_exist=true
+  aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME" || not_exist=true
   if [ $not_exist ]; then
     echo "Polling for restore log"
   else
