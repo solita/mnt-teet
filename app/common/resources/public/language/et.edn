@@ -70,7 +70,8 @@
    :min-value "Lubatud minimaalne väärtus on {min-value}",
    :max-value "Lubatud maksimaalne väärtus on {max-value}",
    :integer-format "Sisesta täisarv",
-   :decimal-format "Sisestage kümnendväärtus"},
+   :decimal-format "Sisestage kümnendväärtus",
+   :only-whitespace nil},
   :no-matching-feature-classes "Pole vastavat vara liiki",
   :cost-item-saved "Vara salvestatud",
   :page {:cost-items "Varad", :cost-items-totals "Kokku"},
@@ -82,6 +83,7 @@
   {:no-road-found-for-points "Punktide jaoks ei leitud teed",
    :show-map "Näita kaarti",
    :hide-map "Peida kaart"},
+  :confirm-unlock-for-edits "Jah, ava",
   :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",

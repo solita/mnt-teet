@@ -69,7 +69,8 @@
    :min-value "Minimum allowed value: {min-value}",
    :max-value "Maximum allowed value: {max-value}",
    :integer-format "Insert integer value",
-   :decimal-format "Insert decimal value"},
+   :decimal-format "Insert decimal value",
+   :only-whitespace "Field cannot contain only whitespace"},
   :no-matching-feature-classes "No matching feature classes.",
   :cost-item-saved "Cost item saved",
   :page {:cost-items "Assets", :cost-items-totals "Totals"},
@@ -82,6 +83,7 @@
   {:no-road-found-for-points "No road found for points",
    :show-map "Show map",
    :hide-map "Hide map"},
+  :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
