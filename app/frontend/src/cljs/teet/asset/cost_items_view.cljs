@@ -596,10 +596,28 @@
     :format-item #(tr [:asset :page %])}])
 
 (defn- save-boq-version-dialog [{:keys [e! on-close]}]
-  [panels/modal {:title (tr [:asset :save-boq-version])
-                 :on-close on-close}
+  (r/with-let [form-state (r/atom {})
+               form-change (form/update-atom-event form-state merge)]
+    [panels/modal {:title (tr [:asset :save-boq-version])
+                   :on-close on-close}
 
-   [:div "save boq version dialog"]])
+     [form/form {:e! e!
+                 :value @form-state
+                 :on-change-event form-change
+                 :save-event cost-items-controller/->SaveBOQVersion}
+      ^{:attribute :boq-version/type
+        :required? true}
+      [select/select-enum {:e! e!
+                           :attribute :boq-version/type
+                           :database :asset}]
+
+      ^{:attribute :boq-version/explanation
+        :required? true
+        :validate (fn [v]
+                    (when (> (count v) 2000)
+                      (tr [:asset :validate :max-length] {:max-length 2000})))}
+      [text-field/TextField {:multiline true
+                             :rows 4}]]]))
 
 (defn- unlock-for-edits-dialog [{:keys [e! on-close]}]
   [panels/modal {:title (tr [:asset :unlock-for-edits])
