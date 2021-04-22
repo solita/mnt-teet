@@ -25,6 +25,7 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
     exit 0
   fi
   sleep ${interval}
+  SECONDS=$(date +%s)
 done
 
 echo "Backup timeout exceeded."

@@ -53,6 +53,7 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
     fi
   fi
   sleep ${interval}
+  SECONDS=$(date +%s)
 done
 
 echo "Restore was not completed in time."
