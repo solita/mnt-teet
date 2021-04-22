@@ -123,3 +123,18 @@
    :transact
    ^{:db :asset}
    [(list 'teet.asset.asset-tx/lock lock-version)]})
+
+(defcommand :asset/unlock-for-edits
+  {:doc "Unlock version for edits"
+   :context {:keys [user db] adb :asset-db}
+   :payload {project-id :boq-version/project}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [^{:error :boq-is-unlocked}
+         (not (boq-unlocked? adb project-id))]
+   :transact
+   ^{:db :asset}
+   [{:db/id "unlock"
+     :boq-version/created-at (java.util.Date.)
+     :boq-version/project project-id
+     :boq-version/locked? false}]})

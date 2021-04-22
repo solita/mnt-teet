@@ -597,14 +597,15 @@
 
 (defn- save-boq-version-dialog [{:keys [e! on-close]}]
   (r/with-let [form-state (r/atom {})
-               form-change (form/update-atom-event form-state merge)]
+               form-change (form/update-atom-event form-state merge)
+               save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
     [panels/modal {:title (tr [:asset :save-boq-version])
                    :on-close on-close}
 
      [form/form {:e! e!
                  :value @form-state
                  :on-change-event form-change
-                 :save-event cost-items-controller/->SaveBOQVersion
+                 :save-event save-event
                  :cancel-event (form/callback-event on-close)}
       ^{:attribute :boq-version/type
         :required? true}
@@ -620,12 +621,25 @@
       [text-field/TextField {:multiline true
                              :rows 4}]]]))
 
-(defn- unlock-for-edits-dialog [{:keys [e! on-close]}]
+(defn- unlock-for-edits-dialog [{:keys [e! on-close version]}]
   [panels/modal {:title (tr [:asset :unlock-for-edits])
                  :on-close on-close}
+   [:<>
+    (when-let [warn (condp du/enum= (:boq-version/type version)
+                      :boq-version.type/tender
+                      (tr [:asset :unlock-tender-boq-warning])
 
-   [:div "unlock for edits dialog"]]
-  )
+                      :boq-version.type/contract
+                      (tr [:asset :unlock-contract-boq-warning])
+
+                      nil)]
+      [common/info-box {:variant :warning
+                        :content warn}])
+    [:div {:class (<class common-styles/flex-row-space-between)}
+     [buttons/button-secondary {:on-click on-close}
+      (tr [:buttons :cancel])]
+     [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
+      (tr [:asset :confirm-unlock-for-edits])]]]])
 
 (defn- boq-version-statusline [e! {:keys [latest-change version]}]
   (r/with-let [dialog (r/atom nil)
@@ -659,9 +673,9 @@
        (when-let [dialog @dialog]
          (case dialog
            :unlock-for-edits
-           [panels/modal {:title (tr [:asset :unlock-for-edits])
-                          :on-close (r/partial set-dialog! nil)}
-            [:div "unlock dialogi tähän"]]
+           [unlock-for-edits-dialog {:e! e!
+                                     :on-close (r/partial set-dialog! nil)
+                                     :version version}]
 
            :save-boq-version
            [save-boq-version-dialog
@@ -780,7 +794,8 @@
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
-  [e! app {atl :asset-type-library cost-item :cost-item :as state}]
+  [e! app {atl :asset-type-library cost-item :cost-item
+           version :version :as state}]
   [cost-items-page-structure
    e! app state
    [add-cost-item app]
