@@ -341,19 +341,20 @@
 (defn latest-change-in-project
   "Fetch latest timestamp and author UUID that has changed anything in the given THK project."
   [db thk-project-id]
-  (first
-   (d/q '[:find ?txi ?author
-          :where
-          (project-tx ?project ?tx ?txi)
-          [?tx :tx/author ?author]
-          (not-join [?project ?txi]
-                    (project-tx ?project ?newer-tx ?newer-txi)
-                    [(> ?newer-txi ?txi)])
-          :in $ ?project %]
-        db thk-project-id
-        '[[(project-tx ?project ?tx ?txi)
-           (or [?e :asset/project ?project]
-               [?e :cost-group/project ?project]
-               [?e :boq-version/project ?project])
-           [?e _ _ ?tx]
-           [?tx :db/txInstant ?txi]]])))
+  (d/q '[:find ?max-txi ?author
+         :where
+         ;; Find the max tx time for any change in the given project
+         [(q '[:find (max ?txi)
+               :where
+               (or [?e :asset/project ?project]
+                   [?e :cost-group/project ?project]
+                   [?e :boq-version/project ?project])
+               [?e _ _ ?tx]
+               [?tx :db/txInstant ?txi]
+               :in $ ?project] $ ?project) [[?max-txi]]]
+
+         ;; Get the tx and its author
+         [?tx :db/txInstant ?max-txi]
+         [?tx :tx/author ?author]
+         :in $ ?project]
+       db thk-project-id))
