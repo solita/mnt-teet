@@ -498,8 +498,7 @@
   error message is displayed.
 
   If msg is nil, the component is returned as is.
-  Otherwise msg must be a map containig :title and :content
-  for the error message."
+  Otherwise msg must be a map containig :title and :body  for the error message."
   [{:keys [title body variant icon] :as msg
     :or {variant :error}} component]
   (r/with-let [hover? (r/atom false)
