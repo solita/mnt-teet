@@ -35,7 +35,8 @@
             [teet.ui.table :as table]
             [teet.user.user-model :as user-model]
             [teet.util.date :as date]
-            [teet.ui.format :as fmt]))
+            [teet.ui.format :as fmt]
+            [teet.ui.panels :as panels]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -594,18 +595,60 @@
     :value page
     :format-item #(tr [:asset :page %])}])
 
-(defn- boq-version-statusline [e! {:keys [latest-change version]}]
-  (let [{:keys [user timestamp]} latest-change]
-    [:div {:class (<class common-styles/flex-row)
-           :style {:background-color theme-colors/gray-light
-                   :width "100%"}}
-     (when timestamp
-       (fmt/date-time timestamp))
-     (when user (user-model/user-name user))
+(defn- save-boq-version-dialog [{:keys [e! on-close]}]
+  [panels/modal {:title (tr [:asset :save-boq-version])
+                 :on-close on-close}
 
+   [:div "save boq version dialog"]])
 
-     (pr-str version)])
+(defn- unlock-for-edits-dialog [{:keys [e! on-close]}]
+  [panels/modal {:title (tr [:asset :unlock-for-edits])
+                 :on-close on-close}
+
+   [:div "unlock for edits dialog"]]
   )
+
+(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+  (r/with-let [dialog (r/atom nil)
+               set-dialog! #(reset! dialog %)]
+    (let [{:keys [user timestamp] :as chg} latest-change
+          locked? (asset-model/locked? version)
+          dialog-to-open (if locked? :unlock-for-edits :save-boq-version)]
+      [:div {:class (<class common-styles/flex-row)
+             :style {:background-color theme-colors/gray-lightest
+                     :width "100%"}}
+       (when chg
+         [:<>
+          [:b (tr [:common :last-modified]) ": "]
+          (fmt/date-time timestamp)])
+
+       [common/popper-tooltip
+        {:title "foo"
+         :variant :info
+         :body [:div
+                (user-model/user-name user)
+                (pr-str version)]}
+        [icons/alert-error-outline]]
+
+       ;; Save or unlock button
+       [buttons/button-secondary
+        {:disabled (some? @dialog)
+         :size :small
+         :on-click (r/partial set-dialog! dialog-to-open)}
+        (tr [:asset dialog-to-open])]
+
+       (when-let [dialog @dialog]
+         (case dialog
+           :unlock-for-edits
+           [panels/modal {:title (tr [:asset :unlock-for-edits])
+                          :on-close (r/partial set-dialog! nil)}
+            [:div "unlock dialogi tähän"]]
+
+           :save-boq-version
+           [save-boq-version-dialog
+            {:e! e!
+             :on-close (r/partial set-dialog! nil)}]))])))
+
 (defn cost-items-page-structure
   [e! app {:keys [cost-items asset-type-library project] :as page-state}
    left-panel-action main-content]
