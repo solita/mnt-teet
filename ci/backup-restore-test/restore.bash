@@ -8,8 +8,8 @@ BACKUP_FILE_NAME=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%
 
 MIN_BACKUP_SIZE=1000000
 BACKUP_SIZE=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $3}')
-RESTORE_DB_NAME="teet"$(date +%Y%m%d)"debug2"
-RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)"debug2"
+RESTORE_DB_NAME="teet"$(date +%Y%m%d)
+RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)
 
 echo $RESTORE_DB_NAME
 echo $RESTORE_ASSET_DB_NAME
