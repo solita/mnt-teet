@@ -604,7 +604,8 @@
      [form/form {:e! e!
                  :value @form-state
                  :on-change-event form-change
-                 :save-event cost-items-controller/->SaveBOQVersion}
+                 :save-event cost-items-controller/->SaveBOQVersion
+                 :cancel-event (form/callback-event on-close)}
       ^{:attribute :boq-version/type
         :required? true}
       [select/select-enum {:e! e!
