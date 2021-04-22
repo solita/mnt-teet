@@ -550,15 +550,16 @@
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
 
-(defn- add-cost-item [app]
-  (let [add? (= "new" (get-in app [:params :id]))
-        project (get-in app [:params :project])]
-    [buttons/button-secondary {:element "a"
-                               :href (url/cost-item project "new")
-                               :disabled add?
-                               :start-icon (r/as-element
-                                            [icons/content-add])}
-     (tr [:asset :add-cost-item])]))
+(defn- add-cost-item [app version]
+  (when-not (asset-model/locked? version)
+    (let [add? (= "new" (get-in app [:params :id]))
+          project (get-in app [:params :project])]
+      [buttons/button-secondary {:element "a"
+                                 :href (url/cost-item project "new")
+                                 :disabled add?
+                                 :start-icon (r/as-element
+                                              [icons/content-add])}
+       (tr [:asset :add-cost-item])])))
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
@@ -794,10 +795,10 @@
            :total-cost (format-euro value)
            (str value)))}]]]])
 
-(defn cost-items-page [e! app state]
+(defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure
    e! app state
-   [add-cost-item app]
+   [add-cost-item app version]
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
@@ -805,11 +806,11 @@
            version :version :as state}]
   [cost-items-page-structure
    e! app state
-   [add-cost-item app]
+   [add-cost-item app version]
    [cost-item-form e! atl cost-item]])
 
 (defn cost-item-page
-  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item] :as state}]
+  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
@@ -818,7 +819,7 @@
 
       [cost-items-page-structure
        e! app state
-       [add-cost-item app]
+       [add-cost-item app version]
        (if component
          ^{:key component}
          [component-form e! asset-type-library component cost-item]
