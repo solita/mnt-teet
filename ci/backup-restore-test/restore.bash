@@ -11,8 +11,8 @@ BACKUP_SIZE=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)
 RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)
 
-echo $RESTORE_DB_NAME
-echo $RESTORE_ASSET_DB_NAME
+echo "Restored DB name "$RESTORE_DB_NAME
+echo "Restored Assets DB name "$RESTORE_ASSET_DB_NAME
 
 if [ "$BACKUP_SIZE" -lt "$MIN_BACKUP_SIZE" ]; then
   echo "Backup is too small"
@@ -35,8 +35,6 @@ SECONDS=$(date +%s)
 END_TIME=$((${SECONDS}+600))
 interval=10
 
-echo $SECONDS
-echo $END_TIME
 # polling 10 min for .log file
 while [ "$SECONDS" -lt "$END_TIME" ]; do
   aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME" || not_exist=true
@@ -56,7 +54,7 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
   SECONDS=$(date +%s)
 done
 
-echo "Restore was not completed in time."
+echo "Restore timeout exceeded."
 exit 1
 
 
