@@ -764,36 +764,39 @@
 
 
 (defn cost-items-totals-page
-  [e! app {atl :asset-type-library totals :cost-totals :as state}]
-  [cost-items-page-structure
-   e! app state
-   nil
-   [:div.cost-items-totals
-    [:div {:style {:float :right}}
-     [:b
-      (tr [:asset :totals-table :project-total]
-          {:total (:total-cost totals)})]]
-    [:div
-     [table/listing-table
-      {:data (:cost-groups totals)
-       :columns asset-model/cost-totals-table-columns
-       :column-align asset-model/cost-totals-table-align
-       :column-label-fn #(if (= % :common/status)
-                           (label (asset-type-library/item-by-ident atl %))
-                           (tr [:asset :totals-table %]))
-       :format-column
-       (fn [column value row]
-         (case column
-           :type (label (asset-type-library/item-by-ident atl value))
-           :common/status (label (asset-type-library/item-by-ident
-                                  atl (:db/ident value)))
-           :properties (format-properties atl row)
-           :quantity (str value
-                          (when-let [qu (:quantity-unit row)]
-                            (str " " qu)))
-           :cost-per-quantity-unit [cost-group-unit-price e! value row]
-           :total-cost (format-euro value)
-           (str value)))}]]]])
+  [e! app {atl :asset-type-library totals :cost-totals version :version :as state}]
+  (let [locked? (asset-model/locked? version)]
+    [cost-items-page-structure
+     e! app state
+     nil
+     [:div.cost-items-totals
+      [:div {:style {:float :right}}
+       [:b
+        (tr [:asset :totals-table :project-total]
+            {:total (:total-cost totals)})]]
+      [:div
+       [table/listing-table
+        {:data (:cost-groups totals)
+         :columns asset-model/cost-totals-table-columns
+         :column-align asset-model/cost-totals-table-align
+         :column-label-fn #(if (= % :common/status)
+                             (label (asset-type-library/item-by-ident atl %))
+                             (tr [:asset :totals-table %]))
+         :format-column
+         (fn [column value row]
+           (case column
+             :type (label (asset-type-library/item-by-ident atl value))
+             :common/status (label (asset-type-library/item-by-ident
+                                    atl (:db/ident value)))
+             :properties (format-properties atl row)
+             :quantity (str value
+                            (when-let [qu (:quantity-unit row)]
+                              (str " " qu)))
+             :cost-per-quantity-unit (if locked?
+                                       (format-euro value)
+                                       [cost-group-unit-price e! value row])
+             :total-cost (format-euro value)
+             (str value)))}]]]]))
 
 (defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure
