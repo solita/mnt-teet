@@ -133,31 +133,44 @@
          :style {:padding "0.2rem"}}
    content])
 
-(defn- location-entry []
-  [:<>
-   [attribute-grid-item
-    [form/field :location/start-point
-     [text-field/TextField {}]]]
+(defn- display-list-item [{:keys [rotl value] :as opts}]
+  [:label {:class (<class common-styles/input-label-style false false)}
+   [typography/Text2Bold (:label opts)]
+   (-> value rotl label)])
 
-   [attribute-grid-item
-    [form/field :location/end-point
-     [text-field/TextField {}]]]
+(defn- display-input [{:keys [value unit label]}]
+  [:label {:class (<class common-styles/input-label-style false false)}
+   [typography/Text2Bold label]
+   (if (some? value)
+     (str value (when unit (str "\u00a0" unit)))
+     "\u2400")])
 
-   [attribute-grid-item
-    [form/field :location/road-nr
-     [text-field/TextField {:type :number}]]]
+(defn- location-entry [locked?]
+  (let [input-comp (if locked? display-input text-field/TextField)]
+    [:<>
+     [attribute-grid-item
+      [form/field :location/start-point
+       [input-comp {}]]]
 
-   [attribute-grid-item
-    [form/field :location/carriageway
-     [text-field/TextField {:type :number}]]]
+     [attribute-grid-item
+      [form/field :location/end-point
+       [input-comp {}]]]
 
-   [attribute-grid-item
-    [form/field :location/start-m
-     [text-field/TextField {:type :number}]]]
+     [attribute-grid-item
+      [form/field :location/road-nr
+       [input-comp {:type :number}]]]
 
-   [attribute-grid-item
-    [form/field :location/end-m
-     [text-field/TextField {:type :number}]]]])
+     [attribute-grid-item
+      [form/field :location/carriageway
+       [input-comp {:type :number}]]]
+
+     [attribute-grid-item
+      [form/field :location/start-m
+       [input-comp {:type :number}]]]
+
+     [attribute-grid-item
+      [form/field :location/end-m
+       [input-comp {:type :number}]]]]))
 
 (defn- location-map [{:keys [e! value on-change]}]
   (r/with-let [current-value (atom value)
@@ -202,7 +215,7 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype]} rotl]
+(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype]} rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -235,7 +248,7 @@
                                        :location/geojson]}
 
                [location-map {:e! e!}]]])
-           [location-entry]]])
+           [location-entry locked?]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -272,23 +285,31 @@
                                                                 :attribute/max-value-ref]))}
                  (if (= type :db.type/ref)
                    ;; Selection value
-                   [select/form-select
-                    {:id ident
-                     :label (label attr)
-                     :show-empty-selection? true
-                     :items (mapv :db/ident (:enum/_attribute attr))
-                     :format-item (comp label rotl)}]
+                   (if locked?
+                     [display-list-item {:label (label attr)
+                                         :rotl rotl}]
+                     [select/form-select
+                      {:id ident
+                       :read-only? locked?
+                       :label (label attr)
+                       :show-empty-selection? true
+                       :items (mapv :db/ident (:enum/_attribute attr))
+                       :format-item (comp label rotl)}])
 
                    ;; Text field
-                   [text-field/TextField
-                    {:label (label attr)
-                     :end-icon (when unit
-                                 (text-field/unit-end-icon unit))}])]]))]]))])))
+                   (if locked?
+                     [display-input {:label (label attr)
+                                     :unit unit}]
+                     [text-field/TextField
+                      {:label (label attr)
+                       :read-only? locked?
+                       :end-icon (when unit
+                                   (text-field/unit-end-icon unit))}]))]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
   [opts]
-  [context/consume :rotl [attributes* opts]])
+  [context/consume-many [:rotl :locked?] [attributes* opts]])
 
 (defn- add-component-menu [allowed-components add-component!]
   [:<>
@@ -691,34 +712,35 @@
              :on-close (r/partial set-dialog! nil)}]))])))
 
 (defn cost-items-page-structure
-  [e! app {:keys [cost-items asset-type-library project] :as page-state}
+  [e! app {:keys [cost-items asset-type-library project version] :as page-state}
    left-panel-action main-content]
   [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
-   [project-view/project-full-page-structure
-    {:e! e!
-     :app app
-     :project project
-     :export-menu-items
-     [{:id "export-boq"
-       :label (tr [:asset :export-boq])
-       :icon [icons/file-download]
-       :link {:target :_blank
-              :href (common-controller/query-url
-                     :asset/export-boq
-                     {:thk.project/id (:thk.project/id project)})}}]
-     :left-panel
-     [:<>
-      [cost-items-navigation e! app]
-      left-panel-action
-      [cost-item-hierarchy {:e! e!
-                            :app app
-                            :add? (= :new-cost-item (:page app))
-                            :project project
-                            :cost-items cost-items}]]
-     :main
-     [:<>
-      [boq-version-statusline e! page-state]
-      main-content]}]])
+   [context/provide :locked? (asset-model/locked? version)
+    [project-view/project-full-page-structure
+     {:e! e!
+      :app app
+      :project project
+      :export-menu-items
+      [{:id "export-boq"
+        :label (tr [:asset :export-boq])
+        :icon [icons/file-download]
+        :link {:target :_blank
+               :href (common-controller/query-url
+                      :asset/export-boq
+                      {:thk.project/id (:thk.project/id project)})}}]
+      :left-panel
+      [:<>
+       [cost-items-navigation e! app]
+       left-panel-action
+       [cost-item-hierarchy {:e! e!
+                             :app app
+                             :add? (= :new-cost-item (:page app))
+                             :project project
+                             :cost-items cost-items}]]
+      :main
+      [:<>
+       [boq-version-statusline e! page-state]
+       main-content]}]]])
 
 (defn- format-properties [atl properties]
   (into [:<>]
