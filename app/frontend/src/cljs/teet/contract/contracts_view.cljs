@@ -1,12 +1,15 @@
 (ns teet.contract.contracts-view
   (:require [reagent.core :as r]
+            [herb.core :refer [<class]]
             [teet.ui.material-ui :refer [Grid]]
             [teet.ui.query :as query]
             [alandipert.storage-atom :refer [local-storage]]
             [teet.ui.buttons :as buttons]
             [teet.localization :refer [tr]]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.ui.select :as select]
+            [teet.common.common-styles :as common-styles]))
 
 (defn contract-card
   [e! contract]
@@ -15,6 +18,7 @@
 (defn contracts-list
   [e! contracts]
   [:div
+   [:h2 (count contracts)]
    (doall
      (for [contract contracts]
        ^{:key (str (:db/id contract))}
@@ -42,18 +46,35 @@
           options)))
 
 (def search-fields
-  {:road-number {:type TextField}
-   :object-name {:type TextField}})
+  [[:road-number {:type TextField}]
+   [:project-name {:type TextField}]
+   [:contract-name {:type TextField}]
+   [:procurement-id {:type TextField}]
+   [:procurement-number {:type TextField}]
+   [:ta/region {:type select/select-enum
+                :field-options {:attribute :ta/region
+                                :show-empty-selection? true}}]
+   [:contract-type {:type select/select-enum
+                    :field-options {:attribute :thk.contract/type
+                                    :show-empty-selection? true}}]])
 
 (defn search-inputs
-  [filter-values input-change search-fields]
+  [e! filter-values input-change search-fields]
   [:div
    (into [:div]
          (mapv
-           (fn [[field-name {field-type :type}]]
-             [field-type {:value (field-name filter-values)
-                         :start-icon icons/action-search
-                         :on-change #(input-change field-name (-> % .-target .-value))}])
+           (fn [[field-name {field-type :type
+                             field-options :field-options}]]
+             [field-type (merge {:e! e!
+                                 :label (tr [:contract :search field-name])
+                                 :value (field-name filter-values)
+                                 :start-icon icons/action-search
+                                 :on-change #(input-change
+                                               field-name
+                                               (if (= field-type TextField)
+                                                 (-> % .-target .-value)
+                                                 %))}
+                                field-options)])
            search-fields))])
 
 (defn contract-search
@@ -64,7 +85,7 @@
    [buttons/link-button {:on-click clear-filters}
     "CLEAR FILTERS"]
    [search-shortcuts (:shortcut @filtering-atom) filter-options change-shortcut]
-   [search-inputs @filtering-atom input-change search-fields]])
+   [search-inputs e! @filtering-atom input-change search-fields]])
 
 
 ;; Targeted from routes.edn will be located in route /contracts
@@ -80,22 +101,21 @@
                clear-filters #(reset! filtering-atom default-filtering-value)]
     [Grid {:container true}
      [Grid {:item true
-            :xs 4}
-      [:h1 "CONTRACT SEARCH AND FILTERS"]
-      [contract-search {:e! e!
-                        :search-fields search-fields
-                        :filtering-atom filtering-atom
-                        :filter-options filter-options
-                        :input-change input-change
-                        :change-shortcut change-shortcut
-                        :clear-filters clear-filters}]]
-     [Grid {:item true
-            :xs 8}
-      [:h1 "CONTRACTS LIStING"]
-      [query/debounce-query
-       {:e! e!
-        :query :contract/list-contracts
-        :args {:payload @filtering-atom
-               :refresh (:contract-refresh route)}
-        :simple-view [contracts-list e!]}
-       250]]]))
+            :xs 12}
+      [:div {:class (<class common-styles/margin-bottom 2)}
+       [:h1 "CONTRACT SEARCH AND FILTERS"]
+       [contract-search {:e! e!
+                         :search-fields search-fields
+                         :filtering-atom filtering-atom
+                         :filter-options filter-options
+                         :input-change input-change
+                         :change-shortcut change-shortcut
+                         :clear-filters clear-filters}]]]
+     [:h1 "CONTRACTS LIStING"]
+     [query/debounce-query
+      {:e! e!
+       :query :contract/list-contracts
+       :args {:search-params @filtering-atom
+              :refresh (:contract-refresh route)}
+       :simple-view [contracts-list e!]}
+      250]]))
