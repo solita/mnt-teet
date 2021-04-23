@@ -7,6 +7,11 @@
   (let [date (java.util.Date.)]
     (.format (java.text.SimpleDateFormat. "yyyyMMdd") date)))
 
+
+;; :server-type   - :cloud
+;  :region        - AWS region, e.g. "us-east-1"
+;  :system        - your system name
+;  :endpoint      - IP address of your system or query group
 (def datomic-config
   (let [region "eu-central-1"
         system "teet-datomic"]
@@ -15,7 +20,7 @@
      :system system
      :query-group system
      :endpoint (str "http://entry." system "." region ".datomic.net:8182/")
-     :proxy-port 8666}))
+     :proxy-port 8182}))
 
 (def ^:dynamic *connection* nil)
 
