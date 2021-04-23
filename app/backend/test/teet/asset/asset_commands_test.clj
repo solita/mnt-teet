@@ -18,7 +18,7 @@
     (let [{oid :asset/oid :as resp}
           (tu/local-command :asset/save-cost-item
                             {:project-id "11111"
-                             :asset {:db/id "bridge"
+                             :asset {:db/id "shed1"
                                      :asset/fclass :fclass/bike-shed}})]
       (println "SAVE COST ITEM RESPONSE: " (pr-str resp))
       (is (asset-model/asset-oid? oid))))
@@ -39,7 +39,7 @@
      {:error :boq-is-locked}
      (tu/local-command :asset/save-cost-item
                        {:project-id "11111"
-                        :asset {:db/id "bridge"
+                        :asset {:db/id "shed2"
                                 :asset/fclass :fclass/bike-shed}})))
 
   (testing "Unlocking allows edits again"
@@ -50,5 +50,5 @@
       (:asset/oid
        (tu/local-command :asset/save-cost-item
                          {:project-id "11111"
-                          :asset {:db/id "bridge"
+                          :asset {:db/id "shed2"
                                   :asset/fclass :fclass/bridge}}))))))
