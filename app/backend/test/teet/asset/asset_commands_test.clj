@@ -38,6 +38,17 @@
     (tu/is-thrown-with-data?
      {:error :boq-is-locked}
      (tu/local-command :asset/save-cost-item
-                            {:project-id "11111"
-                             :asset {:db/id "bridge"
-                                     :asset/fclass :fclass/bridge}}))))
+                       {:project-id "11111"
+                        :asset {:db/id "bridge"
+                                :asset/fclass :fclass/bridge}})))
+
+  (testing "Unlocking allows edits again"
+    (tu/local-command :asset/unlock-for-edits
+                      {:boq-version/project "11111"})
+    (is
+     (asset-model/asset-oid?
+      (:asset/oid
+       (tu/local-command :asset/save-cost-item
+                         {:project-id "11111"
+                          :asset {:db/id "bridge"
+                                  :asset/fclass :fclass/bridge}}))))))
