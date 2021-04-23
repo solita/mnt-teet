@@ -180,21 +180,21 @@
                     :display :flex
                     :border-right (str "1px solid " theme-colors/border-dark)}}
       (if (= @localization/selected-language :et)
-        [typography/Text2Bold "EST"]
+        [typography/Text2Bold (get localization/language-names "et")]
         [buttons/link-button {:style {:font-size "0.875rem"
                                       :line-height "1.3125rem"}
                               :id "ET"
                               :on-click #(change-lan-fn "et")}
-         "EST"])]
+         (get localization/language-names "et")])]
      [:div {:style {:padding-left "1rem"
                     :display :flex}}
       (if (= @localization/selected-language :en)
-        [typography/Text2Bold "ENG"]
+        [typography/Text2Bold (get localization/language-names "en")]
         [buttons/link-button {:style {:font-size "0.875rem"
                                       :line-height "1.3125rem"}
                               :id "EN"
                               :on-click #(change-lan-fn "en")}
-         "ENG"])]]))
+         (get localization/language-names "en")])]]))
 
 (defn extra-nav-element
   [{:keys [icon href content on-click link-id link-text last-item?]}]

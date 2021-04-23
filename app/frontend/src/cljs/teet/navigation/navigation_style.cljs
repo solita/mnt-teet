@@ -213,7 +213,9 @@
                                          theme-colors/white
                                          theme-colors/border-dark)}}}
   {:padding-left "1rem"
-   :height "3.1rem"
+   :height (if last-item?
+             "3.18rem"
+             "3.1rem")
    :display :flex
    :position :relative})
 
@@ -227,9 +229,7 @@
 (defn search-input-style
   []
   (with-meta
-    {:width "18.75rem"
-     :display :block
-     :margin :auto}
+    {}
     (responsivity-styles/mobile-only-meta
       {:height mobile-search-height
        :width "100%"

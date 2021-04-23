@@ -4,7 +4,7 @@
 
 (defn logo-shield
   [{:keys [width height]
-    :or {width ""
+    :or {width "100%"
          height "100%"}}]
   [:svg#Layer_1 {:class (<class navigation-style/logo-shield-style)
                  :height height

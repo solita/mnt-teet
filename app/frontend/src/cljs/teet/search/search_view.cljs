@@ -12,6 +12,7 @@
             [teet.search.search-controller :as search-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.events :as events]
+            [teet.ui.typography :as typography]
             [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.common.common-styles :as common-styles]))
@@ -49,7 +50,7 @@
    :margin-right :auto
    :display :block})
 
-(defn quick-search [_e! _quick-search input-class]
+(defn quick-search [_e! _quick-search input-class input-style]
   (let [show-results? (r/atom false)]
     (common/component
       (hotkeys/hotkey "?" #(.focus (.getElementById js/document "quick-search")))
@@ -63,6 +64,7 @@
            :type          :search
            :variant       :outlined
            :input-class   input-class
+           :input-style   input-style
            :value         (:term quick-search)
            :placeholder   (tr [:search :quick-search])
            :on-change     #(let [term (-> % .-target .-value)]
@@ -100,7 +102,9 @@
                                    :href      href}))
                       (when icon
                         [ListItemIcon icon])
-                      [ListItemText text]]))
+                      [ListItemText
+                       {:disable-typography true
+                        :primary text}]]))
                  results)]
                [CircularProgress { :size "20" :class (<class
                                                       circular-progress-style)
