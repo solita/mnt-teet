@@ -55,4 +55,4 @@
       (System/exit 0))
     (catch Exception e
       (println e)
-      (System/exit 0))))
+      (System/exit 1))))
