@@ -9,7 +9,7 @@
   tu/with-environment
   (tu/with-config {:asset {:default-owner-code "TST"}
                    :enabled-features #{:asset-db :cost-items}})
-  (tu/with-db)
+  (tu/with-db {:data-fixtures [:projects :asset]})
   tu/with-global-data)
 
 (deftest locking-denies-edits
@@ -18,8 +18,8 @@
     (let [{oid :asset/oid :as resp}
           (tu/local-command :asset/save-cost-item
                             {:project-id "11111"
-                             :asset {:db/id "bridge"
-                                     :asset/fclass :fclass/bridge}})]
+                             :asset {:db/id "shed1"
+                                     :asset/fclass :fclass/bike-shed}})]
       (println "SAVE COST ITEM RESPONSE: " (pr-str resp))
       (is (asset-model/asset-oid? oid))))
 
@@ -38,6 +38,17 @@
     (tu/is-thrown-with-data?
      {:error :boq-is-locked}
      (tu/local-command :asset/save-cost-item
-                            {:project-id "11111"
-                             :asset {:db/id "bridge"
-                                     :asset/fclass :fclass/bridge}}))))
+                       {:project-id "11111"
+                        :asset {:db/id "shed2"
+                                :asset/fclass :fclass/bike-shed}})))
+
+  (testing "Unlocking allows edits again"
+    (tu/local-command :asset/unlock-for-edits
+                      {:boq-version/project "11111"})
+    (is
+     (asset-model/asset-oid?
+      (:asset/oid
+       (tu/local-command :asset/save-cost-item
+                         {:project-id "11111"
+                          :asset {:db/id "shed2"
+                                  :asset/fclass :fclass/bridge}}))))))

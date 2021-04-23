@@ -2,7 +2,7 @@
   "Cost items view"
   (:require [teet.project.project-view :as project-view]
             [teet.ui.typography :as typography]
-            [teet.localization :refer [tr] :as localization]
+            [teet.localization :refer [tr tr-enum] :as localization]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [teet.ui.form :as form]
@@ -32,7 +32,11 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
-            [teet.ui.table :as table]))
+            [teet.ui.table :as table]
+            [teet.user.user-model :as user-model]
+            [teet.util.date :as date]
+            [teet.ui.format :as fmt]
+            [teet.ui.panels :as panels]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -546,15 +550,16 @@
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
 
-(defn- add-cost-item [app]
-  (let [add? (= "new" (get-in app [:params :id]))
-        project (get-in app [:params :project])]
-    [buttons/button-secondary {:element "a"
-                               :href (url/cost-item project "new")
-                               :disabled add?
-                               :start-icon (r/as-element
-                                            [icons/content-add])}
-     (tr [:asset :add-cost-item])]))
+(defn- add-cost-item [app version]
+  (when-not (asset-model/locked? version)
+    (let [add? (= "new" (get-in app [:params :id]))
+          project (get-in app [:params :project])]
+      [buttons/button-secondary {:element "a"
+                                 :href (url/cost-item project "new")
+                                 :disabled add?
+                                 :start-icon (r/as-element
+                                              [icons/content-add])}
+       (tr [:asset :add-cost-item])])))
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
@@ -591,8 +596,102 @@
     :value page
     :format-item #(tr [:asset :page %])}])
 
+(defn- save-boq-version-dialog [{:keys [e! on-close]}]
+  (r/with-let [form-state (r/atom {})
+               form-change (form/update-atom-event form-state merge)
+               save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
+    [panels/modal {:title (tr [:asset :save-boq-version])
+                   :on-close on-close}
+
+     [form/form {:e! e!
+                 :value @form-state
+                 :on-change-event form-change
+                 :save-event save-event
+                 :cancel-event (form/callback-event on-close)}
+      ^{:attribute :boq-version/type
+        :required? true}
+      [select/select-enum {:e! e!
+                           :attribute :boq-version/type
+                           :database :asset}]
+
+      ^{:attribute :boq-version/explanation
+        :required? true
+        :validate (fn [v]
+                    (when (> (count v) 2000)
+                      (tr [:asset :validate :max-length] {:max-length 2000})))}
+      [text-field/TextField {:multiline true
+                             :rows 4}]]]))
+
+(defn- unlock-for-edits-dialog [{:keys [e! on-close version]}]
+  [panels/modal {:title (tr [:asset :unlock-for-edits])
+                 :on-close on-close}
+   [:<>
+    (when-let [warn (condp du/enum= (:boq-version/type version)
+                      :boq-version.type/tender
+                      (tr [:asset :unlock-tender-boq-warning])
+
+                      :boq-version.type/contract
+                      (tr [:asset :unlock-contract-boq-warning])
+
+                      nil)]
+      [common/info-box {:variant :warning
+                        :content warn}])
+    [:div {:class (<class common-styles/flex-row-space-between)}
+     [buttons/button-secondary {:on-click on-close}
+      (tr [:buttons :cancel])]
+     [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
+      (tr [:asset :confirm-unlock-for-edits])]]]])
+
+(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+  (r/with-let [dialog (r/atom nil)
+               set-dialog! #(reset! dialog %)]
+    (let [{:keys [user timestamp] :as chg} latest-change
+          locked? (asset-model/locked? version)
+          dialog-to-open (if locked? :unlock-for-edits :save-boq-version)]
+      [:div {:class (<class common-styles/flex-row)
+             :style {:background-color theme-colors/gray-lightest
+                     :width "100%"}}
+
+       (cond
+         (asset-model/locked? version)
+         [:<>
+          (tr-enum (:boq-version/type version))
+          " v." (:boq-version/number version)]
+         chg
+         [:<>
+          [:b (tr [:common :last-modified]) ": "]
+          (fmt/date-time timestamp)])
+
+       (when chg
+         [common/popper-tooltip
+          {:title (tr [:common :last-modified])
+           :variant :info
+           :body [:<>
+                  [:div (fmt/date-time timestamp)]
+                  [:div (user-model/user-name user)]]}
+          [icons/alert-error-outline]])
+
+       ;; Save or unlock button
+       [buttons/button-secondary
+        {:disabled (some? @dialog)
+         :size :small
+         :on-click (r/partial set-dialog! dialog-to-open)}
+        (tr [:asset dialog-to-open])]
+
+       (when-let [dialog @dialog]
+         (case dialog
+           :unlock-for-edits
+           [unlock-for-edits-dialog {:e! e!
+                                     :on-close (r/partial set-dialog! nil)
+                                     :version version}]
+
+           :save-boq-version
+           [save-boq-version-dialog
+            {:e! e!
+             :on-close (r/partial set-dialog! nil)}]))])))
+
 (defn cost-items-page-structure
-  [e! app {:keys [cost-items asset-type-library project]}
+  [e! app {:keys [cost-items asset-type-library project] :as page-state}
    left-panel-action main-content]
   [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
    [project-view/project-full-page-structure
@@ -616,7 +715,10 @@
                             :add? (= :new-cost-item (:page app))
                             :project project
                             :cost-items cost-items}]]
-     :main main-content}]])
+     :main
+     [:<>
+      [boq-version-statusline e! page-state]
+      main-content]}]])
 
 (defn- format-properties [atl properties]
   (into [:<>]
@@ -662,52 +764,56 @@
 
 
 (defn cost-items-totals-page
-  [e! app {atl :asset-type-library totals :cost-totals :as state}]
-  [cost-items-page-structure
-   e! app state
-   nil
-   [:div.cost-items-totals
-    [:div {:style {:float :right}}
-     [:b
-      (tr [:asset :totals-table :project-total]
-          {:total (:total-cost totals)})]]
-    [:div
-     [table/listing-table
-      {:data (:cost-groups totals)
-       :columns asset-model/cost-totals-table-columns
-       :column-align asset-model/cost-totals-table-align
-       :column-label-fn #(if (= % :common/status)
-                           (label (asset-type-library/item-by-ident atl %))
-                           (tr [:asset :totals-table %]))
-       :format-column
-       (fn [column value row]
-         (case column
-           :type (label (asset-type-library/item-by-ident atl value))
-           :common/status (label (asset-type-library/item-by-ident
-                                  atl (:db/ident value)))
-           :properties (format-properties atl row)
-           :quantity (str value
-                          (when-let [qu (:quantity-unit row)]
-                            (str " " qu)))
-           :cost-per-quantity-unit [cost-group-unit-price e! value row]
-           :total-cost (format-euro value)
-           (str value)))}]]]])
+  [e! app {atl :asset-type-library totals :cost-totals version :version :as state}]
+  (let [locked? (asset-model/locked? version)]
+    [cost-items-page-structure
+     e! app state
+     nil
+     [:div.cost-items-totals
+      [:div {:style {:float :right}}
+       [:b
+        (tr [:asset :totals-table :project-total]
+            {:total (:total-cost totals)})]]
+      [:div
+       [table/listing-table
+        {:data (:cost-groups totals)
+         :columns asset-model/cost-totals-table-columns
+         :column-align asset-model/cost-totals-table-align
+         :column-label-fn #(if (= % :common/status)
+                             (label (asset-type-library/item-by-ident atl %))
+                             (tr [:asset :totals-table %]))
+         :format-column
+         (fn [column value row]
+           (case column
+             :type (label (asset-type-library/item-by-ident atl value))
+             :common/status (label (asset-type-library/item-by-ident
+                                    atl (:db/ident value)))
+             :properties (format-properties atl row)
+             :quantity (str value
+                            (when-let [qu (:quantity-unit row)]
+                              (str " " qu)))
+             :cost-per-quantity-unit (if locked?
+                                       (format-euro value)
+                                       [cost-group-unit-price e! value row])
+             :total-cost (format-euro value)
+             (str value)))}]]]]))
 
-(defn cost-items-page [e! app state]
+(defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure
    e! app state
-   [add-cost-item app]
+   [add-cost-item app version]
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
-  [e! app {atl :asset-type-library cost-item :cost-item :as state}]
+  [e! app {atl :asset-type-library cost-item :cost-item
+           version :version :as state}]
   [cost-items-page-structure
    e! app state
-   [add-cost-item app]
+   [add-cost-item app version]
    [cost-item-form e! atl cost-item]])
 
 (defn cost-item-page
-  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item] :as state}]
+  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
@@ -716,7 +822,7 @@
 
       [cost-items-page-structure
        e! app state
-       [add-cost-item app]
+       [add-cost-item app version]
        (if component
          ^{:key component}
          [component-form e! asset-type-library component cost-item]

@@ -70,6 +70,13 @@
 (defrecord SaveCostGroupPrice [cost-group price])
 (defrecord SaveCostGroupPriceResponse [response])
 
+;; Locking and versioning
+(defrecord SaveBOQVersion [callback form-data])
+(defrecord SaveBOQVersionResponse [callback response])
+(defrecord UnlockForEdits [callback])
+(defrecord UnlockForEditsResponse [callback response])
+
+
 (declare process-location-change)
 
 (defn- form-component-id [app]
@@ -121,24 +128,34 @@
     (apply common-controller/update-page-state
            app [:cost-item] update-fn args)))
 
+(def locked?
+  "Check from app state if BOQ version is locked."
+  (comp asset-model/locked?
+        :version
+        common-controller/page-state))
+
 (extend-protocol t/Event
 
   SaveCostItem
   (process-event [_ {page :page :as app}]
-    (let [form-data (form-state app)
-          project-id (get-in app [:params :project])
-          id (if (= "new" (get-in app [:params :id]))
-               (next-id! "costitem")
-               (:db/id form-data))
-          asset (-> form-data
-                    (assoc :db/id id)
-                    (dissoc :fgroup :location/geojson))]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :asset/save-cost-item
-             :payload {:asset asset
-                       :project-id project-id}
-             :result-event ->SaveCostItemResponse})))
+    (if (locked? app)
+      (do
+        (log/debug "Not saving, BOQ version is locked.")
+        app)
+      (let [form-data (form-state app)
+            project-id (get-in app [:params :project])
+            id (if (= "new" (get-in app [:params :id]))
+                 (next-id! "costitem")
+                 (:db/id form-data))
+            asset (-> form-data
+                      (assoc :db/id id)
+                      (dissoc :fgroup :location/geojson))]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/save-cost-item
+               :payload {:asset asset
+                         :project-id project-id}
+               :result-event ->SaveCostItemResponse}))))
 
   SaveCostItemResponse
   (process-event [{:keys [response]} {params :params :as app}]
@@ -157,30 +174,38 @@
 
   DeleteComponent
   (process-event [{:keys [fetched-cost-item-atom id]} app]
-    (let [project-id (get-in app [:params :project])]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :asset/delete-component
-             :payload {:db/id id
-                       :project-id project-id}
-             :result-event common-controller/->Refresh})))
+    (if (locked? app)
+      (do
+        (log/debug "Not deleting component, BOQ version is locked.")
+        app)
+      (let [project-id (get-in app [:params :project])]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/delete-component
+               :payload {:db/id id
+                         :project-id project-id}
+               :result-event common-controller/->Refresh}))))
 
   SaveComponent
   (process-event [_ app]
-    (let [form-data (form-state app)
-          {parent-id :asset/oid}
-          (-> (common-controller/page-state app :cost-item)
-              (asset-model/find-component-path (:asset/oid form-data))
-              butlast last)]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :asset/save-component
-             :payload {:project-id (get-in app [:params :project])
-                       :parent-id parent-id
-                       :component (dissoc form-data
-                                          :component/components
-                                          :location/geojson)}
-             :result-event ->SaveComponentResponse})))
+    (if (locked? app)
+      (do
+        (log/debug "Not saving, BOQ version is locked.")
+        app)
+      (let [form-data (form-state app)
+            {parent-id :asset/oid}
+            (-> (common-controller/page-state app :cost-item)
+                (asset-model/find-component-path (:asset/oid form-data))
+                butlast last)]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/save-component
+               :payload {:project-id (get-in app [:params :project])
+                         :parent-id parent-id
+                         :component (dissoc form-data
+                                            :component/components
+                                            :location/geojson)}
+               :result-event ->SaveComponentResponse}))))
 
   SaveComponentResponse
   (process-event [{:keys [response]} {params :params :as app}]
@@ -197,11 +222,15 @@
 
   UpdateForm
   (process-event [{:keys [form-data]} app]
-    (let [old-form (form-state app)
-          new-form (cu/deep-merge old-form form-data)]
-      (process-location-change
-       (update-form app (constantly new-form))
-       old-form new-form)))
+    (if (locked? app)
+      (do
+        (log/debug "Not editing form, BOQ version is locked.")
+        app)
+      (let [old-form (form-state app)
+            new-form (cu/deep-merge old-form form-data)]
+        (process-location-change
+         (update-form app (constantly new-form))
+         old-form new-form))))
 
   ;; When road address was changed on the form, update geometry
   ;; and start/end points from the fetched response
@@ -404,5 +433,40 @@
   SaveCostGroupPriceResponse
   (process-event [{response :response} app]
     (println "Response: " response)
+    (t/fx app
+          common-controller/refresh-fx)))
+
+(extend-protocol t/Event
+  SaveBOQVersion
+  (process-event [{:keys [callback form-data]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :asset/lock-version
+           :payload (merge
+                     {:boq-version/project (get-in app [:params :project])}
+                     (select-keys form-data [:boq-version/type :boq-version/explanation]))
+           :result-event (partial ->SaveBOQVersionResponse callback)}))
+
+  SaveBOQVersionResponse
+  (process-event [{:keys [callback response]} app]
+    (callback)
+    (t/fx app
+          common-controller/refresh-fx))
+
+  UnlockForEdits
+  (process-event [{:keys [callback]} app]
+    (if-not (locked? app)
+      (do
+        (log/debug "Shouldn't get here, can't unlock what is not locked")
+        app)
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :asset/unlock-for-edits
+             :payload {:boq-version/project (get-in app [:params :project])}
+             :result-event (partial ->UnlockForEditsResponse callback)})))
+
+  UnlockForEditsResponse
+  (process-event [{:keys [callback response]} app]
+    (callback)
     (t/fx app
           common-controller/refresh-fx)))

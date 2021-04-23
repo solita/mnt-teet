@@ -204,11 +204,16 @@
                 (when mock-users?
                   (d/transact *connection* {:tx-data mock-users}))
                 (doseq [df data-fixtures
-                        :let [resource (str "resources/" (name df) ".edn")]]
-                  (log/info "Transacting data fixture: " df)
+                        :let [resource (str "resources/" (name df) ".edn")
+                              fixture-data (-> resource io/resource
+                                               slurp read-string)
+                              fixture-db (or (:db (meta fixture-data)) :teet)
+                              fixture-conn (case fixture-db
+                                             :teet *connection*
+                                             :asset *asset-connection*)]]
+                  (log/info "Transacting data " fixture-db " fixture: " df)
                   (let [{tempids :tempids}
-                        (d/transact *connection* {:tx-data (-> resource io/resource
-                                                               slurp read-string)})]
+                        (d/transact fixture-conn {:tx-data fixture-data})]
                     (swap! *data-fixture-ids*
                            (fn [current-tempids]
                              (if-let [duplicates (seq (set/intersection (set (keys current-tempids))
