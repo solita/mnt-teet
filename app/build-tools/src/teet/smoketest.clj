@@ -18,9 +18,7 @@
     {:server-type :cloud
      :region region
      :system system
-     :query-group system
-     :endpoint (str "http://entry." system "." region ".datomic.net:8182/")
-     :proxy-port 8182}))
+     :endpoint (str "http://entry." system "." region ".datomic.net:8182/")}))
 
 (def ^:dynamic *connection* nil)
 
