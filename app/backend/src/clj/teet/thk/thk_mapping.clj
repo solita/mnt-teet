@@ -344,8 +344,3 @@
                       :parse thk-object-region-fk->ta-region-enum
                       :format (comp ta-region-enum->thk-object-region-fk :db/ident)}
    })
-
-
-
-
-;;
