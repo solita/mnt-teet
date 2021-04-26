@@ -15,7 +15,6 @@ echo "$BASEURL/$ENDPOINT"
 
 while true
 do
-    echo curl on "$BASEURL/$ENDPOINT" returns $(curl  "$BASEURL/$ENDPOINT")
     echo curl returns $(curl -s -L -w ' %{http_code}\n' "$BASEURL/$ENDPOINT")
     read -r CURRENT_COMMIT STATUS < <(curl -s -L -w ' %{http_code}\n' "$BASEURL/$ENDPOINT")
 
