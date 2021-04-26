@@ -14,11 +14,13 @@
 ;  :endpoint      - IP address of your system or query group
 (def datomic-config
   (let [region "eu-central-1"
-        system "teet-datomic"]
-    {:server-type :cloud
+        system "teet-datomic"
+        query-group "teet-datomic-Compute"]
+    {:server-type :ion
      :region region
      :system system
-     :endpoint (str "http://entry." system "." region ".datomic.net:8182/")}))
+     :endpoint (str "http://entry." query-group "." region ".datomic.net:8182/"
+     :proxy-port 8666)}))
 
 (def ^:dynamic *connection* nil)
 
