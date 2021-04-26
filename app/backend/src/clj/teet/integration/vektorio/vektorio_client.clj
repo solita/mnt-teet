@@ -149,5 +149,4 @@
   (assert (some? project-name))
   (log/info "Updating project in vektorio for project" vektorio-project-id project-name)
   (vektor-patch vektorio-config {:endpoint (str "projects/" vektorio-project-id)
-                                 :payload {:name project-name}})
-  )
+                                 :payload {:name project-name}}))

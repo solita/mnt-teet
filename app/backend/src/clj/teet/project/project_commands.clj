@@ -33,10 +33,9 @@
 (defn update-vektorio-project-name? [db project-id project-name]
   (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
         vektorio-config (environment/config-value :vektorio)]
-    (when project-id
-          (log/debug "Updating project name in vektorio? " (some? vektorio-enabled?))
-      (when vektorio-enabled?
-            (vektorio/update-project-in-vektorio! db vektorio-config project-id project-name)))))
+      (if vektorio-enabled?
+            (vektorio/update-project-in-vektorio! db vektorio-config project-id project-name)
+            true)))
 
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
