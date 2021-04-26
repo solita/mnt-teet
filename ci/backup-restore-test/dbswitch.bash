@@ -11,6 +11,8 @@ echo "Checking DB "$CURRENT_DB
 BASEURL=$(aws ssm get-parameters --names "/teet/base-url" --query "Parameters[0].Value" | tr -d '"' | sed 's|/$||g')
 ENDPOINT="query/?q=%5B%22%5E%20%22%2C%22~%3Aquery%22%2C%22~%3Ateet.system%2Fdb%22%5D"
 
+echo "$BASEURL/$ENDPOINT"
+
 while true
 do
     echo curl on "$BASEURL/$ENDPOINT" returns $(curl  "$BASEURL/$ENDPOINT")
