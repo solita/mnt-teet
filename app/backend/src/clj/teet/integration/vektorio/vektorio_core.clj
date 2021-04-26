@@ -70,14 +70,6 @@
                          (file-db/file-metadata-by-id db file-id))]
     file-meta-data))
 
-(defn- vektorio-filename-from-file
-  "Returns for example '02_1_Uskuna.dwg'"
-  [file]
-  (let [file-data (file-db/file-metadata file)
-        _ (log/debug file-data)
-        file-meta-data (filename-metadata/metadata->vektorio-filename file-data)]
-    file-meta-data))
-
 (defn upload-file-to-vektor!
   [conn vektor-config file-id]
   (log/info "Uploading file" file-id "to vektorio")
