@@ -4,6 +4,7 @@ echo "Check started"
 
 set -eu
 
+RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 CURRENT_DB=$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"')
 
 # aws ssm put-parameter \
@@ -21,6 +22,7 @@ BASEURL=$(aws ssm get-parameters --names "/teet/base-url" --query "Parameters[0]
 # "query/?q=["^ ","~:query","~:teet.system/db"]"
 ENDPOINT="query/?q=%5B%22%5E%20%22%2C%22~%3Aquery%22%2C%22~%3Ateet.system%2Fdb%22%5D"
 echo "$BASEURL/$ENDPOINT"
+
 echo curl returns $(curl -s -o /dev/null -w "%{http_code}" "$BASEURL/$ENDPOINT")
 STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASEURL/$ENDPOINT")
 
