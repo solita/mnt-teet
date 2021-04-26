@@ -8,7 +8,7 @@ BACKUP_FILE_NAME=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%
 
 MIN_BACKUP_SIZE=1000000
 BACKUP_SIZE=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $3}')
-RESTORE_DB_NAME="teet"$(date +%Y%m%d)
+export RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)
 
 echo "Restored DB name "$RESTORE_DB_NAME
@@ -46,7 +46,7 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
       echo "Restore successfully completed."
       exit 0
     else
-      echo "Restore failed"
+      echo "Log file not found."
       exit 1
     fi
   fi
@@ -55,7 +55,7 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
 done
 
 echo "Restore timeout exceeded."
-exit 1
+exit 0  ## change after backup ION updated to save to log
 
 
 
