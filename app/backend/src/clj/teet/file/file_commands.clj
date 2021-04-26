@@ -277,9 +277,16 @@
                  :file-seen/file+user [file-id user-id]
                  :file-seen/seen-at (java.util.Date.)})]})
 
+(defn maybe-update-vektorio-model-name! [conn db id file]
+  (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
+        vektorio-config (environment/config-value :vektorio)]
+    (if vektorio-enabled?
+      (vektorio/update-model-in-vektorio! conn db vektorio-config id file)
+      true)))
+
 (defcommand :file/modify
   {:doc "Modify task file info: part, group, sequence and name."
-   :context {:keys [user db]}
+   :context {:keys [conn user db]}
    :payload {id :db/id :as file}
    :project-id (project-db/file-project-id db id)
    :authorization {:document/overwrite-document {:db/id id}}
@@ -295,9 +302,18 @@
              filename-metadata/name->description-and-extension
              :description
              file-model/valid-chars-in-description?)]
-   :transact [(list 'teet.file.file-tx/modify-file
+   :transact [(try (do (maybe-update-vektorio-model-name! conn db id file)
+                    (list 'teet.file.file-tx/modify-file
                     (merge file
-                           (meta-model/modification-meta user)))]})
+                           (meta-model/modification-meta user))))
+                   (catch Exception e
+                     (if
+                       (some? (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+                       (db-api/fail!
+                         {:status 400
+                          :msg (str "Vektor.io error:" (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+                          :error :vektorio-request-failed})
+                       (throw e))))]})
 
 (defn- export-zip [{:keys [db user export-fn export-bucket email-subject-message] :as opts}]
   (if-let [email (:user/email (du/entity db (user-model/user-ref user)))]
