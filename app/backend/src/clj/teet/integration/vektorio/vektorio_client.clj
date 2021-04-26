@@ -152,3 +152,11 @@
   (log/info "Updating project in vektorio for project" vektorio-project-id project-name)
   (vektor-patch vektorio-config {:endpoint (str "projects/" vektorio-project-id)
                                  :payload {:name project-name}}))
+
+(defn update-model! [vektorio-config project-id model-id model-name model-path]
+  (assert (some? model-id))
+  (assert (some? model-name))
+  (log/info "Updating model in vektorio for project" model-id model-name)
+  (vektor-patch vektorio-config {:endpoint (str "projects/" project-id "/models/" model-id)
+                                 :payload {:filename model-name
+                                           :filepath model-path}}))

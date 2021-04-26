@@ -119,3 +119,19 @@
                (do (log/info "No Vektor project id found for " project-id)
                    true))]
     resp))
+
+(defn update-model-in-vektorio!
+  "Updates the model name in Vektor.io in case it is changed in TEET"
+  [conn db vektor-config file-id file]
+  (let [vektor-model-id (:vektorio/model-id (d/pull db [:db/id :vektorio/model-id] file-id))
+        vektor-project-id (ensure-project-vektorio-id! conn vektor-config file-id)
+        vektor-filename (vektorio-filename db file-id)
+        vektor-filepath (vektorio-filepath db file-id)
+        _ (log/debug file " :: " file-id " :: " vektor-model-id "|" vektor-filename "|" vektor-filepath)
+        resp (if (and
+                   (some? vektor-model-id)
+                   (some? vektor-project-id))
+               (vektorio-client/update-model! vektor-config vektor-project-id vektor-model-id vektor-filename vektor-filepath)
+               (do (log/info "No Vektor project/model id found for " file-id vektor-project-id vektor-model-id)
+                   true))]
+    resp))
