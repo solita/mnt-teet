@@ -30,7 +30,7 @@
               :thk.project/custom-end-m]
           project-eid))
 
-(defn update-vektorio-project-name? [db project-id project-name]
+(defn maybe-update-vektorio-project-name? [db project-id project-name]
   (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
         vektorio-config (environment/config-value :vektorio)]
       (if vektorio-enabled?
@@ -44,7 +44,7 @@
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                          :link :thk.project/owner}}}
-  (if (some? (update-vektorio-project-name? db [:thk.project/id id] (:thk.project/project-name project-form)))
+  (if (some? (maybe-update-vektorio-project-name? db [:thk.project/id id] (:thk.project/project-name project-form)))
     (let [{db-before :db-before
          db :db-after} (tx [(merge (cu/without-nils
                                     (select-keys project-form

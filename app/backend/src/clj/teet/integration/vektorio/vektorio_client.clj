@@ -46,7 +46,9 @@
                                           (cheshire/encode payload))})
                   (catch Exception e
                     (log/fatal e "Exception in vektorio post for url " (str api-url endpoint))
-                    (throw e)))]
+                    (throw (ex-info "Vektorio error"
+                                    {:msg "Vektorio error"
+                                     :vektorio-response (ex-data e)}))))]
     (vektor-message-handler resp)))
 
 (defn vektor-delete!
