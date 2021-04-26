@@ -76,12 +76,10 @@
        (catch Exception e
          (if
            (some? (get-in (ex-data e) [:vektorio-response :reason-phrase]))
-           (do
-             (db-api/fail!
-               {:status 400
-                :msg (str "Vektor.io error:" (get-in (ex-data e) [:vektorio-response :reason-phrase]))
-                :error :vektorio-request-failed})
-             nil)
+           (db-api/fail!
+             {:status 400
+              :msg (str "Vektor.io error:" (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+              :error :vektorio-request-failed})
            (throw e)))))
 
 (defcommand :thk.project/revoke-permission
