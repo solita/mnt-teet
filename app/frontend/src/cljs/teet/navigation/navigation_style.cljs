@@ -68,8 +68,7 @@
       :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
       :transition "all 0.2s ease-in-out"}
     (responsivity-styles/mobile-only-meta
-      {:height theme-spacing/appbar-height-mobile})
-    ))
+      {:height theme-spacing/appbar-height-mobile})))
 
 (defn appbar-position [drawer-open?]
   (with-meta
@@ -131,10 +130,10 @@
 (defn language-select-style
   []
   ^{:pseudo {:focus {:min-width "3rem" :width :auto}}}
-  {:color               theme-colors/blue
-   :width               :auto
+  {:color theme-colors/blue
+   :width :auto
    :background-position "right .2em top 50% !important"
-   :padding-right       "1.2rem !important"})
+   :padding-right "1.2rem !important"})
 
 (defn divider-style
   []
@@ -152,8 +151,8 @@
   (with-meta
     {}
     (responsivity-styles/desktop-only-meta
-      {:padding-left "1rem"}))
-  )
+      {:padding-left "1rem"})))
+
 (defn logo-style
   []
   (with-meta

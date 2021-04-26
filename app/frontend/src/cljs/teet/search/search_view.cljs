@@ -113,7 +113,5 @@
                        {:disable-typography true
                         :primary text}]]))
                  results)]
-               [CircularProgress { :size "20" :class (<class
-                                                      circular-progress-style)
-                                  }])]])
+               [CircularProgress { :size "20" :class (<class circular-progress-style)}])]])
          ]))))
