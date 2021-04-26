@@ -277,7 +277,7 @@
                  :file-seen/file+user [file-id user-id]
                  :file-seen/seen-at (java.util.Date.)})]})
 
-(defn maybe-update-vektorio-model-name? [conn db id file]
+(defn maybe-update-vektorio-model-name! [conn db id file]
   (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
         vektorio-config (environment/config-value :vektorio)]
     (if vektorio-enabled?
@@ -302,7 +302,7 @@
              filename-metadata/name->description-and-extension
              :description
              file-model/valid-chars-in-description?)]
-   :transact [(try (do (maybe-update-vektorio-model-name? conn db id file)
+   :transact [(try (do (maybe-update-vektorio-model-name! conn db id file)
                     (list 'teet.file.file-tx/modify-file
                     (merge file
                            (meta-model/modification-meta user))))
