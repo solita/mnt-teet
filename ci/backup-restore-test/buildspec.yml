@@ -18,9 +18,7 @@ phases:
       - ./install-babashka
   build:
     commands:
-      #- sh ./ci/backup-restore-test/backup.bash
-      #- sh ./ci/backup-restore-test/restore.bash
-      - cd ./app/build-tools
-      - clojure -A:smoketest "teet20210422"
-      - cd ../../
+      - sh ./ci/backup-restore-test/backup.bash
+      - sh ./ci/backup-restore-test/restore.bash
+      - sleep 60
       - sh ./ci/backup-restore-test/dbswitch.bash
