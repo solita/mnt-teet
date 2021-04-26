@@ -79,6 +79,7 @@ function install_deps_and_app {
     
     # db setup
     gensecret pgpasswd
+    systemctl status docker | grep -q running || systemctl restart docker
     docker network create docker_teet
     docker run -d -p 127.0.0.1:5432:5432 --name teetdb --network docker_teet -e POSTGRES_PASSWORD="$(cat pgpasswd.secret)" postgres:11
     while [ "$(docker inspect -f '{{.State.Running}}' teetdb)" != true ]; do
@@ -108,7 +109,7 @@ function install_deps_and_app {
     install --mode=755 datomic-cli/datomic* /usr/local/bin/ 
 
     # datomic-cli in tmux
-    start-datomic-protforward
+    start-datomic-portforward
     until netstat -pant | egrep -q '^tcp.*:8666\b.*LISTEN'; do
 	echo "waiting for ssh forward to come up (attach to tmux and check there if stuck here)"
 	sleep 1
@@ -141,8 +142,6 @@ function install_deps_and_app {
     # todo: use postgres backups for pg data (-> remove unneeded datasource-import run)
 }
 
+# kvm command line for testing on local dev machine:
+# kvm -smp 4 -m 4096 -vga qxl --boot once=c --drive "file=$HOME/src/mnt-teet/ci/vmcow1.qcow2"
 
-
-function main() {
-    kvm -smp 4 -m 4096 -vga qxl --boot once=c --drive "file=$HOME/src/mnt-teet/ci/vmcow1.qcow2"
-}
