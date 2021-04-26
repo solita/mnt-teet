@@ -73,7 +73,9 @@
    :max-value "Lubatud maksimaalne väärtus on {max-value}",
    :integer-format "Sisesta täisarv",
    :decimal-format "Sisestage kümnendväärtus",
-   :only-whitespace nil},
+   :only-whitespace "Ainult tühik ei ole lubatud.",
+   :decimal-precision
+   "Numbri täpsus on liiga suur. Lubatud on {precision} kohta peale punkti."},
   :no-matching-feature-classes "Pole vastavat vara liiki",
   :unlock-tender-boq-warning "unlock tender warning (translate me)",
   :cost-item-saved "Vara salvestatud",
@@ -632,6 +634,8 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :vektorio-request-failed
+  "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
   "Ülesande staatus ei luba selle alla faile üles laadida",
   :file-too-large "Fail on liiga suur",

@@ -63,10 +63,10 @@
   (let [path (reverse (asset-model/find-component-path cost-item-data component-oid))]
     (some (du/enum->kw extremum-value-ref) path)))
 
-(def ^:private allowed-decimal-digits 5)
+(def ^:private maximum-decimal-precision 6)
 
 (defn- too-many-decimal-digits? [dec-string]
-  (< allowed-decimal-digits
+  (< maximum-decimal-precision
      (-> dec-string
          (str/split #",|\.")
          second
@@ -109,7 +109,7 @@
 
                 (and (= valueType :db.type/bigdec)
                      (too-many-decimal-digits? v))
-                (tr [:asset :validate :decimal-format]) ;; TODO proper error message
+                (tr [:asset :validate :decimal-precision] {:precision maximum-decimal-precision}) ;; TODO proper error message
 
                 :else
                 (let [n (js/parseFloat v)]
@@ -144,8 +144,8 @@
 
 (defn- attribute-grid-item [content]
   [Grid {:item true
-          :md 4
-          :xs 12
+         :md 4
+         :xs 12
          :style {:padding "0.2rem"}}
    content])
 

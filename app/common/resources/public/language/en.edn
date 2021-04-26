@@ -72,7 +72,9 @@
    :max-value "Maximum allowed value: {max-value}",
    :integer-format "Insert integer value",
    :decimal-format "Insert decimal value",
-   :only-whitespace "Field cannot contain only whitespace"},
+   :only-whitespace "Field cannot contain only whitespace",
+   :decimal-precision
+   "Number precision too large. Maximum allowed is {precision}."},
   :no-matching-feature-classes "No matching feature classes.",
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
@@ -439,7 +441,7 @@
   :task.type/eia-pre-assessment "EIA pre-assessment",
   :task.type/owners-supervision "Owners' supervision",
   :task.group/study "Studies",
-  :file.status/draft "Draft",
+  :file.status/draft "permission-already-granted",
   :task.type/construction-lighting "Lighting",
   :task.type/collaboration "Collaboration",
   :boq-version.type/budget "Budget",
@@ -638,6 +640,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :vektorio-request-failed
+  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
   "Task status does not allow for files to be added",
   :file-too-large "File is too large",
