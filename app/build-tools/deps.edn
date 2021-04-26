@@ -1,11 +1,5 @@
-{:deps {dk.ative/docjure {:mvn/version "1.12.0"}
-        com.datomic/client-cloud {:mvn/version "0.8.102"}
-        com.datomic/ion {:mvn/version "0.9.48"}}
- :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
-             "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
-             "cognitect-dev-tools" {:url "https://dev-tools.cognitect.com/maven/releases/"}}
+{:deps  {dk.ative/docjure {:mvn/version "1.12.0"}}
  :paths ["src"]
  :aliases {:localizations {:main-opts ["-m" "teet.localization"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]}
-           :asset-schema {:main-opts ["-m" "teet.asset-schema"]}
-           :smoketest {:main-opts ["-m" "teet.smoketest"]}}}
+           :asset-schema {:main-opts ["-m" "teet.asset-schema"]}}}
