@@ -18,7 +18,9 @@
             [teet.util.datomic :as du]
             [teet.integration.integration-id :as integration-id]
             [teet.integration.x-road.property-registry :as property-registry]
-            [teet.integration.postgrest :as postgrest])
+            [teet.integration.postgrest :as postgrest]
+            [teet.integration.vektorio.vektorio-core :as vektorio]
+            [teet.log :as log])
   (:import (java.util Date UUID)))
 
 
@@ -28,6 +30,14 @@
               :thk.project/custom-end-m]
           project-eid))
 
+(defn update-vektorio-project-name? [db project-id project-name]
+  (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
+        vektorio-config (environment/config-value :vektorio)]
+    (when project-id
+          (log/debug "Updating project name in vektorio? " (some? vektorio-enabled?))
+      (when vektorio-enabled?
+            (vektorio/update-project-in-vektorio! db vektorio-config project-id project-name)))))
+
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
    :context {:keys [conn db user]}
@@ -35,7 +45,8 @@
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                          :link :thk.project/owner}}}
-  (let [{db-before :db-before
+  (if (some? (update-vektorio-project-name? db [:thk.project/id id] (:thk.project/project-name project-form)))
+    (let [{db-before :db-before
          db :db-after} (tx [(merge (cu/without-nils
                                     (select-keys project-form
                                                  [:thk.project/id
@@ -57,7 +68,11 @@
                      :thk.project/start-m :thk.project/end-m
                      :thk.project/custom-start-m :thk.project/custom-end-m]
                 [:thk.project/id id])]))
-    :ok))
+    :ok)
+    (db-api/fail!
+      {:status 500
+       :msg "Vektor.io error"
+       :error :vektorio-request-failed})))
 
 (defcommand :thk.project/revoke-permission
   ;; Options

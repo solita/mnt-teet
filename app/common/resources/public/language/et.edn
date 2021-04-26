@@ -631,6 +631,8 @@
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
   :user-has-no-email
   "Viidet ei saa e-postiga saata. Puudub e-posti aadress, palun lisage e-posti aadress minu konto alt.",
+  :vektorio-request-failed
+  "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
   :email-address-already-in-use "E-posti aadress on juba kasutusel.",
   :no-participants-with-email
