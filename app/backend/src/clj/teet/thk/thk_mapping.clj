@@ -152,12 +152,7 @@
    "activity_teetdelstamp"
    "activity_cost"
    "activity_procurementno"
-   "activity_procurementid"
-   "activity_procurementname"
-   "activity_procurementtypefk"
-   "activity_procurementstatusfk"
-   "activity_procurementpartid"
-   "activity_procurementpartname"])
+   "activity_procurementid"])
 
 (defn estonian-person-id->user [id]
   (when-not (str/blank? id)
@@ -316,14 +311,7 @@
                             :task {:attribute (juxt :meta/deleted? :meta/modified-at)}}
    "activity_cost" {:attribute :activity/cost}
    "activity_procurementno" {:attribute :activity/procurement-nr}
-   "activity_procurementid" {:attribute :activity/procurement-id}
-   "activity_procurementstatusfk" {:attribute :thk.contract/procurement-status-fk}
-   "activity_procurementtypefk" {:attribute :thk.contract/type
-                                 :parse thk-contract-type-code->contract-type-enum
-                                 :format (comp contract-type-enum->thk-contract-type-code :db/ident)}
-   "activity_procurementname" {:attribute :thk.contract/name}
-   "activity_procurementpartname" {:attribute :thk.contract/part-name}
-   "activity_procurementpartid" {:attribute :thk.contract/procurement-part-id}})
+   "activity_procurementid" {:attribute :activity/procurement-id}})
 
 (def thk->teet-contract
   {"activity_id" {:attribute :thk.activity/id}
@@ -344,3 +332,4 @@
                       :parse thk-object-region-fk->ta-region-enum
                       :format (comp ta-region-enum->thk-object-region-fk :db/ident)}
    })
+

@@ -106,6 +106,8 @@
   []
   (d/db (asset-connection)))
 
+(def adb asset-db)
+
 (defn entity
   "Returns navigable entity from the current db."
   [eid]
@@ -186,12 +188,14 @@
             (log/info "Creating database " test-db-name)
             (d/create-database client db-name)
             (when asset-db?
+              (log/info "Creating asset database " asset-db-name)
               (d/create-database client asset-db-name))
             (binding [*connection* (d/connect client db-name)
                       *asset-connection* (when asset-db?
                                            (d/connect client asset-db-name))
                       *data-fixture-ids* (atom {})]
-              (binding [environment/*connection* *connection*]
+              (binding [environment/*connection* *connection*
+                        environment/*asset-connection* *asset-connection*]
                 (when migrate?
                   (environment/migrate *connection* @environment/schema)
                   (when asset-db?
@@ -200,11 +204,16 @@
                 (when mock-users?
                   (d/transact *connection* {:tx-data mock-users}))
                 (doseq [df data-fixtures
-                        :let [resource (str "resources/" (name df) ".edn")]]
-                  (log/info "Transacting data fixture: " df)
+                        :let [resource (str "resources/" (name df) ".edn")
+                              fixture-data (-> resource io/resource
+                                               slurp read-string)
+                              fixture-db (or (:db (meta fixture-data)) :teet)
+                              fixture-conn (case fixture-db
+                                             :teet *connection*
+                                             :asset *asset-connection*)]]
+                  (log/info "Transacting data " fixture-db " fixture: " df)
                   (let [{tempids :tempids}
-                        (d/transact *connection* {:tx-data (-> resource io/resource
-                                                               slurp read-string)})]
+                        (d/transact fixture-conn {:tx-data fixture-data})]
                     (swap! *data-fixture-ids*
                            (fn [current-tempids]
                              (if-let [duplicates (seq (set/intersection (set (keys current-tempids))
@@ -266,11 +275,15 @@
   (let [db (db)
         user-ref (when user
                    (user-model/user-ref user))]
-    {:conn (db-connection)
-     :db db
-     :user (when user-ref
-             (user-db/user-info db user-ref))
-     :session "foo"}))
+    (merge
+     {:conn (db-connection)
+      :db db
+      :user (when user-ref
+              (user-db/user-info db user-ref))
+      :session "foo"}
+     (when (environment/feature-enabled? :asset-db)
+       {:asset-conn (asset-connection)
+        :asset-db (d/db (asset-connection))}))))
 
 (defn local-query
   ([query args]

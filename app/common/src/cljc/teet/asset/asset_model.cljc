@@ -123,3 +123,7 @@
   {:quantity "right"
    :cost-per-quantity-unit "right"
    :total-cost "right"})
+
+
+(def locked? "Key to check if version is locked"
+  :boq-version/locked?)

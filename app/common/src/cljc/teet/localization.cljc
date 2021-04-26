@@ -24,8 +24,8 @@
 
 (def supported-languages #{"en" "et"})
 
-(def language-names {"en" "ENG"
-                     "et" "ET"})
+(def language-names {"en" "EN"
+                     "et" "EE"})
 
 (defonce loaded-languages (atom {}))
 

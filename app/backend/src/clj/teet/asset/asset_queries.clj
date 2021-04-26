@@ -11,7 +11,8 @@
             [ring.util.io :as ring-io]
             [teet.asset.asset-boq :as asset-boq]
             [teet.localization :as localization]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.user.user-db :as user-db]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -40,6 +41,10 @@
     (merge
      {:asset-type-library (asset-db/asset-type-library adb)
       :cost-items (asset-db/project-cost-items adb project-id)
+      :version (asset-db/project-boq-version adb project-id)
+      :latest-change (when-let [[timestamp author] (asset-db/latest-change-in-project adb project-id)]
+                       {:user (user-db/user-display-info db [:user/id author])
+                        :timestamp timestamp})
       :project (project-db/project-by-id db [:thk.project/id project-id])}
      (when cost-totals
        (let [cost-groups (asset-db/project-cost-groups-totals adb project-id)]

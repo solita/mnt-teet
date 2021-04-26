@@ -107,3 +107,15 @@
   "Login to VektorIO."
   [vektorio-config vektorio-user-id]
   (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id}))
+
+(defn update-project-in-vektorio!
+  "Updates the project name in Vektor.io should it be changed in TEET"
+  [db vektor-config project-id project-name]
+  (let [project (d/pull db [:db/id :thk.project/name :thk.project/project-name :thk.project/id :vektorio/project-id] project-id)
+        vektor-project-name (str  project-name " (THK" (:thk.project/id project) ")")
+        vektor-project-id (:vektorio/project-id project)
+        resp (if (some? vektor-project-id)
+               (vektorio-client/update-project! vektor-config vektor-project-id vektor-project-name)
+               (do (log/info "No Vektor project id found for " project-id)
+                   true))]
+    resp))

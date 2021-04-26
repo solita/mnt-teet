@@ -53,8 +53,10 @@
   :search-shortcuts "Search shortcuts",
   :current-permissions "Current permissions"},
  :asset
- {:totals-table
-  {:properties "Properties",
+ {:unlock-contract-boq-warning
+  "The Cost Item list is in the Contract phase, are you sure that you want to change it, and are you aware that you need to change the budget and inform the management",
+  :totals-table
+  {:properties "Cost grouping",
    :type "Type",
    :quantity "Quantity",
    :cost-per-quantity-unit "Unit cost (€)",
@@ -69,18 +71,23 @@
    :min-value "Minimum allowed value: {min-value}",
    :max-value "Maximum allowed value: {max-value}",
    :integer-format "Insert integer value",
-   :decimal-format "Insert decimal value"},
+   :decimal-format "Insert decimal value",
+   :only-whitespace "Field cannot contain only whitespace"},
   :no-matching-feature-classes "No matching feature classes.",
+  :unlock-tender-boq-warning
+  "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
   :cost-item-saved "Cost item saved",
   :page {:cost-items "Assets", :cost-items-totals "Totals"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
+  :save-boq-version "Save BOQ version",
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
   :location
   {:no-road-found-for-points "No road found for points",
    :show-map "Show map",
    :hide-map "Hide map"},
+  :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
@@ -107,7 +114,8 @@
   {:details "Details",
    :common "Common",
    :location "Location",
-   :cost-grouping "Cost grouping"}},
+   :cost-grouping "Cost grouping"},
+  :unlock-for-edits "Unlock for edits"},
  :buttons
  {:confirm "Confirm",
   :duplicate "Duplicate",
@@ -338,6 +346,7 @@
   :task.status/canceled "Canceled",
   :land-owner-opinion.type/design-conditions-draft
   "Draft act of Design Conditions",
+  :file.status/returned "Returned",
   :land-acquisition.impact/purchase-not-needed
   "Acquisition not needed",
   :task.type/funding-plan "Funding plan",
@@ -374,12 +383,10 @@
   :notification.type/task-assigned "Task assigned",
   :task.type/construction-drainage "Drainage",
   :participation.role/reviewer "Reviewer",
-  :file.status/ready "Ready",
   :activity.name/detailed-design "Detailed design",
   :activity.status/expired "Expired",
   :land-owner-opinion.type/construction "Construction",
   :notification.type/task-waiting-for-review "Task waiting for review",
-  :file.status/approved "Approved / Valid",
   :task.type/acceptances "Acceptances",
   :document.sub-category/terms-of-reference "Terms of Reference",
   :document.sub-category/report "Report",
@@ -435,10 +442,12 @@
   :file.status/draft "Draft",
   :task.type/construction-lighting "Lighting",
   :task.type/collaboration "Collaboration",
+  :boq-version.type/budget "Budget",
   :notification.type/comment-created "New comment",
   :task.type/construction-equipment "Equipment",
   :activity.status/archived "Archived",
   :activity.status/valid "Valid",
+  :boq-version.type/tender "Tender",
   :comment.visibility/all "Public",
   :comment.visibility/internal "Visible internally",
   :task.type/construction-railroad "Railroad",
@@ -461,12 +470,14 @@
   :task.type/design-road-safety-audit "Road safety audit",
   :thk.task-type/third-party-review "3rd party review",
   :document.sub-category/photo "Photo",
+  :boq-version.type/contract "Contract/listing",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design "Road safety audit",
   :participation.role/participant "Participant",
   :estate-procedure.type/property-rights
   "Issuing right for using property",
   :document.sub-category/drawing "Drawing",
+  :file.status/submitted "Submitted",
   :task.type/traffic-study "Traffic study",
   :task.status/accepted "Accepted",
   :cooperation.application.response-type/other "Other",
@@ -547,7 +558,7 @@
   :cooperation.application.type/ex-ante-eia "Ex-ante EIA",
   :cooperation.opinion.status/agreed "Taken into account",
   :task.type/design-requirements "Design requirements",
-  :file.status/updated "Updated",
+  :file.status/valid "Valid",
   :file.document-group/specifications "Specifications",
   :task.type/other-facilities "Other facilities",
   :cooperation.application.type/building-permit-order
@@ -638,6 +649,8 @@
   "The link can't be emailed. Email address has not been added, please add it through the My account page.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
+  :vektorio-request-failed
+  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :email-address-already-in-use "Email address already in use.",
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address."},
@@ -711,6 +724,7 @@
   :meeting/agenda "Agenda",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
+  :boq-version/explanation "Explanation",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
   :cooperation.application/activity "Activity",
@@ -769,6 +783,7 @@
   :activity/name "Activity name",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
+  :boq-version/type "Update version status",
   :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
   :cooperation.contact/name "Name",

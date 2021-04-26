@@ -30,7 +30,7 @@
         (log/error "Vektorio error: " response)
         (throw (ex-info "Vektorio error"
                         {:msg "Vektorio error"
-                         :response response}))))))
+                         :vektorio-response response}))))))
 
 (defn vektor-post!
   [{:keys [config api-key]} {:keys [endpoint payload headers]}]
@@ -46,7 +46,9 @@
                                           (cheshire/encode payload))})
                   (catch Exception e
                     (log/fatal e "Exception in vektorio post for url " (str api-url endpoint))
-                    (throw e)))]
+                    (throw (ex-info "Vektorio error"
+                                    {:msg "Vektorio error"
+                                     :vektorio-response (ex-data e)}))))]
     (vektor-message-handler resp)))
 
 (defn vektor-delete!
@@ -65,6 +67,25 @@
                                      "Content-Type" "application/json"}})]
     (vektor-message-handler resp)))
 
+(defn vektor-patch
+  [{:keys [config api-key]} {:keys [endpoint payload headers]}]
+  (let [{:keys [api-url]} config
+        headers (merge {"x-vektor-viewer-api-key" api-key
+                        "Content-Type" "application/json"}
+                       headers)
+        content-type (get headers "Content-Type")
+        resp (try (clj-http/patch (str api-url endpoint) ;; Using clj-http here because httpkit doesn't automatically use chunked encoding on streams
+                                 {:headers headers
+                                  :body (if (= content-type "application/octet-stream")
+                                          payload
+                                          (cheshire/encode payload))})
+                  (catch Exception e
+                    (log/fatal e "Exception in vektorio PATCH for url " (str api-url endpoint))
+                    (throw (ex-info "Vektorio error"
+                                    {:msg "Vektorio error"
+                                     :vektorio-response (ex-data e)}))))]
+    (vektor-message-handler resp)))
+
 (defn create-user!
   [vektor-conf {:keys [account name]}]
   (vektor-post! vektor-conf {:endpoint "users"
@@ -78,7 +99,7 @@
     (vektor-get vektor-conf (str "users/byAccount/" userid))
     (catch Exception e
       (if
-        (= (get-in (ex-data e) [:response :status]) 404)
+        (= (get-in (ex-data e) [:vektorio-response :status]) 404)
         (do
           (log/info "User " userid " not found from Vektor.")
             nil)
@@ -124,3 +145,10 @@
   (let [resp (vektor-post! vektorio-conf {:endpoint (str "users/" user-id "/instantLogins")
                                           :headers {"Content-Type" "application/x-www-form-urlencoded"}})]
     resp))
+
+(defn update-project! [vektorio-config vektorio-project-id project-name]
+  (assert (some? vektorio-project-id))
+  (assert (some? project-name))
+  (log/info "Updating project in vektorio for project" vektorio-project-id project-name)
+  (vektor-patch vektorio-config {:endpoint (str "projects/" vektorio-project-id)
+                                 :payload {:name project-name}}))

@@ -14,6 +14,11 @@
            (when id
              (permission-db/user-permissions db id)))))
 
+(defn user-display-info
+  "Fetch user display info (name and email) only"
+  [db user-ref]
+  (d/pull db user-model/user-info-attributes (user-model/user-ref user-ref)))
+
 (defn resolve-user
   "Allways returns db/id for given user"
   [db user]

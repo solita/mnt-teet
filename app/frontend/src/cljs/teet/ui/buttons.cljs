@@ -75,6 +75,11 @@
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
                                :color          :primary}))
+(def large-button-primary
+  (util/make-component Button {:variant        :contained
+                               :disable-ripple true
+                               :color          :primary
+                               :size           :large}))
 
 (def button-secondary
   (util/make-component Button {:variant        :contained
@@ -113,7 +118,15 @@
                              :underline :none
                              :type      :button}))
 
-
+(defn stand-alone-icon-button
+  [{:keys [id on-click icon class href]}]
+  [IconButton {:size :small
+               :class (conj class (<class common-styles/stand-alone-icon-button-style))
+               :on-click on-click
+               :href href
+               :id id
+               }
+   icon])
 (defn link-button-with-icon
   [{:keys [on-click icon]} label]
   [link-button {:class (<class common-styles/white-link-button-style)

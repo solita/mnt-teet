@@ -1,6 +1,7 @@
 (ns teet.theme.theme-spacing)
 
 (def appbar-height "90px")
+(def appbar-height-mobile "50px")
 
 (def content-height (str "calc(100vh - " appbar-height ")"))
 
