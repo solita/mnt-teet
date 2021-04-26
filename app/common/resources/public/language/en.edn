@@ -649,6 +649,8 @@
   "The link can't be emailed. Email address has not been added, please add it through the My account page.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
+  :vektorio-request-failed
+  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :email-address-already-in-use "Email address already in use.",
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address."},
