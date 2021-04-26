@@ -8,7 +8,7 @@
     (.format (java.text.SimpleDateFormat. "yyyyMMdd") date)))
 
 
-;; :server-type   - :cloud
+;; :server-type   - :ion
 ;  :region        - AWS region, e.g. "us-east-1"
 ;  :system        - your system name
 ;  :endpoint      - IP address of your system or query group
@@ -17,10 +17,10 @@
         system "teet-datomic"
         query-group "teet-datomic-Compute"]
     {:server-type :ion
-     :region region
-     :system system
-     :endpoint (str "http://entry." query-group "." region ".datomic.net:8182/"
-     :proxy-port 8666)}))
+     :region "eu-central-1"
+     :system "teet-datomic"
+     :endpoint "http://entry.teet-datomic.eu-central-1.datomic.net:8182/"
+     :proxy-port 8666}))
 
 (def ^:dynamic *connection* nil)
 
