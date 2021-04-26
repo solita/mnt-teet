@@ -70,6 +70,14 @@
                          (file-db/file-metadata-by-id db file-id))]
     file-meta-data))
 
+(defn- vektorio-filename-from-file
+  "Returns for example '02_1_Uskuna.dwg'"
+  [file]
+  (let [file-data (file-db/file-metadata file)
+        _ (log/debug file-data)
+        file-meta-data (filename-metadata/metadata->vektorio-filename file-data)]
+    file-meta-data))
+
 (defn upload-file-to-vektor!
   [conn vektor-config file-id]
   (log/info "Uploading file" file-id "to vektorio")
@@ -122,12 +130,11 @@
 
 (defn update-model-in-vektorio!
   "Updates the model name in Vektor.io in case it is changed in TEET"
-  [conn db vektor-config file-id file]
+  [conn db vektor-config file-id]
   (let [vektor-model-id (:vektorio/model-id (d/pull db [:db/id :vektorio/model-id] file-id))
         vektor-project-id (ensure-project-vektorio-id! conn vektor-config file-id)
         vektor-filename (vektorio-filename db file-id)
         vektor-filepath (vektorio-filepath db file-id)
-        _ (log/debug file " :: " file-id " :: " vektor-model-id "|" vektor-filename "|" vektor-filepath)
         resp (if (and
                    (some? vektor-model-id)
                    (some? vektor-project-id))
