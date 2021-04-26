@@ -7,13 +7,13 @@ set -eu
 RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 CURRENT_DB=$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"')
 
-# aws ssm put-parameter \
-#              --name "/teet/datomic/db-name" \
-#              --type "String" \
-#              --value "$RESTORE_DB_NAME" \
-#              --overwrite
+aws ssm put-parameter \
+              --name "/teet/datomic/db-name" \
+              --type "String" \
+              --value $RESTORE_DB_NAME \
+              --overwrite
 
-# sleep 60
+sleep 60
 
 echo "Current DB "$CURRENT_DB
 echo "Restored DB "$RESTORE_DB_NAME
@@ -30,12 +30,12 @@ if [ "$STATUS" = "200" ]; then
   echo "$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') is in use"
 else
   echo "Query failed with status: $STATUS"
-  # aws ssm put-parameter \
-  #              --name "/teet/datomic/db-name" \
-  #              --type "String" \
-  #              --value "$CURRENT_DB" \
-  #              --overwrite
-  # sleep 60
+  aws ssm put-parameter \
+              --name "/teet/datomic/db-name" \
+              --type "String" \
+              --value $CURRENT_DB \
+              --overwrite
+  sleep 60
   echo "$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
 fi
 
