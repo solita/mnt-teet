@@ -224,4 +224,11 @@
   :view teet.contract.contracts-view/contracts-listing-view
   :crumb (tr [:contracts :contracts-listing])
   :title (tr [:contracts :contracts-listing])}
+
+ :contract
+ {:path "/contracts/:contract-ids"                          ;; /contracts/{procurement-id}-{procurement-part-id}
+  :view teet.contract.contract-view/contract-page
+  :state {:query :contract/contract-page
+          :args {:contract-ids
+                 (clojure.string/split contract-ids #"-")}}}
  }

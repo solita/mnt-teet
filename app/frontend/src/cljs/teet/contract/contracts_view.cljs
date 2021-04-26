@@ -9,11 +9,21 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [clojure.string :as str]
+            [teet.ui.url :as url]))
 
 (defn contract-card
-  [e! contract]
-  [:h3 (pr-str contract)])
+  [e! {:thk.contract/keys [procurement-id procurement-part-id]
+       contract-name :thk.contract/name :as contract}]
+  [:div {:class (<class common-styles/margin-bottom 2)}
+   [:h3 contract-name]
+   [:span (pr-str contract)]
+   [url/Link {:page :contract
+              :params {:contract-ids (str/join "-" (filterv
+                                                     some?
+                                                     [procurement-id procurement-part-id]))}}
+    "LINK TO THIS ACTIVITY"]])
 
 (defn contracts-list
   [e! contracts]
@@ -80,18 +90,15 @@
 (defn contract-search
   [{:keys [e! filter-options clear-filters search-fields
            filtering-atom input-change change-shortcut]}]
-
   [:div
    [buttons/link-button {:on-click clear-filters}
     "CLEAR FILTERS"]
    [search-shortcuts (:shortcut @filtering-atom) filter-options change-shortcut]
    [search-inputs e! @filtering-atom input-change search-fields]])
 
-
 ;; Targeted from routes.edn will be located in route /contracts
 (defn contracts-listing-view
-  [e! {contracts :contracts
-       route :route :as app}]
+  [e! {route :route :as app}]
   (r/with-let [default-filtering-value {:shortcut :my-contracts}
                filtering-atom (local-storage (r/atom default-filtering-value)
                                              :contract-filters)
@@ -114,7 +121,7 @@
      [:h1 "CONTRACTS LIStING"]
      [query/debounce-query
       {:e! e!
-       :query :contract/list-contracts
+       :query :contracts/list-contracts
        :args {:search-params @filtering-atom
               :refresh (:contract-refresh route)}
        :simple-view [contracts-list e!]}
