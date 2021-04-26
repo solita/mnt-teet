@@ -31,12 +31,14 @@
 (defn result-container-item
   []
   ^{:pseudo {:last-child {:border-bottom :none}}}
-  {:padding-top "0"
-   :padding-right "0"
-   :padding-bottom "0"
+  ^{:combinators
+    {[:> :ul] {:padding "0"}}}
+  {:padding-right "1rem"
+   :padding-top ".5rem"
+   :padding-bottom ".5rem"
    :display :flex
-   :align-items :center
-   :height "3.125rem"
+   :align-items :flex-start
+   :min-height "3.125rem"
    :border :none
    :border-bottom (str "1px solid " theme-colors/border-dark)})
 
@@ -101,7 +103,12 @@
                                   {:component "a"
                                    :href      href}))
                       (when icon
-                        [ListItemIcon icon])
+                        [ListItemIcon {:style
+                                       {:min-width :auto
+                                        :margin-top "0.25rem"
+                                        :margin-bottom "0.25rem"
+                                        :margin-right "1rem"}}
+                         icon])
                       [ListItemText
                        {:disable-typography true
                         :primary text}]]))

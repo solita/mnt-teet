@@ -6,7 +6,6 @@
             ;; Require all MaterialUI components with "mui-" prefix
             ;; the define-mui-components will adapt them and provide
             ;; wrapper functions that can be used directly from reagent
-            ["@material-ui/core/styles" :as styles]
             ["@material-ui/core/Card" :as mui-Card]
             ["@material-ui/core/CardActionArea" :as mui-CardActionArea]
             ["@material-ui/core/CardActions" :as mui-CardActions]
