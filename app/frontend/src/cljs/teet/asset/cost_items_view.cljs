@@ -63,6 +63,15 @@
   (let [path (reverse (asset-model/find-component-path cost-item-data component-oid))]
     (some (du/enum->kw extremum-value-ref) path)))
 
+(def ^:private allowed-decimal-digits 5)
+
+(defn- too-many-decimal-digits? [dec-string]
+  (< allowed-decimal-digits
+     (-> dec-string
+         (str/split #",|\.")
+         second
+         count)))
+
 (defn- validate [valueType component-oid cost-item-data {:attribute/keys [min-value max-value min-value-ref max-value-ref]} v]
   (when (some? v)
     (let [min-value-by-ref (when min-value-ref (extremum-value-by-ref component-oid cost-item-data min-value-ref))
@@ -97,6 +106,10 @@
                 (and (= valueType :db.type/bigdec)
                      (not (re-matches decimal-pattern v)))
                 (tr [:asset :validate :decimal-format])
+
+                (and (= valueType :db.type/bigdec)
+                     (too-many-decimal-digits? v))
+                (tr [:asset :validate :decimal-format]) ;; TODO proper error message
 
                 :else
                 (let [n (js/parseFloat v)]
