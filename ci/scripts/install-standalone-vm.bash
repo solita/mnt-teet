@@ -134,12 +134,15 @@ function install_deps_and_app {
     # cd app/datasource-import
     # clojure -A:import example-config.edn     
     
+    # todo: docker run problem - after experimenting with running this in codebuild, systemctl complains about init. privileged codebuild container didn't help. need to ditch codebuild & use ec2? or, run pg and postgrest in same container?
+    
     # todo: config.edn for teet app & datomic-local setup
 
     # todo: use datomic.dev-local/import-cloud for datomic data
     
-    pg_dump 
     # todo: use postgres backups for pg data (-> remove unneeded datasource-import run)
+
+
 }
 
 # kvm command line for testing on local dev machine:
