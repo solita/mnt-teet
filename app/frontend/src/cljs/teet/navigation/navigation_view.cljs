@@ -40,18 +40,25 @@
                        "User: " (if user
                                   (str given-name " " family-name
                                        " (person code:" person-id ")\n\n")
-                                  "User not logged in"))]
-    [:div {:class (<class navigation-style/feedback-container-style)}
-     [common/Link {:class (<class navigation-style/feedback-style)
-                   :href (str "mailto:teet-feedback@transpordiamet.ee"
-                              "?Subject=" (uri-quote subject-text)
-                              "&body=" (uri-quote body-text))}
-      [icons/action-feedback-outlined {:color :primary}]
-      [:span {:class (<class responsivity-styles/desktop-only-style
-                             {:margin-left "0.5rem"
-                              :display :inline-block}
-                             {:display :none})}
-       (tr [:common :send-feedback])]]]))
+                                  "User not logged in"))
+        feedback-href (str "mailto:teet-feedback@transpordiamet.ee"
+                           "?Subject=" (uri-quote subject-text)
+                           "&body=" (uri-quote body-text))]
+
+    [:<>
+     [buttons/stand-alone-icon-button
+      {:class [(<class responsivity-styles/visible-mobile-only)]
+       :icon  [icons/action-feedback-outlined {:color :primary}]
+       :href  feedback-href}]
+     [:div {:class (<class navigation-style/feedback-container-style)}
+      [common/Link {:class (<class navigation-style/feedback-style)
+                    :href  feedback-href}
+       [icons/action-feedback-outlined {:color :primary}]
+       [:span {:class (<class responsivity-styles/desktop-only-style
+                              {:margin-left "0.5rem"
+                               :display     :inline-block}
+                              {:display :none})}
+        (tr [:common :send-feedback])]]]]))
 
 (defn- drawer-header
   [e! open?]
@@ -169,54 +176,78 @@
                                    (reset! localization/selected-language
                                            language))))]
     [:div {:class (<class common-styles/flex-row)}
-     [:div {:style {:padding-right "0.5rem"
+     [:div {:style {:padding-right "1rem"
+                    :display :flex
                     :border-right (str "1px solid " theme-colors/border-dark)}}
       (if (= @localization/selected-language :et)
-        [typography/TextBold "EST"]
-        [buttons/link-button {:id "ET"
+        [typography/Text2Bold (get localization/language-names "et")]
+        [buttons/link-button {:style {:font-size "0.875rem"
+                                      :line-height "1.3125rem"}
+                              :id "ET"
                               :on-click #(change-lan-fn "et")}
-         "EST"])]
-     [:div {:style {:padding-left "0.5rem"}}
+         (get localization/language-names "et")])]
+     [:div {:style {:padding-left "1rem"
+                    :display :flex}}
       (if (= @localization/selected-language :en)
-        [typography/TextBold "ENG"]
-        [buttons/link-button {:id "EN"
+        [typography/Text2Bold (get localization/language-names "en")]
+        [buttons/link-button {:style {:font-size "0.875rem"
+                                      :line-height "1.3125rem"}
+                              :id "EN"
                               :on-click #(change-lan-fn "en")}
-         "ENG"])]]))
+         (get localization/language-names "en")])]]))
+
+(defn extra-nav-element
+  [{:keys [icon href content on-click link-id link-text last-item?]}]
+  [:div {:class (<class navigation-style/extra-nav-element-style last-item?)}
+   [:div {:class (<class common-styles/flex-row-center)}
+    [common/Link {:href href
+                  :class (<class common-styles/flex-align-center)
+                  :on-click on-click
+                  :id link-id}
+     [icon {:color :primary
+            :style {:margin-right "1rem"}}]
+     link-text]
+    content]])
 
 (defmethod header-extra-panel :search
   [e! user opts _]
   [:div {:style {:min-width "300px"}}
-   [:div {:class (<class navigation-style/extran-nav-heading-element-style)}
-    [search-view/quick-search e! (:quick-search opts)]]])
+   [:div {:class (<class navigation-style/extra-nav-search-container-style)}
+    [search-view/quick-search
+     e!
+     (:quick-search opts)
+     (<class navigation-style/search-input-style)]]])
+
+(defmethod header-extra-panel :login-control
+  [e! _ _ _]
+  [:div {:style {:min-width "300px"}}
+   [extra-nav-element {:icon icons/action-language
+                       :content [language-options]}]
+   [extra-nav-element {:icon icons/action-login
+                       :href "/oauth2/request"
+                       :link-text (tr [:login :login])
+                       :last-item? true}]])
 
 (defmethod header-extra-panel :account-control
   [e! user _ _]
   [:div {:style {:min-width "300px"}}
-   [:div {:class (<class navigation-style/extran-nav-heading-element-style)}
+   [:div {:class (<class navigation-style/extra-nav-heading-element-style)}
     [typography/Text2
      (user-model/user-name user)]]
-   [:div {:class (<class navigation-style/extra-nav-element-style)}
-    [common/Link {:href "#/account"
-                  :on-click (e! navigation-controller/->CloseExtraPanel)
-                  :class (<class common-styles/flex-row-center)
-                  :id "account-page-link"}
-     [icons/social-person-outlined {:color :primary
-                                    :style {:margin-right "1rem"}}]
-     (tr [:account :my-account])]]
-   [:div {:class (<class navigation-style/extra-nav-element-style)}
-    [:div {:class (<class common-styles/flex-row-center)}
-     [icons/action-language {:color :primary
-                             :style {:margin-right "1rem"}}]
-     [language-options]]]
-   [:div {:class (<class navigation-style/extra-nav-element-style)}
-    [:div {:class (<class common-styles/flex-row-center)}
-     [common/Link {:href "/#/login"
-                   :on-click (e! login-controller/->Logout)
-                   :class (<class common-styles/flex-align-center)}
-      [icons/action-logout {:color :primary
-                            :style {:margin-right "1rem"}}]
-      (tr [:account :logout])]]]])
-
+   [extra-nav-element {:icon icons/social-person-outlined
+                       :href "#/account"
+                       :on-click (e! navigation-controller/->CloseExtraPanel)
+                       :link-text (tr [:account :my-account])
+                       :link-id "account-page-link"}]
+   [extra-nav-element {:icon icons/action-language
+                       :content [language-options]}]
+   [extra-nav-element {:icon icons/action-logout
+                       :href "/#/login"
+                       :on-click #(do (e! (login-controller/->Logout))
+                                      (e! (navigation-controller/->CloseExtraPanel)))
+                       :link-text (tr [:account :logout])
+                       :link-id "account-page-link"
+                       :last-item? true}]])
 
 (defn user-info [user]
   [common/labeled-data {:class (<class navigation-style/divider-style)
@@ -225,11 +256,27 @@
 
 (defn open-account-navigation
   [e!]
-  [:div {:class (<class common-styles/flex-row-center)}
-   [IconButton {:size :small
-                :id "open-account-navigation"
-                :on-click #(e! (navigation-controller/->ToggleExtraPanel :account-control))}
-    [icons/social-person-outlined {:color :primary}]]])
+  [:div {:class (herb/join
+                  (<class common-styles/flex-row-center)
+                  (<class navigation-style/open-account-navigation-style))}
+   [buttons/stand-alone-icon-button {:id "open-account-navigation"
+                                     :icon [icons/social-person-outlined {:color :primary}]
+                                     :on-click #(e! (navigation-controller/->ToggleExtraPanel :account-control))}]])
+
+(defn login-button
+  [e!]
+  [:<>
+   [buttons/large-button-primary
+    {:class (<class responsivity-styles/visible-desktop-only)
+     :style {:margin "0 0 0 2rem"}
+     :href  "/oauth2/request"}
+    (tr [:login :login])]
+   [buttons/stand-alone-icon-button
+    {:id "mobile-login-button"
+     :class [(<class responsivity-styles/visible-mobile-only)
+             (<class navigation-style/divider-style)]
+     :icon [icons/social-person-outlined {:color :primary}]
+     :on-click #(e! (navigation-controller/->ToggleExtraPanel :login-control))}]])
 
 (defn navigation-header-links
   ([e! user url]
@@ -239,29 +286,36 @@
                   :justify-content :flex-end}}
     (when logged-in?
       [:<>
-       [IconButton {:size :small
-                    :id "open-mobile-search"
-                    :class [(<class responsivity-styles/visible-mobile-only) (<class navigation-style/divider-style)]
-                    :on-click #(e! (navigation-controller/->ToggleExtraPanel :search))}
-        [icons/action-search {:color :primary}]]
+       [buttons/stand-alone-icon-button
+        {:id "open-mobile-search"
+         :class [(<class responsivity-styles/visible-mobile-only)
+                 (<class navigation-style/divider-style)]
+         :icon [icons/action-search {:color :primary}]
+         :on-click #(e! (navigation-controller/->ToggleExtraPanel :search))}]
        [notification-view/notifications e!]])
 
     [feedback-link user url]
     (when (not logged-in?)
-      [:div {:class (<class navigation-style/divider-style)
-             :style {:display :flex
-                     :align-items :center}}
-       [icons/action-language {:style {:color theme-colors/primary}}]
+      [:div {:class [(<class navigation-style/divider-style)
+                     (<class responsivity-styles/desktop-only-style
+                             {:display       :flex
+                              :align-items   :center
+                              :padding-right "0.8rem"}
+                             {:display :none})]}
+       [icons/action-language {:style {:color theme-colors/primary
+                                       :padding-right "0.5rem" :width "auto"}}]
        [language-selector]])
     (if logged-in?
       [open-account-navigation e!]
-      [buttons/button-primary {:style {:margin "0 0.5rem"}
-                               :href "/oauth2/request"}
-       (tr [:login :login])])]))
+      [login-button e!])]))
 
 (defn header-extra-panel-container
-  [e! user quick-search extra-panel extra-panel-open?]
-  [:div {:style {:align-self :flex-end}}
+  [e! {:keys [user class quick-search extra-panel extra-panel-open?]}]
+  [:div {:style {:align-self :flex-end}
+         :class [(<class responsivity-styles/mobile-only-style
+                         {:width "100%"}
+                         {:width :auto})
+                 class]}
    [Collapse {:in (boolean extra-panel-open?)}
     [:div {:class (<class navigation-style/extra-nav-style)}
      [header-extra-panel e! user {:quick-search quick-search} extra-panel]]]])
@@ -273,23 +327,29 @@
     [AppBar {:position "sticky"
              :className (herb/join (<class navigation-style/appbar)
                                    (<class navigation-style/appbar-position open?))}
-
-
      [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
-      [IconButton {:on-click #(e! (navigation-controller/->ToggleDrawer))
-                   :class (<class responsivity-styles/mobile-navigation-button)}
-       [icons/navigation-menu]]
+      [buttons/stand-alone-icon-button
+       {:class [(<class responsivity-styles/mobile-navigation-button)]
+        :icon [icons/navigation-menu {:color :primary}]
+        :on-click #(e! (navigation-controller/->ToggleDrawer))}]
       [:div {:class (<class navigation-style/logo-style)}
        [navigation-logo/maanteeamet-logo false]]
       [:div {:class (<class responsivity-styles/desktop-only-style
-                            {:position :relative
-                             :flex-grow 1
+                            {:position   :relative
+                             :flex-grow  1
                              :flex-basis "400px"
-                             :display :block}
+                             :display    :block}
                             {:display :none})}
-       [search-view/quick-search e! quick-search]]
+       [search-view/quick-search
+        e!
+        quick-search
+        (<class navigation-style/search-input-style)]]
       [navigation-header-links e! user url]]
-     [header-extra-panel-container e! user quick-search extra-panel extra-panel-open?]]]
+     [header-extra-panel-container e!
+      {:user user
+       :quick-search quick-search
+       :extra-panel extra-panel
+       :extra-panel-open? extra-panel-open?}]]]
 
    (if (responsivity-styles/mobile?)
      [Drawer {:classes {"paperAnchorDockedLeft"
@@ -309,13 +369,17 @@
       [page-listing e! open? user page]])])
 
 (defn login-header
-  [e! {:keys [url] :as _app}]
+  [e! {:keys [url extra-panel extra-panel-open?] :as _app}]
   [AppBar {:position "sticky"
            :className (herb/join (<class navigation-style/appbar))}
    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
     [:div {:class (<class navigation-style/logo-style)}
      [navigation-logo/maanteeamet-logo true]]
-    [navigation-header-links e! nil url false]]])
+    [navigation-header-links e! nil url false]]
+   [header-extra-panel-container e!
+    {:class (<class responsivity-styles/visible-mobile-only)
+     :extra-panel extra-panel
+     :extra-panel-open? extra-panel-open?}]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}

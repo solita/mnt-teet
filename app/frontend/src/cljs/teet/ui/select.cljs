@@ -123,7 +123,7 @@
   ^{:pseudo {:focus theme-colors/focus-style
              :invalid {:box-shadow :inherit
                        :outline :inherit}
-             :hover {:margin-bottom "0"
+             :hover {:margin-bottom "1px"
                      :border-bottom (str "1px solid " theme-colors/primary)}}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
@@ -131,7 +131,6 @@
    :background-color :white
    :border-radius 0
    :display :block
-   :min-width "5rem"
    :border :none
    :padding-right "2rem"
    :font-size "1rem"

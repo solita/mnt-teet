@@ -90,12 +90,9 @@
                                         (:notification/status %))
                              notifications)
              :color "error"}
-      [IconButton
-       {:color "primary"
-        :size "small"
-        :component "span"
-        :on-click handle-click!}
-       [icons/social-notifications-outlined {:color "primary"}]]]
+      [buttons/stand-alone-icon-button
+        {:icon [icons/social-notifications-outlined {:color :primary}]
+         :on-click handle-click!}]]
      [Menu {:anchor-el @selected-item
             :anchor-origin {:vertical :bottom
                             :horizontal :center}
