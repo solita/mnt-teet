@@ -61,7 +61,8 @@
    :quantity "Kogus",
    :cost-per-quantity-unit "Ühiku maksumus (€)",
    :total-cost "Kokku (€)",
-   :project-total "Kokku {total} EUR"},
+   :project-total "Kokku {total} EUR",
+   :all-components "Kõik komponendid"},
   :add-cost-item "Lisan vara",
   :export-boq "Eksport BOQ",
   :validate
@@ -73,7 +74,9 @@
    :max-value "Lubatud maksimaalne väärtus on {max-value}",
    :integer-format "Sisesta täisarv",
    :decimal-format "Sisestage kümnendväärtus",
-   :only-whitespace nil},
+   :only-whitespace "Ainult tühik ei ole lubatud.",
+   :decimal-precision
+   "Numbri täpsus on liiga suur. Lubatud on {precision} kohta peale punkti."},
   :no-matching-feature-classes "Pole vastavat vara liiki",
   :unlock-tender-boq-warning "unlock tender warning (translate me)",
   :cost-item-saved "Vara salvestatud",
@@ -230,7 +233,7 @@
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
   :application-date-can-not-be-edited
-  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taoutlus ja sisestage uus.",
+  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taotlus ja sisestage uus.",
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
@@ -632,6 +635,8 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :vektorio-request-failed
+  "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
   "Ülesande staatus ei luba selle alla faile üles laadida",
   :file-too-large "Fail on liiga suur",
@@ -641,8 +646,6 @@
   "Vanemat versiooni ei saa asendada. Asenda uusim versioon.",
   :user-has-no-email
   "Viidet ei saa e-postiga saata. Puudub e-posti aadress, palun lisage e-posti aadress minu konto alt.",
-  :vektorio-request-failed
-  "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
   :email-address-already-in-use "E-posti aadress on juba kasutusel.",
   :no-participants-with-email
