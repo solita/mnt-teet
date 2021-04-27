@@ -31,14 +31,14 @@
   [db {:thk.contract/keys [procurement-id procurement-part-id]}]
   (if procurement-part-id
     (ffirst (d/q
-              '[:find (pull ?c [*])
+              '[:find (pull ?c [* {:thk.contract/targets [*]}])
                 :where
                 [?c :thk.contract/procurement-id ?procurement-id]
                 [?c :thk.contract/procurement-part-id ?procurement-part-id]
                 :in $ ?procurement-id ?procurement-part-id]
               db procurement-id procurement-part-id))
     (ffirst (d/q
-              '[:find (pull ?c [*])
+              '[:find (pull ?c [* {:thk.contract/targets [*]}])
                 :where
                 [?c :thk.contract/procurement-id ?procurement-id]
                 [(missing? $ ?c :thk.contract/procurement-part-id)]

@@ -47,8 +47,7 @@
   (let [proj-id (project-db/activity-project-id db activity-id)
         proj (project-db/project-by-id db proj-id)]
     {:page :activity
-     :params {
-              :project (str (:thk.project/id proj))
+     :params {:project (str (:thk.project/id proj))
               :activity (str activity-id)}}))
 
 (defn- file-navigation-info [db file-id]
