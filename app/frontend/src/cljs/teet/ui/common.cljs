@@ -220,6 +220,16 @@
     :display :flex
     :align-items :center})
 
+(defn- contract-link-style
+  []
+  ^{:pseudo {:hover {:text-decoration :none}}}
+  {:margin-left "10px"
+   :margin-right "10px"
+   :font-size "24px"
+   :text-decoration :underline
+   :display :flex
+   :align-items :center})
+
 (defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
@@ -243,6 +253,12 @@
           opts)
    label
    [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
+
+(defn contract-link
+  [opts label]
+  [Link (merge {:class (<class contract-link-style)} opts)
+   label
+   [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
 
 (defn estate-group-style
   []
