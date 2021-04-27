@@ -7,7 +7,9 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.asset.asset-model :as asset-model]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            cljs.reader
+            [teet.asset.asset-type-library :as asset-type-library]))
 
 (defrecord AddComponentCancel [id])
 
@@ -440,7 +442,7 @@
   ToggleOpenTotals
   (process-event [{ident :ident} app]
     (common-controller/update-page-state
-     app [:open-totals] cu/toggle ident)))
+     app [:closed-totals] cu/toggle ident)))
 
 (extend-protocol t/Event
   SaveBOQVersion
@@ -476,3 +478,24 @@
     (callback)
     (t/fx app
           common-controller/refresh-fx)))
+
+(defn filtered-cost-group-totals
+  "Return ATL item that is being filtered by and cost group totals that match
+  the filter.
+
+  Adds :ui/group to each item that contains a vector of type hierarchy."
+  [app atl cost-group-totals]
+  (let [kw (some-> app (get-in [:query :filter]) cljs.reader/read-string)
+
+        filter-pred (if kw
+                      #(some (fn [{t :db/ident}] (= t kw))
+                             (:ui/group %))
+                      identity)]
+    [(some->> kw (asset-type-library/item-by-ident atl))
+     (into []
+           (comp
+            (map #(assoc % :ui/group
+                         (asset-type-library/type-hierarchy atl (:type %))))
+
+            (filter filter-pred))
+           cost-group-totals)]))

@@ -34,7 +34,6 @@
             [teet.map.map-features :as map-features]
             [teet.ui.table :as table]
             [teet.user.user-model :as user-model]
-            [teet.util.date :as date]
             [teet.ui.format :as fmt]
             [teet.ui.panels :as panels]))
 
@@ -784,9 +783,20 @@
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
+(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type}]
+  [table/listing-table-body-component listing-opts
+   [container/collapsible-container-heading
+    {:open? (not (closed-set ident))
+     :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
+    [url/Link {:page :cost-items-totals
+               :query {:filter (str ident)}}
+     (label header-type)]]])
 
 (defn cost-items-totals-page
-  [e! app {atl :asset-type-library totals :cost-totals version :version :as state}]
+  [e! app {atl :asset-type-library totals :cost-totals version :version
+           closed-totals :closed-totals
+           :or {closed-totals #{}}
+           :as state}]
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
           listing-opts {:columns asset-model/cost-totals-table-columns
@@ -808,19 +818,57 @@
                                                       (format-euro value)
                                                       [cost-group-unit-price e! value row])
                             :total-cost (format-euro value)
-                            (str value)))}]
+                            (str value)))}
+
+          [filter-fg-or-fc filtered-cost-groups]
+          (->> totals :cost-groups
+               (cost-items-controller/filtered-cost-group-totals app atl))
+
+          grouped-totals (->> filtered-cost-groups
+                              (group-by (comp first :ui/group))
+                              ;; sort by translated fgroup label
+                              (sort-by (comp label first)))]
       [cost-items-page-structure
        e! app state
        nil
        [:div.cost-items-totals
+        (when-let [hierarchy (some->> filter-fg-or-fc
+                                      (asset-type-library/type-hierarchy atl))]
+          [breadcrumbs/breadcrumbs
+           (into
+            [{:link [url/Link {:page :cost-items-totals :query {:filter nil}}
+                     (tr [:asset :totals-table :all-components])]
+              :title (tr [:asset :totals-table :all-components])}]
+             (for [h hierarchy
+                   :let [title (label h)]]
+               {:link [url/Link {:page :cost-items-totals
+                                 :query {:filter (str (:db/ident h))}}
+                       title]
+                :title title}))])
         [:div {:style {:float :right}}
          [:b
           (tr [:asset :totals-table :project-total]
               {:total (:total-cost totals)})]]
-        [:div
+        [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
-         [table/listing-body
-          (assoc listing-opts :rows (:cost-groups totals))]]]])))
+         (doall
+          (for [[fg rows] grouped-totals
+                :let [ident (:db/ident fg)
+                      open? (not (closed-totals ident))]]
+            ^{:key (str ident)}
+            [:<>
+             [table-section-header e! listing-opts closed-totals fg]
+             (when open?
+               [:<>
+                (doall
+                 (for [[fc rows] (group-by (comp second :ui/group) rows)
+                       :let [ident (:db/ident fc)
+                             open? (not (closed-totals ident))]]
+                   ^{:key (str ident)}
+                   [:<>
+                    [table-section-header e! listing-opts closed-totals fc]
+                    (when open?
+                      [table/listing-body (assoc listing-opts :rows rows)])]))])]))]]])))
 
 (defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure

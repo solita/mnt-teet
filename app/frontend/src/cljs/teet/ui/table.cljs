@@ -92,12 +92,17 @@
 (defn- default-format-column [_column-name value _row]
   (str value))
 
-(defn listing-body [{:keys [rows on-row-click columns column-align get-column format-column]
-                     :or {get-column get}}]
+(defn- db-id-key [row]
+  (str (:db/id row)))
+
+(defn listing-body [{:keys [rows on-row-click columns column-align get-column format-column key]
+                     :or {get-column get
+                          key db-id-key
+                          format-column default-format-column}}]
   [TableBody {}
    (doall
     (for [row rows]
-      ^{:key (get row key)}
+      ^{:key (key row)}
       [TableRow (merge
                  {:class (<class row-style)}
                  (when on-row-click
@@ -179,10 +184,10 @@
                                        ;; filters/results have changed
                                        (reset-show-count! state))
        :reagent-render
-       (fn [{:keys [on-row-click filters data columns column-align
-                    filter-type format-column key column-label-fn]
-             :or {filter-type {}
-                  format-column default-format-column}}]
+       (fn [{:keys [ filters data columns column-align
+                    filter-type column-label-fn]
+             :or {filter-type {}}
+             :as opts}]
          [:<>
           [Table {}
            [listing-header {:state state
@@ -191,13 +196,9 @@
                             :filter-type filter-type
                             :column-align column-align
                             :column-label-fn column-label-fn}]
-           [listing-body {:rows (listing-items state data)
-                          :key key
-                          :on-row-click on-row-click
-                          :columns columns
-                          :column-align column-align
-                          :get-column get-column
-                          :format-column format-column}]]
+           [listing-body
+            (merge opts
+                   {:rows (listing-items state data)})]]
           (when default-show-count
             [scroll-sensor/scroll-sensor (r/partial show-more! state)])])})))
 
