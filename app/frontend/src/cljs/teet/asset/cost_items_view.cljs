@@ -820,6 +820,21 @@
     :total-cost (format-euro value)
     (str value)))
 
+(defn- filter-breadcrumbs [atl filter-fg-or-fc]
+  (when-let [hierarchy (some->> filter-fg-or-fc
+                                (asset-type-library/type-hierarchy atl))]
+    [breadcrumbs/breadcrumbs
+     (into
+      [{:link [url/Link {:page :cost-items-totals :query {:filter nil}}
+               (tr [:asset :totals-table :all-components])]
+        :title (tr [:asset :totals-table :all-components])}]
+      (for [h hierarchy
+            :let [title (label h)]]
+        {:link [url/Link {:page :cost-items-totals
+                          :query {:filter (str (:db/ident h))}}
+                title]
+         :title title}))]))
+
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals version :version
            closed-totals :closed-totals
@@ -845,8 +860,7 @@
                               (sort-by (comp label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            ::url/query {:filter (str (:db/ident %))}})
-          ]
+                            ::url/query {:filter (str (:db/ident %))}})]
       [cost-items-page-structure
        {:e! e!
         :app  app
@@ -855,19 +869,7 @@
                     :fgroup-link-fn filter-link-fn
                     :list-features? false}}
        [:div.cost-items-totals
-        (when-let [hierarchy (some->> filter-fg-or-fc
-                                      (asset-type-library/type-hierarchy atl))]
-          [breadcrumbs/breadcrumbs
-           (into
-            [{:link [url/Link {:page :cost-items-totals :query {:filter nil}}
-                     (tr [:asset :totals-table :all-components])]
-              :title (tr [:asset :totals-table :all-components])}]
-             (for [h hierarchy
-                   :let [title (label h)]]
-               {:link [url/Link {:page :cost-items-totals
-                                 :query {:filter (str (:db/ident h))}}
-                       title]
-                :title title}))])
+        [filter-breadcrumbs atl filter-fg-or-fc]
         [:div {:style {:float :right}}
          [:b
           (tr [:asset :totals-table :project-total]
