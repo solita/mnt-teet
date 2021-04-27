@@ -232,16 +232,14 @@
                  [type (map-services/fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
 
-(def ^:private relevant-roads-buffer-meters 50)
-
 (defn fetch-relevant-roads-for-project-cost-items
   "Returns the road itself, along with all the roads that intersect the
   project road object (radius 50m)"
-  [ctx integration-id]
+  [ctx integration-id buffer-meters]
   {:pre [integration-id]}
   (let [road-object-search-geometry (entity-features/entity-search-area-gml ctx
                                                                             integration-id
-                                                                            relevant-roads-buffer-meters)]
+                                                                            buffer-meters)]
     (->> (map-services/fetch-intersecting-objects-of-type ctx
                                                           "ms:teeosa"
                                                           road-object-search-geometry
@@ -249,4 +247,5 @@
          (map (fn [road-part]
                 {:road (some-> road-part :ms:tee_number ->int)
                  :carriageway (some-> road-part :ms:soidutee_nr ->int)
-                 :name (some-> road-part :ms:nimi)})))))
+                 :name (some-> road-part :ms:nimi)}))
+         set)))

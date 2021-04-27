@@ -1,18 +1,19 @@
 (ns teet.asset.asset-queries
-  (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [datomic.client.api :as d]
-            [teet.environment :as environment]
-            [teet.project.project-db :as project-db]
-            [teet.asset.asset-db :as asset-db]
-            [teet.asset.asset-type-library :as asset-type-library]
-            [teet.asset.asset-model :as asset-model]
-            [teet.util.euro :as euro]
-            [teet.transit :as transit]
+  (:require [datomic.client.api :as d]
             [ring.util.io :as ring-io]
             [teet.asset.asset-boq :as asset-boq]
+            [teet.asset.asset-db :as asset-db]
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.db-api.core :as db-api :refer [defquery]]
+            [teet.environment :as environment]
             [teet.localization :as localization]
             [teet.log :as log]
-            [teet.user.user-db :as user-db]))
+            [teet.project.project-db :as project-db]
+            [teet.road.road-query :as road-query]
+            [teet.transit :as transit]
+            [teet.user.user-db :as user-db]
+            [teet.util.euro :as euro]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -83,3 +84,19 @@
                 (catch Throwable t
                   (log/error t "Exception generating BOQ excel"
                              {:project-id project-id}))))))})
+
+(def ^:private relevant-roads-buffer-meters 50)
+
+(defquery :asset/relevant-roads-for-project-cost-items
+  {:doc "Fetch relevant roads for cost items of project, meaning the project road along with roads intersecting project geometry with a buffer of 50 meters."
+   :context {:keys [db user]}
+   :args {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/read-info {}}}
+  (when-let [integration-id (project-db/thk-id->integration-id-uuid db project-id)]
+    (let [ctx (environment/config-map {:api-url [:api-url]
+                                       :api-secret [:auth :jwt-secret]
+                                       :wfs-url [:road-registry :wfs-url]})]
+      (road-query/fetch-relevant-roads-for-project-cost-items ctx
+                                                              integration-id
+                                                              relevant-roads-buffer-meters))))
