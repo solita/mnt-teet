@@ -61,7 +61,8 @@
    :quantity "Quantity",
    :cost-per-quantity-unit "Unit cost (€)",
    :total-cost "Total (€)",
-   :project-total "Total {total} EUR"},
+   :project-total "Total {total} EUR",
+   :all-components "All components"},
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate
@@ -441,7 +442,7 @@
   :task.type/eia-pre-assessment "EIA pre-assessment",
   :task.type/owners-supervision "Owners' supervision",
   :task.group/study "Studies",
-  :file.status/draft "permission-already-granted",
+  :file.status/draft "Draft",
   :task.type/construction-lighting "Lighting",
   :task.type/collaboration "Collaboration",
   :boq-version.type/budget "Budget",

@@ -61,7 +61,8 @@
    :quantity "Kogus",
    :cost-per-quantity-unit "Ühiku maksumus (€)",
    :total-cost "Kokku (€)",
-   :project-total "Kokku {total} EUR"},
+   :project-total "Kokku {total} EUR",
+   :all-components "Kõik komponendid"},
   :add-cost-item "Lisan vara",
   :export-boq "Eksport BOQ",
   :validate
@@ -232,7 +233,7 @@
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
   :application-date-can-not-be-edited
-  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taoutlus ja sisestage uus.",
+  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taotlus ja sisestage uus.",
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
