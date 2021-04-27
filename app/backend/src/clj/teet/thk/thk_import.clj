@@ -270,6 +270,7 @@
                   (select-keys contract-info [:thk.contract/procurement-id
                                               :thk.contract/name
                                               :thk.contract/part-name
+                                              :thk.contract/procurement-number
                                               :thk.contract/procurement-part-id
                                               :thk.contract/type]))]
           (log/warn "No targets found for contract with ids: " contract-ids)))

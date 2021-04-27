@@ -20,12 +20,12 @@
   )
 
 (defn contract-card
-  [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-no]
+  [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number]
        contract-name :thk.contract/name :as contract}]
   [:div {:class (<class common-styles/margin-bottom 2)}
    [:h3 contract-name]
    [:span (pr-str contract)]
-   [common/contract-link {:href (str "https://riigihanked.riik.ee/rhr-web/#/procurement/" procurement-no)
+   [common/contract-link {:href (str "https://riigihanked.riik.ee/rhr-web/#/procurement/" procurement-number)
                           :target "_blank"}
     (tr [:contracts :contract-link])]
    [common/contract-link {:href (str (get-delta-url) procurement-part-id)
