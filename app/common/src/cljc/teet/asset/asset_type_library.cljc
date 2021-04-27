@@ -38,15 +38,15 @@
         (:fgroups atl)))
 
 (defn type-hierarchy
-  "Find :db/ident of each hierarchy parent of given fclass or ctype."
+  "Find each hierarchy parent of given fclass or ctype."
   [atl node]
-  (mapv :db/ident
-        (drop 1 ; drop 1st :fgroups level
-              (cu/find-path #(concat (:fgroups %)
-                                     (:fclass/_fgroup %)
-                                     (:ctype/_parent %))
-                            #(du/enum= node %)
-                            atl))))
+  (vec
+   (drop 1                              ; drop 1st :fgroups level
+         (cu/find-path #(concat (:fgroups %)
+                                (:fclass/_fgroup %)
+                                (:ctype/_parent %))
+                       #(du/enum= node %)
+                       atl))))
 
 (defn- has-type? [type x]
   (and (map? x)
