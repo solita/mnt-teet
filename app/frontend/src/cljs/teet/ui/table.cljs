@@ -148,6 +148,21 @@
              (take @show-count sorted-items)
              sorted-items)))))))
 
+(defn listing-table-container [& children]
+  (into [Table {}] children))
+
+(defn listing-table-body-component
+  "Add a special body component. Adds a table body with
+  one row containing one cell that spans all the columns.
+
+  The children are added to the one cell."
+  [{:keys [columns]} child]
+  [:tbody {}
+   [:tr {}
+    [:td {:colSpan (count columns)}
+     child]]])
+
+
 (defn listing-table
   "Raw table without panel and title.
 
