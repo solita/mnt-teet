@@ -8,7 +8,7 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid CircularProgress]]
+            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
@@ -583,31 +583,41 @@
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items]}]
+  [{:keys [e! app cost-items fgroup-link-fn fclass-link-fn list-features?]
+    :or {list-features? true}}]
   (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
     [:div.cost-items-by-fgroup
      (doall
-      (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
+      (for [[{ident :db/ident :as fgroup} fclasses] cost-items
+            :let [label (str (tr* fgroup)
+                             " (" (apply + (map (comp count val) fclasses)) ")")]]
         ^{:key (str ident)}
         [container/collapsible-container
          {:on-toggle (r/partial toggle-open! ident)
           :open? (contains? @open ident)}
-         (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
+         (if fgroup-link-fn
+           [Link {:href (fgroup-link-fn fgroup)} label]
+           label)
          [:div.cost-items-by-fclass {:data-fgroup (str ident)
                                      :style {:margin-left "0.5rem"}}
           (doall
-           (for [[{ident :db/ident :as fclass} cost-items] fclasses]
+           (for [[{ident :db/ident :as fclass} cost-items] fclasses
+                 :let [label (str/upper-case (tr* fclass))]]
              ^{:key (str ident)}
              [:div {:style {:margin-top "1rem"
                             :margin-left "1rem"}}
-              [typography/Text2Bold (str/upper-case (tr* fclass))]
-              [:div.cost-items {:style {:margin-left "1rem"}}
-               (for [{oid :asset/oid} cost-items]
-                 ^{:key oid}
-                 [:div
-                  [url/Link {:page :cost-item
-                             :params {:id oid}} oid]])]]))]]))]))
+              [typography/Text2Bold
+               (if fclass-link-fn
+                 [Link {:href (fclass-link-fn fclass)} label]
+                 label)]
+              (when list-features?
+                [:div.cost-items {:style {:margin-left "1rem"}}
+                 (for [{oid :asset/oid} cost-items]
+                   ^{:key oid}
+                   [:div
+                    [url/Link {:page :cost-item
+                               :params {:id oid}} oid]])])]))]]))]))
 
 (defn- cost-items-navigation [e! {:keys [page params]}]
   [select/form-select
@@ -711,35 +721,37 @@
              :on-close (r/partial set-dialog! nil)}]))])))
 
 (defn cost-items-page-structure
-  [e! app {:keys [cost-items asset-type-library project version] :as page-state}
-   left-panel-action main-content]
-  [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
-   [context/provide :locked? (asset-model/locked? version)
-    [project-view/project-full-page-structure
-     {:e! e!
-      :app app
-      :project project
-      :export-menu-items
-      [{:id "export-boq"
-        :label (tr [:asset :export-boq])
-        :icon [icons/file-download]
-        :link {:target :_blank
-               :href (common-controller/query-url
-                      :asset/export-boq
-                      {:thk.project/id (:thk.project/id project)})}}]
-      :left-panel
-      [:<>
-       [cost-items-navigation e! app]
-       left-panel-action
-       [cost-item-hierarchy {:e! e!
-                             :app app
-                             :add? (= :new-cost-item (:page app))
-                             :project project
-                             :cost-items cost-items}]]
-      :main
-      [:<>
-       [boq-version-statusline e! page-state]
-       main-content]}]]])
+  [{:keys [e! app state left-panel-action hierarchy]} main-content]
+  (let [{:keys [cost-items asset-type-library project version] :as page-state} state]
+    [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
+     [context/provide :locked? (asset-model/locked? version)
+      [project-view/project-full-page-structure
+       {:e! e!
+        :app app
+        :project project
+        :export-menu-items
+        [{:id "export-boq"
+          :label (tr [:asset :export-boq])
+          :icon [icons/file-download]
+          :link {:target :_blank
+                 :href (common-controller/query-url
+                        :asset/export-boq
+                        {:thk.project/id (:thk.project/id project)})}}]
+        :left-panel
+        [:<>
+         [cost-items-navigation e! app]
+         left-panel-action
+         [cost-item-hierarchy
+          (merge hierarchy
+                 {:e! e!
+                  :app app
+                  :add? (= :new-cost-item (:page app))
+                  :project project
+                  :cost-items cost-items})]]
+        :main
+        [:<>
+         [boq-version-statusline e! page-state]
+         main-content]}]]]))
 
 (defn- format-properties [atl properties]
   (into [:<>]
@@ -830,10 +842,18 @@
           grouped-totals (->> filtered-cost-groups
                               (group-by (comp first :ui/group))
                               ;; sort by translated fgroup label
-                              (sort-by (comp label first)))]
+                              (sort-by (comp label first)))
+          filter-link-fn #(url/cost-items-totals
+                           {:project (get-in app [:params :project])
+                            ::url/query {:filter (str (:db/ident %))}})
+          ]
       [cost-items-page-structure
-       e! app state
-       nil
+       {:e! e!
+        :app  app
+        :state state
+        :hierarchy {:fclass-link-fn filter-link-fn
+                    :fgroup-link-fn filter-link-fn
+                    :list-features? false}}
        [:div.cost-items-totals
         (when-let [hierarchy (some->> filter-fg-or-fc
                                       (asset-type-library/type-hierarchy atl))]
@@ -875,16 +895,20 @@
 
 (defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure
-   e! app state
-   [add-cost-item app version]
+   {:e! e!
+    :app app
+    :state state
+    :left-panel-action [add-cost-item app version]}
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item
            version :version :as state}]
   [cost-items-page-structure
-   e! app state
-   [add-cost-item app version]
+   {:e! e!
+    :app app
+    :state state
+    :left-panel-action [add-cost-item app version]}
    [cost-item-form e! atl cost-item]])
 
 (defn cost-item-page
@@ -896,8 +920,10 @@
       [new-cost-item-page e! app state]
 
       [cost-items-page-structure
-       e! app state
-       [add-cost-item app version]
+       {:e! e!
+        :app app
+        :state state
+        :left-panel-action [add-cost-item app version]}
        (if component
          ^{:key component}
          [component-form e! asset-type-library component cost-item]
