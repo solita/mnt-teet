@@ -52,6 +52,7 @@
 
 (def ^:private integer-pattern #"^\d*$")
 (def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
+(def ^:private only-whitespace-pattern #"^\s+$")
 
 (defn- extremum-value-by-ref
   "Find the extremum (min or max) value by searching for the given
@@ -62,57 +63,72 @@
   (let [path (reverse (asset-model/find-component-path cost-item-data component-oid))]
     (some (du/enum->kw extremum-value-ref) path)))
 
+(def ^:private maximum-decimal-precision 6)
+
+(defn- too-many-decimal-digits? [dec-string]
+  (< maximum-decimal-precision
+     (-> dec-string
+         (str/split #",|\.")
+         second
+         count)))
+
 (defn- validate [valueType component-oid cost-item-data {:attribute/keys [min-value max-value min-value-ref max-value-ref]} v]
-  (when-not (str/blank? v)
+  (when (some? v)
     (let [min-value-by-ref (when min-value-ref (extremum-value-by-ref component-oid cost-item-data min-value-ref))
           max-value-by-ref (when max-value-ref (extremum-value-by-ref component-oid cost-item-data max-value-ref))]
-      (println min-value-by-ref max-value-by-ref)
-      (case valueType
-       ;; Check length for strings
-       :db.type/string
-       (cond
-         (and min-value (< (count v) min-value))
-         (tr [:asset :validate :min-length] {:min-length min-value})
+      (or (when (and (string? v)
+                     (re-matches only-whitespace-pattern v))
+            (tr [:asset :validate :only-whitespace]))
+          (case valueType
+            ;; Check length for strings
+            :db.type/string
+            (cond
+              (and min-value (< (count v) min-value))
+              (tr [:asset :validate :min-length] {:min-length min-value})
 
-         (and max-value (> (count v) max-value))
-         (tr [:asset :validate :max-length] {:max-length max-value})
+              (and max-value (> (count v) max-value))
+              (tr [:asset :validate :max-length] {:max-length max-value})
 
-         ;; TODO: own error messages for refs?
-         (and min-value-by-ref (< (count v) min-value-by-ref))
-         (tr [:asset :validate :min-length] {:min-length min-value-by-ref})
+              ;; TODO: own error messages for refs?
+              (and min-value-by-ref (< (count v) min-value-by-ref))
+              (tr [:asset :validate :min-length] {:min-length min-value-by-ref})
 
-         (and max-value-by-ref (> (count v) max-value-by-ref))
-         (tr [:asset :validate :max-length] {:max-length max-value-by-ref}))
+              (and max-value-by-ref (> (count v) max-value-by-ref))
+              (tr [:asset :validate :max-length] {:max-length max-value-by-ref}))
 
-       (:db.type/long :db.type/bigdec)
-       (let [v (str/trim v)]
-         (cond
-           (and (= valueType :db.type/long)
-                (not (re-matches integer-pattern v)))
-           (tr [:asset :validate :integer-format])
+            (:db.type/long :db.type/bigdec)
+            (let [v (str/trim v)]
+              (cond
+                (and (= valueType :db.type/long)
+                     (not (re-matches integer-pattern v)))
+                (tr [:asset :validate :integer-format])
 
-           (and (= valueType :db.type/bigdec)
-                (not (re-matches decimal-pattern v)))
-           (tr [:asset :validate :decimal-format])
+                (and (= valueType :db.type/bigdec)
+                     (not (re-matches decimal-pattern v)))
+                (tr [:asset :validate :decimal-format])
 
-           :else
-           (let [n (js/parseFloat v)]
-             (cond
-               (and min-value (< n min-value))
-               (tr [:asset :validate :min-value] {:min-value min-value})
+                (and (= valueType :db.type/bigdec)
+                     (too-many-decimal-digits? v))
+                (tr [:asset :validate :decimal-precision] {:precision maximum-decimal-precision})
 
-               (and max-value (> n max-value))
-               (tr [:asset :validate :max-value] {:max-value max-value})
+                :else
+                (let [n (js/parseFloat v)]
+                  (cond
+                    (and min-value (< n min-value))
+                    (tr [:asset :validate :min-value] {:min-value min-value})
 
-               ;; TODO: own error messages for refs?
-               (and min-value-by-ref (< n min-value-by-ref))
-               (tr [:asset :validate :min-value] {:min-value min-value-by-ref})
+                    (and max-value (> n max-value))
+                    (tr [:asset :validate :max-value] {:max-value max-value})
 
-               (and max-value-by-ref (> n max-value-by-ref))
-               (tr [:asset :validate :max-value] {:max-value max-value-by-ref})))))
+                    ;; TODO: own error messages for refs?
+                    (and min-value-by-ref (< n min-value-by-ref))
+                    (tr [:asset :validate :min-value] {:min-value min-value-by-ref})
 
-       ;; no validation otherwise
-       nil))))
+                    (and max-value-by-ref (> n max-value-by-ref))
+                    (tr [:asset :validate :max-value] {:max-value max-value-by-ref})))))
+
+            ;; no validation otherwise
+            nil)))))
 
 (defn- attribute-group [{ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
@@ -128,8 +144,8 @@
 
 (defn- attribute-grid-item [content]
   [Grid {:item true
-          :md 4
-          :xs 12
+         :md 4
+         :xs 12
          :style {:padding "0.2rem"}}
    content])
 

@@ -61,7 +61,8 @@
    :quantity "Quantity",
    :cost-per-quantity-unit "Unit cost (€)",
    :total-cost "Total (€)",
-   :project-total "Total {total} EUR"},
+   :project-total "Total {total} EUR",
+   :all-components "All components"},
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate
@@ -72,7 +73,9 @@
    :max-value "Maximum allowed value: {max-value}",
    :integer-format "Insert integer value",
    :decimal-format "Insert decimal value",
-   :only-whitespace "Field cannot contain only whitespace"},
+   :only-whitespace "Field cannot contain only whitespace",
+   :decimal-precision
+   "Number precision too large. Maximum allowed is {precision}."},
   :no-matching-feature-classes "No matching feature classes.",
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
@@ -638,6 +641,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :vektorio-request-failed
+  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
   "Task status does not allow for files to be added",
   :file-too-large "File is too large",
@@ -649,8 +654,6 @@
   "The link can't be emailed. Email address has not been added, please add it through the My account page.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
-  :vektorio-request-failed
-  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :email-address-already-in-use "Email address already in use.",
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address."},
