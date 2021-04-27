@@ -2,6 +2,7 @@
   "Query road geometry and road objects from Teeregister"
   (:require [clojure.string :as str]
             [clojure.data.zip.xml :as z]
+            [teet.gis.entity-features :as entity-features]
             [teet.util.geo :as geo]
             [teet.log :as log]
             [teet.map.map-services :as map-services]))
@@ -9,7 +10,6 @@
 (defn- query-by-road-and-carriageway [road carriageway]
   (map-services/ogc-filter
    (map-services/query-by-values {:tee_number road :soidutee_nr carriageway})))
-
 
 (defn- ->int [txt]
   (Long/parseLong txt))
@@ -231,3 +231,22 @@
          (pmap (fn [type]
                  [type (map-services/fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
+
+(def ^:private relevant-roads-buffer-meters 50)
+
+(defn fetch-relevant-roads-for-project-cost-items
+  "Returns the road itself, along with all the roads that intersect the
+  project road object (radius 50m)"
+  [ctx integration-id]
+  {:pre [integration-id]}
+  (let [road-object-search-geometry (entity-features/entity-search-area-gml ctx
+                                                                            integration-id
+                                                                            relevant-roads-buffer-meters)]
+    (->> (map-services/fetch-intersecting-objects-of-type ctx
+                                                          "ms:teeosa"
+                                                          road-object-search-geometry
+                                                          {:propertyName [:ms:tee_number :ms:soidutee_nr :ms:nimi]})
+         (map (fn [road-part]
+                {:road (some-> road-part :ms:tee_number ->int)
+                 :carriageway (some-> road-part :ms:soidutee_nr ->int)
+                 :name (some-> road-part :ms:nimi)})))))

@@ -112,12 +112,26 @@
        (handle-wfs-response wfs-url (:TYPENAME query-params)
                             request-delay (or custom-parse-feature parse-feature))))))
 
-(defn wfs-get-feature [{:keys [wfs-url]} typename ogc-filter]
+(defn- propertyName->string
+  "Transforms a vec of keyword property names into a comma separated list:
+   [:a :b :c] -> \"a,b,c\""
+  [propertyName]
+  (->> propertyName
+       (map name)
+       (str/join ",")))
+
+(defn wfs-get-feature
+  "Returns features of type `typename`, filtered by `ogc-filter`."
+  [{:keys [wfs-url]}
+   typename                                     ;; The `typeName` of the feature
+   ogc-filter                                   ;; the OGC filter in hiccup format
+   & [{:keys [propertyName] :as _options-map}]] ;; a map of other options; `propertyName` is a vector of property keywords to return
   (let [payload [:wfs:GetFeature {:xmlns:wfs "http://www.opengis.net/wfs"
                                   :xmlns:gml "http://www.opengis.net/gml"
                                   :version "1.1.0"
                                   :service "WFS"}
-                 [:wfs:Query {:typeName typename}
+                 [:wfs:Query (merge {:typeName typename}
+                                    (when propertyName {:propertyName (propertyName->string propertyName)}))
                   [:Filter {:xmlns "http://www.opengis.net/ogc"}
                    ogc-filter]]]
         payload-xml (str "<?xml version=\"1.0\"?>\n"
@@ -166,12 +180,13 @@
 
 (defn fetch-intersecting-objects-of-type
   "Fetch road objects for given typename intersecting the given area."
-  [config typename gml-geometry]
+  [config typename gml-geometry & [options-map]]
   (wfs-get-feature config
                    typename
                    [:Intersects
                     [:PropertyName "msGeometry"]
-                    (raw gml-geometry)]))
+                    (raw gml-geometry)]
+                   options-map))
 
 (defn fetch-capabilities [url service]
   (log/info "fetch" service "capabilities from" url)
