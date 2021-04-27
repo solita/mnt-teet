@@ -792,6 +792,22 @@
                :query {:filter (str ident)}}
      (label header-type)]]])
 
+
+(defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
+  (case column
+    :type (label (asset-type-library/item-by-ident atl value))
+    :common/status (label (asset-type-library/item-by-ident
+                           atl (:db/ident value)))
+    :properties (format-properties atl row)
+    :quantity (str value
+                   (when-let [qu (:quantity-unit row)]
+                     (str " " qu)))
+    :cost-per-quantity-unit (if locked?
+                              (format-euro value)
+                              [cost-group-unit-price e! value row])
+    :total-cost (format-euro value)
+    (str value)))
+
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals version :version
            closed-totals :closed-totals
@@ -804,21 +820,8 @@
                         :column-label-fn #(if (= % :common/status)
                                             (label (asset-type-library/item-by-ident atl %))
                                             (tr [:asset :totals-table %]))
-                        :format-column
-                        (fn [column value row]
-                          (case column
-                            :type (label (asset-type-library/item-by-ident atl value))
-                            :common/status (label (asset-type-library/item-by-ident
-                                                   atl (:db/ident value)))
-                            :properties (format-properties atl row)
-                            :quantity (str value
-                                           (when-let [qu (:quantity-unit row)]
-                                             (str " " qu)))
-                            :cost-per-quantity-unit (if locked?
-                                                      (format-euro value)
-                                                      [cost-group-unit-price e! value row])
-                            :total-cost (format-euro value)
-                            (str value)))}
+                        :format-column (r/partial format-cost-table-column
+                                                  {:e! e! :atl atl :locked? locked?})}
 
           [filter-fg-or-fc filtered-cost-groups]
           (->> totals :cost-groups
