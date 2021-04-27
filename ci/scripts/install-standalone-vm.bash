@@ -66,7 +66,7 @@ function install_deps_and_app {
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
@@ -145,6 +145,21 @@ function install_deps_and_app {
 
 }
 
-# kvm command line for testing on local dev machine:
-# kvm -smp 4 -m 4096 -vga qxl --boot once=c --drive "file=$HOME/src/mnt-teet/ci/vmcow1.qcow2"
+UBUNTU_AMI_ID=ami-0767046d1677be5a0
+function run-in-ec2 {
+    # todo: switch to using ec2 instance templates
+
+    #
+    aws ec2 describe-vpcs --output json > vpc.json
+    TEET_VPCID=$(jq -r '.Vpcs[] | [.VpcId, (.Tags[]?|select(.Key=="Name")|.Value)] | select (.[1] == "Main TEET VPC") | .[0]' < vpc.json)
+    # aws ec2 run-instances --image-id $UBUNTU_AMI_ID --count 1 --instance-type m5.xlarge \
+    # 	--key-name $SSHKEYID --subnet-id subnet-abcd1234 --security-group-ids sg-abcd1234 \
+    # 	--user-data file://$PWD/ci/scripts/install-standalone-vm.bash
+
+    # fails, need to specify subnet id and security group etc.
+    aws ec2 run-instances --image-id $UBUNTU_AMI_ID --count 1 --instance-type m5.xlarge \
+	--key-name $SSHKEYID 
+	--user-data file://$PWD/ci/scripts/install-standalone-vm.bash
+}
+
 
