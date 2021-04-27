@@ -78,7 +78,7 @@
           max-value-by-ref (when max-value-ref (extremum-value-by-ref component-oid cost-item-data max-value-ref))]
       (or (when (and (string? v)
                      (re-matches only-whitespace-pattern v))
-            "Empty spaces, what are we living for?")
+            (tr [:asset :validate :only-whitespace]))
           (case valueType
             ;; Check length for strings
             :db.type/string
@@ -109,7 +109,7 @@
 
                 (and (= valueType :db.type/bigdec)
                      (too-many-decimal-digits? v))
-                (tr [:asset :validate :decimal-precision] {:precision maximum-decimal-precision}) ;; TODO proper error message
+                (tr [:asset :validate :decimal-precision] {:precision maximum-decimal-precision})
 
                 :else
                 (let [n (js/parseFloat v)]
