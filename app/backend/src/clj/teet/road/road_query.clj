@@ -231,12 +231,3 @@
          (pmap (fn [type]
                  [type (map-services/fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
-
-(defn fetch-all-objects-for-road
-  [config road-part]
-  (into {}
-        (filter
-         (comp seq second)
-         (pmap (fn [type]
-                 [type (fetch-objects-of-type-for-road config type road-part)])
-               road-object-types))))
