@@ -76,6 +76,7 @@
 (defrecord UnlockForEdits [callback])
 (defrecord UnlockForEditsResponse [callback response])
 
+(defrecord ToggleOpenTotals [ident]) ; toggle open/closed totals ident
 
 (declare process-location-change)
 
@@ -434,7 +435,12 @@
   (process-event [{response :response} app]
     (println "Response: " response)
     (t/fx app
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  ToggleOpenTotals
+  (process-event [{ident :ident} app]
+    (common-controller/update-page-state
+     app [:open-totals] cu/toggle ident)))
 
 (extend-protocol t/Event
   SaveBOQVersion
