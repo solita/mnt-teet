@@ -2,7 +2,7 @@ context('Land section', () => {
   beforeEach(() => {
       cy.visit("")
       // let's make sure we're using the language we're asserting in?
-      cy.get("#language-select").select("ET")
+      cy.get("#language-select").select("EE")
       cy.get("#password-textfield").type(Cypress.env("SITE_PASSWORD"));
       cy.get("button").contains("Login as Benjamin Boss").click();
 
