@@ -32,10 +32,10 @@ BACKUP_LOG_NAME=$BACKUP_FILE_NAME".log"
 echo "Restore log file name " $BACKUP_LOG_NAME
 
 SECONDS=$(date +%s)
-END_TIME=$((${SECONDS}+600))
+END_TIME=$((${SECONDS}+1800))
 interval=10
 
-# polling 10 min for .log file
+# polling 30 min for .log file
 while [ "$SECONDS" -lt "$END_TIME" ]; do
   aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME" || not_exist=true
   if [ $not_exist ]; then
