@@ -339,22 +339,18 @@
         db thk-project-id)))
 
 (defn project-boq-version-history
-  "Return all BOQ project versions (excluding unlocked between saved versions)
+  "Return all BOQ project versions (excluding unlocked versions)
   for the given THK project"
   [db thk-project-id]
-  (let [versions (->>
-                  (d/q '[:find (pull ?e [*])
-                         :where [?e :boq-version/project ?project]
-                         :in $ ?project] db thk-project-id)
-                  (map first)
-                  (sort-by :boq-version/created-at)
-                  reverse)]
-    (concat
-     ;; Take latest version (even if it is unlocked)
-     (take 1 versions)
-
-     ;; Filter out unlocked versions between previous saved ones
-     (filter :boq-version/locked? (drop 1 versions)))))
+  (->>
+   (d/q '[:find (pull ?e [*])
+          :where
+          [?e :boq-version/project ?project]
+          [?e :boq-version/locked? true]
+          :in $ ?project] db thk-project-id)
+   (map first)
+   (sort-by :boq-version/created-at)
+   reverse))
 
 (defn latest-change-in-project
   "Fetch latest timestamp and author UUID that has changed anything in the given THK project."
@@ -377,3 +373,12 @@
           [?tx :tx/author ?author]
           :in $ ?project]
         db thk-project-id)))
+
+(defn version-db
+  "Return db as of the given version id."
+  [db version-id]
+  (let [c (:boq-version/created-at (du/entity db version-id))]
+    (if-not c
+      (throw (ex-info "No version creation time found"
+                      {:version-id version-id}))
+      (d/as-of db c))))
