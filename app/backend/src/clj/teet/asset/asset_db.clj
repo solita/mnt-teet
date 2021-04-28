@@ -338,6 +338,24 @@
           :in $ ?project]
         db thk-project-id)))
 
+(defn project-boq-version-history
+  "Return all BOQ project versions (excluding unlocked between saved versions)
+  for the given THK project"
+  [db thk-project-id]
+  (let [versions (->>
+                  (d/q '[:find (pull ?e [*])
+                         :where [?e :boq-version/project ?project]
+                         :in $ ?project] db thk-project-id)
+                  (map first)
+                  (sort-by :boq-version/created-at)
+                  reverse)]
+    (concat
+     ;; Take latest version (even if it is unlocked)
+     (take 1 versions)
+
+     ;; Filter out unlocked versions between previous saved ones
+     (filter :boq-version/locked? (drop 1 versions)))))
+
 (defn latest-change-in-project
   "Fetch latest timestamp and author UUID that has changed anything in the given THK project."
   [db thk-project-id]

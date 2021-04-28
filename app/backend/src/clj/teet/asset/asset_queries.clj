@@ -83,3 +83,11 @@
                 (catch Throwable t
                   (log/error t "Exception generating BOQ excel"
                              {:project-id project-id}))))))})
+
+(defquery :asset/version-history
+  {:doc "Query version history for BOQ"
+   :context {:keys [db user] adb :asset-db}
+   :args {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/read-info {}}}
+  (asset-db/project-boq-version-history adb project-id))
