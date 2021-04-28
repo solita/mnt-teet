@@ -24,14 +24,14 @@
    [common/contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)
                           :target "_blank"}
     (str/upper-case
-      (str (tr [:contracts :state-procurement-link]) procurement-number))]
+      (str (tr [:contracts :state-procurement-link]) " " procurement-number))]
    [common/contract-link {:href external-link
                           :target "_blank"}
     (str/upper-case
-      (tr [:contracts :external-link]))]
+      (str (tr [:contracts :external-link]) " " procurement-number))]
    [common/contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
     (str/upper-case
-      (str (tr [:contracts :thk-procurement-link]) procurement-id))]
+      (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
    [url/Link {:page :contract
               :params {:contract-ids (str/join "-" (filterv
                                                      some?
