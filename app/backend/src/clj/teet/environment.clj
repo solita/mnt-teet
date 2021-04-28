@@ -296,19 +296,17 @@
 
 (defn datomic-connection
   "Returns thread bound connection or creates a new one."
-  ([]
-   (datomic-connection [(db-name)]))
-  ([database-name]
-   (or *connection*
-     (let [db database-name
-           client (datomic-client)
-           db-status (ensure-database client db)
-           conn (d/connect client {:db-name db})]
-       (log/info "Using database: " db db-status)
-       (when-not @db-migrated?
-                 (migrate conn @schema)
-         (reset! db-migrated? true))
-       conn))))
+  []
+  (or *connection*
+      (let [db (db-name)
+            client (datomic-client)
+            db-status (ensure-database client db)
+            conn (d/connect client {:db-name db})]
+        (log/info "Using database: " db db-status)
+        (when-not @db-migrated?
+          (migrate conn @schema)
+          (reset! db-migrated? true))
+        conn)))
 
 (defn asset-connection
   "Returns thread bound asset db connection or creates a new one."
