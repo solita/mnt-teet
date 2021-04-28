@@ -35,7 +35,8 @@
             [teet.ui.table :as table]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as fmt]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.ui.query :as query]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -736,38 +737,89 @@
             {:e! e!
              :on-close (r/partial set-dialog! nil)}]))])))
 
+(defn- export-boq-form [e! on-close project versions]
+  (r/with-let [export-options
+               (r/atom {:thk.project/id project
+                        :boq-export/unit-prices? true
+                        :boq-export/version (first versions)})
+               change-event (form/update-atom-event export-options merge)
+               format-version (fn [{:boq-version/keys [type number] :as v}]
+                                (if-not v
+                                  (tr [:asset :unofficial-version])
+                                  (str (tr-enum type) " v" number)))]
+    [:<>
+     [form/form {:e! e!
+                 :value @export-options
+                 :on-change-event change-event}
+      ^{:attribute :boq-export/unit-prices?}
+      [select/checkbox {}]
+
+      ^{:attribute :boq-export/version}
+      [select/form-select
+       {:items (into [nil] versions)
+        :format-item format-version}]]
+
+     [:div {:class (<class common-styles/flex-row-space-between)}
+      [buttons/button-secondary {:on-click on-close}
+       (tr [:buttons :cancel])]
+      [buttons/button-primary
+       {:element :a
+        :target :_blank
+        :href (common-controller/query-url
+               :asset/export-boq
+               (cu/without-nils
+                (merge
+                 {:language @localization/selected-language}
+                 (update @export-options
+                         :boq-export/version :db/id))))}
+       (tr [:asset :export-boq])]]]))
+
+(defn- export-boq-dialog [e! app close-export-dialog!]
+  [panels/modal {:title (tr [:asset :export-boq])
+                 :on-close close-export-dialog!}
+   [query/query
+    {:e! e!
+     :query :asset/version-history
+     :args {:thk.project/id (get-in app [:params :project])}
+     :simple-view [export-boq-form e! close-export-dialog!
+                   (get-in app [:params :project])]}]])
+
 (defn cost-items-page-structure
   [{:keys [e! app state left-panel-action hierarchy]} main-content]
-  (let [{:keys [cost-items asset-type-library project version] :as page-state} state]
-    [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
-     [context/provide :locked? (asset-model/locked? version)
-      [project-view/project-full-page-structure
-       {:e! e!
-        :app app
-        :project project
-        :export-menu-items
-        [{:id "export-boq"
-          :label (tr [:asset :export-boq])
-          :icon [icons/file-download]
-          :link {:target :_blank
-                 :href (common-controller/query-url
-                        :asset/export-boq
-                        {:thk.project/id (:thk.project/id project)})}}]
-        :left-panel
-        [:<>
-         [cost-items-navigation e! app]
-         left-panel-action
-         [cost-item-hierarchy
-          (merge hierarchy
-                 {:e! e!
-                  :app app
-                  :add? (= :new-cost-item (:page app))
-                  :project project
-                  :cost-items cost-items})]]
-        :main
-        [:<>
-         [boq-version-statusline e! page-state]
-         main-content]}]]]))
+  (r/with-let [export-dialog-open? (r/atom false)
+               open-export-dialog! #(reset! export-dialog-open? true)
+               close-export-dialog! #(reset! export-dialog-open? false)]
+    [:<>
+     (when @export-dialog-open?
+       [export-boq-dialog e! app close-export-dialog!])
+
+     (let [{:keys [cost-items asset-type-library project version] :as page-state} state]
+       [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
+        [context/provide :locked? (asset-model/locked? version)
+         [project-view/project-full-page-structure
+          {:e! e!
+           :app app
+           :project project
+           :export-menu-items
+           [{:id "export-boq"
+             :label (tr [:asset :export-boq])
+             :icon [icons/file-download]
+             :on-click open-export-dialog!}]
+           :left-panel
+           [:<>
+            [cost-items-navigation e! app]
+            left-panel-action
+            [cost-item-hierarchy
+             (merge hierarchy
+                    {:e! e!
+                     :app app
+                     :add? (= :new-cost-item (:page app))
+                     :project project
+                     :cost-items cost-items})]]
+           :main
+           [:<>
+            [boq-version-statusline e! page-state]
+            main-content]}]]])]))
 
 (defn- format-properties [atl properties]
   (into [:<>]
