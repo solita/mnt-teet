@@ -184,7 +184,7 @@
                                        ;; filters/results have changed
                                        (reset-show-count! state))
        :reagent-render
-       (fn [{:keys [ filters data columns column-align
+       (fn [{:keys [filters data columns column-align
                     filter-type column-label-fn]
              :or {filter-type {}}
              :as opts}]
