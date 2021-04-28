@@ -25,33 +25,84 @@
              [(tr [:asset :totals-table c])]))
                 asset-model/cost-totals-table-columns)))
 
+(defn- groups-with-fgroup-and-fclass
+  "Add localized `:fgroup` and `:fclass` to each cost group and sort by both."
+  [atl language cost-groups]
+  (sort-by
+   (juxt :fgroup :fclass)
+   (map
+    #(let [[fg fc] (map
+                    (partial asset-type-library/label language)
+                    (take 2 (asset-type-library/type-hierarchy atl (:type %))))]
+       (merge % {:fgroup fg
+                 :fclass fc}))
+    cost-groups)))
+
 (defn- cost-group-rows [atl language cost-groups include-unit-prices?]
-  (let [ident->label #(asset-type-library/label language (asset-type-library/item-by-ident atl %))]
+  (let [ident->label #(asset-type-library/label language (asset-type-library/item-by-ident atl %))
+
+        cost-groups (groups-with-fgroup-and-fclass atl language cost-groups)
+        cg-row (fn [r {:keys [type quantity quantity-unit cost-per-quantity-unit]
+                       status :common/status :as row}]
+                 [nil
+                  (ident->label type)
+                  [(str/join "\n"
+                             (map (fn [[k v u]]
+                                    (str k ": " v
+                                         (when u
+                                           (str "\u00a0" u))))
+                                  (asset-type-library/format-properties language atl row)))
+                   {:wrap true}]
+                  (ident->label (:db/ident status))
+                  quantity
+                  quantity-unit
+                  (when include-unit-prices? cost-per-quantity-unit)
+                  {:formula (str "E" r "*G" r)}])
+        cost-groups-output
+        (reduce
+         (fn [{:keys [r previous-cg rows]} cg]
+           (cond
+             ;; Fgroup changed, output fgroup and class before
+             ;; the cost group row
+             (not= (:fgroup previous-cg) (:fgroup cg))
+             {:r (+ r 3)
+              :previous-cg cg
+              :rows (-> rows
+                        (conj [nil [(:fgroup cg) {:col-span 6
+                                                  :font {:bold true
+                                                         :size 14}}]])
+                        (conj [nil [(:fclass cg) {:col-span 6
+                                                  :font {:bold true
+                                                         :size 12}}]])
+                        (conj (cg-row (+ r 2) cg)))}
+
+             ;; Only fclass changed, output fclass before
+             ;; the cost group row
+             (not= (:fclass previous-cg) (:fclass cg))
+             {:r (+ r 2)
+              :previous-cg cg
+              :rows (-> rows
+                        (conj [nil [(:fclass cg) {:col-span 6
+                                                  :font {:bold true
+                                                         :size 12}}]])
+                        (conj (cg-row (inc r) cg)))}
+
+             ;; Regular row, now change in fgroup/fclass
+             :else
+             {:r (inc r)
+              :previous-cg cg
+              :rows
+              (conj rows (cg-row r cg))}))
+         {:r 5 :previous-cg nil :rows []}
+         cost-groups)]
+
     (concat
-     (map-indexed
-      (fn [i {:keys [type quantity quantity-unit cost-per-quantity-unit]
-              status :common/status :as row}]
-        (let [r (+ 5 i)]
-          [nil
-           (ident->label type)
-           [(str/join "\n"
-                      (map (fn [[k v u]]
-                             (str k ": " v
-                                  (when u
-                                    (str "\u00a0" u))))
-                           (asset-type-library/format-properties language atl row)))
-            {:wrap true}]
-           (ident->label (:db/ident status))
-           quantity
-           quantity-unit
-           (when include-unit-prices? cost-per-quantity-unit)
-           {:formula (str "E" r "*G" r)}]))
-      cost-groups)
+     (:rows cost-groups-output)
 
      ;; Add summary row
      (list
       (conj (vec (repeat 7 nil))
-            [{:formula (str "SUM(H5:H" (+ 4 (count cost-groups)) ")")}
+            [{:formula (str "SUM(H5:H" (dec (:r cost-groups-output)) ")")}
              {:font {:bold true}}])))))
 
 (def ^:private
@@ -104,6 +155,12 @@
                       (.setCellType cell org.apache.poi.ss.usermodel.Cell/CELL_TYPE_FORMULA)
                       (.setCellFormula cell formula))
                     (spreadsheet/set-cell! cell v))
+                  (when-let [s (:col-span style)]
+                    (let [a (.getAddress cell)
+                          r (.getRow a)
+                          c (.getColumn a)
+                          region (org.apache.poi.ss.util.CellRangeAddress. r r c (+ c s))]
+                      (.addMergedRegion sheet region)))
                   (when style
                     (spreadsheet/set-cell-style! cell (style! style))))))]
      (r! [(tr [:project :tabs :cost-items]) nil nil nil nil nil
