@@ -12,27 +12,23 @@
             [teet.common.common-styles :as common-styles]
             [clojure.string :as str]
             [teet.ui.url :as url]
-            [teet.common.common-controller :as common-controller]
-            [teet.ui.common :as common]))
-
-(defn get-delta-url []
-  ;; TODO: get real Delta URL
-  )
+            [teet.ui.common :as common]
+            [teet.environment :as environment]))
 
 (defn contract-card
-  [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number]
+  [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
        contract-name :thk.contract/name :as contract}]
   [:div {:class (<class common-styles/margin-bottom 2)}
    [:h3 contract-name]
    [:span (pr-str contract)]
-   [common/contract-link {:href (str "https://riigihanked.riik.ee/rhr-web/#/procurement/" procurement-number)
+   [common/contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)
                           :target "_blank"}
-    (tr [:contracts :contract-link])]
-   [common/contract-link {:href (str (get-delta-url) procurement-part-id)
-                             :target "_blank"}
-    (tr [:delta :procurement-part-link])]
-   [common/contract-link {:href (str "http://mnt-thk.mts.local/web/#/procurementobject/" procurement-id)}
-    (tr [:thk :procurement-link])]
+    (tr [:contracts :state-procurement-link])]
+   [common/contract-link {:href external-link
+                          :target "_blank"}
+    (tr [:contracts :external-link])]
+   [common/contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
+    (tr [:contracts :thk-procurement-link])]
    [url/Link {:page :contract
               :params {:contract-ids (str/join "-" (filterv
                                                      some?
