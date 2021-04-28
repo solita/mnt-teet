@@ -8,10 +8,13 @@
 (defn collapsible-container-heading
   "The heading of collapsible container that shows open/closed state
   and controls the state."
-  [{:keys [on-toggle open? side-component size]
+  [{:keys [on-toggle open? side-component size
+           container-class]
     :or {on-toggle identity
-         size :medium}} heading]
-  [:div  {:class (<class container-theme/container-control)}
+         size :medium
+         container-class (<class container-theme/container-control)}}
+   heading]
+  [:div  {:class container-class}
    [IconButton {:size :small
                 :color :primary
                 :on-click on-toggle

@@ -798,7 +798,10 @@
 (defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type}]
   [table/listing-table-body-component listing-opts
    [container/collapsible-container-heading
-    {:open? (not (closed-set ident))
+    {:container-class [(<class common-styles/flex-row)
+                       (when (= "fclass" (namespace ident))
+                         (<class common-styles/indent-rem 1))]
+     :open? (not (closed-set ident))
      :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
     [url/Link {:page :cost-items-totals
                :query {:filter (str ident)}}

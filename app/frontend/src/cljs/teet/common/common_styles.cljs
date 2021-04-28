@@ -544,3 +544,5 @@
          (when disabled?
            {:color theme-colors/text-disabled})))
 
+(defn indent-rem [rems]
+  {:padding-left (str rems "rem")})
