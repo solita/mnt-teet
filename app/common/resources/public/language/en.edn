@@ -76,6 +76,7 @@
    :only-whitespace "Field cannot contain only whitespace",
    :decimal-precision
    "Number precision too large. Maximum allowed is {precision}."},
+  :unofficial-version "Unofficial",
   :no-matching-feature-classes "No matching feature classes.",
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
@@ -248,7 +249,7 @@
     :content-column nil,
     :decision-column nil},
    :cooperation.application.response-type/opinion
-   {:header nil,
+   {:header "OPINIONS",
     :user-column nil,
     :content-column nil,
     :decision-column nil},
@@ -787,9 +788,11 @@
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :boq-version/type "Update version status",
+  :boq-export/version "Version",
   :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
   :cooperation.contact/name "Name",
+  :boq-export/unit-prices? "Include unit prices?",
   :file/document-group "Group",
   :location/carriageway "Carriageway",
   :meeting.agenda/body "Body",
