@@ -61,7 +61,8 @@
    :quantity "Quantity",
    :cost-per-quantity-unit "Unit cost (€)",
    :total-cost "Total (€)",
-   :project-total "Total {total} EUR"},
+   :project-total "Total {total} EUR",
+   :all-components "All components"},
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate
@@ -72,7 +73,10 @@
    :max-value "Maximum allowed value: {max-value}",
    :integer-format "Insert integer value",
    :decimal-format "Insert decimal value",
-   :only-whitespace "Field cannot contain only whitespace"},
+   :only-whitespace "Field cannot contain only whitespace",
+   :decimal-precision
+   "Number precision too large. Maximum allowed is {precision}."},
+  :unofficial-version "Unofficial",
   :no-matching-feature-classes "No matching feature classes.",
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
@@ -80,6 +84,7 @@
   :page {:cost-items "Assets", :cost-items-totals "Totals"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
+  :export-boq-filename "THK-{project}-BOQ-{version}.xlsx",
   :save-boq-version "Save BOQ version",
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
@@ -207,6 +212,10 @@
   :email "Email",
   :phone "Mobile",
   :phone2 "Phone"},
+ :contracts
+ {:state-procurement-link "Procurement no.",
+  :external-link "Contract no.",
+  :thk-procurement-link "THK"},
  :cooperation
  {:response "Response",
   :application-delete-confirm "Delete the application?",
@@ -245,7 +254,7 @@
     :content-column nil,
     :decision-column nil},
    :cooperation.application.response-type/opinion
-   {:header nil,
+   {:header "OPINIONS",
     :user-column nil,
     :content-column nil,
     :decision-column nil},
@@ -638,6 +647,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
+  :vektorio-request-failed
+  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
   "Task status does not allow for files to be added",
   :file-too-large "File is too large",
@@ -649,8 +660,6 @@
   "The link can't be emailed. Email address has not been added, please add it through the My account page.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review",
-  :vektorio-request-failed
-  "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :email-address-already-in-use "Email address already in use.",
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address."},
@@ -784,9 +793,11 @@
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :boq-version/type "Update version status",
+  :boq-export/version "Version",
   :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
   :cooperation.contact/name "Name",
+  :boq-export/unit-prices? "Include unit prices?",
   :file/document-group "Group",
   :location/carriageway "Carriageway",
   :meeting.agenda/body "Body",
