@@ -769,7 +769,7 @@
                :asset/export-boq
                (cu/without-nils
                 (merge
-                 {:language @localization/selected-language}
+                 {:boq-export/language @localization/selected-language}
                  (update @export-options
                          :boq-export/version :db/id))))}
        (tr [:asset :export-boq])]]]))

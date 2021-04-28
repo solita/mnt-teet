@@ -25,7 +25,7 @@
              [(tr [:asset :totals-table c])]))
                 asset-model/cost-totals-table-columns)))
 
-(defn- cost-group-rows [atl language cost-groups]
+(defn- cost-group-rows [atl language cost-groups include-unit-prices?]
   (let [ident->label #(asset-type-library/label language (asset-type-library/item-by-ident atl %))]
     (concat
      (map-indexed
@@ -44,7 +44,7 @@
            (ident->label (:db/ident status))
            quantity
            quantity-unit
-           cost-per-quantity-unit
+           (when include-unit-prices? cost-per-quantity-unit)
            {:formula (str "E" r "*G" r)}]))
       cost-groups)
 
@@ -79,40 +79,42 @@
   `cost-groups` the project cost groups totals
   `project-id` THK project id
   `language` the language to export in
+  `include-unit-prices?` if false, unit prices are not included
+  `version` the pulled BOQ version entity
   "
-  [{:keys [atl cost-groups project-id language] :as a}]
-   (localization/with-language
-     language
-     (let [sheet-name (str "THK-" project-id "-BOQ")
-           wb (spreadsheet/create-workbook sheet-name [])
-           sheet (doto (.getSheet wb sheet-name)
-                   (set-widths! column-widths-in-chars))
-           style! (memoize
-                   (partial spreadsheet/create-cell-style! wb))
-           r! (fn [row-values]
-                (let [row (spreadsheet/add-row! sheet [])]
-                  (doseq [i (range (count row-values))
-                          :let [v (nth row-values i)
-                                [v style] (if (vector? v)
-                                            v
-                                            [v nil])
-                                cell (.createCell row i)]]
-                    (if (map? v)
-                      (let [{:keys [formula]} v]
-                        (.setCellType cell org.apache.poi.ss.usermodel.Cell/CELL_TYPE_FORMULA)
-                        (.setCellFormula cell formula))
-                      (spreadsheet/set-cell! cell v))
-                    (when style
-                      (spreadsheet/set-cell-style! cell (style! style))))))]
-       (r! [(tr [:project :tabs :cost-items]) nil nil nil nil nil
-            ;; PENDING: versioning&locking not implemented yet, this is dummy
-            "Versioon:" "H0"])
-       (r! [nil "Objekti nr:" project-id])
-       (r! [])
-       (r! (header-row atl language))
-       (doseq [row (cost-group-rows atl language cost-groups)]
-         (r! row))
-       wb)))
+  [{:keys [atl cost-groups project-id language include-unit-prices?
+           version] :as a}]
+  (def *a a)
+   (let [sheet-name (str "THK-" project-id)
+         wb (spreadsheet/create-workbook sheet-name [])
+         sheet (doto (.getSheet wb sheet-name)
+                 (set-widths! column-widths-in-chars))
+         style! (memoize
+                 (partial spreadsheet/create-cell-style! wb))
+         r! (fn [row-values]
+              (let [row (spreadsheet/add-row! sheet [])]
+                (doseq [i (range (count row-values))
+                        :let [v (nth row-values i)
+                              [v style] (if (vector? v)
+                                          v
+                                          [v nil])
+                              cell (.createCell row i)]]
+                  (if (map? v)
+                    (let [{:keys [formula]} v]
+                      (.setCellType cell org.apache.poi.ss.usermodel.Cell/CELL_TYPE_FORMULA)
+                      (.setCellFormula cell formula))
+                    (spreadsheet/set-cell! cell v))
+                  (when style
+                    (spreadsheet/set-cell-style! cell (style! style))))))]
+     (r! [(tr [:project :tabs :cost-items]) nil nil nil nil nil
+          ;; PENDING: versioning&locking not implemented yet, this is dummy
+          "Versioon:" "H0"])
+     (r! [nil "Objekti nr:" project-id])
+     (r! [])
+     (r! (header-row atl language))
+     (doseq [row (cost-group-rows atl language cost-groups include-unit-prices?)]
+       (r! row))
+     wb))
 
 (defn export-boq
   "Create BOQ Excel and write it into the `out` stream.
