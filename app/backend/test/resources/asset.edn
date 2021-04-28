@@ -1,0 +1,116 @@
+;; Create some ROTL definitions for testing,
+;; can't rely on the actual ROTL as that changes with time.
+^{:db :asset}
+[{:db/id ":fgroup/sheds"
+  :db/ident :fgroup/sheds
+  :db/doc "All kinds of sheds"
+  :asset-schema/type :asset-schema.type/fgroup
+  :asset-schema/label ["Kuur" "Shed"]}
+ {:db/id ":fclass/bike-shed"
+  :db/ident :fclass/bike-shed
+  :asset-schema/type :asset-schema.type/fclass
+  :asset-schema/label ["Jalgrata kuur" "Bike shed"]
+  :fclass/fgroup ":fgroup/sheds"
+  :fclass/oid-prefix "BSD"}
+
+ ;; Add two components: wall and door
+ {:db/id ":ctype/bike-shed-wall"
+  :db/ident :ctype/bike-shed-wall
+  :asset-schema/type :asset-schema.type/ctype
+  :asset-schema/label ["Sein" "Wall"]
+  :component/inherits-location? true
+  :ctype/parent ":fclass/bike-shed"}
+
+ {:db/id ":ctype/bike-shed-door"
+  :db/ident :ctype/bike-shed-door
+  :asset-schema/type :asset-schema.type/ctype
+  :asset-schema/label ["Uks" "Door"]
+  :component/inherits-location? true
+  :ctype/parent ":fclass/bike-shed"}
+
+
+ ;; Add some properties
+
+ ;; door width, height and color for door
+ ;; width and height as cost grouping
+ {:db/id ":bike-shed-door/width"
+  :db/ident :bike-shed-door/width
+  :attribute/parent ":ctype/bike-shed-door"
+  :asset-schema/unit "mm"
+  :db/valueType :db.type/bigdec
+  :db/cardinality :db.cardinality/one
+  :asset-schema/type :asset-schema.type/attribute
+  :asset-schema/label ["Laius" "Width"]
+  :attribute/cost-grouping? true
+  }
+
+ {:db/id ":bike-shed-door/height"
+  :db/ident :bike-shed-door/height
+  :attribute/parent ":ctype/bike-shed-door"
+  :asset-schema/unit "mm"
+  :db/valueType :db.type/bigdec
+  :db/cardinality :db.cardinality/one
+  :asset-schema/type :asset-schema.type/attribute
+  :asset-schema/label ["Kõrgus" "Height"]
+  :attribute/cost-grouping? true}
+
+ {:db/id ":bike-shed-door/color"
+  :db/ident :bike-shed-door/color
+  :attribute/parent ":ctype/bike-shed-door"
+  :asset-schema/unit "mm"
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :asset-schema/type :asset-schema.type/attribute
+  :asset-schema/label ["Värv" "Color"]
+  :attribute/cost-grouping? false}
+
+ ;; wall width, height and material (all cost grouping)
+ {:db/id ":bike-shed-wall/width"
+  :db/ident :bike-shed-wall/width
+  :attribute/parent ":ctype/bike-shed-wall"
+  :asset-schema/unit "mm"
+  :db/valueType :db.type/bigdec
+  :db/cardinality :db.cardinality/one
+  :asset-schema/type :asset-schema.type/attribute
+  :asset-schema/label ["Laius" "Width"]
+  :attribute/cost-grouping? true
+  }
+
+ {:db/id ":bike-shed-wall/height"
+  :db/ident :bike-shed-wall/height
+  :attribute/parent ":ctype/bike-shed-wall"
+  :asset-schema/unit "mm"
+  :db/valueType :db.type/bigdec
+  :db/cardinality :db.cardinality/one
+  :asset-schema/type :asset-schema.type/attribute
+  :asset-schema/label ["Kõrgus" "Height"]
+  :attribute/cost-grouping? true}
+
+ {:db/id ":bike-shed-wall/material"
+  :db/ident :bike-shed-wall/material
+  :attribute/parent ":ctype/bike-shed-wall"
+  :asset-schema/unit "mm"
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :asset-schema/type :asset-schema.type/attribute
+  :asset-schema/label ["Värv" "Color"]
+  :attribute/cost-grouping? true}
+
+ ;; Add three material list items: cedar, oak and pine
+
+ {:db/id ":item/bikeshedwallmaterialcedar"
+  :db/ident :item/bikeshedwallmaterialcedar
+  :asset-schema/type :asset-schema.type/enum
+  :asset-schema/label ["Seedripuu" "Cedarwood"]}
+
+ {:db/id ":item/bikeshedwallmaterialoak"
+  :db/ident :item/bikeshedwallmaterialoak
+  :asset-schema/type :asset-schema.type/enum
+  :asset-schema/label ["Tammepuu" "Oakwood"]}
+
+ {:db/id ":item/bikeshedwallmaterialpine"
+  :db/ident :item/bikeshedwallmaterialpine
+  :asset-schema/type :asset-schema.type/enum
+  :asset-schema/label ["Männipuu" "Pine tree"]}
+
+ ]

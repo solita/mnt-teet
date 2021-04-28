@@ -300,6 +300,19 @@
            (for [id (concat projects lifecycles activities)]
              [:db/retractEntity id]))))
 
+(defn delete-all-imported-thk-contracts! []
+  (let [db (db)
+        entity-ids #(into #{} (map first)
+                          (q % db))
+        contracts (entity-ids '[:find ?e :where [?e :thk.contract/procurement-id _]])]
+    (println "Deleting THK contract entities: " (count contracts) " contracts, "
+              "Press enter to continue!")
+    (read-line)
+    (apply tx
+           (for [id contracts]
+             [:db/retractEntity id]))))
+
+
 (defn keep-connection-alive
   "Starts a thread where a single datomic query is ran every minute to keep datomic proxy open."
   []

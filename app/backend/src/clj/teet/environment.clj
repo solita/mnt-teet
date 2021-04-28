@@ -311,18 +311,24 @@
 (defn asset-connection
   "Returns thread bound asset db connection or creates a new one."
   []
-  (if-not (feature-enabled? :asset-db)
-    (throw (ex-info "Asset database is not enabled" {:missing-feature-flag :asset-db}))
-    (or *asset-connection*
-        (let [db (asset-db-name)
-              client (datomic-client)
-              db-status (ensure-database client db)
-              conn (d/connect client {:db-name db})]
-          (log/debug "Using database: " db db-status)
-          (when-not @asset-db-migrated?
-            (migrate-asset-db conn)
-            (reset! asset-db-migrated? true))
-          conn))))
+  (let [db-name (asset-db-name)]
+    (cond (not (feature-enabled? :asset-db))
+          (throw (ex-info "Asset database is not enabled" {:missing-feature-flag :asset-db}))
+
+          (nil? db-name)
+          (throw (ex-info "Asset database name is not defined" {}))
+
+          :else
+          (or *asset-connection*
+              (let [db db-name
+                    client (datomic-client)
+                    db-status (ensure-database client db)
+                    conn (d/connect client {:db-name db})]
+                (log/debug "Using database: " db db-status)
+                (when-not @asset-db-migrated?
+                  (migrate-asset-db conn)
+                  (reset! asset-db-migrated? true))
+                conn)))))
 
 (defn asset-db
   "Return an asset db handled."

@@ -113,9 +113,14 @@
                                :step :on-key-down :disabled :min :max :type :ref :value
                                :required :id :on-blur :placeholder :pattern])
                  {:style input-style
-                  :class (herb/join (<class input-field-style error multiline read-only?
-                                            (boolean start-icon) (boolean end-icon) type)
-                                    input-class)}
+                  :class (herb/join input-class
+                                    (<class input-field-style
+                                            error
+                                            multiline
+                                            read-only?
+                                            (boolean start-icon)
+                                            (boolean end-icon)
+                                            type))}
                  (when read-only?
                    {:disabled true})
                  (when multiline

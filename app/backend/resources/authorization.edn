@@ -109,6 +109,8 @@
   :internal-consultant :link,
   :external-consultant :link,
   :authenticated-guest :link},
+ :cooperation/edit-opinion
+ {:admin :full, :manager :full, :internal-consultant :full},
  :land/create-land-acquisition {:admin :full, :manager :full},
  :project/edit-permissions
  {:admin :full, :manager :full, :external-consultant :link},

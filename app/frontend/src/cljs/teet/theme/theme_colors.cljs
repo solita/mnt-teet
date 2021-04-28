@@ -12,7 +12,7 @@
   (str "rgb(0, 94, 135, " alpha ")"))
 (def blue-tab "#005AA3")
 (def blue-light "#007BAF")
-(def blue-lighter "#AAE1F8")
+(def blue-lighter "#A2C3DD")
 (def blue-lightest (lighten blue-lighter 10))
 (def orange "#FF8000")
 
@@ -58,6 +58,7 @@
   {:outline 0
    :box-shadow (str "0 0 0 1px" white ", "
                     "0 0 0 3px " blue-light)})
+
 (def focus-style
   {:outline (str "2px solid " blue-light)
    :outline-offset "3px"})

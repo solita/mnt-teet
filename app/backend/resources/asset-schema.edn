@@ -1461,6 +1461,7 @@
   :asset-schema/label
   ["Tugisamba/liigendi number" "Support/hinge number"],
   :attribute/mandatory? true,
+  :attribute/max-value-ref ":bridge/bridgespansnum",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridgesupport/supportnumber",
@@ -2534,6 +2535,7 @@
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Ava number" "Span number"],
   :attribute/mandatory? true,
+  :attribute/max-value-ref ":bridge/bridgespansnum",
   :db/cardinality :db.cardinality/one,
   :db/doc "No",
   :db/id ":bridgespan/spannumber",

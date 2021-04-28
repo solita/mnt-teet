@@ -2,17 +2,18 @@
   "Cost items view"
   (:require [teet.project.project-view :as project-view]
             [teet.ui.typography :as typography]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum] :as localization]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid Link CircularProgress IconButton]]
+            [teet.ui.material-ui :refer [Grid CircularProgress]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
             [teet.util.string :as string]
             [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
             [teet.common.responsivity-styles :as responsivity-styles]
@@ -31,7 +32,11 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
-            [teet.ui.table :as table]))
+            [teet.ui.table :as table]
+            [teet.user.user-model :as user-model]
+            [teet.util.date :as date]
+            [teet.ui.format :as fmt]
+            [teet.ui.panels :as panels]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -47,41 +52,83 @@
 
 (def ^:private integer-pattern #"^\d*$")
 (def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
+(def ^:private only-whitespace-pattern #"^\s+$")
 
-(defn- validate [valueType min-value max-value v]
-  (when-not (str/blank? v)
-    (case valueType
-      ;; Check length for strings
-      :db.type/string
-      (cond
-        (and min-value (< (count v) min-value))
-        (tr [:asset :validate :min-length] {:min-length min-value})
+(defn- extremum-value-by-ref
+  "Find the extremum (min or max) value by searching for the given
+  `extremum-value-ref` attribute, starting from the current component
+  defined by `component-oid` and walking up the hierarchy up to the
+  asset. Return the first value of the attribute encountered."
+  [component-oid cost-item-data extremum-value-ref]
+  (let [path (reverse (asset-model/find-component-path cost-item-data component-oid))]
+    (some (du/enum->kw extremum-value-ref) path)))
 
-        (and max-value (> (count v) max-value))
-        (tr [:asset :validate :max-length] {:max-length max-value}))
+(def ^:private maximum-decimal-precision 6)
 
-      (:db.type/long :db.type/bigdec)
-      (let [v (str/trim v)]
-        (cond
-          (and (= valueType :db.type/long)
-               (not (re-matches integer-pattern v)))
-          (tr [:asset :validate :integer-format])
+(defn- too-many-decimal-digits? [dec-string]
+  (< maximum-decimal-precision
+     (-> dec-string
+         (str/split #",|\.")
+         second
+         count)))
 
-          (and (= valueType :db.type/bigdec)
-               (not (re-matches decimal-pattern v)))
-          (tr [:asset :validate :decimal-format])
-
-          :else
-          (let [n (js/parseFloat v)]
+(defn- validate [valueType component-oid cost-item-data {:attribute/keys [min-value max-value min-value-ref max-value-ref]} v]
+  (when (some? v)
+    (let [min-value-by-ref (when min-value-ref (extremum-value-by-ref component-oid cost-item-data min-value-ref))
+          max-value-by-ref (when max-value-ref (extremum-value-by-ref component-oid cost-item-data max-value-ref))]
+      (or (when (and (string? v)
+                     (re-matches only-whitespace-pattern v))
+            (tr [:asset :validate :only-whitespace]))
+          (case valueType
+            ;; Check length for strings
+            :db.type/string
             (cond
-              (and min-value (< n min-value))
-              (tr [:asset :validate :min-value] {:min-value min-value})
+              (and min-value (< (count v) min-value))
+              (tr [:asset :validate :min-length] {:min-length min-value})
 
-              (and max-value (> n max-value))
-              (tr [:asset :validate :max-value] {:max-value max-value})))))
+              (and max-value (> (count v) max-value))
+              (tr [:asset :validate :max-length] {:max-length max-value})
 
-      ;; no validation otherwise
-      nil)))
+              ;; TODO: own error messages for refs?
+              (and min-value-by-ref (< (count v) min-value-by-ref))
+              (tr [:asset :validate :min-length] {:min-length min-value-by-ref})
+
+              (and max-value-by-ref (> (count v) max-value-by-ref))
+              (tr [:asset :validate :max-length] {:max-length max-value-by-ref}))
+
+            (:db.type/long :db.type/bigdec)
+            (let [v (str/trim v)]
+              (cond
+                (and (= valueType :db.type/long)
+                     (not (re-matches integer-pattern v)))
+                (tr [:asset :validate :integer-format])
+
+                (and (= valueType :db.type/bigdec)
+                     (not (re-matches decimal-pattern v)))
+                (tr [:asset :validate :decimal-format])
+
+                (and (= valueType :db.type/bigdec)
+                     (too-many-decimal-digits? v))
+                (tr [:asset :validate :decimal-precision] {:precision maximum-decimal-precision})
+
+                :else
+                (let [n (js/parseFloat v)]
+                  (cond
+                    (and min-value (< n min-value))
+                    (tr [:asset :validate :min-value] {:min-value min-value})
+
+                    (and max-value (> n max-value))
+                    (tr [:asset :validate :max-value] {:max-value max-value})
+
+                    ;; TODO: own error messages for refs?
+                    (and min-value-by-ref (< n min-value-by-ref))
+                    (tr [:asset :validate :min-value] {:min-value min-value-by-ref})
+
+                    (and max-value-by-ref (> n max-value-by-ref))
+                    (tr [:asset :validate :max-value] {:max-value max-value-by-ref})))))
+
+            ;; no validation otherwise
+            nil)))))
 
 (defn- attribute-group [{ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
@@ -97,36 +144,49 @@
 
 (defn- attribute-grid-item [content]
   [Grid {:item true
-          :md 4
-          :xs 12
+         :md 4
+         :xs 12
          :style {:padding "0.2rem"}}
    content])
 
-(defn- location-entry []
-  [:<>
-   [attribute-grid-item
-    [form/field :location/start-point
-     [text-field/TextField {}]]]
+(defn- display-list-item [{:keys [rotl value] :as opts}]
+  [:label {:class (<class common-styles/input-label-style false false)}
+   [typography/Text2Bold (:label opts)]
+   (-> value rotl label)])
 
-   [attribute-grid-item
-    [form/field :location/end-point
-     [text-field/TextField {}]]]
+(defn- display-input [{:keys [value unit label]}]
+  [:label {:class (<class common-styles/input-label-style false false)}
+   [typography/Text2Bold label]
+   (if (some? value)
+     (str value (when unit (str "\u00a0" unit)))
+     "\u2400")])
 
-   [attribute-grid-item
-    [form/field :location/road-nr
-     [text-field/TextField {:type :number}]]]
+(defn- location-entry [locked?]
+  (let [input-comp (if locked? display-input text-field/TextField)]
+    [:<>
+     [attribute-grid-item
+      [form/field :location/start-point
+       [input-comp {}]]]
 
-   [attribute-grid-item
-    [form/field :location/carriageway
-     [text-field/TextField {:type :number}]]]
+     [attribute-grid-item
+      [form/field :location/end-point
+       [input-comp {}]]]
 
-   [attribute-grid-item
-    [form/field :location/start-m
-     [text-field/TextField {:type :number}]]]
+     [attribute-grid-item
+      [form/field :location/road-nr
+       [input-comp {:type :number}]]]
 
-   [attribute-grid-item
-    [form/field :location/end-m
-     [text-field/TextField {:type :number}]]]])
+     [attribute-grid-item
+      [form/field :location/carriageway
+       [input-comp {:type :number}]]]
+
+     [attribute-grid-item
+      [form/field :location/start-m
+       [input-comp {:type :number}]]]
+
+     [attribute-grid-item
+      [form/field :location/end-m
+       [input-comp {:type :number}]]]]))
 
 (defn- location-map [{:keys [e! value on-change]}]
   (r/with-let [current-value (atom value)
@@ -171,7 +231,7 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [{:keys [e! attributes inherits-location? common? ctype]} rotl]
+(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype]} rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -204,7 +264,7 @@
                                        :location/geojson]}
 
                [location-map {:e! e!}]]])
-           [location-entry]]])
+           [location-entry locked?]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -220,7 +280,7 @@
                   :alignItems :flex-end}
             (doall
              (for [{:db/keys [ident valueType]
-                    :attribute/keys [mandatory? min-value max-value]
+                    :attribute/keys [mandatory?]
                     :asset-schema/keys [unit] :as attr} attrs
                    :let [type (:db/ident valueType)
                          unit (if (= ident :common/quantity)
@@ -230,26 +290,42 @@
                [attribute-grid-item
                 [form/field {:attribute ident
                              :required? mandatory?
-                             :validate (r/partial validate (:db/ident valueType) min-value max-value)}
+                             :validate (r/partial validate
+                                                  (:db/ident valueType)
+                                                  component-oid
+                                                  cost-item-data
+                                                  (select-keys attr
+                                                               [:attribute/min-value
+                                                                :attribute/max-value
+                                                                :attribute/min-value-ref
+                                                                :attribute/max-value-ref]))}
                  (if (= type :db.type/ref)
                    ;; Selection value
-                   [select/form-select
-                    {:id ident
-                     :label (label attr)
-                     :show-empty-selection? true
-                     :items (mapv :db/ident (:enum/_attribute attr))
-                     :format-item (comp label rotl)}]
+                   (if locked?
+                     [display-list-item {:label (label attr)
+                                         :rotl rotl}]
+                     [select/form-select
+                      {:id ident
+                       :read-only? locked?
+                       :label (label attr)
+                       :show-empty-selection? true
+                       :items (mapv :db/ident (:enum/_attribute attr))
+                       :format-item (comp label rotl)}])
 
                    ;; Text field
-                   [text-field/TextField
-                    {:label (label attr)
-                     :end-icon (when unit
-                                 (text-field/unit-end-icon unit))}])]]))]]))])))
+                   (if locked?
+                     [display-input {:label (label attr)
+                                     :unit unit}]
+                     [text-field/TextField
+                      {:label (label attr)
+                       :read-only? locked?
+                       :end-icon (when unit
+                                   (text-field/unit-end-icon unit))}]))]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
   [opts]
-  [context/consume :rotl [attributes* opts]])
+  [context/consume-many [:rotl :locked?] [attributes* opts]])
 
 (defn- add-component-menu [allowed-components add-component!]
   [:<>
@@ -412,6 +488,7 @@
           [form-paper [attributes
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
+                        ;; TODO: cost-item-data here as well
                         :common? false
                         :inherits-location? false}]])
 
@@ -483,6 +560,8 @@
           [attributes {:e! e!
                        :attributes (some-> ctype :attribute/_parent)
                        :inherits-location? (:component/inherits-location? ctype)
+                       :component-oid component-oid
+                       :cost-item-data cost-item-data
                        :common? true
                        :ctype ctype}]]]
 
@@ -508,41 +587,44 @@
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
 
+(defn- add-cost-item [app version]
+  (when-not (asset-model/locked? version)
+    (let [add? (= "new" (get-in app [:params :id]))
+          project (get-in app [:params :project])]
+      [buttons/button-secondary {:element "a"
+                                 :href (url/cost-item project "new")
+                                 :disabled add?
+                                 :start-icon (r/as-element
+                                              [icons/content-add])}
+       (tr [:asset :add-cost-item])])))
+
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items add? project]}]
+  [{:keys [e! app cost-items]}]
   (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
-    [:div
-     [buttons/button-secondary {:element "a"
-                                :href (url/cost-item (:thk.project/id project) "new")
-                                :disabled add?
-                                :start-icon (r/as-element
-                                             [icons/content-add])}
-      (tr [:asset :add-cost-item])]
-
-     [:div.cost-items-by-fgroup
-      (doall
-       (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
-         ^{:key (str ident)}
-         [container/collapsible-container
-          {:on-toggle (r/partial toggle-open! ident)
-           :open? (contains? @open ident)}
-          (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
-          [:div.cost-items-by-fclass {:data-fgroup (str ident)
-                                      :style {:margin-left "0.5rem"}}
-           (doall
-            (for [[{ident :db/ident :as fclass} cost-items] fclasses]
-              ^{:key (str ident)}
-              [:div {:style {:margin-top "1rem"
-                             :margin-left "1rem"}}
-               [typography/Text2Bold (str/upper-case (tr* fclass))]
-               [:div.cost-items {:style {:margin-left "1rem"}}
-                (for [{oid :asset/oid} cost-items]
-                  ^{:key oid}
-                  [:div
-                   [url/Link {:page :cost-item
-                              :params {:id oid}} oid]])]]))]]))]]))
+    [:div.cost-items-by-fgroup
+     (doall
+      (for [[{ident :db/ident :as fgroup} fclasses] cost-items]
+        ^{:key (str ident)}
+        [container/collapsible-container
+         {:on-toggle (r/partial toggle-open! ident)
+          :open? (contains? @open ident)}
+         (str (tr* fgroup) " (" (apply + (map (comp count val) fclasses)) ")")
+         [:div.cost-items-by-fclass {:data-fgroup (str ident)
+                                     :style {:margin-left "0.5rem"}}
+          (doall
+           (for [[{ident :db/ident :as fclass} cost-items] fclasses]
+             ^{:key (str ident)}
+             [:div {:style {:margin-top "1rem"
+                            :margin-left "1rem"}}
+              [typography/Text2Bold (str/upper-case (tr* fclass))]
+              [:div.cost-items {:style {:margin-left "1rem"}}
+               (for [{oid :asset/oid} cost-items]
+                 ^{:key oid}
+                 [:div
+                  [url/Link {:page :cost-item
+                             :params {:id oid}} oid]])]]))]]))]))
 
 (defn- cost-items-navigation [e! {:keys [page params]}]
   [select/form-select
@@ -551,111 +633,225 @@
     :value page
     :format-item #(tr [:asset :page %])}])
 
+(defn- save-boq-version-dialog [{:keys [e! on-close]}]
+  (r/with-let [form-state (r/atom {})
+               form-change (form/update-atom-event form-state merge)
+               save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
+    [panels/modal {:title (tr [:asset :save-boq-version])
+                   :on-close on-close}
+
+     [form/form {:e! e!
+                 :value @form-state
+                 :on-change-event form-change
+                 :save-event save-event
+                 :cancel-event (form/callback-event on-close)}
+      ^{:attribute :boq-version/type
+        :required? true}
+      [select/select-enum {:e! e!
+                           :attribute :boq-version/type
+                           :database :asset}]
+
+      ^{:attribute :boq-version/explanation
+        :required? true
+        :validate (fn [v]
+                    (when (> (count v) 2000)
+                      (tr [:asset :validate :max-length] {:max-length 2000})))}
+      [text-field/TextField {:multiline true
+                             :rows 4}]]]))
+
+(defn- unlock-for-edits-dialog [{:keys [e! on-close version]}]
+  [panels/modal {:title (tr [:asset :unlock-for-edits])
+                 :on-close on-close}
+   [:<>
+    (when-let [warn (condp du/enum= (:boq-version/type version)
+                      :boq-version.type/tender
+                      (tr [:asset :unlock-tender-boq-warning])
+
+                      :boq-version.type/contract
+                      (tr [:asset :unlock-contract-boq-warning])
+
+                      nil)]
+      [common/info-box {:variant :warning
+                        :content warn}])
+    [:div {:class (<class common-styles/flex-row-space-between)}
+     [buttons/button-secondary {:on-click on-close}
+      (tr [:buttons :cancel])]
+     [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
+      (tr [:asset :confirm-unlock-for-edits])]]]])
+
+(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+  (r/with-let [dialog (r/atom nil)
+               set-dialog! #(reset! dialog %)]
+    (let [{:keys [user timestamp] :as chg} latest-change
+          locked? (asset-model/locked? version)
+          dialog-to-open (if locked? :unlock-for-edits :save-boq-version)]
+      [:div {:class (<class common-styles/flex-row)
+             :style {:background-color theme-colors/gray-lightest
+                     :width "100%"}}
+
+       (cond
+         (asset-model/locked? version)
+         [:<>
+          (tr-enum (:boq-version/type version))
+          " v." (:boq-version/number version)]
+         chg
+         [:<>
+          [:b (tr [:common :last-modified]) ": "]
+          (fmt/date-time timestamp)])
+
+       (when chg
+         [common/popper-tooltip
+          {:title (tr [:common :last-modified])
+           :variant :info
+           :body [:<>
+                  [:div (fmt/date-time timestamp)]
+                  [:div (user-model/user-name user)]]}
+          [icons/alert-error-outline]])
+
+       ;; Save or unlock button
+       [buttons/button-secondary
+        {:disabled (some? @dialog)
+         :size :small
+         :on-click (r/partial set-dialog! dialog-to-open)}
+        (tr [:asset dialog-to-open])]
+
+       (when-let [dialog @dialog]
+         (case dialog
+           :unlock-for-edits
+           [unlock-for-edits-dialog {:e! e!
+                                     :on-close (r/partial set-dialog! nil)
+                                     :version version}]
+
+           :save-boq-version
+           [save-boq-version-dialog
+            {:e! e!
+             :on-close (r/partial set-dialog! nil)}]))])))
+
 (defn cost-items-page-structure
-  [e! app {:keys [cost-items asset-type-library project]}
-   main-content]
+  [e! app {:keys [cost-items asset-type-library project version] :as page-state}
+   left-panel-action main-content]
   [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
-   [project-view/project-full-page-structure
-    {:e! e!
-     :app app
-     :project project
-     :left-panel
-     [:<>
-      [cost-items-navigation e! app]
-      [cost-item-hierarchy {:e! e!
-                            :app app
-                            :add? (= :new-cost-item (:page app))
-                            :project project
-                            :cost-items cost-items}]]
-     :main main-content}]])
+   [context/provide :locked? (asset-model/locked? version)
+    [project-view/project-full-page-structure
+     {:e! e!
+      :app app
+      :project project
+      :export-menu-items
+      [{:id "export-boq"
+        :label (tr [:asset :export-boq])
+        :icon [icons/file-download]
+        :link {:target :_blank
+               :href (common-controller/query-url
+                      :asset/export-boq
+                      {:thk.project/id (:thk.project/id project)})}}]
+      :left-panel
+      [:<>
+       [cost-items-navigation e! app]
+       left-panel-action
+       [cost-item-hierarchy {:e! e!
+                             :app app
+                             :add? (= :new-cost-item (:page app))
+                             :project project
+                             :cost-items cost-items}]]
+      :main
+      [:<>
+       [boq-version-statusline e! page-state]
+       main-content]}]]])
 
 (defn- format-properties [atl properties]
-  (let [;; status is part of cost grouping, but shown in a separate column
-        properties (dissoc properties :common/status)
-        id->def (partial asset-type-library/item-by-ident atl)
-        attr->val (dissoc (cu/map-keys id->def properties) nil)]
-    (into [:<>]
-          (map (fn [[k v]]
-                 [:div
-                  [typography/BoldGrayText (label k) ": "]
-                  (case (get-in k [:db/valueType :db/ident])
-                    :db.type/ref (some-> v :db/ident id->def label)
-                    (str v))
-                  (when-let [u (:asset-schema/unit k)]
-                    (str " " u))]))
-          (sort-by (comp label key) attr->val))))
+  (into [:<>]
+        (map (fn [[k v u]]
+               [:div
+                [typography/BoldGrayText k ": "]
+                v
+                (when u
+                  (str "\u00a0" u))]))
+        (asset-type-library/format-properties @localization/selected-language
+                                              atl properties)))
 
 (defn format-euro [val]
   (when val
     (str val "\u00A0€")))
 
-(defn cost-group-unit-price [e! initial-value row]
-  (r/with-let [price (r/atom initial-value)
+(defn cost-group-unit-price [e! value row]
+  (r/with-let [initial-value value
+               price (r/atom initial-value)
                change! #(reset! price (-> % .-target .-value))
-               save! #(when (not= initial-value @price)
-                        (e! (cost-items-controller/->SaveCostGroupPrice row @price)))
-               save-on-enter! #(when (= "Enter" (.-key %))
-                                 (save!))]
-    (let [changed? (not= @price initial-value)]
-      [:div {:class (<class common-styles/flex-row)
-             :style {:justify-content :flex-end
-                     ;; to have same padding as header for alignment
-                     :padding-right "16px"}}
-       [text-field/TextField {:input-style {:text-align :right
-                                            :width "8rem"}
-                              :value @price
-                              :on-change change!
-                              :on-key-down save-on-enter!
-                              :end-icon [text-field/euro-end-icon]}]
-       (when changed?
-         [IconButton {:size :small
-                      :on-click save!}
-          [icons/action-done {:font-size :small}]])])))
+               saving? (r/atom false)
+               save! (fn [row]
+                       (when (not= initial-value @price)
+                         (reset! saving? true)
+                         (e! (cost-items-controller/->SaveCostGroupPrice row @price))))
+               save-on-enter! (fn [row e]
+                                (when (= "Enter" (.-key e))
+                                  (save! row)))]
+    (when (not= value initial-value)
+      (reset! saving? false))
+    [:div {:class (<class common-styles/flex-row)
+           :style {:justify-content :flex-end
+                   ;; to have same padding as header for alignment
+                   :padding-right "16px"}}
+     [text-field/TextField {:input-style {:text-align :right
+                                          :width "8rem"}
+                            :value @price
+                            :on-change change!
+                            :on-key-down (r/partial save-on-enter! row)
+                            :on-blur (r/partial save! row)
+                            :disabled @saving?
+                            :end-icon [text-field/euro-end-icon]}]]))
+
 
 (defn cost-items-totals-page
-  [e! app {atl :asset-type-library totals :cost-totals :as state}]
-  [cost-items-page-structure
-   e! app state
-   [:div.cost-items-totals
-    [:div {:style {:float :right}}
-     [:b
-      (tr [:asset :totals-table :project-total]
-          {:total (:total-cost totals)})]]
-    [:div
-     [table/listing-table
-      {:data (:cost-groups totals)
-       :columns asset-model/cost-totals-table-columns
-       :column-align asset-model/cost-totals-table-align
-       :column-label-fn #(if (= % :common/status)
-                           (label (asset-type-library/item-by-ident atl %))
-                           (tr [:asset :totals-table %]))
-       :format-column
-       (fn [column value row]
-         (case column
-           :type (label (asset-type-library/item-by-ident atl value))
-           :common/status (label (asset-type-library/item-by-ident
-                                  atl (:db/ident value)))
-           :properties (format-properties atl row)
-           :quantity (str value
-                          (when-let [qu (:quantity-unit row)]
-                            (str " " qu)))
-           :cost-per-quantity-unit [cost-group-unit-price e! value row]
-           :total-cost (format-euro value)
-           (str value)))}]]]])
+  [e! app {atl :asset-type-library totals :cost-totals version :version :as state}]
+  (let [locked? (asset-model/locked? version)]
+    [cost-items-page-structure
+     e! app state
+     nil
+     [:div.cost-items-totals
+      [:div {:style {:float :right}}
+       [:b
+        (tr [:asset :totals-table :project-total]
+            {:total (:total-cost totals)})]]
+      [:div
+       [table/listing-table
+        {:data (:cost-groups totals)
+         :columns asset-model/cost-totals-table-columns
+         :column-align asset-model/cost-totals-table-align
+         :column-label-fn #(if (= % :common/status)
+                             (label (asset-type-library/item-by-ident atl %))
+                             (tr [:asset :totals-table %]))
+         :format-column
+         (fn [column value row]
+           (case column
+             :type (label (asset-type-library/item-by-ident atl value))
+             :common/status (label (asset-type-library/item-by-ident
+                                    atl (:db/ident value)))
+             :properties (format-properties atl row)
+             :quantity (str value
+                            (when-let [qu (:quantity-unit row)]
+                              (str " " qu)))
+             :cost-per-quantity-unit (if locked?
+                                       (format-euro value)
+                                       [cost-group-unit-price e! value row])
+             :total-cost (format-euro value)
+             (str value)))}]]]]))
 
-(defn cost-items-page [e! app state]
+(defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure
    e! app state
+   [add-cost-item app version]
    [map-view/map-view {}]])
 
 (defn new-cost-item-page
-  [e! app {atl :asset-type-library cost-item :cost-item :as state}]
+  [e! app {atl :asset-type-library cost-item :cost-item
+           version :version :as state}]
   [cost-items-page-structure
    e! app state
+   [add-cost-item app version]
    [cost-item-form e! atl cost-item]])
 
 (defn cost-item-page
-  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item] :as state}]
+  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
@@ -664,6 +860,7 @@
 
       [cost-items-page-structure
        e! app state
+       [add-cost-item app version]
        (if component
          ^{:key component}
          [component-form e! asset-type-library component cost-item]

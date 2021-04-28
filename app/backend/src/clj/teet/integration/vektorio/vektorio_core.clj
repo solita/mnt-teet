@@ -107,3 +107,30 @@
   "Login to VektorIO."
   [vektorio-config vektorio-user-id]
   (vektorio-client/instant-login vektorio-config {:user-id vektorio-user-id}))
+
+(defn update-project-in-vektorio!
+  "Updates the project name in Vektor.io should it be changed in TEET"
+  [db vektor-config project-id project-name]
+  (let [project (d/pull db [:db/id :thk.project/name :thk.project/project-name :thk.project/id :vektorio/project-id] project-id)
+        vektor-project-name (str  project-name " (THK" (:thk.project/id project) ")")
+        vektor-project-id (:vektorio/project-id project)
+        resp (if (some? vektor-project-id)
+               (vektorio-client/update-project! vektor-config vektor-project-id vektor-project-name)
+               (do (log/info "No Vektor project id found for " project-id)
+                   true))]
+    resp))
+
+(defn update-model-in-vektorio!
+  "Updates the model name in Vektor.io in case it is changed in TEET"
+  [conn db vektor-config file-id]
+  (let [vektor-model-id (:vektorio/model-id (d/pull db [:db/id :vektorio/model-id] file-id))
+        vektor-project-id (ensure-project-vektorio-id! conn vektor-config file-id)
+        vektor-filename (vektorio-filename db file-id)
+        vektor-filepath (vektorio-filepath db file-id)
+        resp (if (and
+                   (some? vektor-model-id)
+                   (some? vektor-project-id))
+               (vektorio-client/update-model! vektor-config vektor-project-id vektor-model-id vektor-filename vektor-filepath)
+               (do (log/info "No Vektor project/model id found for " file-id vektor-project-id vektor-model-id)
+                   true))]
+    resp))

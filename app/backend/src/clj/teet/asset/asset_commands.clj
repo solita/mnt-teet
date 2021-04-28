@@ -2,16 +2,16 @@
   "Commands to store asset information"
   (:require [teet.db-api.core :refer [defcommand tx] :as db-api]
             [datomic.client.api :as d]
-            [teet.environment :as environment]
-            [clojure.walk :as walk]
             [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-type-library :as asset-type-library]
-            [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.util.euro :as euro]))
+            [teet.util.euro :as euro]
+            [teet.asset.asset-model :as asset-model]))
 
 
-
+(defn- boq-unlocked? [db thk-project-id]
+  (not (asset-model/locked?
+        (asset-db/project-boq-version db thk-project-id))))
 
 (defcommand :asset/save-cost-item
   {:doc "Create/update an asset cost item"
@@ -24,7 +24,9 @@
    :authorization {:cost-items/edit-cost-items {}}
    :pre [^{:error :asset-does-not-belong-to-project}
          (or (string? (:db/id asset))
-             (= project-id (:asset/project (du/entity adb (:db/id asset)))))]}
+             (= project-id (:asset/project (du/entity adb (:db/id asset)))))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]}
   (let [id (:db/id asset)
         {:keys [db-after tempids]}
         (tx
@@ -47,7 +49,9 @@
    :payload {project-id :project-id component-id :db/id}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
-   :pre [(= project-id (asset-db/component-project adb component-id))]
+   :pre [(= project-id (asset-db/component-project adb component-id))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]
    :transact
    ^{:db :asset}
    [[:db/retractEntity component-id]]})
@@ -60,7 +64,9 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
    :pre [(or (string? (:db/id component))
-             (= project-id (asset-db/component-project adb (:db/id component))))]}
+             (= project-id (asset-db/component-project adb (:db/id component))))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]}
   (let [id (:db/id component)
         {:keys [db-after tempids]}
         (tx
@@ -84,7 +90,9 @@
    :pre [^{:error :cost-group-price-does-not-belong-to-project}
          (or (nil? (:db/id cost-group))
              (= project-id
-                (:cost-group/project (du/entity adb (:db/id cost-group)))))]}
+                (:cost-group/project (du/entity adb (:db/id cost-group)))))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]}
   (tx
    (if-let [id (:db/id cost-group)]
      ;; Compare and swap the price if there is an existing one
@@ -103,3 +111,30 @@
         :cost-group/price (euro/parse price)
         :cost-group/project project-id})]))
   :ok)
+
+(defcommand :asset/lock-version
+  {:doc "Lock a version of BOQ"
+   :context {:keys [user db] adb :asset-db}
+   :payload lock-version
+   :project-id [:thk.project/id (:boq-version/project lock-version)]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [^{:error :boq-is-locked}
+         (boq-unlocked? adb (:boq-version/project lock-version))]
+   :transact
+   ^{:db :asset}
+   [(list 'teet.asset.asset-tx/lock lock-version)]})
+
+(defcommand :asset/unlock-for-edits
+  {:doc "Unlock version for edits"
+   :context {:keys [user db] adb :asset-db}
+   :payload {project-id :boq-version/project}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [^{:error :boq-is-unlocked}
+         (not (boq-unlocked? adb project-id))]
+   :transact
+   ^{:db :asset}
+   [{:db/id "unlock"
+     :boq-version/created-at (java.util.Date.)
+     :boq-version/project project-id
+     :boq-version/locked? false}]})

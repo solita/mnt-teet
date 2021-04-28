@@ -53,14 +53,18 @@
   :search-shortcuts "Otsingu kiirviited",
   :current-permissions "Kehtivad ligipääsud"},
  :asset
- {:totals-table
-  {:properties "Omadused",
+ {:unlock-contract-boq-warning
+  "unlock contract warning (translate me)",
+  :totals-table
+  {:properties "Kulude grupeerimine",
    :type "Tüüp",
    :quantity "Kogus",
    :cost-per-quantity-unit "Ühiku maksumus (€)",
    :total-cost "Kokku (€)",
-   :project-total "Kokku {total} EUR"},
+   :project-total "Kokku {total} EUR",
+   :all-components "Kõik komponendid"},
   :add-cost-item "Lisan vara",
+  :export-boq "Eksport BOQ",
   :validate
   {:min-length
    "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
@@ -69,17 +73,23 @@
    :min-value "Lubatud minimaalne väärtus on {min-value}",
    :max-value "Lubatud maksimaalne väärtus on {max-value}",
    :integer-format "Sisesta täisarv",
-   :decimal-format "Sisestage kümnendväärtus"},
-  :no-matching-feature-classes "Pole vastavata vara liik",
-  :cost-item-saved "Kululoend salvestatud",
+   :decimal-format "Sisestage kümnendväärtus",
+   :only-whitespace "Ainult tühik ei ole lubatud.",
+   :decimal-precision
+   "Numbri täpsus on liiga suur. Lubatud on {precision} kohta peale punkti."},
+  :no-matching-feature-classes "Pole vastavat vara liiki",
+  :unlock-tender-boq-warning "unlock tender warning (translate me)",
+  :cost-item-saved "Vara salvestatud",
   :page {:cost-items "Varad", :cost-items-totals "Kokku"},
-  :feature-group-and-class-placeholder "Otsi vara grupp tai liik",
+  :feature-group-and-class-placeholder "Otsi vara grupp või liik",
+  :save-boq-version "Salvesta BOQ versioon",
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :location
   {:no-road-found-for-points "Punktide jaoks ei leitud teed",
    :show-map "Näita kaarti",
    :hide-map "Peida kaart"},
+  :confirm-unlock-for-edits "Jah, ava",
   :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
@@ -105,7 +115,8 @@
   {:details "Üksikasjad",
    :common "Ühine",
    :location "Asukoht",
-   :cost-grouping "Kulude grupeerimine"}},
+   :cost-grouping "Kulude grupeerimine"},
+  :unlock-for-edits "Avage muudatuste tegemiseks"},
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
@@ -222,7 +233,7 @@
   "Seotud osapoolt ei saa kustutada, kui sellele on juba taotlusi lisatud",
   :create-opinion-title "Seisukoha lisamine",
   :application-date-can-not-be-edited
-  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taoutlus ja sisestage uus.",
+  "Taotlemise kuupäeva ei saa muuta. Kui kuupäevaga tehti viga, kustutage taotlus ja sisestage uus.",
   :waiting-for-response "Ootab vastust",
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
@@ -334,6 +345,7 @@
   :task.status/canceled "Tühistatud",
   :land-owner-opinion.type/design-conditions-draft
   "Projekteerimistingimuste eelnõu",
+  :file.status/returned "Tagasi saadetud",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
   :task.type/funding-plan "Rahastustaotlus",
@@ -371,13 +383,11 @@
   :notification.type/task-assigned "Määratud ülesanne",
   :task.type/construction-drainage "Drenaaž",
   :participation.role/reviewer "Kinnitaja",
-  :file.status/ready "Valmis",
   :activity.name/detailed-design "Põhiprojekt",
   :activity.status/expired "Aegunud",
   :land-owner-opinion.type/construction "Ehitus",
   :notification.type/task-waiting-for-review
   "Ülesanne ootab ülevaatamist",
-  :file.status/approved "Kinnitatud / Kehtiv",
   :task.type/acceptances "Kooskõlastused",
   :document.sub-category/terms-of-reference "Lähteülesanne",
   :document.sub-category/report "Aruanne",
@@ -433,10 +443,12 @@
   :file.status/draft "Mustand",
   :task.type/construction-lighting "Valgustus",
   :task.type/collaboration "Koostöö",
+  :boq-version.type/budget "Eelarve",
   :notification.type/comment-created "Uus märkus",
   :task.type/construction-equipment "Seadmed",
   :activity.status/archived "Arhiveeritud",
   :activity.status/valid "Kehtiv",
+  :boq-version.type/tender "Hange",
   :comment.visibility/all "Avalik",
   :comment.visibility/internal "Sisemine",
   :task.type/construction-railroad "Raudtee",
@@ -458,11 +470,13 @@
   :task.type/design-road-safety-audit "Liiklusohutuse audit",
   :thk.task-type/third-party-review "Ekspertiis",
   :document.sub-category/photo "Foto",
+  :boq-version.type/contract "Leping",
   :thk.lifecycle-type/construction "Ehitamine",
   :task.type/road-safety-audit-design "Liiklusohutuse audit",
   :participation.role/participant "Osaleja",
   :estate-procedure.type/property-rights "Kasutusõiguse seadmine",
   :document.sub-category/drawing "Joonis",
+  :file.status/submitted "Salvestatud",
   :task.type/traffic-study "Liiklusuuring",
   :task.status/accepted "Aktsepteeritud",
   :cooperation.application.response-type/other "Muu",
@@ -542,7 +556,7 @@
   :cooperation.application.type/ex-ante-eia "KMH eelhinnang",
   :cooperation.opinion.status/agreed "Võtta arvesse",
   :task.type/design-requirements "Projekteerimistingimused",
-  :file.status/updated "Korrigeeritud",
+  :file.status/valid "Kehtiv",
   :file.document-group/specifications "Spetsifikatsioonid",
   :task.type/other-facilities "Muud rajatised",
   :cooperation.application.type/building-permit-order
@@ -621,6 +635,8 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :vektorio-request-failed
+  "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
   "Ülesande staatus ei luba selle alla faile üles laadida",
   :file-too-large "Fail on liiga suur",
@@ -705,6 +721,7 @@
   :meeting/agenda "Päevakava",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
+  :boq-version/explanation "Selgitus",
   :user/phone-number "Telefoni number",
   :thk.project/carriageway "SO",
   :cooperation.application/activity "Tegevuse",
@@ -763,6 +780,7 @@
   :activity/name "Tegevuse nimi",
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
+  :boq-version/type "Värskenda versiooni olekut",
   :land-owner-opinion/date "Vastuse kuupäev",
   :file/description "Kirjeldus",
   :cooperation.contact/name "Nimi",

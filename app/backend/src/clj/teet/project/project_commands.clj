@@ -18,7 +18,9 @@
             [teet.util.datomic :as du]
             [teet.integration.integration-id :as integration-id]
             [teet.integration.x-road.property-registry :as property-registry]
-            [teet.integration.postgrest :as postgrest])
+            [teet.integration.postgrest :as postgrest]
+            [teet.integration.vektorio.vektorio-core :as vektorio]
+            [teet.log :as log])
   (:import (java.util Date UUID)))
 
 
@@ -28,6 +30,13 @@
               :thk.project/custom-end-m]
           project-eid))
 
+(defn maybe-update-vektorio-project-name? [db project-id project-name]
+  (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
+        vektorio-config (environment/config-value :vektorio)]
+      (if vektorio-enabled?
+            (vektorio/update-project-in-vektorio! db vektorio-config project-id project-name)
+            true)))
+
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
    :context {:keys [conn db user]}
@@ -35,29 +44,43 @@
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                          :link :thk.project/owner}}}
-  (let [{db-before :db-before
-         db :db-after} (tx [(merge (cu/without-nils
-                                    (select-keys project-form
-                                                 [:thk.project/id
-                                                  :thk.project/owner
-                                                  :thk.project/m-range-change-reason
-                                                  :thk.project/project-name
-                                                  :thk.project/custom-start-m
-                                                  :thk.project/custom-end-m]))
-                                   (modification-meta user))])]
-    (when (not= (geometry-update-attrs db-before [:thk.project/id id])
-                (geometry-update-attrs db [:thk.project/id id]))
-      (project-geometry/update-project-geometries!
-       (environment/config-map {:api-url [:api-url]
-                                :api-secret [:auth :jwt-secret]
-                                :wfs-url [:road-registry :wfs-url]})
-       [(d/pull db '[:db/id :integration/id
-                     :thk.project/project-name :thk.project/name
-                     :thk.project/road-nr :thk.project/carriageway
-                     :thk.project/start-m :thk.project/end-m
-                     :thk.project/custom-start-m :thk.project/custom-end-m]
-                [:thk.project/id id])]))
-    :ok))
+  (try
+    (if (some? (maybe-update-vektorio-project-name? db [:thk.project/id id] (:thk.project/project-name project-form)))
+      (let [{db-before :db-before
+           db :db-after} (tx [(merge (cu/without-nils
+                                      (select-keys project-form
+                                                   [:thk.project/id
+                                                    :thk.project/owner
+                                                    :thk.project/m-range-change-reason
+                                                    :thk.project/project-name
+                                                    :thk.project/custom-start-m
+                                                    :thk.project/custom-end-m]))
+                                     (modification-meta user))])]
+      (when (not= (geometry-update-attrs db-before [:thk.project/id id])
+                  (geometry-update-attrs db [:thk.project/id id]))
+        (project-geometry/update-project-geometries!
+         (environment/config-map {:api-url [:api-url]
+                                  :api-secret [:auth :jwt-secret]
+                                  :wfs-url [:road-registry :wfs-url]})
+         [(d/pull db '[:db/id :integration/id
+                       :thk.project/project-name :thk.project/name
+                       :thk.project/road-nr :thk.project/carriageway
+                       :thk.project/start-m :thk.project/end-m
+                       :thk.project/custom-start-m :thk.project/custom-end-m]
+                  [:thk.project/id id])]))
+      :ok)
+      (db-api/fail!
+        {:status 400
+         :msg "Vektor.io error"
+         :error :vektorio-request-failed}))
+       (catch Exception e
+         (if
+           (some? (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+           (db-api/fail!
+             {:status 400
+              :msg (str "Vektor.io error:" (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+              :error :vektorio-request-failed})
+           (throw e)))))
 
 (defcommand :thk.project/revoke-permission
   ;; Options

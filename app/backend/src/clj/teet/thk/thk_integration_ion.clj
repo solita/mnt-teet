@@ -13,7 +13,9 @@
             [teet.integration.integration-s3 :as integration-s3]
             [datomic.client.api :as d]
             [clojure.data.csv :as csv]
-            [teet.project.project-geometry :as project-geometry]))
+            [teet.project.project-geometry :as project-geometry]
+            [teet.thk.thk-mapping :as thk-mapping])
+  (:import (java.io File)))
 
 (def test-event
   {:input "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"teet-dev-csv-import\"},\"object\":{\"key\":\"thk/unprocessed/not_hep.csv\"}}}]}"})
@@ -31,9 +33,24 @@
                                     file-key
                                     (io/input-stream file))))
 
-(defn- file->csv [{:keys [file] :as ctx}]
-  (assoc ctx :csv
-         (thk-import/parse-thk-export-csv file)))
+(defn- file->project-rows [{:keys [file] :as ctx}]
+  (assoc ctx :project-rows
+             (thk-import/parse-thk-export-csv {:input file
+                                               :column-mapping thk-mapping/thk->teet-project
+                                               :group-by-fn #(get % :thk.project/id)})))
+
+
+(defn- file->contract-rows [{:keys [file] :as ctx}]
+  (if (environment/feature-enabled? :contracts)
+    (assoc ctx :contract-rows
+               (thk-import/parse-thk-export-csv {:input file
+                                                 :column-mapping thk-mapping/thk->teet-contract
+                                                 :group-by-fn (fn [val]
+                                                                (select-keys val [:thk.contract/procurement-part-id
+                                                                                  :thk.contract/procurement-id]))}))
+    (do
+      (log/info "Skipping contract parsing, feature not enabled")
+      ctx)))
 
 (defn csv->file [{csv :csv :as ctx}]
   (with-open [baos (java.io.ByteArrayOutputStream.)
@@ -46,12 +63,23 @@
     (.flush writer)
     (assoc ctx :file (.toByteArray baos))))
 
-(defn- upsert-projects [{:keys [bucket file-key csv connection] :as ctx}]
+(defn- upsert-projects [{:keys [bucket file-key project-rows connection] :as ctx}]
   (let [import-tx-result (thk-import/import-thk-projects! connection
                                                           (str "s3://" bucket "/" file-key)
-                                                          csv)]
+                                                          project-rows)]
     (assoc ctx
            :db (:db-after import-tx-result))))
+
+(defn- upsert-contracts [{:keys [bucket file-key contract-rows connection] :as ctx}]
+  (if (environment/feature-enabled? :contracts)
+    (let [import-tx-result (thk-import/import-thk-contracts! connection
+                                                             (str "s3://" bucket "/" file-key)
+                                                             contract-rows)]
+      (assoc ctx
+        :db (:db-after import-tx-result)))
+    (do
+      (log/info "Skipping upserting contracts because feature not enabled")
+      ctx)))
 
 (defn- move-file [bucket old-key new-key]
   (log/info "Move file in bucket " bucket " from " old-key " => " new-key)
@@ -116,6 +144,20 @@
   (write-error-to-log ctx)
   nil)
 
+(defn read-to-temp-file
+  "Updates the file key in context to a temp file"
+  [ctx]
+  (update ctx :file (fn [stream]
+                      (let [file (File/createTempFile "thk" ".csv")]
+                        (io/copy stream file)
+                        file))))
+
+(defn delete-temp-file-from-ctx
+  "Deletes the temp file created in the earlier step"
+  [ctx]
+  (io/delete-file (:file ctx))
+  (dissoc ctx :file))
+
 (defn- process-thk-file* [event]
   (try
     (let [result (ctx-> {:event event
@@ -125,8 +167,12 @@
                          :wfs-url (environment/config-value :road-registry :wfs-url)}
                         integration-s3/read-trigger-event
                         integration-s3/load-file-from-s3
-                        file->csv
+                        read-to-temp-file
+                        file->project-rows
+                        file->contract-rows
+                        delete-temp-file-from-ctx
                         upsert-projects
+                        upsert-contracts
                         update-entity-info
                         move-file-to-processed)]
       (log/event :thk-file-processed
@@ -150,8 +196,12 @@
             :api-url (environment/config-value :api-url)
             :api-secret (environment/config-value :auth :jwt-secret)
             :wfs-url (environment/config-value :road-registry :wfs-url)}
-           file->csv
+           read-to-temp-file
+           file->project-rows
+           file->contract-rows
+           delete-temp-file-from-ctx
            upsert-projects
+           upsert-contracts
            update-entity-info)
     (catch Exception e
       (println e "Exception in import"))))

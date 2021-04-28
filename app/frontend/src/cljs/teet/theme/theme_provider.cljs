@@ -116,12 +116,16 @@
                                               "&:disabled" {:opacity "0.8"
                                                             :background-color theme-colors/primary
                                                             :color theme-colors/white}}
+                           :containedSizeLarge {:border-radius "1.5rem"
+                                                :font-size "1rem"
+                                                :height "3rem"
+                                                :padding "0 1.5rem"}
                            :root {:text-transform :none
                                   :font-weight 400
                                   :padding "4px 1.875rem"
                                   :font-size "1rem"
                                   :white-space :nowrap
-                                  :max-height "40px"
+                                  :max-height "50px"
                                   :box-shadow "none"
                                   "&:hover" {:box-shadow "none"}}}
                :MuiDrawer {:paper {:background-color theme-colors/blue

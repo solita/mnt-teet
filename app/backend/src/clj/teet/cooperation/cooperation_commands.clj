@@ -208,7 +208,7 @@
    :context {:keys [user db]}
    :payload {:keys [application-id opinion-form]}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/edit-application {}}
+   :authorization {:cooperation/edit-opinion {}}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
    :transact
    (db-api-large-text/store-large-text!
@@ -288,5 +288,5 @@
    :context {:keys [user db]}
    :payload {:keys [application-id opinion-id]}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/edit-application {}}
+   :authorization {:cooperation/edit-opinion {}}
    :transact [[:db/retractEntity opinion-id]]})
