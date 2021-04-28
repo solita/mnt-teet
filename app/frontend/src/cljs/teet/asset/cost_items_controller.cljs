@@ -485,7 +485,8 @@
 
   Adds :ui/group to each item that contains a vector of type hierarchy."
   [app atl cost-group-totals]
-  (let [kw (some-> app (get-in [:query :filter]) cljs.reader/read-string)
+  (let [kw (some-> app (get-in [:query :filter])
+                   cljs.reader/read-string) ; only reads edn, not arbitrary code
 
         filter-pred (if kw
                       #(some (fn [{t :db/ident}] (= t kw))
