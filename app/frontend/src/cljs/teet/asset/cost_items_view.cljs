@@ -880,7 +880,7 @@
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
          (doall
-          (for [[fg rows] grouped-totals
+          (for [[fg fgroup-rows] grouped-totals
                 :let [ident (:db/ident fg)
                       open? (not (closed-totals ident))]]
             ^{:key (str ident)}
@@ -889,14 +889,15 @@
              (when open?
                [:<>
                 (doall
-                 (for [[fc rows] (group-by (comp second :ui/group) rows)
+                 (for [[fc fclass-rows] (group-by (comp second :ui/group)
+                                                  fgroup-rows)
                        :let [ident (:db/ident fc)
                              open? (not (closed-totals ident))]]
                    ^{:key (str ident)}
                    [:<>
                     [table-section-header e! listing-opts closed-totals fc]
                     (when open?
-                      [table/listing-body (assoc listing-opts :rows rows)])]))])]))]]])))
+                      [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
 
 (defn cost-items-page [e! app {version :version :as state}]
   [cost-items-page-structure

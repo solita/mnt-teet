@@ -483,7 +483,16 @@
   "Return ATL item that is being filtered by and cost group totals that match
   the filter.
 
-  Adds :ui/group to each item that contains a vector of type hierarchy."
+  Adds :ui/group to each item that contains a vector of type hierarchy.
+  The group is used in view code to group the rows into sections.
+
+  For example if URL query parameter `:filter` has `:fgroup/foo`
+  the first item will be the ATL definition of the feature group
+  and the second item will a vector of all the rows in `cost-group-totals`
+  where the type hierarchy contains the fgroup. So all rows for any
+  component in any fclass under the fgroup.
+  "
+
   [app atl cost-group-totals]
   (let [kw (some-> app (get-in [:query :filter])
                    cljs.reader/read-string) ; only reads edn, not arbitrary code
