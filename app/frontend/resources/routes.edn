@@ -170,7 +170,8 @@
   :parent :project
   :view teet.asset.cost-items-view/cost-items-page
   :state {:query :asset/project-cost-items
-          :args {:thk.project/id project}}}
+          :args {:thk.project/id project
+                 :relevant-roads true}}}
 
  :cost-items-totals
  {:path "/projects/:project/cost-items-totals"
@@ -187,7 +188,8 @@
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
                  :cost-item (let [oid (params :id)]
-                              (when (not= oid "new") oid))}}}
+                              (when (not= oid "new") oid))
+                 :relevant-roads true}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}

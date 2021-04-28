@@ -28,12 +28,15 @@
     (asset-db/asset-type-library adb))
    (d/pull adb '[*] [:asset/oid oid])))
 
+(def ^:private relevant-roads-buffer-meters 50)
+
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
    :context {:keys [db user] adb :asset-db}
    :args {project-id :thk.project/id
           cost-item :cost-item
-          cost-totals :cost-totals}
+          cost-totals :cost-totals
+          relevant-roads :relevant-roads}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
@@ -60,7 +63,19 @@
                     ;; PENDING: what if there are thousands?
                     (if (asset-model/component-oid? cost-item)
                       (asset-model/component-asset-oid cost-item)
-                      cost-item))}))))
+                      cost-item))})
+     ;; Fetch relevant roads for cost items of project, meaning the
+     ;; project road along with roads intersecting project geometry
+     ;; with a buffer of 50 meters.
+     (when relevant-roads
+       {:relevant-roads
+        (when-let [integration-id (project-db/thk-id->integration-id-uuid db project-id)]
+          (let [ctx (environment/config-map {:api-url [:api-url]
+                                             :api-secret [:auth :jwt-secret]
+                                             :wfs-url [:road-registry :wfs-url]})]
+            (road-query/fetch-relevant-roads-for-project-cost-items ctx
+                                                                    integration-id
+                                                                    relevant-roads-buffer-meters)))}))))
 
 (defquery :asset/export-boq
   {:doc "Export Bill of Quantities Excel for the project"
@@ -84,19 +99,3 @@
                 (catch Throwable t
                   (log/error t "Exception generating BOQ excel"
                              {:project-id project-id}))))))})
-
-(def ^:private relevant-roads-buffer-meters 50)
-
-(defquery :asset/relevant-roads-for-project-cost-items
-  {:doc "Fetch relevant roads for cost items of project, meaning the project road along with roads intersecting project geometry with a buffer of 50 meters."
-   :context {:keys [db user]}
-   :args {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/read-info {}}}
-  (when-let [integration-id (project-db/thk-id->integration-id-uuid db project-id)]
-    (let [ctx (environment/config-map {:api-url [:api-url]
-                                       :api-secret [:auth :jwt-secret]
-                                       :wfs-url [:road-registry :wfs-url]})]
-      (road-query/fetch-relevant-roads-for-project-cost-items ctx
-                                                              integration-id
-                                                              relevant-roads-buffer-meters))))

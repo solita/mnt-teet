@@ -161,32 +161,38 @@
      (str value (when unit (str "\u00a0" unit)))
      "\u2400")])
 
-(defn- location-entry [locked?]
-  (let [input-comp (if locked? display-input text-field/TextField)]
+(defn- location-entry [locked? relevant-roads]
+  (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [attribute-grid-item
-      [form/field :location/start-point
-       [input-comp {}]]]
-
-     [attribute-grid-item
-      [form/field :location/end-point
-       [input-comp {}]]]
-
+      [form/field :location/road-nr
+       [select/form-select
+        {:show-empty-selection? true
+         :items relevant-roads
+         :format-item :name}]]]
      [attribute-grid-item
       [form/field :location/road-nr
-       [input-comp {:type :number}]]]
+       [input-textfield {:type :number}]]]
 
      [attribute-grid-item
       [form/field :location/carriageway
-       [input-comp {:type :number}]]]
+       [input-textfield {:type :number}]]]
+
+     [attribute-grid-item
+      [form/field :location/start-point
+       [input-textfield {}]]]
+
+     [attribute-grid-item
+      [form/field :location/end-point
+       [input-textfield {}]]]
 
      [attribute-grid-item
       [form/field :location/start-m
-       [input-comp {:type :number}]]]
+       [input-textfield {:type :number}]]]
 
      [attribute-grid-item
       [form/field :location/end-m
-       [input-comp {:type :number}]]]]))
+       [input-textfield {:type :number}]]]]))
 
 (defn- location-map [{:keys [e! value on-change]}]
   (r/with-let [current-value (atom value)
@@ -231,7 +237,7 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype]} rotl locked?]
+(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype relevant-roads]} rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -264,7 +270,7 @@
                                        :location/geojson]}
 
                [location-map {:e! e!}]]])
-           [location-entry locked?]]])
+           [location-entry locked? relevant-roads]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -306,7 +312,6 @@
                                          :rotl rotl}]
                      [select/form-select
                       {:id ident
-                       :read-only? locked?
                        :label (label attr)
                        :show-empty-selection? true
                        :items (mapv :db/ident (:enum/_attribute attr))
@@ -456,7 +461,7 @@
                                 :padding "1rem"}}
    component])
 
-(defn- cost-item-form [e! atl {:asset/keys [fclass] :as form-data}]
+(defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
   (r/with-let [initial-data form-data
                new? (nil? form-data)
 
@@ -490,7 +495,8 @@
                         :attributes (some-> feature-class :attribute/_parent)
                         ;; TODO: cost-item-data here as well
                         :common? false
-                        :inherits-location? false}]])
+                        :inherits-location? false
+                        :relevant-roads relevant-roads}]])
 
         [form/footer2]]
 
@@ -844,11 +850,11 @@
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item
-           version :version :as state}]
+           version :version relevant-roads :relevant-roads :as state}]
   [cost-items-page-structure
    e! app state
    [add-cost-item app version]
-   [cost-item-form e! atl cost-item]])
+   [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn cost-item-page
   [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version] :as state}]
