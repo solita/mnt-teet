@@ -37,6 +37,7 @@ else
               --overwrite
   sleep 60
   echo "$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
+  exit 1
 fi
 
 echo "Check completed"
