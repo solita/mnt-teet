@@ -84,6 +84,7 @@
   :page {:cost-items "Assets", :cost-items-totals "Totals"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
+  :export-boq-filename "THK-{project}-BOQ-{version}.xlsx",
   :save-boq-version "Save BOQ version",
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
