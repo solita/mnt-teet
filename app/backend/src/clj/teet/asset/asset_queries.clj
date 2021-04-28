@@ -106,7 +106,8 @@
                       :include-unit-prices? unit-prices?
                       :version version-info
                       :project-id project-id
-                      :language language})
+                      :language language
+                      :project-name (project-db/project-name db [:thk.project/id project-id])})
                     (catch Throwable t
                       (log/error t "Exception generating BOQ excel"
                                  {:project-id project-id}))))))})))

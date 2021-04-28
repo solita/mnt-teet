@@ -1,11 +1,9 @@
 (ns teet.asset.asset-boq
   "Asset Bill of Quantities Excel export."
   (:require [teet.asset.asset-model :as asset-model]
-            [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-type-library :as asset-type-library]
             [dk.ative.docjure.spreadsheet :as spreadsheet]
-            [teet.localization :refer [tr]]
-            [teet.localization :as localization]
+            [teet.localization :refer [tr tr-enum] :as localization]
             [clojure.string :as str]))
 
 (defn- header-row [atl language]
@@ -65,16 +63,19 @@
              ;; Fgroup changed, output fgroup and class before
              ;; the cost group row
              (not= (:fgroup previous-cg) (:fgroup cg))
-             {:r (+ r 3)
+             {:r (+ r 4)
               :previous-cg cg
               :rows (-> rows
+                        (conj [])
                         (conj [nil [(:fgroup cg) {:col-span 6
+                                                  :halign :center
                                                   :font {:bold true
                                                          :size 14}}]])
                         (conj [nil [(:fclass cg) {:col-span 6
+                                                  :halign :center
                                                   :font {:bold true
                                                          :size 12}}]])
-                        (conj (cg-row (+ r 2) cg)))}
+                        (conj (cg-row (+ r 3) cg)))}
 
              ;; Only fclass changed, output fclass before
              ;; the cost group row
@@ -83,6 +84,7 @@
               :previous-cg cg
               :rows (-> rows
                         (conj [nil [(:fclass cg) {:col-span 6
+                                                  :halign :center
                                                   :font {:bold true
                                                          :size 12}}]])
                         (conj (cg-row (inc r) cg)))}
@@ -126,15 +128,16 @@
   "Create Bill of Quantities spreadsheet from cost group summary info.
 
   Takes the following keys:
-  `atl`  the asset type library
-  `cost-groups` the project cost groups totals
-  `project-id` THK project id
-  `language` the language to export in
-  `include-unit-prices?` if false, unit prices are not included
-  `version` the pulled BOQ version entity
+  `:atl`  the asset type library
+  `:cost-groups` the project cost groups totals
+  `:project-id` THK project id
+  `:language` the language to export in
+  `:include-unit-prices?` if false, unit prices are not included
+  `:version` the pulled BOQ version entity
+  `:project-name` the name of the THK project
   "
   [{:keys [atl cost-groups project-id language include-unit-prices?
-           version] :as a}]
+           version project-name] :as a}]
   (def *a a)
    (let [sheet-name (str "THK-" project-id)
          wb (spreadsheet/create-workbook sheet-name [])
@@ -163,10 +166,15 @@
                       (.addMergedRegion sheet region)))
                   (when style
                     (spreadsheet/set-cell-style! cell (style! style))))))]
-     (r! [(tr [:project :tabs :cost-items]) nil nil nil nil nil
-          ;; PENDING: versioning&locking not implemented yet, this is dummy
-          "Versioon:" "H0"])
-     (r! [nil "Objekti nr:" project-id])
+     (r! [(tr [:project :tabs :cost-items])
+          project-name project-id nil nil nil
+
+          (tr [:fields :boq-export/version])
+          (if version
+            (str (tr-enum (:boq-version/type version)) " v"
+                 (:boq-version/number version))
+            (tr [:asset :unofficial-version]))])
+     (r! [])
      (r! [])
      (r! (header-row atl language))
      (doseq [row (cost-group-rows atl language cost-groups include-unit-prices?)]
