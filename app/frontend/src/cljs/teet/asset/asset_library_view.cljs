@@ -15,7 +15,8 @@
             [teet.ui.container :as container]
             [teet.ui.url :as url]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.theme.theme-spacing :as theme-spacing]))
 
 (defn tr*
   ([m]
@@ -167,6 +168,11 @@
       [:div "no such thing"])))
 
 
+(defn- scrollable-grid [xs content]
+  [Grid {:item true :xs xs
+         :classes #js {:item (<class common-styles/content-scroll-max-height "60px")}}
+   content])
+
 (defn asset-library-page [_e! app {:keys [fgroups] common :ctype/common
                                     modified :tx/schema-imported-at
                                     :as atl}]
@@ -183,18 +189,13 @@
          (format/date-time modified)])]
      [Paper {}
       [Grid {:container true :spacing 0 :wrap :wrap}
-       [Grid {:item true :xs 4
-              :style {:max-height "80vh"
-                      :overflow-y :scroll}}
+       [scrollable-grid 4
         (doall
          (for [fg fgroups]
            ^{:key (str (:db/ident fg))}
            [rotl-tree {:open @open :toggle! toggle!} fg]))]
-       [Grid {:item true :xs 8
-              :style {:max-height "80vh"
-                      :overflow-y :scroll
-                      :padding "1rem"}}
-        [:<>
+       [scrollable-grid 8
+        [:div {:style {:padding "1rem"}}
          (when-let [item (->> app :query :item cljs.reader/read-string
                               (asset-type-library/item-by-ident atl))]
            [rotl-item atl item])]]]]]))
