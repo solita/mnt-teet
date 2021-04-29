@@ -469,6 +469,8 @@
     (let [feature-class (when fclass
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
+       (when-let [oid (:asset/oid form-data)]
+         [typography/Heading2 oid])
        [form/form2
         {:e! e!
          :on-change-event cost-items-controller/->UpdateForm
@@ -543,6 +545,8 @@
     (let [component-path (asset-model/find-component-path cost-item-data component-oid)
           component-data (last component-path)]
       [:<>
+       (when (asset-model/component-oid? component-oid)
+         [typography/Heading2 component-oid])
        [component-form-navigation atl component-path]
 
        [form/form2
