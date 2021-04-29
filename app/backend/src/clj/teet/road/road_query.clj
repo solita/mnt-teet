@@ -232,9 +232,15 @@
                  [type (map-services/fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
 
-(defn- collect-carriageways [relevant-roads]
+(defn- collect-carriageways
+  "Group all the carriageways of a road into one map.
+  ```
+  (collect-carriageways [{:road-nr 1 :carriageway 1} {:road-nr 1 :carriageway 2} {:road-nr 2 :carriageway 1}])
+  => [{:road-nr 1 :carriageways [1 2]} {:road-nr 2 :carriageways [1]}]
+  ```"
+  [relevant-roads]
   (->> relevant-roads
-       (group-by :road)
+       (group-by :road-nr)
        (map (fn [[_road-nr roads-with-road-nr]]
               (reduce (fn [road-with-carriageways road]
                         (update road-with-carriageways :carriageways conj (:carriageway road)))
@@ -258,8 +264,8 @@
                                                           road-object-search-geometry
                                                           {:return-properties [:ms:tee_number :ms:soidutee_nr :ms:nimi]})
          (map (fn [road-part]
-                {:road (some-> road-part :ms:tee_number ->int)
+                {:road-nr (some-> road-part :ms:tee_number ->int)
                  :carriageway (some-> road-part :ms:soidutee_nr ->int)
-                 :name (some-> road-part :ms:nimi)}))
+                 :road-name (some-> road-part :ms:nimi)}))
          collect-carriageways
          set)))

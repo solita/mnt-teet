@@ -309,7 +309,7 @@
                                      (point-geojson start "start/end" "start")
                                      (point-geojson end "start/end" "end")]
                                 #js [geojson])}
-                         :location/road-nr road-nr
+                         :location/road-nr (str road-nr)
                          :location/carriageway carriageway
                          :location/start-m (or m start-m)
                          :location/end-m end-m})))))))))

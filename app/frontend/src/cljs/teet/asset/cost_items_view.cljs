@@ -161,6 +161,16 @@
      (str value (when unit (str "\u00a0" unit)))
      "\u2400")])
 
+(defn- road-nr-format [relevant-roads]
+  (let [road-nr->item-name (->> relevant-roads
+                                (map (juxt (comp str :road-nr)
+                                           #(str (:road-nr %) " " (:road-name %))))
+                                (into {}))]
+    (fn [select-value]
+      (get road-nr->item-name
+           select-value
+           ""))))
+
 (defn- location-entry [locked? relevant-roads]
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
@@ -168,11 +178,8 @@
       [form/field :location/road-nr
        [select/form-select
         {:show-empty-selection? true
-         :items relevant-roads
-         :format-item :name}]]]
-     [attribute-grid-item
-      [form/field :location/road-nr
-       [input-textfield {:type :number}]]]
+         :items (->> relevant-roads (map :road-nr) sort (map str) vec)
+         :format-item (road-nr-format relevant-roads)}]]]
 
      [attribute-grid-item
       [form/field :location/carriageway
