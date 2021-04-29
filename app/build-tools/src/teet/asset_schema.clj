@@ -205,6 +205,8 @@
        (map (juxt :name attribute-name))
        (into {})))
 
+(def sorted (partial sort-by :db/id))
+
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
     (let [workbook (sheet/load-workbook in)
@@ -235,70 +237,75 @@
       (vec
        (concat
         ;; Output feature groups
-        (for [fg fgroup
-              :when (:name fg)]
-          (common-attrs :asset-schema.type/fgroup fg))
+        (sorted
+         (for [fg fgroup
+               :when (:name fg)]
+           (common-attrs :asset-schema.type/fgroup fg)))
 
         ;; Output feature classes
-        (for [fc fclass
-              :when (:name fc)]
-          (merge
-           (common-attrs :asset-schema.type/fclass fc)
-           {:fclass/fgroup (str (:fgroup fc))}
-           (when-let [op (:oid-prefix fc)]
-             {:fclass/oid-prefix op})))
+        (sorted
+         (for [fc fclass
+               :when (:name fc)]
+           (merge
+            (common-attrs :asset-schema.type/fclass fc)
+            {:fclass/fgroup (str (:fgroup fc))}
+            (when-let [op (:oid-prefix fc)]
+              {:fclass/oid-prefix op}))))
 
         ;; Output component types
-        (for [ct ctype
-              :when (or (= (:name ct) :ctype/common)
-                        (and (:name ct)
-                             (or (not (contains? ct :part-of))
-                                 (exists? (:part-of ct)))))]
+        (sorted
+         (for [ct ctype
+               :when (or (= (:name ct) :ctype/common)
+                         (and (:name ct)
+                              (or (not (contains? ct :part-of))
+                                  (exists? (:part-of ct)))))]
 
-          (merge
-           (common-attrs :asset-schema.type/ctype ct)
-           (when-let [il (:inherits-location? ct)]
-             {:component/inherits-location? il})
-           (when-let [qu (:quantity-unit ct)]
-             {:component/quantity-unit (str/trim qu)})
-           (when (contains? ct :part-of)
-             {:ctype/parent (str (:part-of ct))})))
+           (merge
+            (common-attrs :asset-schema.type/ctype ct)
+            (when-let [il (:inherits-location? ct)]
+              {:component/inherits-location? il})
+            (when-let [qu (:quantity-unit ct)]
+              {:component/quantity-unit (str/trim qu)})
+            (when (contains? ct :part-of)
+              {:ctype/parent (str (:part-of ct))}))))
 
         ;; Output attributes namespaced by ctype
-        (for [p (vals attrs-by-name)
-              :let [valueType (case (:datatype p)
-                                ("text" "alphanumeric") :db.type/string
-                                "listitem" :db.type/ref
-                                "integer" :db.type/long
-                                "number" :db.type/bigdec
-                                "datetime" :db.type/instant
-                                nil)]
-              :when (and valueType
-                         (exists? (:ctype p)))]
-          (without-empty
-           (merge
-            (common-attrs :asset-schema.type/attribute p)
-            {:db/cardinality :db.cardinality/one ; PENDING: can be many?
-             :db/valueType valueType
-             :asset-schema/unit (:unit p)
-             :attribute/parent (str (:ctype p))
-             :attribute/cost-grouping? (:cost-grouping? p)
-             :attribute/mandatory? (:mandatory? p)}
-            (min-and-max-values p unnamespaced->namespaced))))
+        (sorted
+         (for [p (vals attrs-by-name)
+               :let [valueType (case (:datatype p)
+                                 ("text" "alphanumeric") :db.type/string
+                                 "listitem" :db.type/ref
+                                 "integer" :db.type/long
+                                 "number" :db.type/bigdec
+                                 "datetime" :db.type/instant
+                                 nil)]
+               :when (and valueType
+                          (exists? (:ctype p)))]
+           (without-empty
+            (merge
+             (common-attrs :asset-schema.type/attribute p)
+             {:db/cardinality :db.cardinality/one ; PENDING: can be many?
+              :db/valueType valueType
+              :asset-schema/unit (:unit p)
+              :attribute/parent (str (:ctype p))
+              :attribute/cost-grouping? (:cost-grouping? p)
+              :attribute/mandatory? (:mandatory? p)}
+             (min-and-max-values p unnamespaced->namespaced)))))
 
         ;; Output enum values
-        (for [item list-items
-              :let [attr (attrs-by-name (:property item))
-                    attr-name (get-in attrs-by-name [(:property item) :name])
-                    ctype-or-fclass (or (get ctypes-by-name (:ctype attr))
-                                        (get fclass-by-name (:ctype attr)))
-                    all-exist? (and attr ctype-or-fclass
-                                    (:name item)
-                                    (exists? (:property item)))]
-              :when all-exist?]
-          (merge
-           (common-attrs :asset-schema.type/enum item)
-           {:enum/attribute (str attr-name)})))))))
+        (sorted
+         (for [item list-items
+               :let [attr (attrs-by-name (:property item))
+                     attr-name (get-in attrs-by-name [(:property item) :name])
+                     ctype-or-fclass (or (get ctypes-by-name (:ctype attr))
+                                         (get fclass-by-name (:ctype attr)))
+                     all-exist? (and attr ctype-or-fclass
+                                     (:name item)
+                                     (exists? (:property item)))]
+               :when all-exist?]
+           (merge
+            (common-attrs :asset-schema.type/enum item)
+            {:enum/attribute (str attr-name)}))))))))
 
 (defn -main [& [sheet-path]]
   (let [sheet-file (some-> sheet-path io/file)]
