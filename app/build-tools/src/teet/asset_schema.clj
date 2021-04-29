@@ -91,6 +91,7 @@
             :cost-grouping? :mandatory?
             :label-et :label-en
             :description-et :description-en
+            :agreed?
             :comment]
            #{:name :ctype}))
 
