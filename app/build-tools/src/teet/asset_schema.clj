@@ -206,6 +206,17 @@
        (into {})))
 
 (def sorted (partial sort-by :db/id))
+(defn without-duplicates
+  "Remove any items where the :db/id appears multiple times."
+  [items]
+  (->> items
+       (group-by :db/id)
+       (filter (fn [[id items]]
+                 (let [duplicates? (> (count items) 1)]
+                   (when duplicates?
+                     (println "Id " id " appears " (count items) " times, skipping it."))
+                   (not duplicates?))))
+       (mapcat val)))
 
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
