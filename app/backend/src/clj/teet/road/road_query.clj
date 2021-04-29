@@ -232,6 +232,19 @@
                  [type (map-services/fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
 
+(defn- collect-carriageways [relevant-roads]
+  (->> relevant-roads
+       (group-by :road)
+       (map (fn [[_road-nr roads-with-road-nr]]
+              (reduce (fn [road-with-carriageways road]
+                        (update road-with-carriageways :carriageways conj (:carriageway road)))
+                      (let [first-road (first roads-with-road-nr)]
+                        (-> first-road
+                            (dissoc :carriageway)
+                            (assoc :carriageways #{(:carriageway first-road)})))
+                      (rest roads-with-road-nr))))
+       (map #(update % :carriageways (comp vec sort)))))
+
 (defn fetch-relevant-roads-for-project-cost-items
   "Returns the road itself, along with all the roads that intersect the
   project road object (radius 50m)"
@@ -243,9 +256,10 @@
     (->> (map-services/fetch-intersecting-objects-of-type ctx
                                                           "ms:teeosa"
                                                           road-object-search-geometry
-                                                          {:propertyName [:ms:tee_number :ms:soidutee_nr :ms:nimi]})
+                                                          {:return-properties [:ms:tee_number :ms:soidutee_nr :ms:nimi]})
          (map (fn [road-part]
                 {:road (some-> road-part :ms:tee_number ->int)
                  :carriageway (some-> road-part :ms:soidutee_nr ->int)
                  :name (some-> road-part :ms:nimi)}))
+         collect-carriageways
          set)))
