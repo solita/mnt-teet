@@ -9,7 +9,8 @@
             [teet.ui.icons :as icons]
             [teet.util.datomic :as du]
             [teet.common.common-styles :as common-styles]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.ui.format :as format]))
 
 (defn tr*
   ([m]
@@ -112,10 +113,17 @@
        ^{:key (str (:db/id fc))}
        [fclass open fc]))]])
 
-(defn asset-library-page [_e! _app {:keys [fgroups] common :ctype/common}]
+(defn asset-library-page [_e! _app {:keys [fgroups] common :ctype/common
+                                    modified :tx/schema-imported-at}]
   (r/with-let [open (r/atom #{})]
     [:<>
-     [typography/Heading1 (tr [:asset :type-library :header])]
+     [:div {:class (<class common-styles/flex-row-space-between)
+            :style {:align-items :center}}
+      [typography/Heading1 (tr [:asset :type-library :header])]
+      (when modified
+        [:div {:style {:margin "1rem"}}
+         (tr [:common :last-modified]) ": "
+         (format/date-time modified)])]
      [ctype open (assoc common ::label (tr [:asset :type-library :common-ctype]))]
      (doall
       (for [fg fgroups]
