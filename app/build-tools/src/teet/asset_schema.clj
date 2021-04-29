@@ -135,7 +135,7 @@
      :db/doc comment
      :asset-schema/type type}
     (when (or label-et label-en)
-      {:asset-schema/label [(or label-et "") (or label-en "")]})
+      {:asset-schema/label [(str (or label-et "")) (str (or label-en ""))]})
     (when (or description-et description-en)
       {:asset-schema/description [(or description-et) (or description-en "")]}))))
 
