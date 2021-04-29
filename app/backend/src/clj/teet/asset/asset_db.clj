@@ -59,7 +59,11 @@
           remove-empty-selection-attributes
           (pull-child-ctypes db)))
 
-   {:ctype/common (d/pull db ctype-pattern :ctype/common)
+   {:tx/schema-imported-at (ffirst
+                            (d/q '[:find (max ?t)
+                                   :where [_ :tx/schema-imported-at ?t]]
+                                 db))
+    :ctype/common (d/pull db ctype-pattern :ctype/common)
     :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
@@ -338,6 +342,20 @@
           :in $ ?project]
         db thk-project-id)))
 
+(defn project-boq-version-history
+  "Return all BOQ project versions (excluding unlocked versions)
+  for the given THK project"
+  [db thk-project-id]
+  (->>
+   (d/q '[:find (pull ?e [*])
+          :where
+          [?e :boq-version/project ?project]
+          [?e :boq-version/locked? true]
+          :in $ ?project] db thk-project-id)
+   (map first)
+   (sort-by :boq-version/created-at)
+   reverse))
+
 (defn latest-change-in-project
   "Fetch latest timestamp and author UUID that has changed anything in the given THK project."
   [db thk-project-id]
@@ -359,3 +377,12 @@
           [?tx :tx/author ?author]
           :in $ ?project]
         db thk-project-id)))
+
+(defn version-db
+  "Return db as of the given version id."
+  [db version-id]
+  (let [c (:boq-version/created-at (du/entity db version-id))]
+    (if-not c
+      (throw (ex-info "No version creation time found"
+                      {:version-id version-id}))
+      (d/as-of db c))))

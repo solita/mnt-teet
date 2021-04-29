@@ -243,4 +243,10 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :enum/attribute :boq-version/type}
           {:db/ident :boq-version.type/contract
            :enum/attribute :boq-version/type}]]}
+
+ {:db/ident :migration/tx-schema-import-time
+  :txes [[{:db/ident :tx/schema-imported-at
+           :db/doc "The timestamp of when the ROTL Excel was imported"
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}]]}
  ]

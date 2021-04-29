@@ -73,7 +73,7 @@
     :hotkey "8"
     :feature-flag :cost-items
     :authorization :cost-items/cost-items
-    :match-pages #{:cost-items :cost-items-totals}}
+    :match-pages #{:cost-item :cost-items :cost-items-totals}}
    {:name :cooperation
     :label [:project :tabs :cooperation]
     :navigate {:page :cooperation}
