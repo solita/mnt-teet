@@ -154,6 +154,18 @@
     (when value ;; There is a value but we couldn't find the namespaced version -> possible typo
       (throw (ex-info (str "invalid property as ref: " value) {:value value :attribute attribute})))))
 
+(defn- trim
+  "Replace non-breaking spaces with regular and trim whitespace.
+  If resulting string is blank, returns nil. Otherwise returns
+  trimmed string."
+  [input]
+  (let [s (some-> input
+                  ;; Turn non-breaking spaces to regular
+                  (str/replace "\u00a0" " ")
+                  str/trim)]
+    ;; Return nil for blank
+    (when-not (str/blank? s)
+      s)))
 
 (defn- min-and-max-values
   "Build a map containing min and max value attributes. If `(:min-valuep)` can
@@ -161,16 +173,23 @@
   returned. If it can be parsed as a `:db/ident` referencing another attribute,
   `{:attribute/min-value-ref <parsed kw>}` is returned. Likewise for max values."
   [p unnamespaced->namespaced]
-  (merge (if-let [min (->long (:min-value p))]
-           {:attribute/min-value min}
-           (extremum-value-ref (:min-value p)
-                               :attribute/min-value-ref
-                               unnamespaced->namespaced))
-         (if-let [max (->long (:max-value p))]
-           {:attribute/max-value max}
-           (extremum-value-ref (:max-value p)
-                               :attribute/max-value-ref
-                               unnamespaced->namespaced))))
+  (let [min-value (trim (:min-value p))
+        max-value (trim (:max-value p))]
+    (try
+      (merge (if-let [min (->long min-value)]
+               {:attribute/min-value min}
+               (extremum-value-ref min-value
+                                   :attribute/min-value-ref
+                                   unnamespaced->namespaced))
+             (if-let [max (->long max-value)]
+               {:attribute/max-value max}
+               (extremum-value-ref max-value
+                                   :attribute/max-value-ref
+                                   unnamespaced->namespaced)))
+      (catch Exception e
+        (throw (ex-info "Problem with min/max values"
+                        (merge {:property p}
+                               (ex-data e))))))))
 
 (defn- unnamespaced-attr->namespaced-attr
   "construct map from unnamespaced attribute name strings to namespaced keywords"
