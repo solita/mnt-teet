@@ -8,7 +8,8 @@
   (let [clean #(-> %
                    (str/replace "(" "")
                    (str/replace ")" "")
-                   (str/replace "/" "_"))]
+                   (str/replace "/" "_")
+                   (str/replace "," "_"))]
     (keyword (clean pfx) (clean name))))
 
 (defn- parse-prefix-and-name [s]
