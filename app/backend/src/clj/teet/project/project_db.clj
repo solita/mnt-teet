@@ -226,3 +226,9 @@
   (boolean
    (ffirst (d/q '[:find ?e :where [?project :thk.project/owner ?e] :in $ ?project]
                 db project-eid))))
+
+(defn project-name [db project-eid]
+  (let [p (d/pull db '[:thk.project/name :thk.project/project-name]
+                  project-eid)]
+    (or (:thk.project/project-name p)
+        (:thk.project/name p))))
