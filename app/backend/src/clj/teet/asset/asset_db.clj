@@ -59,7 +59,11 @@
           remove-empty-selection-attributes
           (pull-child-ctypes db)))
 
-   {:ctype/common (d/pull db ctype-pattern :ctype/common)
+   {:tx/schema-imported-at (ffirst
+                            (d/q '[:find (max ?t)
+                                   :where [_ :tx/schema-imported-at ?t]]
+                                 db))
+    :ctype/common (d/pull db ctype-pattern :ctype/common)
     :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
