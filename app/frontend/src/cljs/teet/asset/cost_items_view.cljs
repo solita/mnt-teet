@@ -163,7 +163,7 @@
 
 (defn- road-nr-format [relevant-roads]
   (let [road-nr->item-name (->> relevant-roads
-                                (map (juxt (comp str :road-nr)
+                                (map (juxt :road-nr
                                            #(str (:road-nr %) " " (:road-name %))))
                                 (into {}))]
     (fn [select-value]
@@ -171,19 +171,24 @@
            select-value
            ""))))
 
-(defn- location-entry [locked? relevant-roads]
+(defn- location-entry [locked? selected-road-nr relevant-roads]
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [attribute-grid-item
       [form/field :location/road-nr
        [select/form-select
         {:show-empty-selection? true
-         :items (->> relevant-roads (map :road-nr) sort (map str) vec)
+         :items (->> relevant-roads (map :road-nr) sort vec)
          :format-item (road-nr-format relevant-roads)}]]]
 
      [attribute-grid-item
       [form/field :location/carriageway
-       [input-textfield {:type :number}]]]
+       [select/form-select
+        {:show-empty-selection? true
+         :items (or (cost-items-controller/carriageways-for-road selected-road-nr
+                                                                 relevant-roads)
+                    [1])
+         :format-item str}]]]
 
      [attribute-grid-item
       [form/field :location/start-point
@@ -277,7 +282,7 @@
                                        :location/geojson]}
 
                [location-map {:e! e!}]]])
-           [location-entry locked? relevant-roads]]])
+           [location-entry locked? (:location/road-nr cost-item-data) relevant-roads]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -500,6 +505,7 @@
           [form-paper [attributes
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
+                        :cost-item-data form-data
                         ;; TODO: cost-item-data here as well
                         :common? false
                         :inherits-location? false

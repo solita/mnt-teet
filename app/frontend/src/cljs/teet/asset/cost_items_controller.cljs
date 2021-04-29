@@ -134,6 +134,39 @@
         :version
         common-controller/page-state))
 
+(defn carriageways-for-road
+  "Get the carriageways of the road with `road-nr` from `relevant-roads`"
+  [road-nr relevant-roads]
+  (->> relevant-roads
+       (some #(when (= (:road-nr %) road-nr) %))
+       :carriageways))
+
+(defn- default-carriageway
+  "When changing road number, also change the carriageway if the current
+  value is invalid"
+  [form-update-data old-form-data relevant-roads]
+  (if (and (:location/road-nr form-update-data)
+           (not (:location/carriageway form-update-data))
+           ;; 1 is always an allowed carriageway value, no need to
+           ;; check if still valid
+           (not= (:location/carriageway old-form-data) 1))
+    (if-let [selected-road-carriageways (carriageways-for-road (:location/road-nr form-update-data)
+                                                               relevant-roads)]
+      ;; If the currently selected carriageway was NOT found for the newly selected road...
+      (if-not (some #(= (:location/carriageway old-form-data) %)
+                    selected-road-carriageways)
+        ;; ... use the smallest available carriageway ...
+        (assoc form-update-data
+               :location/carriageway
+               (apply min selected-road-carriageways))
+        ;; ... otherwise no need to change the currently selected one.
+        form-update-data)
+      form-update-data)
+    form-update-data))
+
+(defn- app->relevant-roads [app]
+  (-> app :route :cost-item :relevant-roads))
+
 (extend-protocol t/Event
 
   SaveCostItem
@@ -227,7 +260,10 @@
         (log/debug "Not editing form, BOQ version is locked.")
         app)
       (let [old-form (form-state app)
-            new-form (cu/deep-merge old-form form-data)]
+            new-form (cu/deep-merge old-form
+                                    (default-carriageway form-data
+                                                         old-form
+                                                         (app->relevant-roads app)))]
         (process-location-change
          (update-form app (constantly new-form))
          old-form new-form))))
@@ -309,7 +345,7 @@
                                      (point-geojson start "start/end" "start")
                                      (point-geojson end "start/end" "end")]
                                 #js [geojson])}
-                         :location/road-nr (str road-nr)
+                         :location/road-nr road-nr
                          :location/carriageway carriageway
                          :location/start-m (or m start-m)
                          :location/end-m end-m})))))))))
