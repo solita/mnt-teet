@@ -116,9 +116,14 @@
     (if (string? x)
       (try
         (Long/parseLong x)
-        (catch NumberFormatException e
-          (println "Can't parse number: " x)
-          nil))
+        (catch NumberFormatException _e
+          ;; Number that looks like "100" in excel may be
+          ;; "100.0" when read, try parsing as double but returning long
+          (try
+            (long (Double/parseDouble x))
+            (catch NumberFormatException _e
+              (println "Can't parse number: " x)
+              nil))))
       (long x))))
 
 (defn common-attrs [type {:keys [name comment label-et label-en
