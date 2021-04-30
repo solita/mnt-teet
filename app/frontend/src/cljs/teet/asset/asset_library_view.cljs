@@ -178,7 +178,6 @@
 (defn- ensure-tree-open [atl open item-kw]
   (let [current-open @open
         th (mapv :db/ident (asset-type-library/type-hierarchy atl item-kw))]
-    (println "ensure open idents: " th)
     (when-not (every? current-open th)
       (swap! open into th))))
 
