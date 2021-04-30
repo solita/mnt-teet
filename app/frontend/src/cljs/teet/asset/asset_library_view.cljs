@@ -142,7 +142,7 @@
      [url/Link {:page :asset-type-library
                 :query {:item (str ident)}}
       [:<>
-       (tr* item)
+       (or (:label opts) (tr* item))
        [:div {:class (<class rotl-type-badge-style)}
         (tr [:asset :type-library (-> ident namespace keyword)])]]]
      [:div {:class (<class common-styles/indent-rem 1)}
@@ -153,8 +153,7 @@
            ^{:key (str (:db/ident child))}
            [rotl-tree opts child])))]]))
 
-(defn rotl-item [atl {type :asset-schema/type :as item}]
-  (def *item item)
+(defn rotl-item [{type :asset-schema/type :as item}]
   (r/with-let [open (r/atom #{})]
     (case (:db/ident type)
       :asset-schema.type/fgroup
@@ -191,12 +190,19 @@
      [Paper {}
       [Grid {:container true :spacing 0 :wrap :wrap}
        [scrollable-grid 4
-        (doall
-         (for [fg fgroups]
-           ^{:key (str (:db/ident fg))}
-           [rotl-tree {:open @open :toggle! toggle!} fg]))]
+        [:<>
+         ^{:key "common"}
+         [rotl-tree {:open @open :toggle! toggle!
+                     :label (tr [:asset :type-library :common-ctype])} common]
+         (doall
+          (for [fg fgroups]
+            ^{:key (str (:db/ident fg))}
+            [rotl-tree {:open @open :toggle! toggle!} fg]))]]
        [scrollable-grid 8
         [:div {:style {:padding "1rem"}}
-         (when-let [item (->> app :query :item cljs.reader/read-string
-                              (asset-type-library/item-by-ident atl))]
-           [rotl-item atl item])]]]]]))
+         (when-let [item-kw
+                    (->> app :query :item cljs.reader/read-string)]
+           (let [item (if (= item-kw :ctype/common)
+                        common
+                        (asset-type-library/item-by-ident atl item-kw))]
+             [rotl-item item]))]]]]]))
