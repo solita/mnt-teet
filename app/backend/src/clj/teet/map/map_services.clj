@@ -121,11 +121,14 @@
        (str/join ",")))
 
 (defn wfs-get-feature
-  "Returns features of type `typename`, filtered by `ogc-filter`."
+  "Returns features of type `typename`, filtered by `ogc-filter`. The
+  last optional argument is an options map with the following possible keys:
+  - `return-properties`, a vector of property keywords to return, corresponding
+    to `propertyName` WFS Query argument"
   [{:keys [wfs-url]}
    typename                                     ;; The `typeName` of the feature
    ogc-filter                                   ;; the OGC filter in hiccup format
-   & [{:keys [return-properties] :as _options-map}]] ;; a map of other options; `return-properties` is a vector of property keywords to return
+   & [{:keys [return-properties] :as _options-map}]]
   (let [payload [:wfs:GetFeature {:xmlns:wfs "http://www.opengis.net/wfs"
                                   :xmlns:gml "http://www.opengis.net/gml"
                                   :version "1.1.0"
