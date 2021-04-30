@@ -150,9 +150,7 @@
    "activity_thkupdstamp"
    "activity_teetupdstamp"
    "activity_teetdelstamp"
-   "activity_cost"
-   "activity_procurementno"
-   "activity_procurementid"])
+   "activity_cost"])
 
 (defn estonian-person-id->user [id]
   (when-not (str/blank? id)
@@ -309,9 +307,7 @@
                             :parse (constantly nil)
                             :format (fn [[d? at]] (if d? (datetime-str at) ""))
                             :task {:attribute (juxt :meta/deleted? :meta/modified-at)}}
-   "activity_cost" {:attribute :activity/cost}
-   "activity_procurementno" {:attribute :activity/procurement-nr}
-   "activity_procurementid" {:attribute :activity/procurement-id}})
+   "activity_cost" {:attribute :activity/cost}})
 
 (def thk->teet-contract
   {"activity_id" {:attribute :thk.activity/id}
