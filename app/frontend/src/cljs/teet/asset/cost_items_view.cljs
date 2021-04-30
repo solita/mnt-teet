@@ -864,7 +864,7 @@
              :icon [icons/file-download]
              :on-click open-export-dialog!}]
            :left-panel
-           [:div {:class (<class common-styles/content-scroll-max-height "90px")}
+           [:div {:style {:overflow-y :scroll}}
             [cost-items-navigation e! app]
             left-panel-action
             [cost-item-hierarchy
