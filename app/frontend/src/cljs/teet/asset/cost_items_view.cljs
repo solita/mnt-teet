@@ -142,7 +142,8 @@
     :else
     :details))
 
-(defn- attribute-grid-item [content]
+(defn- attribute-grid-item
+  [content]
   [Grid {:item true
          :md 4
          :xs 12
@@ -174,35 +175,57 @@
 (defn- location-entry [locked? selected-road-nr relevant-roads]
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
-     [attribute-grid-item
+     [Grid {:item true
+            :md 5
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/road-nr
        [select/form-select
         {:show-empty-selection? true
          :items (->> relevant-roads (map :road-nr) sort vec)
          :format-item (road-nr-format relevant-roads)}]]]
 
-     [attribute-grid-item
-      [form/field :location/carriageway
-       [select/form-select
-        {:show-empty-selection? true
-         :items (or (cost-items-controller/carriageways-for-road selected-road-nr
-                                                                 relevant-roads)
-                    [1])
-         :format-item str}]]]
+     [Grid {:item true
+            :container true
+            :md 7
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [Grid {:item true
+             :md 2
+             :xs 12}
+       [form/field :location/carriageway
+        [select/form-select
+         {:show-empty-selection? true
+          :items (or (cost-items-controller/carriageways-for-road selected-road-nr
+                                                                  relevant-roads)
+                     [1])
+          :format-item str}]]]]
 
-     [attribute-grid-item
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/start-point
        [input-textfield {}]]]
 
-     [attribute-grid-item
-      [form/field :location/end-point
-       [input-textfield {}]]]
-
-     [attribute-grid-item
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/start-m
        [input-textfield {:type :number}]]]
 
-     [attribute-grid-item
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/end-point
+       [input-textfield {}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/end-m
        [input-textfield {:type :number}]]]]))
 
