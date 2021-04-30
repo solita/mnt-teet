@@ -143,6 +143,17 @@
                                #{} datoms)]))))
           links)))
 
+(defn contract->eid
+  "Parse procurement-id and part-id from the given id and return them as combined entity id"
+  [id]
+  (let [procurement-id (subs id (count "contract-"))
+        part-id-begin-idx (str/index-of procurement-id "-")]
+    [:thk.contract/procurement-id+procurement-part-id
+     (if (nil? part-id-begin-idx)
+       [procurement-id nil]
+       [(subs procurement-id 0 part-id-begin-idx)
+        (subs procurement-id (+ 1 part-id-begin-idx))])]))
+
 (defn ->eid [id]
   (cond
     (str/starts-with? id "project-")
@@ -153,6 +164,9 @@
 
     (str/starts-with? id "file-")
     [:file/id (UUID/fromString (subs id 5))]
+
+    (str/starts-with? id "contract-")
+    (contract->eid id)
 
     (re-matches #"^\d+$" id)
     (Long/parseLong id)
