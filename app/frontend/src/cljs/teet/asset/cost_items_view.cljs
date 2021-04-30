@@ -646,11 +646,12 @@
                              :params {:id oid}} oid]])]]))]]))]))
 
 (defn- cost-items-navigation [e! {:keys [page params]}]
-  [select/form-select
-   {:on-change #(e! (common-controller/->Navigate % params nil))
-    :items [:cost-items :cost-items-totals]
-    :value page
-    :format-item #(tr [:asset :page %])}])
+  [:div {:class (<class common-styles/padding 1 1)}
+   [select/form-select
+    {:on-change #(e! (common-controller/->Navigate % params nil))
+     :items [:cost-items :cost-items-totals]
+     :value page
+     :format-item #(tr [:asset :page %])}]])
 
 (defn- save-boq-version-dialog [{:keys [e! on-close]}]
   (r/with-let [form-state (r/atom {})
