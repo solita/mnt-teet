@@ -118,16 +118,17 @@
                :let [params (param-names path)
                      param-syms (map (comp symbol name) params)
                      fn-name (symbol (name route-name))]]
-           (case (count params)
-             0 `(defn ~fn-name [] ~(str "#" path))
-             1 `(def ~fn-name
-                  (fn route# [~@param-syms]
-                    (if (map? ~(first param-syms))
-                      (str (route# (~(first params) ~(first param-syms)))
-                           (when-let [query# (:teet.ui.url/query ~(first param-syms))]
-                             (str "?" (teet.ui.url/format-params query#))))
-                      (str "#" ~@(split-path path)))))
-             ;; more than 1 parameter
+           (if (= 1 (count params))
+             ;; exactly 1 parameter, check if it is map or value
+             `(def ~fn-name
+                (fn route# [~@param-syms]
+                  (if (map? ~(first param-syms))
+                    (str (route# (~(first params) ~(first param-syms)))
+                         (when-let [query# (:teet.ui.url/query ~(first param-syms))]
+                           (str "?" (teet.ui.url/format-params query#))))
+                    (str "#" ~@(split-path path)))))
+             ;; more than 1 parameter, support 1 arity for map and
+             ;; other for parameter count
              `(def ~fn-name
                 (fn route#
                   ([{:keys [~@param-syms] query# :teet.ui.url/query}]
