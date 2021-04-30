@@ -21,3 +21,14 @@
                           {:activity/procurement-id procurement-id})
                         (when procurement-nr
                           {:activity/procurement-nr procurement-nr})))})))
+
+(defn retract-procurement-info-from-activity [conn]
+  (let [activities (d/q '[:find ?a
+                          :where [?a :activity/procurement-id _]
+                          [?a :activity/procurement-nr _]]
+                     (d/db conn))]
+    (d/transact conn
+      {:tx-data (for [[activity-id] activities]
+                  (merge {:db/id activity-id}
+                    {:activity/procurement-id nil}
+                    {:activity/procurement-nr nil}))})))
