@@ -1,8 +1,10 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
+            [teet.theme.theme-spacing :as theme-spacing]
             [herb.core :refer [defglobal]]
             [garden.color :refer [darken]]
-            [garden.stylesheet :refer [at-media]]))
+            [garden.stylesheet :refer [at-media]]
+            [clojure.string :as str]))
 
 ;; Typography styles
 (def h1-desktop
@@ -559,3 +561,15 @@
          (when disabled?
            {:color theme-colors/text-disabled})))
 
+(defn indent-rem [rems]
+  {:padding-left (str rems "rem")})
+
+(defn content-scroll-max-height
+  "Return style for scrollable content with max-height, calculates
+  height from viewport height minus appbar and any provided
+  height values."
+  [& element-heights-above-content]
+  {:overflow-y :scroll
+   :max-height (str "calc(100vh - " theme-spacing/appbar-height " - "
+                    (str/join " - " element-heights-above-content)
+                    ")")})

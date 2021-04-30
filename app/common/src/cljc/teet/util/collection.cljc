@@ -283,3 +283,30 @@
 
        :else x))
    form))
+
+(defn find-path
+  "Return vector containing all parents of element matching `pred`
+  in nested structure `form`. The last element is the matching element
+  itself.
+
+  `children` fn to return collection of children for candidate item
+  `pred`     fn that takes item to find and candidate child and returns truthy
+             if the candidate matches the item to find
+  `form`     the nested data structure
+  "
+  [children pred form ]
+  (let [containing
+        (fn containing [path here]
+          (let [cs (children here)]
+            (if-let [c (some #(when (pred %) %) cs)]
+              ;; we found the component at this level
+              (into path [here c])
+
+              ;; not found here, recurse
+              (first
+               (for [sub cs
+                     :let [sub-path (containing (conj path here) sub)]
+                     :when sub-path]
+                 sub-path)))))]
+
+    (containing [] form)))

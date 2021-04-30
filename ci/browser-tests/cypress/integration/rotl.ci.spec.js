@@ -6,11 +6,17 @@ context("ROTL", () => {
     })
 
     it("renders list of feature groups that can be opened", () => {
-        cy.get("[data-ident=':fgroup/structures'] .MuiCardHeader-action button").click()
 
-        cy.get("[data-ident=':fclass/bridge'] .MuiCardHeader-action button").click()
+        // open structures fgroup
+        cy.get("[data-ident=':fgroup/structures'] button.MuiIconButton-root").first().click()
 
-        cy.get("[data-ident=':ctype/bridgespan'] .MuiCardHeader-action button").click()
+        // open bridge
+        cy.get("[data-ident=':fclass/bridge'] button.MuiIconButton-root").first().click()
+
+        // click to select bridge span
+        cy.get("[data-ident=':ctype/bridgespan'] a").first().click()
+
+        // details view has bridge attribute listed
         cy.get("td").contains(":bridgespan/spannumber")
 
     })

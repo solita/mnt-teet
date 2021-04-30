@@ -54,7 +54,7 @@
   :current-permissions "Kehtivad ligipääsud"},
  :asset
  {:unlock-contract-boq-warning
-  "unlock contract warning (translate me)",
+  "Kululoend on aktiivses lepingus. Selle muutmine tähendab lepingu muudatust. Kas oled kindel, et soovid avada kululoendi muudatusteks?",
   :totals-table
   {:properties "Kulude grupeerimine",
    :type "Tüüp",
@@ -64,7 +64,7 @@
    :project-total "Kokku {total} EUR",
    :all-components "Kõik komponendid"},
   :add-cost-item "Lisan vara",
-  :export-boq "Eksport BOQ",
+  :export-boq "Kululoendi eksport",
   :validate
   {:min-length
    "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
@@ -77,12 +77,15 @@
    :only-whitespace "Ainult tühik ei ole lubatud.",
    :decimal-precision
    "Numbri täpsus on liiga suur. Lubatud on {precision} kohta peale punkti."},
+  :unofficial-version "Mitteametlik",
   :no-matching-feature-classes "Pole vastavat vara liiki",
-  :unlock-tender-boq-warning "unlock tender warning (translate me)",
+  :unlock-tender-boq-warning
+  "Kululoend on hetkel hankes, kas oled kindel , et soovid seda muuta? Hanke kululoendi muutmisel tuleb teavitada pakkujaid ning vajadusel muuta pakkumuste esitamise tähtaega.",
   :cost-item-saved "Vara salvestatud",
-  :page {:cost-items "Varad", :cost-items-totals "Kokku"},
-  :feature-group-and-class-placeholder "Otsi vara grupp või liik",
-  :save-boq-version "Salvesta BOQ versioon",
+  :page {:cost-items "Varad", :cost-items-totals "Summad"},
+  :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
+  :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
+  :save-boq-version "Salvesta kululoendi versioon",
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :location
@@ -106,7 +109,7 @@
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
-   :component-quantity-unit "Komponent koguse ühik: {unit}",
+   :component-quantity-unit "Komponendi koguse ühik: {unit}",
    :ctype "Komponent",
    :db.type/long "Täisarv",
    :attributes "Tunnused",
@@ -781,9 +784,11 @@
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
   :boq-version/type "Värskenda versiooni olekut",
+  :boq-export/version "Versioon",
   :land-owner-opinion/date "Vastuse kuupäev",
   :file/description "Kirjeldus",
   :cooperation.contact/name "Nimi",
+  :boq-export/unit-prices? "Ekspordi ka ühikhinnad?",
   :file/document-group "Dokumendi grupp",
   :location/carriageway "Sõidutee",
   :meeting.agenda/body "Sisu",

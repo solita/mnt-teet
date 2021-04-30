@@ -7,7 +7,9 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.asset.asset-model :as asset-model]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            cljs.reader
+            [teet.asset.asset-type-library :as asset-type-library]))
 
 (defrecord AddComponentCancel [id])
 
@@ -76,6 +78,7 @@
 (defrecord UnlockForEdits [callback])
 (defrecord UnlockForEditsResponse [callback response])
 
+(defrecord ToggleOpenTotals [ident]) ; toggle open/closed totals ident
 
 (declare process-location-change)
 
@@ -470,7 +473,12 @@
   (process-event [{response :response} app]
     (println "Response: " response)
     (t/fx app
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  ToggleOpenTotals
+  (process-event [{ident :ident} app]
+    (common-controller/update-page-state
+     app [:closed-totals] cu/toggle ident)))
 
 (extend-protocol t/Event
   SaveBOQVersion
@@ -506,3 +514,34 @@
     (callback)
     (t/fx app
           common-controller/refresh-fx)))
+
+(defn filtered-cost-group-totals
+  "Return ATL item that is being filtered by and cost group totals that match
+  the filter.
+
+  Adds :ui/group to each item that contains a vector of type hierarchy.
+  The group is used in view code to group the rows into sections.
+
+  For example if URL query parameter `:filter` has `:fgroup/foo`
+  the first item will be the ATL definition of the feature group
+  and the second item will a vector of all the rows in `cost-group-totals`
+  where the type hierarchy contains the fgroup. So all rows for any
+  component in any fclass under the fgroup.
+  "
+
+  [app atl cost-group-totals]
+  (let [kw (some-> app (get-in [:query :filter])
+                   cljs.reader/read-string) ; only reads edn, not arbitrary code
+
+        filter-pred (if kw
+                      #(some (fn [{t :db/ident}] (= t kw))
+                             (:ui/group %))
+                      identity)]
+    [(some->> kw (asset-type-library/item-by-ident atl))
+     (into []
+           (comp
+            (map #(assoc % :ui/group
+                         (asset-type-library/type-hierarchy atl (:type %))))
+
+            (filter filter-pred))
+           cost-group-totals)]))

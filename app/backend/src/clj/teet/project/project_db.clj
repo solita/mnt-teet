@@ -241,3 +241,9 @@
   (-> (du/entity db [:thk.project/id thk-id])
       :integration/id
       integration-id/uuid->number))
+
+(defn project-name [db project-eid]
+  (let [p (d/pull db '[:thk.project/name :thk.project/project-name]
+                  project-eid)]
+    (or (:thk.project/project-name p)
+        (:thk.project/name p))))

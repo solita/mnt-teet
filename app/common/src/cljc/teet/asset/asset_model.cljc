@@ -49,7 +49,8 @@
 
   "
   (:require #?(:cljs [goog.string :as gstr])
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.util.collection :as cu]))
 
 #?(:cljs (def ^:private format gstr/format))
 
@@ -98,23 +99,10 @@
   c1 has child component c2
   and c2 has child component c3 (the component we want)"
   [asset component-oid]
-  (let [containing
-        (fn containing [path here]
-          (let [cs (concat (:asset/components here)
-                           (:component/components here))]
-            (if-let [c (some #(when (= component-oid (:asset/oid %))
-                                %) cs)]
-              ;; we found the component at this level
-              (into path [here c])
-
-              ;; not found here, recurse
-              (first
-               (for [sub cs
-                     :let [sub-path (containing (conj path here) sub)]
-                     :when sub-path]
-                 sub-path)))))]
-
-    (containing [] asset)))
+  (cu/find-path #(concat (:asset/components %)
+                         (:component/components %))
+                #(= component-oid (:asset/oid %))
+                asset))
 
 (def cost-totals-table-columns
   [:type :properties :common/status :quantity :cost-per-quantity-unit :total-cost])

@@ -7,13 +7,15 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.db-api.core :as db-api :refer [defquery]]
             [teet.environment :as environment]
-            [teet.localization :as localization]
+            [teet.localization :as localization :refer [with-language tr tr-enum]]
             [teet.log :as log]
             [teet.project.project-db :as project-db]
             [teet.road.road-query :as road-query]
             [teet.transit :as transit]
             [teet.user.user-db :as user-db]
-            [teet.util.euro :as euro]))
+            [teet.util.euro :as euro]
+            [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -77,25 +79,60 @@
                                                                     integration-id
                                                                     relevant-roads-buffer-meters)))}))))
 
+(s/def :boq-export/version integer?)
+(s/def :boq-export/unit-prices? boolean?)
+(s/def :boq-export/language keyword?)
+
 (defquery :asset/export-boq
   {:doc "Export Bill of Quantities Excel for the project"
+   :spec (s/keys :req [:thk.project/id :boq-export/unit-prices? :boq-export/language]
+                 :opt [:boq-export/version])
+   :context {:keys [db user] adb :asset-db}
+   :args {project-id :thk.project/id
+          :boq-export/keys [version unit-prices? language]}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/read-info {}}}
+  (with-language language
+    (let [version-info (when version
+                         (d/pull adb '[*] version))
+          adb (if version
+                (asset-db/version-db adb version)
+                adb)
+          filename (tr [:asset :export-boq-filename]
+                       {:project project-id
+                        :version (if version-info
+                                   (str (tr-enum (:boq-version/type version-info))
+                                        "-v"
+                                        (:boq-version/number version-info))
+                                   (str/lower-case
+                                    (tr [:asset :unofficial-version])))})]
+      ^{:format :raw}
+      {:status 200
+       :headers {"Content-Disposition"
+                 (str "attachment; filename=" filename)}
+       :body (let [atl (asset-db/asset-type-library adb)
+                   cost-groups (asset-db/project-cost-groups-totals adb project-id)]
+               (ring-io/piped-input-stream
+                (fn [out]
+                  (try
+                    (asset-boq/export-boq
+                     out
+                     {:atl atl
+                      :cost-groups cost-groups
+                      :include-unit-prices? unit-prices?
+                      :version version-info
+                      :project-id project-id
+                      :language language
+                      :project-name (project-db/project-name db [:thk.project/id project-id])})
+                    (catch Throwable t
+                      (log/error t "Exception generating BOQ excel"
+                                 {:project-id project-id}))))))})))
+
+(defquery :asset/version-history
+  {:doc "Query version history for BOQ"
+   :spec (s/keys :req [:thk.project/id])
    :context {:keys [db user] adb :asset-db}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
-  ^{:format :raw}
-  {:status 200
-   :headers {"Content-Disposition"
-             (str "attachment; filename=THK" project-id "-bill-of-quantities.xlsx")}
-   :body (let [atl (asset-db/asset-type-library adb)
-               cost-groups (asset-db/project-cost-groups-totals adb project-id)]
-           (ring-io/piped-input-stream
-            (fn [out]
-              (try
-                (asset-boq/export-boq out {:atl atl
-                                           :cost-groups cost-groups
-                                           :project-id project-id
-                                           :language :et})
-                (catch Throwable t
-                  (log/error t "Exception generating BOQ excel"
-                             {:project-id project-id}))))))})
+  (asset-db/project-boq-version-history adb project-id))

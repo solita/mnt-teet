@@ -5,11 +5,18 @@
             [teet.localization :as localization :refer [tr]]
             [teet.ui.table :as table]
             [teet.util.collection :as cu]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent IconButton]]
+            [teet.ui.material-ui :refer [Card CardHeader CardContent IconButton
+                                         Paper Grid]]
             [teet.ui.icons :as icons]
             [teet.util.datomic :as du]
             [teet.common.common-styles :as common-styles]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.ui.format :as format]
+            [teet.ui.container :as container]
+            [teet.ui.url :as url]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.theme.theme-spacing :as theme-spacing]))
 
 (defn tr*
   ([m]
@@ -68,13 +75,25 @@
            (:asset-schema/unit a)
            [attribute-values open a]]]])]]))
 
+(defn- child-links [children]
+  (when (seq children)
+    [:ul
+     (doall
+      (for [child children]
+        ^{:key (str (:db/id child))}
+        [:li
+         [url/Link {:page :asset-type-library
+                    :query {:item (str (:db/ident child))}}
+          (tr* child)]]))]))
+
 (defn- ctype [open {label ::label
                     attributes :attribute/_parent
                     child-ctypes :ctype/_parent
                     :component/keys [inherits-location? quantity-unit]
                     :as ct}]
-  [collapsible open ct
-   (or label (str (tr [:asset :type-library :ctype]) " " (tr* ct)))
+  [:<>
+   [typography/Heading3
+    (or label (str (tr [:asset :type-library :ctype]) " " (tr* ct)))]
    [:div
     (tr* ct :asset-schema/description)
     (when inherits-location?
@@ -84,40 +103,106 @@
       [typography/SmallGrayText
        (tr [:asset :type-library :component-quantity-unit] {:unit quantity-unit})])
     [attribute-table open attributes]
-    (when (seq child-ctypes)
-      [:div.child-ctypes
-       (doall
-        (for [ct child-ctypes]
-          ^{:key (str (:db/id ct))}
-          [ctype open ct]))])]])
+    [child-links child-ctypes]]])
 
 (defn- fclass [open {attributes :attribute/_parent :as fclass}]
-  [collapsible open fclass
-   (str (tr [:asset :type-library :fclass]) " " (tr* fclass))
+  [:<>
+   [typography/Heading3
+    (str (tr [:asset :type-library :fclass]) " " (tr* fclass))]
    [:div
     (tr* fclass :asset-schema/description)
     [attribute-table open attributes]
-    (doall
-     (for [ct (:ctype/_parent fclass)]
-       ^{:key (str (:db/id ct))}
-       [ctype open ct]))]])
+    [child-links (:ctype/_parent fclass)]]])
 
 (defn- fgroup [open fgroup]
-  [collapsible open fgroup
-   (str (tr [:asset :type-library :fgroup]) " " (tr* fgroup))
+  [:<>
+   [typography/Heading3
+    (str (tr [:asset :type-library :fgroup]) " " (tr* fgroup))]
    [:div
     (tr* fgroup :asset-schema/description)
-    (doall
-     (for [fc (:fclass/_fgroup fgroup)]
-       ^{:key (str (:db/id fc))}
-       [fclass open fc]))]])
+    [child-links (:fclass/_fgroup fgroup)]]])
 
-(defn asset-library-page [_e! _app {:keys [fgroups] common :ctype/common}]
+(defn- rotl-type-badge-style []
+  {:font-size "70%"
+   :font-variant :all-small-caps
+   :margin-left "1rem"
+   :padding "0px 5px 0px 5px"
+   :border-radius "10px"
+   :display :inline-block
+   :background theme-colors/gray-lightest})
+
+(defn- rotl-tree [{:keys [open toggle!] :as opts} {ident :db/ident :as item}]
+  (let [children (concat (:fclass/_fgroup item)
+                         (:ctype/_parent item))]
+    [container/collapsible-container
+     {:container-attrs {:data-ident (str ident)}
+      :open? (open ident)
+      :disabled? (empty? children)
+      :on-toggle (r/partial toggle! ident)}
+     [url/Link {:page :asset-type-library
+                :query {:item (str ident)}}
+      [:<>
+       (or (:label opts) (tr* item))
+       [:div {:class (<class rotl-type-badge-style)}
+        (tr [:asset :type-library (-> ident namespace keyword)])]]]
+     [:div {:class (<class common-styles/indent-rem 1)}
+      (if (empty? children)
+        (tr [:asset :type-library :no-child-items])
+        (doall
+         (for [child children]
+           ^{:key (str (:db/ident child))}
+           [rotl-tree opts child])))]]))
+
+(defn rotl-item [{type :asset-schema/type :as item}]
   (r/with-let [open (r/atom #{})]
+    (case (:db/ident type)
+      :asset-schema.type/fgroup
+      [fgroup open item]
+
+      :asset-schema.type/fclass
+      [fclass open item]
+
+      :asset-schema.type/ctype
+      [ctype open item]
+
+      [:div "no such thing"])))
+
+
+(defn- scrollable-grid [xs content]
+  [Grid {:item true :xs xs
+         :classes #js {:item (<class common-styles/content-scroll-max-height "60px")}}
+   content])
+
+(defn asset-library-page [_e! app {:keys [fgroups] common :ctype/common
+                                    modified :tx/schema-imported-at
+                                    :as atl}]
+  (r/with-let [open (r/atom #{})
+               toggle! #(swap! open cu/toggle %)]
     [:<>
-     [typography/Heading1 (tr [:asset :type-library :header])]
-     [ctype open (assoc common ::label (tr [:asset :type-library :common-ctype]))]
-     (doall
-      (for [fg fgroups]
-        ^{:key (str (:db/id fg))}
-        [fgroup open fg]))]))
+     [:div {:class (<class common-styles/flex-row-space-between)
+            :style {:align-items :center}}
+
+      [typography/Heading1 (tr [:asset :type-library :header])]
+      (when modified
+        [:div {:style {:margin "1rem"}}
+         (tr [:common :last-modified]) ": "
+         (format/date-time modified)])]
+     [Paper {}
+      [Grid {:container true :spacing 0 :wrap :wrap}
+       [scrollable-grid 4
+        [:<>
+         ^{:key "common"}
+         [rotl-tree {:open @open :toggle! toggle!
+                     :label (tr [:asset :type-library :common-ctype])} common]
+         (doall
+          (for [fg fgroups]
+            ^{:key (str (:db/ident fg))}
+            [rotl-tree {:open @open :toggle! toggle!} fg]))]]
+       [scrollable-grid 8
+        [:div {:style {:padding "1rem"}}
+         (when-let [item-kw
+                    (->> app :query :item cljs.reader/read-string)]
+           (let [item (if (= item-kw :ctype/common)
+                        common
+                        (asset-type-library/item-by-ident atl item-kw))]
+             [rotl-item item]))]]]]]))
