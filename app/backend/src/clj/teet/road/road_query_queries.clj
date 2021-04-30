@@ -86,9 +86,7 @@
 (defn road-properties [coordinate]
   (let [config (tr-config)
         road-part (closest-road-part-for-coordinate config coordinate)]
-    {:road-part road-part
-     ;:objects (road-query/fetch-all-objects-for-road config road-part)
-     }))
+    {:road-part road-part}))
 
 (defquery :road/road-properties-for-coordinate
   {:doc "Fetch the closest road part and road objects for clicked coordinate"

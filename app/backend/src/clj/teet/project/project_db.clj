@@ -227,6 +227,21 @@
    (ffirst (d/q '[:find ?e :where [?project :thk.project/owner ?e] :in $ ?project]
                 db project-eid))))
 
+(defn thk-id->integration-id-uuid
+  "given project's `:thk.project/id`, fetch the said project's
+  `:integration/id` UUID form"
+  [db thk-id]
+  (-> (du/entity db [:thk.project/id thk-id])
+      :integration/id))
+
+(defn thk-id->integration-id-number
+  "given project's `:thk.project/id`, fetch the said project's
+  `:integration/id` number form"
+  [db thk-id]
+  (-> (du/entity db [:thk.project/id thk-id])
+      :integration/id
+      integration-id/uuid->number))
+
 (defn project-name [db project-eid]
   (let [p (d/pull db '[:thk.project/name :thk.project/project-name]
                   project-eid)]
