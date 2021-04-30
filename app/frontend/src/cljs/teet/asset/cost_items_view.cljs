@@ -371,7 +371,7 @@
   [:<>
    (if (> (count allowed-components) 3)
      [common/context-menu
-      {:label "add component"
+      {:label (tr [:asset :add-component])
        :icon [icons/content-add-circle-outline]
        :items (for [c allowed-components]
                 {:label (label c)
