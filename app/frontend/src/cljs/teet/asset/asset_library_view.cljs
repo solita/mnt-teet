@@ -131,9 +131,10 @@
    :display :inline-block
    :background theme-colors/gray-lightest})
 
-(defn- rotl-tree [{:keys [open toggle!] :as opts} {ident :db/ident :as item}]
+(defn- rotl-tree [{:keys [open toggle! focus] :as opts} {ident :db/ident :as item}]
   (let [children (concat (:fclass/_fgroup item)
-                         (:ctype/_parent item))]
+                         (:ctype/_parent item))
+        label (or (:label opts) (tr* item))]
     [container/collapsible-container
      {:container-attrs {:data-ident (str ident)}
       :open? (open ident)
@@ -142,16 +143,16 @@
      [url/Link {:page :asset-type-library
                 :query {:item (str ident)}}
       [:<>
-       (or (:label opts) (tr* item))
+       (if (= focus ident)
+         [:b label]
+         label)
        [:div {:class (<class rotl-type-badge-style)}
         (tr [:asset :type-library (-> ident namespace keyword)])]]]
      [:div {:class (<class common-styles/indent-rem 1)}
-      (if (empty? children)
-        (tr [:asset :type-library :no-child-items])
-        (doall
-         (for [child children]
-           ^{:key (str (:db/ident child))}
-           [rotl-tree opts child])))]]))
+      (doall
+       (for [child children]
+         ^{:key (str (:db/ident child))}
+         [rotl-tree opts child]))]]))
 
 (defn rotl-item [{type :asset-schema/type :as item}]
   (r/with-let [open (r/atom #{})]
@@ -165,7 +166,8 @@
       :asset-schema.type/ctype
       [ctype open item]
 
-      [:div "no such thing"])))
+      ;; Empty span, shouldn't get here
+      [:span])))
 
 
 (defn- scrollable-grid [xs content]
@@ -173,36 +175,56 @@
          :classes #js {:item (<class common-styles/content-scroll-max-height "60px")}}
    content])
 
-(defn asset-library-page [_e! app {:keys [fgroups] common :ctype/common
-                                    modified :tx/schema-imported-at
-                                    :as atl}]
-  (r/with-let [open (r/atom #{})
-               toggle! #(swap! open cu/toggle %)]
-    [:<>
-     [:div {:class (<class common-styles/flex-row-space-between)
-            :style {:align-items :center}}
+(defn- ensure-tree-open [atl open item-kw]
+  (let [current-open @open
+        th (mapv :db/ident (asset-type-library/type-hierarchy atl item-kw))]
+    (println "ensure open idents: " th)
+    (when-not (every? current-open th)
+      (swap! open into th))))
 
-      [typography/Heading1 (tr [:asset :type-library :header])]
-      (when modified
-        [:div {:style {:margin "1rem"}}
-         (tr [:common :last-modified]) ": "
-         (format/date-time modified)])]
-     [Paper {}
-      [Grid {:container true :spacing 0 :wrap :wrap}
-       [scrollable-grid 4
+(defn- focus-on-ident [app]
+  (some->> app :query :item cljs.reader/read-string))
+
+(defn asset-library-page [_e! app atl]
+  (let [open (r/atom #{})
+        toggle! #(swap! open cu/toggle %)
+        focus (atom (focus-on-ident app))]
+    (r/create-class
+     {:component-will-receive-props
+      (fn [_this [_ _ app _]]
+        (let [new-focus (focus-on-ident app)]
+          (when (not= new-focus @focus)
+            (ensure-tree-open atl open new-focus)
+            (reset! focus new-focus))))
+      :reagent-render
+      (fn [_e! _app {:keys [fgroups] common :ctype/common
+                     modified :tx/schema-imported-at
+                     :as atl}]
         [:<>
-         ^{:key "common"}
-         [rotl-tree {:open @open :toggle! toggle!
-                     :label (tr [:asset :type-library :common-ctype])} common]
-         (doall
-          (for [fg fgroups]
-            ^{:key (str (:db/ident fg))}
-            [rotl-tree {:open @open :toggle! toggle!} fg]))]]
-       [scrollable-grid 8
-        [:div {:style {:padding "1rem"}}
-         (when-let [item-kw
-                    (->> app :query :item cljs.reader/read-string)]
-           (let [item (if (= item-kw :ctype/common)
-                        common
-                        (asset-type-library/item-by-ident atl item-kw))]
-             [rotl-item item]))]]]]]))
+         [:div {:class (<class common-styles/flex-row-space-between)
+                :style {:align-items :center}}
+
+          [typography/Heading1 (tr [:asset :type-library :header])]
+          (when modified
+            [:div {:style {:margin "1rem"}}
+             (tr [:common :last-modified]) ": "
+             (format/date-time modified)])]
+         [Paper {}
+          [Grid {:container true :spacing 0 :wrap :wrap}
+           [scrollable-grid 4
+            [:<>
+             ^{:key "common"}
+             [rotl-tree {:open @open :toggle! toggle!
+                         :focus @focus
+                         :label (tr [:asset :type-library :common-ctype])} common]
+             (doall
+              (for [fg fgroups]
+                ^{:key (str (:db/ident fg))}
+                [rotl-tree {:open @open :toggle! toggle! :focus @focus} fg]))]]
+           [scrollable-grid 8
+            [:div {:style {:padding "1rem"}}
+             (when-let [item-kw @focus]
+               (let [item (if (= item-kw :ctype/common)
+                            common
+                            (asset-type-library/item-by-ident atl item-kw))]
+                 [rotl-item item]))]]]]])})))
