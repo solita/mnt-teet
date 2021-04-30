@@ -135,7 +135,8 @@
   (let [children (concat (:fclass/_fgroup item)
                          (:ctype/_parent item))]
     [container/collapsible-container
-     {:open? (open ident)
+     {:container-attrs {:data-ident (str ident)}
+      :open? (open ident)
       :disabled? (empty? children)
       :on-toggle (r/partial toggle! ident)}
      [url/Link {:page :asset-type-library
