@@ -1033,7 +1033,7 @@
    [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn cost-item-page
-  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version] :as state}]
+  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version relevant-roads] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
@@ -1050,4 +1050,4 @@
          [component-form e! asset-type-library component cost-item]
 
          ^{:key oid}
-         [cost-item-form e! asset-type-library cost-item])])))
+         [cost-item-form e! asset-type-library relevant-roads cost-item])])))
