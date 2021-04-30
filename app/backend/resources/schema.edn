@@ -1942,5 +1942,7 @@
 
           [:db/retract :thk.contract/procurement-id :db/unique :db.unique/identity]]]}]
 
+ {:db/ident :migration/retract-activity-procurement
+  :txes [teet.migration.activity-procurement-info/retract-procurement-info-from-activity]}]
 
 

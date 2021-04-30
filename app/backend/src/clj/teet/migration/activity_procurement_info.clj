@@ -29,6 +29,8 @@
                      (d/db conn))]
     (d/transact conn
       {:tx-data (for [[activity-id] activities]
-                  (merge {:db/id activity-id}
-                    {:activity/procurement-id nil}
-                    {:activity/procurement-nr nil}))})))
+                  [:db/retract activity-id :activity/procurement-id])})
+
+    (d/transact conn
+      {:tx-data (for [[activity-id] activities]
+                  [:db/retract activity-id :activity/procurement-nr])})))
