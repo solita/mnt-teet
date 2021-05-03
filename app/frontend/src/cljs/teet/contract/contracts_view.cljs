@@ -13,7 +13,8 @@
             [clojure.string :as str]
             [teet.ui.url :as url]
             [teet.ui.common :as common]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [teet.contract.contract-model :as contract-model]))
 
 (defn contract-card
   [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
@@ -79,7 +80,12 @@
                                 :show-empty-selection? true}}]
    [:contract-type {:type select/select-enum
                     :field-options {:attribute :thk.contract/type
-                                    :show-empty-selection? true}}]])
+                                    :show-empty-selection? true}}]
+   [:contract-status {:type select/form-select
+                      :field-options {:items contract-model/contract-statuses
+                                      :format-item #(tr [:contract %])
+                                      :attribute :thk.contract/status
+                                      :show-empty-selection? true}}]])
 
 (defn search-inputs
   [e! filter-values input-change search-fields]

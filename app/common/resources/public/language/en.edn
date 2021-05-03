@@ -78,6 +78,7 @@
    "Number precision too large. Maximum allowed is {precision}."},
   :unofficial-version "Unofficial",
   :no-matching-feature-classes "No matching feature classes.",
+  :add-component "Add component",
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
   :cost-item-saved "Cost item saved",
@@ -212,7 +213,14 @@
   :email "Email",
   :phone "Mobile",
   :phone2 "Phone"},
- :contract {:edit-contract "Contract information"},
+ :contract
+ {:edit-contract "Contract information",
+  :thk.contract.status/signed "Signed",
+  :thk.contract.status/in-progress "In progress",
+  :thk.contract.status/deadline-approaching "Deadline approaching",
+  :thk.contract.status/deadline-overdue "Deadline overdue",
+  :thk.contract.status/warranty "Warranty",
+  :thk.contract.status/completed "Completed"},
  :contracts
  {:state-procurement-link "Procurement no.",
   :external-link "Contract no.",
