@@ -3,7 +3,8 @@
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.contract.contract-db :as contract-db]))
+            [teet.contract.contract-db :as contract-db])
+  (:import (java.util Date)))
 
 (defmulti contract-search-clause (fn [[attribute _value] _user]
                                    attribute))
@@ -68,6 +69,11 @@
   {:where '[[?c :thk.contract/type ?contract-type-search-value]]
    :in {'?contract-type-search-value value}})
 
+(defmethod contract-search-clause :contract-status
+  [[_ value] _]
+  {:where '[[(= ?calculated-status ?status)]]
+   :in {'?status value}})
+
 (defn contract-listing-query
   "takes search params and forms datomic query with the help of contract-search multimethod"
   [db user search-params]
@@ -82,14 +88,20 @@
            :in {}}
           search-params)
         arglist (seq in)
-        in (into '[$ %] (map first) arglist)
-        args (into [db contract-db/contract-query-rules] (map second) arglist)]
-    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [*]}])]
-                       :where (into '[[?c :thk.contract/procurement-id _]]
+        in (into '[$ % ?now] (map first) arglist)
+        args (into [db
+                    (into contract-db/contract-query-rules
+                          contract-db/contract-status-rules)
+                    (Date.)]
+                   (map second)
+                   arglist)]
+    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [*]}]) ?calculated-status]
+                       :where (into '[[?c :thk.contract/procurement-id _]
+                                      (contract-status ?c ?calculated-status ?now)]
                                     where)
                        :in in}
                :args args})
-         (mapv first))))
+         (mapv contract-db/contract-with-status))))
 
 (defquery :contracts/list-contracts
   {:doc "Return a list of contracts matching given search params"
@@ -97,4 +109,6 @@
    :args {search-params :search-params}
    :project-id nil
    :authorization {}}
-  (contract-listing-query db user (cu/without-empty-vals search-params)))
+  (->> (contract-listing-query db user (cu/without-empty-vals search-params))
+      (sort-by :meta/created-at)
+      reverse))

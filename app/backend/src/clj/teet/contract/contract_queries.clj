@@ -14,7 +14,7 @@
     target))
 
 (defquery :contract/contract-page
-  {:doc "Return a list of contracts matching given search params"
+  {:doc "Return the single contracts information"
    :context {db :db user :user}
    :args {contract-ids :contract-ids}
    :project-id nil
@@ -22,8 +22,8 @@
   (let [[contract-id contract-part-id] contract-ids]
     (-> (contract-db/get-contract
           db
-          {:thk.contract/procurement-id contract-id
-           :thk.contract/procurement-part-id contract-part-id})
+          [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]])
         (update
           :thk.contract/targets
-          #(map (partial target-with-navigation-info db) %)))))
+          #(map (partial target-with-navigation-info db) %))
+        (update :thk.contract/cost str))))

@@ -79,6 +79,7 @@
    "Numbri täpsus on liiga suur. Lubatud on {precision} kohta peale punkti."},
   :unofficial-version "Mitteametlik",
   :no-matching-feature-classes "Pole vastavat vara liiki",
+  :add-component "Lisan komponendi",
   :unlock-tender-boq-warning
   "Kululoend on hetkel hankes, kas oled kindel , et soovid seda muuta? Hanke kululoendi muutmisel tuleb teavitada pakkujaid ning vajadusel muuta pakkumuste esitamise tähtaega.",
   :cost-item-saved "Vara salvestatud",
@@ -211,7 +212,14 @@
   :email "E-post",
   :phone "Mobiil",
   :phone2 "Telefon"},
- :contract {:edit-contract nil},
+ :contract
+ {:edit-contract nil,
+  :thk.contract.status/signed nil,
+  :thk.contract.status/in-progress nil,
+  :thk.contract.status/deadline-approaching nil,
+  :thk.contract.status/deadline-overdue nil,
+  :thk.contract.status/warranty nil,
+  :thk.contract.status/completed nil},
  :contracts
  {:state-procurement-link "Hanke nr.",
   :external-link "Lepingu nr.",
