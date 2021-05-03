@@ -36,7 +36,9 @@
             [teet.user.user-model :as user-model]
             [teet.ui.format :as fmt]
             [teet.ui.panels :as panels]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.format :as format]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -155,11 +157,12 @@
    [typography/Text2Bold (:label opts)]
    (-> value rotl label)])
 
-(defn- display-input [{:keys [value unit label]}]
+(defn- display-input [{:keys [value unit label format]
+                       :or {format str}}]
   [:label {:class (<class common-styles/input-label-style false false)}
    [typography/Text2Bold label]
    (if (some? value)
-     (str value (when unit (str "\u00a0" unit)))
+     (str (format value) (when unit (str "\u00a0" unit)))
      "\u2400")])
 
 (defn- road-nr-format [relevant-roads]
@@ -340,8 +343,9 @@
                                                                 :attribute/max-value
                                                                 :attribute/min-value-ref
                                                                 :attribute/max-value-ref]))}
-                 (if (= type :db.type/ref)
+                 (cond
                    ;; Selection value
+                   (= type :db.type/ref)
                    (if locked?
                      [display-list-item {:label (label attr)
                                          :rotl rotl}]
@@ -352,7 +356,14 @@
                        :items (mapv :db/ident (:enum/_attribute attr))
                        :format-item (comp label rotl)}])
 
+                   (= type :db.type/instant)
+                   (if locked?
+                     [display-input {:label (label attr)
+                                     :format format/date}]
+                     [date-picker/date-input {:label (label attr)}])
+
                    ;; Text field
+                   :else
                    (if locked?
                      [display-input {:label (label attr)
                                      :unit unit}]
@@ -853,7 +864,7 @@
              :icon [icons/file-download]
              :on-click open-export-dialog!}]
            :left-panel
-           [:<>
+           [:div {:style {:overflow-y :scroll}}
             [cost-items-navigation e! app]
             left-panel-action
             [cost-item-hierarchy
