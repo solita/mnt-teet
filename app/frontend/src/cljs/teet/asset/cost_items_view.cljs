@@ -36,7 +36,9 @@
             [teet.user.user-model :as user-model]
             [teet.ui.format :as fmt]
             [teet.ui.panels :as panels]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.format :as format]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -142,7 +144,8 @@
     :else
     :details))
 
-(defn- attribute-grid-item [content]
+(defn- attribute-grid-item
+  [content]
   [Grid {:item true
          :md 4
          :xs 12
@@ -154,39 +157,80 @@
    [typography/Text2Bold (:label opts)]
    (-> value rotl label)])
 
-(defn- display-input [{:keys [value unit label]}]
+(defn- display-input [{:keys [value unit label format]
+                       :or {format str}}]
   [:label {:class (<class common-styles/input-label-style false false)}
    [typography/Text2Bold label]
    (if (some? value)
-     (str value (when unit (str "\u00a0" unit)))
+     (str (format value) (when unit (str "\u00a0" unit)))
      "\u2400")])
 
-(defn- location-entry [locked?]
-  (let [input-comp (if locked? display-input text-field/TextField)]
+(defn- road-nr-format [relevant-roads]
+  (let [road-nr->item-name (->> relevant-roads
+                                (map (juxt :road-nr
+                                           #(str (:road-nr %) " " (:road-name %))))
+                                (into {}))]
+    (fn [select-value]
+      (get road-nr->item-name
+           select-value
+           ""))))
+
+(defn- location-entry [locked? selected-road-nr relevant-roads]
+  (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
-     [attribute-grid-item
-      [form/field :location/start-point
-       [input-comp {}]]]
-
-     [attribute-grid-item
-      [form/field :location/end-point
-       [input-comp {}]]]
-
-     [attribute-grid-item
+     [Grid {:item true
+            :md 5
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/road-nr
-       [input-comp {:type :number}]]]
+       [select/form-select
+        {:show-empty-selection? true
+         :items (->> relevant-roads (map :road-nr) sort vec)
+         :format-item (road-nr-format relevant-roads)}]]]
 
-     [attribute-grid-item
-      [form/field :location/carriageway
-       [input-comp {:type :number}]]]
+     [Grid {:item true
+            :container true
+            :md 7
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [Grid {:item true
+             :md 2
+             :xs 12}
+       [form/field :location/carriageway
+        [select/form-select
+         {:show-empty-selection? true
+          :items (or (cost-items-controller/carriageways-for-road selected-road-nr
+                                                                  relevant-roads)
+                     [1])
+          :format-item str}]]]]
 
-     [attribute-grid-item
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/start-point
+       [input-textfield {}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/start-m
-       [input-comp {:type :number}]]]
+       [input-textfield {:type :number}]]]
 
-     [attribute-grid-item
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/end-point
+       [input-textfield {}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/end-m
-       [input-comp {:type :number}]]]]))
+       [input-textfield {:type :number}]]]]))
 
 (defn- location-map [{:keys [e! value on-change]}]
   (r/with-let [current-value (atom value)
@@ -231,7 +275,7 @@
                      (fn [_]
                        (not @dragging?))}))}}])))
 
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype]} rotl locked?]
+(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype relevant-roads]} rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -264,7 +308,7 @@
                                        :location/geojson]}
 
                [location-map {:e! e!}]]])
-           [location-entry locked?]]])
+           [location-entry locked? (:location/road-nr cost-item-data) relevant-roads]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -299,20 +343,27 @@
                                                                 :attribute/max-value
                                                                 :attribute/min-value-ref
                                                                 :attribute/max-value-ref]))}
-                 (if (= type :db.type/ref)
+                 (cond
                    ;; Selection value
+                   (= type :db.type/ref)
                    (if locked?
                      [display-list-item {:label (label attr)
                                          :rotl rotl}]
                      [select/form-select
                       {:id ident
-                       :read-only? locked?
                        :label (label attr)
                        :show-empty-selection? true
                        :items (mapv :db/ident (:enum/_attribute attr))
                        :format-item (comp label rotl)}])
 
+                   (= type :db.type/instant)
+                   (if locked?
+                     [display-input {:label (label attr)
+                                     :format format/date}]
+                     [date-picker/date-input {:label (label attr)}])
+
                    ;; Text field
+                   :else
                    (if locked?
                      [display-input {:label (label attr)
                                      :unit unit}]
@@ -331,7 +382,7 @@
   [:<>
    (if (> (count allowed-components) 3)
      [common/context-menu
-      {:label "add component"
+      {:label (tr [:asset :add-component])
        :icon [icons/content-add-circle-outline]
        :items (for [c allowed-components]
                 {:label (label c)
@@ -456,7 +507,7 @@
                                 :padding "1rem"}}
    component])
 
-(defn- cost-item-form [e! atl {:asset/keys [fclass] :as form-data}]
+(defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
   (r/with-let [initial-data form-data
                new? (nil? form-data)
 
@@ -469,6 +520,8 @@
     (let [feature-class (when fclass
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
+       (when-let [oid (:asset/oid form-data)]
+         [typography/Heading2 oid])
        [form/form2
         {:e! e!
          :on-change-event cost-items-controller/->UpdateForm
@@ -488,9 +541,11 @@
           [form-paper [attributes
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
+                        :cost-item-data form-data
                         ;; TODO: cost-item-data here as well
                         :common? false
-                        :inherits-location? false}]])
+                        :inherits-location? false
+                        :relevant-roads relevant-roads}]])
 
         [form/footer2]]
 
@@ -543,6 +598,8 @@
     (let [component-path (asset-model/find-component-path cost-item-data component-oid)
           component-data (last component-path)]
       [:<>
+       (when (asset-model/component-oid? component-oid)
+         [typography/Heading2 component-oid])
        [component-form-navigation atl component-path]
 
        [form/form2
@@ -637,11 +694,12 @@
                                :params {:id oid}} oid]])])]))]]))]))
 
 (defn- cost-items-navigation [e! {:keys [page params]}]
-  [select/form-select
-   {:on-change #(e! (common-controller/->Navigate % params nil))
-    :items [:cost-items :cost-items-totals]
-    :value page
-    :format-item #(tr [:asset :page %])}])
+  [:div {:class (<class common-styles/padding 1 1)}
+   [select/form-select
+    {:on-change #(e! (common-controller/->Navigate % params nil))
+     :items [:cost-items :cost-items-totals]
+     :value page
+     :format-item #(tr [:asset :page %])}]])
 
 (defn- save-boq-version-dialog [{:keys [e! on-close]}]
   (r/with-let [form-state (r/atom {})
@@ -806,7 +864,7 @@
              :icon [icons/file-download]
              :on-click open-export-dialog!}]
            :left-panel
-           [:<>
+           [:div {:style {:overflow-y :scroll}}
             [cost-items-navigation e! app]
             left-panel-action
             [cost-item-hierarchy
@@ -977,16 +1035,16 @@
 
 (defn new-cost-item-page
   [e! app {atl :asset-type-library cost-item :cost-item
-           version :version :as state}]
+           version :version relevant-roads :relevant-roads :as state}]
   [cost-items-page-structure
    {:e! e!
     :app app
     :state state
     :left-panel-action [add-cost-item app version]}
-   [cost-item-form e! atl cost-item]])
+   [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn cost-item-page
-  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version] :as state}]
+  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version relevant-roads] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
@@ -1003,4 +1061,4 @@
          [component-form e! asset-type-library component cost-item]
 
          ^{:key oid}
-         [cost-item-form e! asset-type-library cost-item])])))
+         [cost-item-form e! asset-type-library relevant-roads cost-item])])))

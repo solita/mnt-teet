@@ -337,6 +337,7 @@
   [value]
   (if (and (not (boolean? value))
            (not (string? value))
+           (not (number? value))
            (gobj/containsKey value "target"))
     (gobj/getValueByKeys value "target" "value")
     value))

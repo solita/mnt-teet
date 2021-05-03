@@ -17,6 +17,7 @@
 (def restart go)
 
 (def db-connection environment/datomic-connection)
+(def asset-connection environment/asset-connection)
 
 (defn db []
   (d/db (db-connection)))
@@ -336,8 +337,15 @@
 ;;
 (def logged-user   tu/logged-user)
 (def local-login   tu/local-login)
-(def local-query   tu/local-query)
-(def local-command tu/local-command)
+(defn local-query [& args]
+  (binding [tu/*connection* (db-connection)
+            tu/*asset-connection* (asset-connection)]
+    (apply tu/local-query args)))
+
+(defn local-command [& args]
+  (binding [tu/*connection* (db-connection)
+            tu/*asset-connection* (asset-connection)]
+    (apply tu/local-command args)))
 
 (defn pprint-file [filename output]
   (spit filename (with-out-str (clojure.pprint/pprint output))))
