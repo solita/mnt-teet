@@ -52,8 +52,8 @@
 (defn- label-for [item]
   [context/consume :rotl [label-for* item]])
 
-(def ^:private integer-pattern #"^\d*$")
-(def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
+(def ^:private integer-pattern #"^-?\d*$")
+(def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
 (def ^:private only-whitespace-pattern #"^\s+$")
 
 (defn- extremum-value-by-ref
