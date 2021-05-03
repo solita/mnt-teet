@@ -38,7 +38,8 @@
    :args {project-id :thk.project/id
           cost-item :cost-item
           cost-totals :cost-totals
-          relevant-roads :relevant-roads}
+          relevant-roads :relevant-roads
+          road :road}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
    :authorization {:project/read-info {}}}
@@ -53,7 +54,10 @@
                         :timestamp timestamp})
       :project (project-db/project-by-id db [:thk.project/id project-id])}
      (when cost-totals
-       (let [cost-groups (asset-db/project-cost-groups-totals adb project-id)]
+       (let [cost-groups (asset-db/project-cost-groups-totals
+                          adb project-id
+                          (when road
+                            (asset-db/project-assets-and-components-matching-road adb project-id road)))]
          {:cost-totals
           {:cost-groups cost-groups
            :total-cost (reduce + (keep :total-cost cost-groups))}}))
