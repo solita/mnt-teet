@@ -26,11 +26,10 @@
   (let [activities (d/q '[:find ?a
                           :where [?a :activity/procurement-id _]
                           [?a :activity/procurement-nr _]]
-                     (d/db conn))]
+                     (d/db conn))
+        procurement-ids (for [[activity-id] activities]
+                          [:db/retract activity-id :activity/procurement-id])
+        procurement-nrs (for [[activity-id] activities]
+          [:db/retract activity-id :activity/procurement-nr])]
     (d/transact conn
-      {:tx-data (for [[activity-id] activities]
-                  [:db/retract activity-id :activity/procurement-id])})
-
-    (d/transact conn
-      {:tx-data (for [[activity-id] activities]
-                  [:db/retract activity-id :activity/procurement-nr])})))
+      {:tx-data (into [] (concat procurement-ids procurement-nrs))})))
