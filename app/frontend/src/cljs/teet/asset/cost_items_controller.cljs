@@ -466,7 +466,8 @@
                                          :quantity :count
                                          :cost-per-quantity-unit
                                          :total-cost
-                                         :quantity-unit :type)
+                                         :quantity-unit :type
+                                         :ui/group)
                      :price price}
            :result-event ->SaveCostGroupPriceResponse}))
 

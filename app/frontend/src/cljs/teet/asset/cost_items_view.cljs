@@ -940,7 +940,7 @@
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
-(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type}]
+(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type} subtotal]
   [table/listing-table-body-component listing-opts
    [container/collapsible-container-heading
     {:container-class [(<class common-styles/flex-row)
@@ -948,9 +948,12 @@
                          (<class common-styles/indent-rem 1))]
      :open? (not (closed-set ident))
      :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
-    [url/Link {:page :cost-items-totals
-               :query {:filter (str ident)}}
-     (label header-type)]]])
+    [:<>
+     [url/Link {:page :cost-items-totals
+                :query {:filter (str ident)}}
+      (label header-type)]
+     [:div {:style {:float :right :font-weight 700
+                    :font-size "80%"}} subtotal]]]])
 
 
 (defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
@@ -1043,7 +1046,8 @@
                       open? (not (closed-totals ident))]]
             ^{:key (str ident)}
             [:<>
-             [table-section-header e! listing-opts closed-totals fg]
+             [table-section-header e! listing-opts closed-totals fg
+              (get-in totals [:fclass-and-fgroup-totals (:db/ident fg)])]
              (when open?
                [:<>
                 (doall
@@ -1053,7 +1057,8 @@
                              open? (not (closed-totals ident))]]
                    ^{:key (str ident)}
                    [:<>
-                    [table-section-header e! listing-opts closed-totals fc]
+                    [table-section-header e! listing-opts closed-totals fc
+                     (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
                     (when open?
                       [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
 
