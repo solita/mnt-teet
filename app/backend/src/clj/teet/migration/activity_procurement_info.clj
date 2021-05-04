@@ -24,8 +24,9 @@
 
 (defn retract-procurement-info-from-activity [conn]
   (let [activities (->> (d/q '[:find ?a
-                               :where [?a :activity/procurement-id _]
-                               [?a :activity/procurement-nr _]]
+                               :where (or
+                                        [?a :activity/procurement-id _]
+                                        [?a :activity/procurement-nr _])]
                           (d/db conn))
                      (mapv first))
         procurement-ids (for [activity-id activities]
