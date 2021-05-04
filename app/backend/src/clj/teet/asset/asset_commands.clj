@@ -48,7 +48,7 @@
              adb :asset-db}
    :payload {project-id :project-id component-id :db/id}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}
+   :authorization {:cost-items/delete-cost-items {}}
    :pre [(= project-id (asset-db/component-project adb component-id))
          ^{:error :boq-is-locked}
          (boq-unlocked? adb project-id)]

@@ -465,7 +465,7 @@
                   (when (pos? i)
                     {:margin-left "-0.9rem"}))}])))])
 
-(defn- component-rows [{:keys [e! level components
+(defn- component-rows [{:keys [e! level components locked?
                                delete-component!]}]
   (when (seq components)
     [:<>
@@ -485,24 +485,33 @@
            [label-for (:component/ctype c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 25 :flex-end 0 nil)}
-           [buttons/delete-button-with-confirm
-            {:small? true
-             :icon-position :start
-             :action (r/partial delete-component! (:db/id c))}
-            (tr [:buttons :delete])]]]
+           (when-not locked?
+             [when-authorized
+              :asset/delete-component nil
+              [buttons/delete-button-with-confirm
+               {:small? true
+                :icon-position :start
+                :action (r/partial delete-component! (:db/id c))}
+               (tr [:buttons :delete])]])]]
          [component-rows {:e! e!
+                          :locked? locked?
                           :components (:component/components c)
                           :level (inc (or level 0))}]]))]))
 
-(defn- components-tree
+(defn- components-tree*
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! asset]}]
+  [{:keys [e! asset]} locked?]
   [:<>
    [typography/Heading3 (tr [:asset :components :label])
     (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
    [component-rows {:e! e!
+                    :locked? locked?
                     :components (:asset/components asset)
                     :delete-component! (e! cost-items-controller/->DeleteComponent)}]])
+
+(defn- components-tree [opts]
+  [context/consume :locked?
+   [components-tree* opts]])
 
 (defn- form-paper
   "Wrap the form input portion in a light gray paper."
