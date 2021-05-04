@@ -21,3 +21,16 @@
                           {:activity/procurement-id procurement-id})
                         (when procurement-nr
                           {:activity/procurement-nr procurement-nr})))})))
+
+(defn retract-procurement-info-from-activity [conn]
+  (let [activities (->> (d/q '[:find ?a
+                               :where [?a :activity/procurement-id _]
+                               [?a :activity/procurement-nr _]]
+                          (d/db conn))
+                     (mapv first))
+        procurement-ids (for [activity-id activities]
+                          [:db/retract activity-id :activity/procurement-id])
+        procurement-nrs (for [activity-id activities]
+                          [:db/retract activity-id :activity/procurement-nr])]
+    (d/transact conn
+      {:tx-data (into [] (concat procurement-ids procurement-nrs))})))

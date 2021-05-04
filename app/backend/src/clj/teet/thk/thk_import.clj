@@ -206,9 +206,7 @@
                                                 :activity/estimated-start-date
                                                 :activity/estimated-end-date
                                                 :activity/name
-                                                :activity/status
-                                                :activity/procurement-nr
-                                                :activity/procurement-id}))
+                                                :activity/status}))
                        (if act-db-id
                          ;; Existing activity
                          {:db/id act-db-id

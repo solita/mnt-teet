@@ -62,11 +62,6 @@
 (defn exported-to-thk? [activity]
   (not (activity-types-not-sent-to-thk (du/enum->kw (:activity/name activity)))))
 
-(defn deletable?
-  "Can the activity be deleted? It can if it has no procurement number."
-  [activity]
-  (nil? (:activity/procurement-nr activity)))
-
 (defn active? [activity]
   (-> activity :activity/status :db/ident activity-in-progress-statuses))
 
