@@ -309,7 +309,9 @@
                             :parse (constantly nil)
                             :format (fn [[d? at]] (if d? (datetime-str at) ""))
                             :task {:attribute (juxt :meta/deleted? :meta/modified-at)}}
-   "activity_cost" {:attribute :activity/cost}})
+   "activity_cost" {:attribute :activity/cost}
+   "activity_procurementno" {:attribute :activity/procurement-nr}
+   "activity_procurementid" {:attribute :activity/procurement-id}})
 
 (def thk->teet-contract
   {"activity_id" {:attribute :thk.activity/id}
