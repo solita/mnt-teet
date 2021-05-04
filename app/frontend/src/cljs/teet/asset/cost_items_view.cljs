@@ -38,7 +38,7 @@
             [teet.ui.panels :as panels]
             [teet.ui.query :as query]
             [teet.ui.date-picker :as date-picker]
-            [teet.ui.format :as format]))
+            [teet.authorization.authorization-check :refer [when-authorized]]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -359,7 +359,7 @@
                    (= type :db.type/instant)
                    (if locked?
                      [display-input {:label (label attr)
-                                     :format format/date}]
+                                     :format fmt/date}]
                      [date-picker/date-input {:label (label attr)}])
 
                    ;; Text field
@@ -378,24 +378,29 @@
   [opts]
   [context/consume-many [:rotl :locked?] [attributes* opts]])
 
+(defn- add-component-menu* [allowed-components add-component! locked?]
+  (when-not locked?
+    [:<>
+     (if (> (count allowed-components) 3)
+       [common/context-menu
+        {:label (tr [:asset :add-component])
+         :icon [icons/content-add-circle-outline]
+         :items (for [c allowed-components]
+                  {:label (label c)
+                   :icon [icons/content-add]
+                   :on-click (r/partial add-component! (:db/ident c))})}]
+       (doall
+        (for [c allowed-components]
+          ^{:key (str (:db/ident c))}
+          [Grid {:item true :xs 12 :md 4}
+           [buttons/button-secondary {:size :small
+                                      :on-click (r/partial add-component! (:db/ident c))
+                                      :start-icon (r/as-element [icons/content-add])}
+            (label c)]])))]))
+
 (defn- add-component-menu [allowed-components add-component!]
-  [:<>
-   (if (> (count allowed-components) 3)
-     [common/context-menu
-      {:label (tr [:asset :add-component])
-       :icon [icons/content-add-circle-outline]
-       :items (for [c allowed-components]
-                {:label (label c)
-                 :icon [icons/content-add]
-                 :on-click (r/partial add-component! (:db/ident c))})}]
-     (doall
-      (for [c allowed-components]
-        ^{:key (str (:db/ident c))}
-        [Grid {:item true :xs 12 :md 4}
-         [buttons/button-secondary {:size :small
-                                    :on-click (r/partial add-component! (:db/ident c))
-                                    :start-icon (r/as-element [icons/content-add])}
-          (label c)]])))])
+  [context/consume :locked?
+   [add-component-menu* allowed-components add-component!]])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
@@ -752,7 +757,9 @@
                set-dialog! #(reset! dialog %)]
     (let [{:keys [user timestamp] :as chg} latest-change
           locked? (asset-model/locked? version)
-          dialog-to-open (if locked? :unlock-for-edits :save-boq-version)]
+          action (if locked?
+                   :asset/unlock-for-edits
+                   :asset/lock-version)]
       [:div {:class (<class common-styles/flex-row)
              :style {:background-color theme-colors/gray-lightest
                      :width "100%"}}
@@ -777,20 +784,23 @@
           [icons/alert-error-outline]])
 
        ;; Save or unlock button
-       [buttons/button-secondary
-        {:disabled (some? @dialog)
-         :size :small
-         :on-click (r/partial set-dialog! dialog-to-open)}
-        (tr [:asset dialog-to-open])]
+       [when-authorized action nil
+        [buttons/button-secondary
+         {:disabled (some? @dialog)
+          :size :small
+          :on-click (r/partial set-dialog! action)}
+         (tr [:asset (case action
+                       :asset/unlock-for-edits :unlock-for-edits
+                       :asset/lock-version :save-boq-version)])]]
 
        (when-let [dialog @dialog]
          (case dialog
-           :unlock-for-edits
+           :asset/unlock-for-edits
            [unlock-for-edits-dialog {:e! e!
                                      :on-close (r/partial set-dialog! nil)
                                      :version version}]
 
-           :save-boq-version
+           :asset/lock-version
            [save-boq-version-dialog
             {:e! e!
              :on-close (r/partial set-dialog! nil)}]))])))

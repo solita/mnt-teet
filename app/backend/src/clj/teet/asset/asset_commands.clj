@@ -117,7 +117,7 @@
    :context {:keys [user db] adb :asset-db}
    :payload lock-version
    :project-id [:thk.project/id (:boq-version/project lock-version)]
-   :authorization {:cost-items/edit-cost-items {}}
+   :authorization {:cost-items/locking-unlocking-and-versioning {}}
    :pre [^{:error :boq-is-locked}
          (boq-unlocked? adb (:boq-version/project lock-version))]
    :transact
@@ -129,7 +129,7 @@
    :context {:keys [user db] adb :asset-db}
    :payload {project-id :boq-version/project}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}
+   :authorization {:cost-items/locking-unlocking-and-versioning {}}
    :pre [^{:error :boq-is-unlocked}
          (not (boq-unlocked? adb project-id))]
    :transact
