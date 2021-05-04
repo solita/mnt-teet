@@ -323,7 +323,16 @@
                                 (tu/db)))]
       (def activity* activity)
       (is (= (:activity/procurement-id activity) nil))
-      (is (= (:activity/procurement-nr activity) nil)))))
+      (is (= (:activity/procurement-nr activity) nil))))
+
+  (testing "procurement nr and id are not exported from activity"
+    (export-csv)
+    (let [export-rows (tu/get-data :export-rows)
+          activity-row (cu/find-first #(= (get % "activity_id")
+                                          "6594")
+                                      export-rows)]
+      (is (= (get activity-row "activity_procurementid") ""))
+      (is (= (get activity-row "activity_procurementno") "")))))
 
 (deftest activity-deletion-timestamp
   (import-projects-csv!)
