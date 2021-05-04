@@ -179,7 +179,9 @@
   :view teet.asset.cost-items-view/cost-items-totals-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
-                 :cost-totals true}}}
+                 :cost-totals true
+                 :relevant-roads true
+                 :road (some-> query-params :road ->long)}}}
 
  :cost-item
  {:path "/projects/:project/cost-items/:id"

@@ -62,7 +62,8 @@
    :cost-per-quantity-unit "Unit cost (€)",
    :total-cost "Total (€)",
    :project-total "Total {total} EUR",
-   :all-components "All components"},
+   :all-components "All components",
+   :all-roads "All roads"},
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate
@@ -213,7 +214,15 @@
   :email "Email",
   :phone "Mobile",
   :phone2 "Phone"},
- :contract {:edit-contract "Contract information"},
+ :contract
+ {:edit-contract "Contract information",
+  :thk.contract.status/signed "Signed",
+  :thk.contract.status/in-progress "In progress",
+  :thk.contract.status/deadline-approaching "Deadline approaching",
+  :thk.contract.status/deadline-overdue "Deadline overdue",
+  :thk.contract.status/warranty "Warranty",
+  :thk.contract.status/completed "Completed",
+  :contracts-listing "Contract listing"},
  :contracts
  {:state-procurement-link "Procurement no.",
   :external-link "Contract no.",

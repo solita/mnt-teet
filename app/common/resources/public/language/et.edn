@@ -62,7 +62,8 @@
    :cost-per-quantity-unit "Ühiku maksumus (€)",
    :total-cost "Kokku (€)",
    :project-total "Kokku {total} EUR",
-   :all-components "Kõik komponendid"},
+   :all-components "Kõik komponendid",
+   :all-roads "Kõik teed"},
   :add-cost-item "Lisan vara",
   :export-boq "Kululoendi eksport",
   :validate
@@ -212,7 +213,15 @@
   :email "E-post",
   :phone "Mobiil",
   :phone2 "Telefon"},
- :contract {:edit-contract nil},
+ :contract
+ {:edit-contract nil,
+  :thk.contract.status/signed nil,
+  :thk.contract.status/in-progress nil,
+  :thk.contract.status/deadline-approaching nil,
+  :thk.contract.status/deadline-overdue nil,
+  :thk.contract.status/warranty nil,
+  :thk.contract.status/completed nil,
+  :contracts-listing nil},
  :contracts
  {:state-procurement-link "Hanke nr.",
   :external-link "Lepingu nr.",

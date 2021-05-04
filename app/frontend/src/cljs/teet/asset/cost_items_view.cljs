@@ -966,6 +966,7 @@
 
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals version :version
+           relevant-roads :relevant-roads
            closed-totals :closed-totals
            :or {closed-totals #{}}
            :as state}]
@@ -989,7 +990,10 @@
                               (sort-by (comp label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            ::url/query {:filter (str (:db/ident %))}})]
+                            ::url/query {:filter (str (:db/ident %))}})
+          road-filter-value (some #(when (= (get-in app [:query :road])
+                                            (str (:road-nr %)))
+                                     %) relevant-roads)]
       [cost-items-page-structure
        {:e! e!
         :app  app
@@ -999,10 +1003,19 @@
                     :list-features? false}}
        [:div.cost-items-totals
         [filter-breadcrumbs atl filter-fg-or-fc]
+        [:div {:style {:max-width "25vw"}}
+         [select/form-select
+          {:items (into [nil] relevant-roads)
+           :value road-filter-value
+           :on-change (e! cost-items-controller/->SetTotalsRoadFilter)
+           :format-item #(if-not %
+                           (tr [:asset :totals-table :all-roads])
+                           (str (:road-nr %) " " (:road-name %)))}]]
         [:div {:style {:float :right}}
          [:b
           (tr [:asset :totals-table :project-total]
               {:total (:total-cost totals)})]]
+
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
          (doall
