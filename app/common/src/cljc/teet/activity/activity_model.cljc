@@ -65,7 +65,8 @@
 (defn active? [activity]
   (-> activity :activity/status :db/ident activity-in-progress-statuses))
 
-(defn finished? [activity]
+;; commented out for testing clj-kondo github action, is it running and configured correctly to catch use sites of this?
+#_(defn finished? [activity]
   (-> activity :activity/status :db/ident activity-finished-statuses))
 
 (defn conflicting-schedules?
