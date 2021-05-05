@@ -8,7 +8,7 @@ describe("Activity view", function() {
 
     context("Edit Activity", function() {
         it("can be edited", function() {
-            cy.get("span[class=MuiButton-label]").contains("Edit").click({force: true})
+            cy.get("button[data-cy=activity-edit-button]").click({force: true})
             cy.get("div[data-form-attribute=" +
                 "\"[:activity/estimated-start-date :activity/estimated-end-date]\"]").should("exist")
         })
