@@ -15,7 +15,8 @@
             [teet.localization :refer [tr]]
             [teet.ui.project-context :as project-context]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.ui.url :as url]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.

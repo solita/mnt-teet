@@ -9,7 +9,7 @@
 
 (defn breadcrumbs-style
   []
-  {:padding        "1.5rem 1.875rem"})
+  {:padding "1rem"})
 
 (defn breadcrumbs
   [breadcrumbs]

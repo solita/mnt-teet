@@ -459,6 +459,7 @@
   "select_all"
   "send"
   "sort"
+  "shield"
   "text_format"
   "unarchive"
   "undo"

@@ -14,7 +14,8 @@
             [teet.ui.url :as url]
             [teet.ui.common :as common]
             [teet.environment :as environment]
-            [teet.contract.contract-model :as contract-model]))
+            [teet.contract.contract-model :as contract-model]
+            [teet.contract.contract-view :as contract-view]))
 
 (defn contract-card
   [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
@@ -22,21 +23,14 @@
   [:div {:class (<class common-styles/margin-bottom 2)}
    [:h3 contract-name]
    [:span (pr-str contract)]
-   [common/contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)
-                          :target "_blank"}
-    (str/upper-case
-      (str (tr [:contracts :state-procurement-link]) " " procurement-number))]
-   [common/contract-link {:href external-link
-                          :target "_blank"}
-    (str/upper-case
-      (str (tr [:contracts :external-link]) " " procurement-number))]
-   [common/contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
+   [contract-view/contract-procurement-link contract]
+   (when external-link
+     [contract-view/contract-external-link contract])
+   [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
     (str/upper-case
       (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
    [url/Link {:page :contract
-              :params {:contract-ids (str/join "-" (filterv
-                                                     some?
-                                                     [procurement-id procurement-part-id]))}}
+              :params {:contract-ids (contract-model/contract-url-id contract)}}
     "LINK TO THIS ACTIVITY"]])
 
 (defn contracts-list

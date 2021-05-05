@@ -224,12 +224,16 @@
  :contracts
  {:path "/contracts"
   :view teet.contract.contracts-view/contracts-listing-view
-  :crumb (tr [:contracts :contracts-listing])
-  :title (tr [:contracts :contracts-listing])}
+  :crumb (tr [:contract :contracts-listing])
+  :title (tr [:contract :contracts-listing])}
 
  :contract
  {:path "/contracts/:contract-ids"                          ;; /contracts/{procurement-id}-{procurement-part-id}
   :view teet.contract.contract-view/contract-page
+  :extenal-links [teet.contract-contract-view/contract-links state]
+  :crumb (teet.contract.contract-model/contract-url-id state)
+  :title (get-in state [:thk.contract/name])
+  :parent :contracts
   :state {:query :contract/contract-page
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}

@@ -1,5 +1,6 @@
 (ns teet.contract.contract-model
-  (:require #?(:clj [clj-time.coerce :as tc]
+  (:require [clojure.string :as str]
+            #?(:clj [clj-time.coerce :as tc]
                :cljs [cljs-time.coerce :as tc])))
 
 (def contract-form-keys
@@ -29,3 +30,7 @@
    4 :thk.contract.status/deadline-overdue
    5 :thk.contract.status/warranty
    6 :thk.contract.status/completed})
+
+(defn contract-url-id
+  [{:thk.contract/keys [procurement-id procurement-part-id]}]
+  (str/join "-" (filterv some? [procurement-id procurement-part-id])))
