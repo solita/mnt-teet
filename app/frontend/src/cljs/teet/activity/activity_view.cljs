@@ -89,7 +89,7 @@
                 :save-event activity-controller/->SaveActivityForm
                 :cancel-event project-controller/->CloseDialog
                 :delete (when user-authorized?
-                                 (activity-controller/->DeleteActivity (:db/id activity)))
+                          (activity-controller/->DeleteActivity (:db/id activity)))
                 :spec :activity/new-activity-form}
 
      ^{:attribute :activity/manager}
