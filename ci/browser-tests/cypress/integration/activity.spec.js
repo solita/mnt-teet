@@ -1,8 +1,10 @@
-describe("Activity view", function() {
+describe("Task view", function() {
     before(() => {
-        cy.dummyLogin("Carla")
+        cy.dummyLogin("benjamin")
         cy.selectLanguage("#EN")
         cy.projectByName("integration test project")
+
+        // Navigate to Detailed design
         cy.get("li a").contains("Detailed design").click()
     })
 
