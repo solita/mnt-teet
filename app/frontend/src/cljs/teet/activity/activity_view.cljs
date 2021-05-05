@@ -80,8 +80,7 @@
         [form/footer2]]]]]))
 
 (defn edit-activity-form [e! activity project {:keys [max-date min-date]}]
-  (let [deletable? (activity-model/deletable? activity)
-        user-authorized? (authorized? @teet.app-state/user :activity/delete-activity
+  (let [user-authorized? (authorized? @teet.app-state/user :activity/delete-activity
                            {:project-id (:db/id project)
                             :entity activity})]
     [form/form {:e! e!
@@ -89,8 +88,8 @@
                 :on-change-event activity-controller/->UpdateActivityForm
                 :save-event activity-controller/->SaveActivityForm
                 :cancel-event project-controller/->CloseDialog
-                :delete (when (and deletable? user-authorized?)
-                          (activity-controller/->DeleteActivity (:db/id activity)))
+                :delete (when user-authorized?
+                                 (activity-controller/->DeleteActivity (:db/id activity)))
                 :spec :activity/new-activity-form}
 
      ^{:attribute :activity/manager}
