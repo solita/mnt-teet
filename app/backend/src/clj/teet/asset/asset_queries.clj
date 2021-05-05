@@ -19,10 +19,11 @@
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
-   :context _
+   :context {adb :asset-db}
    :unauthenticated? true
-   :args _}
-  (asset-db/asset-type-library (environment/asset-db)))
+   :args _
+   :last-modified (asset-db/last-atl-modification-time adb)}
+  (asset-db/asset-type-library adb))
 
 (defn- fetch-cost-item [adb oid]
   (asset-type-library/db->form
