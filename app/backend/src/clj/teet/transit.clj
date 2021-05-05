@@ -1,7 +1,8 @@
 (ns teet.transit
   "Transit format utilities"
   (:require [cognitect.transit :as t]
-            [teet.util.collection :as cu])
+            [teet.util.collection :as cu]
+            [ring.util.io :as ring-io])
   (:import (com.cognitect.transit WriteHandler)))
 
 (defn transit->clj
@@ -38,9 +39,18 @@
     (.toString out "UTF-8")))
 
 (defn transit-response [data]
-  {:status 200
-   :headers {"Content-Type" "application/json+transit"}
-   :body (clj->transit data)})
+  (let [last-modified (some-> data meta :last-modified)
+        body (if last-modified
+               ;; We have last-modified, data :body is a delay
+               (ring-io/piped-input-stream
+                (fn [out]
+                  (write-transit out @(:body data))))
+               (clj->transit data))]
+    {:status 200
+     :headers (merge {"Content-Type" "application/json+transit"}
+                     (when last-modified
+                       {"Last-Modified" last-modified}))
+     :body body}))
 
 (defn transit-request [{:keys [body params request-method] :as _req}]
   (case request-method
