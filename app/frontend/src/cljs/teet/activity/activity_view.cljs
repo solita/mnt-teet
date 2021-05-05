@@ -140,7 +140,8 @@
    [when-authorized
     :activity/update
     activity
-    [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
+    [buttons/button-secondary {:data-cy "activity-edit-button"
+                               :on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
      (tr [:buttons :edit])]]])
 
 (defn task-status-color
