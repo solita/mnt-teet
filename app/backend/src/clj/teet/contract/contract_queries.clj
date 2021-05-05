@@ -1,7 +1,9 @@
 (ns teet.contract.contract-queries
   (:require [teet.db-api.core :refer [defquery]]
             [teet.contract.contract-db :as contract-db]
-            [teet.notification.notification-queries :as notification-queries]))
+            [teet.notification.notification-queries :as notification-queries]
+            [teet.util.datomic :as du]
+            [teet.util.collection :as cu]))
 
 (defn target-with-navigation-info
   [db target]
@@ -26,4 +28,6 @@
         (update
           :thk.contract/targets
           #(map (partial target-with-navigation-info db) %))
-        (update :thk.contract/cost str))))
+        (cu/update-in-if-exists [:thk.contract/cost] str)
+        (cu/update-in-if-exists [:thk.contract/warranty-period] str)
+        du/idents->keywords)))
