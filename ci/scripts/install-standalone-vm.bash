@@ -10,9 +10,8 @@ set -euo pipefail
 
 TEET_BRANCH=master
 TEET_GIT_URL=https://github.com/solita/mnt-teet.git
-DATOMIC_SOURCE_DB_NAME=$(aws ssm get-parameter --name /teet/datomic/db-name --query "Parameter.Value" --output text)
-TEET_ENV_NAME=$(aws ssm get-parameter --name /teet/env --query "Parameter.Value" --output text)
-
+export AWS_REGION=eu-central-1
+export AWS_DEFAULT_REGION=$AWS_REGION
 function gensecret {
     name="$1"
     touch "$name.secret"
@@ -66,7 +65,7 @@ function install_deps_and_app {
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
@@ -93,6 +92,10 @@ function install_deps_and_app {
     docker exec teetdb sed -i -e '1i host all all 172.16.0.0/14 trust' /var/lib/postgresql/data/pg_hba.conf
     docker restart teetdb    
 
+    DATOMIC_SOURCE_DB_NAME=$(aws ssm get-parameter --name /teet/datomic/db-name --query "Parameter.Value" --output text)
+    TEET_ENV_NAME=$(aws ssm get-parameter --name /teet/env --query "Parameter.Value" --output text)
+
+    
     test -f cognitect-dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
     unzip cognitect-dev-tools.zip
     cd cognitect-dev-tools-*
@@ -116,7 +119,6 @@ function install_deps_and_app {
     done
     
     
-
     import-datomic-to-dev-local
     
     cd mnt-teet
@@ -130,11 +132,6 @@ function install_deps_and_app {
     
     sleep 10 # fixme, wait for some sensible signal (poll backend tcp port with netstat?)
         
-    ## unneeded when restoring pg backup
-    # cd app/datasource-import
-    # clojure -A:import example-config.edn     
-    
-    # todo: docker run problem - after experimenting with running this in codebuild, systemctl complains about init. privileged codebuild container didn't help. need to ditch codebuild & use ec2? or, run pg and postgrest in same container?
     
     # todo: config.edn for teet app & datomic-local setup
 
@@ -145,21 +142,52 @@ function install_deps_and_app {
 
 }
 
-UBUNTU_AMI_ID=ami-0767046d1677be5a0
 function run-in-ec2 {
-    # todo: switch to using ec2 instance templates
-
-    #
-    aws ec2 describe-vpcs --output json > vpc.json
-    TEET_VPCID=$(jq -r '.Vpcs[] | [.VpcId, (.Tags[]?|select(.Key=="Name")|.Value)] | select (.[1] == "Main TEET VPC") | .[0]' < vpc.json)
-    # aws ec2 run-instances --image-id $UBUNTU_AMI_ID --count 1 --instance-type m5.xlarge \
-    # 	--key-name $SSHKEYID --subnet-id subnet-abcd1234 --security-group-ids sg-abcd1234 \
-    # 	--user-data file://$PWD/ci/scripts/install-standalone-vm.bash
-
-    # fails, need to specify subnet id and security group etc.
-    aws ec2 run-instances --image-id $UBUNTU_AMI_ID --count 1 --instance-type m5.xlarge \
-	--key-name $SSHKEYID 
-	--user-data file://$PWD/ci/scripts/install-standalone-vm.bash
+    read -p 'ssh keypair name> ' SSHKEYID
+    aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name $SSHKEYID \
+        --user-data file://$PWD/ci/scripts/install-standalone-vm.bash \
+        --launch-template LaunchTemplateName=standalone-teetapp-template
 }
+
+
+
+[default]
+role_arn = arn:aws:iam::595654131005:instance-profile/standalone-teetapp-profile
+credential_source = Ec2InstanceMetadata
+region = eu-central-1
+
+
+ cat > StandaloneTeetAppEC2RoleTrust.json <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+EOF
+
+cat > StandaloneTeetAppEC2RolePermissions.json <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:Get*",
+                "s3:List*"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+aws iam create-role --role-name StandaloneTeetAppEC2RoleInstance-Profile --assume-role-policy-document file://StandaloneTeetAppEC2RoleTrust.json
 
 
