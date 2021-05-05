@@ -1,6 +1,6 @@
 describe("Activity view", function() {
     before(() => {
-        cy.dummyLogin("benjamin")
+        cy.dummyLogin("Carla")
         cy.selectLanguage("#EN")
         cy.projectByName("integration test project")
         cy.get("li a").contains("Detailed design").click()
