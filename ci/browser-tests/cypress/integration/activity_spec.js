@@ -1,0 +1,17 @@
+describe("Activity view", function() {
+    before(() => {
+        cy.dummyLogin("benjamin")
+        cy.selectLanguage("#EN")
+        cy.projectByName("integration test project")
+        cy.get("li a").contains("Detailed design").click()
+    })
+
+    context("Edit Activity", function() {
+        it("can be edited", function() {
+            cy.get("button[class=\"MuiButtonBase-root MuiButton-root " +
+                "MuiButton-contained MuiButton-containedSecondary\"]").click({force: true})
+            cy.get("div[data-form-attribute=" +
+                "\"[:activity/estimated-start-date :activity/estimated-end-date]\"]").should("exist")
+        })
+    })
+})
