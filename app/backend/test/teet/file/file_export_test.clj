@@ -47,6 +47,18 @@
         (is (= s3-file-key (read-entry in)))
         (is (nil? (.getNextEntry in)))))))
 
+(defn create-task->add-file->start-review->accept [task-params]
+  (tu/local-login tu/mock-user-boss)
+
+  ;; 1a
+  (let [first-task-id (tu/create-task task-params)]
+    (tu/fake-upload first-task-id #:file {:name "image.png" :file/size 666})
+    (tu/local-command :task/submit {:task-id first-task-id})
+    (tu/local-command :task/start-review {:task-id first-task-id})
+    ;; 1d - accept
+    (tu/local-command :task/review {:task-id first-task-id
+                                    :result :accept} )))
+
 (deftest handle-duplicate-filenames
   ;; from TEET-1479 steps to reproduce:
   ;; 1.
@@ -57,40 +69,36 @@
   ;; 2. a Add the same task again under the same activity,
   ;;    b upload the same file to it (the TEET filenames will match for both files)
   ;; 3. Request the activity zip download link and download the zip
-  ;; 
-  (tu/local-login tu/mock-user-boss)
+  ;;
 
   ;; 1a
-  (let [activity-id (tu/->db-id "p1-lc1-act1")        
+  ;; 2a
+  (let [activity-id (tu/->db-id "p1-lc1-act1")
         activity-entity (du/entity (tu/db) activity-id)
         task-params {:activity activity-id
                      :task {:task/group :task.group/land-purchase
                             :task/type :task.type/plot-allocation-plan
                             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                             :task/estimated-start-date (:activity/estimated-start-date activity-entity)
-                            :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}
-        first-task-id (tu/create-task task-params)
-        ;; 1b
-        file (tu/fake-upload first-task-id #:file {:name "image.png" :file/size 666})
-        ]
-    ;; 1c
-    (tu/local-command :task/submit {:task-id first-task-id})
-    (tu/local-command :task/start-review {:task-id first-task-id})
-    ;; 1d - accept
-    (tu/local-command :task/review {:task-id first-task-id
-                                    :result :accept} )
-    ;; 2a
+                            :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}]
+    ;; Add one...
+    (create-task->add-file->start-review->accept task-params)
+    ;; ... two ...
+    (create-task->add-file->start-review->accept task-params)
+    (tu/local-login tu/mock-user-boss)
+
     (with-redefs [integration-s3/get-object
-                (fn [_bucket file-key]
-                  (java.io.ByteArrayInputStream. (.getBytes file-key "UTF-8")))]
+                  (fn [_bucket file-key]
+                    (java.io.ByteArrayInputStream. (.getBytes file-key "UTF-8")))]
       (let [second-task-id (tu/create-task task-params)
-            ;; 2b
-            file (tu/fake-upload second-task-id #:file {:name "image.png" :file/size 666})
-            s3-file-key (:file/s3-key (du/entity (tu/db) (:db/id file)))
-            {:keys [filename input-stream]} (with-language :en (file-export/activity-zip (tu/db) activity-id))]
+            ;; ... and three files with the same name and task type
+            _file (tu/fake-upload second-task-id #:file {:name "image.png" :file/size 666})
+            {:keys [_filename input-stream]} (with-language :en (file-export/activity-zip (tu/db) activity-id))]
         (let [in (java.util.zip.ZipInputStream. input-stream)
               first-entry (.getNextEntry in)
-              second-entry (.getNextEntry in)]
+              second-entry (.getNextEntry in)
+              third-entry (.getNextEntry in)]
           (is (= "KY/00_General/MA11111_MO_TL_KY_00_image.png" (.getName first-entry) ))
           (is (= "KY/00_General/MA11111_MO_TL_KY_00_image (1).png" (some-> second-entry .getName)))
+          (is (= "KY/00_General/MA11111_MO_TL_KY_00_image (2).png" (some-> third-entry .getName)))
           (is (nil? (.getNextEntry in))))))))
