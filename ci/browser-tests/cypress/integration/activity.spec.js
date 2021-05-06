@@ -1,9 +1,6 @@
 describe("Activity view", function() {
     beforeEach(() => {
-        cy.visit("")
-        cy.get("#password-textfield").type(Cypress.env("SITE_PASSWORD"));
-        cy.get("button").contains("Login as Benjamin Boss").click();
-        cy.contains('Minu projektid');
+        cy.dummyLogin("Danny")
     })
 
     function selectProject() {
