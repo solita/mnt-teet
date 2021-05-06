@@ -9,9 +9,27 @@
             [teet.asset.asset-model :as asset-model]
             [teet.routes :as routes]
             cljs.reader
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [reagent.core :as r]))
 
 (defrecord AddComponentCancel [id])
+
+(defrecord MaybeFetchAssetTypeLibrary []
+  t/Event
+  (process-event [_ app]
+    (if (:asset-type-library app)
+      app
+      (t/fx app
+            {:tuck.effect/type :query
+             :query :asset/type-library
+             :args {}
+             :result-path [:asset-type-library]}))))
+
+;; Register routes that need asset type library to be in app state
+;; and launch event to fetch it when navigating.
+(doseq [r [:cost-item :cost-items :cost-items-totals :asset-type-library]]
+  (defmethod routes/on-navigate-event r [_] (->MaybeFetchAssetTypeLibrary)))
+
 
 (defmethod routes/on-leave-event :cost-item [{:keys [query new-query]}]
   (when (and (:component query)
@@ -168,8 +186,7 @@
       form-update-data)
     form-update-data))
 
-(defn- app->relevant-roads [app]
-  (-> app :route :cost-item :relevant-roads))
+(declare project-relevant-roads)
 
 (extend-protocol t/Event
 
@@ -264,10 +281,11 @@
         (log/debug "Not editing form, BOQ version is locked.")
         app)
       (let [old-form (form-state app)
-            new-form (cu/deep-merge old-form
-                                    (default-carriageway form-data
-                                                         old-form
-                                                         (app->relevant-roads app)))]
+            new-form (cu/deep-merge
+                      old-form
+                      (default-carriageway form-data
+                                           old-form
+                                           (project-relevant-roads (get-in app [:params :project]))))]
         (process-location-change
          (update-form app (constantly new-form))
          old-form new-form))))
@@ -489,7 +507,7 @@
            :page (:page app)
            :params (:params app)
            :query (if road
-                    {:road (:road-nr road)}
+                    {:road road}
                     {})})))
 
 (extend-protocol t/Event
@@ -557,3 +575,32 @@
 
             (filter filter-pred))
            cost-group-totals)]))
+
+
+(def relevant-road-cache
+  "Atom to cache relevant roads by project."
+  (r/atom {}))
+
+(defn- project-relevant-roads
+  "Get relevant roads for project that have been fetched previously."
+  [project-id]
+  (get @relevant-road-cache project-id))
+
+(defrecord FetchRelevantRoadsResponse [project-id response]
+  t/Event
+  (process-event [_ app]
+    (swap! relevant-road-cache assoc project-id response)
+    app))
+
+(defrecord FetchRelevantRoads [project-id]
+  t/Event
+  (process-event [_ app]
+    (if (contains? @relevant-road-cache project-id)
+      app
+      (do
+        (swap! relevant-road-cache assoc project-id [])
+        (t/fx app
+              {:tuck.effect/type :query
+               :query :asset/project-relevant-roads
+               :args {:thk.project/id project-id}
+               :result-event (partial ->FetchRelevantRoadsResponse project-id)})))))

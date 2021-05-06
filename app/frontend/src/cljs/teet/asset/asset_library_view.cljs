@@ -6,7 +6,7 @@
             [teet.ui.table :as table]
             [teet.util.collection :as cu]
             [teet.ui.material-ui :refer [Card CardHeader CardContent IconButton
-                                         Paper Grid]]
+                                         Paper Grid CircularProgress]]
             [teet.ui.icons :as icons]
             [teet.util.datomic :as du]
             [teet.common.common-styles :as common-styles]
@@ -184,7 +184,7 @@
 (defn- focus-on-ident [app]
   (some->> app :query :item cljs.reader/read-string))
 
-(defn asset-library-page [_e! app atl]
+(defn asset-library-page [_e! {atl :asset-type-library :as app}]
   (let [open (r/atom #{})
         toggle! #(swap! open cu/toggle %)
         focus (atom (focus-on-ident app))]
@@ -196,34 +196,36 @@
             (ensure-tree-open atl open new-focus)
             (reset! focus new-focus))))
       :reagent-render
-      (fn [_e! _app {:keys [fgroups] common :ctype/common
-                     modified :tx/schema-imported-at
-                     :as atl}]
-        [:<>
-         [:div {:class (<class common-styles/flex-row-space-between)
-                :style {:align-items :center}}
-
-          [typography/Heading1 (tr [:asset :type-library :header])]
-          (when modified
-            [:div {:style {:margin "1rem"}}
-             (tr [:common :last-modified]) ": "
-             (format/date-time modified)])]
-         [Paper {}
-          [Grid {:container true :spacing 0 :wrap :wrap}
-           [scrollable-grid 4
+      (fn [_e! {atl :asset-type-library :as _app}]
+        (if-not atl
+          [CircularProgress {}]
+          (let [{:keys [fgroups] common :ctype/common
+                 modified :tx/schema-imported-at} atl]
             [:<>
-             ^{:key "common"}
-             [rotl-tree {:open @open :toggle! toggle!
-                         :focus @focus
-                         :label (tr [:asset :type-library :common-ctype])} common]
-             (doall
-              (for [fg fgroups]
-                ^{:key (str (:db/ident fg))}
-                [rotl-tree {:open @open :toggle! toggle! :focus @focus} fg]))]]
-           [scrollable-grid 8
-            [:div {:style {:padding "1rem"}}
-             (when-let [item-kw @focus]
-               (let [item (if (= item-kw :ctype/common)
-                            common
-                            (asset-type-library/item-by-ident atl item-kw))]
-                 [rotl-item item]))]]]]])})))
+             [:div {:class (<class common-styles/flex-row-space-between)
+                    :style {:align-items :center}}
+
+              [typography/Heading1 (tr [:asset :type-library :header])]
+              (when modified
+                [:div {:style {:margin "1rem"}}
+                 (tr [:common :last-modified]) ": "
+                 (format/date-time modified)])]
+             [Paper {}
+              [Grid {:container true :spacing 0 :wrap :wrap}
+               [scrollable-grid 4
+                [:<>
+                 ^{:key "common"}
+                 [rotl-tree {:open @open :toggle! toggle!
+                             :focus @focus
+                             :label (tr [:asset :type-library :common-ctype])} common]
+                 (doall
+                  (for [fg fgroups]
+                    ^{:key (str (:db/ident fg))}
+                    [rotl-tree {:open @open :toggle! toggle! :focus @focus} fg]))]]
+               [scrollable-grid 8
+                [:div {:style {:padding "1rem"}}
+                 (when-let [item-kw @focus]
+                   (let [item (if (= item-kw :ctype/common)
+                                common
+                                (asset-type-library/item-by-ident atl item-kw))]
+                     [rotl-item item]))]]]]])))})))
