@@ -42,10 +42,6 @@
   (to-value [this]
     (mapv to-value* this)))
 
-(def default-value
-  "Mapping of component to default value. Some components don't want nil as the value (like text area)."
-  {TextField ""})
-
 (defonce field-specs (atom {}))
 
 (defn- valid-attribute?
@@ -290,8 +286,7 @@
          (swap! current-fields dissoc attribute))
        :reagent-render
        (fn [_ field {:keys [update-attribute-fn value]}]
-         (let [value (attribute-value value attribute
-                                      (default-value (first field)))
+         (let [value (attribute-value value attribute)
                error-text (and validate-field
                                (validate-field value))
                error? (boolean
