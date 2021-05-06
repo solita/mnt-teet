@@ -12,8 +12,8 @@ describe("Activity view", function() {
         cy.get("span").contains("Projektide loetelu").click();
         cy.contains("Kõik projektid").click();
 
-        cy.get("#quick-search").type("aruvalla");
-        cy.get("p").contains("Aruvalla").click();
+        cy.get("#quick-search").type("integration test project");
+        cy.get("div").contains("integration test project").click();
     }
 
     function selectActivity() {
