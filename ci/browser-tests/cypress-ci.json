@@ -1,5 +1,5 @@
 {"baseUrl": "http://localhost:4000/",
- "ignoreTestFiles": ["**/land_section.spec.js", "**/task.ci.spec.js", "**/task.spec.js"],
+ "ignoreTestFiles": ["**/land_section.spec.js", "**/task.ci.spec.js", "**/task.spec.js", "**/activity.ci.spec.js"],
  "viewportWidth": 1280,
  "viewportHeight": 800,
  "retries": 5
