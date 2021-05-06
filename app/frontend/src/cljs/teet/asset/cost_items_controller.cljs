@@ -9,9 +9,27 @@
             [teet.asset.asset-model :as asset-model]
             [teet.routes :as routes]
             cljs.reader
-            [teet.asset.asset-type-library :as asset-type-library]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [reagent.core :as r]))
 
 (defrecord AddComponentCancel [id])
+
+(defrecord MaybeFetchAssetTypeLibrary []
+  t/Event
+  (process-event [_ app]
+    (if (:asset-type-library app)
+      app
+      (t/fx app
+            {:tuck.effect/type :query
+             :query :asset/type-library
+             :args {}
+             :result-path [:asset-type-library]}))))
+
+;; Register routes that need asset type library to be in app state
+;; and launch event to fetch it when navigating.
+(doseq [r [:cost-item :cost-items :cost-items-totals :asset-type-library]]
+  (defmethod routes/on-navigate-event r [_] (->MaybeFetchAssetTypeLibrary)))
+
 
 (defmethod routes/on-leave-event :cost-item [{:keys [query new-query]}]
   (when (and (:component query)
