@@ -2,7 +2,8 @@
   "Transit format utilities"
   (:require [cognitect.transit :as t]
             [teet.util.collection :as cu]
-            [ring.util.io :as ring-io])
+            [ring.util.io :as ring-io]
+            [ring.util.time :as ring-time])
   (:import (com.cognitect.transit WriteHandler)))
 
 (defn transit->clj
@@ -49,7 +50,8 @@
     {:status 200
      :headers (merge {"Content-Type" "application/json+transit"}
                      (when last-modified
-                       {"Last-Modified" last-modified}))
+                       {"Last-Modified" (ring-time/format-date last-modified)
+                        "Cache-Control" "must-revalidate"}))
      :body body}))
 
 (defn transit-request [{:keys [body params request-method] :as _req}]
