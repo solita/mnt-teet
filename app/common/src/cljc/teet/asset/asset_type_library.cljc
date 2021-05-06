@@ -1,7 +1,9 @@
 (ns teet.asset.asset-type-library
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            #?@(:clj [[clojure.string :as str]
+                      [clojure.walk :as walk]])))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
