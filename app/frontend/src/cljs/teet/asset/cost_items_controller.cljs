@@ -79,6 +79,7 @@
 (defrecord UnlockForEditsResponse [callback response])
 
 (defrecord ToggleOpenTotals [ident]) ; toggle open/closed totals ident
+(defrecord SetTotalsRoadFilter [road])
 
 (declare process-location-change)
 
@@ -465,7 +466,8 @@
                                          :quantity :count
                                          :cost-per-quantity-unit
                                          :total-cost
-                                         :quantity-unit :type)
+                                         :quantity-unit :type
+                                         :ui/group)
                      :price price}
            :result-event ->SaveCostGroupPriceResponse}))
 
@@ -478,7 +480,17 @@
   ToggleOpenTotals
   (process-event [{ident :ident} app]
     (common-controller/update-page-state
-     app [:closed-totals] cu/toggle ident)))
+     app [:closed-totals] cu/toggle ident))
+
+  SetTotalsRoadFilter
+  (process-event [{road :road} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (:page app)
+           :params (:params app)
+           :query (if road
+                    {:road (:road-nr road)}
+                    {})})))
 
 (extend-protocol t/Event
   SaveBOQVersion

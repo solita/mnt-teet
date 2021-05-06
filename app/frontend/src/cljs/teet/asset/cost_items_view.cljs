@@ -38,7 +38,7 @@
             [teet.ui.panels :as panels]
             [teet.ui.query :as query]
             [teet.ui.date-picker :as date-picker]
-            [teet.ui.format :as format]))
+            [teet.authorization.authorization-check :refer [when-authorized]]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -359,7 +359,7 @@
                    (= type :db.type/instant)
                    (if locked?
                      [display-input {:label (label attr)
-                                     :format format/date}]
+                                     :format fmt/date}]
                      [date-picker/date-input {:label (label attr)}])
 
                    ;; Text field
@@ -378,24 +378,29 @@
   [opts]
   [context/consume-many [:rotl :locked?] [attributes* opts]])
 
+(defn- add-component-menu* [allowed-components add-component! locked?]
+  (when-not locked?
+    [:<>
+     (if (> (count allowed-components) 3)
+       [common/context-menu
+        {:label (tr [:asset :add-component])
+         :icon [icons/content-add-circle-outline]
+         :items (for [c allowed-components]
+                  {:label (label c)
+                   :icon [icons/content-add]
+                   :on-click (r/partial add-component! (:db/ident c))})}]
+       (doall
+        (for [c allowed-components]
+          ^{:key (str (:db/ident c))}
+          [Grid {:item true :xs 12 :md 4}
+           [buttons/button-secondary {:size :small
+                                      :on-click (r/partial add-component! (:db/ident c))
+                                      :start-icon (r/as-element [icons/content-add])}
+            (label c)]])))]))
+
 (defn- add-component-menu [allowed-components add-component!]
-  [:<>
-   (if (> (count allowed-components) 3)
-     [common/context-menu
-      {:label (tr [:asset :add-component])
-       :icon [icons/content-add-circle-outline]
-       :items (for [c allowed-components]
-                {:label (label c)
-                 :icon [icons/content-add]
-                 :on-click (r/partial add-component! (:db/ident c))})}]
-     (doall
-      (for [c allowed-components]
-        ^{:key (str (:db/ident c))}
-        [Grid {:item true :xs 12 :md 4}
-         [buttons/button-secondary {:size :small
-                                    :on-click (r/partial add-component! (:db/ident c))
-                                    :start-icon (r/as-element [icons/content-add])}
-          (label c)]])))])
+  [context/consume :locked?
+   [add-component-menu* allowed-components add-component!]])
 
 (defn- format-fg-and-fc [[fg fc]]
   (if (and (nil? fg)
@@ -460,7 +465,7 @@
                   (when (pos? i)
                     {:margin-left "-0.9rem"}))}])))])
 
-(defn- component-rows [{:keys [e! level components
+(defn- component-rows [{:keys [e! level components locked?
                                delete-component!]}]
   (when (seq components)
     [:<>
@@ -480,24 +485,33 @@
            [label-for (:component/ctype c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 25 :flex-end 0 nil)}
-           [buttons/delete-button-with-confirm
-            {:small? true
-             :icon-position :start
-             :action (r/partial delete-component! (:db/id c))}
-            (tr [:buttons :delete])]]]
+           (when-not locked?
+             [when-authorized
+              :asset/delete-component nil
+              [buttons/delete-button-with-confirm
+               {:small? true
+                :icon-position :start
+                :action (r/partial delete-component! (:db/id c))}
+               (tr [:buttons :delete])]])]]
          [component-rows {:e! e!
+                          :locked? locked?
                           :components (:component/components c)
                           :level (inc (or level 0))}]]))]))
 
-(defn- components-tree
+(defn- components-tree*
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! asset]}]
+  [{:keys [e! asset]} locked?]
   [:<>
    [typography/Heading3 (tr [:asset :components :label])
     (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
    [component-rows {:e! e!
+                    :locked? locked?
                     :components (:asset/components asset)
                     :delete-component! (e! cost-items-controller/->DeleteComponent)}]])
+
+(defn- components-tree [opts]
+  [context/consume :locked?
+   [components-tree* opts]])
 
 (defn- form-paper
   "Wrap the form input portion in a light gray paper."
@@ -752,7 +766,9 @@
                set-dialog! #(reset! dialog %)]
     (let [{:keys [user timestamp] :as chg} latest-change
           locked? (asset-model/locked? version)
-          dialog-to-open (if locked? :unlock-for-edits :save-boq-version)]
+          action (if locked?
+                   :asset/unlock-for-edits
+                   :asset/lock-version)]
       [:div {:class (<class common-styles/flex-row)
              :style {:background-color theme-colors/gray-lightest
                      :width "100%"}}
@@ -777,20 +793,23 @@
           [icons/alert-error-outline]])
 
        ;; Save or unlock button
-       [buttons/button-secondary
-        {:disabled (some? @dialog)
-         :size :small
-         :on-click (r/partial set-dialog! dialog-to-open)}
-        (tr [:asset dialog-to-open])]
+       [when-authorized action nil
+        [buttons/button-secondary
+         {:disabled (some? @dialog)
+          :size :small
+          :on-click (r/partial set-dialog! action)}
+         (tr [:asset (case action
+                       :asset/unlock-for-edits :unlock-for-edits
+                       :asset/lock-version :save-boq-version)])]]
 
        (when-let [dialog @dialog]
          (case dialog
-           :unlock-for-edits
+           :asset/unlock-for-edits
            [unlock-for-edits-dialog {:e! e!
                                      :on-close (r/partial set-dialog! nil)
                                      :version version}]
 
-           :save-boq-version
+           :asset/lock-version
            [save-boq-version-dialog
             {:e! e!
              :on-close (r/partial set-dialog! nil)}]))])))
@@ -921,7 +940,7 @@
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
-(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type}]
+(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type} subtotal]
   [table/listing-table-body-component listing-opts
    [container/collapsible-container-heading
     {:container-class [(<class common-styles/flex-row)
@@ -929,9 +948,12 @@
                          (<class common-styles/indent-rem 1))]
      :open? (not (closed-set ident))
      :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
-    [url/Link {:page :cost-items-totals
-               :query {:filter (str ident)}}
-     (label header-type)]]])
+    [:<>
+     [url/Link {:page :cost-items-totals
+                :query {:filter (str ident)}}
+      (label header-type)]
+     [:div {:style {:float :right :font-weight 700
+                    :font-size "80%"}} subtotal]]]])
 
 
 (defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
@@ -966,6 +988,7 @@
 
 (defn cost-items-totals-page
   [e! app {atl :asset-type-library totals :cost-totals version :version
+           relevant-roads :relevant-roads
            closed-totals :closed-totals
            :or {closed-totals #{}}
            :as state}]
@@ -989,7 +1012,10 @@
                               (sort-by (comp label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            ::url/query {:filter (str (:db/ident %))}})]
+                            ::url/query {:filter (str (:db/ident %))}})
+          road-filter-value (some #(when (= (get-in app [:query :road])
+                                            (str (:road-nr %)))
+                                     %) relevant-roads)]
       [cost-items-page-structure
        {:e! e!
         :app  app
@@ -999,10 +1025,19 @@
                     :list-features? false}}
        [:div.cost-items-totals
         [filter-breadcrumbs atl filter-fg-or-fc]
+        [:div {:style {:max-width "25vw"}}
+         [select/form-select
+          {:items (into [nil] relevant-roads)
+           :value road-filter-value
+           :on-change (e! cost-items-controller/->SetTotalsRoadFilter)
+           :format-item #(if-not %
+                           (tr [:asset :totals-table :all-roads])
+                           (str (:road-nr %) " " (:road-name %)))}]]
         [:div {:style {:float :right}}
          [:b
           (tr [:asset :totals-table :project-total]
               {:total (:total-cost totals)})]]
+
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
          (doall
@@ -1011,7 +1046,8 @@
                       open? (not (closed-totals ident))]]
             ^{:key (str ident)}
             [:<>
-             [table-section-header e! listing-opts closed-totals fg]
+             [table-section-header e! listing-opts closed-totals fg
+              (get-in totals [:fclass-and-fgroup-totals (:db/ident fg)])]
              (when open?
                [:<>
                 (doall
@@ -1021,7 +1057,8 @@
                              open? (not (closed-totals ident))]]
                    ^{:key (str ident)}
                    [:<>
-                    [table-section-header e! listing-opts closed-totals fc]
+                    [table-section-header e! listing-opts closed-totals fc
+                     (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
                     (when open?
                       [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
 
