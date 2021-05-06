@@ -88,6 +88,13 @@
                            :permission/role       :external-consultant
                            :permission/valid-from (Date.)}]}))
 
+(defn give-internal-consultant-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :internal-consultant
+                           :permission/valid-from (Date.)}]}))
+
 (defn remove-permission [user-uuid permission-eid]
   (d/transact (environment/datomic-connection)
               {:tx-data [[:db/retract [:user/id user-uuid]
@@ -140,7 +147,11 @@
 
 (defn make-mock-users!
   []
-  (apply tx mock-users))
+  (apply tx mock-users)
+  (give-manager-permission [:user/id manager-uid])
+  (give-admin-permission [:user/id boss-uid])
+  (give-external-consultant-permission [:user/id external-consultant-id])
+  (give-internal-consultant-permission [:user/id internal-consultant-id]))
 
 (defn delete-db
   [db-name]
