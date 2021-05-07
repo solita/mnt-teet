@@ -12,7 +12,7 @@
             [taoensso.timbre :as log])
   (:import (java.util.zip ZipOutputStream ZipEntry)))
 
-(defn task-zip-entries
+(defn- task-zip-entries
   "Return zip file entries for current versions of all files in the given task."
   ([db task-id] (task-zip-entries db task-id ""))
   ([db task-id folder-prefix]
@@ -48,7 +48,7 @@
   (ring-io/piped-input-stream
    (fn [ostream]
      (with-open [out (ZipOutputStream. ostream)]
-       (try         
+       (try
          (doseq [{:keys [folder name input]} entries]
            (.putNextEntry out (ZipEntry. (str (when folder
                                                 (str folder "/"))
@@ -56,6 +56,31 @@
            (io/copy (input) out))
          (catch Throwable e
            (log/info e "io/copy failed in zip creation")))))))
+
+(defn- file-name-with-sequence-number [seq fn]
+  (let [{:keys [extension description]}
+        (filename-metadata/name->description-and-extension fn)
+        new-description (str description " (" seq ")")]
+
+    (if (not-empty extension)
+      (str new-description "." extension)
+      ;; else:
+      ;; avoid turning extensionless "foo" filename into "foo."
+      new-description)))
+
+(defn- rename-dup-group [[_dup-key ms]]
+  (map-indexed (fn [index m]
+                 (if (= 0 index)
+                   m
+                   ;; else
+                   (update m :name (partial file-name-with-sequence-number index))))
+               ms))
+
+(defn rename-duplicates [zip-entries]
+  (let [dup-groups (group-by :dup-key zip-entries)
+        renamed-dup-groups (mapv rename-dup-group dup-groups)
+        zip-entries (mapcat identity renamed-dup-groups)]
+    zip-entries))
 
 (defn task-zip
   "Create zip from all the files in a task. Returns map with :filename for the zip
@@ -83,34 +108,13 @@
                       "_" (get-in export-info [:task/type :filename/code])
                       ".zip")]
     {:filename filename
-     :input-stream (zip-stream (task-zip-entries db task-id))}))
-
-
-(defn file-name-with-sequence-number [seq fn]
-  (let [{:keys [extension description]}
-        (filename-metadata/name->description-and-extension fn)
-        new-description (str description " (" seq ")")]
-    
-    (if (not-empty extension)
-      (str new-description "." extension)
-      ;; else:
-      ;; avoid turning extensionless "foo" filename into "foo." 
-      new-description)))
-
-(defn rename-dup-group [[dup-key ms]]
-  (map-indexed (fn [index m]
-                 (if (= 0 index)
-                   m
-                   ;; else
-                   (update m :name (partial file-name-with-sequence-number index))))
-               ms))
-
-(defn rename-duplicates [zip-entries]
-  (let [dup-groups (group-by :dup-key zip-entries)
-        renamed-dup-groups (mapv rename-dup-group dup-groups)
-        zip-entries (mapcat identity renamed-dup-groups)]
-    
-    zip-entries))
+     :input-stream (-> (task-zip-entries db task-id)
+                       ;; Even though we can't add files with same
+                       ;; name to one task any more, this was allowed
+                       ;; earlier and we have these in production, so
+                       ;; we need to handle duplicate names.
+                       rename-duplicates
+                       zip-stream)}))
 
 (defn activity-zip
   "Create zip from all the files in all tasks for an activity.
@@ -136,7 +140,8 @@
                    db activity-id)
         activity-zip-entries (mapcat (fn [[task-id code]]
                                        (task-zip-entries db task-id (str code "/")))
-                                     tasks)
-        entries-with-dups-renamed (rename-duplicates activity-zip-entries)]
+                                     tasks)]
     {:filename filename
-     :input-stream (zip-stream entries-with-dups-renamed)}))
+     :input-stream (-> activity-zip-entries
+                       rename-duplicates
+                       zip-stream)}))
