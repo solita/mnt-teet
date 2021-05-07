@@ -224,6 +224,12 @@
   :thk.contract.status/deadline-overdue "Deadline overdue",
   :contract-information "Contract information",
   :status "Status",
+  :table-heading
+  {:project "Project",
+   :activity "Activity",
+   :task "Task",
+   :project-manager "Project manager"},
+  :contract-related-entities "Contract related entities",
   :thk.contract.status/signed "Signed",
   :thk.contract.status/completed "Completed",
   :contracts-listing "Contract listing",
