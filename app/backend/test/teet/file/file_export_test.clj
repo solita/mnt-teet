@@ -59,6 +59,32 @@
     (tu/local-command :task/review {:task-id first-task-id
                                     :result :accept} )))
 
+(deftest rename-duplicates
+  (is (= (file-export/rename-duplicates [{:folder "00_General",
+                                          :name "MA18491_ES_TL_PT_00_Screenshot.png",
+                                          :dup-key ["00_General" "MA18491_ES_TL_PT_00_Screenshot.png"],
+                                          :input identity}
+                                         {:folder "00_General",
+                                          :name "MA18491_ES_TL_PT_00_Screenshot.png",
+                                          :dup-key ["00_General" "MA18491_ES_TL_PT_00_Screenshot.png"],
+                                          :input identity}
+                                         {:folder "00_General",
+                                          :name "MA18491_ES_TL_PT_00_Screenshot.png",
+                                          :dup-key ["00_General" "MA18491_ES_TL_PT_00_Screenshot.png"],
+                                          :input identity}])
+         [{:folder "00_General",
+           :name "MA18491_ES_TL_PT_00_Screenshot.png",
+           :dup-key ["00_General" "MA18491_ES_TL_PT_00_Screenshot.png"],
+           :input identity}
+          {:folder "00_General",
+           :name "MA18491_ES_TL_PT_00_Screenshot (1).png",
+           :dup-key ["00_General" "MA18491_ES_TL_PT_00_Screenshot.png"],
+           :input identity}
+          {:folder "00_General",
+           :name "MA18491_ES_TL_PT_00_Screenshot (2).png",
+           :dup-key ["00_General" "MA18491_ES_TL_PT_00_Screenshot.png"],
+           :input identity}])))
+
 (deftest handle-duplicate-filenames
   ;; from TEET-1479 steps to reproduce:
   ;; 1.
@@ -70,9 +96,8 @@
   ;;    b upload the same file to it (the TEET filenames will match for both files)
   ;; 3. Request the activity zip download link and download the zip
   ;;
-
-  ;; 1a
-  ;; 2a
+  ;; In test we perform step 1 twice to see that the indexing works
+  ;; for multiple entries, ie. file.pdf, file (1).pdf, file (2).pdf etc.
   (let [activity-id (tu/->db-id "p1-lc1-act1")
         activity-entity (du/entity (tu/db) activity-id)
         task-params {:activity activity-id
