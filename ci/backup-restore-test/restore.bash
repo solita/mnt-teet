@@ -3,11 +3,12 @@
 echo "Restore started"
 S3_BUCKET="teet-dev2-documents"
 
-BACKUP_FILE_NAME=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $4}')
+BACKUP_FILE_NAME=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip$" | awk '{print $4}')
+echo $BACKUP_FILE_NAME
 [ -z "$BACKUP_FILE_NAME" ] && echo "Backup file not found for " $(date +%Y-%m-%d) && exit 1
 
 MIN_BACKUP_SIZE=1000000
-BACKUP_SIZE=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip" | awk '{print $3}')
+BACKUP_SIZE=$(aws s3 ls s3://$S3_BUCKET | grep "backup" | grep $(date +%Y-%m-%d)".edn.zip$" | awk '{print $3}')
 RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)
 
@@ -37,21 +38,15 @@ interval=10
 
 # polling 30 min for .log file
 while [ "$SECONDS" -lt "$END_TIME" ]; do
-  aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME" || not_exist=true
-  if [ $not_exist ]; then
-    echo "Polling for restore log"
-  else
-    first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
-    if [ "$first_line_bytes" = "SUCCESS" ]; then
-      echo "Restore successfully completed."
-      exit 0
-    else
-      echo "Restore failed "$first_line_bytes
-      exit 1
-    fi
+  aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME"
+
+  first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
+  if [ "$first_line_bytes" = "SUCCESS{" ]; then
+    echo "Restore successfully completed."
+    exit 0
   fi
+
   sleep ${interval}
-  not_exist=false
   SECONDS=$(date +%s)
 done
 
