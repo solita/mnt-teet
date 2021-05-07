@@ -1,5 +1,8 @@
 (ns teet.contract.contract-db
-  (:require [datomic.client.api :as d])
+  (:require [datomic.client.api :as d]
+            [teet.user.user-model :as user-model]
+            [teet.project.project-model :as project-model]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 (def contract-query-rules
@@ -17,8 +20,26 @@
      [?c :thk.contract/targets ?target]
      [?activity :activity/tasks ?target]]
 
+    [(target-activity ?target ?activity)
+     [?target :activity/name _]
+     [?activity :activity/name _]
+     [(= ?target ?activity)]]
+
+    [(target-activity ?target ?activity)
+     [?activity :activity/tasks ?target]]
+
     [(contract-target-project ?c ?project)
      [?c :thk.contract/targets ?target]
+     (or-join [?target ?project]
+              (and
+                [?activity :activity/tasks ?target]
+                [?lc :thk.lifecycle/activities ?activity]
+                [?project :thk.project/lifecycles ?lc])
+              (and
+                [?lc :thk.lifecycle/activities ?target]
+                [?project :thk.project/lifecycles ?lc]))]
+
+    [(target-project ?target ?project)
      (or-join [?target ?project]
               (and
                 [?activity :activity/tasks ?target]
@@ -50,11 +71,9 @@
     ;Deadline approaching - Days until deadline < 30 deadline is given
     [(contract-status ?c ?s ?now)
      [?c :thk.contract/start-of-work ?start]
-     [(< ?start ?now)]
-     [?c :thk.contract/deadline ?deadline]
      (contract-deadline ?c ?act-dl)
      [(teet.util.date/dec-days ?act-dl 30) ?deadline-soon]
-     [(> ?deadline ?now)]
+     [(> ?act-dl ?now)]
      [(> ?now ?deadline-soon)]
      [(ground :thk.contract.status/deadline-approaching) ?s]]
     ;Deadline overdue - Deadline date has passed
@@ -89,8 +108,9 @@
 
 (defn get-contract
   [db contract-eid]
-  (-> (d/q '[:find (pull ?c [* {:thk.contract/targets [*]}]) ?status
-             :where (contract-status ?c ?status ?now)
+  (-> (d/q '[:find (pull ?c [*]) ?status
+             :where
+             (contract-status ?c ?status ?now)
              :in $ % ?c ?now]
            db
            contract-status-rules
@@ -98,3 +118,39 @@
            (Date.))
       first
       contract-with-status))
+
+(defn parse-target-information
+  [[target project activity]]
+  (let [project-id (:thk.project/id project)
+        activity-id (str (:db/id activity))]
+    {:target target
+     :activity {:activity/manager (user-model/user-name (:activity/manager activity))
+                :activity/name (:activity/name activity)}
+     :project project
+     :target-navigation-info (if (:activity/name target)
+                               {:page :activity
+                                :params {:project project-id
+                                         :activity activity-id}}
+                               {:page :activity-task
+                                :params {:project project-id
+                                         :activity activity-id
+                                         :task (str (:db/id target))}})}))
+
+(defn get-contract-target-information
+  [db contract-eid]
+  (->> (d/q '[:find
+              (pull ?target [*])
+              (pull ?project [:thk.project/id :thk.project/name :thk.project/project-name])
+              (pull ?activity [:db/id :activity/name
+                               {:thk.lifecycle/_activities [:thk.lifecycle/id]}
+                               {:activity/manager [:user/family-name :user/given-name]}])
+              :where
+              [?c :thk.contract/targets ?target]
+              (target-activity ?target ?activity)
+              (target-project ?target ?project)
+              :in $ % ?c]
+            db
+            contract-query-rules
+            contract-eid)
+       (mapv parse-target-information)
+       du/idents->keywords))
