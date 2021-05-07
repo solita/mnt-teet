@@ -106,7 +106,7 @@
         ;; If we have geometry (in setup wizard) or are editing related features
         ;; show the buffer as well, otherwise just the road line
         style (if (and
-                    (not tab-drawn?)
+                   (not tab-drawn?)
                     (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
                 (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
                 map-features/project-line-style)]
@@ -245,3 +245,13 @@
       map-features/highlighted-road-object-style
       {:z-index 999
        :opacity 0.7})}))
+
+(defn create-layers
+  "Create :layers map suitable for map from given `layers` functions.
+  Opts map containing, :e! :app :project and :set-overlays!
+  is passed to each layer."
+  [opts & layers]
+  (reduce (fn [layers layer-fn]
+            (merge layers (layer-fn opts)))
+          {}
+          layers))

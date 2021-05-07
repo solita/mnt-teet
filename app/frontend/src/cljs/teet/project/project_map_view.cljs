@@ -60,25 +60,23 @@
           {:layer-controls? true
            :class (<class map-style)
            :config (:config app)
-           :layers (let [opts {:e! e!
-                               :app app
-                               :project project
-                               :set-overlays! set-overlays!}]
-                     (reduce (fn [layers layer-fn]
-                               (merge layers (layer-fn opts)))
-                             {}
-                             [#_project-layers/surveys-layer
-                              (partial project-layers/project-road-geometry-layer
-                                       map-object-padding fitted-atom)
-                              project-layers/setup-restriction-candidates
-                              project-layers/project-drawn-area-layer
-                              project-layers/setup-cadastral-unit-candidates
-                              project-layers/ags-surveys
-                              project-layers/related-restrictions
-                              project-layers/related-cadastral-units
-                              project-layers/selected-cadastral-units
-                              project-layers/selected-restrictions
-                              project-layers/highlighted-road-objects]))
+           :layers (project-layers/create-layers
+                    {:e! e!
+                     :app app
+                     :project project
+                     :set-overlays! set-overlays!}
+
+                    (partial project-layers/project-road-geometry-layer
+                             map-object-padding fitted-atom)
+                    project-layers/setup-restriction-candidates
+                    project-layers/project-drawn-area-layer
+                    project-layers/setup-cadastral-unit-candidates
+                    project-layers/ags-surveys
+                    project-layers/related-restrictions
+                    project-layers/related-cadastral-units
+                    project-layers/selected-cadastral-units
+                    project-layers/selected-restrictions
+                    project-layers/highlighted-road-objects)
            :overlays (into []
                            (concat
                             (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
