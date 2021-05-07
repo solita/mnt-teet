@@ -19,10 +19,11 @@
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
-   :context _
+   :context {adb :asset-db}
    :unauthenticated? true
-   :args _}
-  (asset-db/asset-type-library (environment/asset-db)))
+   :args _
+   :last-modified (asset-db/last-atl-modification-time adb)}
+  (asset-db/asset-type-library adb))
 
 (defn- fetch-cost-item [adb oid]
   (asset-type-library/db->form
@@ -49,13 +50,33 @@
    {}
    cost-groups))
 
+(defquery :asset/project-relevant-roads
+  {:doc "Query project's relevant roads"
+   :context {:keys [db user] adb :asset-db}
+   :args {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/read-info {}}}
+  ;; Fetch relevant roads for cost items of project, meaning the
+  ;; project road along with roads intersecting project geometry
+  ;; with a buffer of 50 meters.
+  ;;
+  ;; This can take some time, so it should be fetched once.
+  ;; Could be cached per project as well.
+  (let [integration-id (project-db/thk-id->integration-id-uuid db project-id)
+        ctx (environment/config-map {:api-url [:api-url]
+                                     :api-secret [:auth :jwt-secret]
+                                     :wfs-url [:road-registry :wfs-url]})]
+    (road-query/fetch-relevant-roads-for-project-cost-items
+     ctx
+     integration-id
+     relevant-roads-buffer-meters)))
+
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
    :context {:keys [db user] adb :asset-db}
    :args {project-id :thk.project/id
           cost-item :cost-item
           cost-totals :cost-totals
-          relevant-roads :relevant-roads
           road :road}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
@@ -64,8 +85,7 @@
     (transit/with-write-options
       euro/transit-type-handlers
       (merge
-       {:asset-type-library atl
-        :cost-items (asset-db/project-cost-items adb project-id)
+       {:cost-items (asset-db/project-cost-items adb project-id)
         :version (asset-db/project-boq-version adb project-id)
         :latest-change (when-let [[timestamp author] (asset-db/latest-change-in-project adb project-id)]
                          {:user (user-db/user-display-info db [:user/id author])
@@ -88,19 +108,7 @@
                       ;; PENDING: what if there are thousands?
                       (if (asset-model/component-oid? cost-item)
                         (asset-model/component-asset-oid cost-item)
-                        cost-item))})
-       ;; Fetch relevant roads for cost items of project, meaning the
-       ;; project road along with roads intersecting project geometry
-       ;; with a buffer of 50 meters.
-       (when relevant-roads
-         {:relevant-roads
-          (when-let [integration-id (project-db/thk-id->integration-id-uuid db project-id)]
-            (let [ctx (environment/config-map {:api-url [:api-url]
-                                               :api-secret [:auth :jwt-secret]
-                                               :wfs-url [:road-registry :wfs-url]})]
-              (road-query/fetch-relevant-roads-for-project-cost-items ctx
-                                                                      integration-id
-                                                                      relevant-roads-buffer-meters)))})))))
+                        cost-item))})))))
 
 (s/def :boq-export/version integer?)
 (s/def :boq-export/unit-prices? boolean?)

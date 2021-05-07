@@ -1,9 +1,9 @@
 (ns teet.asset.asset-type-library
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
-            [clojure.walk :as walk]
             [teet.util.datomic :as du]
-            [clojure.string :as str]))
+            #?@(:clj [[clojure.string :as str]
+                      [clojure.walk :as walk]])))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
@@ -65,13 +65,19 @@
                                             (= (:db/ident %) ident))
                                       atl))))
 
-(defn item-by-ident
-  "Find any type of ATL item based on ident."
+(defn- item-by-ident*
   [atl ident]
   (cu/find-matching #(and (map? %)
                           (contains? % :asset-schema/type)
                           (= ident (:db/ident %)))
                     atl))
+
+(def item-by-ident
+  "Find any type of ATL item based on ident."
+  ;; NOTE: we can memoize this without fear of unbounded growth
+  ;; as asset type library will never change during the lifetime
+  ;; of the process (either page in browser or deployment in ions)
+  (memoize item-by-ident*))
 
 
 #?(:clj

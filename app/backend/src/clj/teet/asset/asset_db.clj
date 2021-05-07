@@ -79,13 +79,19 @@
     (child-ctypes db x)
     x))
 
+(defn last-atl-modification-time [db]
+  (ffirst
+   (d/q '[:find (max ?txi)
+          :where
+          [_ :tx/schema-imported-at _ ?tx]
+          [?tx :db/txInstant ?txi]] db)))
+
 (defn asset-type-library [db]
   (walk/postwalk
    (fn [x]
      (->> x
           remove-empty-selection-attributes
           (pull-child-ctypes db)))
-
    {:tx/schema-imported-at (ffirst
                             (d/q '[:find (max ?t)
                                    :where [_ :tx/schema-imported-at ?t]]
