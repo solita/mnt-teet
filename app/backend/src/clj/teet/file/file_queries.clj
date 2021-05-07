@@ -85,15 +85,16 @@
   {:doc "Download comment attachment"
    :context {:keys [db user]}
    :args {:keys [file-id attached-to comment-id]}
-   :pre [(or (and comment-id
-                  (file-db/file-is-attached-to-comment? db file-id comment-id)
-                  (authorization-check/authorized? user :document/view-document
-                                                   (url-for-file db file-id false)))
-             (and attached-to
-                  (file-db/allow-download-attachments? db user attached-to)
-                  (file-db/file-is-attached-to? db file-id attached-to))
-
-             (file-db/own-file? db user file-id))]
+   :pre [(or
+           (and comment-id
+               (file-db/file-is-attached-to-comment? db file-id comment-id)
+               (authorization-check/authorized? user :document/view-document
+                 (merge (url-for-file db file-id false)
+                   {:project-id (when comment-id (project-db/comment-project-id db comment-id))})))
+           (and attached-to
+             (file-db/allow-download-attachments? db user attached-to)
+             (file-db/file-is-attached-to? db file-id attached-to))
+           (file-db/own-file? db user file-id))]
    :project-id nil
    :authorization {}}
   (url-for-file db file-id false))
