@@ -46,13 +46,13 @@
                           :thk.contract.status/signed
                           :info
                           :thk.contract.status/in-progress
-                          :success
+                          :info
                           :thk.contract.status/deadline-approaching
                           :warning
                           :thk.contract.status/deadline-overdue
                           :error
                           :thk.contract.status/warranty
-                          :success
+                          :info
                           :thk.contract.status/completed
                           :success)
         component (if show-label?
@@ -76,4 +76,5 @@
         :thk.contract.status/completed
         [icons/action-check-circle-outlined {:style {:color theme-colors/success}}])
       (when show-label?
-        [:span (tr [:enum status])])]]))
+        [:span {:style {:margin-left "4px"}}
+         (tr [:enum status])])]]))

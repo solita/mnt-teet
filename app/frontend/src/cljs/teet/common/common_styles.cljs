@@ -530,7 +530,7 @@
      :border-radius "3px"
      :line-height 1
      :background-color background
-     :padding "0.5rem"
+     :padding "0.5rem 0.7rem 0.5rem 0.5rem"
      :max-width "315px"}))
 
 (defn text-ellipsis [max-width]
