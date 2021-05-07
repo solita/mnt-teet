@@ -32,23 +32,21 @@ BACKUP_LOG_NAME=$BACKUP_FILE_NAME".log"
 
 echo "Restore log file name " $BACKUP_LOG_NAME
 
-SECONDS=$(date +%s)
-END_TIME=$((${SECONDS}+1800))
-interval=10
+# wait 10 min until restore completed
+sleep 600
 
-# polling 30 min for .log file
-while [ "$SECONDS" -lt "$END_TIME" ]; do
-  aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME"
+# polling 20 times 5 seconds each for .log file
+aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME"
 
-  first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
-  if [ "$first_line_bytes" = "SUCCESS{" ]; then
-    echo "Restore successfully completed."
-    exit 0
-  fi
+first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
+if [ "$first_line_bytes" = "SUCCESS{" ]; then
+  echo "Restore successfully completed."
+  exit 0
+else
+  echo "Restore failed "$first_line_bytes
+  exit 1
+fi
 
-  sleep ${interval}
-  SECONDS=$(date +%s)
-done
 
 echo "Restore timeout exceeded."
 exit 0  ## change after backup ION updated to save to log
