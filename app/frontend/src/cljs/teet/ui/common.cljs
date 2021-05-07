@@ -526,7 +526,10 @@
       [:div {:on-mouse-enter enter!
              :on-mouse-leave leave!
              :on-click enter!
+             :on-focus enter!
+             :on-blur leave!
              :ref set-anchor-el!
+             :tabindex 0
              :style {:display :inline-block}}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
