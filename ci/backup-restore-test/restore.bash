@@ -42,11 +42,11 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
     echo "Polling for restore log"
   else
     first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
-    if [ "$first_line_bytes" = "SUCCESS{" ]; then
+    if [ "$first_line_bytes" = "SUCCESS" ]; then
       echo "Restore successfully completed."
       exit 0
     else
-      echo "Log file not found."
+      echo "Restore failed "$first_line_bytes
       exit 1
     fi
   fi
