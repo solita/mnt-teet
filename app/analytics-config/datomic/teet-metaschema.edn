@@ -20,7 +20,25 @@
   :enum/attribute {:name "code"
                    :include [:db/ident]
                    :exclude [:enum/attribute :enum/valid-for]
-                   :rename {:db/ident "code"}}}
+                   :rename {:db/ident "code"}}
+  ;; cooperation
+  :cooperation.3rd-party/name
+  {:name "cooperation_3rd_party"
+   :include [:cooperation.3rd-party/*]}
+
+  :cooperation.application/type
+  {:name "cooperation_application"
+   :include [:cooperation.application/*]}
+
+  :cooperation.response/status
+  {:name "cooperation_response"
+   :include [:cooperation.response/*]}
+
+  ;; meetings
+
+  ;; contracts
+
+  }
 
  ;; Joins are not needed, but make the tables "wide" for
  ;; analytics tools. They include the referenced entity
