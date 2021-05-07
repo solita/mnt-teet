@@ -454,8 +454,7 @@
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
-     {:db/id (:db/id project)
-      :thk.project/id (:thk.project/id project)}
+     project
      [:<>
       [project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
