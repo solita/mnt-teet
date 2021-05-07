@@ -51,6 +51,7 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
     fi
   fi
   sleep ${interval}
+  not_exist=false
   SECONDS=$(date +%s)
 done
 
