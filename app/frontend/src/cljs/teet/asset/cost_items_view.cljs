@@ -28,10 +28,6 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.map.openlayers.drag :as drag]
-            [teet.map.map-view :as map-view]
-            [teet.map.map-layers :as map-layers]
-            [teet.map.map-features :as map-features]
             [teet.ui.table :as table]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as fmt]
@@ -39,7 +35,8 @@
             [teet.ui.query :as query]
             [teet.ui.date-picker :as date-picker]
             [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.project-context :as project-context]))
+            [teet.ui.project-context :as project-context]
+            [teet.asset.cost-items-map-view :as cost-items-map-view]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -265,49 +262,6 @@
       [form/field :location/end-m
        [input-textfield {:type :number}]]]]))
 
-(defn- location-map [{:keys [e! value on-change]}]
-  (r/with-let [current-value (atom value)
-               dragging? (atom false)]
-    ;;(project-map-view/create-project-map e! app project)
-    (let [geojson (last value)]
-      (reset! current-value value)
-      [map-view/map-view e!
-       {:on-click (fn [{c :coordinate}]
-                    (let [[start end :as v] @current-value]
-                      (cond
-                        ;; If no start point, set it
-                        (nil? start) (on-change (assoc v 0 c))
-
-                        ;; If no end point, set it
-                        (nil? end) (on-change (assoc v 1 c))
-
-                        ;; Otherwise do nothing
-                        :else nil)))
-        :event-handlers (drag/drag-feature
-                         {:accept (comp :map/feature :geometry)
-                          :on-drag drag/on-drag-set-coordinates
-                          :on-drop
-                          (fn [target to]
-                            (when-let [p (some-> target :geometry :map/feature
-                                                 .getProperties (aget "start/end"))]
-                              (on-change
-                               (assoc @current-value
-                                      (case p
-                                        "start" 0
-                                        "end" 1)
-                                      to))))
-                          :dragging? dragging?})
-        :layers {:selected-road-geometry
-                 (when-let [g geojson]
-                   (map-layers/geojson-data-layer
-                    "selected-road-geometry"
-                    geojson
-                    map-features/asset-road-line-style
-                    {:fit-on-load? true
-                     :fit-condition
-                     (fn [_]
-                       (not @dragging?))}))}}])))
-
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common? ctype]}
                     rotl locked?]
@@ -342,7 +296,7 @@
                                        :location/start-m :location/end-m
                                        :location/geojson]}
 
-               [location-map {:e! e!}]]])
+               [cost-items-map-view/location-map {:e! e!}]]])
            [location-entry e! locked? (:location/road-nr cost-item-data)]]])
        (doall
         (for [g [:cost-grouping :common :details]
@@ -1025,7 +979,9 @@
 (defn- wrap-atl-loader [page-fn e! {atl :asset-type-library :as app} state]
   (if-not atl
     [CircularProgress {}]
-    [page-fn e! app state]))
+    [cost-items-map-view/with-map-context
+     app (:project state)
+     [page-fn e! app state]]))
 
 (defn- cost-items-totals-page*
   [e! {atl :asset-type-library :as app}
@@ -1101,13 +1057,15 @@
 (defn cost-items-totals-page [e! app state]
   [wrap-atl-loader cost-items-totals-page* e! app state])
 
-(defn- cost-items-page* [e! app {version :version :as state}]
+
+
+(defn- cost-items-page* [e! app {:keys [version project] :as state}]
   [cost-items-page-structure
    {:e! e!
     :app app
     :state state
     :left-panel-action [add-cost-item app version]}
-   [map-view/map-view {}]])
+   [cost-items-map-view/project-map {:e! e!}]])
 
 (defn cost-items-page [e! app state]
   [wrap-atl-loader cost-items-page* e! app state])
