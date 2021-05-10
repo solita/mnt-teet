@@ -320,7 +320,10 @@
                      layer)))
            layers)))
 
-(defn map-view [e! {:keys [config height class layer-controls?] :or {height "100%"} :as opts}
+(defn map-view [e!
+                {:keys [config height class layer-controls? allow-select?]
+                 :or {height "100%"
+                      allow-select? true} :as opts}
                 {:keys [background-layer] :as map-data
                  :or   {background-layer ["kaart"]}}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
@@ -375,9 +378,10 @@
                      (when-let [on-click (:on-click opts)]
                        (on-click {:coordinate (js->clj (aget event "coordinate"))})))
 
-         :on-select (fn [[item & _] _event]
-                      (when-let [event (common-controller/map-item-selected item)]
-                        (e! event)))
+         :on-select (when allow-select?
+                      (fn [[item & _] _event]
+                        (when-let [event (common-controller/map-item-selected item)]
+                          (e! event))))
 
          :on-dblclick nil
 

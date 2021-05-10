@@ -28,17 +28,15 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.map.openlayers.drag :as drag]
-            [teet.map.map-view :as map-view]
-            [teet.map.map-layers :as map-layers]
-            [teet.map.map-features :as map-features]
             [teet.ui.table :as table]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as fmt]
             [teet.ui.panels :as panels]
             [teet.ui.query :as query]
             [teet.ui.date-picker :as date-picker]
-            [teet.authorization.authorization-check :refer [when-authorized]]))
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.ui.project-context :as project-context]
+            [teet.asset.cost-items-map-view :as cost-items-map-view]))
 
 (defn- label [m]
   (let [l (tr* m)]
@@ -52,8 +50,8 @@
 (defn- label-for [item]
   [context/consume :rotl [label-for* item]])
 
-(def ^:private integer-pattern #"^\d*$")
-(def ^:private decimal-pattern #"^\d+((,|\.)\d*)?$")
+(def ^:private integer-pattern #"^-?\d*$")
+(def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
 (def ^:private only-whitespace-pattern #"^\s+$")
 
 (defn- extremum-value-by-ref
@@ -175,7 +173,50 @@
            select-value
            ""))))
 
-(defn- location-entry [locked? selected-road-nr relevant-roads]
+(defn- with-relevant-roads* [{e! :e!} _ {project-id :thk.project/id}]
+  (e! (cost-items-controller/->FetchRelevantRoads project-id))
+  (fn [_ component _]
+    (conj component
+          (get @cost-items-controller/relevant-road-cache project-id))))
+
+(defn- with-relevant-roads [opts component]
+  [project-context/consume
+   [with-relevant-roads* opts component]])
+
+(defn- relevant-road-select* [{:keys [empty-label] :as opts
+                               :or {empty-label ""}} relevant-roads]
+  (let [items (->> relevant-roads (map :road-nr) sort vec)]
+    [select/form-select
+     (-> opts
+         (merge {:show-empty-selection? true
+                 :empty-selection-label empty-label
+                 :items items
+                 :format-item (road-nr-format relevant-roads)})
+         (update :value
+                 #(if (string? %)
+                    (js/parseInt %)
+                    %)))]))
+
+(defn- relevant-road-select [opts]
+  [with-relevant-roads opts
+   [relevant-road-select* opts]])
+
+(defn- carriageway-for-road-select* [opts selected-road-nr relevant-roads]
+  [select/form-select
+   (merge opts
+          {:show-empty-selection? true
+           :items (or (cost-items-controller/carriageways-for-road
+                       selected-road-nr
+                       relevant-roads)
+                      [1])
+           :format-item str})])
+
+(defn- carriageway-for-road-select [opts selected-road-nr]
+  [with-relevant-roads
+   opts
+   [carriageway-for-road-select* opts selected-road-nr]])
+
+(defn- location-entry [e! locked? selected-road-nr]
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [Grid {:item true
@@ -183,10 +224,7 @@
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/road-nr
-       [select/form-select
-        {:show-empty-selection? true
-         :items (->> relevant-roads (map :road-nr) sort vec)
-         :format-item (road-nr-format relevant-roads)}]]]
+       [relevant-road-select {:e! e!}]]]
 
      [Grid {:item true
             :container true
@@ -197,12 +235,7 @@
              :md 2
              :xs 12}
        [form/field :location/carriageway
-        [select/form-select
-         {:show-empty-selection? true
-          :items (or (cost-items-controller/carriageways-for-road selected-road-nr
-                                                                  relevant-roads)
-                     [1])
-          :format-item str}]]]]
+        [carriageway-for-road-select {:e! e!} selected-road-nr]]]]
 
      [Grid {:item true
             :md 3
@@ -222,6 +255,13 @@
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
+      [form/field :location/start-offset-m
+       [input-textfield {:type :number}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/end-point
        [input-textfield {}]]]
 
@@ -230,52 +270,18 @@
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-m
+       [input-textfield {:type :number}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/end-offset-m
        [input-textfield {:type :number}]]]]))
 
-(defn- location-map [{:keys [e! value on-change]}]
-  (r/with-let [current-value (atom value)
-               dragging? (atom false)]
-    ;;(project-map-view/create-project-map e! app project)
-    (let [geojson (last value)]
-      (reset! current-value value)
-      [map-view/map-view e!
-       {:on-click (fn [{c :coordinate}]
-                    (let [[start end :as v] @current-value]
-                      (cond
-                        ;; If no start point, set it
-                        (nil? start) (on-change (assoc v 0 c))
-
-                        ;; If no end point, set it
-                        (nil? end) (on-change (assoc v 1 c))
-
-                        ;; Otherwise do nothing
-                        :else nil)))
-        :event-handlers (drag/drag-feature
-                         {:accept (comp :map/feature :geometry)
-                          :on-drag drag/on-drag-set-coordinates
-                          :on-drop
-                          (fn [target to]
-                            (when-let [p (some-> target :geometry :map/feature
-                                                 .getProperties (aget "start/end"))]
-                              (on-change
-                               (assoc @current-value
-                                      (case p
-                                        "start" 0
-                                        "end" 1)
-                                      to))))
-                          :dragging? dragging?})
-        :layers {:selected-road-geometry
-                 (when-let [g geojson]
-                   (map-layers/geojson-data-layer
-                    "selected-road-geometry"
-                    geojson
-                    map-features/asset-road-line-style
-                    {:fit-on-load? true
-                     :fit-condition
-                     (fn [_]
-                       (not @dragging?))}))}}])))
-
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location? common? ctype relevant-roads]} rotl locked?]
+(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
+                            common? ctype]}
+                    rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
     (let [common-attrs (:attribute/_parent (:ctype/common rotl))
@@ -307,8 +313,8 @@
                                        :location/start-m :location/end-m
                                        :location/geojson]}
 
-               [location-map {:e! e!}]]])
-           [location-entry locked? (:location/road-nr cost-item-data) relevant-roads]]])
+               [cost-items-map-view/location-map {:e! e!}]]])
+           [location-entry e! locked? (:location/road-nr cost-item-data)]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -419,7 +425,7 @@
     (if read-only?
       [typography/Heading3 (format-fg-and-fc [fg fc])]
       [Grid {:container true}
-       [Grid {:item true :xs 12 :class (<class responsivity-styles/visible-desktop-only)}
+       [Grid {:item true :xs 12}
         [select/select-search
          {:e! e!
           :on-change #(on-change (mapv :db/ident %))
@@ -434,24 +440,7 @@
                            fc (:fclass/_fgroup fg)
                            :let [result [fg fc]]
                            :when (string/contains-words? (format-fg-and-fc result) text)]
-                       result)))}]]
-
-       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
-        [select/select-with-action
-         {:show-empty-selection? true
-          :items fgroups
-          :format-item tr*
-          :value fg
-          :on-change #(on-change [(:db/ident %) nil])}]]
-
-       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
-        (when-let [{fclasses :fclass/_fgroup} fg]
-          [select/select-with-action
-           {:show-empty-selection? true
-            :items fclasses
-            :format-item tr*
-            :value fc
-            :on-change #(on-change [fg-ident (:db/ident %)])}])]])))
+                       result)))}]]])))
 
 (defn- component-tree-level-indent [level]
   [:<>
@@ -870,7 +859,8 @@
      (when @export-dialog-open?
        [export-boq-dialog e! app close-export-dialog!])
 
-     (let [{:keys [cost-items asset-type-library project version] :as page-state} state]
+     (let [{:keys [asset-type-library]} app
+           {:keys [cost-items project version] :as page-state} state]
        [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
         [context/provide :locked? (asset-model/locked? version)
          [project-view/project-full-page-structure
@@ -986,12 +976,19 @@
                 title]
          :title title}))]))
 
-(defn cost-items-totals-page
-  [e! app {atl :asset-type-library totals :cost-totals version :version
-           relevant-roads :relevant-roads
-           closed-totals :closed-totals
-           :or {closed-totals #{}}
-           :as state}]
+(defn- wrap-atl-loader [page-fn e! {atl :asset-type-library :as app} state]
+  (if-not atl
+    [CircularProgress {}]
+    [cost-items-map-view/with-map-context
+     app (:project state)
+     [page-fn e! app state]]))
+
+(defn- cost-items-totals-page*
+  [e! {atl :asset-type-library :as app}
+   {totals :cost-totals version :version
+    closed-totals :closed-totals
+    :or {closed-totals #{}}
+    :as state}]
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
           listing-opts {:columns asset-model/cost-totals-table-columns
@@ -1012,10 +1009,7 @@
                               (sort-by (comp label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            ::url/query {:filter (str (:db/ident %))}})
-          road-filter-value (some #(when (= (get-in app [:query :road])
-                                            (str (:road-nr %)))
-                                     %) relevant-roads)]
+                            ::url/query {:filter (str (:db/ident %))}})]
       [cost-items-page-structure
        {:e! e!
         :app  app
@@ -1026,13 +1020,11 @@
        [:div.cost-items-totals
         [filter-breadcrumbs atl filter-fg-or-fc]
         [:div {:style {:max-width "25vw"}}
-         [select/form-select
-          {:items (into [nil] relevant-roads)
-           :value road-filter-value
-           :on-change (e! cost-items-controller/->SetTotalsRoadFilter)
-           :format-item #(if-not %
-                           (tr [:asset :totals-table :all-roads])
-                           (str (:road-nr %) " " (:road-name %)))}]]
+         [relevant-road-select
+          {:e! e!
+           :value (get-in app [:query :road])
+           :empty-label (tr [:asset :totals-table :all-roads])
+           :on-change (e! cost-items-controller/->SetTotalsRoadFilter)}]]
         [:div {:style {:float :right}}
          [:b
           (tr [:asset :totals-table :project-total]
@@ -1062,17 +1054,26 @@
                     (when open?
                       [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
 
-(defn cost-items-page [e! app {version :version :as state}]
+(defn cost-items-totals-page [e! app state]
+  [wrap-atl-loader cost-items-totals-page* e! app state])
+
+
+
+(defn- cost-items-page* [e! app {:keys [version project] :as state}]
   [cost-items-page-structure
    {:e! e!
     :app app
     :state state
     :left-panel-action [add-cost-item app version]}
-   [map-view/map-view {}]])
+   [cost-items-map-view/project-map {:e! e!}]])
 
-(defn new-cost-item-page
-  [e! app {atl :asset-type-library cost-item :cost-item
-           version :version relevant-roads :relevant-roads :as state}]
+(defn cost-items-page [e! app state]
+  [wrap-atl-loader cost-items-page* e! app state])
+
+(defn- new-cost-item-page*
+  [e! {atl :asset-type-library :as app}
+   {cost-item :cost-item
+    version :version relevant-roads :relevant-roads :as state}]
   [cost-items-page-structure
    {:e! e!
     :app app
@@ -1080,8 +1081,11 @@
     :left-panel-action [add-cost-item app version]}
    [cost-item-form e! atl relevant-roads cost-item]])
 
-(defn cost-item-page
-  [e! {:keys [query params] :as app} {:keys [asset-type-library cost-item version relevant-roads] :as state}]
+(defn new-cost-item-page [e! app state]
+  [wrap-atl-loader new-cost-item-page* e! app state])
+
+(defn- cost-item-page*
+  [e! {:keys [query params asset-type-library] :as app} {:keys [cost-item version relevant-roads] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))]
@@ -1099,3 +1103,6 @@
 
          ^{:key oid}
          [cost-item-form e! asset-type-library relevant-roads cost-item])])))
+
+(defn cost-item-page [e! app state]
+  [wrap-atl-loader cost-item-page* e! app state])

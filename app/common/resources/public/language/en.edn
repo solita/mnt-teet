@@ -513,6 +513,7 @@
   :boq-version.type/contract "Contract/listing",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design "Road safety audit",
+  :thk.contract.status/unknown "Contract status unknown",
   :participation.role/participant "Participant",
   :estate-procedure.type/property-rights
   "Issuing right for using property",
@@ -727,6 +728,7 @@
   :cooperation.response/valid-until "Expiration date",
   :ta/region "Region",
   :land-owner-opinion/authority-position "Authorities position",
+  :location/end-offset-m "End offset",
   :thk.contract/cost "Capital amount",
   :cooperation.opinion/status "Opinion of Competent Authority",
   :activity/status "Status",
@@ -782,6 +784,7 @@
   :participation/participant "User",
   :land-acquisition/status "Status",
   :common {"description" "Description", "name" "Name"},
+  :location/start-offset-m "Start offset",
   :land-owner-opinion/respondent-connection-to-land
   "Respondents connection to the land",
   :thk.contract/warranty-period "Warranty period",

@@ -50,7 +50,8 @@
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
             [clojure.string :as str]
-            [teet.user.user-db :as user-db]))
+            [teet.user.user-db :as user-db]
+            [ring.middleware.not-modified :as not-modified]))
 
 (defn- jwt-token [req]
   (or
@@ -72,51 +73,53 @@
     (deref-delay (get m k default-value))))
 
 (defn- request [handler-fn]
-  (fn [req]
-    (try
-      (let [user (some->> req jwt-token (jwt-token/verify-token
-                                         (environment/config-value :auth :jwt-secret)))]
-        (log/with-context
-          {:user (str (:user/id user))}
-          (let [conn (environment/datomic-connection)
-                db (d/db conn)
-                aconn (delay (environment/asset-connection))
-                ctx {:conn conn
-                     :db db
-                     :asset-conn aconn
-                     :asset-db (delay (d/db @aconn))
-                     :user (merge user
-                                  (when-let [user-id (:user/id user)]
-                                    (user-db/user-info db [:user/id user-id])))
-                     :session (:session req)}
-                request-payload (transit/transit-request req)
-                response (handler-fn ctx request-payload)]
-            (case (:format (meta response))
-              ;; If :format meta key is :raw, send output as ring response
-              :raw response
+  (not-modified/wrap-not-modified
+   (fn [req]
+     (try
+       (let [user (some->> req jwt-token (jwt-token/verify-token
+                                          (environment/config-value :auth :jwt-secret)))]
+         (log/with-context
+           {:user (str (:user/id user))}
+           (let [conn (environment/datomic-connection)
+                 db (d/db conn)
+                 aconn (delay (environment/asset-connection))
+                 ctx {:conn conn
+                      :db db
+                      :asset-conn aconn
+                      :asset-db (delay (d/db @aconn))
+                      :user (merge user
+                                   (when-let [user-id (:user/id user)]
+                                     (user-db/user-info db [:user/id user-id])))
+                      :session (:session req)
+                      :headers (:headers req)}
+                 request-payload (transit/transit-request req)
+                 response (handler-fn ctx request-payload)]
+             (case (:format (meta response))
+               ;; If :format meta key is :raw, send output as ring response
+               :raw response
 
-              ;; Default to sending out transit response
-              (transit/transit-response response)))))
-      (catch Exception e
-        (let [exd (ex-data e)
-              status (:status exd)
-              error (or (:error exd)
-                        (:teet/error exd))]
-          (case error
-            ;; Return JWT verification failures (likely expired token) as 401 (same as PostgREST)
-            :jwt-verification-failed
-            (do
-              (log/info "JWT verification failed: " (ex-data e))
-              {:status 401
-               :body "JWT verification failed"})
+               ;; Default to sending out transit response
+               (transit/transit-response response)))))
+       (catch Exception e
+         (let [exd (ex-data e)
+               status (:status exd)
+               error (or (:error exd)
+                         (:teet/error exd))]
+           (case error
+             ;; Return JWT verification failures (likely expired token) as 401 (same as PostgREST)
+             :jwt-verification-failed
+             (do
+               (log/info "JWT verification failed: " (ex-data e))
+               {:status 401
+                :body "JWT verification failed"})
 
-            ;; Log all other errors, but don't return exception info to client
-            (do
-              (log/error e "Exception in handler")
-              (merge {:status (or status 500)
-                      :body "Internal server error, see log for details"}
-                     (when (keyword? error)
-                       {:headers {"X-TEET-Error" (name error)}})))))))))
+             ;; Log all other errors, but don't return exception info to client
+             (do
+               (log/error e "Exception in handler")
+               (merge {:status (or status 500)
+                       :body "Internal server error, see log for details"}
+                      (when (keyword? error)
+                        {:headers {"X-TEET-Error" (name error)}}))))))))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))

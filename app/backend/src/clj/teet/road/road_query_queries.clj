@@ -185,11 +185,18 @@
 (defquery :road/line-by-road
   {:doc "Fetch line geometry based on road address from Teeregister API."
    :config {client [:road-registry :api]}
-   :args {:keys [road-nr carriageway start-m end-m]}
+   :args {:keys [road-nr carriageway start-m end-m start-offset-m end-offset-m]}
    :project-id nil
    :authorization {}}
-  (teeregister-api/line-by-road (teeregister-api/create-client client)
-                                road-nr carriageway start-m end-m))
+  (let [line (teeregister-api/line-by-road (teeregister-api/create-client client)
+                                           road-nr carriageway start-m end-m)]
+    {:road-line line
+     :start-point (if start-offset-m
+                    (geo/line-string-offset-point line start-offset-m :start)
+                    (first line))
+     :end-point (if end-offset-m
+                  (geo/line-string-offset-point line end-offset-m :end)
+                  (last line))}))
 
 (defquery :road/point-by-road
   {:doc "Fetch point geometry baed on road address from Teeregister API."

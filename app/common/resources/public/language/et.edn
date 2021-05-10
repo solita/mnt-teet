@@ -508,6 +508,7 @@
   :boq-version.type/contract "Leping",
   :thk.lifecycle-type/construction "Ehitamine",
   :task.type/road-safety-audit-design "Liiklusohutuse audit",
+  :thk.contract.status/unknown nil,
   :participation.role/participant "Osaleja",
   :estate-procedure.type/property-rights "Kasutusõiguse seadmine",
   :document.sub-category/drawing "Joonis",
@@ -718,6 +719,7 @@
   :cooperation.response/valid-until "Aegumiskuupäev",
   :ta/region nil,
   :land-owner-opinion/authority-position "Pädeva asutuse seisukoht",
+  :location/end-offset-m "Lõpp kaugus teljest",
   :thk.contract/cost nil,
   :cooperation.opinion/status "Ametlik seisukoht",
   :activity/status "Olek",
@@ -774,6 +776,7 @@
   :participation/participant "Kasutaja",
   :land-acquisition/status "Olek",
   :common {"description" "Kirjeldus", "name" "Nimi"},
+  :location/start-offset-m "Algus kaugus teljest",
   :land-owner-opinion/respondent-connection-to-land
   "Vastaja seotus maaga",
   :thk.contract/warranty-period nil,

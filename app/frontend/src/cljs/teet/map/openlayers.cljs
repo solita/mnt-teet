@@ -266,7 +266,7 @@
          (if-let [kasittelija (peek @click-handler)]
            (kasittelija (event-description this e))
 
-           (if-let [g (event-geometry this e true)]
+           (if-let [g (and on-select (event-geometry this e true))]
              (if-let [source-on-select (:on-select g)]
                (source-on-select g)
                (when on-select (on-select [g] e)))

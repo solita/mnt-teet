@@ -64,14 +64,17 @@
               .fill)))
         canvas))))
 
-(defn road-line-style [color ^ol.render.Feature _feature res]
-  (let [line-width (+ 3 (min 5 (int (/ 200 res))))]
-    ;; Show project road geometry line
-    (ol.style.Style.
+(defn road-line-style
+  ([color feature res]
+   (road-line-style 1 color feature res))
+  ([width-multiplier color ^ol.render.Feature feature res]
+   (let [line-width (* width-multiplier (+ 3 (min 5 (int (/ 200 res)))))]
+     ;; Show project road geometry line
+     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color color
                                           :width line-width
                                           :lineCap "butt"})
-           :zIndex 2})))
+           :zIndex 2}))))
 
 (def ^{:doc "Show project geometry as the road line."} project-line-style
   (partial road-line-style "blue"))
