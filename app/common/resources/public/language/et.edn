@@ -222,6 +222,7 @@
   :thk.contract/warranty-end-date nil,
   :thk.contract.status/deadline-overdue nil,
   :contract-information nil,
+  :contract-save-success nil,
   :status nil,
   :table-heading
   {:project nil, :activity nil, :task nil, :project-manager nil},
