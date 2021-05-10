@@ -658,8 +658,7 @@
   [e! app project]
   (log/debug "project-page: project id" (:thk.project/id project))
   [project-context/provide
-   {:db/id (:db/id project)
-    :thk.project/id (:thk.project/id project)}
+   project
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-view e! app project]]])
@@ -674,7 +673,7 @@
            export-menu-items]}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
-     (select-keys project [:db/id :thk.project/id])
+     project
      [:<>
       [project-navigator-view/project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}

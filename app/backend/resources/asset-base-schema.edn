@@ -249,4 +249,15 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :db/doc "The timestamp of when the ROTL Excel was imported"
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one}]]}
- ]
+
+ {:db/ident :migration/location-offset
+  :txes [[{:db/ident :location/start-offset-m
+           :db/doc "Offset meters from road at start."
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :attribute/parent :ctype/location}
+          {:db/ident :location/end-offset-m
+           :db/doc "Offset meters from road at end."
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :attribute/parent :ctype/location}]]}]
