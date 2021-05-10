@@ -23,7 +23,7 @@
 
 (defn mobile?
   []
-  (>= desktop-cutoff-width @window-width))
+  (> desktop-cutoff-width @window-width))
 
 (defn mobile-only-meta
   [style]
