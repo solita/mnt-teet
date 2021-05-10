@@ -33,8 +33,33 @@ function start-teet-app {
 
 function start-datomic-portforward {
     uuid="$(uuidgen)"
-    tmux new -d -s "$uuid"
-    tmux send-keys -t "${uuid}" "datomic client access teet-datomic" ENTER
+    tmux new -d -s "${uuid}"
+    cat >> ~/.ssh/config <<EOF
+StrictHostKeyChecking no
+EOF
+    tmux send-keys -t "$uuid" "datomic client access teet-datomic" ENTER
+    until netstat -pant | grep LISTEN | egrep -q '/ssh *$'; do
+	echo sleeping until datomic ssh forward seems active
+	sleep 3
+    done
+    
+}
+
+function allow-datomic-bastion-ssh {
+    # also set up revocation for it in exit trap (but it's fail-open..)
+    local SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)    
+    local MYIP=$(curl http://checkip.amazonaws.com)
+    trap "aws ec2 revoke-security-group-ingress \
+	--group-id $SG \
+	--protocol tcp \
+	--port 22 \
+	--cidr $MYIP/32" EXIT
+    echo allowed ssh access to datomic bastion from ip $MYIP
+    aws ec2 authorize-security-group-ingress \
+	--group-id $SG \
+	--protocol tcp \
+	--port 22 \
+	--cidr $MYIP/32
 }
 
 
@@ -61,11 +86,11 @@ function import-datomic-to-dev-local {
 function install_deps_and_app {
     # set up deps and env
     test "$(whoami)" = root
-    mkdir /var/tmp/teetinstall
+    mkdir -p /var/tmp/teetinstall
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
@@ -93,7 +118,7 @@ function install_deps_and_app {
     docker restart teetdb    
 
     DATOMIC_SOURCE_DB_NAME=$(aws ssm get-parameter --name /teet/datomic/db-name --query "Parameter.Value" --output text)
-    TEET_ENV_NAME=$(aws ssm get-parameter --name /teet/env --query "Parameter.Value" --output text)
+    TEET_ENV=$(aws ssm get-parameter --name /teet/env --query "Parameter.Value" --output text)
 
     
     test -f cognitect-dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
@@ -111,13 +136,8 @@ function install_deps_and_app {
     unzip datomic-cli*.zip
     install --mode=755 datomic-cli/datomic* /usr/local/bin/ 
 
-    # datomic-cli in tmux
-    start-datomic-portforward
-    until netstat -pant | egrep -q '^tcp.*:8666\b.*LISTEN'; do
-	echo "waiting for ssh forward to come up (attach to tmux and check there if stuck here)"
-	sleep 1
-    done
-    
+    allow-datomic-bastion-ssh
+    start-datomic-portforward    
     
     import-datomic-to-dev-local
     
@@ -148,46 +168,5 @@ function run-in-ec2 {
         --user-data file://$PWD/ci/scripts/install-standalone-vm.bash \
         --launch-template LaunchTemplateName=standalone-teetapp-template
 }
-
-
-
-[default]
-role_arn = arn:aws:iam::595654131005:instance-profile/standalone-teetapp-profile
-credential_source = Ec2InstanceMetadata
-region = eu-central-1
-
-
- cat > StandaloneTeetAppEC2RoleTrust.json <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "ec2.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
-}
-EOF
-
-cat > StandaloneTeetAppEC2RolePermissions.json <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": [
-                "s3:Get*",
-                "s3:List*"
-            ],
-            "Effect": "Allow",
-            "Resource": "*"
-        }
-    ]
-}
-EOF
-aws iam create-role --role-name StandaloneTeetAppEC2RoleInstance-Profile --assume-role-policy-document file://StandaloneTeetAppEC2RoleTrust.json
 
 
