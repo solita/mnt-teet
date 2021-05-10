@@ -2,6 +2,6 @@
 
 (defn contract-page-container
   []
-  {:padding "1rem"
+  {:padding "2rem"
    :background-color :white
    :flex 1})

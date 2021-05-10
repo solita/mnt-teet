@@ -25,7 +25,8 @@
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
             [teet.contract.contract-style :as contract-style]
-            [teet.contract.contract-status :as contract-status]))
+            [teet.contract.contract-status :as contract-status]
+            [teet.ui.table :as table]))
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
@@ -54,24 +55,27 @@
    [contract-external-link contract]
    [contract-thk-link contract]])
 
-(defn link-to-target
-  [navigation-info]
-  [url/Link navigation-info
-   "LINK TO THIS target"])
-
-(defn target-row
-  [target]
-  [:div
-   (when-let [navigation-info (:navigation-info target)]
-     [link-to-target navigation-info])
-   [:p (pr-str target)]])
-
 (defn target-table
   [targets]
   [:div
-   (for [target targets]
-     ^{:key (str (:db/id target))}
-     [target-row target])])
+   [table/simple-table
+    [[(tr [:contract :table-heading :project])]
+     [(tr [:contract :table-heading :activity])]
+     [(tr [:contract :table-heading :task])]
+     [(tr [:contract :table-heading :project-manager])]]
+    (for [target targets
+          :let [task? (some? (get-in target [:target :task/type]))]]
+      (if task?
+        [[(get-in target [:project :thk.project/name])]
+         [(tr [:enum (get-in target [:activity :activity/name])])]
+         [[url/Link (:target-navigation-info target)
+           (get-in target [:target :task/type])]]
+         [(get-in target [:activity :activity/manager])]]
+        [[(get-in target [:project :thk.project/name])]
+         [[url/Link (:target-navigation-info target)
+           (get-in target [:target :activity/name])]]
+         [nil]
+         [(get-in target [:activity :activity/manager])]]))]])
 
 (defn edit-contract-form
   [e! close-event form-atom]
@@ -178,4 +182,11 @@
                                :form-component [edit-contract-form e!]
                                :form-value (select-keys contract contract-model/contract-form-keys)}]]
      [contract-information-row contract]]
-    [target-table targets]]])
+    [:div
+     [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
+      (tr [:contract :contract-related-entities])]
+     (if (not-empty targets)
+       [target-table targets]
+       [:span
+        "Contract integration failed and this contract doesn't have any valid targets.
+        Contact administration for a bug report"])]]])

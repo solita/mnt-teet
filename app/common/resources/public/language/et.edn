@@ -223,6 +223,9 @@
   :thk.contract.status/deadline-overdue nil,
   :contract-information nil,
   :status nil,
+  :table-heading
+  {:project nil, :activity nil, :task nil, :project-manager nil},
+  :contract-related-entities nil,
   :thk.contract.status/signed nil,
   :thk.contract.status/completed nil,
   :contracts-listing nil,

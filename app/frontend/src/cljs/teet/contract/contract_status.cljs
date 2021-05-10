@@ -40,21 +40,26 @@
   [:div {:class (<class status-container-style)}
    [:div {:class (<class in-progress-icon-style)}]])
 
+(defn contract-status->variant-icon
+  [contract-status]
+  (case contract-status
+    :thk.contract.status/signed
+    [:info [signed-status-icon]]
+    :thk.contract.status/in-progress
+    [:info [in-progress-status-icon]]
+    :thk.contract.status/deadline-approaching
+    [:warning [icons/action-report-problem-outlined {:style {:color theme-colors/warning}}]]
+    :thk.contract.status/deadline-overdue
+    [:error [icons/alert-error-outline {:style {:color theme-colors/error}}]]
+    :thk.contract.status/warranty
+    [:info [icons/content-shield-outlined {:style {:color theme-colors/success}}]]
+    :thk.contract.status/completed
+    [:success [icons/action-check-circle-outlined {:style {:color theme-colors/success}}]]))
+
+
 (defn contract-status
-  [{:keys [show-label?] :as opts} status]
-  (let [tooltip-variant (case status
-                          :thk.contract.status/signed
-                          :info
-                          :thk.contract.status/in-progress
-                          :success
-                          :thk.contract.status/deadline-approaching
-                          :warning
-                          :thk.contract.status/deadline-overdue
-                          :error
-                          :thk.contract.status/warranty
-                          :success
-                          :thk.contract.status/completed
-                          :success)
+  [{:keys [show-label?] :as _opts} status]
+  (let [[tooltip-variant icon] (contract-status->variant-icon status)
         component (if show-label?
                     :<>
                     #(common/popper-tooltip {:title (tr [:enum status])
@@ -62,18 +67,7 @@
                                             %))]
     [component
      [:div {:class (<class common-styles/flex-row-center)}
-      (case status
-        :thk.contract.status/signed
-        [signed-status-icon]
-        :thk.contract.status/in-progress
-        [in-progress-status-icon]
-        :thk.contract.status/deadline-approaching
-        [icons/action-report-problem-outlined {:style {:color theme-colors/warning}}]
-        :thk.contract.status/deadline-overdue
-        [icons/alert-error-outline {:style {:color theme-colors/error}}]
-        :thk.contract.status/warranty
-        [icons/content-shield-outlined {:style {:color theme-colors/success}}]
-        :thk.contract.status/completed
-        [icons/action-check-circle-outlined {:style {:color theme-colors/success}}])
+      icon
       (when show-label?
-        [:span (tr [:enum status])])]]))
+        [:span {:style {:margin-left "4px"}}
+         (tr [:enum status])])]]))
