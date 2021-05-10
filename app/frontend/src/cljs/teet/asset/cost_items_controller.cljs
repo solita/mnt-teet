@@ -48,7 +48,8 @@
       (when-not (str/blank? x)
         (common-controller/->long x)))
     (select-keys % [:location/road-nr :location/carriageway
-                    :location/start-m :location/end-m])))
+                    :location/start-m :location/start-offset-m
+                    :location/end-m :location/end-offset-m])))
 
 (defn- point [v]
   (if (vector? v)
@@ -305,15 +306,16 @@
          ;; Set start/end points and GeoJSON geometry
          (if (:location/end-m address)
            ;; Line geometry
-           (assoc form
-                  :location/start-point (first response)
-                  :location/end-point (last response)
-                  :location/geojson
-                  (feature-collection-geojson
-                   #js {:type "LineString"
-                        :coordinates (clj->js response)}
-                   (point-geojson (first response) "start/end" "start")
-                   (point-geojson (last response) "start/end" "end")))
+           (let [{:keys [road-line start-point end-point]} response]
+             (assoc form
+                    :location/start-point start-point
+                    :location/end-point end-point
+                    :location/geojson
+                    (feature-collection-geojson
+                     #js {:type "LineString"
+                          :coordinates (clj->js road-line)}
+                     (point-geojson start-point "start/end" "start")
+                     (point-geojson end-point "start/end" "end"))))
            ;; Point geometry
            (-> form
                (assoc :location/start-point response
@@ -439,7 +441,9 @@
       ;; Manually edited road location, refetch geometry and points
       (not= (road-address old-form)
             (road-address new-form))
-      (let [{:location/keys [road-nr carriageway start-m end-m]} (road-address new-form)]
+      (let [{:location/keys [road-nr carriageway
+                             start-m start-offset-m
+                             end-m end-offset-m]} (road-address new-form)]
         (log/debug "ROAD ADDRESS CHANGED")
         (cond
           ;; All values present, fetch line geometry
@@ -450,7 +454,9 @@
                  :args {:road-nr road-nr
                         :carriageway carriageway
                         :start-m start-m
-                        :end-m end-m}
+                        :start-offset-m start-offset-m
+                        :end-m end-m
+                        :end-offset-m end-offset-m}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; Valid start point, fetch a point geometry
