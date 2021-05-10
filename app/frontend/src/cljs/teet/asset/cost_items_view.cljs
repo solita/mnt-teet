@@ -277,9 +277,7 @@
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-offset-m
-       [input-textfield {:type :number}]]]
-
-     ]))
+       [input-textfield {:type :number}]]]]))
 
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common? ctype]}

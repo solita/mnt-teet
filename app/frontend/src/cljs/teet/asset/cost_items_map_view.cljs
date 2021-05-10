@@ -18,7 +18,8 @@
      (merge-with
       merge
       opts
-      {:overlays @overlays
+      {:allow-select? false
+       :overlays @overlays
        :layers (project-layers/create-layers
                 {:e! e! :project project :app app :set-overlays! set-overlays!}
                 (partial project-layers/project-road-geometry-layer
