@@ -201,7 +201,7 @@
   [with-relevant-roads opts
    [relevant-road-select* opts]])
 
-(defn- carriageway-for-road-select [opts selected-road-nr relevant-roads]
+(defn- carriageway-for-road-select* [opts selected-road-nr relevant-roads]
   [select/form-select
    (merge opts
           {:show-empty-selection? true
@@ -210,6 +210,11 @@
                        relevant-roads)
                       [1])
            :format-item str})])
+
+(defn- carriageway-for-road-select [opts selected-road-nr]
+  [with-relevant-roads
+   opts
+   [carriageway-for-road-select* opts selected-road-nr]])
 
 (defn- location-entry [e! locked? selected-road-nr]
   (let [input-textfield (if locked? display-input text-field/TextField)]
@@ -230,9 +235,7 @@
              :md 2
              :xs 12}
        [form/field :location/carriageway
-        [with-relevant-roads
-         {:e! e!}
-         [carriageway-for-road-select {} selected-road-nr]]]]]
+        [carriageway-for-road-select {:e! e!} selected-road-nr]]]]
 
      [Grid {:item true
             :md 3
@@ -252,6 +255,13 @@
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
+      [form/field :location/start-offset-m
+       [input-textfield {:type :number}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
       [form/field :location/end-point
        [input-textfield {}]]]
 
@@ -260,7 +270,16 @@
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-m
-       [input-textfield {:type :number}]]]]))
+       [input-textfield {:type :number}]]]
+
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/end-offset-m
+       [input-textfield {:type :number}]]]
+
+     ]))
 
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common? ctype]}
