@@ -67,7 +67,8 @@
                      :set-overlays! set-overlays!}
 
                     (partial project-layers/project-road-geometry-layer
-                             map-object-padding fitted-atom)
+                             {:map-padding map-object-padding
+                              :fitted-atom  fitted-atom})
                     project-layers/setup-restriction-candidates
                     project-layers/project-drawn-area-layer
                     project-layers/setup-cadastral-unit-candidates

@@ -82,8 +82,10 @@
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
-  [map-obj-padding
-   fitted-atom
+  [{:keys [map-padding fitted-atom]
+    :or {map-padding [25 25 25 25]
+         fitted-atom (atom false)}
+    :as opts}
    {app :app
     {:keys [basic-information-form geometry] :as project} :project
     set-overlays! :set-overlays!}]
@@ -101,15 +103,16 @@
                                           :thk.project/effective-km-range)))
         options {:fit-on-load? (geometry-fit-on-first-load fitted-atom)
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding map-obj-padding}
+                 :fit-padding map-padding}
 
         ;; If we have geometry (in setup wizard) or are editing related features
-        ;; show the buffer as well, otherwise just the road line
-        style (if (and
-                   (not tab-drawn?)
-                    (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
-                (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
-                map-features/project-line-style)]
+        style (or (:style opts)
+                  (if (and
+                       (not tab-drawn?)
+                       (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
+                    ;; show the buffer as well, otherwise just the road line
+                    (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
+                    map-features/project-line-style))]
 
     {:thk-project
      (if geometry

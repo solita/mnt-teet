@@ -22,7 +22,9 @@
        :layers (project-layers/create-layers
                 {:e! e! :project project :app app :set-overlays! set-overlays!}
                 (partial project-layers/project-road-geometry-layer
-                         [25 25 25 25] fitted-atom))})]))
+                         {:fitted-atom fitted-atom
+                          :style (partial map-features/road-line-style
+                                          2.5 "gray")}))})]))
 
 (defn project-map [opts]
   [context/consume :cost-items-map [project-map* opts]])
