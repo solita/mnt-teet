@@ -122,6 +122,22 @@
              :s3 {:bucket bucket :file-key file-key}
              :config config))))
 
+(defn- read-delete-config [{event :event :as ctx}]
+  (let [{:keys [db-name asset-db-name] :as config*} (-> event :input (cheshire/decode keyword))
+        config (dissoc config* :db-name :asset-db-name)]
+    (log/info "Read delete config from event:\n"
+      "Delete DB name: " db-name ", asset DB name: " asset-db-name "\n"
+      "Other options: " config)
+    (if (or (str/blank? db-name)
+          (str/blank? asset-db-name))
+      (throw (ex-info "Missing delete DB name(s)"
+               {:expected-keys [:db-name :asset-db-name]
+                :got-keys (keys config*)}))
+      (assoc ctx
+        :db-name db-name
+        :asset-db-name asset-db-name
+        :config config))))
+
 (defn- attr-info [db attr-info-cache a]
   (get (swap! attr-info-cache
               (fn [attrs]
@@ -412,6 +428,32 @@
   [event]
   (future
     (restore* event))
+  "{\"success\": true}")
+
+(defn- delete-datomic-dbs
+  "Delete TEET DB and Asset DB."
+  [{:keys [db-name asset-db-name datomic-client] :as ctx}]
+  (println "CONTEXT: " ctx)
+  (log/info "Delete backup DB: " db-name " and Asset DB: " asset-db-name " datomic-client " datomic-client)
+  (d/delete-database datomic-client {:db-name db-name})
+  (d/delete-database datomic-client {:db-name asset-db-name}))
+
+(defn- delete-db* [event]
+  (println "EVENT: " event)
+  (try
+    (ctx-> {:event event
+            :datomic-client (environment/datomic-client)
+            :conn (environment/datomic-connection)}
+      read-delete-config
+      delete-datomic-dbs)
+    (catch Exception e
+      (log/error e "ERROR IN DELETE" (ex-data e)))))
+
+(defn delete-db
+  "Lambda function endpoint for delete database and asset db"
+  [event]
+  (future
+    (delete-db* event))
   "{\"success\": true}")
 
 
