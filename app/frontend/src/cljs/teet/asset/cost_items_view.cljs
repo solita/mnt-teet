@@ -425,7 +425,7 @@
     (if read-only?
       [typography/Heading3 (format-fg-and-fc [fg fc])]
       [Grid {:container true}
-       [Grid {:item true :xs 12 :class (<class responsivity-styles/visible-desktop-only)}
+       [Grid {:item true :xs 12}
         [select/select-search
          {:e! e!
           :on-change #(on-change (mapv :db/ident %))
@@ -440,24 +440,7 @@
                            fc (:fclass/_fgroup fg)
                            :let [result [fg fc]]
                            :when (string/contains-words? (format-fg-and-fc result) text)]
-                       result)))}]]
-
-       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
-        [select/select-with-action
-         {:show-empty-selection? true
-          :items fgroups
-          :format-item tr*
-          :value fg
-          :on-change #(on-change [(:db/ident %) nil])}]]
-
-       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
-        (when-let [{fclasses :fclass/_fgroup} fg]
-          [select/select-with-action
-           {:show-empty-selection? true
-            :items fclasses
-            :format-item tr*
-            :value fc
-            :on-change #(on-change [fg-ident (:db/ident %)])}])]])))
+                       result)))}]]])))
 
 (defn- component-tree-level-indent [level]
   [:<>
