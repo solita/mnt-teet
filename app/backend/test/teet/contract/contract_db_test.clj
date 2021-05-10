@@ -102,10 +102,10 @@
         (is (= (:thk.contract/status contract)
                :thk.contract.status/deadline-overdue))))
 
-    (testing "Deadline is in the past so contract is in status deadline overdue"
+    (testing "Extended deadline is in the past so contract is in status deadline overdue"
       (let [contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["11111" "22222"]])]
+                       [:thk.contract/procurement-id+procurement-part-id ["1111" "2222"]])]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/deadline-overdue))))
 
