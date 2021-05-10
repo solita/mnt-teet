@@ -223,6 +223,7 @@
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",
   :contract-information "Contract information",
+  :contract-save-success "Contract saved",
   :status "Status",
   :table-heading
   {:project "Project",

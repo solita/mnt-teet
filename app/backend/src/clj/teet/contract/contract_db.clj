@@ -79,7 +79,6 @@
     ;Deadline overdue - Deadline date has passed
     [(contract-status ?c ?s ?now)
      [?c :thk.contract/start-of-work ?start]
-     [(< ?start ?now)]
      [(missing? $ ?c :thk.contract/warranty-end-date)]
      (contract-deadline ?c ?act-dl)
      [(< ?act-dl ?now)]
@@ -87,7 +86,6 @@
     ;Warranty - deadline (and extended deadline if given) has passed and warranty date isn't passed
     [(contract-status ?c ?s ?now)
      [?c :thk.contract/start-of-work ?start]
-     [(< ?start ?now)]
      [?c :thk.contract/warranty-end-date ?warranty-end]
      [(< ?now ?warranty-end)]
      (contract-deadline ?c ?act-dl)
