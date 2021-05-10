@@ -30,6 +30,7 @@
       (str/replace #"\s" "")
       (str/replace "€" "")
       (str/replace "," ".")
+      (str/replace "−" "-")
       #?(:clj bigdec :cljs js/parseFloat)))
 
 #?(:clj (def transit-type-handlers
