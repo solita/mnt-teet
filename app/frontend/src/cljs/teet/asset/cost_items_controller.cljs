@@ -361,7 +361,6 @@
                           (point-geojson start-point "start/end" "start")
                           (point-geojson end-point "start/end" "end"))}))
              (let [{:keys [geometry road-nr carriageway start-m end-m m]} road]
-
                (when geometry
                  (let [geojson (js/JSON.parse geometry)]
                    (merge form
@@ -376,7 +375,7 @@
                                   #js [geojson
                                        (point-geojson start-point "start/end" "start")
                                        (point-geojson end-point "start/end" "end")]
-                                  #js [geojson])}
+                                  #js [(point-geojson start-point "start/end" "start")])}
                            :location/road-nr road-nr
                            :location/carriageway carriageway
                            :location/start-m (or m start-m)

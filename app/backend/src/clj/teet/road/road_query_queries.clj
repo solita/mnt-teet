@@ -176,11 +176,6 @@
                   (sort-by :distance)
                   first)
         ls (some-> road :geometry (cheshire/decode keyword) :coordinates)]
-
-    (def *args [(teeregister-api/create-client client)
-                distance start end])
-    (def *ls ls)
-
     (merge
      {:road road
       :start-point start
@@ -196,10 +191,14 @@
    :args {:keys [point distance]}
    :project-id nil
    :authorization {}}
-  {:road (first
-          (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
-                                            distance point))
-   :start-point point})
+  (let [road (first
+              (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
+                                                distance point))
+        p (some-> road :geometry (cheshire/decode keyword) :coordinates)]
+    {:road road
+     :start-point point
+     :start-offset-m (when p
+                       (geo/distance point p))}))
 
 
 (defquery :road/line-by-road
