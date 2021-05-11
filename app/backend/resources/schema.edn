@@ -1943,6 +1943,24 @@
           [:db/retract :thk.contract/procurement-id :db/unique :db.unique/identity]]]}
 
  {:db/ident :migration/retract-activity-procurement-info
-  :txes [teet.migration.activity-procurement-info/retract-procurement-info-from-activity]}]
+  :txes [teet.migration.activity-procurement-info/retract-procurement-info-from-activity]}
+
+ {:db/ident :migration/thk.contracts3
+  :txes [[{:db/ident :thk.contract/external-link
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Link to an external service given by the user"}
+
+          {:db/ident :thk.contract/start-of-work
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Start of work value given by the user"}
+          {:db/ident :thk.contract/procurement-id+procurement-part-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:thk.contract/procurement-id :thk.contract/procurement-part-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one contract per procurement-id and part-id combination"}]]}]
+
 
 

@@ -39,6 +39,8 @@
             teet.asset.asset-library-view
             teet.account.account-view
             teet.asset.cost-items-view
+            teet.contract.contracts-view
+            teet.contract.contract-view
 
             teet.ui.query
             [teet.ui.url :as url]
@@ -52,6 +54,7 @@
 ;; See routes.edn
 (def ->long common-controller/->long)
 (define-main-page page-and-title)
+
 
 (defn- main-view-content [e! nav-open? app]
   (if (get-in app [:config :api-url])               ;;config gets loaded when session is checked

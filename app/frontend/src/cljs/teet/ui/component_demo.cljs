@@ -19,7 +19,8 @@
             [reagent.core :as r]
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.mentions :as mentions]
-            [teet.ui.common :as common-ui]))
+            [teet.ui.common :as common-ui]
+            [teet.contract.contract-status :as contract-status]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -298,6 +299,27 @@
                                      :link {:target :_blank
                                             :href "http://example.com"}
                                      :icon [icons/notification-bluetooth-audio]}]}]])
+
+(defn contract-demo
+  []
+  [:div
+   [:h1 "Statuses"]
+   [:div {:style {:display :flex
+                  :align-items :center}}
+    [contract-status/contract-status {} :thk.contract.status/signed]
+    [contract-status/contract-status {} :thk.contract.status/completed]
+    [contract-status/contract-status {} :thk.contract.status/in-progress]
+    [contract-status/contract-status {} :thk.contract.status/deadline-approaching]
+    [contract-status/contract-status {} :thk.contract.status/deadline-overdue]
+    [contract-status/contract-status {} :thk.contract.status/warranty]]
+   [:div
+    [contract-status/contract-status {:show-label? true} :thk.contract.status/signed]
+    [contract-status/contract-status {:show-label? true} :thk.contract.status/completed]
+    [contract-status/contract-status {:show-label? true} :thk.contract.status/in-progress]
+    [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-approaching]
+    [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-overdue]
+    [contract-status/contract-status {:show-label? true} :thk.contract.status/warranty]]])
+
 (def demos
   [{:id :context-menu
     :heading "Context menu"
@@ -334,7 +356,10 @@
     :component [container-demo]}
    {:id :mentions
     :heading "Mentions input"
-    :component [mentions-demo]}])
+    :component [mentions-demo]}
+   {:id :contracts
+    :heading "Contract components"
+    :component [contract-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
