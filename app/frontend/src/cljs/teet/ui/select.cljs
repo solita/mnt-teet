@@ -388,7 +388,7 @@
   [{:keys [e! value on-change label required error
            format-result
            show-label? after-results-action
-           query placeholder no-results]
+           query placeholder no-results clear-value]
     :or {show-label? true
          placeholder (tr [:user :autocomplete :placeholder])
          no-results (tr [:user :autocomplete :no-options])}}]
@@ -447,11 +447,11 @@
                                                                        :results results
                                                                        :highlight (first results))))))))))
                    :input-button-click #(do
-                                          (on-change nil)
+                                          (on-change clear-value)
                                           (swap! state assoc :input "")
                                           (r/after-render
-                                            (fn []
-                                              (.focus @input-ref))))
+                                           (fn []
+                                             (.focus @input-ref))))
                    :input-button-icon icons/content-clear}]
        (when open?
          [Popper {:open true
