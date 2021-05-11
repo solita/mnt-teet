@@ -6,7 +6,10 @@
    (defn ->bigdec [x]
      (if (string? x)
        (when-not (str/blank? x)
-         (-> x str/trim (str/replace "," ".") bigdec))
+         (-> x str/trim
+             (str/replace "," ".")
+             (str/replace "−" "-")
+             bigdec))
        (bigdec x))))
 
 #?(:clj
