@@ -10,7 +10,8 @@
             [teet.util.collection :as cu]
             [teet.map.map-services :as map-services]
             [teet.road.teeregister-api :as teeregister-api]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [cheshire.core :as cheshire]))
 
 (defonce cache-options
   ;; For local development use:
@@ -169,8 +170,19 @@
    :args {:keys [start end distance]}
    :project-id nil
    :authorization {}}
-  (teeregister-api/road-by-2-geopoints (teeregister-api/create-client client)
-                                       distance start end))
+  (let [road (->> (teeregister-api/road-by-2-geopoints
+                   (teeregister-api/create-client client)
+                   distance start end)
+                  (sort-by :distance)
+                  first)
+        ls (some-> road :geometry (cheshire/decode keyword) :coordinates)]
+    (merge
+     {:road road
+      :start-point start
+      :end-point end}
+     (when ls
+       {:start-offset-m (geo/line-string-point-offset ls start :start)
+        :end-offset-m (geo/line-string-point-offset ls end :end)}))))
 
 (defquery :road/by-geopoint
   {:doc "Return road for a single geopoint"
@@ -179,8 +191,15 @@
    :args {:keys [point distance]}
    :project-id nil
    :authorization {}}
-  (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
-                                    distance point))
+  (let [road (first
+              (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
+                                                distance point))
+        p (some-> road :geometry (cheshire/decode keyword) :coordinates)]
+    {:road road
+     :start-point point
+     :start-offset-m (when p
+                       (geo/distance point p))}))
+
 
 (defquery :road/line-by-road
   {:doc "Fetch line geometry based on road address from Teeregister API."

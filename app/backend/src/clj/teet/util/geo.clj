@@ -71,21 +71,10 @@
 
 (defn angle
   "Returns angle of line segment in radians."
-  [[[x1 y1 :as p1] [x2 y2 :as p2]]]
+  [[[x1 y1] [x2 y2]]]
   (let [dx (- x2 x1)
         dy (- y2 y1)]
     (Math/atan2 dy dx)))
-
-(defn points->line-eq
-  "Calculate line equation y=mx+b for line that passes
-  between two given points.
-
-  Returns [m b]. Returns nil for vertical lines."
-  [[x1 y1] [x2 y2]]
-  (when (not= x1 x2)
-    (let [m (/ (- y2 y1) (- x2 x1))
-          b (- y1 (* m x1))]
-      [m b])))
 
 (defn- start-or-end-segment
   "Returns the start or end segment of a line string.
@@ -99,27 +88,6 @@
                 :start p1
                 :end p2)]
     [segment point]))
-
-(defn line-string-point-offset
-  "Return offset how far the point is from linestring start or end point.
-  Measures the offset from the `:start` or `:end` line segment depending
-  on `start-or-end` parameter.
-
-  Returns positive number if offset is on the right side of the line and
-  negative if the offset is on the left side."
-  [line-string [px py :as point] start-or-end]
-  (let [[[p1 p2] distance-point] (start-or-end-segment line-string start-or-end)
-        d (distance distance-point point)
-        [m b] (points->line-eq p1 p2)]
-    (* d
-       (if (>= m 0)
-         (if (> py (+ (* m px) b))
-           -1 ; left
-           1) ; right
-
-         (if (< py (+ (* m px) b))
-           -1
-           1)))))
 
 (defn line-string-offset-point
   "Return a point that is given offset meters to the side of the
@@ -137,3 +105,24 @@
         x (+ px (* offset (Math/cos point-angle)))
         y (+ py (* offset (Math/sin point-angle)))]
     [x y]))
+
+(defn line-string-point-offset
+  "Return offset how far the point is from linestring start or end point.
+  Measures the offset from the `:start` or `:end` line segment depending
+  on `start-or-end` parameter.
+
+  Returns positive number if offset is on the right side of the line and
+  negative if the offset is on the left side."
+  [line-string [px py :as point] start-or-end]
+  (let [[_ distance-point] (start-or-end-segment line-string start-or-end)
+        d (distance distance-point point)
+        right-offset-point (line-string-offset-point line-string 1 start-or-end)
+        left-offset-point (line-string-offset-point line-string -1 start-or-end)]
+    (* d
+       (if (< (distance point right-offset-point)
+              (distance point left-offset-point))
+         ;; closer to right offset point, positive offset
+         1
+
+         ;; closet to left offset point, negative offset
+         -1))))
