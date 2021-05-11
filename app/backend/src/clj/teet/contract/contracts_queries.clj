@@ -122,5 +122,5 @@
    :authorization {}}
   (->> (contract-db/project-related-contracts db [:thk.project/id project-id])
        (sort-by
-         #((:thk.contract/status %) contract-model/contract-status-order))
+         (comp contract-model/contract-status-order :thk.contract/status))
        vec))

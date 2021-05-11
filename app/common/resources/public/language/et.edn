@@ -215,7 +215,8 @@
   :phone "Mobiil",
   :phone2 "Telefon"},
  :contract
- {:thk.contract.status/deadline-approaching nil,
+ {:no-targets-for-contract nil,
+  :thk.contract.status/deadline-approaching nil,
   :related-contracts nil,
   :thk.contract/type nil,
   :contract-information-heading nil,
