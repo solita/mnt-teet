@@ -215,7 +215,9 @@
   :phone "Mobiil",
   :phone2 "Telefon"},
  :contract
- {:thk.contract.status/deadline-approaching nil,
+ {:no-targets-for-contract nil,
+  :thk.contract.status/deadline-approaching nil,
+  :related-contracts nil,
   :thk.contract/type nil,
   :contract-information-heading nil,
   :thk.contract.status/warranty nil,
@@ -508,7 +510,6 @@
   :boq-version.type/contract "Leping",
   :thk.lifecycle-type/construction "Ehitamine",
   :task.type/road-safety-audit-design "Liiklusohutuse audit",
-  :thk.contract.status/unknown nil,
   :participation.role/participant "Osaleja",
   :estate-procedure.type/property-rights "Kasutusõiguse seadmine",
   :document.sub-category/drawing "Joonis",

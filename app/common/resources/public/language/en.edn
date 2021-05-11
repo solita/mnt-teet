@@ -216,7 +216,10 @@
   :phone "Mobile",
   :phone2 "Phone"},
  :contract
- {:thk.contract.status/deadline-approaching "Deadline approaching",
+ {:no-targets-for-contract
+  "Contract integration failed and this contract doesn't have any valid targets. Contact administration for a bug report",
+  :thk.contract.status/deadline-approaching "Deadline approaching",
+  :related-contracts "RELATED CONTRACTS",
   :thk.contract/type "Type",
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
@@ -513,7 +516,6 @@
   :boq-version.type/contract "Contract/listing",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design "Road safety audit",
-  :thk.contract.status/unknown "Contract status unknown",
   :participation.role/participant "Participant",
   :estate-procedure.type/property-rights
   "Issuing right for using property",

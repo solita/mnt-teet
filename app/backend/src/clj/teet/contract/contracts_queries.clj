@@ -3,7 +3,8 @@
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.contract.contract-db :as contract-db])
+            [teet.contract.contract-db :as contract-db]
+            [teet.contract.contract-model :as contract-model])
   (:import (java.util Date)))
 
 (defmulti contract-search-clause (fn [[attribute _value] _user]
@@ -112,3 +113,14 @@
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
       (sort-by :meta/created-at)
       reverse))
+
+(defquery :contracts/project-related-contracts
+  {:doc "Return a list of contracts related to the given project"
+   :context {db :db}
+   :args {project-id :thk.project/id}
+   :project-id project-id
+   :authorization {}}
+  (->> (contract-db/project-related-contracts db [:thk.project/id project-id])
+       (sort-by
+         (comp contract-model/contract-status-order :thk.contract/status))
+       vec))

@@ -188,5 +188,4 @@
      (if (not-empty targets)
        [target-table targets]
        [:span
-        "Contract integration failed and this contract doesn't have any valid targets.
-        Contact administration for a bug report"])]]])
+        (tr [:contract :no-targets-for-contract])])]]])

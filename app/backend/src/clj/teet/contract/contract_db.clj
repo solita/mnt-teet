@@ -1,7 +1,6 @@
 (ns teet.contract.contract-db
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
-            [teet.project.project-model :as project-model]
             [teet.util.datomic :as du])
   (:import (java.util Date)))
 
@@ -100,7 +99,7 @@
      [(ground :thk.contract.status/completed) ?s]]])
 
 (defn contract-with-status
-  "Used when after datomic query which returns [contract contract-status]"
+  "Used after datomic query which returns [contract contract-status]"
   [[contract status]]
   (assoc contract :thk.contract/status status))
 
@@ -152,3 +151,18 @@
             contract-eid)
        (mapv format-target-information)
        du/idents->keywords))
+
+(defn project-related-contracts
+  [db project-eid]
+  (->> (d/q '[:find (pull ?c [:thk.contract/procurement-id+procurement-part-id :thk.contract/status
+                              :thk.contract/name :thk.contract/part-name :db/id]) ?status
+              :where
+              (contract-target-project ?c ?project)
+              (contract-status ?c ?status ?now)
+              :in $ % ?project ?now]
+            db
+            (into contract-query-rules
+                  contract-status-rules)
+            project-eid
+            (Date.))
+       (mapv contract-with-status)))

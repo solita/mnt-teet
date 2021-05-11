@@ -16,6 +16,7 @@
          teet.user.user-tx/set-global-role
          teet.user.user-tx/ensure-unique-email
          clojure.string/includes?
+         teet.util.date/dec-days
          teet.task.task-tx/delete-task
          teet.asset.asset-tx/save-asset
          teet.asset.asset-tx/save-component
