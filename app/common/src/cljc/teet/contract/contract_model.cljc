@@ -1,5 +1,10 @@
 (ns teet.contract.contract-model
   (:require [clojure.string :as str]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
+            [teet.util.coerce :refer [->long ->bigdec]]
+            #?(:clj [clj-time.core :as t]
+               :cljs [cljs-time.core :as t])
             #?(:clj [clj-time.coerce :as tc]
                :cljs [cljs-time.coerce :as tc])))
 
@@ -34,3 +39,29 @@
 (defn contract-url-id
   [{:thk.contract/keys [procurement-id procurement-part-id]}]
   (str/join "-" (filterv some? [procurement-id procurement-part-id])))
+
+(defn contract-with-warranty-end-date
+  "Calculates contracts warranty end date given the proper values if not possible assoc nil in warrant-end-date"
+  [{:thk.contract/keys [warranty-period deadline extended-deadline] :as contract}]
+  (let [act-dl (or extended-deadline deadline)
+        warranty-end-date (when (and act-dl warranty-period)
+                            (-> act-dl
+                                tc/from-date
+                                (t/plus (t/months warranty-period))
+                                tc/to-date))]
+    (assoc contract :thk.contract/warranty-end-date warranty-end-date)))
+
+(defn db-values->frontend
+  [contract-form-data]
+  (-> contract-form-data
+      (cu/update-in-if-exists [:thk.contract/cost] str)
+      (cu/update-in-if-exists [:thk.contract/warranty-period] str)
+      du/idents->keywords))
+
+(defn form-values->db-values
+  [contract]
+  (-> contract
+      (select-keys contract-form-keys)
+      (cu/update-in-if-exists [:thk.contract/cost] ->bigdec)
+      (cu/update-in-if-exists [:thk.contract/warranty-period] ->long)
+      contract-with-warranty-end-date))

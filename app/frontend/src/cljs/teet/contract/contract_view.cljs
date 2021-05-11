@@ -69,7 +69,7 @@
         [[(get-in target [:project :thk.project/name])]
          [(tr [:enum (get-in target [:activity :activity/name])])]
          [[url/Link (:target-navigation-info target)
-           (get-in target [:target :task/type])]]
+           (tr [:enum (get-in target [:target :task/type])])]]
          [(get-in target [:activity :activity/manager])]]
         [[(get-in target [:project :thk.project/name])]
          [[url/Link (:target-navigation-info target)

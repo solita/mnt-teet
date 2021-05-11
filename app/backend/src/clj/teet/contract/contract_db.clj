@@ -117,7 +117,7 @@
       first
       contract-with-status))
 
-(defn parse-target-information
+(defn- format-target-information
   [[target project activity]]
   (let [project-id (:thk.project/id project)
         activity-id (str (:db/id activity))]
@@ -134,7 +134,7 @@
                                          :activity activity-id
                                          :task (str (:db/id target))}})}))
 
-(defn get-contract-target-information
+(defn contract-target-information
   [db contract-eid]
   (->> (d/q '[:find
               (pull ?target [*])
@@ -150,5 +150,5 @@
             db
             contract-query-rules
             contract-eid)
-       (mapv parse-target-information)
+       (mapv format-target-information)
        du/idents->keywords))
