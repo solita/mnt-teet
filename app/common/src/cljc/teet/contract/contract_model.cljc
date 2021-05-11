@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.util.coerce :refer [->long ->bigdec]]
+            #?(:clj [teet.util.coerce :refer [->long ->bigdec]])
             #?(:clj [clj-time.core :as t]
                :cljs [cljs-time.core :as t])
             #?(:clj [clj-time.coerce :as tc]
@@ -58,10 +58,11 @@
       (cu/update-in-if-exists [:thk.contract/warranty-period] str)
       du/idents->keywords))
 
-(defn form-values->db-values
-  [contract]
-  (-> contract
-      (select-keys contract-form-keys)
-      (cu/update-in-if-exists [:thk.contract/cost] ->bigdec)
-      (cu/update-in-if-exists [:thk.contract/warranty-period] ->long)
-      contract-with-warranty-end-date))
+#?(:clj
+   (defn form-values->db-values
+     [contract]
+     (-> contract
+         (select-keys contract-form-keys)
+         (cu/update-in-if-exists [:thk.contract/cost] ->bigdec)
+         (cu/update-in-if-exists [:thk.contract/warranty-period] ->long)
+         contract-with-warranty-end-date)))
