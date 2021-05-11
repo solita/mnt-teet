@@ -348,8 +348,7 @@
                                                       :coordinates [start-point end-point]})
                                             (point-geojson start-point "start/end" "start")
                                             (point-geojson end-point "start/end" "end")))}))
-           (let [{:keys [geometry road-nr carriageway start-m end-m m]}
-                 (first (sort-by :distance response))]
+           (let [{:keys [geometry road-nr carriageway start-m end-m m]} response]
 
              (when geometry
                (let [geojson (js/JSON.parse geometry)
