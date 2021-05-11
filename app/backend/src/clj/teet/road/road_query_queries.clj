@@ -180,9 +180,14 @@
     (def *args [(teeregister-api/create-client client)
                 distance start end])
     (def *ls ls)
-    ;; calculate offsets for start and end points
 
-    road))
+    (merge
+     {:road road
+      :start-point start
+      :end-point end}
+     (when ls
+       {:start-offset-m (geo/line-string-point-offset ls start :start)
+        :end-offset-m (geo/line-string-point-offset ls end :end)}))))
 
 (defquery :road/by-geopoint
   {:doc "Return road for a single geopoint"
@@ -191,9 +196,11 @@
    :args {:keys [point distance]}
    :project-id nil
    :authorization {}}
-  (first
-   (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
-                                     distance point)))
+  {:road (first
+          (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
+                                            distance point))
+   :start-point point})
+
 
 (defquery :road/line-by-road
   {:doc "Fetch line geometry based on road address from Teeregister API."
