@@ -29,16 +29,20 @@
    :thk.contract.status/completed])
 
 (def contract-status-order
-  {1 :thk.contract.status/signed
-   2 :thk.contract.status/in-progress
-   3 :thk.contract.status/deadline-approaching
-   4 :thk.contract.status/deadline-overdue
-   5 :thk.contract.status/warranty
-   6 :thk.contract.status/completed})
+  {:thk.contract.status/signed 1
+   :thk.contract.status/in-progress 2
+   :thk.contract.status/deadline-approaching 3
+   :thk.contract.status/deadline-overdue 4
+   :thk.contract.status/warranty 5
+   :thk.contract.status/completed 6})
 
 (defn contract-url-id
-  [{:thk.contract/keys [procurement-id procurement-part-id]}]
-  (str/join "-" (filterv some? [procurement-id procurement-part-id])))
+  [{:thk.contract/keys [procurement-id+procurement-part-id]}]
+  (str/join "-" (filterv some? procurement-id+procurement-part-id)))
+
+(defn contract-name
+  [{:thk.contract/keys [part-name name]}]
+  (or part-name name))
 
 (defn contract-with-warranty-end-date
   "Calculates contracts warranty end date given the proper values if not possible assoc nil in warrant-end-date"
