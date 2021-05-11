@@ -66,6 +66,7 @@ function allow-datomic-bastion-ssh {
 
 function import-datomic-to-dev-local {
     # run in backend directory, needs the deps
+    mkdir -p ~/.datomic
     clojure -A:dev -e "
      (require 'datomic.dev-local)
      (datomic.dev-local/import-cloud
@@ -77,6 +78,7 @@ function import-datomic-to-dev-local {
               :query-geoup \"teet-datomic\"
               :proxy-port 8182} ; not needed when running in same vpc as compute group
      :dest {:system \"teet-test-env\"
+            :storage-dir \"$HOME/.datomic/dev-local-data\"
             :server-type :dev-local
             :db-name \"teet\"}
      :filters {:since 0}})"
@@ -148,17 +150,21 @@ function install_deps_and_app {
 
     cd ../..
 
+
+    cd app/backend
+    import-datomic-to-dev-local
+    cd ../..
+
     start-teet-app # backend, frontend & postgrest
     
-    sleep 10 # fixme, wait for some sensible signal (poll backend tcp port with netstat?)
-        
-    
-    # todo: config.edn for teet app & datomic-local setup
-
-    # todo: use datomic.dev-local/import-cloud for datomic data
+    # todo: config.edn for teet app setup
     
     # todo: use postgres backups for pg data (-> remove unneeded datasource-import run)
 
+    until netstat -pant | grep LISTEN | egrep -q ':4000.*LISTEN.*/java *$'; do
+	echo sleeping until backend starts listening on :4000
+	sleep 3
+    done
 
 }
 
@@ -168,5 +174,4 @@ function run-in-ec2 {
         --user-data file://$PWD/ci/scripts/install-standalone-vm.bash \
         --launch-template LaunchTemplateName=standalone-teetapp-template
 }
-
 
