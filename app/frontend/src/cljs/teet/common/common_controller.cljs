@@ -98,6 +98,7 @@
 (defrecord RPC [rpc-effect-params])
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
+(defrecord NavigateWithSameParams [page])
 (defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
 (defrecord ResponseError [err]) ; handle errors in HTTP response
 (defrecord ModalFormResult [close-event response])          ; Handle the submit result of form-modal-button
@@ -195,6 +196,14 @@
            :page page
            :params params
            :query query}))
+
+  NavigateWithSameParams
+  (process-event [{page :page} {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query {}}))
 
   SetQueryParam
   (process-event [{:keys [param value]} {:keys [page params query] :as app}]

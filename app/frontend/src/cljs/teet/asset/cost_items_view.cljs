@@ -434,6 +434,7 @@
           :value (when fc [fg fc])
           :format-result format-fg-and-fc
           :show-empty-selection? true
+          :clear-value [nil nil]
           :query (fn [text]
                    #(vec
                      (for [fg fgroups
@@ -515,7 +516,7 @@
                new? (nil? form-data)
 
                cancel-event (if new?
-                              #(common-controller/->SetQueryParam :id nil)
+                              #(common-controller/->NavigateWithSameParams :cost-items)
 
                               ;; Update with initial data to cancel
                               (r/partial
