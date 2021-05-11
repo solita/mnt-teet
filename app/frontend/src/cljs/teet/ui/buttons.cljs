@@ -81,6 +81,12 @@
                                :size :small
                                :color :primary}))
 
+(def small-button-secondary
+  (util/make-component Button {:variant :contained
+                               :disable-ripple true
+                               :size :small
+                               :color :secondary}))
+
 (def large-button-primary
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
