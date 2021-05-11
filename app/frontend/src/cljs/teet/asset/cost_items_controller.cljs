@@ -10,7 +10,8 @@
             [teet.routes :as routes]
             cljs.reader
             [teet.asset.asset-type-library :as asset-type-library]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.ui.format :as format]))
 
 (defrecord AddComponentCancel [id])
 
@@ -43,13 +44,20 @@
   (str prefix (swap! next-id inc)))
 
 (def ^:private road-address
-  #(cu/map-vals
-    (fn [x]
-      (when-not (str/blank? x)
-        (common-controller/->long x)))
-    (select-keys % [:location/road-nr :location/carriageway
-                    :location/start-m :location/start-offset-m
-                    :location/end-m :location/end-offset-m])))
+  #(into {}
+         (map
+          (fn [[k x]]
+            [k
+             (when-not (str/blank? x)
+               (if (#{:location/start-offset-m :location/end-offset-m} k)
+                 (-> x
+                     (str/replace "," ".")
+                     (str/replace "−" "-")
+                     js/parseFloat)
+                 (common-controller/->long x)))])
+          (select-keys % [:location/road-nr :location/carriageway
+                          :location/start-m :location/start-offset-m
+                          :location/end-m :location/end-offset-m]))))
 
 (defn- point [v]
   (if (vector? v)
@@ -358,9 +366,9 @@
                  (let [geojson (js/JSON.parse geometry)]
                    (merge form
                           {:location/start-point start-point
-                           :location/start-offset-m start-offset-m
+                           :location/start-offset-m (format/decimal 3 start-offset-m)
                            :location/end-point end-point
-                           :location/end-offset-m end-offset-m
+                           :location/end-offset-m (format/decimal 3 end-offset-m)
                            :location/geojson
                            #js {:type "FeatureCollection"
                                 :features
