@@ -61,11 +61,11 @@ else
 fi
 
 # Cleanup both old DB-s
-aws lambda invoke --function-name teet-datomic-Compute-delete --payload "{
-  \"db-name\":\"$CURRENT_DB_NAME\",
-  \"asset-db-name\":\"$CURRENT_ASSET_DB_NAME\"}" out
+aws lambda invoke --function-name teet-datomic-Compute-delete-db --payload "{
+  \"db-name\":\"$CURRENT_DB\",
+  \"asset-db-name\":\"$CURRENT_ASSET_DB\"}" out
 
-echo "$CURRENT_DB_NAME and $CURRENT_ASSET_DB_NAME have been deleted"
+echo "$CURRENT_DB and $CURRENT_ASSET_DB have been deleted"
 
 
 echo "Check completed"
