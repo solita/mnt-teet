@@ -472,6 +472,17 @@
   [amount]
   {:padding-bottom (str amount "rem")})
 
+(defn margin
+  ([val]
+   (margin val val))
+  ([vertical horizontal]
+   (margin vertical horizontal vertical horizontal))
+  ([up right down left]
+   {:margin-top (str up "rem")
+    :margin-right (str right "rem")
+    :margin-bottom (str down "rem")
+    :margin-left (str left "rem")}))
+
 (defn padding
   "Add padding. Amounts specified in rem unit."
   ([vertical horizontal]
@@ -519,7 +530,7 @@
      :border-radius "3px"
      :line-height 1
      :background-color background
-     :padding "0.5rem"
+     :padding "0.5rem 0.7rem 0.5rem 0.5rem"
      :max-width "315px"}))
 
 (defn text-ellipsis [max-width]

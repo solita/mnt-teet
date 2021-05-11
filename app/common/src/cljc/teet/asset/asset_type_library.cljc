@@ -3,7 +3,8 @@
   (:require [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             #?@(:clj [[clojure.string :as str]
-                      [clojure.walk :as walk]])))
+                      [clojure.walk :as walk]
+                      [teet.util.coerce :refer [->long ->bigdec]]])))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
@@ -79,23 +80,6 @@
   ;; of the process (either page in browser or deployment in ions)
   (memoize item-by-ident*))
 
-
-#?(:clj
-   (defn ->bigdec [x]
-     (if (string? x)
-       (when-not (str/blank? x)
-         (-> x str/trim
-             (str/replace "," ".")
-             (str/replace "−" "-")
-             bigdec))
-       (bigdec x))))
-
-#?(:clj
-   (defn ->long [x]
-     (if (string? x)
-       (when-not (str/blank? x)
-         (-> x str/trim Long/parseLong))
-       (long x))))
 #?(:clj
    (defn coerce-fn [value-type]
      (case value-type

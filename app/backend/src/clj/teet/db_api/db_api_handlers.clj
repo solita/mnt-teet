@@ -8,6 +8,9 @@
 
             ;; Require all namespaces that provide queries/commands
             teet.authorization.authorization-queries
+            teet.contract.contracts-queries
+            teet.contract.contract-queries
+            teet.contract.contract-commands
             teet.file.file-commands
             teet.file.file-queries
             teet.comment.comment-commands

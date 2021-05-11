@@ -242,6 +242,28 @@
           (doseq [verify @verify-fns]
             (verify)))))))
 
+(deftest delete-tx-backup
+  (let [timestamp (System/currentTimeMillis)
+        with-populated-db (tu/with-db {:timestamp timestamp :skip-delete? true})
+        test-db-name (str "test-db-" timestamp)
+        test-asset-db-name (str "test-asset-db-" timestamp)]
+    (testing "Delete given databases by names"
+      (with-populated-db
+        (fn []
+          (let [client (d/client (environment/config-value :datomic :client))]
+            (#'backup-ion/delete-datomic-dbs
+              {:conn (tu/connection)
+               :asset-conn (tu/asset-connection)
+               :datomic-client client
+               :db-name test-db-name
+               :asset-db-name test-asset-db-name})
+            (is (nil?
+                  (some #(or
+                           (= test-asset-db-name %)
+                           (= test-db-name %))
+                    (d/list-databases client {})))
+              "No test DB or Asset DB after ION delete db call")))))))
+
 
 ;; use from repl as in (restore-dev-backup-to-local "/tmp/teet-dev-backup-2020-12-15.edn.zip")
 ;; - after calling this, note the printed db name, and put that in your config.edn & restart

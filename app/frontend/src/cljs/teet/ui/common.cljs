@@ -220,6 +220,13 @@
     :display :flex
     :align-items :center})
 
+(defn- contract-link-style
+  []
+  {:margin-right "10px"
+   :white-space :nowrap
+   :display :flex
+   :align-items :center})
+
 (defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
@@ -243,6 +250,14 @@
           opts)
    label
    [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
+
+(defn external-contract-link
+  [opts label]
+  [Link (merge {:class (<class contract-link-style)
+                :target :_blank}
+               opts)
+   label
+   [icons/action-open-in-new {:class (<class common-styles/margin-left 0.5)}]])
 
 (defn estate-group-style
   []
@@ -511,7 +526,10 @@
       [:div {:on-mouse-enter enter!
              :on-mouse-leave leave!
              :on-click enter!
+             :on-focus enter!
+             :on-blur leave!
              :ref set-anchor-el!
+             :tabindex 0
              :style {:display :inline-block}}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
