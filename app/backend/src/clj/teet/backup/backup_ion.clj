@@ -442,7 +442,7 @@
   (println "EVENT: " event)
   (try
     (ctx-> {:event event
-            :datomic-client (environment/datomic-client)
+            :datomic-client (d/client (environment/config-value :datomic :client))
             :conn (environment/datomic-connection)}
       read-delete-config
       delete-datomic-dbs)
