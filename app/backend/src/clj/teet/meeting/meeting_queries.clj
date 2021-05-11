@@ -165,11 +165,13 @@
 
 (defn project-decisions
   [db user project-id search-term]
-  (let [meetings (link-db/fetch-links
-                   db user
-                   (project-related-unit-ids db (environment/api-context) project-id)
-                   #(contains? % :meeting.decision/body)
-                   (meta-query/without-deleted
+  (let [meetings (db-api-large-text/with-large-text
+                   meeting-model/rich-text-fields
+                   (link-db/fetch-links
+                    db user
+                    (project-related-unit-ids db (environment/api-context) project-id)
+                    #(contains? % :meeting.decision/body)
+                    (meta-query/without-deleted
                      db
                      (->> (d/q '[:find
                                  (pull ?m [* {:activity/_meetings [:activity/name
@@ -200,7 +202,7 @@
                                db project-id)
                           (map #(assoc (first %) :meeting/locked-at (second %)))
                           (sort-by :meeting/start)
-                          reverse)))
+                          reverse))))
         decision-ids (matching-decision-ids search-term meetings)]
     (filter-decisions decision-ids meetings)))
 
