@@ -230,7 +230,7 @@
   :view teet.contract.contract-view/contract-page
   :extenal-links [teet.contract-contract-view/contract-links state]
   :crumb (teet.contract.contract-model/contract-url-id state)
-  :title (:thk.contract/name state)
+  :title (teet.contract.contract-model/contract-name state)
   :parent :contracts
   :state {:query :contract/contract-page
           :args {:contract-ids
