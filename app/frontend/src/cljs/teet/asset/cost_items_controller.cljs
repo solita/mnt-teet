@@ -94,6 +94,9 @@
 ;; Response when fetching road address based on geopoints
 (defrecord FetchRoadResponse [start-end-points response])
 
+;; initialize map (when opening map and editing existing asset)
+(defrecord InitMap [])
+
 (defrecord AddComponent [type])
 
 (defrecord SaveCostGroupPrice [cost-group price])
@@ -380,6 +383,22 @@
                            :location/carriageway carriageway
                            :location/start-m (or m start-m)
                            :location/end-m end-m}))))))))))
+
+  InitMap
+  (process-event [_ app]
+    (let [{:location/keys [start-point end-point]} (form-state app)
+          start (some-> start-point point)
+          end (some-> end-point point)]
+      (if (or start end)
+        (update-form app merge
+                     {:location/geojson
+                      #js {:type "FeatureCollection"
+                           :features
+                           (if end
+                             #js [(point-geojson start "start/end" "start")
+                                  (point-geojson end "start/end" "end")]
+                             #js [(point-geojson start "start/end" "start")])}})
+        app)))
 
   AddComponent
   (process-event [{type :type} {:keys [page params query] :as app}]
