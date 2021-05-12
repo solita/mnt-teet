@@ -183,6 +183,11 @@
   [project-context/consume
    [with-relevant-roads* opts component]])
 
+(defn- number-value [opts]
+  (update opts :value #(if (string? %)
+                         (js/parseInt %)
+                         %)))
+
 (defn- relevant-road-select* [{:keys [empty-label] :as opts
                                :or {empty-label ""}} relevant-roads]
   (let [items (->> relevant-roads (map :road-nr) sort vec)]
@@ -192,10 +197,7 @@
                  :empty-selection-label empty-label
                  :items items
                  :format-item (road-nr-format relevant-roads)})
-         (update :value
-                 #(if (string? %)
-                    (js/parseInt %)
-                    %)))]))
+         number-value)]))
 
 (defn- relevant-road-select [opts]
   [with-relevant-roads opts
@@ -203,7 +205,7 @@
 
 (defn- carriageway-for-road-select* [opts selected-road-nr relevant-roads]
   [select/form-select
-   (merge opts
+   (merge (number-value opts)
           {:show-empty-selection? true
            :items (or (cost-items-controller/carriageways-for-road
                        selected-road-nr
