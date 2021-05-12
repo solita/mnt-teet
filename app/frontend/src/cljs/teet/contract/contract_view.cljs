@@ -128,7 +128,7 @@
     [:div {:class (<class common-styles/flex-row-center)}
      [contract-menu/contract-menu e! app contract]
      [typography/TextBold {:class (<class common-styles/margin-left 0.5)}
-      (:thk.contract/name contract)]]
+      (contract-model/contract-name contract)]]
     [contract-external-links contract]]])
 
 (defn contract-information-row
