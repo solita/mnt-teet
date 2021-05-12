@@ -514,16 +514,15 @@
    component])
 
 (defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
-  (r/with-let [initial-data form-data
-               new? (nil? form-data)
+  (r/with-let [initial-data form-data]
+    (let [new? (nil? (:asset/oid form-data))
+          cancel-event (if new?
+                         #(common-controller/->NavigateWithSameParams :cost-items)
 
-               cancel-event (if new?
-                              #(common-controller/->NavigateWithSameParams :cost-items)
-
-                              ;; Update with initial data to cancel
-                              (r/partial
-                               cost-items-controller/->UpdateForm initial-data))]
-    (let [feature-class (when fclass
+                         ;; Update with initial data to cancel
+                         (r/partial
+                          cost-items-controller/->UpdateForm initial-data))
+          feature-class (when fclass
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
        (when-let [oid (:asset/oid form-data)]
