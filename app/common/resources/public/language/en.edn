@@ -198,7 +198,7 @@
   :select-all "Select all",
   :hotkey "key {key}",
   :total "Total",
-  :contract-menu "Contract menu",
+  :contract-menu "Contracts",
   :language "Language",
   :filter-shortcuts "Filter shortcuts",
   :unassigned "Unassigned",
