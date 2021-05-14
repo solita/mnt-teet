@@ -73,7 +73,7 @@
          [(get-in target [:activity :activity/manager])]]
         [[(get-in target [:project :thk.project/name])]
          [[url/Link (:target-navigation-info target)
-           (get-in target [:target :activity/name])]]
+           (tr [:enum (get-in target [:target :activity/name])])]]
          [nil]
          [(get-in target [:activity :activity/manager])]]))]])
 
