@@ -10,6 +10,8 @@ env:
 
   parameter-store:
     AWS_ACCOUNT_ID: "/teet/aws-account-id"
+    DOCKER_USER: "/teet/datomic/db-name"
+    DOCKER_ACCESS_TOKEN: "/teet/datomic/db-name"
 
 phases:
   install:
@@ -17,7 +19,7 @@ phases:
       java: openjdk8
   pre_build:
     commands:
-      - $(aws ecr get-login --no-include-email --region eu-central-1)
+      - $(echo $DOCKER_ACCESS_TOKEN | docker login --username $DOCKER_USER --password-stdin)
   build:
     commands:
       - cd $WD && bash build.sh
