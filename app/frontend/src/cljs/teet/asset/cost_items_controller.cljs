@@ -368,9 +368,9 @@
                  (let [geojson (js/JSON.parse geometry)]
                    (merge form
                           {:location/start-point start-point
-                           :location/start-offset-m (format/decimal 3 start-offset-m)
+                           :location/start-offset-m start-offset-m
                            :location/end-point end-point
-                           :location/end-offset-m (format/decimal 3 end-offset-m)
+                           :location/end-offset-m end-offset-m
                            :location/geojson
                            #js {:type "FeatureCollection"
                                 :features

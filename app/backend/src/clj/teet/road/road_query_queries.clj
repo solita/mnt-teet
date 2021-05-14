@@ -11,7 +11,8 @@
             [teet.map.map-services :as map-services]
             [teet.road.teeregister-api :as teeregister-api]
             [clojure.spec.alpha :as s]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire])
+  (:import (java.text NumberFormat)))
 
 (defonce cache-options
   ;; For local development use:
@@ -163,6 +164,13 @@
 (s/def ::distance number?)
 (s/def ::point ::geopoint)
 
+(def ^:private locale (java.util.Locale. "et" "EE"))
+
+(defn- decimal [d n]
+  (.format (doto (NumberFormat/getNumberInstance)
+             (.setMinimumFractionDigits d)
+             (.setMaximumFractionDigits d)) n))
+
 (defquery :road/by-2-geopoints
   {:doc "Return road for 2 geopoints within distance"
    :spec (s/keys :req-un [::start ::end ::distance])
@@ -175,9 +183,15 @@
                    distance start end)
                   (sort-by :distance)
                   first)
-        ls (some-> road :geometry (cheshire/decode keyword) :coordinates)]
+        ls (some-> road :geometry (cheshire/decode keyword) :coordinates)
+        km-format (partial decimal 6)
+        m-format (partial decimal 3)]
     (merge
-     {:road road
+     {:road (-> road
+                (cu/update-in-if-exists [:start-km] km-format)
+                (cu/update-in-if-exists [:end-km] km-format)
+                (cu/update-in-if-exists [:start-offset-m] m-format)
+                (cu/update-in-if-exists [:end-offset-m] m-format))
       :start-point start
       :end-point end}
      (when ls
