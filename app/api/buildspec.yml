@@ -25,8 +25,11 @@ phases:
   build:
     commands:
       - cd $WD && bash build.sh
+      - echo "STEP 1"
       - docker tag mnt-teet/teet-api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
+      - echo "STEP 2"
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
+      - echo "STEP 3"
   post_build:
    commands:
      - cd ../..
