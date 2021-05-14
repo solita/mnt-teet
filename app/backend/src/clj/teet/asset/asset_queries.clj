@@ -167,3 +167,20 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
   (asset-db/project-boq-version-history adb project-id))
+
+
+(s/def :assets-search/fclass (s/coll-of keyword?))
+
+(defquery :assets/search
+  {:doc "Search assets based on multiple criteria."
+   :spec (s/keys :opt-un [:assets-search/fclass])
+   :args {fclass :fclass}
+   :context {:keys [db user] adb :asset-db}
+   :project-id nil
+   :authorization {}}
+  (d/q '[:find (pull ?a [:asset/fclass :common/status :asset/oid])
+         :where
+         [?a :asset/fclass ?fclass]
+         :in $ [?fclass ...]]
+       adb
+       fclass))

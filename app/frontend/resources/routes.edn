@@ -235,4 +235,10 @@
   :state {:query :contract/contract-page
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}
+
+ :assets
+ {:path "/assets"
+  :view teet.asset.assets-view/assets-page
+  :crumb (tr [:asset :manager :link])
+  :title (tr [:asset :manager :link])}
  }
