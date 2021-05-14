@@ -19,6 +19,8 @@ phases:
       java: openjdk8
   pre_build:
     commands:
+      - echo $DOCKER_USER
+      - echo $DOCKER_ACCESS_TOKEN
       - $(echo $DOCKER_ACCESS_TOKEN | docker login --username $DOCKER_USER --password-stdin)
   build:
     commands:
