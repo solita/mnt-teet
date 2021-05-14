@@ -19,18 +19,14 @@ phases:
       java: openjdk8
   pre_build:
     commands:
-      - echo $DOCKER_USER
       - echo $DOCKER_ACCESS_TOKEN > ~/token.txt
       - cat ~/token.txt | docker login --username $DOCKER_USER --password-stdin
   build:
     commands:
       - cd $WD && bash build.sh
-      - echo "STEP 1"
       - docker tag mnt-teet/teet-api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
-      - echo "STEP 2"
       - $(aws ecr get-login --no-include-email --region eu-central-1)
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
-      - echo "STEP 3"
   post_build:
    commands:
      - cd ../..
