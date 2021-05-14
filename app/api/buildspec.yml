@@ -10,11 +10,18 @@ env:
 
   parameter-store:
     AWS_ACCOUNT_ID: "/teet/aws-account-id"
+    DOCKER_USER: "/teet/docker/user"
+    DOCKER_ACCESS_TOKEN: "/teet/docker/token"
 
 phases:
   install:
     runtime-versions:
       java: openjdk8
+  pre_build:
+    commands:
+      - echo $DOCKER_USER
+      - echo $DOCKER_ACCESS_TOKEN > ~/token.txt
+      - cat ~/token.txt | docker login --username $DOCKER_USER --password-stdin
   build:
     commands:
       - cd $WD && bash build.sh
