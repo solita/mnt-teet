@@ -108,7 +108,9 @@
 (defn- fclass [open {attributes :attribute/_parent :as fclass}]
   [:<>
    [typography/Heading3
-    (str (tr [:asset :type-library :fclass]) " " (tr* fclass))]
+    (str (tr [:asset :type-library :fclass]) " " (tr* fclass)
+         (when-let [op (:fclass/oid-prefix fclass)]
+           (str " (" op ")")))]
    [:div
     (tr* fclass :asset-schema/description)
     [attribute-table open attributes]
