@@ -250,8 +250,8 @@
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/start-m
-       [input-textfield {:type :number}]]]
+      [form/field :location/start-km
+       [input-textfield {}]]]
 
      [Grid {:item true
             :md 3
@@ -271,8 +271,8 @@
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/end-m
-       [input-textfield {:type :number}]]]
+      [form/field :location/end-km
+       [input-textfield {}]]]
 
      [Grid {:item true
             :md 3
@@ -312,7 +312,7 @@
              [Grid {:item true :xs 12 :md 12}
               [form/field {:attribute [:location/start-point :location/end-point
                                        :location/road-nr :location/carriageway
-                                       :location/start-m :location/end-m
+                                       :location/start-km :location/end-km
                                        :location/geojson]}
 
                [cost-items-map-view/location-map {:e! e!}]]])
