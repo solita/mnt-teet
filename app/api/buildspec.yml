@@ -10,8 +10,8 @@ env:
 
   parameter-store:
     AWS_ACCOUNT_ID: "/teet/aws-account-id"
-    DOCKER_USER: "/teet/datomic/db-name"
-    DOCKER_ACCESS_TOKEN: "/teet/datomic/db-name"
+    DOCKER_USER: "/teet/docker/user"
+    DOCKER_ACCESS_TOKEN: "/teet/docker/token"
 
 phases:
   install:
