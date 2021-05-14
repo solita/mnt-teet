@@ -7,6 +7,8 @@ DOCKER_ACCESS_TOKEN=$(aws ssm get-parameters --names "/teet/docker/token" --quer
 echo $DOCKER_USER
 echo $DOCKER_ACCESS_TOKEN
 
-$(echo $DOCKER_ACCESS_TOKEN | docker login --username $DOCKER_USER --password-stdin)
+echo $DOCKER_ACCESS_TOKEN > ~/token.txt
+
+cat ~/token.txt | docker login --username $DOCKER_USER --password-stdin
 
 docker build . -t mnt-teet/teet-api:latest --build-arg POSTGREST_VERSION=v6.0.1
