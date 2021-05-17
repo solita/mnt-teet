@@ -49,9 +49,6 @@ if [ "$STATUS" = "200" ]; then
     \"asset-db-name\":\"$CURRENT_ASSET_DB\"}" out
 
   echo "$CURRENT_DB and $CURRENT_ASSET_DB have been deleted"
-
-  sh ./notifiy.bash "Backup-Restore build succeeded \n$MSG_TEET_DB_IS_SWITCHED\n$MSG_ASSET_DB_IS_SWITCHED" ":great-success:"
-
   echo "Backup-Restore build succeeded"
 else
   echo "Restored DB check failed with status: $STATUS"
@@ -72,6 +69,6 @@ else
   echo $MSG_TEET_DB_IS_RESTORED
   echo $MSG_ASSET_DB_IS_RESTORED
 
-  sh ./notifiy.bash "Backup-Restore build failed. Restored DB check failed with status: $STATUS\n$MSG_TEET_DB_IS_RESTORED\n$MSG_ASSET_DB_IS_RESTORED" ":blob-fail:"
+  bash ./notify.bash "Backup-Restore build failed. Restored DB check failed with status: $STATUS\n$MSG_TEET_DB_IS_RESTORED\n$MSG_ASSET_DB_IS_RESTORED" ":blob-fail:"
   exit 1
 fi
