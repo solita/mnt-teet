@@ -79,8 +79,6 @@
          :headers {"Location" (file-storage/download-url "inline"
                                                          thumbnail-key)}}))))
 
-
-
 (defquery :file/download-attachment
   {:doc "Download comment attachment"
    :context {:keys [db user]}
@@ -114,3 +112,19 @@
       ;; If metadata can't be parsed, return empty map, frontend will
       ;; know that filename is not valid
       {})))
+
+(defquery :file/redirect-to-zip
+  {:doc "URL endpoint for redirecting to AWS download of a generated zip file"
+   :context {:keys [db]}
+   :args {s3-key :s3-key
+          filename :filename}
+   :config {export-bucket [:document-storage :export-bucket-name]}
+   :unauthenticated? true
+   :pre [^{:error :configuration-missing}
+         (some? export-bucket)]}
+  ^{:format :raw}
+  {:status 302
+   :headers {"Location" (integration-s3/presigned-url
+                          {:content-disposition (str "attachment; filename=" filename)
+                           :expiration-seconds 60}
+                          "GET" export-bucket s3-key)}})
