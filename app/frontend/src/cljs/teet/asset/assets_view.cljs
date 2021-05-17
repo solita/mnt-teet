@@ -24,19 +24,30 @@
       :atl atl}]]])
 
 (defn- assets-results [e! atl {:keys [assets geojson]}]
-  [:div
-   [table/listing-table
-    {:columns asset-model/assets-listing-columns
-     :data assets
-     :key :asset/oid}]
-   [map-view/map-view e!
-    {:layers (when geojson
-               {:assets-search-geojson
-                (map-layers/geojson-data-layer
-                 "assets-search-geojson"
-                 (js/JSON.parse geojson)
-                 map-features/project-line-style
-                 {:fit-on-load? true})})}]])
+  (let [fitted (atom false)]
+    (r/create-class
+     {:component-did-update
+      (fn [_
+           [_ _ _ {old-geojson :geojson}]
+           [_ _ _ {new-geojson :geojson}]]
+        (when (not= old-geojson new-geojson)
+          (reset! fitted false)))
+      :reagent-render
+      (fn [e! atl {:keys [assets geojson]}]
+        [:div
+         [table/listing-table
+          {:columns asset-model/assets-listing-columns
+           :data assets
+           :key :asset/oid}]
+         [map-view/map-view e!
+          {:layers (when geojson
+                     {:assets-search-geojson
+                      (map-layers/geojson-data-layer
+                       "assets-search-geojson"
+                       (js/JSON.parse geojson)
+                       map-features/asset-line-and-icon
+                       {:fit-on-load? true
+                        :fitted-atom fitted})})}]])})))
 
 (defn assets-page [e! app]
   (r/with-let [filters (r/atom {})]
