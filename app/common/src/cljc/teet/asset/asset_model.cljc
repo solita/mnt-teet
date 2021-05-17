@@ -70,6 +70,12 @@
   (and (string? oid)
        (boolean (re-matches component-pattern oid))))
 
+(defn asset-oid->fclass-oid-prefix
+  "Extract the asset fclass OID prefix from an asset OID instance."
+  [oid]
+  {:pre [(asset-oid? oid)]}
+  (subs oid 4 7))
+
 (defn asset-oid
   "Format asset OID for feature class prefix and seq number."
   [owner-code fclass-oid-prefix sequence-number]
@@ -115,3 +121,8 @@
 
 (def locked? "Key to check if version is locked"
   :boq-version/locked?)
+
+
+(def assets-listing-columns
+  "Columns to show in asset manager search results listing"
+  [:asset/oid :location/road-nr])
