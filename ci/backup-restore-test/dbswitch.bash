@@ -39,11 +39,11 @@ STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASEURL/$ENDPOINT")
 
 if [ "$STATUS" = "200" ]; then
   echo "Query succeeded"
-  MSG_TEET_DB_IS_RESTORED="$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') DB is in use"
-  MSG_ASSET_DB_IS_RESTORED="$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') Assets DB is in use"
+  MSG_TEET_DB_IS_SWITCHED="$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') DB is in use"
+  MSG_ASSET_DB_IS_SWITCHED="$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') Assets DB is in use"
 
-  echo $MSG_TEET_DB_IS_RESTORED
-  echo $MSG_ASSET_DB_IS_RESTORED
+  echo $MSG_TEET_DB_IS_SWITCHED
+  echo $MSG_ASSET_DB_IS_SWITCHED
 
     # Cleanup both old DB-s
   aws lambda invoke --function-name teet-datomic-Compute-delete-db --payload "{
@@ -52,11 +52,22 @@ if [ "$STATUS" = "200" ]; then
 
   echo "$CURRENT_DB and $CURRENT_ASSET_DB have been deleted"
 
-  sh ./notifiy.bash "Backup-Restore build succeeded \n$MSG_TEET_DB_IS_RESTORED\n$MSG_ASSET_DB_IS_RESTORED" ":great-success:"
+  sh ./notifiy.bash "Backup-Restore build succeeded \n$MSG_TEET_DB_IS_SWITCHED\n$MSG_ASSET_DB_IS_SWITCHED" ":great-success:"
 
   echo "Backup-Restore build succeeded"
 else
   echo "Restored DB check failed with status: $STATUS"
+    aws ssm put-parameter \
+              --name "/teet/datomic/db-name" \
+              --type "String" \
+              --value $CURRENT_DB \
+              --overwrite
+
+  aws ssm put-parameter \
+              --name "/teet/datomic/asset-db-name" \
+              --type "String" \
+              --value $CURRENT_ASSET_DB \
+              --overwrite
 
   MSG_TEET_DB_IS_RESTORED="$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
   MSG_ASSET_DB_IS_RESTORED="$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
