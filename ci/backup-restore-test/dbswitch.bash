@@ -57,7 +57,7 @@ if [ "$STATUS" = "200" ]; then
   echo "Backup-Restore build succeeded"
 else
   echo "Restored DB check failed with status: $STATUS"
-    aws ssm put-parameter \
+  aws ssm put-parameter \
               --name "/teet/datomic/db-name" \
               --type "String" \
               --value $CURRENT_DB \
