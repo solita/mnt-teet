@@ -88,6 +88,7 @@
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
+  :manager {:link "Varad"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :location

@@ -5,10 +5,7 @@
             [teet.localization :as localization :refer [tr]]
             [teet.ui.table :as table]
             [teet.util.collection :as cu]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent IconButton
-                                         Paper Grid CircularProgress]]
-            [teet.ui.icons :as icons]
-            [teet.util.datomic :as du]
+            [teet.ui.material-ui :refer [Paper Grid CircularProgress]]
             [teet.common.common-styles :as common-styles]
             [herb.core :refer [<class]]
             [teet.ui.format :as format]
@@ -16,36 +13,8 @@
             [teet.ui.url :as url]
             [teet.theme.theme-colors :as theme-colors]
             [teet.asset.asset-type-library :as asset-type-library]
-            [teet.theme.theme-spacing :as theme-spacing]))
+            [teet.asset.asset-ui :refer [tr*]]))
 
-(defn tr*
-  ([m]
-   (tr* m :asset-schema/label))
-  ([m key]
-   (get-in m [key (case @localization/selected-language
-                    :et 0
-                    :en 1)])))
-
-(defn- collapsible [open item header content]
-  (let [open? (@open (:db/ident item))]
-    [Card {:variant :outlined
-           :data-ident (str (:db/ident item))}
-     [CardHeader {:disableTypography true
-                  :title (r/as-element
-                           (condp du/enum= (:asset-schema/type item)
-                             :asset-schema.type/fgroup [typography/Heading2 header]
-                             :asset-schema.type/fclass [typography/Heading4 header]
-                             :asset-schema.type/ctype [typography/Heading5 header]
-                             [typography/BoldGrayText header]))
-                  :action (r/as-element
-                           [IconButton {:on-click #(swap! open cu/toggle (:db/ident item))}
-                            (if open?
-                              [icons/navigation-expand-less]
-                              [icons/navigation-expand-more])])}]
-     (when (@open (:db/ident item))
-       [CardContent {:class [(<class common-styles/margin-left 1)
-                             (<class common-styles/margin-bottom 0.5)]}
-        content])]))
 
 (defn- attribute-values [open {values :enum/_attribute id :db/ident :as a}]
   (when (seq values)
@@ -108,7 +77,9 @@
 (defn- fclass [open {attributes :attribute/_parent :as fclass}]
   [:<>
    [typography/Heading3
-    (str (tr [:asset :type-library :fclass]) " " (tr* fclass))]
+    (str (tr [:asset :type-library :fclass]) " " (tr* fclass)
+         (when-let [op (:fclass/oid-prefix fclass)]
+           (str " (" op ")")))]
    [:div
     (tr* fclass :asset-schema/description)
     [attribute-table open attributes]

@@ -125,28 +125,28 @@
              (when delete-title
                {:modal-title delete-title}))
             (tr [:buttons :delete])]])]
-    [:div
-     [:div {:class (<class form-buttons)}
+    [:div {:class (<class form-buttons)}
+     [:div
       (when-not delete-link?
-        delete-element)
-      [:div {:style {:margin-left :auto
-                     :text-align :center}}
-       [:div {:class (<class common-styles/margin-bottom 1)}
-        (when cancel
-          [buttons/button-secondary {:style {:margin-right "1rem"}
-                                     :disabled disabled?
-                                     :class "cancel"
-                                     :on-click cancel}
-           (tr [:buttons :cancel])])
-        (when validate
-          [buttons/button-primary {:disabled disabled?
-                                   :type :submit
-                                   :class "submit"
-                                   :on-click validate}
-           (tr [:buttons :save])])]
-       (when (and delete-link? delete-element)
-         [:div
-          delete-element])]]]))
+        delete-element)]
+     [:div {:style {:margin-left :auto
+                    :text-align :center}}
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (when cancel
+         [buttons/button-secondary {:style {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])
+       (when validate
+         [buttons/button-primary {:disabled disabled?
+                                  :type :submit
+                                  :class "submit"
+                                  :on-click validate}
+          (tr [:buttons :save])])]
+      (when (and delete-link? delete-element)
+        [:div
+         delete-element])]]))
 
 (defn- hide-field?
   "Returns true if field is nil or if it has `:step` in its metadata and
