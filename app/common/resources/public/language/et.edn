@@ -586,7 +586,15 @@
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
   :task.type/road "Tee",
-  :cooperation.application.response-type/coordination "Kooskõlastus"},
+  :cooperation.application.response-type/coordination "Kooskõlastus",
+  :file.part.status/not-started "Not started",
+  :file.part.status/in-progress "In progress",
+  :file.part.status/waiting-for-review "Waiting for review",
+  :file.part.status/reviewing "Reviewing",
+  :file.part.status/completed "Completed",
+  :notification.type/task-part-waiting-for-review "Task part {task-part-name} is waiting for your review.",
+  :notification.type/task-part-review-accepted "Task part {task-part-name} has been accepted.",
+  :notification.type/task-part-review-rejected "Task part {task-part-name} has been rejected."},
  :environment
  {:build-time "Viimane versiooniuuendus toimus",
   :info-text
@@ -1234,6 +1242,8 @@
   :add-part-modal-title "Lisan ülesande osa",
   :part-deleted-successfully "Ülesande osa edukalt kustutatud",
   :submit-results "Esitan tulemused",
+  :reopen "Reopen task"
+  :reopen-success "Task re-opened successfully"
   :submit-results-success "Tulemused edukalt esitatud",
   :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
   :confirm-delete-task-sent-to-thk
@@ -1257,4 +1267,17 @@
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
   :version-mismatch
-  "Rakenduse uus versioon on laetud. Palun värskenda lehte."}}
+  "Rakenduse uus versioon on laetud. Palun värskenda lehte."}
+:task-part {:accept "Kooskõlastatud"
+            :reject "Saadan tagasi"
+            :submit-for-approval "Esitan ülevaatamiseks"
+            :reopen "Ava"
+            :submit-results "Submit results"
+            :submit-results-confirm "Are you sure you wish to submit this task part for review?"
+            :approve-part "Approve results"
+            :approve-part-confirm "Are you sure you wish approve the task part?"
+            :reject-part "Send back"
+            :reject-part-confirm "Are you sure you wish to send back the task part?"
+            :reopen-part "Reopen task part"
+            :reopen-part-confirm "Are you sure you wish to reopen this task part and all associated files?"
+            :reopen-successful "Task part re-opened successfully"}}

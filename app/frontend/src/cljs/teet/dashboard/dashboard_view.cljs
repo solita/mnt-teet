@@ -18,7 +18,9 @@
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.util.collection :as cu]
-            [teet.land.land-style :as land-style]))
+            [teet.util.datomic :as du]
+            [teet.land.land-style :as land-style]
+            [clojure.string :as cstr]))
 
 (defonce open-projects-atom (local-storage (r/atom #{}) "dashboard-open-projects"))
 
@@ -35,6 +37,14 @@
    [typography/Heading2 {:style {:margin-bottom "0.5rem"
                                  :font-variant :all-petite-caps}} label]
    content])
+
+(defn- is-task-part-notification?
+  "Checks if the notification type is task-part as these require additional part name in the message"
+  [notification-type]
+  (or
+    (du/enum= notification-type :notification.type/task-part-waiting-for-review)
+    (du/enum= notification-type :notification.type/task-part-review-accepted)
+    (du/enum= notification-type :notification.type/task-part-review-rejected)))
 
 (defn- task-row [{:task/keys [group type status estimated-start-date estimated-end-date]
                   id :db/id :as t}]
@@ -130,11 +140,17 @@
              (doall
                (for [{:notification/keys [type]
                       :meta/keys [created-at]
+                      task-part-name :notification/target
                       id :db/id} notifications]
                  ^{:key (str id)}
                  [:div
                   [buttons/link-button {:on-click #(e! (notification-controller/->NavigateTo id))}
-                   (tr-enum type) " " (fmt/date-time created-at)]])))]
+                   (if (is-task-part-notification? type)
+                     (tr [:enum (:db/ident type)] {:task-part-name (str "#" (:file.part/number task-part-name)
+                                                                        (if (cstr/blank? (:file.part/name task-part-name))
+                                                                          ""
+                                                                          (str " \"" (:file.part/name task-part-name) "\"")))})
+                     (tr-enum type)) " " (fmt/date-time created-at)]])))]
 
           [section
            (tr [:dashboard :activities-and-tasks])

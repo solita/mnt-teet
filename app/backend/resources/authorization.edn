@@ -5,6 +5,7 @@
   :internal-consultant :link,
   :external-consultant :link},
  :task/review {:admin :full, :manager :full},
+ :task/reopen {:admin :full, :manager :full},
  :task/task-information
  {:admin :full,
   :manager :full,

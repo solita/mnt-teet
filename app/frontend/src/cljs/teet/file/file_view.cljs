@@ -35,7 +35,8 @@
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            [teet.ui.common :as common-ui]))
+            [teet.ui.common :as common-ui]
+            [taoensso.timbre :as log]))
 
 
 
@@ -543,7 +544,7 @@
            [:<>
             (when (and can-submit?
                        (nil? latest-file)
-                       (du/enum= :file.status/draft (:file/status file)))
+                       (file-model/editable? file))
               [file-replacement-modal-button {:e! e!
                                               :project-id project-id
                                               :task task
@@ -609,31 +610,15 @@
                                          :entity-id (:db/id @selected-file)
                                          :show-comment-form? false}]])]])))
 
-(defn file-part-heading
-  [{heading :heading
-    number :number} opts]
-  [:div {:style {:margin-bottom "1.5rem"
-                 :display :flex
-                 :justify-content :space-between}}
-   [:div {:class (<class common-styles/flex-row-end)
-          :style {:margin-right "0.5rem"}}
-    [typography/Heading2 {:style {:margin-right "0.5rem"}}
-     heading]
-    (when number
-      [typography/GrayText
-       {:style {:white-space :nowrap}}
-       (goog.string/format "#%02d" number)])]
-   [:div
-    (when-let [action-comp (:action opts)]
-      action-comp)]])
-
 (defn no-files
   []
-  [typography/GrayText {:class [(<class typography/gray-text-style)
+  [typography/GrayTextDiv {:class [(<class typography/gray-text-style)
                                 (<class common-styles/flex-row)
                                 (<class common-styles/margin-bottom 1)]}
-   [ti/file {:style {:margin-right "0.5rem"}}]
-   [:span (tr [:file :no-files])]])
+   [:div {:class [(<class common-styles/flex-row)
+                  (<class common-styles/margin-bottom 1.5)]}
+    [ti/file {:style {:margin-right "0.5rem"}}]
+   [:span {:style {:margin-top "2px"}} (tr [:file :no-files])]]])
 
 (defn- file-edit-name [{:keys [value on-change error error-text]}]
   (let [[name original-name] value
@@ -734,8 +719,8 @@
 
        :reagent-render
        (fn [e! app project]
-         (let [{file-id :file
-                task-id :task
+         (let [{file-id     :file
+                task-id     :task
                 activity-id :activity} (:navigation project)
                activity (project-model/activity-by-id project activity-id)
                task (project-model/task-by-id project task-id)
@@ -752,29 +737,29 @@
                                                  (get-in file [:file/part :db/id]))
                                           %)
                                        (:file.part/_task task))
-                                 {:file.part/name (tr [:file-upload :general-part])
+                                 {:file.part/name   (tr [:file-upload :general-part])
                                   :file.part/number 0})]
                [:div
                 [project-navigator-view/project-navigator-with-content
-                 {:e! e!
-                  :app app
-                  :project project
-                  :column-widths [3 9 :auto]
-                  :show-map? false
+                 {:e!              e!
+                  :app             app
+                  :project         project
+                  :column-widths   [3 9 :auto]
+                  :show-map?       false
                   :content-padding "0rem"}
                  [Grid {:container true :spacing 0}
-                  [Grid {:item true :xs 4
+                  [Grid {:item  true :xs 4
                          :class (<class common-styles/flex-column-1)}
                    [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
-                  [Grid {:item true :xs 8
+                  [Grid {:item  true :xs 8
                          :class (<class common-styles/padding 2 2 2 1.75)}
                    [:<>
                     (when @edit-open?
-                      [file-edit-dialog {:e! e!
+                      [file-edit-dialog {:e!       e!
                                          :on-close #(reset! edit-open? false)
                                          :activity activity
-                                         :file file
-                                         :parts (:file.part/_task task)}])]
+                                         :file     file
+                                         :parts    (:file.part/_task task)}])]
 
                    [:div {:class (<class common-styles/flex-row)}
                     [typography/Heading1 {:title description
@@ -783,13 +768,14 @@
                      [:span {:class (<class common-styles/overflow-ellipsis)}
                       description]
                      [typography/GrayText {:style {:display :inline-block
-                                                   :margin "0 0.5rem"}}
+                                                   :margin  "0 0.5rem"}}
                       (str/upper-case extension)]]
-                    [:div {:style {:flex-grow 1
+                    [:div {:style {:flex-grow  1
                                    :text-align :end}}
-                     [buttons/button-secondary {:on-click #(reset! edit-open? true)
-                                                :data-cy "edit-file-button"}
-                      (tr [:buttons :edit])]]]
+                     (when (file-model/editable? file)
+                       [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                                  :data-cy  "edit-file-button"}
+                        (tr [:buttons :edit])])]]
                    [file-identifying-info (du/enum= :activity.name/land-acquisition
                                                     (:activity/name activity))
                     file]
@@ -799,17 +785,18 @@
 
                    ^{:key (str (:db/id file) "-details-and-comments")}
                    [tabs/details-and-comments-tabs
-                    {:e! e!
-                     :app app
+                    {:e!                                e!
+                     :app                               app
                      :after-comment-list-rendered-event common-controller/->Refresh
-                     :comment-link-comp [file-comments-link file]
-                     :after-comment-added-event common-controller/->Refresh
-                     :entity-id (:db/id file)
-                     :entity-type :file
-                     :show-comment-form? (not old?)}
+                     :comment-link-comp                 [file-comments-link file]
+                     :after-comment-added-event         common-controller/->Refresh
+                     :entity-id                         (:db/id file)
+                     :entity-type                       :file
+                     :show-comment-form?                (not old?)}
                     (when file
-                      [file-details {:e! e! :app app :project-id project-id :task task
-                                     :file file :latest-file latest-file
-                                     :file-part file-part
-                                     :can-submit? (task-model/can-submit? task)
+                      [file-details {:e!           e! :app app :project-id project-id :task task
+                                     :file         file :latest-file latest-file
+                                     :file-part    file-part
+                                     :can-submit?  (if (> 0 (:file.part/number file-part)) (task-model/can-submit-part? file-part)
+                                                                         (task-model/can-submit? task))
                                      :replace-form (:files-form project)}])]]]]]))))})))
