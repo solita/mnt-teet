@@ -779,8 +779,9 @@
           {:title (tr [:common :last-modified])
            :variant :info
            :body [:<>
-                  [:div (fmt/date-time timestamp)]
-                  [:div (user-model/user-name user)]]}
+                  (fmt/date-time timestamp)
+                  [:br]
+                  (user-model/user-name user)]}
           [icons/alert-error-outline]])
 
        ;; Save or unlock button
