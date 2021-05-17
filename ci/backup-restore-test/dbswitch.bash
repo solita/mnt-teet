@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-
-echo "Check started"
-
 set -eu
+echo "Check started"
 
 RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)

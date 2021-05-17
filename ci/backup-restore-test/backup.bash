@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -eu
 echo "Backup started"
 
 S3_BUCKET="teet-dev2-documents"

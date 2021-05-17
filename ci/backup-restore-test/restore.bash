@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -eu
 
 echo "Restore started"
 S3_BUCKET="teet-dev2-documents"
