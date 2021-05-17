@@ -44,12 +44,9 @@ if [ "$first_line_bytes" = "SUCCESS{" ]; then
   exit 0
 else
   echo "Restore failed "$first_line_bytes
+  sh ./notifiy.bash "Backup-Restore build failed. Restore from $BACKUP_FILE_NAME failed with: $first_line_bytes" ":blob-fail:"
   exit 1
 fi
-
-
-echo "Restore timeout exceeded."
-exit 0  ## change after backup ION updated to save to log
 
 
 

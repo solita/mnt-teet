@@ -29,4 +29,5 @@ while [ "$SECONDS" -lt "$END_TIME" ]; do
 done
 
 echo "Backup timeout exceeded."
+sh ./notifiy.bash "Backup-Restore build failed. Backup .zip pull timeout exceeded" ":blob-fail:"
 exit 1
