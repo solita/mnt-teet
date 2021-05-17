@@ -113,6 +113,13 @@
       ;; know that filename is not valid
       {})))
 
+(defn valid-filename?
+  [filename]
+  (let [{extension :extension
+         description :description} (filename-metadata/name->description-and-extension filename)]
+    (and (file-model/valid-chars-in-description? description)
+         (= extension "zip"))))
+
 (defquery :file/redirect-to-zip
   {:doc "URL endpoint for redirecting to AWS download of a generated zip file"
    :context {:keys [db]}
@@ -121,7 +128,9 @@
    :config {export-bucket [:document-storage :export-bucket-name]}
    :unauthenticated? true
    :pre [^{:error :configuration-missing}
-         (some? export-bucket)]}
+         (some? export-bucket)
+         ^{:error :invalid-filename}
+         (valid-filename? filename)]}
   ^{:format :raw}
   {:status 302
    :headers {"Location" (integration-s3/presigned-url
