@@ -57,13 +57,14 @@
   "The Cost Item list is in the Contract phase, are you sure that you want to change it, and are you aware that you need to change the budget and inform the management",
   :totals-table
   {:properties "Cost grouping",
-   :type "Type",
-   :quantity "Quantity",
+   :project-total "Total {total} EUR",
    :cost-per-quantity-unit "Unit cost (€)",
    :total-cost "Total (€)",
-   :project-total "Total {total} EUR",
+   :type "Type",
    :all-components "All components",
-   :all-roads "All roads"},
+   :all-roads "All roads",
+   :quantity "Quantity",
+   :no-road-reference "No road reference"},
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate

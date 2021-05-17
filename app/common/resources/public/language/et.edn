@@ -57,13 +57,14 @@
   "Kululoend on aktiivses lepingus. Selle muutmine tähendab lepingu muudatust. Kas oled kindel, et soovid avada kululoendi muudatusteks?",
   :totals-table
   {:properties "Kulude grupeerimine",
-   :type "Tüüp",
-   :quantity "Kogus",
+   :project-total "Kokku {total} EUR",
    :cost-per-quantity-unit "Ühiku maksumus (€)",
    :total-cost "Kokku (€)",
-   :project-total "Kokku {total} EUR",
+   :type "Tüüp",
    :all-components "Kõik komponendid",
-   :all-roads "Kõik teed"},
+   :all-roads "Kõik teed",
+   :quantity "Kogus",
+   :no-road-reference "Ilma tee aadressita"},
   :add-cost-item "Lisan vara",
   :export-boq "Kululoendi eksport",
   :validate

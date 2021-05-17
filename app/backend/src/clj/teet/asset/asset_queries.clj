@@ -16,7 +16,8 @@
             [teet.util.euro :as euro]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [teet.util.coerce :refer [->long]]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -96,7 +97,15 @@
          (let [cost-groups (asset-db/project-cost-groups-totals
                             adb project-id
                             (when road
-                              (asset-db/project-assets-and-components-matching-road adb project-id road)))]
+                              (cond
+                                (= road "all-roads")
+                                (asset-db/project-assets-and-components-with-road adb project-id)
+
+                                (= road "no-road-reference")
+                                (asset-db/project-assets-and-components-without-road adb project-id)
+                                :else
+                                (asset-db/project-assets-and-components-matching-road
+                                 adb project-id (->long road)))))]
            {:cost-totals
             {:cost-groups cost-groups
              :fclass-and-fgroup-totals (fclass-and-fgroup-totals atl cost-groups)

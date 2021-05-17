@@ -172,21 +172,35 @@
   [project-context/consume
    [with-relevant-roads* opts component]])
 
-(defn- number-value [opts]
-  (update opts :value #(if (string? %)
-                         (js/parseInt %)
-                         %)))
+(defn- number-value
+  ([opts]
+   (number-value [] opts))
+  ([extra-opts opts]
+   (update opts :value
+           #(or
+             (some (fn [extra-opt]
+                     (when (= (str extra-opt) (str %))
+                       extra-opt)) extra-opts)
+             (if (string? %)
+               (js/parseInt %)
+               %)))))
 
-(defn- relevant-road-select* [{:keys [empty-label] :as opts
+(defn- relevant-road-select* [{:keys [empty-label extra-opts extra-opts-label] :as opts
                                :or {empty-label ""}} relevant-roads]
-  (let [items (->> relevant-roads (map :road-nr) sort vec)]
+  (let [items (->> relevant-roads (map :road-nr) sort vec)
+        fmt (road-nr-format relevant-roads)]
     [select/form-select
-     (-> opts
-         (merge {:show-empty-selection? true
-                 :empty-selection-label empty-label
-                 :items items
-                 :format-item (road-nr-format relevant-roads)})
-         number-value)]))
+     (->> opts
+          (merge {:show-empty-selection? (if extra-opts false true)
+                  :empty-selection-label empty-label
+                  :items (if extra-opts
+                           (into extra-opts items)
+                           items)
+                  :format-item (if extra-opts
+                                 #(or (extra-opts-label %)
+                                      (fmt %))
+                                 fmt)})
+          (number-value extra-opts))]))
 
 (defn- relevant-road-select [opts]
   [with-relevant-roads opts
@@ -982,8 +996,11 @@
         [:div {:style {:max-width "25vw"}}
          [relevant-road-select
           {:e! e!
+           :extra-opts ["all-roads" "no-road-reference"]
+           :extra-opts-label {"all-roads" (tr [:asset :totals-table :all-roads])
+                              "no-road-reference" (tr [:asset :totals-table :no-road-reference])}
            :value (get-in app [:query :road])
-           :empty-label (tr [:asset :totals-table :all-roads])
+
            :on-change (e! cost-items-controller/->SetTotalsRoadFilter)}]]
         [:div {:style {:float :right}}
          [:b
