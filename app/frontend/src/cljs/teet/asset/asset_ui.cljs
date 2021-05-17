@@ -65,3 +65,24 @@
                            :when (string/contains-words? (format-fg-and-fc result) text)]
 
                        result)))}]]])))
+
+(defn select-fgroup-and-fclass-multiple
+  "Select multiple [fgroup fclass] values."
+  [{:keys [e! on-change value atl]}]
+  [select/select-search-multiple
+   {:e! e!
+    :on-change on-change
+    :placeholder (tr [:asset :feature-group-and-class-placeholder])
+    :no-results (tr [:asset :no-matching-feature-classes])
+    :value value
+    :format-result format-fg-and-fc
+    :show-empty-selection? true
+    :clear-value [nil nil]
+    :query (fn [text]
+             #(vec
+               (for [fg (:fgroups atl)
+                     fc (:fclass/_fgroup fg)
+                     :let [result [fg fc]]
+                     :when (string/contains-words? (format-fg-and-fc result) text)]
+
+                 result)))}])

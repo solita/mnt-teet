@@ -6,20 +6,37 @@
             [teet.ui.typography :as typography]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
-            [teet.asset.asset-ui :as asset-ui]))
+            [teet.asset.asset-ui :as asset-ui]
+            [teet.map.map-view :as map-view]
+            [teet.map.map-layers :as map-layers]
+            [teet.map.map-features :as map-features]
+            [teet.ui.table :as table]
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.assets-controller :as assets-controller]))
 
 (defn- asset-filters [e! atl filters]
   [:div {:style {:min-width "300px"}}
    [:div {:style {:padding "1rem"}}
-    [asset-ui/select-fgroup-and-fclass
+    [asset-ui/select-fgroup-and-fclass-multiple
      {:e! e!
-      :value (@filters :fgroup-and-fclass)
-      :on-change #(swap! filters assoc :fgroup-and-fclass %)
-      :atl atl}]
-    "SEARCH THIS: " (pr-str @filters)]])
+      :value (@filters :fclass)
+      :on-change #(swap! filters assoc :fclass %)
+      :atl atl}]]])
 
-(defn- assets-list [e! atl assets]
-  [:div (pr-str assets)])
+(defn- assets-results [e! atl {:keys [assets geojson]}]
+  [:div
+   [table/listing-table
+    {:columns asset-model/assets-listing-columns
+     :data assets
+     :key :asset/oid}]
+   [map-view/map-view e!
+    {:layers (when geojson
+               {:assets-search-geojson
+                (map-layers/geojson-data-layer
+                 "assets-search-geojson"
+                 (js/JSON.parse geojson)
+                 map-features/project-line-style
+                 {:fit-on-load? true})})}]])
 
 (defn assets-page [e! app]
   (r/with-let [filters (r/atom {})]
@@ -36,8 +53,7 @@
                      :padding "1rem"}}
        [:div {:class (<class common-styles/flex-row-space-between)}
         [typography/Heading1 (tr [:asset :manager :link])]]
-       [query/query {:e! e!
-                     :query :assets/search
-                     :args {:fclass #{(second (@filters :fgroup-and-fclass))}}
-                     :simple-view [assets-list e! (:asset-type-library app)]}]
-       [:div "here's the assets"]]]]))
+       (when-let [q (assets-controller/assets-query @filters)]
+         [query/query
+          (merge q {:e! e!
+                    :simple-view [assets-results e! (:asset-type-library app)]})])]]]))
