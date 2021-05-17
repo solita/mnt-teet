@@ -45,19 +45,9 @@
 
 (def ^:private road-address
   #(into {}
-         (map
-          (fn [[k x]]
-            [k
-             (when-not (str/blank? x)
-               (if (#{:location/start-offset-m :location/end-offset-m} k)
-                 (-> x
-                     (str/replace "," ".")
-                     (str/replace "−" "-")
-                     js/parseFloat)
-                 (common-controller/->long x)))])
-          (select-keys % [:location/road-nr :location/carriageway
-                          :location/start-m :location/start-offset-m
-                          :location/end-m :location/end-offset-m]))))
+         (select-keys % [:location/road-nr :location/carriageway
+                         :location/start-km :location/start-offset-m
+                         :location/end-km :location/end-offset-m])))
 
 (defn- point [v]
   (if (vector? v)
@@ -315,7 +305,7 @@
        app
        (fn [form]
          ;; Set start/end points and GeoJSON geometry
-         (if (:location/end-m address)
+         (if (:location/end-km address)
            ;; Line geometry
            (let [{:keys [road-line start-point end-point]} response]
              (assoc form
@@ -355,7 +345,7 @@
            (if (nil? road)
              (-> form
                  (dissoc :location/road-nr :location/carriageway
-                         :location/start-m :location/end-m
+                         :location/start-km :location/end-km
                          :location/start-offset-m :location/end-offset-m)
                  (merge {:location/geojson
                          (feature-collection-geojson
@@ -363,26 +353,26 @@
                                     :coordinates [start-point end-point]})
                           (point-geojson start-point "start/end" "start")
                           (point-geojson end-point "start/end" "end"))}))
-             (let [{:keys [geometry road-nr carriageway start-m end-m m]} road]
+             (let [{:keys [geometry road-nr carriageway start-km end-km km]} road]
                (when geometry
                  (let [geojson (js/JSON.parse geometry)]
                    (merge form
                           {:location/start-point start-point
-                           :location/start-offset-m (format/decimal 3 start-offset-m)
+                           :location/start-offset-m start-offset-m
                            :location/end-point end-point
-                           :location/end-offset-m (format/decimal 3 end-offset-m)
+                           :location/end-offset-m end-offset-m
                            :location/geojson
                            #js {:type "FeatureCollection"
                                 :features
-                                (if end-m
+                                (if end-km
                                   #js [geojson
                                        (point-geojson start-point "start/end" "start")
                                        (point-geojson end-point "start/end" "end")]
                                   #js [(point-geojson start-point "start/end" "start")])}
                            :location/road-nr road-nr
                            :location/carriageway carriageway
-                           :location/start-m (or m start-m)
-                           :location/end-m end-m}))))))))))
+                           :location/start-km (or km start-km)
+                           :location/end-km end-km}))))))))))
 
   InitMap
   (process-event [_ app]
@@ -462,37 +452,37 @@
 
           ;; No valid points, don't fetch anything and remove road address
           :else
-          (dissoc app :location/road-nr :location/carriageway :location/start-m :location/end-m)))
+          (dissoc app :location/road-nr :location/carriageway :location/start-km :location/end-km)))
 
       ;; Manually edited road location, refetch geometry and points
       (not= (road-address old-form)
             (road-address new-form))
       (let [{:location/keys [road-nr carriageway
-                             start-m start-offset-m
-                             end-m end-offset-m]} (road-address new-form)]
+                             start-km start-offset-m
+                             end-km end-offset-m]} (road-address new-form)]
         (log/debug "ROAD ADDRESS CHANGED")
         (cond
           ;; All values present, fetch line geometry
-          (and road-nr carriageway start-m end-m)
+          (and road-nr carriageway start-km end-km)
           (t/fx app
                 {:tuck.effect/type :query
                  :query :road/line-by-road
                  :args {:road-nr road-nr
                         :carriageway carriageway
-                        :start-m start-m
+                        :start-km start-km
                         :start-offset-m start-offset-m
-                        :end-m end-m
+                        :end-km end-km
                         :end-offset-m end-offset-m}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; Valid start point, fetch a point geometry
-          (and road-nr carriageway start-m)
+          (and road-nr carriageway start-km)
           (t/fx app
                 {:tuck.effect/type :query
                  :query :road/point-by-road
                  :args {:road-nr road-nr
                         :carriageway carriageway
-                        :start-m start-m}
+                        :start-km start-km}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; No valid road address

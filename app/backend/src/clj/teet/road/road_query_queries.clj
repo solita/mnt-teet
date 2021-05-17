@@ -11,7 +11,9 @@
             [teet.map.map-services :as map-services]
             [teet.road.teeregister-api :as teeregister-api]
             [clojure.spec.alpha :as s]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [teet.util.coerce :refer [->bigdec ->long]])
+  (:import (java.text NumberFormat)))
 
 (defonce cache-options
   ;; For local development use:
@@ -163,6 +165,13 @@
 (s/def ::distance number?)
 (s/def ::point ::geopoint)
 
+(def ^:private locale (java.util.Locale. "et" "EE"))
+
+(defn- decimal [d n]
+  (.format (doto (NumberFormat/getNumberInstance)
+             (.setMinimumFractionDigits d)
+             (.setMaximumFractionDigits d)) n))
+
 (defquery :road/by-2-geopoints
   {:doc "Return road for 2 geopoints within distance"
    :spec (s/keys :req-un [::start ::end ::distance])
@@ -175,9 +184,15 @@
                    distance start end)
                   (sort-by :distance)
                   first)
-        ls (some-> road :geometry (cheshire/decode keyword) :coordinates)]
+        ls (some-> road :geometry (cheshire/decode keyword) :coordinates)
+        km-format (partial decimal 6)
+        m-format (partial decimal 3)]
     (merge
-     {:road road
+     {:road (-> road
+                (cu/update-in-if-exists [:start-km] km-format)
+                (cu/update-in-if-exists [:end-km] km-format)
+                (cu/update-in-if-exists [:start-offset-m] m-format)
+                (cu/update-in-if-exists [:end-offset-m] m-format))
       :start-point start
       :end-point end}
      (when ls
@@ -204,17 +219,20 @@
 (defquery :road/line-by-road
   {:doc "Fetch line geometry based on road address from Teeregister API."
    :config {client [:road-registry :api]}
-   :args {:keys [road-nr carriageway start-m end-m start-offset-m end-offset-m]}
+   :args {:keys [road-nr carriageway start-km end-km start-offset-m end-offset-m]}
    :project-id nil
    :authorization {}}
-  (let [line (teeregister-api/line-by-road (teeregister-api/create-client client)
-                                           road-nr carriageway start-m end-m)]
+  (let [line (teeregister-api/line-by-road
+              (teeregister-api/create-client client)
+              (->long road-nr) (->long carriageway)
+              (-> start-km ->bigdec road-model/km->m)
+              (-> end-km ->bigdec road-model/km->m))]
     {:road-line line
-     :start-point (if start-offset-m
-                    (geo/line-string-offset-point line start-offset-m :start)
+     :start-point (if-let [offset (some-> start-offset-m ->bigdec double)]
+                    (geo/line-string-offset-point line offset :start)
                     (first line))
-     :end-point (if end-offset-m
-                  (geo/line-string-offset-point line end-offset-m :end)
+     :end-point (if-let [offset (some-> end-offset-m ->bigdec double)]
+                  (geo/line-string-offset-point line offset :end)
                   (last line))}))
 
 (defquery :road/point-by-road
