@@ -35,7 +35,22 @@
      [?ctype :component/inherits-location? true]
      (or [?parent :asset/components ?e]
          [?parent :component/components ?e])
-     (location-attr ?parent ?attr ?val)]])
+     (location-attr ?parent ?attr ?val)]
+
+
+    ;; Find the entity where location attr is missing
+    ;; - entity is asset, check if it is missing
+    [(location-attr-missing ?e ?attr)
+     [?e :asset/fclass _]
+     [(missing? $ ?e ?attr)]]
+
+    ;; - entity inherits location, check if parent is missing
+    [(location-attr-missing ?e ?attr)
+     [?e :component/ctype ?ctype]
+     [?ctype :component/inherits-location? true]
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (location-attr-missing ?e ?attr)]])
 
 (def ctype-pattern
   '[*
@@ -171,6 +186,30 @@
                [?e :asset/oid ?oid]
                :in $ % ?project ?road-nr]
              db rules thk-project-id road-nr)))
+
+(defn project-assets-and-components-with-road
+  "Find OIDs of all project assets and components that have a road defined."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr ?e :location/road-nr _)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
+(defn project-assets-and-components-without-road
+  "Find OIDs of all project assets and components where the road value is missing."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr-missing ?e :location/road-nr)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
 
 (defn project-asset-and-component-oids
   "Return all OIDs of assets and their components for the given THK project."
