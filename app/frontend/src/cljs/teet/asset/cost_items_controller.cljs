@@ -45,19 +45,9 @@
 
 (def ^:private road-address
   #(into {}
-         (map
-          (fn [[k x]]
-            [k
-             (when-not (str/blank? x)
-               (if (#{:location/start-offset-m :location/end-offset-m} k)
-                 (-> x
-                     (str/replace "," ".")
-                     (str/replace "−" "-")
-                     js/parseFloat)
-                 (common-controller/->long x)))])
-          (select-keys % [:location/road-nr :location/carriageway
-                          :location/start-km :location/start-offset-m
-                          :location/end-km :location/end-offset-m]))))
+         (select-keys % [:location/road-nr :location/carriageway
+                         :location/start-km :location/start-offset-m
+                         :location/end-km :location/end-offset-m])))
 
 (defn- point [v]
   (if (vector? v)
