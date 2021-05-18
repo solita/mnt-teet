@@ -14,7 +14,8 @@
             [teet.log :as log]
             [clojure.string :as str])
   (:import (java.net URLEncoder)
-           (net.coobird.thumbnailator Thumbnailator)))
+           (net.coobird.thumbnailator Thumbnailator)
+           (java.util UUID)))
 
 
 (defn- url-for-file [db file-id with-metadata?]
@@ -113,7 +114,7 @@
       ;; know that filename is not valid
       {})))
 
-(defn- valid-filename?
+(defn- valid-export-zip-filename?
   [filename]
   (let [{extension :extension
          description :description} (filename-metadata/name->description-and-extension filename)]
@@ -130,7 +131,8 @@
    :pre [^{:error :configuration-missing}
          (some? export-bucket)
          ^{:error :invalid-filename}
-         (valid-filename? filename)]}
+         (valid-export-zip-filename? filename)
+         (UUID/fromString s3-key)]}
   ^{:format :raw}
   {:status 302
    :headers {"Location" (integration-s3/presigned-url
