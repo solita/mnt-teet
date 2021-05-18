@@ -35,7 +35,6 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [teet.ui.drag :as drag]
-            [goog.string :as gstr]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
