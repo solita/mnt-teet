@@ -302,12 +302,15 @@
       [icons/maps-layers]]]))
 
 (defn map-container-style
-  []
-  {:display        :flex
-   :flex-direction :column
-   :flex           1
-   :position       :relative
-   :overflow       :hidden})
+  [full-height?]
+  (merge
+   {:display        :flex
+    :flex-direction :column
+    :flex           1
+    :position       :relative
+    :overflow       :hidden}
+   (when full-height?
+     {:height "100%"})))
 
 (defn- create-data-layers [ctx layers]
   (log/info "Create data layers: " layers)
@@ -321,9 +324,12 @@
            layers)))
 
 (defn map-view [e!
-                {:keys [config height class layer-controls? allow-select?]
+                {:keys [config height class layer-controls? allow-select?
+                        full-height?]
                  :or {height "100%"
-                      allow-select? true} :as opts}
+                      allow-select? true
+                      full-height? false
+                      } :as opts}
                 {:keys [background-layer] :as map-data
                  :or   {background-layer ["kaart"]}}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
@@ -335,7 +341,7 @@
     (vreset! on-zoom (get-in map-data [:on-zoom]))
 
     (let [{:keys [extent]} map-data]
-      [:div {:class (<class map-container-style)}
+      [:div {:class (<class map-container-style full-height?)}
        (when layer-controls?
          [map-layer-controls e! map-data])
        [map-control-buttons e! map-data]
