@@ -383,7 +383,7 @@
                                            (str "UPLOAD:" name))]
      (let [{:keys [url task-id file]}
            (local-command
-             (first (filter (fn [x] (= (:user/id x) boss-id)) mock-users))
+             (logged-user)
              (if previous-version-id
                             :file/replace
                             :file/upload)
