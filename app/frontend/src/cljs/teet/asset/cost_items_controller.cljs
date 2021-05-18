@@ -519,8 +519,7 @@
                                          :total-cost
                                          :quantity-unit :type
                                          :ui/group)
-                     ;; Interpret empty string as 0
-                     :price (if (str/blank? price) "0" price)}
+                     :price (if (str/blank? price) nil price)}
            :result-event (partial ->SaveCostGroupPriceResponse finish-saving!)
            :error-event (partial ->SaveCostGroupPriceError finish-saving!)}))
 

@@ -104,24 +104,31 @@
          (boq-unlocked? adb project-id)
 
          ^{:error :invalid-price}
-         (valid-cost-group-price? price)]}
-  (tx
-   (if-let [id (:db/id cost-group)]
-     ;; Compare and swap the price if there is an existing one
-     ^{:db :asset}
-     [[:db/cas id :cost-group/price
-       (euro/parse (:cost-group/price cost-group))
-       (euro/parse price)]]
-
-     ;; Create new cost group price
-     ^{:db :asset}
-     [(merge
-       (asset-type-library/form->db (asset-type-library/rotl-map
-                                     (asset-db/asset-type-library adb))
-                                    cost-group)
-       {:db/id "new-cost-group-price"
-        :cost-group/price (euro/parse price)
-        :cost-group/project project-id})]))
+         (or (nil? price)
+             (valid-cost-group-price? price))]}
+  ;; Are we inserting or updating?
+  (if-let [id (:db/id cost-group)]
+    ;; Update: If we have a new price...
+    (let [current-cost-group-price (some-> (:cost-group/price cost-group) euro/parse)]
+      (if price
+        ;; Compare and swap the price if there is an existing one
+        (tx ^{:db :asset}
+            [[:db/cas id :cost-group/price
+              current-cost-group-price
+              (euro/parse price)]])
+        ;; Else retract the cost group price
+        (tx ^{:db :asset}
+            [[:db/retract id :cost-group/price]])))
+    ;; Insert: Create new cost group price (if no price, no tx necessary)
+    (when price
+      (tx ^{:db :asset}
+          [(merge
+            (asset-type-library/form->db (asset-type-library/rotl-map
+                                          (asset-db/asset-type-library adb))
+                                         cost-group)
+            {:db/id "new-cost-group-price"
+             :cost-group/price (euro/parse price)
+             :cost-group/project project-id})])))
   :ok)
 
 (defcommand :asset/lock-version
