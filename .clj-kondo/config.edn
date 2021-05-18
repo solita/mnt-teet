@@ -1,6 +1,9 @@
 {:linters
- {:unresolved-var {:exclude [teet.log]}}
- {:unresolved-symbol
+ {:unresolved-var {:exclude [teet.log]}
+  :unused-namespace {:exclude [teet.log
+                               taoensso.timbre
+                               "@material-ui.*"]}
+  :unresolved-symbol
   {:level :warning
    :exclude [(teet.db-api.core/defcommand)
              (teet.db-api.core/defquery)
