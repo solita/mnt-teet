@@ -906,30 +906,34 @@
   (when val
     (str val "\u00A0€")))
 
-(defn cost-group-unit-price [e! value row]
-  (r/with-let [initial-value value
-               price (r/atom initial-value)
+(defn- cost-group-unit-price [e! value row]
+  (r/with-let [price (r/atom value)
                change! #(reset! price (-> % .-target .-value))
                saving? (r/atom false)
-               save! (fn [row]
-                       (when (not= initial-value @price)
+               ;; Called after both success and error responses
+               finish-saving! (fn []
+                                ;; Reset price to nil, so current `value` is shown and reset to `price` on field focus
+                                ;; Successful save does refresh, so the new properly formatted value is fetched from the backend
+                                (reset! price nil)
+                                (reset! saving? false))
+               save! (fn [current-value row]
+                       (when (not= current-value @price)
                          (reset! saving? true)
-                         (e! (cost-items-controller/->SaveCostGroupPrice row @price))))
-               save-on-enter! (fn [row e]
+                         (e! (cost-items-controller/->SaveCostGroupPrice finish-saving! row @price))))
+               save-on-enter! (fn [current-value row e]
                                 (when (= "Enter" (.-key e))
-                                  (save! row)))]
-    (when (not= value initial-value)
-      (reset! saving? false))
+                                  (save! current-value row)))]
     [:div {:class (<class common-styles/flex-row)
            :style {:justify-content :flex-end
                    ;; to have same padding as header for alignment
                    :padding-right "16px"}}
      [text-field/TextField {:input-style {:text-align :right
                                           :width "8rem"}
-                            :value @price
+                            :value (or @price value)
                             :on-change change!
-                            :on-key-down (r/partial save-on-enter! row)
-                            :on-blur (r/partial save! row)
+                            :on-key-down (r/partial save-on-enter! value row)
+                            :on-focus #(reset! price value)
+                            :on-blur (r/partial save! value row)
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
