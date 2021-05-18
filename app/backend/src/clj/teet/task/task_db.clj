@@ -6,7 +6,9 @@
             [teet.activity.activity-db :as activity-db]
             [teet.meta.meta-query :as meta-query]
             [teet.activity.activity-model :as activity-model]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.user.user-model :as user-model])
+  (:import (java.util Date)))
 
 (defn activity-for-task-id
   [db task-id]
