@@ -15,7 +15,9 @@
             [teet.user.user-db :as user-db]
             [teet.util.euro :as euro]
             [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [cheshire.core :as cheshire]
+            [teet.util.coerce :refer [->long]]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -95,7 +97,15 @@
          (let [cost-groups (asset-db/project-cost-groups-totals
                             adb project-id
                             (when road
-                              (asset-db/project-assets-and-components-matching-road adb project-id road)))]
+                              (cond
+                                (= road "all-roads")
+                                (asset-db/project-assets-and-components-with-road adb project-id)
+
+                                (= road "no-road-reference")
+                                (asset-db/project-assets-and-components-without-road adb project-id)
+                                :else
+                                (asset-db/project-assets-and-components-matching-road
+                                 adb project-id (->long road)))))]
            {:cost-totals
             {:cost-groups cost-groups
              :fclass-and-fgroup-totals (fclass-and-fgroup-totals atl cost-groups)
@@ -167,3 +177,35 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
   (asset-db/project-boq-version-history adb project-id))
+
+
+(s/def :assets-search/fclass (s/coll-of keyword?))
+
+(defquery :assets/search
+  {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
+   :spec (s/keys :opt-un [:assets-search/fclass])
+   :args {fclass :fclass}
+   :context {:keys [db user] adb :asset-db}
+   :project-id nil
+   :authorization {}}
+  (let [assets (mapv first
+                     (d/q '[:find (pull ?a [:asset/fclass :common/status :asset/oid
+                                            :location/road-nr
+                                            :location/start-point :location/end-point])
+                            :where
+                            [?a :asset/fclass ?fclass]
+                            :in $ [?fclass ...]]
+                          adb
+                          fclass))]
+    {:assets (mapv #(dissoc % :location/start-point :location/end-point)
+                   assets)
+     :geojson (cheshire/encode
+               {:type "FeatureCollection"
+                :features
+                (for [{:location/keys [start-point end-point] :as a} assets
+                      :when (and start-point end-point)]
+                  {:type "Feature"
+                   :properties {"oid" (:asset/oid a)
+                                "fclass" (:db/ident (:asset/fclass a))}
+                   :geometry {:type "LineString"
+                              :coordinates [start-point end-point]}})})}))

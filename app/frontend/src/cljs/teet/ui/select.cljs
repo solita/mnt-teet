@@ -11,7 +11,7 @@
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
-                                         Popper CircularProgress Paper Link Divider]]
+                                         Popper CircularProgress Paper Chip Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util :refer [mapc]]
             ["react"]
@@ -487,6 +487,23 @@
                  [:div {:class (<class after-result-entry)}
                   [buttons/link-button
                    {:on-click on-click} title]]])])]])])))
+
+(defn- selected-item-chip [{:keys [format-result on-change value]
+                            :or {format-result str}} item]
+  [Chip {:label (format-result item)
+         :on-delete #(on-change (disj (or value #{}) item))}])
+
+(defn select-search-multiple
+  "Multiple select with select-search. Contains a list of chips for results.
+  Value is a set of selected items."
+  [{:keys [on-change value] :as opts}]
+  [:div.select-search-multiple
+   (mapc (r/partial selected-item-chip opts) value)
+   ^{:key (str (count value))} ; remount search to clear it's text search after every change
+   [select-search
+    (merge opts
+           {:value nil
+            :on-change #(on-change (conj (or value #{}) %))})]])
 
 (defn select-user
   "Select user"

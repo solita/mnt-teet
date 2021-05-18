@@ -480,45 +480,45 @@
 
     ;; Begin listening to command channel
     (go-loop [[[command & args] ch] (alts! [command-ch unmount-ch])]
-             (when-not (= ch unmount-ch)
-               (case command
+      (when-not (= ch unmount-ch)
+        (case command
 
-                 ::popup
-                 (let [[coordinate content] args]
-                   (display-popup! this coordinate content))
+          ::popup
+          (let [[coordinate content] args]
+            (display-popup! this coordinate content))
 
-                 ::invalidate-size
-                 (do
-                   (.updateSize ol3)
-                   (.render ol3))
+          ::invalidate-size
+          (do
+            (.updateSize ol3)
+            (.render ol3))
 
-                 ::hide-popup
-                 (remove-popup! this)
+          ::hide-popup
+          (remove-popup! this)
 
-                 ::hide-popup-without-event
-                 (remove-popup-without-event! this)
+          ::hide-popup-without-event
+          (remove-popup-without-event! this)
 
-                 ::cursor
-                 (let [[cursor] args
-                       vp (.-viewport_ ol3)
-                       style (.-style vp)]
-                   (set! (.-cursor style) (case cursor
-                                            :crosshair "crosshair"
-                                            :progress "progress"
-                                            "")))
-                 ::tooltip
-                 (let [[x y teksti] args]
-                   (reagent/set-state this
-                                      {:hover {:x x :y y :tooltip teksti}}))
+          ::cursor
+          (let [[cursor] args
+                vp (.-viewport_ ol3)
+                style (.-style vp)]
+            (set! (.-cursor style) (case cursor
+                                     :crosshair "crosshair"
+                                     :progress "progress"
+                                     "")))
+          ::tooltip
+          (let [[x y teksti] args]
+            (reagent/set-state this
+                               {:hover {:x x :y y :tooltip teksti}}))
 
-                 ::fit
-                 (let [[extent-or-geometry {:keys [padding]
-                                            :or {padding [0 0 0 0]}}] args]
-                   (log/info "PADDING: " padding)
-                   (.fit (.getView ol3) extent-or-geometry
-                         (clj->js {:padding (clj->js padding)}))))
+          ::fit
+          (let [[extent-or-geometry {:keys [padding]
+                                     :or {padding [0 0 0 0]}}] args]
+            (log/info "PADDING: " padding)
+            (.fit (.getView ol3) extent-or-geometry
+                  (clj->js {:padding (clj->js padding)}))))
 
-               (recur (alts! [command-ch unmount-ch]))))
+        (recur (alts! [command-ch unmount-ch]))))
 
 
     (.setView

@@ -121,6 +121,12 @@
                  :link {:page :asset-type-library}
                  :icon icons/editor-schema
                  :name (tr [:asset :type-library :link])}])
+   (when-feature :assetmanager
+     [view-link {:open? open?
+                 :current-page page
+                 :link {:page :assets}
+                 :icon icons/asset-manager
+                 :name (tr [:asset :manager :link])}])
    (when-feature :road-information-view
      [view-link {:open? open?
                  :current-page page
