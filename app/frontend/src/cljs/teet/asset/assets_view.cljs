@@ -13,7 +13,8 @@
             [teet.ui.table :as table]
             [teet.asset.asset-model :as asset-model]
             [teet.asset.assets-controller :as assets-controller]
-            [teet.ui.split-pane :refer [vertical-split-pane]]))
+            [teet.ui.split-pane :refer [vertical-split-pane]]
+            [teet.map.openlayers :as openlayers]))
 
 (defn- asset-filters [e! atl filters]
   [:div {:style {:min-width "300px"}}
@@ -35,11 +36,14 @@
           (reset! fitted false)))
       :reagent-render
       (fn [e! atl {:keys [assets geojson]}]
-        [vertical-split-pane {:defaultSize 400 :primary "second"}
-         [table/listing-table
-          {:columns asset-model/assets-listing-columns
-           :data assets
-           :key :asset/oid}]
+        [vertical-split-pane {:defaultSize 400 :primary "second"
+                              :on-drag-finished openlayers/invalidate-size!}
+         [:div
+          [typography/Heading1 (tr [:asset :manager :link])]
+          [table/listing-table
+           {:columns asset-model/assets-listing-columns
+            :data assets
+            :key :asset/oid}]]
          [map-view/map-view e!
           {:full-height? true
            :layers (when geojson
@@ -54,10 +58,11 @@
 (defn assets-page [e! app]
   (r/with-let [filters (r/atom {})]
     [vertical-split-pane {:minSize 50
-                          :defaultSize 330}
+                          :defaultSize 330
+                          :on-drag-finished openlayers/invalidate-size!}
      [asset-filters e! (:asset-type-library app) filters]
      [:div
-      [typography/Heading1 (tr [:asset :manager :link])]
+
       (when-let [q (assets-controller/assets-query @filters)]
         [query/query
          (merge q {:e! e!

@@ -11,7 +11,7 @@
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
-                                         Popper CircularProgress Paper Chip Divider]]
+                                         Popper CircularProgress Paper Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util :refer [mapc]]
             ["react"]
@@ -500,20 +500,51 @@
                    {:on-click on-click} title]]])])]])])))
 
 (defn- multiselect-chip-style []
-  {:margin "3px"})
+  ^{:pseudo {:focus {:border-color "#40a9ff"
+                     :background-color "#e6f7ff"}}
+    :combinators {[:> :span] {:overflow "hidden"
+                              :white-space "nowrap"
+                              :text-overflow "ellipsis"}
+                  [:> :.material-icons] {:font-size "12px"
+                                         :cursor "pointer"
+                                         :padding "4px"}}}
+  {:display "flex"
+   :align-items "center"
+   :height "24px"
+   :margin "2px"
+   :line-height "22px"
+   :background-color "#fafafa"
+   :border "1px solid #e8e8e8"
+   :border-radius "2px"
+   :box-sizing "content-box"
+   :padding "0 4px 0 10px"
+   :outline "0"
+   :overflow "hidden"})
+
 
 (defn- selected-item-chip [{:keys [format-result format-result-chip on-change value]
                             :or {format-result str}} item]
-  [Chip {:classes #js {:root (<class multiselect-chip-style)}
-         :size :small
-         :label ((or format-result-chip format-result) item)
-         :on-delete #(on-change (disj (or value #{}) item))}])
+  [:div {:class (<class multiselect-chip-style)}
+   [:span ((or format-result-chip format-result) item)]
+   [icons/navigation-close
+    {:on-click #(on-change (disj (or value #{}) item))}]])
 
 (defn- multiselect-input-wrapper-style
   []
-  ^{:hover {:border-color "#40a9ff"}
-    :focused {:border-color "#40a9ff"
-              :box-shadow "0 0 0 2px rgba(24, 144, 255, 0.2)"}}
+  ^{:pseudo {:hover {:border-color "#40a9ff"}
+             :focused {:border-color "#40a9ff"
+                       :box-shadow "0 0 0 2px rgba(24, 144, 255, 0.2)"}}
+    :combinators {[:> :input] {:font-size "14px"
+                               :height "30px"
+                               :display "inline-block"
+                               :box-sizing "border-box"
+                               :padding "4px 6px"
+                               :width 0
+                               :min-width "100px"
+                               :flex-grow 1
+                               :border 0
+                               :margin 0
+                               :outline 0}}}
   {:width "300px"
    :border "1px solid #d9d9d9"
    :background-color "#fff"
@@ -521,19 +552,6 @@
    :padding "1px"
    :display "flex"
    :flex-wrap "wrap"})
-
-(defn- multiselect-input-style []
-  {:font-size "14px"
-   :height "30px"
-   :display "inline-block"
-   :box-sizing "border-box"
-   :padding "4px 6px"
-   :width 0
-   :min-width "100px"
-   :flex-grow 1
-   :border 0
-   :margin 0
-   :outline 0})
 
 (defn select-search-multiple
   "Multiple select with select-search. Contains a list of chips for results.
@@ -552,7 +570,6 @@
               :input-ref @input-ref
               :show-label? false
               :start-icon nil :input-button-icon nil
-              :input-class (<class multiselect-input-style)
               :value nil
               :on-change #(on-change (conj (or value #{}) %))})]]))
 
