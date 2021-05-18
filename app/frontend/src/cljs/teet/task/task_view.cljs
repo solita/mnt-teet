@@ -245,8 +245,8 @@
            [buttons/button-primary {:size :small
                                    :on-click (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))}
             (tr [:task-part :submit-for-approval])]]]
-          :file.part.status/reviewing
 
+          :file.part.status/reviewing
           [when-authorized :task/review task
            [:<>
            [buttons/button-with-confirm
@@ -272,6 +272,7 @@
             [buttons/button-warning {:size :small
                                      :on-click (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :reject)}
              (tr [:task-part :reject])]]]]
+
           :file.part.status/completed
           [when-authorized :task/reopen-task task
            [buttons/button-with-confirm

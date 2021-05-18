@@ -141,14 +141,13 @@
   StartTaskPartReview
   (process-event [{task-id :task-id
                    taskpart-id :taskpart-id} app]
-     (do (taoensso.timbre/debug "Calling STPR")
        (t/fx app
           {:tuck.effect/type :command!
            :command :task/start-task-part-review
            :payload {:taskpart-id (common-controller/->long taskpart-id)
                      :task-id (common-controller/->long task-id)}
            :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->Refresh})))
+           :result-event common-controller/->Refresh}))
 
   Review
   (process-event [{result :result} {params :params :as app}]
