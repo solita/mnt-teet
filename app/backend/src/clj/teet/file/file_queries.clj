@@ -113,7 +113,7 @@
       ;; know that filename is not valid
       {})))
 
-(defn valid-filename?
+(defn- valid-filename?
   [filename]
   (let [{extension :extension
          description :description} (filename-metadata/name->description-and-extension filename)]
