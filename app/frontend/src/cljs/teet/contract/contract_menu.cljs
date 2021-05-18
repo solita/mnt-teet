@@ -18,7 +18,11 @@
   [{:name :contract-information
     :label [:contract :contract-information]
     :navigate {:page :contract}
-    :hotkey "1"}])
+    :hotkey "1"}
+   {:name :partners-information
+    :label [:contract :partner-information]
+    :navigate {:page :partner-information}
+    :hotkey "2"}])
 
 (defn- contract-menu-item [e! close-menu!
                            {:keys [hotkey navigate] :as _item}
