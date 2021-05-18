@@ -20,9 +20,9 @@ function gensecret {
 }
 
 function start-teet-app {
-    cd app/api
+    cd mnt-teet/app/api
     nohup ./dev.sh > api.out &
-    cd ../..
+    cd ../../..
     uuid="$(uuidgen)"
     tmux new -d -s "$uuid"
     tmux splitw -h -t "${uuid}:0.0"
@@ -67,6 +67,7 @@ function allow-datomic-bastion-ssh {
 function import-datomic-to-dev-local {
     # run in backend directory, needs the deps
     mkdir -p ~/.datomic
+    cd mnt-teet/app/backend
     clojure -A:dev -e "
      (require 'datomic.dev-local)
      (datomic.dev-local/import-cloud
@@ -82,10 +83,29 @@ function import-datomic-to-dev-local {
             :server-type :dev-local
             :db-name \"teet\"}
      :filters {:since 0}})"
+    cd -
+}
+
+function setup-postgres {
+    AWS_SSM_DB_URI=$(ssm-get /teet/migrate/db-uri)
+    SOURCE_DB_USER=$(ssm-get /teet/migrate/db-user)
+    SOURCE_DB_PASS=$(ssm-get /teet/migrate/db-password)
+    
+    SOURCE_DB_NAME=$AWS_SSM_DB_URI; SOURCE_DB_NAME=${AWS_SSM_DB_URI#*//}; SOURCE_DB_NAME=${SOURCE_DB_NAME#*/}
+    SOURCE_DB_HOST=$AWS_SSM_DB_URI; SOURCE_DB_HOST=${AWS_SSM_DB_URI#*//}; SOURCE_DB_HOST=${SOURCE_DB_HOST%/*};
+    createuser -h localhost -U postgres teetmaster
+    createdb -h localhost -U postgres $SOURCE_DB_NAME -O teetmaster
+    psql -c "CREATE ROLE teeregister" -h localhost -U postgres
+    PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h $SOURCE_DB_HOST -U $SOURCE_DB_USER $SOURCE_DB_NAME | pg_restore -d "$SOURCE_DB_NAME" -h localhost -U postgres
 }
 
 
-function install_deps_and_app {
+function ssm-get {
+    aws ssm get-parameter --name "$1" --query "Parameter.Value" --output text
+}
+
+
+function install-deps-and-app {
     # set up deps and env
     test "$(whoami)" = root
     mkdir -p /var/tmp/teetinstall
@@ -100,7 +120,6 @@ function install_deps_and_app {
     clojure -e true > /dev/null
 
 
-    # fetch app & run setup scripts therein
     git clone -b $TEET_BRANCH $TEET_GIT_URL
     
     # db setup
@@ -119,8 +138,8 @@ function install_deps_and_app {
     docker exec teetdb sed -i -e '1i host all all 172.16.0.0/14 trust' /var/lib/postgresql/data/pg_hba.conf
     docker restart teetdb    
 
-    DATOMIC_SOURCE_DB_NAME=$(aws ssm get-parameter --name /teet/datomic/db-name --query "Parameter.Value" --output text)
-    TEET_ENV=$(aws ssm get-parameter --name /teet/env --query "Parameter.Value" --output text)
+    DATOMIC_SOURCE_DB_NAME=$(ssm-get /teet/datomic/db-name)
+    TEET_ENV=$(ssm-get /teet/env)
 
     
     test -f cognitect-dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
@@ -143,24 +162,12 @@ function install_deps_and_app {
     
     import-datomic-to-dev-local
     
-    cd mnt-teet
-    cd db
-    ./devdb_create_template.sh
-    ./devdb_clean.sh
-
-    cd ../..
-
-
-    cd app/backend
-    import-datomic-to-dev-local
-    cd ../..
-
+    setup-postgres
+    
     start-teet-app # backend, frontend & postgrest
     
     # todo: config.edn for teet app setup
     
-    # todo: use postgres backups for pg data (-> remove unneeded datasource-import run)
-
     until netstat -pant | grep LISTEN | egrep -q ':4000.*LISTEN.*/java *$'; do
 	echo sleeping until backend starts listening on :4000
 	sleep 3
@@ -169,9 +176,20 @@ function install_deps_and_app {
 }
 
 function run-in-ec2 {
+    local SCRIPTPATH
+    local SSHKEYID
+    SCRIPTPATH="$(realpath $0)"
     read -p 'ssh keypair name> ' SSHKEYID
     aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name $SSHKEYID \
-        --user-data file://$PWD/ci/scripts/install-standalone-vm.bash \
+        --user-data file://$SCRIPTPATH \
         --launch-template LaunchTemplateName=standalone-teetapp-template
 }
 
+if test $1 = launchvm; then
+    # assume we're running in codebuild or dev workstation
+    set -x
+    run-in-ec2    
+else
+    # assume we're running as the cloud-init script (aka user-data script) inside the vm
+    install-deps-and-app
+fi
