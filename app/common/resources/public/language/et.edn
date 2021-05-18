@@ -714,6 +714,7 @@
   :meeting/title "Pealkiri",
   :estate-procedure/process-fees "Asjaajamistasud",
   :thk.project/activity-status "Olek",
+  :asset/oid "OID",
   :land-owner-opinion/type "Taotluse liik",
   :meeting/date-and-time "Kuupäev ja kellaaeg",
   :task/assignee "Vastutav isik",

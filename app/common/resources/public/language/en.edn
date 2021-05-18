@@ -720,6 +720,7 @@
   :meeting/title "Title",
   :estate-procedure/process-fees "Processing fees",
   :thk.project/activity-status "Status",
+  :asset/oid "OID",
   :land-owner-opinion/type "Opinion type",
   :meeting/date-and-time "Date and time",
   :task/assignee "Responsible person",
