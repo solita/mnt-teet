@@ -81,9 +81,13 @@
               (tempids id)
               id))))
 
-(defn- valid-cost-group-price? [price]
+(defn- valid-cost-group-price?
+  "We want the price to be
+   - non-negative
+   - max eurocent precision"
+  [price]
   (try (not (neg? (euro/parse price)))
-       (catch Exception e
+       (catch Exception _e
          false)))
 
 (defcommand :asset/save-cost-group-price

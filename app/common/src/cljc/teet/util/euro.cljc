@@ -22,7 +22,7 @@
      :cljs (.toLocaleString n js/undefined #js {:minimumFractionDigits 2
                                                 :maximumFractionDigits 2})))
 
-(def ^:private euro-pattern #"^-?\d+(\.\d{1,2})?")
+(def ^:private euro-pattern #"^-?\d+(\.\d{0,2})?")
 
 (defn parse
   "Parse string as euro number, string can contain whitespace and end with € symbol."
