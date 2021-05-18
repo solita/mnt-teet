@@ -81,6 +81,11 @@
               (tempids id)
               id))))
 
+(defn- valid-cost-group-price? [price]
+  (try (not (neg? (euro/parse price)))
+       (catch Exception e
+         false)))
+
 (defcommand :asset/save-cost-group-price
   {:doc "Save cost group price"
    :context {:keys [user db] adb :asset-db}
@@ -92,7 +97,10 @@
              (= project-id
                 (:cost-group/project (du/entity adb (:db/id cost-group)))))
          ^{:error :boq-is-locked}
-         (boq-unlocked? adb project-id)]}
+         (boq-unlocked? adb project-id)
+
+         ^{:error :invalid-price}
+         (valid-cost-group-price? price)]}
   (tx
    (if-let [id (:db/id cost-group)]
      ;; Compare and swap the price if there is an existing one

@@ -22,16 +22,22 @@
      :cljs (.toLocaleString n js/undefined #js {:minimumFractionDigits 2
                                                 :maximumFractionDigits 2})))
 
+(def ^:private euro-pattern #"^-?\d+(\.\d{1,2})?")
+
 (defn parse
   "Parse string as euro number, string can contain whitespace and end with € symbol."
   [s]
-  (-> s
-      (str/replace #"\h" "")
-      (str/replace #"\s" "")
-      (str/replace "€" "")
-      (str/replace "," ".")
-      (str/replace "−" "-")
-      #?(:clj bigdec :cljs js/parseFloat)))
+  (let [euro-string (-> s
+                        (str/replace #"\h" "")
+                        (str/replace #"\s" "")
+                        (str/replace "€" "")
+                        (str/replace "," ".")
+                        (str/replace "−" "-"))]
+    (if (re-matches euro-pattern euro-string)
+      (#?(:clj bigdec :cljs js/parseFloat) euro-string)
+      ;; The behavior difference below mirrors that of `bigdec` vs `js/parseFloat`
+      #?(:clj (throw (NumberFormatException. (str "not a valid euro value: " s)))
+         :cljs nil))))
 
 #?(:clj (def transit-type-handlers
           {java.math.BigDecimal format-no-sign}))
