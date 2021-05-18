@@ -12,7 +12,8 @@
             [teet.map.map-features :as map-features]
             [teet.ui.table :as table]
             [teet.asset.asset-model :as asset-model]
-            [teet.asset.assets-controller :as assets-controller]))
+            [teet.asset.assets-controller :as assets-controller]
+            [teet.ui.split-pane :refer [vertical-split-pane]]))
 
 (defn- asset-filters [e! atl filters]
   [:div {:style {:min-width "300px"}}
@@ -34,13 +35,14 @@
           (reset! fitted false)))
       :reagent-render
       (fn [e! atl {:keys [assets geojson]}]
-        [:div
+        [vertical-split-pane {:defaultSize 400 :primary "second"}
          [table/listing-table
           {:columns asset-model/assets-listing-columns
            :data assets
            :key :asset/oid}]
          [map-view/map-view e!
-          {:layers (when geojson
+          {:full-height? true
+           :layers (when geojson
                      {:assets-search-geojson
                       (map-layers/geojson-data-layer
                        "assets-search-geojson"
@@ -51,20 +53,12 @@
 
 (defn assets-page [e! app]
   (r/with-let [filters (r/atom {})]
-    [:div {:style {:padding "1.875rem 1.5rem"
-                   :display :flex
-                   :height "calc(100vh - 220px)"
-                   :flex-direction :column
-                   :flex 1}}
-     [Paper {:style {:display :flex :flex 1}}
-      [:div {:style {:width "30vw"}}
-       [asset-filters e! (:asset-type-library app) filters]]
-      [:div {:style {:flex 1 :overflow-y :scroll
-                     :max-height "calc(100vh - 170px)"
-                     :padding "1rem"}}
-       [:div {:class (<class common-styles/flex-row-space-between)}
-        [typography/Heading1 (tr [:asset :manager :link])]]
-       (when-let [q (assets-controller/assets-query @filters)]
-         [query/query
-          (merge q {:e! e!
-                    :simple-view [assets-results e! (:asset-type-library app)]})])]]]))
+    [vertical-split-pane {:minSize 50
+                          :defaultSize 330}
+     [asset-filters e! (:asset-type-library app) filters]
+     [:div
+      [typography/Heading1 (tr [:asset :manager :link])]
+      (when-let [q (assets-controller/assets-query @filters)]
+        [query/query
+         (merge q {:e! e!
+                   :simple-view [assets-results e! (:asset-type-library app)]})])]]))
