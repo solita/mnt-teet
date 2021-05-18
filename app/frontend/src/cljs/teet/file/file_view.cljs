@@ -122,37 +122,39 @@
   (r/with-let [search-term (r/atom "")
                on-change #(let [val (-> % .-target .-value)]
                             (reset! search-term val))
-               selected-part (r/atom nil)
-               change-part #(do (reset! selected-part %))]
-    [:div
-     [:div {:class [(<class common-styles/flex-row)
-                    (<class common-styles/margin-bottom 1)]}
-      [TextField {:value @search-term
-                  :style {:margin-right "1rem"
-                          :flex 1}
-                  :placeholder (tr [:file :filter-file-listing])
-                  :start-icon icons/action-search
-                  :on-change on-change}]
-      [:div {:style {:flex 1}}
-       [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
-                                             :file.part/number 0}]
-                                           parts)
-                            :format-item (fn [{:file.part/keys [name number]}]
-                                           (gstr/format "%s #%02d" name number))
-                            :on-change change-part
-                            :value @selected-part
-                            :empty-selection-label (tr [:file :all-parts])
-                            :show-empty-selection? true}]]]
-     (conj
-       file-component
-       (filterv
-         (fn [{:file/keys [name] :as file}]
-           (and
-             (str/includes? (str/lower-case name) (str/lower-case @search-term))
-             file))
-         files)
-       parts
-       @selected-part)]))
+               selected-part-id (r/atom nil)
+               change-part #(reset! selected-part-id (:file.part/number %))]
+              (let [selected-part (when @selected-part-id
+                                    (first (filter (comp #(= @selected-part-id %) :file.part/number) parts)))]
+               [:div
+                [:div {:class [(<class common-styles/flex-row)
+                               (<class common-styles/margin-bottom 1)]}
+                 [TextField {:value @search-term
+                             :style {:margin-right "1rem"
+                                     :flex 1}
+                             :placeholder (tr [:file :filter-file-listing])
+                             :start-icon icons/action-search
+                             :on-change on-change}]
+                 [:div {:style {:flex 1}}
+                  [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
+                                                        :file.part/number 0}]
+                                                      parts)
+                                       :format-item (fn [{:file.part/keys [name number]}]
+                                                      (gstr/format "%s #%02d" name number))
+                                       :on-change change-part
+                                       :value selected-part
+                                       :empty-selection-label (tr [:file :all-parts])
+                                       :show-empty-selection? true}]]]
+                (conj
+                  file-component
+                  (filterv
+                    (fn [{:file/keys [name] :as file}]
+                      (and
+                        (str/includes? (str/lower-case name) (str/lower-case @search-term))
+                        file))
+                    files)
+                  parts
+                  selected-part)])))
 
 (defn file-comments-text
   [{:comment/keys [counts] :as file}]
