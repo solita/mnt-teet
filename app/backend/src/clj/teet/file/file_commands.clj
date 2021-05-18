@@ -178,7 +178,7 @@
                                            (:file/name file))))
 
             key (new-file-key file)
-            res (tx [(list 'teet.file.file-tx/upload-file-to-task
+            res (tx [(list 'teet.file.file-tx/upload-file-to-task user
                            {:db/id task-id
                             :task/files
                             [(cu/without-nils
