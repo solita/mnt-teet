@@ -14,7 +14,8 @@
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
             [teet.project.project-db :as project-db]
-            [teet.integration.integration-id :as integration-id])
+            [teet.integration.integration-id :as integration-id]
+            [teet.meta.meta-model :as meta-model])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI"})
@@ -206,9 +207,7 @@
                                                 :activity/estimated-start-date
                                                 :activity/estimated-end-date
                                                 :activity/name
-                                                :activity/status
-                                                :activity/procurement-nr
-                                                :activity/procurement-id}))
+                                                :activity/status}))
                        (if act-db-id
                          ;; Existing activity
                          {:db/id act-db-id
@@ -270,8 +269,10 @@
                   (select-keys contract-info [:thk.contract/procurement-id
                                               :thk.contract/name
                                               :thk.contract/part-name
+                                              :thk.contract/procurement-number
                                               :thk.contract/procurement-part-id
-                                              :thk.contract/type]))]
+                                              :thk.contract/type])
+                  (meta-model/system-created))]
           (log/warn "No targets found for contract with ids: " contract-ids)))
       (log/info "Contract with ids: " contract-ids " already exists nothing is done"))))
 

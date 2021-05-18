@@ -10,6 +10,48 @@
             [clojure.string :as str]
             [teet.asset.asset-model :as asset-model]))
 
+(def rules
+  "Helper rules for asset/component queries."
+  '[;; Determine THK project match for asset/component
+    [(project ?e ?project)
+     [?e :asset/project ?project]]
+
+    ;; Recursively the parent has the project
+    [(project ?e ?project)
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (project ?parent ?project)]
+
+
+    ;; Get a location attr for entity
+    [(location-attr ?e ?attr ?val)
+     ;; entity has location directly, use this
+     [?e :location/start-point _]
+     [?e ?attr ?val]]
+
+    [(location-attr ?e ?attr ?val)
+     ;; component inherits location, use parent
+     [?e :component/ctype ?ctype]
+     [?ctype :component/inherits-location? true]
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (location-attr ?parent ?attr ?val)]
+
+
+    ;; Find the entity where location attr is missing
+    ;; - entity is asset, check if it is missing
+    [(location-attr-missing ?e ?attr)
+     [?e :asset/fclass _]
+     [(missing? $ ?e ?attr)]]
+
+    ;; - entity inherits location, check if parent is missing
+    [(location-attr-missing ?e ?attr)
+     [?e :component/ctype ?ctype]
+     [?ctype :component/inherits-location? true]
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (location-attr-missing ?e ?attr)]])
+
 (def ctype-pattern
   '[*
     {:ctype/_parent [*]}
@@ -52,14 +94,24 @@
     (child-ctypes db x)
     x))
 
+(defn last-atl-modification-time [db]
+  (ffirst
+   (d/q '[:find (max ?txi)
+          :where
+          [_ :tx/schema-imported-at _ ?tx]
+          [?tx :db/txInstant ?txi]] db)))
+
 (defn asset-type-library [db]
   (walk/postwalk
    (fn [x]
      (->> x
           remove-empty-selection-attributes
           (pull-child-ctypes db)))
-
-   {:ctype/common (d/pull db ctype-pattern :ctype/common)
+   {:tx/schema-imported-at (ffirst
+                            (d/q '[:find (max ?t)
+                                   :where [_ :tx/schema-imported-at ?t]]
+                                 db))
+    :ctype/common (d/pull db ctype-pattern :ctype/common)
     :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
@@ -116,12 +168,48 @@
   "Return all OIDs of assets in the given THK project."
   [db thk-project-id]
   (mapv first
+        (d/q {:query '{:find [?oid]
+                       :where [[?asset :asset/project ?project]
+                               [?asset :asset/oid ?oid]]
+                       :in [$ ?project]}
+              :args [db thk-project-id]})))
+
+(defn project-assets-and-components-matching-road
+  "Find OIDs of all project assets and components that match a given road.
+  If component inherits location from parent, the parent component location is used."
+  [db thk-project-id road-nr]
+  (mapv first
         (d/q '[:find ?oid
                :where
-               [?asset :asset/project ?project]
-               [?asset :asset/oid ?oid]
-               :in $ ?project]
-             db thk-project-id)))
+               (project ?e ?project)
+               (location-attr ?e :location/road-nr ?road-nr)
+               [?e :asset/oid ?oid]
+               :in $ % ?project ?road-nr]
+             db rules thk-project-id road-nr)))
+
+(defn project-assets-and-components-with-road
+  "Find OIDs of all project assets and components that have a road defined."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr ?e :location/road-nr _)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
+(defn project-assets-and-components-without-road
+  "Find OIDs of all project assets and components where the road value is missing."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr-missing ?e :location/road-nr)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
 
 (defn project-asset-and-component-oids
   "Return all OIDs of assets and their components for the given THK project."
@@ -132,8 +220,10 @@
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.
   Returns map where key is item id and value is map of the values.
-  Only returns items that have some cost grouping attributes."
-  [db thk-project-id]
+  Only returns items that have some cost grouping attributes.
+
+  List of OID codes (`oids`) determines what assets/components to return."
+  [db oids]
   (let [entity-attr-vals
         (d/q '[:find ?a ?type-ident ?attr-ident ?val ?value-type-ident
                :keys id type attr val val-type
@@ -144,13 +234,14 @@
                 [?a :component/ctype ?type])
                [?a ?attr ?val]
                (or [?attr :attribute/cost-grouping? true]
-                   [?attr :db/ident :common/status])
+                   [?attr :db/ident :common/status]
+                   [?attr :db/ident :location/road-nr])
                [?attr :db/ident ?attr-ident]
                [?type :db/ident ?type-ident]
                [?attr :db/valueType ?value-type]
                [?value-type :db/ident ?value-type-ident]
                :in $ [?oid ...]]
-             db (project-asset-and-component-oids db thk-project-id))
+             db oids)
 
         ;; Fetch all list item ref ids
         list-item-ids (into #{}
@@ -171,9 +262,9 @@
 
     (cu/keep-vals
      ;; Keep only items that have cost grouping fields
-     ;; not just type and status
+     ;; not just type, status amd road
      (fn [v]
-       (when (seq (dissoc v :type :common/status))
+       (when (seq (dissoc v :type :common/status :location/road-nr))
          v))
      ;; Group by feature/component id
      (reduce
@@ -210,9 +301,15 @@
   Take all components for all assets and group them by cost-grouping attributes.
 
   Counts quantities and total prices (if price info is known for
-  a group)."
-  [db thk-project-id]
-  (let [items (cost-group-attrs-q db thk-project-id)
+  a group).
+
+  Optional `oids` lists OID codes to use, if omitted all project asset/component
+  OIDs are considered."
+  [db thk-project-id & [oids]]
+  (let [items (cost-group-attrs-q
+               db (if (some? oids)
+                    oids
+                    (project-asset-and-component-oids db thk-project-id)))
         types (into #{} (map (comp :type val)) items)
         type-qty-unit (into {}
                             (d/q '[:find ?e ?u
@@ -338,6 +435,20 @@
           :in $ ?project]
         db thk-project-id)))
 
+(defn project-boq-version-history
+  "Return all BOQ project versions (excluding unlocked versions)
+  for the given THK project"
+  [db thk-project-id]
+  (->>
+   (d/q '[:find (pull ?e [*])
+          :where
+          [?e :boq-version/project ?project]
+          [?e :boq-version/locked? true]
+          :in $ ?project] db thk-project-id)
+   (map first)
+   (sort-by :boq-version/created-at)
+   reverse))
+
 (defn latest-change-in-project
   "Fetch latest timestamp and author UUID that has changed anything in the given THK project."
   [db thk-project-id]
@@ -359,3 +470,12 @@
           [?tx :tx/author ?author]
           :in $ ?project]
         db thk-project-id)))
+
+(defn version-db
+  "Return db as of the given version id."
+  [db version-id]
+  (let [c (:boq-version/created-at (du/entity db version-id))]
+    (if-not c
+      (throw (ex-info "No version creation time found"
+                      {:version-id version-id}))
+      (d/as-of db c))))

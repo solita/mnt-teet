@@ -1,9 +1,10 @@
 (ns teet.asset.asset-type-library
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
-            [clojure.walk :as walk]
             [teet.util.datomic :as du]
-            [clojure.string :as str]))
+            #?@(:clj [[clojure.string :as str]
+                      [clojure.walk :as walk]
+                      [teet.util.coerce :refer [->long ->bigdec]]])))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
@@ -26,6 +27,28 @@
             fg))
         (:fgroups atl)))
 
+(defn fclass-for-ctype
+  "Find fclass which ctype belongs to."
+  [atl ctype]
+  (some (fn [fg]
+          (some (fn [fc]
+                  (when (some #(du/enum= ctype %)
+                              (:ctype/_parent fc))
+                    fc))
+                (:fclass/_fgroup fg)))
+        (:fgroups atl)))
+
+(defn type-hierarchy
+  "Find each hierarchy parent of given fclass or ctype."
+  [atl node]
+  (vec
+   (drop 1                              ; drop 1st :fgroups level
+         (cu/find-path #(concat (:fgroups %)
+                                (:fclass/_fgroup %)
+                                (:ctype/_parent %))
+                       #(du/enum= node %)
+                       atl))))
+
 (defn- has-type? [type x]
   (and (map? x)
        (= type (get-in x [:asset-schema/type :db/ident]))))
@@ -43,28 +66,20 @@
                                             (= (:db/ident %) ident))
                                       atl))))
 
-(defn item-by-ident
-  "Find any type of ATL item based on ident."
+(defn- item-by-ident*
   [atl ident]
   (cu/find-matching #(and (map? %)
                           (contains? % :asset-schema/type)
                           (= ident (:db/ident %)))
                     atl))
 
+(def item-by-ident
+  "Find any type of ATL item based on ident."
+  ;; NOTE: we can memoize this without fear of unbounded growth
+  ;; as asset type library will never change during the lifetime
+  ;; of the process (either page in browser or deployment in ions)
+  (memoize item-by-ident*))
 
-#?(:clj
-   (defn ->bigdec [x]
-     (if (string? x)
-       (when-not (str/blank? x)
-         (-> x str/trim (str/replace "," ".") bigdec))
-       (bigdec x))))
-
-#?(:clj
-   (defn ->long [x]
-     (if (string? x)
-       (when-not (str/blank? x)
-         (-> x str/trim Long/parseLong))
-       (long x))))
 #?(:clj
    (defn coerce-fn [value-type]
      (case value-type

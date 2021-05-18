@@ -15,12 +15,9 @@
             [teet.user.user-db :as user-db]
             [teet.user.user-model :as user-model]
             [teet.user.user-spec :as user-spec]
-            [teet.util.datomic :as du]
-            [teet.integration.integration-id :as integration-id]
             [teet.integration.x-road.property-registry :as property-registry]
             [teet.integration.postgrest :as postgrest]
-            [teet.integration.vektorio.vektorio-core :as vektorio]
-            [teet.log :as log])
+            [teet.integration.vektorio.vektorio-core :as vektorio])
   (:import (java.util Date UUID)))
 
 
@@ -200,14 +197,6 @@
          :msg "User is already added"
          :error :permission-already-granted}))))
 
-(defn- thk-id->integration-id
-  "given project's `:thk.project/id`, fetch the said project's
-  `:integration/id` number form"
-  [db thk-id]
-  (-> (du/entity db [:thk.project/id thk-id])
-      :integration/id
-      integration-id/uuid->number))
-
 (defcommand :thk.project/add-search-geometry
   {:doc "Add a new geometry to use in the related restriction search"
    :context {:keys [user db]}
@@ -220,7 +209,7 @@
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
    :pre [(string? id)]}
-  (when-let [entity-id (thk-id->integration-id db id)]
+  (when-let [entity-id (project-db/thk-id->integration-id-number db id)]
     (let [config (environment/config-map {:api-url [:api-url]
                                          :api-secret [:auth :jwt-secret]})
           features [{:label geometry-label
@@ -242,7 +231,7 @@
                                           :link :thk.project/owner}}
    :pre [(string? id)
          (string? geometry-id)]}
-  (when-let [entity-id (thk-id->integration-id db id)]
+  (when-let [entity-id (project-db/thk-id->integration-id-number db id)]
     (let [config (environment/config-map {:api-url [:api-url]
                                          :api-secret [:auth :jwt-secret]})]
      (entity-features/delete-entity-feature! config entity-id geometry-id))))

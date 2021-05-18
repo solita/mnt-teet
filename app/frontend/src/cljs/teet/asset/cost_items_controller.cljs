@@ -7,9 +7,30 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.asset.asset-model :as asset-model]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            cljs.reader
+            [teet.asset.asset-type-library :as asset-type-library]
+            [reagent.core :as r]
+            [teet.ui.format :as format]))
 
 (defrecord AddComponentCancel [id])
+
+(defrecord MaybeFetchAssetTypeLibrary []
+  t/Event
+  (process-event [_ app]
+    (if (:asset-type-library app)
+      app
+      (t/fx app
+            {:tuck.effect/type :query
+             :query :asset/type-library
+             :args {}
+             :result-path [:asset-type-library]}))))
+
+;; Register routes that need asset type library to be in app state
+;; and launch event to fetch it when navigating.
+(doseq [r [:cost-item :cost-items :cost-items-totals :asset-type-library :assets]]
+  (defmethod routes/on-navigate-event r [_] (->MaybeFetchAssetTypeLibrary)))
+
 
 (defmethod routes/on-leave-event :cost-item [{:keys [query new-query]}]
   (when (and (:component query)
@@ -23,12 +44,10 @@
   (str prefix (swap! next-id inc)))
 
 (def ^:private road-address
-  #(cu/map-vals
-    (fn [x]
-      (when-not (str/blank? x)
-        (common-controller/->long x)))
-    (select-keys % [:location/road-nr :location/carriageway
-                    :location/start-m :location/end-m])))
+  #(into {}
+         (select-keys % [:location/road-nr :location/carriageway
+                         :location/start-km :location/start-offset-m
+                         :location/end-km :location/end-offset-m])))
 
 (defn- point [v]
   (if (vector? v)
@@ -65,6 +84,9 @@
 ;; Response when fetching road address based on geopoints
 (defrecord FetchRoadResponse [start-end-points response])
 
+;; initialize map (when opening map and editing existing asset)
+(defrecord InitMap [])
+
 (defrecord AddComponent [type])
 
 (defrecord SaveCostGroupPrice [cost-group price])
@@ -76,6 +98,8 @@
 (defrecord UnlockForEdits [callback])
 (defrecord UnlockForEditsResponse [callback response])
 
+(defrecord ToggleOpenTotals [ident]) ; toggle open/closed totals ident
+(defrecord SetTotalsRoadFilter [road])
 
 (declare process-location-change)
 
@@ -133,6 +157,38 @@
   (comp asset-model/locked?
         :version
         common-controller/page-state))
+
+(defn carriageways-for-road
+  "Get the carriageways of the road with `road-nr` from `relevant-roads`"
+  [road-nr relevant-roads]
+  (->> relevant-roads
+       (some #(when (= (:road-nr %) road-nr) %))
+       :carriageways))
+
+(defn- default-carriageway
+  "When changing road number, also change the carriageway if the current
+  value is invalid"
+  [form-update-data old-form-data relevant-roads]
+  (if (and (:location/road-nr form-update-data)
+           (not (:location/carriageway form-update-data))
+           ;; 1 is always an allowed carriageway value, no need to
+           ;; check if still valid
+           (not= (:location/carriageway old-form-data) 1))
+    (if-let [selected-road-carriageways (carriageways-for-road (:location/road-nr form-update-data)
+                                                               relevant-roads)]
+      ;; If the currently selected carriageway was NOT found for the newly selected road...
+      (if-not (some #(= (:location/carriageway old-form-data) %)
+                    selected-road-carriageways)
+        ;; ... use the smallest available carriageway ...
+        (assoc form-update-data
+               :location/carriageway
+               (apply min selected-road-carriageways))
+        ;; ... otherwise no need to change the currently selected one.
+        form-update-data)
+      form-update-data)
+    form-update-data))
+
+(declare project-relevant-roads)
 
 (extend-protocol t/Event
 
@@ -227,7 +283,11 @@
         (log/debug "Not editing form, BOQ version is locked.")
         app)
       (let [old-form (form-state app)
-            new-form (cu/deep-merge old-form form-data)]
+            new-form (cu/deep-merge
+                      old-form
+                      (default-carriageway form-data
+                                           old-form
+                                           (project-relevant-roads (get-in app [:params :project]))))]
         (process-location-change
          (update-form app (constantly new-form))
          old-form new-form))))
@@ -245,17 +305,18 @@
        app
        (fn [form]
          ;; Set start/end points and GeoJSON geometry
-         (if (:location/end-m address)
+         (if (:location/end-km address)
            ;; Line geometry
-           (assoc form
-                  :location/start-point (first response)
-                  :location/end-point (last response)
-                  :location/geojson
-                  (feature-collection-geojson
-                   #js {:type "LineString"
-                        :coordinates (clj->js response)}
-                   (point-geojson (first response) "start/end" "start")
-                   (point-geojson (last response) "start/end" "end")))
+           (let [{:keys [road-line start-point end-point]} response]
+             (assoc form
+                    :location/start-point start-point
+                    :location/end-point end-point
+                    :location/geojson
+                    (feature-collection-geojson
+                     #js {:type "LineString"
+                          :coordinates (clj->js road-line)}
+                     (point-geojson start-point "start/end" "start")
+                     (point-geojson end-point "start/end" "end"))))
            ;; Point geometry
            (-> form
                (assoc :location/start-point response
@@ -273,46 +334,61 @@
         (log/debug "Stale response for " start-end-points " => " response)
         app)
 
-      (update-form
-       (if (empty? response)
-         (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
-         app)
-       (fn [form]
+      (let [{:keys [road start-point end-point start-offset-m end-offset-m]}
+            response]
+        (println "RESPONSE: " (pr-str response))
+        (update-form
          (if (empty? response)
-           (-> form
-               (dissoc :location/road-nr :location/carriageway :location/start-m :location/end-m)
-               (merge {:location/geojson (let [{:location/keys [start-point end-point]}
-                                               (cu/map-vals point start-end-points)]
-                                           (feature-collection-geojson
-                                            (clj->js {:type "LineString"
-                                                      :coordinates [start-point end-point]})
-                                            (point-geojson start-point "start/end" "start")
-                                            (point-geojson end-point "start/end" "end")))}))
-           (let [{:keys [geometry road-nr carriageway start-m end-m m]}
-                 (first (sort-by :distance response))]
+           (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
+           app)
+         (fn [form]
+           (if (nil? road)
+             (-> form
+                 (dissoc :location/road-nr :location/carriageway
+                         :location/start-km :location/end-km
+                         :location/start-offset-m :location/end-offset-m)
+                 (merge {:location/geojson
+                         (feature-collection-geojson
+                          (clj->js {:type "LineString"
+                                    :coordinates [start-point end-point]})
+                          (point-geojson start-point "start/end" "start")
+                          (point-geojson end-point "start/end" "end"))}))
+             (let [{:keys [geometry road-nr carriageway start-km end-km km]} road]
+               (when geometry
+                 (let [geojson (js/JSON.parse geometry)]
+                   (merge form
+                          {:location/start-point start-point
+                           :location/start-offset-m start-offset-m
+                           :location/end-point end-point
+                           :location/end-offset-m end-offset-m
+                           :location/geojson
+                           #js {:type "FeatureCollection"
+                                :features
+                                (if end-km
+                                  #js [geojson
+                                       (point-geojson start-point "start/end" "start")
+                                       (point-geojson end-point "start/end" "end")]
+                                  #js [(point-geojson start-point "start/end" "start")])}
+                           :location/road-nr road-nr
+                           :location/carriageway carriageway
+                           :location/start-km (or km start-km)
+                           :location/end-km end-km}))))))))))
 
-             (when geometry
-               (let [geojson (js/JSON.parse geometry)
-                     start (when start-m (aget geojson "coordinates" 0))
-                     end (when end-m (last (aget geojson "coordinates")))]
-                 (log/debug "RECEIVED NEW START/END start: " start ", end: " end )
-
-                 (merge form
-                        (when (and start end)
-                          {:location/start-point (vec start)
-                           :location/end-point (vec end)})
-                        {:location/geojson
-                         #js {:type "FeatureCollection"
-                              :features
-                              (if end-m
-                                #js [geojson
-                                     (point-geojson start "start/end" "start")
-                                     (point-geojson end "start/end" "end")]
-                                #js [geojson])}
-                         :location/road-nr road-nr
-                         :location/carriageway carriageway
-                         :location/start-m (or m start-m)
-                         :location/end-m end-m})))))))))
+  InitMap
+  (process-event [_ app]
+    (let [{:location/keys [start-point end-point]} (form-state app)
+          start (some-> start-point point)
+          end (some-> end-point point)]
+      (if (or start end)
+        (update-form app merge
+                     {:location/geojson
+                      #js {:type "FeatureCollection"
+                           :features
+                           (if end
+                             #js [(point-geojson start "start/end" "start")
+                                  (point-geojson end "start/end" "end")]
+                             #js [(point-geojson start "start/end" "start")])}})
+        app)))
 
   AddComponent
   (process-event [{type :type} {:keys [page params query] :as app}]
@@ -376,33 +452,37 @@
 
           ;; No valid points, don't fetch anything and remove road address
           :else
-          (dissoc app :location/road-nr :location/carriageway :location/start-m :location/end-m)))
+          (dissoc app :location/road-nr :location/carriageway :location/start-km :location/end-km)))
 
       ;; Manually edited road location, refetch geometry and points
       (not= (road-address old-form)
             (road-address new-form))
-      (let [{:location/keys [road-nr carriageway start-m end-m]} (road-address new-form)]
+      (let [{:location/keys [road-nr carriageway
+                             start-km start-offset-m
+                             end-km end-offset-m]} (road-address new-form)]
         (log/debug "ROAD ADDRESS CHANGED")
         (cond
           ;; All values present, fetch line geometry
-          (and road-nr carriageway start-m end-m)
+          (and road-nr carriageway start-km end-km)
           (t/fx app
                 {:tuck.effect/type :query
                  :query :road/line-by-road
                  :args {:road-nr road-nr
                         :carriageway carriageway
-                        :start-m start-m
-                        :end-m end-m}
+                        :start-km start-km
+                        :start-offset-m start-offset-m
+                        :end-km end-km
+                        :end-offset-m end-offset-m}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; Valid start point, fetch a point geometry
-          (and road-nr carriageway start-m)
+          (and road-nr carriageway start-km)
           (t/fx app
                 {:tuck.effect/type :query
                  :query :road/point-by-road
                  :args {:road-nr road-nr
                         :carriageway carriageway
-                        :start-m start-m}
+                        :start-km start-km}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; No valid road address
@@ -426,7 +506,8 @@
                                          :quantity :count
                                          :cost-per-quantity-unit
                                          :total-cost
-                                         :quantity-unit :type)
+                                         :quantity-unit :type
+                                         :ui/group)
                      :price price}
            :result-event ->SaveCostGroupPriceResponse}))
 
@@ -434,7 +515,22 @@
   (process-event [{response :response} app]
     (println "Response: " response)
     (t/fx app
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  ToggleOpenTotals
+  (process-event [{ident :ident} app]
+    (common-controller/update-page-state
+     app [:closed-totals] cu/toggle ident))
+
+  SetTotalsRoadFilter
+  (process-event [{road :road} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (:page app)
+           :params (:params app)
+           :query (if road
+                    {:road road}
+                    {})})))
 
 (extend-protocol t/Event
   SaveBOQVersion
@@ -470,3 +566,63 @@
     (callback)
     (t/fx app
           common-controller/refresh-fx)))
+
+(defn filtered-cost-group-totals
+  "Return ATL item that is being filtered by and cost group totals that match
+  the filter.
+
+  Adds :ui/group to each item that contains a vector of type hierarchy.
+  The group is used in view code to group the rows into sections.
+
+  For example if URL query parameter `:filter` has `:fgroup/foo`
+  the first item will be the ATL definition of the feature group
+  and the second item will a vector of all the rows in `cost-group-totals`
+  where the type hierarchy contains the fgroup. So all rows for any
+  component in any fclass under the fgroup.
+  "
+
+  [app atl cost-group-totals]
+  (let [kw (some-> app (get-in [:query :filter])
+                   cljs.reader/read-string) ; only reads edn, not arbitrary code
+
+        filter-pred (if kw
+                      #(some (fn [{t :db/ident}] (= t kw))
+                             (:ui/group %))
+                      identity)]
+    [(some->> kw (asset-type-library/item-by-ident atl))
+     (into []
+           (comp
+            (map #(assoc % :ui/group
+                         (asset-type-library/type-hierarchy atl (:type %))))
+
+            (filter filter-pred))
+           cost-group-totals)]))
+
+
+(def relevant-road-cache
+  "Atom to cache relevant roads by project."
+  (r/atom {}))
+
+(defn- project-relevant-roads
+  "Get relevant roads for project that have been fetched previously."
+  [project-id]
+  (get @relevant-road-cache project-id))
+
+(defrecord FetchRelevantRoadsResponse [project-id response]
+  t/Event
+  (process-event [_ app]
+    (swap! relevant-road-cache assoc project-id response)
+    app))
+
+(defrecord FetchRelevantRoads [project-id]
+  t/Event
+  (process-event [_ app]
+    (if (contains? @relevant-road-cache project-id)
+      app
+      (do
+        (swap! relevant-road-cache assoc project-id [])
+        (t/fx app
+              {:tuck.effect/type :query
+               :query :asset/project-relevant-roads
+               :args {:thk.project/id project-id}
+               :result-event (partial ->FetchRelevantRoadsResponse project-id)})))))

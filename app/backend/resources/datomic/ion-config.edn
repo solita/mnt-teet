@@ -16,6 +16,7 @@
          teet.user.user-tx/set-global-role
          teet.user.user-tx/ensure-unique-email
          clojure.string/includes?
+         teet.util.date/dec-days
          teet.task.task-tx/delete-task
          teet.asset.asset-tx/save-asset
          teet.asset.asset-tx/save-component
@@ -61,6 +62,10 @@
            :restore
            {:fn teet.backup.backup-ion/restore
             :description "Restore environment from S3 backup file"}
+
+           :delete-db
+           {:fn teet.backup.backup-ion/delete-db
+            :description "Delete Datomic TEET DB and Asset DB"}
 
            :datasource-cleanup
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion

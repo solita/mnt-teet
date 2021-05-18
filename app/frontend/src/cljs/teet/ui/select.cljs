@@ -11,7 +11,7 @@
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
-                                         Popper CircularProgress Paper Link Divider]]
+                                         Popper CircularProgress Paper Chip Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util :refer [mapc]]
             ["react"]
@@ -388,7 +388,7 @@
   [{:keys [e! value on-change label required error
            format-result
            show-label? after-results-action
-           query placeholder no-results]
+           query placeholder no-results clear-value]
     :or {show-label? true
          placeholder (tr [:user :autocomplete :placeholder])
          no-results (tr [:user :autocomplete :no-options])}}]
@@ -447,11 +447,11 @@
                                                                        :results results
                                                                        :highlight (first results))))))))))
                    :input-button-click #(do
-                                          (on-change nil)
+                                          (on-change clear-value)
                                           (swap! state assoc :input "")
                                           (r/after-render
-                                            (fn []
-                                              (.focus @input-ref))))
+                                           (fn []
+                                             (.focus @input-ref))))
                    :input-button-icon icons/content-clear}]
        (when open?
          [Popper {:open true
@@ -487,6 +487,23 @@
                  [:div {:class (<class after-result-entry)}
                   [buttons/link-button
                    {:on-click on-click} title]]])])]])])))
+
+(defn- selected-item-chip [{:keys [format-result on-change value]
+                            :or {format-result str}} item]
+  [Chip {:label (format-result item)
+         :on-delete #(on-change (disj (or value #{}) item))}])
+
+(defn select-search-multiple
+  "Multiple select with select-search. Contains a list of chips for results.
+  Value is a set of selected items."
+  [{:keys [on-change value] :as opts}]
+  [:div.select-search-multiple
+   (mapc (r/partial selected-item-chip opts) value)
+   ^{:key (str (count value))} ; remount search to clear it's text search after every change
+   [select-search
+    (merge opts
+           {:value nil
+            :on-change #(on-change (conj (or value #{}) %))})]])
 
 (defn select-user
   "Select user"

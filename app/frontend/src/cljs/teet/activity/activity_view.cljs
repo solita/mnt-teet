@@ -80,8 +80,7 @@
         [form/footer2]]]]]))
 
 (defn edit-activity-form [e! activity project {:keys [max-date min-date]}]
-  (let [deletable? (activity-model/deletable? activity)
-        user-authorized? (authorized? @teet.app-state/user :activity/delete-activity
+  (let [user-authorized? (authorized? @teet.app-state/user :activity/delete-activity
                            {:project-id (:db/id project)
                             :entity activity})]
     [form/form {:e! e!
@@ -89,7 +88,7 @@
                 :on-change-event activity-controller/->UpdateActivityForm
                 :save-event activity-controller/->SaveActivityForm
                 :cancel-event project-controller/->CloseDialog
-                :delete (when (and deletable? user-authorized?)
+                :delete (when user-authorized?
                           (activity-controller/->DeleteActivity (:db/id activity)))
                 :spec :activity/new-activity-form}
 
@@ -141,7 +140,8 @@
    [when-authorized
     :activity/update
     activity
-    [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
+    [buttons/button-secondary {:data-cy "activity-edit-button"
+                               :on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
      (tr [:buttons :edit])]]])
 
 (defn task-status-color

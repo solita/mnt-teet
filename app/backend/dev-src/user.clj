@@ -17,6 +17,7 @@
 (def restart go)
 
 (def db-connection environment/datomic-connection)
+(def asset-connection environment/asset-connection)
 
 (defn db []
   (d/db (db-connection)))
@@ -87,6 +88,13 @@
                            :permission/role       :external-consultant
                            :permission/valid-from (Date.)}]}))
 
+(defn give-internal-consultant-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :internal-consultant
+                           :permission/valid-from (Date.)}]}))
+
 (defn remove-permission [user-uuid permission-eid]
   (d/transact (environment/datomic-connection)
               {:tx-data [[:db/retract [:user/id user-uuid]
@@ -139,7 +147,11 @@
 
 (defn make-mock-users!
   []
-  (apply tx mock-users))
+  (apply tx mock-users)
+  (give-manager-permission [:user/id manager-uid])
+  (give-admin-permission [:user/id boss-uid])
+  (give-external-consultant-permission [:user/id external-consultant-id])
+  (give-internal-consultant-permission [:user/id internal-consultant-id]))
 
 (defn delete-db
   [db-name]
@@ -336,8 +348,15 @@
 ;;
 (def logged-user   tu/logged-user)
 (def local-login   tu/local-login)
-(def local-query   tu/local-query)
-(def local-command tu/local-command)
+(defn local-query [& args]
+  (binding [tu/*connection* (db-connection)
+            tu/*asset-connection* (asset-connection)]
+    (apply tu/local-query args)))
+
+(defn local-command [& args]
+  (binding [tu/*connection* (db-connection)
+            tu/*asset-connection* (asset-connection)]
+    (apply tu/local-command args)))
 
 (defn pprint-file [filename output]
   (spit filename (with-out-str (clojure.pprint/pprint output))))
