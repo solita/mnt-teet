@@ -116,10 +116,10 @@
                      :type :notification.type/task-waiting-for-review
                      :project (project-db/task-project-id db task-id)})
                   {})]
-               (concat (for [{id :db/id} (task-db/task-file-listing-not-complete db user task-id)]
+               (concat (for [{id :db/id} (task-db/not-reviewed-task-files db user task-id)]
                   {:db/id id
                    :file/status :file.status/submitted})
-               (for [pid (task-db/task-file-parts-not-complete db task-id)]
+               (for [pid (task-db/not-reviewed-file-parts db task-id)]
                  {:db/id (first pid)
                   :file.part/status :file.part.status/waiting-for-review})))})
 
@@ -136,7 +136,7 @@
              (case result
                :accept (into [(merge {:db/id taskpart-id
                                       :file.part/status :file.part.status/completed}
-                                     (meta-model/completion-meta user))
+                                     (task-db/task-part-completion-attributes user))
                               (if-let [assignee (task-db/get-task-assignee-by-id db task-id)]
                                 (notification-db/notification-tx
                                   db
@@ -200,8 +200,8 @@
                          [{:db/id taskpart-id
                           :file.part/status :file.part.status/in-progress}]
                          (concat
-                           [[:db/retract taskpart-id :meta/completed-at]
-                           [:db/retract taskpart-id :meta/completed-by]]
+                           [[:db/retract taskpart-id :file.part/completed-at]
+                           [:db/retract taskpart-id :file.part/completed-by]]
                          (for [{id :db/id} (task-db/task-part-file-listing db user taskpart-id)]
                            {:db/id id
                             :file/status :file.status/draft})))})
@@ -216,10 +216,10 @@
              :transact (into
                          [{:db/id task-id
                            :task/status :task.status/in-progress}]
-                         (concat (for [{id :db/id} (task-db/task-file-listing-not-complete db user task-id)]
+                         (concat (for [{id :db/id} (task-db/not-reviewed-task-files db user task-id)]
                                    {:db/id id
                                     :file/status :file.status/draft})
-                                 (for [pid (task-db/task-file-parts-not-complete db task-id)]
+                                 (for [pid (task-db/not-reviewed-file-parts db task-id)]
                                    {:db/id (first pid)
                                     :file.part/status :file.part.status/in-progress})))})
 
@@ -268,10 +268,10 @@
    :transact (into
                [{:db/id task-id
                  :task/status :task.status/reviewing}]
-               (concat (for [{id :db/id} (task-db/task-file-listing-not-complete db user task-id)]
+               (concat (for [{id :db/id} (task-db/not-reviewed-task-files db user task-id)]
                          {:db/id id
                           :file/status :file.status/submitted})
-                       (for [pid (task-db/task-file-parts-not-complete db task-id)]
+                       (for [pid (task-db/not-reviewed-file-parts db task-id)]
                          {:db/id (first pid)
                           :file.part/status :file.part.status/reviewing})))})
 
@@ -307,10 +307,10 @@
                  :task/status :task.status/completed}]
 
                ;; Mark all latest versions as final
-               (concat (for [{id :db/id} (task-db/task-file-listing-not-complete db user task-id)]
+               (concat (for [{id :db/id} (task-db/not-reviewed-task-files db user task-id)]
                          {:db/id id
                           :file/status :file.status/final})
-                       (for [pid (task-db/task-file-parts-not-complete db task-id)]
+                       (for [pid (task-db/not-reviewed-file-parts db task-id)]
                          {:db/id (first pid)
                           :file.part/status :file.part.status/completed})))
 
@@ -318,10 +318,10 @@
      :reject (into
                [{:db/id task-id
                  :task/status :task.status/in-progress}]
-               (concat (for [{id :db/id} (task-db/task-file-listing-not-complete db user task-id)]
+               (concat (for [{id :db/id} (task-db/not-reviewed-task-files db user task-id)]
                          {:db/id id
                           :file/status :file.status/returned})
-                       (for [pid (task-db/task-file-parts-not-complete db task-id)]
+                       (for [pid (task-db/not-reviewed-file-parts db task-id)]
                          {:db/id (first pid)
                           :file.part/status :file.part.status/in-progress})))
               (notification-db/notification-tx

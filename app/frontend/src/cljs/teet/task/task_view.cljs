@@ -652,7 +652,7 @@
                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
                                                (du/find-by-id task-id tasks)))
         task (project-model/task-by-id project task-id)
-        assignee (project-model/task-assignee project task-id)]
+        assignee (task-model/task-assignee project task-id)]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project

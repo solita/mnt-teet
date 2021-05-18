@@ -13,6 +13,16 @@
   (let [task (du/entity db task-id)]
     (get-in task [:activity/_tasks 0 :db/id])))
 
+(defn task-part-completion-attributes
+  [user]
+  {:file.part/completed-by (user-model/user-ref user)
+   :file.part/completed-at (Date.)})
+
+(defn task-completion-attributes
+  [user]
+  {:task/completed-by (user-model/user-ref user)
+   :task/completed-at (Date.)})
+
 (defn get-task-assignee-by-id
   [db task-id]
   (get-in (d/pull db [:task/assignee] task-id) [:task/assignee :db/id]))
@@ -25,22 +35,22 @@
                                                                 :db/id
                                                                 :file.part/number
                                                                 :file.part/status
-                                                                :meta/completed-at
+                                                                :file.part/completed-at
                                                                 :meta/deleted?]}] task-id))
     :file.part/_task
     #(sort-by :file.part/number %)))
 
-(defn task-file-parts-not-complete
+(defn not-reviewed-file-parts
   [db task-eid]
   (d/q '[:find ?p
          :where
          [?p :file.part/task ?t]
-         [(missing? $ ?p :meta/completed-at)]
+         [(missing? $ ?p :file.part/completed-at)]
          [(missing? $ ?p :meta/deleted?)]
          :in $ ?t]
        db task-eid))
 
-(defn task-file-listing-not-complete
+(defn not-reviewed-task-files
   "Returns non-final version of files for a given task. Returns latest versions of files as vector
   and adds all previous versions of a files as :versions key."
   [db user task-eid]
@@ -53,7 +63,7 @@
                                                       [(missing? $ ?f :file/part)]
                                                       (and
                                                         [?f :file/part ?p]
-                                                        [(missing? $ ?p :meta/completed-at)]))
+                                                        [(missing? $ ?p :file.part/completed-at)]))
                                              :in $ ?t]
                                            db task-eid))))
 

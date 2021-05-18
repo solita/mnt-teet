@@ -719,8 +719,8 @@
 
        :reagent-render
        (fn [e! app project]
-         (let [{file-id     :file
-                task-id     :task
+         (let [{file-id :file
+                task-id :task
                 activity-id :activity} (:navigation project)
                activity (project-model/activity-by-id project activity-id)
                task (project-model/task-by-id project task-id)
@@ -737,29 +737,29 @@
                                                  (get-in file [:file/part :db/id]))
                                           %)
                                        (:file.part/_task task))
-                                 {:file.part/name   (tr [:file-upload :general-part])
+                                 {:file.part/name (tr [:file-upload :general-part])
                                   :file.part/number 0})]
                [:div
                 [project-navigator-view/project-navigator-with-content
-                 {:e!              e!
-                  :app             app
-                  :project         project
-                  :column-widths   [3 9 :auto]
-                  :show-map?       false
+                 {:e e!
+                  :app app
+                  :project project
+                  :column-widths [3 9 :auto]
+                  :show-map? false
                   :content-padding "0rem"}
                  [Grid {:container true :spacing 0}
-                  [Grid {:item  true :xs 4
+                  [Grid {:item true :xs 4
                          :class (<class common-styles/flex-column-1)}
                    [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
-                  [Grid {:item  true :xs 8
+                  [Grid {:item true :xs 8
                          :class (<class common-styles/padding 2 2 2 1.75)}
                    [:<>
                     (when @edit-open?
-                      [file-edit-dialog {:e!       e!
+                      [file-edit-dialog {:e! e!
                                          :on-close #(reset! edit-open? false)
                                          :activity activity
-                                         :file     file
-                                         :parts    (:file.part/_task task)}])]
+                                         :file file
+                                         :parts (:file.part/_task task)}])]
 
                    [:div {:class (<class common-styles/flex-row)}
                     [typography/Heading1 {:title description
@@ -785,18 +785,24 @@
 
                    ^{:key (str (:db/id file) "-details-and-comments")}
                    [tabs/details-and-comments-tabs
-                    {:e!                                e!
-                     :app                               app
+                    {:e! e!
+                     :app app
                      :after-comment-list-rendered-event common-controller/->Refresh
-                     :comment-link-comp                 [file-comments-link file]
-                     :after-comment-added-event         common-controller/->Refresh
-                     :entity-id                         (:db/id file)
-                     :entity-type                       :file
-                     :show-comment-form?                (not old?)}
+                     :comment-link-comp [file-comments-link file]
+                     :after-comment-added-event common-controller/->Refresh
+                     :entity-id (:db/id file)
+                     :entity-type :file
+                     :show-comment-form? (not old?)}
                     (when file
-                      [file-details {:e!           e! :app app :project-id project-id :task task
-                                     :file         file :latest-file latest-file
-                                     :file-part    file-part
-                                     :can-submit?  (if (> 0 (:file.part/number file-part)) (task-model/can-submit-part? file-part)
-                                                                         (task-model/can-submit? task))
+                      [file-details {:e! e!
+                                     :app app
+                                     :project-id project-id
+                                     :task task
+                                     :file file
+                                     :latest-file latest-file
+                                     :file-part file-part
+                                     :can-submit? (if
+                                                    (> 0 (:file.part/number file-part))
+                                                    (task-model/can-submit-part? file-part)
+                                                    (task-model/can-submit? task))
                                      :replace-form (:files-form project)}])]]]]]))))})))

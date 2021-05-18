@@ -84,6 +84,17 @@
                 :else
                 :unassigned)))
 
+(defn task-assignee
+  "Fetch task assignee based on task-id.
+  Goes through lifecycles and activities and returns a task assignee for matching id."
+  [{lcs :thk.project/lifecycles} task-id]
+  (some
+    (fn [{activities :thk.lifecycle/activities}]
+      (some (fn [{tasks :activity/tasks}]
+              (some #(when (id= (:db/id %) task-id) (:db/id (:task/assignee %))) tasks))
+            activities))
+    lcs))
+
 (defn can-submit-part?
   "Check if the task part can be submitted."
   [task-part]

@@ -19,11 +19,6 @@
   {:meta/modifier    (user-model/user-ref user)
    :meta/modified-at (Date.)})
 
-(defn completion-meta
-  [user]
-  {:meta/completed-by (user-model/user-ref user)
-   :meta/completed-at (Date.)})
-
 (defn deletion-tx
   [user id]
   (assoc (modification-meta user)

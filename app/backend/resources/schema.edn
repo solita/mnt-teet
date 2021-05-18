@@ -1960,8 +1960,7 @@
            :db/tupleAttrs [:thk.contract/procurement-id :thk.contract/procurement-part-id]
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
-           :db/doc "Ensure there is only one contract per procurement-id and part-id combination"}]]}]
-          [:db/retract :thk.contract/procurement-id :db/unique :db.unique/identity]]]}
+           :db/doc "Ensure there is only one contract per procurement-id and part-id combination"}]]}
 
 {:db/ident :migration/additional-file-statuses
  :txes [[{:db/ident :file.status/submitted :enum/attribute :file/status}
@@ -1987,12 +1986,20 @@
           {:db/ident :notification.type/task-part-review-accepted :enum/attribute :notification/type}
           {:db/ident :notification.type/task-part-review-rejected :enum/attribute :notification/type}]]}
 
-{:db/ident :migration/file-part-review-completion-metas
-  :txes [[{:db/ident :meta/completed-at
+{:db/ident :migration/file-part-and-task-completion-attributes
+  :txes [[{:db/ident :file.part/completed-at
             :db/valueType :db.type/instant
             :db/cardinality :db.cardinality/one
-            :db/doc "Timestamp of task completion"}
-          {:db/ident :meta/completed-by
+            :db/doc "Timestamp of task part completion"}
+          {:db/ident :file.part/completed-by
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to user entity who completed the task part"}
+          {:db/ident :task/completed-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of task completion"}
+          {:db/ident :task/completed-by
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Ref to user entity who completed the task"}]]}]

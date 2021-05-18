@@ -312,17 +312,6 @@
            activities))
    lcs))
 
-(defn task-assignee
-  "Fetch project task by id.
-  Goes through lifecycles and activities and returns a task with matching id."
-  [{lcs :thk.project/lifecycles} task-id]
-  (some
-    (fn [{activities :thk.lifecycle/activities}]
-      (some (fn [{tasks :activity/tasks}]
-              (some #(when (id= (:db/id %) task-id) (:db/id (:task/assignee %))) tasks))
-            activities))
-    lcs))
-
 (defn file-by-id
   "Fetch file in project by file id"
   ([project file-id]

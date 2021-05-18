@@ -145,7 +145,7 @@
                  ^{:key (str id)}
                  [:div
                   [buttons/link-button {:on-click #(e! (notification-controller/->NavigateTo id))}
-                   (if (is-task-part-notification? type)
+                   (if (is-task-part-notification? type)    ;; In case of a task part notification, the translated message includes a task part name and number
                      (tr [:enum (:db/ident type)] {:task-part-name (str "#" (:file.part/number task-part-name)
                                                                         (if (cstr/blank? (:file.part/name task-part-name))
                                                                           ""
