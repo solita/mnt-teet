@@ -89,8 +89,9 @@
 
 (defrecord AddComponent [type])
 
-(defrecord SaveCostGroupPrice [cost-group price])
-(defrecord SaveCostGroupPriceResponse [response])
+(defrecord SaveCostGroupPrice [finish-saving! cost-group price])
+(defrecord SaveCostGroupPriceResponse [finish-saving! response])
+(defrecord SaveCostGroupPriceError [finish-saving! error])
 
 ;; Locking and versioning
 (defrecord SaveBOQVersion [callback form-data])
@@ -497,7 +498,7 @@
 (extend-protocol t/Event
 
   SaveCostGroupPrice
-  (process-event [{:keys [cost-group price]} app]
+  (process-event [{:keys [cost-group price finish-saving!]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :asset/save-cost-group-price
@@ -508,14 +509,22 @@
                                          :total-cost
                                          :quantity-unit :type
                                          :ui/group)
-                     :price price}
-           :result-event ->SaveCostGroupPriceResponse}))
+                     :price (if (str/blank? price) nil price)}
+           :result-event (partial ->SaveCostGroupPriceResponse finish-saving!)
+           :error-event (partial ->SaveCostGroupPriceError finish-saving!)}))
 
   SaveCostGroupPriceResponse
-  (process-event [{response :response} app]
+  (process-event [{:keys [finish-saving! response]} app]
     (println "Response: " response)
+    (finish-saving!)
     (t/fx app
           common-controller/refresh-fx))
+
+  SaveCostGroupPriceError
+  (process-event [{:keys [finish-saving! error]} app]
+    (println "Error: " error)
+    (finish-saving!)
+    (common-controller/on-server-error error app))
 
   ToggleOpenTotals
   (process-event [{ident :ident} app]
