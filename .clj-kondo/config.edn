@@ -1,11 +1,8 @@
 {:linters
+ {:unresolved-var {:exclude [teet.log]}}
  {:unresolved-symbol
   {:level :warning
-   :exclude [(teet.log/info)
-             (teet.log/error)
-             (teet.log/warn)
-             (teet.log/debug)
-             (teet.db-api.core/defcommand)
+   :exclude [(teet.db-api.core/defcommand)
              (teet.db-api.core/defquery)
              (teet.db-api.core/defrequest*)
              (teet.integration.integration-context/defstep)]}}
