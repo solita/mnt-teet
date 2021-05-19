@@ -9,7 +9,7 @@ describe("Task files", function() {
             })
     })
 
-/*    it("shows the task export menu item", function() {
+    it("shows the task export menu item", function() {
         cy.dummyLogin("Danny")
         cy.visit(this.taskURL)
         cy.get("#project-export-menu").click()
@@ -103,7 +103,7 @@ describe("Task files", function() {
         cy.get(".file-identifying-info[data-version=1]").should("not.exist")
         cy.get(".file-identifying-info[data-version=2]").should("exist")
     })
-*/
+
     it("Test if task part can be reviewed", function() {
         cy.dummyLogin("Danny")
         cy.visit(this.taskURL)
