@@ -5,7 +5,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 // even with the expense of having larger bundle (eg. 3.0mb => 4.5mb)
 branch = process.env["CODEBUILD_SOURCE_VERSION"] || "master";
 teet_env = process.env["TEET_ENV"] || "unknown";
-minimize = (teet_env !== "teet-dev") && (branch !== "master")
+minimize = (teet_env !== "teet-dev2") && (branch !== "master")
 
 module.exports = {
     entry: './out/index.js',
