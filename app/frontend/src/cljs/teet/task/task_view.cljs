@@ -220,7 +220,7 @@
                     (tr [:fields :validation-error :file.part/name])
                     :else
                     nil))}
-    [TextField {}]]])
+    [TextField {:id :task-part-name}]]])
 
 (defn task-part-buttons [e! task task-part]
   (let [task-part-status (:db/ident (:file.part/status task-part))]
@@ -234,23 +234,22 @@
           :file.part.status/in-progress
           [when-authorized :task/submit task
            [buttons/button-with-confirm
-           {:id (str "submit-button-" (:db/id task-part))
-            :action (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))
+           {:action (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))
             :modal-title (str (tr [:task-part :submit-results]) "?")
             :confirm-button-text  (tr [:buttons :confirm])
             :cancel-button-text  (tr [:buttons :cancel])
             :modal-text (tr [:task-part :submit-results-confirm])
             :close-on-action? true}
            [buttons/button-primary {:size :small
-                                   :on-click (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))}
+                                    :id (str "submit-button-" (:db/id task-part))
+                                    :on-click (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))}
             (tr [:task-part :submit-for-approval])]]]
 
           :file.part.status/reviewing
           [when-authorized :task/review task
            [:<>
            [buttons/button-with-confirm
-          {:id (str "accept-button-" (:db/id task-part))
-           :action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :accept)
+          {:action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :accept)
            :modal-title (str (tr [:task-part :approve-part]) "?")
            :confirm-button-text  (tr [:buttons :confirm])
            :cancel-button-text  (tr [:buttons :cancel])
@@ -258,31 +257,32 @@
            :close-on-action? true}
           [buttons/button-green {:style {:margin-right "1em"}
                                  :size :small
+                                 :id (str "accept-button-" (:db/id task-part))
                                  :on-click (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :accept)}
            (tr [:task-part :accept])]]
            [buttons/button-with-confirm
-            {:id (str "reject-button-" (:db/id task-part))
-            :action (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :reject)
+            {:action (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :reject)
             :modal-title (str (tr [:task-part :reject-part]) "?")
             :confirm-button-text  (tr [:buttons :confirm])
             :cancel-button-text  (tr [:buttons :cancel])
             :modal-text (tr [:task-part :reject-part-confirm])
             :close-on-action? true}
             [buttons/button-warning {:size :small
+                                     :id (str "reject-button-" (:db/id task-part))
                                      :on-click (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :reject)}
              (tr [:task-part :reject])]]]]
 
           :file.part.status/completed
           [when-authorized :task/reopen-task task
            [buttons/button-with-confirm
-            {:id (str "reopen-button-" (:db/id task-part))
-             :action (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))
+            {:action (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))
              :modal-title (str (tr [:task-part :reopen-part]) "?")
              :confirm-button-text  (tr [:buttons :confirm])
              :cancel-button-text  (tr [:buttons :cancel])
              :modal-text (tr [:task-part :reopen-part-confirm])
              :close-on-action? true}
             [buttons/button-primary {:size :small
+                                     :id (str "reopen-button-" (:db/id task-part))
                                      :on-click (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))}
              (tr [:task-part :reopen])]]]
           [:<>])]])))
@@ -353,6 +353,7 @@
                      :style {:margin-right "0.5rem"}}
                     (tr [:buttons :edit])]}]
                  [buttons/button-primary {:size :small
+                                          :id (str "tp-upload-" (:file.part/number file-part))
                                           :start-icon (r/as-element [icons/content-add])
                                           :on-click #(upload! {:file/part file-part})}
                   (tr [:buttons :upload])]]])}]
@@ -449,7 +450,8 @@
           :button-component
           [buttons/button-secondary
            {:start-icon (r/as-element
-                          [icons/content-add])}
+                          [icons/content-add])
+            :data-cy "task-add-file-part"}
            (tr [:task :add-part])]}]])]))
 
 (defn file-upload-controls
@@ -576,6 +578,7 @@
 (defn- edit-task-form-button [e! activity task allow-delete?]
   [form/form-modal-button
    {:e! e!
+    :id "edit-task-button"
     :button-component [buttons/button-secondary {}
                        (tr [:buttons :edit])]
     :modal-title (tr [:project :edit-task])

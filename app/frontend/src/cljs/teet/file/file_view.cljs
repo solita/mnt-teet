@@ -743,7 +743,7 @@
                                   :file.part/number 0})]
                [:div
                 [project-navigator-view/project-navigator-with-content
-                 {:e e!
+                 {:e! e!
                   :app app
                   :project project
                   :column-widths [3 9 :auto]
