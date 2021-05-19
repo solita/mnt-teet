@@ -12,19 +12,23 @@
             [teet.project.project-style :as project-style]
             [teet.common.common-controller :as common-controller]
             [teet.ui.typography :as typography]
+            [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]))
 
-(def contract-pages
-  [{:name :contract-information
-    :label [:contract :contract-information]
-    :navigate {:page :contract}
-    :href-fn #(str "#/contracts/" %)
-    :hotkey "1"}
-   {:name :partner-information
-    :label [:contract :partner-information]
-    :navigate {:page :partners}
-    :href-fn #(str "#/contracts/" % "/partners")
-    :hotkey "2"}])
+(defn contract-pages []
+  (let [menu-items
+        [{:name :contract-information
+          :label [:contract :contract-information]
+          :navigate {:page :contract}
+          :href-fn #(str "#/contracts/" %)
+          :hotkey "1"}]]
+    (if (common-controller/feature-enabled? :contract-partners)
+      (conj menu-items {:name :partner-information
+                        :label [:contract :partner-information]
+                        :navigate {:page :partners}
+                        :href-fn #(str "#/contracts/" % "/partners")
+                        :hotkey "2"})
+      menu-items)))
 
 (defn- contract-menu-item [e! close-menu!
                            {:keys [hotkey href-fn navigate] :as _item}
@@ -73,7 +77,7 @@
           [ClickAwayListener {:on-click-away toggle-open!}
            [Paper
             (into [MenuList {}]
-                  (for [page contract-pages]
+                  (for [page (contract-pages)]
                     [contract-menu-item
                      e! toggle-open! page
                      (contract-model/contract-url-id contract)]))]]]]))))
