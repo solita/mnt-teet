@@ -236,6 +236,7 @@
    :project-manager "Projektijuht"},
   :contract-related-entities "Lepinguga seotud üksused",
   :thk.contract.status/signed "Allkirjastatud",
+  :partner-information "Partnerite info",
   :thk.contract.status/completed "Valmis",
   :contracts-listing "Lepingute loetelu",
   :edit-contract "Lepingu info",
@@ -398,6 +399,7 @@
   :notification.type/cooperation-application-expired-soon
   "Taotluse tingimused aeguvad peagi",
   :cooperation.opinion.status/unanswered "Ei esitanud arvamust",
+  :file.part.status/reviewing "Ülevaatamisel",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
   :document.category/project-doc "Projektdokumentatsioon",
@@ -453,7 +455,10 @@
   :cooperation.opinion.status/rejected "Mitte arvestada",
   :document.sub-category/no-objection-letters "Kooskõlastused",
   :task.group/working-design "Töö/teostuse projekt",
+  :file.part.status/waiting-for-review "Ootab ülevaatamist",
   :task.status/waiting-for-review "Ootab ülevaatamist",
+  :notification.type/task-part-waiting-for-review
+  "Task part {task-part-name} is waiting for your review.",
   :cooperation.application.type/waste-permit "Jäätmeluba",
   :thk.lifecycle-type/design "Projekteerimine",
   :task.type/acceptance "Vastuvõtmine",
@@ -488,6 +493,8 @@
   :boq-version.type/budget "Eelarve",
   :notification.type/comment-created "Uus märkus",
   :task.type/construction-equipment "Seadmed",
+  :notification.type/task-part-review-accepted
+  "Task part {task-part-name} has been accepted.",
   :activity.status/archived "Arhiveeritud",
   :activity.status/valid "Kehtiv",
   :boq-version.type/tender "Hange",
@@ -537,6 +544,7 @@
   :task.status/completed "Valmis",
   :task.type/building-permit "Ehitusluba",
   :task.type/land-owners "Kokkulepped maaomanikega",
+  :file.part.status/completed "Lõpetatud",
   :task.type/acceptances-no-objection "Kooskõlastused",
   :thk.task-type/environmental-impact-assessment "KMH eelhinnang",
   :document.sub-category/drill-posts "Puurtulbad",
@@ -599,6 +607,7 @@
   :activity.name/preliminary-design "Eelprojekt",
   :cooperation.application.type/geological-survey-plan
   "Geoloogiliste uuringute kava",
+  :file.part.status/in-progress "Töös",
   :task.status/in-progress "Töös",
   :task.type/drainage "Drenaaž",
   :cooperation.application.type/ex-ante-eia "KMH eelhinnang",
@@ -617,6 +626,8 @@
   :cooperation.application.type/special-use-water-permit
   "Vee-erikasutusluba",
   :estate-compensation.reason/other "Muud",
+  :notification.type/task-part-review-rejected
+  "Task part {task-part-name} has been rejected.",
   :cooperation.application.type/eia-report "KMH aruanne",
   :task.type/archeological-study "Arheoloogiline uuring",
   :task.type/construction-cost-list "Kululoend",
@@ -632,6 +643,7 @@
   :activity.status/canceled "Katkestatud",
   :cooperation.response.status/no-objection "Vastus olemas",
   :thk.contract.status/in-progress "Töös",
+  :file.part.status/not-started "Pole alustatud",
   :cooperation.application.type/work-permit "Töö luba",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
@@ -791,6 +803,7 @@
   :land-acquisition/pos-number "POS#",
   :meeting.agenda/responsible "Vastutav isik",
   :document/sub-category "Dokumendi alamtüüp",
+  :location/road-address "Tee aadress",
   :user/add-global-permission
   "Lisan globaalse rolli (kehtib kõikide projektide kohta)",
   :cooperation.contact/company "Asutus",
@@ -807,6 +820,7 @@
   :comment/track? "Jälgin staatust",
   :land-owner-opinion/body "Arvamuse sisu",
   :user/roles "Rollid",
+  :asset/fclass "Vara liik",
   :document/author "Autor",
   :file/name "Nimi",
   :cooperation.contact/email "E-post",
@@ -1284,6 +1298,7 @@
   :edit-part-modal-title "Muudan ülesande osa",
   :confirm-delete-confirm "Jah, kustuta ülesanne",
   :upload-files "Laen failid üles",
+  :reopen-success "Task re-opened successfully",
   :part-added-succesfully "Ülesande osa edukalt lisatud",
   :edit-document "Muudan dokumenti",
   :part-edited-succesfully "Ülesande osa edukalt muudetud",
@@ -1294,6 +1309,7 @@
   :add-part "Lisan osa",
   :accept-review "Aktsepteerin ülesande",
   :confirm-delete-cancel "Ei",
+  :reopen "Reopen task",
   :reject-review "Lükkan tagasi",
   :documents "Dokumendid",
   :add-part-modal-title "Lisan ülesande osa",
@@ -1308,6 +1324,23 @@
   :no-documents "Dokumente ei ole",
   :edit-success-notification "Ülesanne edukalt muudetud",
   :results "Tulemused"},
+ :task-part
+ {:reopen-successful "Task part re-opened successfully",
+  :reopen-part "Reopen task part",
+  :reopen "Ava",
+  :reopen-part-confirm
+  "Are you sure you wish to reopen this task part and all associated files?",
+  :submit-for-approval "Esitan ülevaatamiseks",
+  :reject-part "Send back",
+  :submit-results "Submit results",
+  :reject "Saadan tagasi",
+  :approve-part "Approve results",
+  :submit-results-confirm
+  "Are you sure you wish to submit this task part for review?",
+  :approve-part-confirm "Are you sure you wish approve the task part?",
+  :accept "Kooskõlastatud",
+  :reject-part-confirm
+  "Are you sure you wish to send back the task part?"},
  :unit-info {:owners-opinions "Maade omanike arvamused"},
  :unit-modal-page {:add-new-owner-opinion "Lisan uue arvamuse"},
  :user

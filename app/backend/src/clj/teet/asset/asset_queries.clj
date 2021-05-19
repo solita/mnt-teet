@@ -17,7 +17,8 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [cheshire.core :as cheshire]
-            [teet.util.coerce :refer [->long]]))
+            [teet.util.coerce :refer [->long]]
+            [teet.util.collection :as cu]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -190,14 +191,18 @@
    :authorization {}}
   (let [assets (mapv first
                      (d/q '[:find (pull ?a [:asset/fclass :common/status :asset/oid
-                                            :location/road-nr
+                                            :location/road-nr :location/carriageway
+                                            :location/start-km :location/end-km
                                             :location/start-point :location/end-point])
                             :where
                             [?a :asset/fclass ?fclass]
                             :in $ [?fclass ...]]
                           adb
                           fclass))]
-    {:assets (mapv #(dissoc % :location/start-point :location/end-point)
+    {:assets (mapv #(-> %
+                        (dissoc :location/start-point :location/end-point)
+                        (cu/update-in-if-exists [:location/start-km] asset-model/format-location-km)
+                        (cu/update-in-if-exists [:location/end-km] asset-model/format-location-km))
                    assets)
      :geojson (cheshire/encode
                {:type "FeatureCollection"
