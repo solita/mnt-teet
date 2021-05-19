@@ -1315,8 +1315,6 @@
   :add-part-modal-title "Add task part",
   :part-deleted-successfully "Task part deleted successfully",
   :submit-results "Submit results",
-  :reopen "Reopen task"
-  :reopen-success "Task re-opened successfully"
   :submit-results-success "Results submitted successfully",
   :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
   :confirm-delete-task-sent-to-thk

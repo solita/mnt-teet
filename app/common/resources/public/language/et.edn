@@ -1315,8 +1315,6 @@
   :add-part-modal-title "Lisan ülesande osa",
   :part-deleted-successfully "Ülesande osa edukalt kustutatud",
   :submit-results "Esitan tulemused",
-  :reopen "Reopen task"
-  :reopen-success "Task re-opened successfully"
   :submit-results-success "Tulemused edukalt esitatud",
   :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
   :confirm-delete-task-sent-to-thk
