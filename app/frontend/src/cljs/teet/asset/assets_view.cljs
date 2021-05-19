@@ -1,10 +1,7 @@
 (ns teet.asset.assets-view
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid Paper]]
             [teet.ui.query :as query]
-            [teet.common.common-styles :as common-styles]
             [teet.ui.typography :as typography]
-            [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
             [teet.asset.asset-ui :as asset-ui]
             [teet.map.map-view :as map-view]
@@ -14,7 +11,8 @@
             [teet.asset.asset-model :as asset-model]
             [teet.asset.assets-controller :as assets-controller]
             [teet.ui.split-pane :refer [vertical-split-pane]]
-            [teet.map.openlayers :as openlayers]))
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.ui.context :as context]))
 
 (defn- asset-filters [e! atl filters]
   [:div {:style {:min-width "300px"}}
@@ -25,8 +23,28 @@
       :on-change #(swap! filters assoc :fclass %)
       :atl atl}]]])
 
-(defn- assets-results [e! atl {:keys [assets geojson]}]
-  (let [fitted (atom false)]
+(defn- format-assets-column [column value _row]
+  (case column
+    :location/road-address
+    (let [{:location/keys [road-nr carriageway start-km end-km]} value]
+      (str road-nr " / " carriageway
+           (when (or start-km end-km)
+             (str ": "
+                  (when start-km
+                    (str start-km "km"))
+                  " - "
+                  (when end-km
+                    (str end-km "km"))))))
+
+    :asset/fclass
+    [asset-ui/label-for (:db/ident value)]
+
+    (str value)))
+
+(defn- assets-results [_ _ _]
+  (let [fitted (atom false)
+        map-key (r/atom 1)
+        next-map-key! #(swap! map-key inc)]
     (r/create-class
      {:component-did-update
       (fn [_
@@ -35,15 +53,18 @@
         (when (not= old-geojson new-geojson)
           (reset! fitted false)))
       :reagent-render
-      (fn [e! atl {:keys [assets geojson]}]
+      (fn [e! _atl {:keys [assets geojson]}]
         [vertical-split-pane {:defaultSize 400 :primary "second"
-                              :on-drag-finished openlayers/invalidate-size!}
+                              :on-drag-finished next-map-key!}
          [:div
           [typography/Heading1 (tr [:asset :manager :link])]
           [table/listing-table
            {:columns asset-model/assets-listing-columns
+            :get-column asset-model/assets-listing-get-column
+            :format-column format-assets-column
             :data assets
             :key :asset/oid}]]
+         ^{:key (str "map" @map-key)}
          [map-view/map-view e!
           {:full-height? true
            :layers (when geojson
@@ -57,13 +78,14 @@
 
 (defn assets-page [e! app]
   (r/with-let [filters (r/atom {})]
-    [vertical-split-pane {:minSize 50
-                          :defaultSize 330
-                          :on-drag-finished openlayers/invalidate-size!}
-     [asset-filters e! (:asset-type-library app) filters]
-     [:div
+    [context/provide :rotl (asset-type-library/rotl-map (:asset-type-library app))
+     [vertical-split-pane {:minSize 50
+                           :defaultSize 330
+                           :allowResize false}
+      [asset-filters e! (:asset-type-library app) filters]
+      [:div
 
-      (when-let [q (assets-controller/assets-query @filters)]
-        [query/query
-         (merge q {:e! e!
-                   :simple-view [assets-results e! (:asset-type-library app)]})])]]))
+       (when-let [q (assets-controller/assets-query @filters)]
+         [query/query
+          (merge q {:e! e!
+                    :simple-view [assets-results e! (:asset-type-library app)]})])]]]))
