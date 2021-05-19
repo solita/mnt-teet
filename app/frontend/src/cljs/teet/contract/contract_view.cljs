@@ -69,11 +69,11 @@
         [[(get-in target [:project :thk.project/name])]
          [(tr [:enum (get-in target [:activity :activity/name])])]
          [[url/Link (:target-navigation-info target)
-           (get-in target [:target :task/type])]]
+           (tr [:enum (get-in target [:target :task/type])])]]
          [(get-in target [:activity :activity/manager])]]
         [[(get-in target [:project :thk.project/name])]
          [[url/Link (:target-navigation-info target)
-           (get-in target [:target :activity/name])]]
+           (tr [:enum (get-in target [:target :activity/name])])]]
          [nil]
          [(get-in target [:activity :activity/manager])]]))]])
 
@@ -128,7 +128,7 @@
     [:div {:class (<class common-styles/flex-row-center)}
      [contract-menu/contract-menu e! app contract]
      [typography/TextBold {:class (<class common-styles/margin-left 0.5)}
-      (:thk.contract/name contract)]]
+      (contract-model/contract-name contract)]]
     [contract-external-links contract]]])
 
 (defn contract-information-row
@@ -188,5 +188,4 @@
      (if (not-empty targets)
        [target-table targets]
        [:span
-        "Contract integration failed and this contract doesn't have any valid targets.
-        Contact administration for a bug report"])]]])
+        (tr [:contract :no-targets-for-contract])])]]])

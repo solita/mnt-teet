@@ -37,3 +37,10 @@
    :font-weight (if selected?
              "bold"
              "normal")})
+
+(defn project-contract-container
+  []
+  ^{:pseudo {:last-of-type {:border-bottom 0}}}
+  {:margin-bottom "1rem"
+   :padding-bottom "1rem"
+   :border-bottom (str "1px solid " theme-colors/gray-lighter)})

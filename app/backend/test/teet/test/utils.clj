@@ -166,15 +166,15 @@
 
 (defn with-db
   ([] (with-db {}))
-  ([{:keys [data-fixtures migrate? mock-users? skip-delete?]
+  ([{:keys [data-fixtures migrate? mock-users? skip-delete? timestamp]
      :or {data-fixtures [:projects]
           migrate? true
           mock-users? true
-          skip-delete? false} :as _opts}]
+          skip-delete? false
+          timestamp (System/currentTimeMillis)} :as _opts}]
    (fn with-db-fixture [f]
-     (let [now (System/currentTimeMillis)
-           test-db-name (str "test-db-" now)
-           test-asset-db-name (str "test-asset-db-" now)]
+     (let [test-db-name (str "test-db-" timestamp)
+           test-asset-db-name (str "test-asset-db-" timestamp)]
        (reset! @#'environment/asset-db-migrated? false)
        (run-with-config
         {:datomic {:db-name test-db-name

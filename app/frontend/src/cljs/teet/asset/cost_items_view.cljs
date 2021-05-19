@@ -7,16 +7,15 @@
             [reagent.core :as r]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
-            [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
+            [teet.asset.asset-ui :as asset-ui
+             :refer [tr* label label-for select-fgroup-and-fclass]]
             [teet.ui.material-ui :refer [Grid CircularProgress Link]]
             [teet.ui.text-field :as text-field]
             [clojure.string :as str]
-            [teet.util.string :as string]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
-            [teet.common.responsivity-styles :as responsivity-styles]
             [herb.core :refer [<class]]
             [teet.ui.common :as common]
             [teet.ui.container :as container]
@@ -38,17 +37,7 @@
             [teet.ui.project-context :as project-context]
             [teet.asset.cost-items-map-view :as cost-items-map-view]))
 
-(defn- label [m]
-  (let [l (tr* m)]
-    (if (str/blank? l)
-      (str (:db/ident m))
-      l)))
 
-(defn- label-for* [item rotl]
-  [:span (label (rotl item))])
-
-(defn- label-for [item]
-  [context/consume :rotl [label-for* item]])
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -183,19 +172,35 @@
   [project-context/consume
    [with-relevant-roads* opts component]])
 
-(defn- relevant-road-select* [{:keys [empty-label] :as opts
+(defn- number-value
+  ([opts]
+   (number-value [] opts))
+  ([extra-opts opts]
+   (update opts :value
+           #(or
+             (some (fn [extra-opt]
+                     (when (= (str extra-opt) (str %))
+                       extra-opt)) extra-opts)
+             (if (string? %)
+               (js/parseInt %)
+               %)))))
+
+(defn- relevant-road-select* [{:keys [empty-label extra-opts extra-opts-label] :as opts
                                :or {empty-label ""}} relevant-roads]
-  (let [items (->> relevant-roads (map :road-nr) sort vec)]
+  (let [items (->> relevant-roads (map :road-nr) sort vec)
+        fmt (road-nr-format relevant-roads)]
     [select/form-select
-     (-> opts
-         (merge {:show-empty-selection? true
-                 :empty-selection-label empty-label
-                 :items items
-                 :format-item (road-nr-format relevant-roads)})
-         (update :value
-                 #(if (string? %)
-                    (js/parseInt %)
-                    %)))]))
+     (->> opts
+          (merge {:show-empty-selection? (if extra-opts false true)
+                  :empty-selection-label empty-label
+                  :items (if extra-opts
+                           (into extra-opts items)
+                           items)
+                  :format-item (if extra-opts
+                                 #(or (extra-opts-label %)
+                                      (fmt %))
+                                 fmt)})
+          (number-value extra-opts))]))
 
 (defn- relevant-road-select [opts]
   [with-relevant-roads opts
@@ -203,7 +208,7 @@
 
 (defn- carriageway-for-road-select* [opts selected-road-nr relevant-roads]
   [select/form-select
-   (merge opts
+   (merge (number-value opts)
           {:show-empty-selection? true
            :items (or (cost-items-controller/carriageways-for-road
                        selected-road-nr
@@ -248,15 +253,15 @@
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/start-m
-       [input-textfield {:type :number}]]]
+      [form/field :location/start-km
+       [input-textfield {}]]]
 
      [Grid {:item true
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/start-offset-m
-       [input-textfield {:type :number}]]]
+       [input-textfield {}]]]
 
      [Grid {:item true
             :md 3
@@ -269,15 +274,15 @@
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/end-m
-       [input-textfield {:type :number}]]]
+      [form/field :location/end-km
+       [input-textfield {}]]]
 
      [Grid {:item true
             :md 3
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-offset-m
-       [input-textfield {:type :number}]]]]))
+       [input-textfield {}]]]]))
 
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common? ctype]}
@@ -310,7 +315,7 @@
              [Grid {:item true :xs 12 :md 12}
               [form/field {:attribute [:location/start-point :location/end-point
                                        :location/road-nr :location/carriageway
-                                       :location/start-m :location/end-m
+                                       :location/start-km :location/end-km
                                        :location/geojson]}
 
                [cost-items-map-view/location-map {:e! e!}]]])
@@ -408,39 +413,9 @@
   [context/consume :locked?
    [add-component-menu* allowed-components add-component!]])
 
-(defn- format-fg-and-fc [[fg fc]]
-  (if (and (nil? fg)
-           (nil? fc))
-    ""
-    (str (label fg) " / " (label fc))))
 
-(defn group-and-class-selection [{:keys [e! on-change value atl read-only?]}]
-  (let [[fg-ident fc-ident] value
-        fg (if fg-ident
-             (asset-type-library/item-by-ident atl fg-ident)
-             (when fc-ident
-               (asset-type-library/fgroup-for-fclass atl fc-ident)))
-        fc (and fc-ident (asset-type-library/item-by-ident atl fc-ident))
-        fgroups (:fgroups atl)]
-    (if read-only?
-      [typography/Heading3 (format-fg-and-fc [fg fc])]
-      [Grid {:container true}
-       [Grid {:item true :xs 12}
-        [select/select-search
-         {:e! e!
-          :on-change #(on-change (mapv :db/ident %))
-          :placeholder (tr [:asset :feature-group-and-class-placeholder])
-          :no-results (tr [:asset :no-matching-feature-classes])
-          :value (when fc [fg fc])
-          :format-result format-fg-and-fc
-          :show-empty-selection? true
-          :query (fn [text]
-                   #(vec
-                     (for [fg fgroups
-                           fc (:fclass/_fgroup fg)
-                           :let [result [fg fc]]
-                           :when (string/contains-words? (format-fg-and-fc result) text)]
-                       result)))}]]])))
+
+
 
 (defn- component-tree-level-indent [level]
   [:<>
@@ -511,16 +486,15 @@
    component])
 
 (defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
-  (r/with-let [initial-data form-data
-               new? (nil? form-data)
+  (r/with-let [initial-data form-data]
+    (let [new? (nil? (:asset/oid form-data))
+          cancel-event (if new?
+                         #(common-controller/->NavigateWithSameParams :cost-items)
 
-               cancel-event (if new?
-                              #(common-controller/->SetQueryParam :id nil)
-
-                              ;; Update with initial data to cancel
-                              (r/partial
-                               cost-items-controller/->UpdateForm initial-data))]
-    (let [feature-class (when fclass
+                         ;; Update with initial data to cancel
+                         (r/partial
+                          cost-items-controller/->UpdateForm initial-data))
+          feature-class (when fclass
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
        (when-let [oid (:asset/oid form-data)]
@@ -534,7 +508,7 @@
          :disable-buttons? (= initial-data form-data)}
 
         [form/field {:attribute [:fgroup :asset/fclass]}
-         [group-and-class-selection
+         [select-fgroup-and-fclass
           {:e! e!
            :atl atl
            :read-only? (seq (dissoc form-data :asset/fclass :fgroup :db/id))}]]
@@ -777,8 +751,9 @@
           {:title (tr [:common :last-modified])
            :variant :info
            :body [:<>
-                  [:div (fmt/date-time timestamp)]
-                  [:div (user-model/user-name user)]]}
+                  (fmt/date-time timestamp)
+                  [:br]
+                  (user-model/user-name user)]}
           [icons/alert-error-outline]])
 
        ;; Save or unlock button
@@ -903,30 +878,34 @@
   (when val
     (str val "\u00A0€")))
 
-(defn cost-group-unit-price [e! value row]
-  (r/with-let [initial-value value
-               price (r/atom initial-value)
+(defn- cost-group-unit-price [e! value row]
+  (r/with-let [price (r/atom value)
                change! #(reset! price (-> % .-target .-value))
                saving? (r/atom false)
-               save! (fn [row]
-                       (when (not= initial-value @price)
+               ;; Called after both success and error responses
+               finish-saving! (fn []
+                                ;; Reset price to nil, so current `value` is shown and reset to `price` on field focus
+                                ;; Successful save does refresh, so the new properly formatted value is fetched from the backend
+                                (reset! price nil)
+                                (reset! saving? false))
+               save! (fn [current-value row]
+                       (when (not= current-value @price)
                          (reset! saving? true)
-                         (e! (cost-items-controller/->SaveCostGroupPrice row @price))))
-               save-on-enter! (fn [row e]
+                         (e! (cost-items-controller/->SaveCostGroupPrice finish-saving! row @price))))
+               save-on-enter! (fn [current-value row e]
                                 (when (= "Enter" (.-key e))
-                                  (save! row)))]
-    (when (not= value initial-value)
-      (reset! saving? false))
+                                  (save! current-value row)))]
     [:div {:class (<class common-styles/flex-row)
            :style {:justify-content :flex-end
                    ;; to have same padding as header for alignment
                    :padding-right "16px"}}
      [text-field/TextField {:input-style {:text-align :right
                                           :width "8rem"}
-                            :value @price
+                            :value (or @price value)
                             :on-change change!
-                            :on-key-down (r/partial save-on-enter! row)
-                            :on-blur (r/partial save! row)
+                            :on-key-down (r/partial save-on-enter! value row)
+                            :on-focus #(reset! price value)
+                            :on-blur (r/partial save! value row)
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
@@ -1022,8 +1001,11 @@
         [:div {:style {:max-width "25vw"}}
          [relevant-road-select
           {:e! e!
+           :extra-opts ["all-roads" "no-road-reference"]
+           :extra-opts-label {"all-roads" (tr [:asset :totals-table :all-roads])
+                              "no-road-reference" (tr [:asset :totals-table :no-road-reference])}
            :value (get-in app [:query :road])
-           :empty-label (tr [:asset :totals-table :all-roads])
+
            :on-change (e! cost-items-controller/->SetTotalsRoadFilter)}]]
         [:div {:style {:float :right}}
          [:b

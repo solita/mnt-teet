@@ -70,6 +70,12 @@
   (and (string? oid)
        (boolean (re-matches component-pattern oid))))
 
+(defn asset-oid->fclass-oid-prefix
+  "Extract the asset fclass OID prefix from an asset OID instance."
+  [oid]
+  {:pre [(asset-oid? oid)]}
+  (subs oid 4 7))
+
 (defn asset-oid
   "Format asset OID for feature class prefix and seq number."
   [owner-code fclass-oid-prefix sequence-number]
@@ -115,3 +121,26 @@
 
 (def locked? "Key to check if version is locked"
   :boq-version/locked?)
+
+
+(def assets-listing-columns
+  "Columns to show in asset manager search results listing"
+  [:asset/oid :asset/fclass :location/road-address])
+
+(defmulti assets-listing-get-column (fn [_row column] column))
+
+(defmethod assets-listing-get-column :default [row column] (get row column))
+
+(defmethod assets-listing-get-column :location/road-address [row _]
+  (select-keys row [:location/road-nr :location/carriageway :location/start-km :location/end-km]))
+
+#?(:clj
+   (def ^:private location-km-format
+     (doto (java.text.NumberFormat/getNumberInstance)
+       (.setMinimumFractionDigits 6)
+       (.setMaximumFractionDigits 6))))
+
+#?(:clj (defn format-location-km [v]
+          (if-not v
+            ""
+            (.format location-km-format v))))

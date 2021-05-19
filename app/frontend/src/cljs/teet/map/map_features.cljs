@@ -8,7 +8,8 @@
             [ol.render.Feature]
             [ol.style.Circle]
             [teet.theme.theme-colors :as theme-colors]
-            [ol.extent :as ol-extent]))
+            [ol.extent :as ol-extent]
+            [teet.asset.asset-model :as asset-model]))
 
 
 (def ^:const map-pin-height 26)
@@ -335,3 +336,67 @@
                                            :width 20})
             :fill (ol.style.Fill. #js {:cursor :pointer
                                        :color "#ff30aa"})}))))
+
+
+(defn- rounded-rect [ctx x y w h r]
+  (doto ctx
+    .beginPath
+    (.moveTo (+ x r) y)
+    (.arcTo (+ x w) y (+ x w) (+ y h) r)
+    (.arcTo (+ x w) (+ y h) x (+ y h) r)
+    (.arcTo x (+ y h) x y r)
+    (.arcTo x y (+ x w) y r)
+    .closePath))
+
+(def text->canvas
+  (memoize
+   (fn [{:keys [font fill stroke text w h x y background-fill r]}]
+     (let [canvas (.createElement js/document "canvas")]
+       (set! (.-width canvas) w)
+       (set! (.-height canvas) h)
+       (let [ctx (.getContext canvas "2d")]
+         (when background-fill
+           (set! (.-fillStyle ctx) background-fill)
+           (rounded-rect ctx 0 0 w h (or r (* w 0.10)))
+           (.fill ctx))
+         (set! (.-font ctx) font)
+         (set! (.-fillStyle ctx) fill)
+         (set! (.-strokeStyle ctx) stroke)
+         (.fillText ctx text x y)
+         (when stroke (.strokeText ctx text x y)))
+       canvas))))
+
+(def asset-bg-colors
+  "Some random bg colors for asset badges"
+  ["#ff6f59ff" "#254441ff" "#43aa8bff" "#b2b09bff" "#ef3054ff"])
+
+(defn asset-bg-color-by-hash [cls]
+  (nth asset-bg-colors (mod (hash cls) (count asset-bg-colors))))
+
+(defn asset-line-and-icon
+  "Show line between start->end points of asset location and
+an icon based on asset class."
+  [^ol.render.Feature feature _res]
+  (let [cls (some-> feature .getProperties (aget "oid")
+                    asset-model/asset-oid->fclass-oid-prefix)
+        center (-> feature .getGeometry .getExtent
+                   ol-extent/getCenter ol.geom.Point.)]
+    #js [(ol.style.Style.
+          #js {:geometry center
+               :image (ol.style.Icon.
+                       #js {:anchor #js [0.5 0.5]
+                            :imgSize #js [36 20]
+                            :img (text->canvas
+                                  {:font "16px monospace"
+                                   :fill "black"
+                                   :w 36 :h 20
+                                   :x 3 :y 15
+                                   :text cls
+                                   :background-fill (asset-bg-color-by-hash cls)
+                                   :r 5})})})
+
+         (ol.style.Style.
+          #js {:stroke (ol.style.Stroke. #js {:color "red"
+                                              :width 3
+                                              :lineCap "butt"})
+               :zIndex 2})]))

@@ -32,7 +32,7 @@
       (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
    [url/Link {:page :contract
               :params {:contract-ids (contract-model/contract-url-id contract)}}
-    "LINK TO THIS ACTIVITY"]])
+    "LINK TO THIS CONTRACT"]])
 
 (defn contracts-list
   [e! contracts]

@@ -337,6 +337,7 @@
        x))
    tx-data))
 
+
 (defn tx
   "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data.
 
