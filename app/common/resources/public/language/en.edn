@@ -652,15 +652,7 @@
   :document.sub-category/table-of-content "Table of Content",
   :task.status/not-started "Not started",
   :task.type/road "Road",
-  :cooperation.application.response-type/coordination "Coordination",
-  :file.part.status/not-started "Not started",
-  :file.part.status/in-progress "In progress",
-  :file.part.status/waiting-for-review "Waiting for review",
-  :file.part.status/reviewing "Reviewing",
-  :file.part.status/completed "Completed",
-  :notification.type/task-part-waiting-for-review "Task part {task-part-name} is waiting for your review.",
-  :notification.type/task-part-review-accepted "Task part {task-part-name} has been accepted.",
-  :notification.type/task-part-review-rejected "Task part {task-part-name} has been rejected."},
+  :cooperation.application.response-type/coordination "Coordination"},
  :environment
  {:build-time "Last build happened at",
   :info-text
@@ -1365,18 +1357,4 @@
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",
   :version-mismatch
-  "A new version of the application has been deployed. Please refresh the page."}
- :task-part {:accept "Agreed"
-             :reject "Send back"
-             :submit-for-approval "Submit task part for review"
-             :reopen "Reopen"
-             :submit-results "Submit results"
-             :submit-results-confirm "Are you sure you wish to submit this task part for review?"
-             :approve-part "Approve results"
-             :approve-part-confirm "Are you sure you wish approve the task part?"
-             :reject-part "Send back"
-             :reject-part-confirm "Are you sure you wish to send back the task part?"
-             :reopen-part "Reopen task part"
-             :reopen-part-confirm "Are you sure you wish to reopen this task part and all associated files?"
-             :reopen-successful "Task part re-opened successfully"
-             }}
+  "A new version of the application has been deployed. Please refresh the page."}}
