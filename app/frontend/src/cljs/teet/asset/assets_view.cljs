@@ -53,7 +53,7 @@
         (when (not= old-geojson new-geojson)
           (reset! fitted false)))
       :reagent-render
-      (fn [e! atl {:keys [assets geojson]}]
+      (fn [e! _atl {:keys [assets geojson]}]
         [vertical-split-pane {:defaultSize 400 :primary "second"
                               :on-drag-finished next-map-key!}
          [:div
