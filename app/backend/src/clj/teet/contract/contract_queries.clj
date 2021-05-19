@@ -21,13 +21,14 @@
      result))
 
 (defquery :contract/partner-page
-  {:doc "Return the single partner information"
+  {:doc "Return contract partners information"
    :context {db :db user :user}
    :args {contract-ids :contract-ids}
    :project-id nil
    :authorization {}}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
+        ;; TODO add partners info query to result
         result (-> (contract-db/get-contract
                      db
                      contract-eid)
