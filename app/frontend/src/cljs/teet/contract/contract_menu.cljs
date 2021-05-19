@@ -18,14 +18,16 @@
   [{:name :contract-information
     :label [:contract :contract-information]
     :navigate {:page :contract}
+    :href-fn #(str "#/contracts/" %)
     :hotkey "1"}
-   {:name :partners-information
+   {:name :partner-information
     :label [:contract :partner-information]
-    :navigate {:page :partner-information}
+    :navigate {:page :partners}
+    :href-fn #(str "#/contracts/" % "/partners")
     :hotkey "2"}])
 
 (defn- contract-menu-item [e! close-menu!
-                           {:keys [hotkey navigate] :as _item}
+                           {:keys [hotkey href-fn navigate] :as _item}
                            contract-id]
   (let [activate! #(do
                      (e! (common-controller/map->Navigate
@@ -39,7 +41,7 @@
                 page-name :name} _]
         [MenuItem {:on-click activate!
                    :component (r/reactify-component Link)
-                   :href (str "#/contracts/" contract-id)
+                   :href (href-fn contract-id)
                    :id (str "navigation-item-" (name page-name))
                    :class (str "project-menu-item-" (name (:page navigate)))
                    :classes {:root (<class project-style/project-view-selection-item)}}

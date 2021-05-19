@@ -238,14 +238,12 @@
 
  :partners
  {:path "/contracts/:contract-ids/partners"
-  :view teet.contract.partners.partners-view/partners-info-page
+  :view teet.contract.contract-view/partner-page
   :crumb (teet.contract.contract-model/contract-url-id state) ;; TODO: fix
   :title (teet.contract.contract-model/contract-name state) ;; TODO: fix
-  :state {:query :contract/contract-page
+  :state {:query :contract/partner-page
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}
-
-
  :assets
  {:path "/assets"
   :view teet.asset.assets-view/assets-page
