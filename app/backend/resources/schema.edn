@@ -2053,8 +2053,8 @@
            :db/cardinality :db.cardinality/one}]
 
          [;; USER CHANGES
-          {:db/ident :user/files
+          {:db/ident :user/documents
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Links to file entities"}]]}]
+           :db/doc "CV's, certificates and other job related documents related to the user"}]]}]
 
