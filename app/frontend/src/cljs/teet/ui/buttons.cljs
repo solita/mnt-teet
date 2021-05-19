@@ -56,7 +56,6 @@
   ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
   {:color (str theme-colors/green " !important")})
 
-
 (def button-text
   (util/make-component Button {:variant        :text
                                :disable-ripple true}))

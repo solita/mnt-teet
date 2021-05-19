@@ -566,6 +566,7 @@
 (defn input-label-style
   [disabled? dark-theme?]
   (merge {:display :block
+          :margin-bottom "0.25rem"
           :color (if dark-theme?
                    theme-colors/white
                    theme-colors/black-coral)}

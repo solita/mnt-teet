@@ -237,9 +237,29 @@
   :edit-contract "Contract information",
   :thk.contract.status/in-progress "In progress"},
  :contracts
- {:state-procurement-link "Procurement no.",
+ {:contracts "Contracts",
+  :state-procurement-link "Procurement no.",
   :external-link "Contract no.",
-  :thk-procurement-link "THK"},
+  :thk-procurement-link "THK",
+  :quick-filters "Quick filters"
+  :shortcuts
+  {:my-contracts "My contracts",
+   :all-contracts "All contracts",
+   :unassigned "Unassigned contracts"}
+  :filters
+  {:show-filters "Show filters",
+   :hide-filters "Hide filters"
+   :select-input-placeholder "Select"
+   :search-input-placeholder "Search"
+   :inputs
+   {:road-number "Road number"
+    :project-name "Project name"
+    :contract-name "Procurement name"
+    :procurement-id "Procurement id"
+    :procurement-number "Contract number"
+    :ta/region "TA region"
+    :contract-type "Contract type"
+    :contract-status "Contract status"}}}
  :cooperation
  {:response "Response",
   :application-delete-confirm "Delete the application?",

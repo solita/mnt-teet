@@ -15,7 +15,8 @@
             [teet.ui.common :as common]
             [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]
-            [teet.contract.contract-view :as contract-view]))
+            [teet.contract.contract-view :as contract-view]
+            [teet.contract.contract-style :as contract-style]))
 
 (defn contract-card
   [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
@@ -47,21 +48,41 @@
    :all-contracts
    :unassigned])
 
+(def filter-fields-types
+  [:search-field
+   :select-enum-field
+   :select-form-field])
+
+(defn toggle-filter-visibility-button
+  [visible? on-click-handler]
+  [buttons/button-secondary {:size :small
+                             :style {:padding "0 1.18rem"
+                                     :box-sizing :border-box
+                                     :height "1.5rem"}
+                             :on-click on-click-handler
+                             :start-icon (r/as-element [icons/content-filter-alt-outlined])}
+   (if visible?
+     (tr [:contracts :filters :hide-filters])
+     (tr [:contracts :filters :show-filters]))])
+
 (defn search-shortcuts
-  [value options change-shortcut]
-  (into [:div
-         [:span "SHORTCUTS"]]
+  [value options change-shortcut visible-filters? toggle-visibility]
+  [:div {:class (<class contract-style/search-shortcuts)}
+  (into [:div {:class (<class contract-style/search-shortcut-items)}]
         (mapv
           (fn [option]
             (let [selected? (= option value)]
               [:<>
                (if selected?
-                 [:div
-                  [:strong (tr [:contracts :shortcuts option])]]
-                 [:div
-                  [buttons/link-button {:on-click #(change-shortcut option)}
+                 [:span {:class (<class contract-style/search-shortcut-item selected?)
+                         :on-click #(change-shortcut option)}
+                  (tr [:contracts :shortcuts option])]
+                 [:span
+                  [buttons/link-button {:class (<class contract-style/search-shortcut-item selected?)
+                                        :on-click #(change-shortcut option)}
                    (tr [:contracts :shortcuts option])]])]))
-          options)))
+          options))
+   [toggle-filter-visibility-button ]])
 
 (def search-fields
   [[:road-number {:type TextField}]
@@ -81,33 +102,72 @@
                                       :attribute :thk.contract/status
                                       :show-empty-selection? true}}]])
 
-(defn search-inputs
+(def filter-fields
+  [[:road-number {:type :search-field}]
+   [:project-name {:type :search-field}]
+   [:contract-name {:type :search-field}]
+   [:procurement-id {:type :search-field}]
+   [:procurement-number {:type :search-field}]
+   [:ta/region {:type :select-enum-field
+                :field-options {:attribute :ta/region
+                                :show-empty-selection? true}}]
+   [:contract-type {:type :select-enum-field
+                    :field-options {:attribute :thk.contract/type
+                                    :show-empty-selection? true}}]
+   [:contract-status {:type :select-form-field
+                      :field-options {:items contract-model/contract-statuses
+                                      :format-item #(tr [:contract %])
+                                      :attribute :thk.contract/status
+                                      :show-empty-selection? true}}]])
+
+(defmulti filter-input (fn [input-options filter-field-type]
+                         filter-field-type))
+
+(defmethod filter-input :search-field
+  [input-options]
+  [TextField (merge input-options
+               {:start-icon icons/action-search
+                :placeholder (tr [:search :quick-search])})])
+
+(defmethod filter-input :select-enum-field
+  [input-options]
+  [select/select-enum input-options])
+
+(defmethod filter-input :select-form-field
+  [input-options]
+  [select/form-select input-options])
+
+(defn filter-inputs
   [e! filter-values input-change search-fields]
   [:div
-   (into [:div]
-         (mapv
-           (fn [[field-name {field-type :type
-                             field-options :field-options}]]
-             [field-type (merge {:e! e!
-                                 :label (tr [:contract :search field-name])
-                                 :value (field-name filter-values)
-                                 :start-icon icons/action-search
-                                 :on-change #(input-change
-                                               field-name
-                                               (if (= field-type TextField)
-                                                 (-> % .-target .-value)
-                                                 %))}
-                                field-options)])
-           search-fields))])
+   (into [:<>]
+     (mapv
+       (fn [[field-name {field-type :type
+                         field-options :field-options}] ]
+         (let [general-input-options (merge {:e! e!
+                                      :label (tr [:contracts :filters :inputs field-name])
+                                      :value (field-name filter-values)
+                                      :on-change #(input-change
+                                                    field-name
+                                                    (if (= field-type :search-field)
+                                                      (-> % .-target .-value)
+                                                      %))}
+                                       field-options)]
+           (filter-input general-input-options field-type)))
+       search-fields))])
 
 (defn contract-search
   [{:keys [e! filter-options clear-filters search-fields
            filtering-atom input-change change-shortcut]}]
   [:div
-   [buttons/link-button {:on-click clear-filters}
-    "CLEAR FILTERS"]
+   [:div {:class (<class contract-style/search-header)}
+    [:div {:class (<class contract-style/quick-filters-header)}
+     (tr [:contracts :quick-filters])]]
    [search-shortcuts (:shortcut @filtering-atom) filter-options change-shortcut]
-   [search-inputs e! @filtering-atom input-change search-fields]])
+   ;[search-inputs e! @filtering-atom input-change search-fields]
+   [filter-inputs e! @filtering-atom input-change filter-fields]
+   [buttons/link-button {:on-click clear-filters}
+    "CLEAR FILTERS"]])
 
 ;; Targeted from routes.edn will be located in route /contracts
 (defn contracts-listing-view
@@ -122,8 +182,8 @@
     [Grid {:container true}
      [Grid {:item true
             :xs 12}
-      [:div {:class (<class common-styles/margin-bottom 2)}
-       [:h1 "CONTRACT SEARCH AND FILTERS"]
+      [:div {:class (<class contract-style/contract-page-container)}
+       [:h1 (tr [:contracts :shortcuts (:shortcut @filtering-atom)])]
        [contract-search {:e! e!
                          :search-fields search-fields
                          :filtering-atom filtering-atom
@@ -131,7 +191,7 @@
                          :input-change input-change
                          :change-shortcut change-shortcut
                          :clear-filters clear-filters}]]]
-     [:h1 "CONTRACTS LIStING"]
+     [:h1 "CONTRACTS LISTING"]
      [query/debounce-query
       {:e! e!
        :query :contracts/list-contracts

@@ -109,6 +109,11 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :contracts}
+               :icon icons/action-description
+               :name (tr [:contracts :contracts])}]
    (when-feature :asset-db
      [view-link {:open? open?
                  :current-page page

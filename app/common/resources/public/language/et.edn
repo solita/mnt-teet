@@ -15,7 +15,7 @@
  {:activity.status/archived "Arhiveerin tegevuse",
   :activity.status/canceled "Katkestan tegevuse",
   :activity.status/completed "Kinnitan tegevuse",
-  :approve-activity-confirm "Tegevuse staatus märgitakse lõpetatuks",
+  :approve-activity-conffirm "Tegevuse staatus märgitakse lõpetatuks",
   :reject-activity-confirm "Tegevuse staatus uuendatakse",
   :submit-for-approval "Esitan tegevuse"},
  :admin
@@ -233,9 +233,29 @@
   :edit-contract nil,
   :thk.contract.status/in-progress nil},
  :contracts
- {:state-procurement-link "Hanke nr.",
+ {:contracts "Lepingud",
+  :state-procurement-link "Hanke nr.",
   :external-link "Lepingu nr.",
-  :thk-procurement-link "THK"},
+  :thk-procurement-link "THK"
+  :quick-filters nil
+  :shortcuts
+  {:my-contracts nil,
+   :all-contracts nil,
+   :unassigned nil}
+  :filters
+  {:show-filters nil,
+   :hide-filters nil
+   :select-input-placeholder nil
+   :search-input-placeholder "Otsin"
+   :inputs
+   {:road-number nil
+    :project-name nil
+    :contract-name nil
+    :procurement-id nil
+    :procurement-number nil
+    :ta/region nil
+    :contract-type nil
+    :contract-status nil}}},
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",
