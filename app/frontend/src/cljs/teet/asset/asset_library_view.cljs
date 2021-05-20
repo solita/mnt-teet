@@ -50,7 +50,7 @@
      (doall
       (for [child children]
         ^{:key (str (:db/id child))}
-        [:li
+        [:li {:data-cy (str "link-" (str (:db/ident child)))}
          [url/Link {:page :asset-type-library
                     :query {:item (str (:db/ident child))}}
           (tr* child)]]))]))
