@@ -50,7 +50,7 @@
      [?ctype :component/inherits-location? true]
      (or [?parent :asset/components ?e]
          [?parent :component/components ?e])
-     (location-attr-missing ?e ?attr)]])
+     (location-attr-missing ?parent ?attr)]])
 
 (def ctype-pattern
   '[*
@@ -65,6 +65,11 @@
      [~'*
       {:attribute/_parent [~'* {:enum/_attribute [~'*]}]}
       {:ctype/_parent ~ctype-pattern}]}])
+
+(def material-pattern
+  '[*
+    {:material/fgroups
+     [*]}])
 
 (defn- ctype? [x]
   (and (map? x)
@@ -101,6 +106,7 @@
           [_ :tx/schema-imported-at _ ?tx]
           [?tx :db/txInstant ?txi]] db)))
 
+
 (defn asset-type-library [db]
   (walk/postwalk
    (fn [x]
@@ -117,7 +123,12 @@
                    (d/q '[:find (pull ?fg p)
                           :where [?fg :asset-schema/type :asset-schema.type/fgroup]
                           :in $ p]
-                        db type-library-pattern))}))
+                        db type-library-pattern))
+    :materials (mapv first
+                     (d/q '[:find (pull ?m p)
+                            :where [?m :asset-schema/type :asset-schema.type/material]
+                            :in $ p]
+                          db material-pattern))}))
 
 
 (defn project-cost-items
@@ -195,6 +206,17 @@
                :where
                (project ?e ?project)
                (location-attr ?e :location/road-nr _)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
+(defn project-assets-and-components
+  "Find OIDs of all project assets and components."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
                [?e :asset/oid ?oid]
                :in $ % ?project]
              db rules thk-project-id)))

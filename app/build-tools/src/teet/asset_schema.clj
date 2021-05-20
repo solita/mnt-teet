@@ -26,7 +26,15 @@
 (defn- update-name-columns [name-keys rows]
   (mapv #(reduce
           (fn [row k]
-            (update row k parse-name))
+            ;; k can be either keyword or a vector containing a single keyword
+            ;; If k is a vec, the column contains multiple comma separated names
+            (if (vector? k)
+              (update row
+                      (first k)
+                      (fn [names-string]
+                        (->> (str/split names-string #"\s*,\s*")
+                             (mapv parse-name))))
+              (update row k parse-name)))
           % name-keys)
         rows))
 
@@ -103,6 +111,15 @@
             :agreed?
             :comment]
            #{:name :property}))
+
+(def read-material
+  (partial read-sheet
+           "material"
+           [:name
+            :fgroups
+            :label-et
+            :label-en]
+           #{:name [:fgroups]}))
 
 (defn- without-empty [m]
   (into {}
@@ -221,17 +238,21 @@
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
     (let [workbook (sheet/load-workbook in)
-          fgroup (read-feature-groups workbook)
-          fclass (read-feature-classes workbook)
 
+          fgroup (read-feature-groups workbook)
+          fgroup-by-name (map-by-name fgroup)
+
+          fclass (read-feature-classes workbook)
           fclass-by-name (map-by-name fclass)
 
           ctype (into [{:name :ctype/common
                         :comment "Attributes common to all assets and components"}]
                       (read-ctypes workbook))
           ctypes-by-name (map-by-name ctype)
+
           pset (read-pset workbook)
           list-items (read-list-items workbook)
+          materials (read-material workbook)
 
           unnamespaced->namespaced (unnamespaced-attr->namespaced-attr pset)
 
@@ -325,7 +346,25 @@
                 :when all-exist?]
             (merge
              (common-attrs :asset-schema.type/enum item)
-             {:enum/attribute (str attr-name)})))))))))
+             {:enum/attribute (str attr-name)}))))
+
+        ;; Output materials
+        (sorted
+         (without-duplicates
+          (for [material materials
+                           ;; Do the given fgroups exist?
+                :when (and (every? (fn [[name fgroup]]
+                                     (if (get fgroup-by-name fgroup)
+                                       true
+                                       ;; Invalid fgroup, report and skip
+                                       (println (str "Material " name " has invalid fgroup " fgroup ", skipping"))))
+                                   (map (juxt (constantly (:name material))
+                                              identity)
+                                        (:fgroups material)))
+                           (:name material))]
+            (merge
+             (common-attrs :asset-schema.type/material material)
+             {:material/fgroups (mapv str (:fgroups material))})))))))))
 
 (defn -main [& [sheet-path]]
   (let [sheet-file (some-> sheet-path io/file)]
