@@ -96,7 +96,7 @@
 (defn- material [_open material]
   [:<>
    [typography/Heading3
-    (str (tr [:asset :type-library :material]) " " (tr* fgroup))]
+    (str (tr [:asset :type-library :material]) " " (tr* material))]
    [:div
     (tr* material :asset-schema/description)
     [child-links (:material/fgroups material)]]])
@@ -186,16 +186,18 @@
 (defn- focus-on-ident [app]
   (some->> app :query :item cljs.reader/read-string))
 
-(defn asset-library-page [_e! {atl :asset-type-library :as app}]
+(defn asset-library-page [_e! app]
   (let [open (r/atom #{})
         toggle! #(swap! open cu/toggle %)
         focus (atom (focus-on-ident app))]
     (r/create-class
      {:component-will-receive-props
-      (fn [_this [_ _ app _]]
+      (fn [_this [_ _ {atl :asset-type-library :as app} _]]
         (let [new-focus (focus-on-ident app)]
           (when (not= new-focus @focus)
-            (ensure-tree-open atl open new-focus)
+            (ensure-tree-open atl
+                              open
+                              new-focus)
             (reset! focus new-focus))))
       :reagent-render
       (fn [_e! {atl :asset-type-library :as _app}]
