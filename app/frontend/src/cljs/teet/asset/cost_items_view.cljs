@@ -232,15 +232,11 @@
        [relevant-road-select {:e! e!}]]]
 
      [Grid {:item true
-            :container true
             :md 2
             :xs 12
             :style {:padding "0.2rem"}}
-      [Grid {:item true
-             :md 2
-             :xs 12}
-       [form/field :location/carriageway
-        [carriageway-for-road-select {:e! e! :form-select-width "100px"} selected-road-nr]]]]
+      [form/field :location/carriageway
+       [carriageway-for-road-select {:e! e!} selected-road-nr]]]
 
      [Grid {:item true
             :md 4
