@@ -194,7 +194,7 @@
   (boolean
    (environment/when-feature :admin-inspector true)))
 
-(def user-info [:user/person-id :user/given-name :user/family-name])
+(def user-info [:db/id :user/person-id :user/given-name :user/family-name])
 
 (def user-info-attrs
   #{:meta/creator
