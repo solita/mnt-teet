@@ -329,7 +329,8 @@
        [:div {:class (<class common-styles/margin-bottom 0.5)
               :style {:display :flex
                       :justify-content :flex-end}}
-        [buttons/link-button-with-icon {:on-click reset-filter
+        [buttons/link-button-with-icon {:class (<class common-styles/white-text)
+                                        :on-click reset-filter
                                         :icon [icons/content-clear {:font-size :small}]}
          (tr [:search :clear-filters])]]
        [typography/Text2 {:style {:color :white}} (tr [:common :filter-shortcuts])]
@@ -354,7 +355,8 @@
              search-fields)
        [:div {:style {:display :flex
                       :justify-content :flex-end}}
-        [buttons/link-button-with-icon {:on-click reset-filter
+        [buttons/link-button-with-icon {:class (<class common-styles/white-text)
+                                        :on-click reset-filter
                                         :icon [icons/content-clear {:font-size :small}]}
          (tr [:search :clear-filters])]]]])])
 

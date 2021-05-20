@@ -7,10 +7,12 @@
   {:padding "2rem 2.5rem"
    :background-color theme-colors/white
    :flex 1})
-
+(defn contract-search-container
+  []
+  {:display :flex
+   :flex-direction :column})
 (defn search-header
   []
-  ^{:combinators {[:> :div :span] {:background :red}}}
   {:border-bottom (str "1px solid " theme-colors/border-dark)})
 
 (defn quick-filters-header
@@ -37,6 +39,28 @@
    :font-weight (if selected?
              "bold"
              "normal")})
+
+(defn filter-inputs
+  []
+  {:margin-top "2.625rem"
+   :display :grid
+   :grid-template-columns "repeat(4, 1fr)"
+   :column-gap "1rem"
+   :row-gap "1rem"})
+
+(defn clear-filters-button
+  []
+  ^{:combinators
+    {[:> :span] {:font-size "1rem"
+                 :margin-right "0.34rem"}}}
+  {:float :right
+   :color theme-colors/text-medium-emphasis
+   :margin-top "1.31rem"
+   :align-self :flex-end})
+
+(defn filter-input
+  []
+  {:width "25%"})
 
 (defn project-contract-container
   []

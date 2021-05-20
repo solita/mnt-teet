@@ -1,5 +1,5 @@
 (ns teet.ui.buttons
-  (:require [herb.core :refer [<class]]
+  (:require [herb.core :as herb :refer [<class]]
             [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText
                                          IconButton MenuList MenuItem
                                          ClickAwayListener Popper Paper]]
@@ -138,9 +138,10 @@
                :id id
                }
    icon])
+
 (defn link-button-with-icon
-  [{:keys [on-click icon]} label]
-  [link-button {:class (<class common-styles/white-link-button-style)
+  [{:keys [on-click icon class]} label]
+  [link-button {:class (herb/join class (<class common-styles/link-button-style))
                 :on-click on-click}
    icon
    label])

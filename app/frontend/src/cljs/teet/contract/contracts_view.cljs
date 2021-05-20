@@ -53,20 +53,20 @@
    :select-enum-field
    :select-form-field])
 
-(defn toggle-filter-visibility-button
-  [visible? on-click-handler]
+(defn toggle-filters-visibility-button
+  [filters-visibility? toggle-filters-visibility]
   [buttons/button-secondary {:size :small
                              :style {:padding "0 1.18rem"
                                      :box-sizing :border-box
                                      :height "1.5rem"}
-                             :on-click on-click-handler
+                             :on-click toggle-filters-visibility
                              :start-icon (r/as-element [icons/content-filter-alt-outlined])}
-   (if visible?
+   (if filters-visibility?
      (tr [:contracts :filters :hide-filters])
      (tr [:contracts :filters :show-filters]))])
 
 (defn search-shortcuts
-  [value options change-shortcut visible-filters? toggle-visibility]
+  [{:keys [value options change-shortcut filters-visibility? toggle-filters-visibility]}]
   [:div {:class (<class contract-style/search-shortcuts)}
   (into [:div {:class (<class contract-style/search-shortcut-items)}]
         (mapv
@@ -82,25 +82,7 @@
                                         :on-click #(change-shortcut option)}
                    (tr [:contracts :shortcuts option])]])]))
           options))
-   [toggle-filter-visibility-button ]])
-
-(def search-fields
-  [[:road-number {:type TextField}]
-   [:project-name {:type TextField}]
-   [:contract-name {:type TextField}]
-   [:procurement-id {:type TextField}]
-   [:procurement-number {:type TextField}]
-   [:ta/region {:type select/select-enum
-                :field-options {:attribute :ta/region
-                                :show-empty-selection? true}}]
-   [:contract-type {:type select/select-enum
-                    :field-options {:attribute :thk.contract/type
-                                    :show-empty-selection? true}}]
-   [:contract-status {:type select/form-select
-                      :field-options {:items contract-model/contract-statuses
-                                      :format-item #(tr [:contract %])
-                                      :attribute :thk.contract/status
-                                      :show-empty-selection? true}}]])
+   [toggle-filters-visibility-button filters-visibility? toggle-filters-visibility]])
 
 (def filter-fields
   [[:road-number {:type :search-field}]
@@ -118,7 +100,8 @@
                       :field-options {:items contract-model/contract-statuses
                                       :format-item #(tr [:contract %])
                                       :attribute :thk.contract/status
-                                      :show-empty-selection? true}}]])
+                                      :show-empty-selection? true}}]
+   ])
 
 (defmulti filter-input (fn [input-options filter-field-type]
                          filter-field-type))
@@ -138,36 +121,48 @@
   [select/form-select input-options])
 
 (defn filter-inputs
-  [e! filter-values input-change search-fields]
-  [:div
-   (into [:<>]
-     (mapv
-       (fn [[field-name {field-type :type
-                         field-options :field-options}] ]
-         (let [general-input-options (merge {:e! e!
-                                      :label (tr [:contracts :filters :inputs field-name])
-                                      :value (field-name filter-values)
-                                      :on-change #(input-change
-                                                    field-name
-                                                    (if (= field-type :search-field)
-                                                      (-> % .-target .-value)
-                                                      %))}
-                                       field-options)]
-           (filter-input general-input-options field-type)))
-       search-fields))])
+  [{:keys [e! filter-values input-change filters-visibility? clear-filters]}]
+  [:div {:style {:display (if filters-visibility? :block :none)}}
+   [:div {:class (<class contract-style/filter-inputs)}
+    (into [:<>]
+      (mapv
+        (fn [[field-name {field-type :type
+                          field-options :field-options}]]
+          (let [general-input-options (merge {:e! e!
+                                              :class (<class contract-style/filter-input)
+                                              :label (tr [:contracts :filters :inputs field-name])
+                                              :value (field-name filter-values)
+                                              :on-change #(input-change
+                                                            field-name
+                                                            (if (= field-type :search-field)
+                                                              (-> % .-target .-value)
+                                                              %))}
+                                        field-options)]
+            (filter-input general-input-options field-type)))
+        filter-fields))]
+   [buttons/link-button-with-icon {:class (<class contract-style/clear-filters-button)
+                                   :on-click clear-filters
+                                   :icon [icons/content-clear]}
+    (tr [:search :clear-filters])]])
 
 (defn contract-search
-  [{:keys [e! filter-options clear-filters search-fields
-           filtering-atom input-change change-shortcut]}]
-  [:div
-   [:div {:class (<class contract-style/search-header)}
-    [:div {:class (<class contract-style/quick-filters-header)}
-     (tr [:contracts :quick-filters])]]
-   [search-shortcuts (:shortcut @filtering-atom) filter-options change-shortcut]
-   ;[search-inputs e! @filtering-atom input-change search-fields]
-   [filter-inputs e! @filtering-atom input-change filter-fields]
-   [buttons/link-button {:on-click clear-filters}
-    "CLEAR FILTERS"]])
+  [{:keys [e! filter-options clear-filters filtering-atom input-change change-shortcut]}]
+  (r/with-let [filters-visibility? (r/atom false)
+               toggle-filters-visibility #(swap! filters-visibility? not)]
+    [:div {:class (<class contract-style/contract-search-container)}
+     [:div {:class (<class contract-style/search-header)}
+      [:div {:class (<class contract-style/quick-filters-header)}
+       (tr [:contracts :quick-filters])]]
+     [search-shortcuts {:value (:shortcut @filtering-atom)
+                      :options filter-options
+                      :change-shortcut change-shortcut
+                      :filters-visibility? @filters-visibility?
+                      :toggle-filters-visibility toggle-filters-visibility}]
+     [filter-inputs {:e! e!
+                   :filter-values @filtering-atom
+                   :input-change input-change
+                   :filters-visibility? @filters-visibility?
+                   :clear-filters clear-filters}]]))
 
 ;; Targeted from routes.edn will be located in route /contracts
 (defn contracts-listing-view
@@ -185,7 +180,6 @@
       [:div {:class (<class contract-style/contract-page-container)}
        [:h1 (tr [:contracts :shortcuts (:shortcut @filtering-atom)])]
        [contract-search {:e! e!
-                         :search-fields search-fields
                          :filtering-atom filtering-atom
                          :filter-options filter-options
                          :input-change input-change
