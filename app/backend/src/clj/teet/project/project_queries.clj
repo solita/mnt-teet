@@ -22,7 +22,8 @@
             [teet.util.datomic :as du]
             [teet.integration.integration-id :as integration-id]
             [teet.file.file-db :as file-db]
-            [teet.db-api.db-api-large-text :as db-api-large-text]))
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.comment.comment-db :as comment-db]))
 
 (defquery :thk.project/integration-id->thk-id
   {:doc "Fetch THK project id for given entity :integration/id number"
@@ -46,6 +47,15 @@
                     (throw (ex-info "Unrecognized integration id"
                                     {:id id})))])))
 
+(defn task-update
+  [db user task-id task]
+  (->> task
+       (merge
+         {:task/files (task-db/task-file-listing db user task-id)}
+         (task-db/task-file-parts db task-id))
+       (merge
+         (comment-db/comment-count-of-entity-by-status db user task-id :task))))
+
 (defn maybe-fetch-task-files [project db user task-id]
   (if-not task-id
     project
@@ -56,9 +66,8 @@
       :activity/tasks #(= task-id (:db/id %))] ; matching task
 
      ;; Fetch and assoc the tasks
-     merge
-     {:task/files (task-db/task-file-listing db user task-id)}
-     (task-db/task-file-parts db task-id))))
+
+     (partial task-update db user task-id))))
 
 
 (defn tasks-with-statuses
