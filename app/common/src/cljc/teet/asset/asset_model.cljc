@@ -125,4 +125,22 @@
 
 (def assets-listing-columns
   "Columns to show in asset manager search results listing"
-  [:asset/oid :location/road-nr])
+  [:asset/oid :asset/fclass :location/road-address])
+
+(defmulti assets-listing-get-column (fn [_row column] column))
+
+(defmethod assets-listing-get-column :default [row column] (get row column))
+
+(defmethod assets-listing-get-column :location/road-address [row _]
+  (select-keys row [:location/road-nr :location/carriageway :location/start-km :location/end-km]))
+
+#?(:clj
+   (def ^:private location-km-format
+     (doto (java.text.NumberFormat/getNumberInstance)
+       (.setMinimumFractionDigits 6)
+       (.setMaximumFractionDigits 6))))
+
+#?(:clj (defn format-location-km [v]
+          (if-not v
+            ""
+            (.format location-km-format v))))
