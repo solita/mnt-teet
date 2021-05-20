@@ -238,6 +238,7 @@
    :activity "Activity",
    :task "Task"},
   :contract-related-entities "Contract related entities",
+  :partners-listing "Partners listing",
   :thk.contract.status/signed "Signed",
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",

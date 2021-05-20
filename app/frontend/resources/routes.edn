@@ -236,6 +236,16 @@
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}
 
+ :partners
+ {:path "/contracts/:contract-ids/partners"
+  :view teet.contract.contract-view/partner-page
+  :extenal-links [teet.contract-contract-view/contract-links state]
+  :crumb (tr [:contract :partners-listing])
+  :title (teet.contract.contract-model/contract-name state)
+  :parent :contract
+  :state {:query :contract/partner-page
+          :args {:contract-ids
+                 (clojure.string/split contract-ids #"-")}}}
  :assets
  {:path "/assets"
   :view teet.asset.assets-view/assets-page

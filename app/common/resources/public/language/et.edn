@@ -235,6 +235,7 @@
    :activity "Tegevus",
    :task "Ülesanne"},
   :contract-related-entities "Lepinguga seotud üksused",
+  :partners-listing "Partnerite loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Valmis",
