@@ -48,7 +48,7 @@
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
                            show-label? show-empty-selection? error error-text required empty-selection-label
-                           data-item? read-only? dark-theme?]
+                           data-item? read-only? dark-theme? form-select-width]
                         :or {format-item :label
                              show-label? true
                              data-item? false
@@ -67,7 +67,11 @@
          [typography/Text2Bold
           label (when required
                         [common/required-astrix])]))
-     [:div {:style {:position :relative}}
+     [:div {:style (merge {:position :relative}
+                          (when form-select-width
+                            ;; FIXME: ugly hack for too short select
+                            ;; as it doesn't grow to full grid width
+                            {:width form-select-width}))}
       [:select
        {:value (or (option-idx value) "")
         :name name

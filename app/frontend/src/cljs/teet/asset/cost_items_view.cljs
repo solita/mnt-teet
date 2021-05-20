@@ -225,7 +225,7 @@
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [Grid {:item true
-            :md 5
+            :md 10
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/road-nr
@@ -233,56 +233,58 @@
 
      [Grid {:item true
             :container true
-            :md 7
+            :md 2
             :xs 12
             :style {:padding "0.2rem"}}
       [Grid {:item true
              :md 2
              :xs 12}
        [form/field :location/carriageway
-        [carriageway-for-road-select {:e! e!} selected-road-nr]]]]
+        [carriageway-for-road-select {:e! e! :form-select-width "100px"} selected-road-nr]]]]
 
      [Grid {:item true
-            :md 3
+            :md 4
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/start-point
+      [form/field {:attribute :location/start-point
+                   :required? true}
        [input-textfield {}]]]
 
      [Grid {:item true
-            :md 3
+            :md 4
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/start-km
-       [input-textfield {}]]]
+      [form/field {:attribute :location/start-km
+                   :required? true}
+       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
 
      [Grid {:item true
-            :md 3
+            :md 4
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/start-offset-m
-       [input-textfield {}]]]
+       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
 
      [Grid {:item true
-            :md 3
+            :md 4
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-point
        [input-textfield {}]]]
 
      [Grid {:item true
-            :md 3
+            :md 4
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-km
-       [input-textfield {}]]]
+       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
 
      [Grid {:item true
-            :md 3
+            :md 4
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/end-offset-m
-       [input-textfield {}]]]]))
+       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]]))
 
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common? ctype]}
