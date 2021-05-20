@@ -210,6 +210,17 @@
                :in $ % ?project]
              db rules thk-project-id)))
 
+(defn project-assets-and-components
+  "Find OIDs of all project assets and components."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
 (defn project-assets-and-components-without-road
   "Find OIDs of all project assets and components where the road value is missing."
   [db thk-project-id]
