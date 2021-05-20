@@ -5,7 +5,8 @@
             [teet.util.datomic :as du]
             [teet.asset.asset-model :as asset-model]
             [datomic.client.api :as d]
-            [teet.meta.meta-model :as meta-model]))
+            [teet.meta.meta-model :as meta-model]
+            [clojure.walk :as walk]))
 
 (defn save-asset
   "Create or update asset. Creates new OID based on the fclass."
@@ -41,6 +42,42 @@
        (cu/without-nils
         (assoc component :asset/oid component-oid))])))
 
+(defn- collect-oids [form]
+  (cu/collect #(and (map-entry? %)
+                    (= :asset/oid (first %)))
+              form))
+
+(defn import-asset
+  "Import full asset with components. Creates new OIDs for asset and all
+  the components if they are not present."
+  [db owner-code {existing-oid :asset/oid :as asset}]
+  {:pre [(or
+          ;; No asset OID at toplevel, check that there are no OIDs
+          ;; in child components either
+          (and (nil? existing-oid)
+               (empty? (collect-oids (:asset/components asset))))
+
+          ;; Asset provided at toplevel, check that all component OIDs
+          ;; are sub-OIDs of the asset
+          (and (asset-model/asset-oid? existing-oid)
+               (every? (fn [[_ component-oid]]
+                         (= existing-oid
+                            (asset-model/component-asset-oid component-oid)))
+                       (collect-oids (:asset/components asset)))))]}
+  (let [oid (or existing-oid
+                (asset-db/next-oid db owner-code (:asset/fclass asset)))]
+    [(-> asset
+         (assoc :asset/oid oid)
+         (update :asset/components
+                 (fn [components]
+                   (walk/prewalk
+                    (fn [x]
+                      (if (and (map? x)
+                               (contains? x :component/ctype)
+                               (not (contains? x :asset/oid)))
+                        (assoc x :asset/oid (asset-db/next-component-oid db oid))
+                        x))
+                    components))))]))
 (defn lock
   "Create new lock for project BOQ."
   [db {:boq-version/keys [project type] :as lock}]

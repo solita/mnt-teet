@@ -20,6 +20,7 @@
          teet.task.task-tx/delete-task
          teet.asset.asset-tx/save-asset
          teet.asset.asset-tx/save-component
+         teet.asset.asset-tx/import-asset
          teet.asset.asset-tx/lock]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
