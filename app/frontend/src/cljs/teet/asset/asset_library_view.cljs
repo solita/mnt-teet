@@ -50,7 +50,7 @@
      (doall
       (for [child children]
         ^{:key (str (:db/id child))}
-        [:li
+        [:li {:data-cy (str "link-" (str (:db/ident child)))}
          [url/Link {:page :asset-type-library
                     :query {:item (str (:db/ident child))}}
           (tr* child)]]))]))
@@ -85,13 +85,22 @@
     [attribute-table open attributes]
     [child-links (:ctype/_parent fclass)]]])
 
-(defn- fgroup [open fgroup]
+(defn- fgroup [_open fgroup]
   [:<>
    [typography/Heading3
     (str (tr [:asset :type-library :fgroup]) " " (tr* fgroup))]
    [:div
     (tr* fgroup :asset-schema/description)
     [child-links (:fclass/_fgroup fgroup)]]])
+
+(defn- material [_open material]
+  [:<>
+   [typography/Heading3
+    (str (tr [:asset :type-library :material]) " " (tr* material))]
+   [:div
+    (tr* material :asset-schema/description)
+    [child-links (:material/fgroups material)]]])
+
 
 (defn- rotl-type-badge-style []
   {:font-size "70%"
@@ -103,8 +112,9 @@
    :background theme-colors/gray-lightest})
 
 (defn- rotl-tree [{:keys [open toggle! focus] :as opts} {ident :db/ident :as item}]
-  (let [children (concat (:fclass/_fgroup item)
-                         (:ctype/_parent item))
+  (let [children (or (:children item)
+                     (concat (:fclass/_fgroup item)
+                             (:ctype/_parent item)))
         label (or (:label opts) (tr* item))]
     [container/collapsible-container
      {:container-attrs {:data-ident (str ident)}
@@ -123,9 +133,12 @@
       (doall
        (for [child children]
          ^{:key (str (:db/ident child))}
-         [rotl-tree opts child]))]]))
+         [rotl-tree
+          ;; Children do not inherit the label
+          (dissoc opts :label)
+          child]))]]))
 
-(defn rotl-item [{type :asset-schema/type :as item}]
+(defn- rotl-item [{type :asset-schema/type :as item}]
   (r/with-let [open (r/atom #{})]
     (case (:db/ident type)
       :asset-schema.type/fgroup
@@ -137,6 +150,9 @@
       :asset-schema.type/ctype
       [ctype open item]
 
+      :asset-schema.type/material
+      [material open item]
+
       ;; Empty span, shouldn't get here
       [:span])))
 
@@ -146,31 +162,48 @@
          :classes #js {:item (<class common-styles/content-scroll-max-height "60px")}}
    content])
 
+(defn- with-top-level [item th]
+  (cond (or (asset-type-library/fclass? item)
+            (asset-type-library/ctype? item)
+            (asset-type-library/fgroup? item))
+        (conj th :fgroup/fgroups)
+
+        ;; This does not actually work yet since `type-hierarchy` assumes fgroups at top level
+        (asset-type-library/material? item)
+        (conj th :material/materials)
+
+        :else
+        th))
+
 (defn- ensure-tree-open [atl open item-kw]
   (let [current-open @open
-        th (mapv :db/ident (asset-type-library/type-hierarchy atl item-kw))]
+        hierarchy (asset-type-library/type-hierarchy atl item-kw)
+        item (last hierarchy)
+        th (with-top-level item (mapv :db/ident hierarchy))]
     (when-not (every? current-open th)
       (swap! open into th))))
 
 (defn- focus-on-ident [app]
   (some->> app :query :item cljs.reader/read-string))
 
-(defn asset-library-page [_e! {atl :asset-type-library :as app}]
+(defn asset-library-page [_e! app]
   (let [open (r/atom #{})
         toggle! #(swap! open cu/toggle %)
         focus (atom (focus-on-ident app))]
     (r/create-class
      {:component-will-receive-props
-      (fn [_this [_ _ app _]]
+      (fn [_this [_ _ {atl :asset-type-library :as app} _]]
         (let [new-focus (focus-on-ident app)]
           (when (not= new-focus @focus)
-            (ensure-tree-open atl open new-focus)
+            (ensure-tree-open atl
+                              open
+                              new-focus)
             (reset! focus new-focus))))
       :reagent-render
       (fn [_e! {atl :asset-type-library :as _app}]
         (if-not atl
           [CircularProgress {}]
-          (let [{:keys [fgroups] common :ctype/common
+          (let [{:keys [fgroups materials] common :ctype/common
                  modified :tx/schema-imported-at} atl]
             [:<>
              [:div {:class (<class common-styles/flex-row-space-between)
@@ -188,11 +221,20 @@
                  ^{:key "common"}
                  [rotl-tree {:open @open :toggle! toggle!
                              :focus @focus
-                             :label (tr [:asset :type-library :common-ctype])} common]
-                 (doall
-                  (for [fg fgroups]
-                    ^{:key (str (:db/ident fg))}
-                    [rotl-tree {:open @open :toggle! toggle! :focus @focus} fg]))]]
+                             :label (tr [:asset :type-library :common-ctype])}
+                  common]
+                 ^{:key "fgroups"}
+                 [rotl-tree {:open @open :toggle! toggle!
+                             :focus @focus
+                             :label (tr [:asset :type-library :fgroup])}
+                  {:db/ident :fgroup/fgroups
+                   :children fgroups}]
+                 ^{:key "materials"}
+                 [rotl-tree {:open @open :toggle! toggle!
+                             :focus @focus
+                             :label (tr [:asset :type-library :material])}
+                  {:db/ident :material/materials
+                   :children materials}]]]
                [scrollable-grid 8
                 [:div {:style {:padding "1rem"}}
                  (when-let [item-kw @focus]

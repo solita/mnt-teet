@@ -66,6 +66,11 @@
       {:attribute/_parent [~'* {:enum/_attribute [~'*]}]}
       {:ctype/_parent ~ctype-pattern}]}])
 
+(def material-pattern
+  '[*
+    {:material/fgroups
+     [*]}])
+
 (defn- ctype? [x]
   (and (map? x)
        (du/enum= (:asset-schema/type x) :asset-schema.type/ctype)))
@@ -101,6 +106,7 @@
           [_ :tx/schema-imported-at _ ?tx]
           [?tx :db/txInstant ?txi]] db)))
 
+
 (defn asset-type-library [db]
   (walk/postwalk
    (fn [x]
@@ -117,7 +123,12 @@
                    (d/q '[:find (pull ?fg p)
                           :where [?fg :asset-schema/type :asset-schema.type/fgroup]
                           :in $ p]
-                        db type-library-pattern))}))
+                        db type-library-pattern))
+    :materials (mapv first
+                     (d/q '[:find (pull ?m p)
+                            :where [?m :asset-schema/type :asset-schema.type/material]
+                            :in $ p]
+                          db material-pattern))}))
 
 
 (defn project-cost-items
