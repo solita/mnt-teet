@@ -36,6 +36,9 @@
     ""
     (str (label fg) " / " (label fc))))
 
+(defn- format-fc [[_fg fc]]
+  (label fc))
+
 (defn select-fgroup-and-fclass [{:keys [e! on-change value atl read-only?]}]
   (let [[fg-ident fc-ident] value
         fg (if fg-ident
@@ -76,6 +79,7 @@
     :no-results (tr [:asset :no-matching-feature-classes])
     :value value
     :format-result format-fg-and-fc
+    :format-result-chip format-fc
     :show-empty-selection? true
     :clear-value [nil nil]
     :query (fn [text]

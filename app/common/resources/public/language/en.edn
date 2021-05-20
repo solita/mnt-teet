@@ -402,6 +402,7 @@
   :notification.type/cooperation-application-expired-soon
   "Application terms will expire soon",
   :cooperation.opinion.status/unanswered "No opinion was submitted",
+  :file.part.status/reviewing "Reviewing",
   :task.status/rejected "Rejected",
   :task.status/reviewing "Reviewing",
   :document.category/project-doc "Project documentation",
@@ -455,7 +456,10 @@
   :cooperation.opinion.status/rejected "Ignore",
   :document.sub-category/no-objection-letters "No-objection letters",
   :task.group/working-design "Working Design",
+  :file.part.status/waiting-for-review "Waiting for review",
   :task.status/waiting-for-review "Waiting for review",
+  :notification.type/task-part-waiting-for-review
+  "Task part {task-part-name} is waiting for your review.",
   :cooperation.application.type/waste-permit "Waste permit",
   :thk.lifecycle-type/design "Design",
   :task.type/acceptance "Acceptance",
@@ -490,6 +494,8 @@
   :boq-version.type/budget "Budget",
   :notification.type/comment-created "New comment",
   :task.type/construction-equipment "Equipment",
+  :notification.type/task-part-review-accepted
+  "Task part {task-part-name} has been accepted.",
   :activity.status/archived "Archived",
   :activity.status/valid "Valid",
   :boq-version.type/tender "Tender",
@@ -540,6 +546,7 @@
   :task.status/completed "Completed",
   :task.type/building-permit "Building permit",
   :task.type/land-owners "Land-owners",
+  :file.part.status/completed "Completed",
   :task.type/acceptances-no-objection
   "Acceptances (No-objection co-ordination)",
   :thk.task-type/environmental-impact-assessment
@@ -604,6 +611,7 @@
   :activity.name/preliminary-design "Preliminary design",
   :cooperation.application.type/geological-survey-plan
   "Geological survey plan",
+  :file.part.status/in-progress "In progress",
   :task.status/in-progress "In progress",
   :task.type/drainage "Drainage",
   :cooperation.application.type/ex-ante-eia "Ex-ante EIA",
@@ -622,6 +630,8 @@
   :cooperation.application.type/special-use-water-permit
   "Special-use of Water permit",
   :estate-compensation.reason/other "Other",
+  :notification.type/task-part-review-rejected
+  "Task part {task-part-name} has been rejected.",
   :cooperation.application.type/eia-report "EIA report",
   :task.type/archeological-study "Archaeological study",
   :task.type/construction-cost-list "Bill of Quantities",
@@ -637,6 +647,7 @@
   :activity.status/canceled "Cancelled",
   :cooperation.response.status/no-objection "No objection",
   :thk.contract.status/in-progress "In progress",
+  :file.part.status/not-started "Not started",
   :cooperation.application.type/work-permit "Work permit",
   :document.sub-category/table-of-content "Table of Content",
   :task.status/not-started "Not started",
@@ -797,6 +808,7 @@
   :land-acquisition/pos-number "POS#",
   :meeting.agenda/responsible "Responsible person",
   :document/sub-category "Document subtype",
+  :location/road-address "Road address",
   :user/add-global-permission
   "Add global role (applies to all projects)",
   :cooperation.contact/company "Company",
@@ -813,6 +825,7 @@
   :comment/track? "Track status",
   :land-owner-opinion/body "Response body",
   :user/roles "Roles",
+  :asset/fclass "Asset type",
   :document/author "Author",
   :file/name "Name",
   :cooperation.contact/email "Email",
@@ -1285,6 +1298,7 @@
   :edit-part-modal-title "Edit task part",
   :confirm-delete-confirm "Yes, delete the task",
   :upload-files "Upload files",
+  :reopen-success "Task re-opened successfully",
   :part-added-succesfully "Task part added successfully",
   :edit-document "Edit document",
   :part-edited-succesfully "Task part edited successfully",
@@ -1295,6 +1309,7 @@
   :add-part "Add part",
   :accept-review "Accept review",
   :confirm-delete-cancel "No",
+  :reopen "Reopen task",
   :reject-review "Reject review",
   :documents "Documents",
   :add-part-modal-title "Add task part",
@@ -1309,6 +1324,23 @@
   :no-documents "No documents",
   :edit-success-notification "Task edited successfully",
   :results "Results"},
+ :task-part
+ {:reopen-successful "Task part re-opened successfully",
+  :reopen-part "Reopen task part",
+  :reopen "Reopen",
+  :reopen-part-confirm
+  "Are you sure you wish to reopen this task part and all associated files?",
+  :submit-for-approval "Submit task part for review",
+  :reject-part "Send back",
+  :submit-results "Submit results",
+  :reject "Send back",
+  :approve-part "Approve results",
+  :submit-results-confirm
+  "Are you sure you wish to submit this task part for review?",
+  :approve-part-confirm "Are you sure you wish approve the task part?",
+  :accept "Agreed",
+  :reject-part-confirm
+  "Are you sure you wish to send back the task part?"},
  :unit-info {:owners-opinions "Land owners opinions"},
  :unit-modal-page {:add-new-owner-opinion "Add new opinion"},
  :user

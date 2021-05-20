@@ -81,6 +81,15 @@
               (tempids id)
               id))))
 
+(defn- valid-cost-group-price?
+  "We want the price to be
+   - non-negative
+   - max eurocent precision"
+  [price]
+  (try (not (neg? (euro/parse price)))
+       (catch Exception _e
+         false)))
+
 (defcommand :asset/save-cost-group-price
   {:doc "Save cost group price"
    :context {:keys [user db] adb :asset-db}
@@ -92,24 +101,34 @@
              (= project-id
                 (:cost-group/project (du/entity adb (:db/id cost-group)))))
          ^{:error :boq-is-locked}
-         (boq-unlocked? adb project-id)]}
-  (tx
-   (if-let [id (:db/id cost-group)]
-     ;; Compare and swap the price if there is an existing one
-     ^{:db :asset}
-     [[:db/cas id :cost-group/price
-       (euro/parse (:cost-group/price cost-group))
-       (euro/parse price)]]
+         (boq-unlocked? adb project-id)
 
-     ;; Create new cost group price
-     ^{:db :asset}
-     [(merge
-       (asset-type-library/form->db (asset-type-library/rotl-map
-                                     (asset-db/asset-type-library adb))
-                                    cost-group)
-       {:db/id "new-cost-group-price"
-        :cost-group/price (euro/parse price)
-        :cost-group/project project-id})]))
+         ^{:error :invalid-price}
+         (or (nil? price)
+             (valid-cost-group-price? price))]}
+  ;; Are we inserting or updating?
+  (if-let [id (:db/id cost-group)]
+    ;; Update: If we have a new price...
+    (let [current-cost-group-price (some-> (:cost-group/price cost-group) euro/parse)]
+      (if price
+        ;; Compare and swap the price if there is an existing one
+        (tx ^{:db :asset}
+            [[:db/cas id :cost-group/price
+              current-cost-group-price
+              (euro/parse price)]])
+        ;; Else retract the cost group price
+        (tx ^{:db :asset}
+            [[:db/retract id :cost-group/price]])))
+    ;; Insert: Create new cost group price (if no price, no tx necessary)
+    (when price
+      (tx ^{:db :asset}
+          [(merge
+            (asset-type-library/form->db (asset-type-library/rotl-map
+                                          (asset-db/asset-type-library adb))
+                                         cost-group)
+            {:db/id "new-cost-group-price"
+             :cost-group/price (euro/parse price)
+             :cost-group/project project-id})])))
   :ok)
 
 (defcommand :asset/lock-version

@@ -1960,7 +1960,101 @@
            :db/tupleAttrs [:thk.contract/procurement-id :thk.contract/procurement-part-id]
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
-           :db/doc "Ensure there is only one contract per procurement-id and part-id combination"}]]}]
+           :db/doc "Ensure there is only one contract per procurement-id and part-id combination"}]]}
 
+ {:db/ident :migration/contract-partners
+  :txes [;; COMPANY BASIC INFORMATION
+         [{:db/ident :company/country
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "ISO code of the country"}
 
+          {:db/ident :company/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :company/business-registry-code
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :company/emails
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/many}
+
+          {:db/ident :company/phone-numbers
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/many}]
+
+         ;; LINK ENTITY BETWEEN COMPANY AND CONTRACT
+         [{:db/ident :company-contract/company
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :company-contract/contract
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "REFERENCES :thk.contract/..."}
+
+          {:db/ident :company-contract/lead-partner?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :company-contract/sub-company-contracts
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/isComponent true
+           :db/doc "REFERENCES :company-contract/..."}
+
+          {:db/ident :company-contract/employees
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/isComponent true
+           :db/doc "REFERENCES :company-contract-employee/..."}
+
+          {:db/ident :company-contract/work-description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "String description of the work to be done by the company in this contract"}]
+
+         ;; LINK ENTITY BETWEEN COMPANY-CONTRACT AND USER
+         [{:db/ident :company-contract-employee/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "REFERENCES :user/..."}
+
+          {:db/ident :company-contract-employee/key-person?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :company-contract-employee/role
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+
+          ;; USE :review entities for key person reviews
+          {:db/ident :company-contract-employee/accepted?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "When all required reviews are in state accepted accept the company-contract-employee as well"}
+
+          {:db/ident :company-contract-employee.role/company-representative
+           :enum/attribute :company-contract-employee/role}
+
+          {:db/ident :company-contract-employee.role/company-project-manager
+           :enum/attribute :company-contract-employee/role}
+
+          {:db/ident :company-contract-employee.role/team-member
+           :enum/attribute :company-contract-employee/role}
+
+          {:db/ident :company-contract-employee.role/supervisor
+           :enum/attribute :company-contract-employee/role}
+
+          {:db/ident :company-contract-employee/active?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one}]
+
+         [;; USER CHANGES
+          {:db/ident :user/documents
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "CV's, certificates and other job related documents related to the user"}]]}]
 
