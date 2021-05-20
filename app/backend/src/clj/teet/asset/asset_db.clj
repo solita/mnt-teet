@@ -50,7 +50,7 @@
      [?ctype :component/inherits-location? true]
      (or [?parent :asset/components ?e]
          [?parent :component/components ?e])
-     (location-attr-missing ?e ?attr)]])
+     (location-attr-missing ?parent ?attr)]])
 
 (def ctype-pattern
   '[*
