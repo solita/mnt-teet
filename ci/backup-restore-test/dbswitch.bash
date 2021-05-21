@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-
-echo "Check started"
-
 set -eu
+echo "Check started"
 
 RESTORE_DB_NAME="teet"$(date +%Y%m%d)
 RESTORE_ASSET_DB_NAME="teetasset"$(date +%Y%m%d)
@@ -39,10 +37,21 @@ STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASEURL/$ENDPOINT")
 
 if [ "$STATUS" = "200" ]; then
   echo "Query succeeded"
-  echo "$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') DB is in use"
-  echo "$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') Assets DB is in use"
+  MSG_TEET_DB_IS_SWITCHED="$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') DB is in use"
+  MSG_ASSET_DB_IS_SWITCHED="$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') Assets DB is in use"
+
+  echo $MSG_TEET_DB_IS_SWITCHED
+  echo $MSG_ASSET_DB_IS_SWITCHED
+
+    # Cleanup both old DB-s
+  aws lambda invoke --function-name teet-datomic-Compute-delete-db --payload "{
+    \"db-name\":\"$CURRENT_DB\",
+    \"asset-db-name\":\"$CURRENT_ASSET_DB\"}" out
+
+  echo "$CURRENT_DB and $CURRENT_ASSET_DB have been deleted"
+  echo "Backup-Restore build succeeded"
 else
-  echo "Query failed with status: $STATUS"
+  echo "Restored DB check failed with status: $STATUS"
   aws ssm put-parameter \
               --name "/teet/datomic/db-name" \
               --type "String" \
@@ -54,18 +63,12 @@ else
               --type "String" \
               --value $CURRENT_ASSET_DB \
               --overwrite
-  sleep 60
-  echo "$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
-  echo "$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
+
+  MSG_TEET_DB_IS_RESTORED="$(aws ssm get-parameters --names "/teet/datomic/db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
+  MSG_ASSET_DB_IS_RESTORED="$(aws ssm get-parameters --names "/teet/datomic/asset-db-name" --query "Parameters[0].Value" | tr -d '"') is set back"
+  echo $MSG_TEET_DB_IS_RESTORED
+  echo $MSG_ASSET_DB_IS_RESTORED
+
+  bash ./notify.bash "Backup-Restore build failed. Restored DB check failed with status: $STATUS\n$MSG_TEET_DB_IS_RESTORED\n$MSG_ASSET_DB_IS_RESTORED" ":blob-fail:"
   exit 1
 fi
-
-# Cleanup both old DB-s
-aws lambda invoke --function-name teet-datomic-Compute-delete-db --payload "{
-  \"db-name\":\"$CURRENT_DB\",
-  \"asset-db-name\":\"$CURRENT_ASSET_DB\"}" out
-
-echo "$CURRENT_DB and $CURRENT_ASSET_DB have been deleted"
-
-
-echo "Check completed"
