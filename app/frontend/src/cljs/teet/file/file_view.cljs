@@ -619,8 +619,8 @@
                                 (<class common-styles/margin-bottom 1)]}
    [:div {:class [(<class common-styles/flex-row)
                   (<class common-styles/margin-bottom 1.5)]}
-    [ti/file {:style {:margin-right "0.5rem"}}]
-   [:span {:style {:margin-top "2px"}} (tr [:file :no-files])]]])
+    [ti/file {:class (<class common-styles/margin-right 0.5)}]
+   [:span {:class (<class common-styles/flex-align-center)} (tr [:file :no-files])]]])
 
 (defn- file-edit-name [{:keys [value on-change error error-text]}]
   (let [[name original-name] value

@@ -3,7 +3,7 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.activity.activity-model :as activity-model]
-            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.authorization.authorization-check :as authorization-check :refer [when-authorized]]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
             [teet.file.file-view :as file-view]
@@ -168,12 +168,12 @@
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
-      {:e!              e!
-       :value           files-form
+      {:e! e!
+       :value files-form
        :on-change-event file-controller/->UpdateFilesForm
-       :save-event      #(file-controller/->AddFilesToTask files-form task close! linked-from)
+       :save-event #(file-controller/->AddFilesToTask files-form task close! linked-from)
        :cancel-fn close!
-       :in-progress?    upload-progress
+       :in-progress? upload-progress
        :spec :task/add-files}
       (when (seq (:file.part/_task task))
         ^{:attribute :file/part}
@@ -219,69 +219,67 @@
                     nil))}
     [TextField {:id :task-part-name}]]])
 
+(defn- task-part-review-button
+  "Button with confirmation that is displayed for task part review actions."
+  [{:keys [action title-text modal-text button-type button-params button-text]}]
+  [buttons/button-with-confirm
+   {:action action
+    :modal-title (str title-text "?")
+    :confirm-button-text  (tr [:buttons :confirm])
+    :cancel-button-text  (tr [:buttons :cancel])
+    :modal-text modal-text
+    :close-on-action? true}
+   [button-type (merge button-params
+                       {:size :small
+                        :onclick action})
+    button-text]])
+
 (defn task-part-buttons [e! task task-part]
   (let [task-part-status (:db/ident (:file.part/status task-part))]
     (when (task-model/can-submit? task)
       [:div
-       {:style {:display :flex
-                :margin "0.5em 0.5em 0.5em 0.5em"
-                :padding-bottom "1em"}}
+       {:class [(<class common-styles/padding-bottom 1)
+                (<class common-styles/margin 0.5)]}
        [:<>
         (case task-part-status
           :file.part.status/in-progress
           [when-authorized :task/submit task
-           [buttons/button-with-confirm
-           {:action (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))
-            :modal-title (str (tr [:task-part :submit-results]) "?")
-            :confirm-button-text  (tr [:buttons :confirm])
-            :cancel-button-text  (tr [:buttons :cancel])
-            :modal-text (tr [:task-part :submit-results-confirm])
-            :close-on-action? true}
-           [buttons/button-primary {:size :small
-                                    :id (str "submit-button-" (:db/id task-part))
-                                    :on-click (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))}
-            (tr [:task-part :submit-for-approval])]]]
+           [task-part-review-button
+            {:action (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))
+             :title-text (tr [:task-part :submit-results])
+             :modal-text (tr [:task-part :submit-results-confirm])
+             :button-type buttons/button-primary
+             :button-params {:id (str "submit-button-" (:db/id task-part))}
+             :button-text (tr [:task-part :submit-for-approval])}]]
 
           :file.part.status/reviewing
           [when-authorized :task/review task
            [:<>
-           [buttons/button-with-confirm
-          {:action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :accept)
-           :modal-title (str (tr [:task-part :approve-part]) "?")
-           :confirm-button-text  (tr [:buttons :confirm])
-           :cancel-button-text  (tr [:buttons :cancel])
-           :modal-text (tr [:task-part :approve-part-confirm])
-           :close-on-action? true}
-          [buttons/button-green {:style {:margin-right "1em"}
-                                 :size :small
-                                 :id (str "accept-button-" (:db/id task-part))
-                                 :on-click (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :accept)}
-           (tr [:task-part :accept])]]
-           [buttons/button-with-confirm
-            {:action (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :reject)
-            :modal-title (str (tr [:task-part :reject-part]) "?")
-            :confirm-button-text  (tr [:buttons :confirm])
-            :cancel-button-text  (tr [:buttons :cancel])
-            :modal-text (tr [:task-part :reject-part-confirm])
-            :close-on-action? true}
-            [buttons/button-warning {:size :small
-                                     :id (str "reject-button-" (:db/id task-part))
-                                     :on-click (e! task-controller/->ReviewTaskPart (:db/id task) (:db/id task-part) :reject)}
-             (tr [:task-part :reject])]]]]
+            [task-part-review-button
+             {:action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :accept)
+              :title-text (tr [:task-part :approve-part])
+              :modal-text (tr [:task-part :approve-part-confirm])
+              :button-type buttons/button-green
+              :button-params {:id (str "accept-button-" (:db/id task-part))
+                              :class (<class common-styles/margin-right 1)}
+              :button-text (tr [:task-part :accept])}]
+            [task-part-review-button
+             {:action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :reject)
+              :title-text (tr [:task-part :reject-part])
+              :modal-text (tr [:task-part :reject-part-confirm])
+              :button-type buttons/button-warning
+              :button-params {:id (str "reject-button-" (:db/id task-part))}
+              :button-text (tr [:task-part :reject])}]]]
 
           :file.part.status/completed
           [when-authorized :task/reopen-task task
-           [buttons/button-with-confirm
+           [task-part-review-button
             {:action (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))
-             :modal-title (str (tr [:task-part :reopen-part]) "?")
-             :confirm-button-text  (tr [:buttons :confirm])
-             :cancel-button-text  (tr [:buttons :cancel])
+             :title-text (tr [:task-part :reopen-part])
              :modal-text (tr [:task-part :reopen-part-confirm])
-             :close-on-action? true}
-            [buttons/button-primary {:size :small
-                                     :id (str "reopen-button-" (:db/id task-part))
-                                     :on-click (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))}
-             (tr [:task-part :reopen])]]]
+             :button-type buttons/button-primary
+             :button-params {:id (str "reopen-button-" (:db/id task-part))}
+             :button-text (tr [:task-part :reopen])}]]
           [:<>])]])))
 
 (defn- start-task-part-review [e! task-id task-part-id]
@@ -302,12 +300,11 @@
   [e! {heading :heading
        number :number} file-part opts]
   [:div
-   [:div {:style {:margin-bottom "0.5rem"
-                  :display :flex
-                  :justify-content :space-between}}
-    [:div {:class (<class common-styles/flex-row-end)
-           :style {:margin-right "0.5rem"}}
-     [typography/Heading3 {:style {:margin-right "0.5rem"}}
+   [:div {:class [(<class common-styles/margin-bottom 0.5)
+                  (<class common-styles/space-between-center)]}
+    [:div {:class [(<class common-styles/flex-row-end)
+                   (<class common-styles/margin-right 0.5)]}
+     [typography/Heading3 {:class (<class common-styles/margin-right 0.5)}
       heading]
      (when number
        [typography/Heading4
@@ -317,19 +314,17 @@
     [:div {:style {:padding-top "5px"}}
      (when-let [action-comp (:action opts)]
        action-comp)]]
-   [:div {:style {:margin-right "2em"
-                  :margin-bottom "1em"}}
-    (str (tr [:fields :task/status]) ": " (tr-enum (:file.part/status file-part)))]
+   [:div {:class [(<class common-styles/margin-right 2)
+                  (<class common-styles/margin-bottom 1)]}
+    (tr-enum (:file.part/status file-part))]
    ])
 
 (defn file-section-view
   [{:keys [e! upload! sort-by-value allow-replacement-opts
            land-acquisition?]} task file-part assignee? files]
   [:div
-   {:style
-    {:border-bottom (str "solid " theme-colors/gray-light " 1px")
-     :margin-bottom "1.5em"
-     :margin-top "1em"}}
+   {:class [(<class common-styles/margin 1 0 1.5 0)
+            (<class common-styles/gray-light-border-bottom)]}
    [task-part-heading e! {:heading (:file.part/name file-part)
                           :number (:file.part/number file-part)
                           :file-count (count files)} file-part
@@ -370,9 +365,8 @@
   [:div {:class [(<class common-styles/space-between-center)
                  (<class common-styles/margin-bottom 1)]}
 
-   [:div {:style {:margin-right "0.5rem"
-                  :display :flex
-                  :align-items :flex-end}}
+   [:div {:class [(<class common-styles/margin-right 0.5)
+                  (<class common-styles/flex-align-end)]}
     [typography/Heading2 {:style {:margin-right "0.5rem"
                                   :display :inline-block}}
      (tr [:common :files])]
@@ -607,7 +601,7 @@
 
 (defn- task-page-content
   [e! app activity {status :task/status :as task} pm? assignee? files-form]
-  [:div.task-page {:style {:margin-bottom "2em"}}
+  [:div.task-page {:class (<class common-styles/margin-bottom 2)}
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
       [start-review e!]])

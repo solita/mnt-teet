@@ -171,6 +171,10 @@
    :margin-bottom  "0.5rem"
    :border-bottom  (str "1px solid " theme-colors/gray-light)})
 
+(defn gray-light-border-bottom
+  []
+  {:border-bottom  (str "1px solid " theme-colors/gray-light)})
+
 (defn top-info-spacing
   []
   {:padding "1.5rem 1.875rem"})
