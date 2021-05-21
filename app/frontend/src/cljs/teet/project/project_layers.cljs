@@ -9,7 +9,8 @@
             [teet.project.project-model :as project-model]
             [clojure.string :as str]
             [reagent.core :as r]
-            [teet.map.map-overlay :as map-overlay]))
+            [teet.map.map-overlay :as map-overlay]
+            [teet.common.common-controller :as common-controller]))
 
 (defn- endpoint [app]
   (get-in app [:config :api-url]))
@@ -126,16 +127,17 @@
           style
           options))
 
-       (map-layers/geojson-layer endpoint
-                                 "geojson_entities"
-                                 {"ids" (str "{" (:integration/id project) "}")}
-                                 style
-                                 (assoc options
-                                        ;; Update start/end labels from source geometry
-                                        ;; once it is loaded
-                                        :on-load (partial update-km-range-label-overlays!
-                                                          start-label end-label
-                                                          set-overlays!))))}))
+       (map-layers/geojson-layer
+        {:url (common-controller/query-url :geo/entities {:ids [(:integration/id project)]})}
+        "geojson_entities"
+        nil
+        style
+        (assoc options
+               ;; Update start/end labels from source geometry
+               ;; once it is loaded
+               :on-load (partial update-km-range-label-overlays!
+                                 start-label end-label
+                                 set-overlays!))))}))
 
 (defn setup-restriction-candidates [{{:keys [query]} :app
                                      {:keys [setup-step

@@ -23,13 +23,15 @@
         extent (.getTileCoordExtent tile-grid coord
                                     (ol-extent/createEmpty))
         [x1 y1 x2 y2] extent]
-    (apply mvt-url
-           url
-           (merge {"xmin" x1 "ymin" y1 "xmax" x2 "ymax" y2
-                   ;;"r" (.getResolution tile-grid (aget coord 0))
-                   ;;"pr" pixel-ratio
-                   }
-                  parameters))))
+    (if (fn? url)
+      (url {:xmin x1 :ymin y1 :xmax x2 :ymax y2})
+      (apply mvt-url
+             url
+             (merge {"xmin" x1 "ymin" y1 "xmax" x2 "ymax" y2
+                     ;;"r" (.getResolution tile-grid (aget coord 0))
+                     ;;"pr" pixel-ratio
+                     }
+                    parameters)))))
 
 (defn load-tile [tile url]
   ;;(.log js/console "Loading: " url)

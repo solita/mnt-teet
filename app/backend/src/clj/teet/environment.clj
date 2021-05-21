@@ -5,7 +5,9 @@
             [teet.log :as log]
             [datomic.client.api :as d]
             [cognitect.aws.client.api :as aws]
-            [teet.util.collection :as cu])
+            [teet.util.collection :as cu]
+            [teet.util.cache :as cache]
+            [clojure.set :as set])
   (:import (java.time ZoneId)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -140,8 +142,7 @@
                                                       read-string))}
    :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}
    :contract {:state-procurement-url (->ssm [:contact :state-procurement-url] nil)
-              :thk-procurement-url (->ssm [:contract :thk-procurement-url] nil)}
-   })
+              :thk-procurement-url (->ssm [:contract :thk-procurement-url] nil)}})
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config
@@ -348,3 +349,48 @@
   []
   {:api-url (config-value :api-url)
    :api-secret (config-value :auth :jwt-secret)})
+
+(def rds-client (delay (aws/client {:api :rds})))
+
+(def pg-connection-pool
+  (cache/cached
+   #(let [{:keys [host port password]}
+          (or
+           ;; local dev env config
+           (config-value :postgresql)
+
+           ;; config from RDS service
+           (-> @rds-client
+               (aws/invoke {:op :DescribeDBInstances
+                            :request {:DBInstanceIdentifier "teet"}})
+               (get-in [:DBInstances 0 :Endpoint])
+               (set/rename-keys {:Address :host
+                                 :Port :port})))
+
+          password (or password
+                       (-> (ssm-parameters [(->ssm [:api :authenticator-password])])
+                           first val))
+          hikari-config
+          (doto (com.zaxxer.hikari.HikariConfig.)
+            (.setJdbcUrl (str "jdbc:postgresql://" host ":" port "/teet"))
+            (.setUsername "authenticator")
+            (.setPassword password)
+            (.addDataSourceProperty "cachePrepStmts" "true")
+            (.addDataSourceProperty "prepStmtCacheSize" "250")
+            (.addDataSourceProperty "prepStmtCacheSqlLimit" "2048"))]
+      (com.zaxxer.hikari.HikariDataSource. hikari-config))))
+
+(defn get-pg-connection
+  "Get connection to PostgreSQL, you must `.close` it to return it to
+  the pool. Use [[call-with-pg-connection]] for autoclosed connection."
+  []
+  (let [conn (.getConnection (pg-connection-pool))]
+    (with-open [^java.sql.Statement stmt (.createStatement conn)]
+      (.execute stmt "SET SESSION ROLE teet_backend"))
+    conn))
+
+(defn call-with-pg-connection [func]
+  (with-open [conn (get-pg-connection)]
+    (with-open [^java.sql.Statement stmt (.createStatement conn)]
+      (.execute stmt "SET SESSION ROLE teet_backend"))
+    (func {:connection conn})))
