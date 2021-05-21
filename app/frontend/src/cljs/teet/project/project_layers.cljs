@@ -9,7 +9,8 @@
             [teet.project.project-model :as project-model]
             [clojure.string :as str]
             [reagent.core :as r]
-            [teet.map.map-overlay :as map-overlay]))
+            [teet.map.map-overlay :as map-overlay]
+            [teet.common.common-controller :as common-controller]))
 
 (defn- endpoint [app]
   (get-in app [:config :api-url]))
@@ -126,16 +127,17 @@
           style
           options))
 
-       (map-layers/geojson-layer endpoint
-                                 "geojson_entities"
-                                 {"ids" (str "{" (:integration/id project) "}")}
-                                 style
-                                 (assoc options
-                                        ;; Update start/end labels from source geometry
-                                        ;; once it is loaded
-                                        :on-load (partial update-km-range-label-overlays!
-                                                          start-label end-label
-                                                          set-overlays!))))}))
+       (map-layers/geojson-layer
+        {:url (common-controller/query-url :geo/entities {:ids [(:integration/id project)]})}
+        "geojson_entities"
+        nil
+        style
+        (assoc options
+               ;; Update start/end labels from source geometry
+               ;; once it is loaded
+               :on-load (partial update-km-range-label-overlays!
+                                 start-label end-label
+                                 set-overlays!))))}))
 
 (defn setup-restriction-candidates [{{:keys [query]} :app
                                      {:keys [setup-step
@@ -165,26 +167,25 @@
                                       {:opacity 1})})))
 
 (defn related-restrictions [{{query :query :as app} :app
-                             {restrictions :thk.project/related-restrictions} :project}]
-  (when (and restrictions (not (or (:configure query) (= (:tab query) "land"))))
+                             project :project}]
+  (when (not (or (:configure query) (= (:tab query) "land")))
     {:related-restrictions
-     (map-layers/geojson-layer (endpoint app)
-                               "geojson_features_by_id"
-                               {"ids" restrictions}
+     (map-layers/geojson-layer {:url (common-controller/query-url :geo/project-related-restrictions
+                                                                  {:db/id (:db/id project)})}
+                               "geojson_features_by_id" nil
                                map-features/project-related-restriction-style
-                               {:post? true})}))
+                               {})}))
 
 (defn related-cadastral-units [{{query :query :as app} :app
-                                {cadastral-units :thk.project/related-cadastral-units
-                                 filtered-units :thk.project/filtered-cadastral-units} :project}]
-  (when (and cadastral-units (not (:configure query)))
-    (let [units (or filtered-units cadastral-units)]
-      {:related-cadastral-units
-       (map-layers/geojson-layer (endpoint app)
-                                 "geojson_features_by_id"
-                                 {"ids" units}
-                                 map-features/cadastral-unit-style
-                                 {:post? true})})))
+                                {project-id :db/id} :project}]
+  (when (not (:configure query))
+    {:related-cadastral-units
+     (map-layers/geojson-layer
+      {:url (common-controller/query-url :geo/project-related-cadastral-units
+                                         {:db/id project-id})}
+      "geojson_features_by_id" nil
+      map-features/cadastral-unit-style
+      {})}))
 
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))

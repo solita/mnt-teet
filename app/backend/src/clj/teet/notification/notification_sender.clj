@@ -10,6 +10,8 @@
             [clojure.string :as str]
             [teet.localization :refer [with-language tr-enum]]))
 
+;; FIXME: NOT USED ANYWHERE... delete this ns
+
 (def ^:private email (delay (aws/client {:api :email})))
 
 (defn- send-email* [from to subject body]

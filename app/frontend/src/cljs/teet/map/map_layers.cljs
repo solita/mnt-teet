@@ -14,7 +14,8 @@
             [ol.format.WFS]
             [ol.format.GeoJSON]
             [ol.loadingstrategy :as ol-loadingstrategy]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.common-controller :as common-controller]))
 
 
 (def ^:const default-projection "EPSG:3301")
@@ -31,7 +32,10 @@
                  {:keys [min-resolution max-resolution z-index opacity on-select]
                   :or {z-index 99
                        opacity 1}}]
-  (mvt/->MVT (str endpoint "/rpc/" rpc-name) ; base url
+  (mvt/->MVT (if-let [url-fn (and (map? endpoint)
+                                  (:url-fn endpoint))]
+               url-fn
+               (str endpoint "/rpc/" rpc-name)) ; base url
              rpc-name ; source-name
              default-projection
              nil ; extent
@@ -64,10 +68,15 @@
                      z-index
                      opacity
                      min-resolution max-resolution
-                     (if post?
-                       {:url (str endpoint "/rpc/" rpc-name)
-                        :payload parameters}
-                       (url (str endpoint "/rpc/" rpc-name) parameters))
+                     (if-let [url (and (map? endpoint)
+                                       (:url endpoint))]
+                       ;; direct URL given
+                       url
+
+                       (if post?
+                         {:url (str endpoint "/rpc/" rpc-name)
+                          :payload parameters}
+                         (url (str endpoint "/rpc/" rpc-name) parameters)))
                      content-type
                      style-fn
                      (fn [layer]
@@ -124,13 +133,16 @@
           ;; Show all projects
           {"type" "project"})]
     {:projects
-     (mvt-layer api-url "mvt_entities" entity-query-options
-                map-features/project-line-style
-                {:max-resolution project-pin-resolution-threshold})
+     (mvt-layer
+      {:url-fn #(common-controller/query-url :geo/mvt (merge % {:type "project"}))} #_api-url "mvt_entities" entity-query-options
+      map-features/project-line-style
+      {:max-resolution project-pin-resolution-threshold})
      :project-pins
-     (geojson-layer api-url "geojson_entity_pins" entity-query-options
-                    map-features/project-pin-style
-                    {})}))
+     (geojson-layer ;;api-url "geojson_entity_pins" entity-query-options
+      {:url (common-controller/query-url :geo/entity-pins {:type "project"})}
+      "geojson_entity_pins" nil
+      map-features/project-pin-style
+      {})}))
 
 (defn- mvt-for-datasource-ids [api-url prefix datasource-ids style opts]
   (into {}

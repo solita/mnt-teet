@@ -11,7 +11,8 @@
             [teet.log :as log]
             [tara.routes :as tara-routes]
             [tara.endpoint :as tara-endpoint]
-            [teet.login.login-commands :as login-commands]))
+            [teet.login.login-commands :as login-commands]
+            [teet.util.cache :refer [cached]]))
 
 (log/enable-ion-cast-appender!)
 (some-> (ion/get-env) environment/init-ion-config!)
@@ -33,19 +34,6 @@
                              :store cookie-store})
       cookies/wrap-cookies
       wrap-exception-alert))
-
-(defn cached
-  "Return function to get deferred value. Succesfully created
-  value is cached and returned with subsequent calls.
-
-  If value-fn throws exception when creating value, it isn't cached.
-  Use this instead of delay if value-fn can have intermittent failures."
-  [value-fn]
-  (let [val (atom nil)]
-    (fn []
-      (if-let [v @val]
-        v
-        (swap! val (fn [_] (value-fn)))))))
 
 (defn ring->ion [handler]
   (-> handler wrap-middleware apigw/ionize))

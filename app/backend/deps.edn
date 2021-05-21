@@ -37,13 +37,20 @@
 
         ;; Cognitect AWS API
         com.cognitect.aws/api {:mvn/version "0.8.456"}
-        com.cognitect.aws/endpoints {:mvn/version "1.1.11.789"}
-        com.cognitect.aws/email {:mvn/version "770.2.568.0"}
-        com.cognitect.aws/ssm {:mvn/version "798.2.672.0"}
-        com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
-        com.cognitect.aws/sts {:mvn/version "798.2.678.0"}
-        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}}
+        com.cognitect.aws/endpoints {:mvn/version "1.1.11.1001"}
+        com.cognitect.aws/ssm {:mvn/version "811.2.889.0"}
+        com.cognitect.aws/s3 {:mvn/version "811.2.889.0"}
+        com.cognitect.aws/sts {:mvn/version "811.2.889.0"}
+        com.cognitect.aws/logs {:mvn/version "809.2.784.0"}
+        com.cognitect.aws/rds {:mvn/version "811.2.889.0"}
 
+        ;; PostgreSQL JDBC driver and SQL libraries
+        org.postgresql/postgresql {:mvn/version "42.2.20"}
+        com.zaxxer/HikariCP {:mvn/version "4.0.3"}
+        webjure/jeesql {:mvn/version "0.4.7"}
+
+
+        }
 
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
