@@ -139,7 +139,7 @@
               :config (->ssm [:vektorio :config] {} (comp #(update % :file-extensions suffix-list)
                                                       read-string))}
    :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}
-   :contract {:state-procurement-url (->ssm [:contact :state-procurement-url] nil)
+   :contract {:state-procurement-url (->ssm [:contract :state-procurement-url] nil)
               :thk-procurement-url (->ssm [:contract :thk-procurement-url] nil)}
    })
 

@@ -69,7 +69,9 @@
   {:thk {:url (environment/config-value :thk :url)}
    :api-url (environment/config-value :api-url)
    :file {:allowed-suffixes (environment/config-value :file :allowed-suffixes)
-          :image-suffixes (environment/config-value :file :image-suffixes)}})
+          :image-suffixes (environment/config-value :file :image-suffixes)}
+   :contract {:state-procurement-url (environment/config-value :contract :state-procurement-url)
+              :thk-procurement-url (environment/config-value :contract :thk-procurement-url)}})
 
 ;; dummy-login trust person-id etc information from
 ;; the frontend (command could be renamed to dummy-login)
