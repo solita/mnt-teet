@@ -2,7 +2,6 @@
   "View for a workflow task"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [goog.string :as gstr]
             [teet.activity.activity-model :as activity-model]
             [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-styles :as common-styles]
@@ -10,7 +9,6 @@
             [teet.file.file-view :as file-view]
             [teet.file.file-model :as file-model]
             [teet.localization :refer [tr tr-enum]]
-            [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.task-model :as task-model]
@@ -33,9 +31,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.log :as log]
             [teet.ui.drag :as drag]
-            [teet.authorization.authorization-check :as authorization-check]
+            [goog.string :as gstr]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.ui.rich-text-editor :as rich-text-editor]))
@@ -47,7 +44,7 @@
           (sort-by (comp task-model/task-group-order :db/ident)
                    task-groups)))
 
-(defn- task-selection [{:keys [e! on-change-selected on-change-sent existing selected sent-to-thk activity-name]
+(defn- task-selection [{:keys [on-change-selected on-change-sent existing selected sent-to-thk activity-name]
                         :or {existing #{}}}
                        task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
@@ -620,13 +617,16 @@
      :app app
      :type :task-comment
      :entity-type :task
-     :entity-id (:db/id task)}
+     :entity-id (:db/id task)
+     :comment-counts (:comment/counts task)
+     :after-comment-list-rendered-event common-controller/->Refresh
+     :after-comment-added-event
+     common-controller/->Refresh
+     :after-comment-deleted-event
+     common-controller/->Refresh}
     [task-details e! (:new-document app)
      (get-in app [:params :project])
      activity task assignee? files-form]]])
-
-
-
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
