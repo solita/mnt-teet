@@ -46,6 +46,7 @@
             teet.asset.asset-queries
             teet.asset.asset-commands
             teet.integration.vektorio.vektorio-queries
+            teet.geo.geo-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

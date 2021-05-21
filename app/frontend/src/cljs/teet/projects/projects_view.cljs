@@ -21,7 +21,8 @@
             [teet.ui.table :as table]
             [teet.ui.typography :as typography]
             [teet.ui.util :as util :refer [mapc]]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.common.common-controller :as common-controller]))
 
 (defmethod search-interface/format-search-result :project
   [{:thk.project/keys [id] :as project}]
@@ -157,18 +158,20 @@
                (when-not (str/blank? search-term)
                  ;; Showing search results, only fetch those
                  {:search-results
-                  (map-layers/geojson-layer api-url
-                                            "geojson_entities"
-                                            {"ids" (str "{" (str/join "," search-results) "}")}
-                                            map-features/project-line-style
-                                            {:max-resolution map-layers/project-pin-resolution-threshold})
+                  (map-layers/geojson-layer
+                   {:url (common-controller/query-url :geo/entities
+                                                      {:ids search-results})}
+                   "geojson_entities" nil
+                   map-features/project-line-style
+                   {:max-resolution map-layers/project-pin-resolution-threshold})
                   :search-result-pins
-                  (map-layers/geojson-layer api-url
-                                            "geojson_entity_pins"
-                                            {"ids" (str "{" (str/join "," search-results) "}")}
-                                            map-features/project-pin-style
-                                            {:min-resolution map-layers/project-pin-resolution-threshold
-                                             :fit-on-load? true})}))}
+                  (map-layers/geojson-layer
+                   {:url (common-controller/query-url :geo/entity-pins
+                                                      {:ids search-results})}
+                   "geojson_entity_pins" nil
+                   map-features/project-pin-style
+                   {:min-resolution map-layers/project-pin-resolution-threshold
+                    :fit-on-load? true})}))}
      (:map app)]))
 
 (defn projects-list-page [e! app projects]
