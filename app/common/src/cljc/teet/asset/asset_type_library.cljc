@@ -1,9 +1,10 @@
 (ns teet.asset.asset-type-library
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
-            [clojure.walk :as walk]
             [teet.util.datomic :as du]
-            [clojure.string :as str]))
+            #?@(:clj [[clojure.string :as str]
+                      [clojure.walk :as walk]
+                      [teet.util.coerce :refer [->long ->bigdec]]])))
 
 (defn rotl-map
   "Return a flat mapping of all ROTL items, by :db/ident."
@@ -26,12 +27,36 @@
             fg))
         (:fgroups atl)))
 
+(defn fclass-for-ctype
+  "Find fclass which ctype belongs to."
+  [atl ctype]
+  (some (fn [fg]
+          (some (fn [fc]
+                  (when (some #(du/enum= ctype %)
+                              (:ctype/_parent fc))
+                    fc))
+                (:fclass/_fgroup fg)))
+        (:fgroups atl)))
+
+(defn type-hierarchy
+  "Find each hierarchy parent of given fclass or ctype."
+  [atl node]
+  (vec
+   (drop 1                              ; drop 1st :fgroups level
+         (cu/find-path #(concat (:fgroups %)
+                                (:fclass/_fgroup %)
+                                (:ctype/_parent %))
+                       #(du/enum= node %)
+                       atl))))
+
 (defn- has-type? [type x]
   (and (map? x)
        (= type (get-in x [:asset-schema/type :db/ident]))))
 
+(def fgroup? (partial has-type? :asset-schema.type/fgroup))
 (def fclass? (partial has-type? :asset-schema.type/fclass))
 (def ctype? (partial has-type? :asset-schema.type/ctype))
+(def material? (partial has-type? :asset-schema.type/material))
 
 (defn allowed-component-types
   "Return all ctypes that are allowed for the given fclass or ctype."
@@ -43,26 +68,25 @@
                                             (= (:db/ident %) ident))
                                       atl))))
 
-(defn item-by-ident
-  "Find any type of ATL item based on ident."
+(defn- item-by-ident*
   [atl ident]
   (cu/find-matching #(and (map? %)
                           (contains? % :asset-schema/type)
                           (= ident (:db/ident %)))
                     atl))
 
+(def item-by-ident
+  "Find any type of ATL item based on ident."
+  ;; NOTE: we can memoize this without fear of unbounded growth
+  ;; as asset type library will never change during the lifetime
+  ;; of the process (either page in browser or deployment in ions)
+  (memoize item-by-ident*))
 
 #?(:clj
    (defn coerce-fn [value-type]
      (case value-type
-       :db.type/bigdec #(if (string? %)
-                          (when-not (str/blank? %)
-                            (-> % str/trim (str/replace "," ".") bigdec))
-                          (bigdec %))
-       :db.type/long #(if (string? %)
-                        (when-not (str/blank? %)
-                          (-> % str/trim Long/parseLong))
-                        (long %))
+       :db.type/bigdec ->bigdec
+       :db.type/long ->long
 
        ;; Remove blank values (will be retracted)
        :db.type/string #(when-not (str/blank? %) %)
@@ -118,3 +142,27 @@
 
             :else x)))
       asset)))
+
+(defn label [language schema-item]
+  (get-in schema-item [:asset-schema/label (case language
+                                             :et 0
+                                             :en 1)]))
+
+(defn format-properties
+  "Format properties map for summary view.
+  Returns collection of property values with name, value and
+  optional unit."
+  [language atl properties]
+  (let [;; status is part of cost grouping, but shown in a separate column
+        properties (dissoc properties :common/status)
+        id->def (partial item-by-ident atl)
+        attr->val (dissoc (cu/map-keys id->def properties) nil)
+        label (partial label language)]
+    (map (fn [[k v]]
+           (let [u (:asset-schema/unit k)]
+             [(label k)
+              (case (get-in k [:db/valueType :db/ident])
+                :db.type/ref (some-> v :db/ident id->def label)
+                (str v))
+              u]))
+         (sort-by (comp label key) attr->val))))

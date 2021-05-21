@@ -193,18 +193,11 @@
               [(ensure-manager-permission-tx db project-id user new-manager)
                (manager-notification-tx db project-id user new-manager)]))))
 
-(defn user-can-delete-activity?
-  "A user can delete an activity if it has no procurement number"
-  [db activity-id]
-  (activity-model/deletable? (du/entity db activity-id)))
-
 (defcommand :activity/delete
   {:doc "Mark an activity as deleted"
    :context {db :db
              user :user}
    :payload {activity-id :db/id}
-   :pre [^{:error :can-not-delete}
-         (user-can-delete-activity? db activity-id)]
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
    :transact [(list 'teet.activity.activity-tx/delete-activity user activity-id)]})

@@ -1,5 +1,12 @@
 (ns teet.backup.backup-ion
-  "Backup Ion for exporting an .edn file backup to S3 bucket."
+  "Backup Ion for exporting an .edn file backup to S3 bucket.
+
+  When backing up the datomic we go through all the transactions that have happened to the db
+  and write them to a file.
+
+  Some of the transactions will be Datomic internal, which we can't transact again,
+  these should be in the `ignore-attributes` set.
+  "
   (:require [datomic.client.api :as d]
             [teet.environment :as environment]
             [teet.integration.integration-s3 :as s3]
@@ -115,6 +122,22 @@
              :s3 {:bucket bucket :file-key file-key}
              :config config))))
 
+(defn- read-delete-config [{event :event :as ctx}]
+  (let [{:keys [db-name asset-db-name] :as config*} (-> event :input (cheshire/decode keyword))
+        config (dissoc config* :db-name :asset-db-name)]
+    (log/info "Read delete config from event:\n"
+      "Delete DB name: " db-name ", asset DB name: " asset-db-name "\n"
+      "Other options: " config)
+    (if (or (str/blank? db-name)
+          (str/blank? asset-db-name))
+      (throw (ex-info "Missing delete DB name(s)"
+               {:expected-keys [:db-name :asset-db-name]
+                :got-keys (keys config*)}))
+      (assoc ctx
+        :db-name db-name
+        :asset-db-name asset-db-name
+        :config config))))
+
 (defn- attr-info [db attr-info-cache a]
   (get (swap! attr-info-cache
               (fn [attrs]
@@ -125,7 +148,15 @@
 
 (def ^:private ignore-attributes
   "Internal datomic stuff that we can skip"
-  #{:db.install/attribute})
+  #{:db.install/attribute
+
+    ; :db.alter/attribute added because of [:db/retract :thk.contract/procurement-id :db/unique :db.unique/identity]
+    ; caused issues in the backup
+    ; ERROR:
+    ; {:cognitect.anomalies/category :cognitect.anomalies/incorrect,
+    ; :cognitect.anomalies/message ":db.alter/attribute must be set on entity :db.part/db,
+    ; found 79164837200314", :a 79164837200314, :e 79164837200314, :db/error :db.error/invalid-datom}
+    :db.alter/attribute})
 
 
 (defn- output-tx [db-ref attr-info-cache {:keys [data]} ignore-attributes]
@@ -342,6 +373,28 @@
   (environment/migrate conn @environment/schema)
   ctx)
 
+(defn log-restore-result
+  "Write log to bucket into the same file name from which the restore was started"
+  [{{bucket :bucket file-key :file-key} :s3 error :error}]
+  (try
+    (let [file (java.io.File/createTempFile file-key ".log")]
+      (log/info "Generating restore log file: " (.getAbsolutePath file))
+      (with-open [w (io/writer file :append true)]
+        (.write w
+          (if (empty? error)
+            "SUCCESS"
+            (str "FAILURE"
+              (:message error)))))
+      (with-open [in (io/input-stream file)]
+        (s3/write-file-to-s3
+          {:to {:bucket bucket
+                :file-key (str file-key ".log")}
+           :contents in}))
+      (io/delete-file file))
+    (log/info "Backup restore log created.")
+    (catch Exception e
+      (log/error e "Backup restore logging failed"))))
+
 (defn backup
   "Lambda function endpoint for backing up database as a transaction log to S3"
   [_event]
@@ -364,15 +417,43 @@
              prepare-asset-db-for-restore
              restore-tx-file
              migrate
+             log-restore-result
              delete-backup-file)
       (catch Exception e
-        (log/error e "ERROR IN RESTORE" (ex-data e)))))
+        (log/error e "ERROR IN RESTORE" (ex-data e))
+        (log-restore-result (ex-data e)))))
 
 (defn restore
   "Lambda function endpoint for restoring database from transaction log in S3"
   [event]
   (future
     (restore* event))
+  "{\"success\": true}")
+
+(defn- delete-datomic-dbs
+  "Delete TEET DB and Asset DB."
+  [{:keys [db-name asset-db-name datomic-client] :as ctx}]
+  (println "CONTEXT: " ctx)
+  (log/info "Delete backup DB: " db-name " and Asset DB: " asset-db-name " datomic-client " datomic-client)
+  (d/delete-database datomic-client {:db-name db-name})
+  (d/delete-database datomic-client {:db-name asset-db-name}))
+
+(defn- delete-db* [event]
+  (println "EVENT: " event)
+  (try
+    (ctx-> {:event event
+            :datomic-client (d/client (environment/config-value :datomic :client))
+            :conn (environment/datomic-connection)}
+      read-delete-config
+      delete-datomic-dbs)
+    (catch Exception e
+      (log/error e "ERROR IN DELETE" (ex-data e)))))
+
+(defn delete-db
+  "Lambda function endpoint for delete database and asset db"
+  [event]
+  (future
+    (delete-db* event))
   "{\"success\": true}")
 
 

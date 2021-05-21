@@ -42,10 +42,6 @@
   (to-value [this]
     (mapv to-value* this)))
 
-(def default-value
-  "Mapping of component to default value. Some components don't want nil as the value (like text area)."
-  {TextField ""})
-
 (defonce field-specs (atom {}))
 
 (defn- valid-attribute?
@@ -129,28 +125,28 @@
              (when delete-title
                {:modal-title delete-title}))
             (tr [:buttons :delete])]])]
-    [:div
-     [:div {:class (<class form-buttons)}
+    [:div {:class (<class form-buttons)}
+     [:div
       (when-not delete-link?
-        delete-element)
-      [:div {:style {:margin-left :auto
-                     :text-align :center}}
-       [:div {:class (<class common-styles/margin-bottom 1)}
-        (when cancel
-          [buttons/button-secondary {:style {:margin-right "1rem"}
-                                     :disabled disabled?
-                                     :class "cancel"
-                                     :on-click cancel}
-           (tr [:buttons :cancel])])
-        (when validate
-          [buttons/button-primary {:disabled disabled?
-                                   :type :submit
-                                   :class "submit"
-                                   :on-click validate}
-           (tr [:buttons :save])])]
-       (when (and delete-link? delete-element)
-         [:div
-          delete-element])]]]))
+        delete-element)]
+     [:div {:style {:margin-left :auto
+                    :text-align :center}}
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (when cancel
+         [buttons/button-secondary {:style {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])
+       (when validate
+         [buttons/button-primary {:disabled disabled?
+                                  :type :submit
+                                  :class "submit"
+                                  :on-click validate}
+          (tr [:buttons :save])])]
+      (when (and delete-link? delete-element)
+        [:div
+         delete-element])]]))
 
 (defn- hide-field?
   "Returns true if field is nil or if it has `:step` in its metadata and
@@ -290,8 +286,7 @@
          (swap! current-fields dissoc attribute))
        :reagent-render
        (fn [_ field {:keys [update-attribute-fn value]}]
-         (let [value (attribute-value value attribute
-                                      (default-value (first field)))
+         (let [value (attribute-value value attribute)
                error-text (and validate-field
                                (validate-field value))
                error? (boolean
@@ -337,6 +332,7 @@
   [value]
   (if (and (not (boolean? value))
            (not (string? value))
+           (not (number? value))
            (gobj/containsKey value "target"))
     (gobj/getValueByKeys value "target" "value")
     value))

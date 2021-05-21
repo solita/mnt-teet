@@ -5,13 +5,14 @@
             [teet.ui.icons :as icons]
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal
+            [teet.ui.material-ui :refer [ButtonBase Chip Collapse Popper Portal Grid
                                          Paper Menu MenuItem ListItemIcon ClickAwayListener]]
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
             [re-svg-icons.feather-icons :as fi]
-            [teet.ui.util :refer [mapc]]))
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.format :as format]))
 
 (def Link typography/Link)
 (def Link2 typography/Link2)
@@ -219,6 +220,13 @@
     :display :flex
     :align-items :center})
 
+(defn- contract-link-style
+  []
+  {:margin-right "10px"
+   :white-space :nowrap
+   :display :flex
+   :align-items :center})
+
 (defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
@@ -242,6 +250,14 @@
           opts)
    label
    [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
+
+(defn external-contract-link
+  [opts label]
+  [Link (merge {:class (<class contract-link-style)
+                :target :_blank}
+               opts)
+   label
+   [icons/action-open-in-new {:class (<class common-styles/margin-left 0.5)}]])
 
 (defn estate-group-style
   []
@@ -497,8 +513,7 @@
   error message is displayed.
 
   If msg is nil, the component is returned as is.
-  Otherwise msg must be a map containig :title and :content
-  for the error message."
+  Otherwise msg must be a map containig :title and :body  for the error message."
   [{:keys [title body variant icon] :as msg
     :or {variant :error}} component]
   (r/with-let [hover? (r/atom false)
@@ -511,7 +526,10 @@
       [:div {:on-mouse-enter enter!
              :on-mouse-leave leave!
              :on-click enter!
+             :on-focus enter!
+             :on-blur leave!
              :ref set-anchor-el!
+             :tabIndex 0
              :style {:display :inline-block}}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
@@ -592,3 +610,19 @@
         [Paper
          (mapc (r/partial context-menu-item toggle!)
                (remove nil? items))]]]]]))
+
+(defn date-label-component
+  "Shows :label with formatted date from :value with an info icon and :tooltip"
+  [{value :value label :label tooltip :tooltip}]
+  [:div
+   {:data-cy "date-label-component"}
+   [:label {:class (<class common-styles/input-label-style false false)}
+    [typography/Text2Bold label]]
+   [:div
+    {:class (<class common-styles/flex-row-center)}
+    [popper-tooltip tooltip
+     [icons/action-info-outlined
+      {:style {:color :primary}}]]
+    [:div
+     {:style {:padding-left "0.3em"}}
+     [typography/Text (format/date value)]]]])

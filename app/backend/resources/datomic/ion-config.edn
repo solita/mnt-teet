@@ -16,7 +16,11 @@
          teet.user.user-tx/set-global-role
          teet.user.user-tx/ensure-unique-email
          clojure.string/includes?
-         teet.task.task-tx/delete-task]
+         teet.util.date/dec-days
+         teet.task.task-tx/delete-task
+         teet.asset.asset-tx/save-asset
+         teet.asset.asset-tx/save-component
+         teet.asset.asset-tx/lock]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
@@ -46,7 +50,7 @@
            {:fn teet.file.file-import/scheduled-file-import
             :description "Scheduled import job in case of retries or initial Vektorio import"}
 
-           
+
            :thk-export
            {:fn teet.thk.thk-integration-ion/export-projects-to-thk
             :description "Export projects as CSV for THK"}
@@ -58,6 +62,10 @@
            :restore
            {:fn teet.backup.backup-ion/restore
             :description "Restore environment from S3 backup file"}
+
+           :delete-db
+           {:fn teet.backup.backup-ion/delete-db
+            :description "Delete Datomic TEET DB and Asset DB"}
 
            :datasource-cleanup
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion

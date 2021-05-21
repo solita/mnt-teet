@@ -177,7 +177,26 @@
       (throw (ex-info "Can't find estonian translation"
                       {:enum value})))))
 
-(def thk->teet
+
+(def thk-contract-type-code->contract-type-enum
+  {"3500" :thk.contract.type/construction-works
+   "3501" :thk.contract.type/things
+   "3502" :thk.contract.type/services})
+
+(def contract-type-enum->thk-contract-type-code
+  (reverse-mapping thk-contract-type-code->contract-type-enum))
+
+(def thk-object-region-fk->ta-region-enum
+  {"1800" :ta.region/north
+   "1801" :ta.region/east
+   "1802" :ta.region/south
+   "1803" :ta.region/west
+   "1804" :ta.region/center})
+
+(def ta-region-enum->thk-object-region-fk
+  (reverse-mapping thk-object-region-fk->ta-region-enum))
+
+(def thk->teet-project
   {;; Object/project fields
    "object_id" {:attribute :thk.project/id}
    "object_groupfk" {:attribute :object/groupfk}
@@ -202,7 +221,10 @@
    "object_owner" {:attribute :thk.project/owner
                    :parse estonian-person-id->user
                    :format :user/person-id}
-   "object_regionfk" {:attribute :object/regionfk}
+   "object_regionfk" {:attribute :ta/region
+                      :parse thk-object-region-fk->ta-region-enum
+                      :format (comp ta-region-enum->thk-object-region-fk :db/ident)}
+
    "object_regionname" {:attribute :thk.project/region-name}
    "object_thkupdstamp" {:attribute :object/thkupdstamp}
    ;;"object_teetupdstamp"
@@ -290,3 +312,24 @@
    "activity_cost" {:attribute :activity/cost}
    "activity_procurementno" {:attribute :activity/procurement-nr}
    "activity_procurementid" {:attribute :activity/procurement-id}})
+
+(def thk->teet-contract
+  {"activity_id" {:attribute :thk.activity/id}
+   "activity_teetid" {:attribute :activity-db-id
+                      :parse ->numeric-uuid}
+   "activity_taskid" {:attribute :activity/task-id
+                      :parse ->numeric-uuid}
+   "activity_procurementno" {:attribute :thk.contract/procurement-number}
+   "activity_procurementid" {:attribute :thk.contract/procurement-id}
+   "activity_procurementstatusfk" {:attribute :thk.contract/procurement-status-fk}
+   "activity_procurementtypefk" {:attribute :thk.contract/type
+                                 :parse thk-contract-type-code->contract-type-enum
+                                 :format (comp contract-type-enum->thk-contract-type-code :db/ident)}
+   "activity_procurementname" {:attribute :thk.contract/name}
+   "activity_procurementpartname" {:attribute :thk.contract/part-name}
+   "activity_procurementpartid" {:attribute :thk.contract/procurement-part-id}
+   "object_regionfk" {:attribute :ta/region
+                      :parse thk-object-region-fk->ta-region-enum
+                      :format (comp ta-region-enum->thk-object-region-fk :db/ident)}
+   })
+

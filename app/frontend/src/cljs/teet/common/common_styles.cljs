@@ -1,8 +1,10 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
+            [teet.theme.theme-spacing :as theme-spacing]
             [herb.core :refer [defglobal]]
             [garden.color :refer [darken]]
-            [garden.stylesheet :refer [at-media]]))
+            [garden.stylesheet :refer [at-media]]
+            [clojure.string :as str]))
 
 ;; Typography styles
 (def h1-desktop
@@ -438,6 +440,21 @@
    :text-decoration :underline
    :align-items :center})
 
+(defn stand-alone-icon-button-style
+  []
+  ^{:pseudo {:hover {:background-color theme-colors/background-color-light
+                     :box-shadow :none}
+             :focus {:background-color theme-colors/background-color-light
+                     :outline :none
+                     :border :none
+                     :box-shadow :none}}}
+  {:outline :none
+   :border-radius "50%"
+   :background-color theme-colors/white
+   :width "2.2rem"
+   :height "2.2rem"
+   :margin "0"
+   :transition "background-color 0.3s ease"})
 (defn gray-lightest-background-style []
   {:background-color theme-colors/gray-lightest})
 
@@ -454,6 +471,17 @@
 (defn padding-bottom
   [amount]
   {:padding-bottom (str amount "rem")})
+
+(defn margin
+  ([val]
+   (margin val val))
+  ([vertical horizontal]
+   (margin vertical horizontal vertical horizontal))
+  ([up right down left]
+   {:margin-top (str up "rem")
+    :margin-right (str right "rem")
+    :margin-bottom (str down "rem")
+    :margin-left (str left "rem")}))
 
 (defn padding
   "Add padding. Amounts specified in rem unit."
@@ -502,7 +530,8 @@
      :border-radius "3px"
      :line-height 1
      :background-color background
-     :padding "0.5rem"}))
+     :padding "0.5rem 0.7rem 0.5rem 0.5rem"
+     :max-width "315px"}))
 
 (defn text-ellipsis [max-width]
   {:text-overflow :ellipsis
@@ -542,3 +571,16 @@
                    theme-colors/black-coral)}
          (when disabled?
            {:color theme-colors/text-disabled})))
+
+(defn indent-rem [rems]
+  {:padding-left (str rems "rem")})
+
+(defn content-scroll-max-height
+  "Return style for scrollable content with max-height, calculates
+  height from viewport height minus appbar and any provided
+  height values."
+  [& element-heights-above-content]
+  {:overflow-y :scroll
+   :max-height (str "calc(100vh - " theme-spacing/appbar-height " - "
+                    (str/join " - " element-heights-above-content)
+                    ")")})

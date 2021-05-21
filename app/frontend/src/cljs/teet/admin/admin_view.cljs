@@ -376,10 +376,12 @@
            :simple-view [user-list e! admin]}
           500]]]])))
 
-(defn- inspector-value [link? value]
+(defn- inspector-value [db link? value]
   (if link?
     [:<>
-     [:a {:href (str "#/admin/inspect/" (:db/id value))}
+     [:a {:href (str "#/admin/inspect/" (case db
+                                          :teet ""
+                                          :asset "a") (:db/id value))}
       (str (:db/id value))]
      (str " " (str/join ", "
                         (for [[k v] (sort-by first value)
@@ -396,7 +398,7 @@
    [TableBody {}
     content]])
 
-(defn inspector-history-view [ref-attrs txs]
+(defn inspector-history-view [db ref-attrs txs]
   [:div.inspector-history
    [typography/Heading2 "Change history"]
    (doall
@@ -420,13 +422,15 @@
                 ^{:key (str i)}
                 [:span {:style {:text-decoration (if add? :none :line-through)
                                 :padding "0 1rem 0 1rem"}}
-                 [inspector-value (ref-attrs k)
+                 [inspector-value
+                  db
+                  (ref-attrs k)
                   (if (ref-attrs k)
                     {:db/id v}
                     v)]])
               (sort-by first values)))]])]]))])
 
-(defn inspector-history [e! ref-attrs id]
+(defn inspector-history [e! db ref-attrs id]
   (r/with-let [show? (r/atom false)]
     [:<>
      (if-not @show?
@@ -435,16 +439,29 @@
        [query/query {:e! e!
                      :query :admin/entity-history
                      :args {:id id}
-                     :simple-view [inspector-history-view ref-attrs]}])]))
+                     :simple-view [inspector-history-view db ref-attrs]}])]))
 
-(defn inspector-page [e! {{id :id} :params :as _app} {:keys [entity ref-attrs linked-from]}]
+(defmulti show-keys-for-linked (fn [link-key _linked-item] link-key))
+(defmethod show-keys-for-linked :default [_ item] item)
+
+;; Components are specified as isComponent in datomic schema, so they are pulled completely
+;; with the main entity, but we don't want to see the whole item as the link.
+(defmethod show-keys-for-linked :asset/components [_ item]
+  (select-keys item [:db/id :asset/oid :component/ctype]))
+(defmethod show-keys-for-linked :component/components [_ item]
+  (select-keys item [:db/id :asset/oid :component/ctype]))
+
+(defn inspector-page [e! {{id :id} :params :as _app} {:keys [entity db ref-attrs linked-from]}]
   ^{:key id}
   [:div
    [typography/Heading2 "Attribute values for entity"]
    [inspector-attribute-table
     (doall
      (for [[k v] (sort-by first (seq entity))
-           :let [link? (ref-attrs k)]]
+           :let [link? (ref-attrs k)
+                 show-value #(if-not link?
+                               %
+                               (show-keys-for-linked k %))]]
        ^{:key (str k)}
        [TableRow {}
         [TableCell {} (str k)]
@@ -455,8 +472,8 @@
              (map-indexed
               (fn [i v]
                 ^{:key (str i)}
-                [:li [inspector-value link? v]]) v))]
-           [inspector-value link? v])]]))]
+                [:li [inspector-value db link? (show-value v)]]) v))]
+           [inspector-value db link? (show-value v)])]]))]
 
    (when (seq linked-from)
      [:<>
@@ -478,6 +495,6 @@
                (map-indexed
                 (fn [i v]
                   ^{:key (str i)}
-                  [:li [inspector-value true {:db/id v}]]) v))]]]))]]])
+                  [:li [inspector-value db true {:db/id v}]]) v))]]]))]]])
 
-   [inspector-history e! ref-attrs id]])
+   [inspector-history e! db ref-attrs id]])

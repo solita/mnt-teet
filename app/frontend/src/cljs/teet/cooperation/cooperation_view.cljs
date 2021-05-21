@@ -978,7 +978,10 @@
 
    ^{:attribute :cooperation.application/date
      :xs 8}
-   [date-picker/date-input {}]
+   ;; :value implicitly added by form
+   [common/date-label-component {:label (tr [:fields :cooperation.application/date])
+                                 :tooltip {:title [:span (tr [:cooperation :application-date-can-not-be-edited])]
+                                           :variant :info}}]
 
    ^{:attribute :cooperation.application/response-deadline
      :xs 8}
@@ -1009,7 +1012,7 @@
                                  :project-id project-db-id})
       :response-uploads-allowed (cooperation-model/application-response-editable? application)
       :save-opinion (authorization-check/authorized?
-                      {:functionality :cooperation/edit-application
+                      {:functionality :cooperation/edit-opinion
                        :entity application
                        :project-id project-db-id})}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}

@@ -6,7 +6,9 @@
             [teet.test.utils :as tu]
             [teet.thk.thk-integration-ion :as thk-integration]
             [clojure.string :as str]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [datomic.dev-local :as dl]
+            [cognitect.aws.client.api :as aws])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -17,6 +19,7 @@
 (def restart go)
 
 (def db-connection environment/datomic-connection)
+(def asset-connection environment/asset-connection)
 
 (defn db []
   (d/db (db-connection)))
@@ -87,6 +90,13 @@
                            :permission/role       :external-consultant
                            :permission/valid-from (Date.)}]}))
 
+(defn give-internal-consultant-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :internal-consultant
+                           :permission/valid-from (Date.)}]}))
+
 (defn remove-permission [user-uuid permission-eid]
   (d/transact (environment/datomic-connection)
               {:tx-data [[:db/retract [:user/id user-uuid]
@@ -139,7 +149,11 @@
 
 (defn make-mock-users!
   []
-  (apply tx mock-users))
+  (apply tx mock-users)
+  (give-manager-permission [:user/id manager-uid])
+  (give-admin-permission [:user/id boss-uid])
+  (give-external-consultant-permission [:user/id external-consultant-id])
+  (give-internal-consultant-permission [:user/id internal-consultant-id]))
 
 (defn delete-db
   [db-name]
@@ -300,6 +314,19 @@
            (for [id (concat projects lifecycles activities)]
              [:db/retractEntity id]))))
 
+(defn delete-all-imported-thk-contracts! []
+  (let [db (db)
+        entity-ids #(into #{} (map first)
+                          (q % db))
+        contracts (entity-ids '[:find ?e :where [?e :thk.contract/procurement-id _]])]
+    (println "Deleting THK contract entities: " (count contracts) " contracts, "
+              "Press enter to continue!")
+    (read-line)
+    (apply tx
+           (for [id contracts]
+             [:db/retractEntity id]))))
+
+
 (defn keep-connection-alive
   "Starts a thread where a single datomic query is ran every minute to keep datomic proxy open."
   []
@@ -323,8 +350,15 @@
 ;;
 (def logged-user   tu/logged-user)
 (def local-login   tu/local-login)
-(def local-query   tu/local-query)
-(def local-command tu/local-command)
+(defn local-query [& args]
+  (binding [tu/*connection* (db-connection)
+            tu/*asset-connection* (asset-connection)]
+    (apply tu/local-query args)))
+
+(defn local-command [& args]
+  (binding [tu/*connection* (db-connection)
+            tu/*asset-connection* (asset-connection)]
+    (apply tu/local-command args)))
 
 (defn pprint-file [filename output]
   (spit filename (with-out-str (clojure.pprint/pprint output))))
@@ -360,3 +394,51 @@
             (println
              (remove-permission (:user/id user)
                                 (:db/id perm)))))))))
+
+
+(def cloud-client {:server-type :ion
+                   :region "eu-central-1"
+                   :system "teet-datomic"
+                   :endpoint "http://entry.teet-datomic.eu-central-1.datomic.net:8182/"
+                   :proxy-port 8182})
+
+(def local-client {:server-type :dev-local
+                   :system "teet"})
+
+
+(defn import-cloud [cloud-db-name local-db-name]
+  (dl/import-cloud {:source (assoc cloud-client :db-name cloud-db-name)
+                    :dest (assoc local-client :db-name local-db-name)}))
+
+(defn- today-db-name [prefix]
+  (let [c (java.util.Calendar/getInstance)]
+    (format "%s%d%02d%02d" prefix
+            (.get c java.util.Calendar/YEAR)
+            (inc (.get c java.util.Calendar/MONTH))
+            (.get c java.util.Calendar/DATE))))
+
+(defn import-current-cloud-dbs
+  "Import current teet and asset databases from dev"
+  []
+  (let [c (aws/client {:api :ssm})
+        {cloud-teet-db-name "/teet/datomic/db-name"
+         cloud-asset-db-name "/teet/datomic/asset-db-name"}
+        (into {}
+              (map (juxt :Name :Value))
+              (:Parameters (aws/invoke c {:op :GetParameters
+                                          :request {:Names ["/teet/datomic/db-name"
+                                                            "/teet/datomic/asset-db-name"]}})))
+
+        local-teet-db-name (today-db-name "teet")
+        local-asset-db-name (today-db-name "asset")]
+    (println "Importing databases from cloud:\n"
+             "CLOUD: " cloud-teet-db-name " => LOCAL: " local-teet-db-name "\n"
+             "CLOUD: " cloud-asset-db-name " => LOCAL: " local-asset-db-name "\n"
+             "Press enter to continue or abort evaluation.")
+
+    (when (read-line)
+      (println "Importing TEET db")
+      (import-cloud cloud-teet-db-name local-teet-db-name)
+      (println "\nImporting asset db")
+      (import-cloud cloud-asset-db-name local-asset-db-name)
+      (println "\nDone. Remember to change config.edn to use new databases."))))

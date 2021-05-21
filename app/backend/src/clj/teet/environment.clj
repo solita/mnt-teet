@@ -137,7 +137,11 @@
    :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}
    :vektorio {:api-key (->ssm [:vektorio :api-key] nil)
               :config (->ssm [:vektorio :config] {} (comp #(update % :file-extensions suffix-list)
-                                                          read-string))}})
+                                                      read-string))}
+   :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}
+   :contract {:state-procurement-url (->ssm [:contract :state-procurement-url] nil)
+              :thk-procurement-url (->ssm [:contract :thk-procurement-url] nil)}
+   })
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config
@@ -310,18 +314,24 @@
 (defn asset-connection
   "Returns thread bound asset db connection or creates a new one."
   []
-  (if-not (feature-enabled? :asset-db)
-    (throw (ex-info "Asset database is not enabled" {:missing-feature-flag :asset-db}))
-    (or *asset-connection*
-        (let [db (asset-db-name)
-              client (datomic-client)
-              db-status (ensure-database client db)
-              conn (d/connect client {:db-name db})]
-          (log/debug "Using database: " db db-status)
-          (when-not @asset-db-migrated?
-            (migrate-asset-db conn)
-            (reset! asset-db-migrated? true))
-          conn))))
+  (let [db-name (asset-db-name)]
+    (cond (not (feature-enabled? :asset-db))
+          (throw (ex-info "Asset database is not enabled" {:missing-feature-flag :asset-db}))
+
+          (nil? db-name)
+          (throw (ex-info "Asset database name is not defined" {}))
+
+          :else
+          (or *asset-connection*
+              (let [db db-name
+                    client (datomic-client)
+                    db-status (ensure-database client db)
+                    conn (d/connect client {:db-name db})]
+                (log/debug "Using database: " db db-status)
+                (when-not @asset-db-migrated?
+                  (migrate-asset-db conn)
+                  (reset! asset-db-migrated? true))
+                conn)))))
 
 (defn asset-db
   "Return an asset db handled."

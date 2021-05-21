@@ -26,101 +26,181 @@
   {:transition "background-color 0.2s ease-in-out"
    :cursor :pointer})
 
-(defn- listing-header
+(defprotocol ListingTableState
+  (current-sort-column [this] "Return column and direction of sort")
+  (current-show-count [this] "Returns current shown row count (or nil for unlimited)")
+  (sort! [this column] "Sort by given column, if already sorted by that column, changes direction")
+  (listing-items [this items] "Apply current sorting and show count to given items")
+  (show-more! [this] "Increase show count")
+  (reset-show-count! [this] "Reset show count back to initial value"))
+
+(defn listing-header
   ([] (listing-header {:filters (r/wrap {} :_)}))
-  ([{:keys [sort! sort-column sort-direction filters columns filter-type]}]
-   [TableHead {}
-    [TableRow {}
-     (doall
-      (for [column columns]
-        ^{:key (name column)}
-        [TableCell {:style {:vertical-align :top}
-                    :sortDirection (if (= sort-column column)
-                                     (name sort-direction)
-                                     false)}
-         [TableSortLabel
-          {:active (= column sort-column)
-           :direction (if (= sort-direction :asc)
-                        "asc" "desc")
-           :on-click (r/partial sort! column)}
-          (tr [:fields column])]
-         (case (filter-type column)
-           :string
-           [TextField {:value (or (get @filters column) "")
-                       :type "text"
-                       :id (str "filter input for " column)
-                       :variant :filled
-                       :start-icon icons/action-search
-                       :input-class (<class table-filter-style)
-                       :on-change #(swap! filters
-                                          (fn [filters]
+  ([{:keys [state filters columns filter-type
+            column-align column-label-fn]
+     :or {filter-type {}}}]
+   (let [[sort-column sort-direction] (current-sort-column state)]
+     [TableHead {}
+      [TableRow {}
+       (doall
+        (for [column columns]
+          ^{:key (name column)}
+          [TableCell
+           (merge {:style {:vertical-align :top}
+                   :sortDirection (if (= sort-column column)
+                                    (name sort-direction)
+                                    false)}
+                  (when-let [a (get column-align column)]
+                    {:align a}))
+           [TableSortLabel
+            {:active (= column sort-column)
+             :direction (if (= sort-direction :asc)
+                          "asc" "desc")
+             :on-click (r/partial sort! state column)}
+            (if column-label-fn
+              (column-label-fn column)
+              (tr [:fields column]))]
+           (case (filter-type column)
+             :string
+             [TextField {:value (or (get @filters column) "")
+                         :type "text"
+                         :id (str "filter input for " column)
+                         :variant :filled
+                         :start-icon icons/action-search
+                         :input-class (<class table-filter-style)
+                         :on-change #(swap! filters
+                                            (fn [filters]
+                                              (let [v (-> % .-target .-value)]
+                                                (if (str/blank? v)
+                                                  (dissoc filters column)
+                                                  (assoc filters column v)))))}]
+
+             :number
+             [TextField {:value (or (get @filters column) "")
+                         :type "number"
+                         :id (str "filter input for " column)
+                         :variant :filled
+                         :start-icon icons/action-search
+                         :input-class (<class table-filter-style)
+                         :on-change #(swap! filters assoc column
                                             (let [v (-> % .-target .-value)]
                                               (if (str/blank? v)
-                                                (dissoc filters column)
-                                                (assoc filters column v)))))}]
+                                                nil
+                                                (js/parseInt v))))}]
+             [:span])]))]])))
 
-           :number
-           [TextField {:value (or (get @filters column) "")
-                       :type "number"
-                       :id (str "filter input for " column)
-                       :variant :filled
-                       :start-icon icons/action-search
-                       :input-class (<class table-filter-style)
-                       :on-change #(swap! filters assoc column
-                                          (let [v (-> % .-target .-value)]
-                                            (if (str/blank? v)
-                                              nil
-                                              (js/parseInt v))))}]
-           [:span])]))]]))
+(defn- default-format-column [_column-name value _row]
+  (str value))
 
-(defn- listing-table [{:keys [default-sort-column]}]
-  (let [sort-column (r/atom [default-sort-column :asc])
-        show-count (r/atom 20)
-        sort! (fn [col]
-                (reset! show-count 20)
-                (swap! sort-column
-                       (fn [[sort-col sort-dir]]
-                         (if (= sort-col col)
-                           [sort-col (if (= sort-dir :asc)
-                                       :desc
-                                       :asc)]
-                           [col :asc]))))
+(defn- db-id-key [row]
+  (str (:db/id row)))
 
-        show-more! #(swap! show-count + 20)]
+(defn listing-body [{:keys [rows on-row-click columns column-align get-column format-column key]
+                     :or {get-column get
+                          key db-id-key
+                          format-column default-format-column}}]
+  [TableBody {}
+   (doall
+    (for [row rows]
+      ^{:key (key row)}
+      [TableRow (merge
+                 {:class (<class row-style)}
+                 (when on-row-click
+                   {:on-click (r/partial on-row-click row)}))
+       (doall
+        (for [column columns]
+          ^{:key (name column)}
+          [TableCell (if-let [a (get column-align column)]
+                       {:align a}
+                       {})
+           (format-column column (get-column row column) row)]))]))])
+
+
+
+(defn listing-table-state
+  "Create internal state used in listing table, contains how many items are shown
+  and the sorting options and functions to access and manipulate."
+  ([] (listing-table-state {}))
+  ([{:keys [default-sort-column default-show-count get-column get-column-compare]
+     :or {default-show-count 20
+          get-column get
+          get-column-compare (constantly compare)}}]
+   (let [sort-column (r/atom [default-sort-column :asc])
+         show-count (r/atom default-show-count)]
+     (reify ListingTableState
+       (current-sort-column [_] @sort-column)
+       (current-show-count [_] @show-count)
+       (reset-show-count! [_] (reset! show-count default-show-count))
+       (sort! [_ col]
+         (reset! show-count default-show-count)
+         (swap! sort-column
+                (fn [[sort-col sort-dir]]
+                  (if (= sort-col col)
+                    [sort-col (if (= sort-dir :asc)
+                                :desc
+                                :asc)]
+                    [col :asc]))))
+       (show-more! [_]
+         (swap! show-count + default-show-count))
+
+       (listing-items [_ items]
+         (let [[sort-col sort-dir] @sort-column
+               sorted-items ((if (= sort-dir :asc) identity reverse)
+                             (sort-by #(get-column % sort-col)
+                                      (or (get-column-compare sort-col) compare)
+                                      items))]
+           (if default-show-count
+             (take @show-count sorted-items)
+             sorted-items)))))))
+
+(defn listing-table-container [& children]
+  (into [Table {}] children))
+
+(defn listing-table-body-component
+  "Add a special body component. Adds a table body with
+  one row containing one cell that spans all the columns.
+
+  The children are added to the one cell."
+  [{:keys [columns]} child]
+  [:tbody {}
+   [:tr {}
+    [:td {:colSpan (count columns)}
+     child]]])
+
+
+(defn listing-table
+  "Raw table without panel and title.
+
+  default-show-count determines how many items are initially rendered
+  and what is the increment when rendering more. If `nil` then all
+  items are rendered."
+  [{:keys [default-show-count get-column]
+    :or {default-show-count 20
+         get-column get} :as opts}]
+  (let [state (listing-table-state opts)]
     (r/create-class
       {:component-will-receive-props (fn [_this _new-props]
                                        ;; When props change, reset show count
                                        ;; filters/results have changed
-                                       (reset! show-count 20))
+                                       (reset-show-count! state))
        :reagent-render
-       (fn [{:keys [on-row-click filters data columns filter-type get-column get-column-compare format-column key]
-             :or {filter-type {}
-                  get-column get}}]
-         (let [[sort-col sort-dir] @sort-column]
-           [:<>
-            [Table {}
-             [listing-header {:sort! sort!
-                              :sort-column sort-col
-                              :sort-direction sort-dir
-                              :filters filters
-                              :columns columns
-                              :filter-type filter-type}]
-             [TableBody {}
-              (doall
-                (for [row (take @show-count
-                            ((if (= sort-dir :asc) identity reverse)
-                             (sort-by #(get-column % sort-col)
-                               (or (get-column-compare sort-col) compare)
-                               data)))]
-                  ^{:key (get row key)}
-                  [TableRow {:on-click #(on-row-click row)
-                             :class (<class row-style)}
-                   (doall
-                     (for [column columns]
-                       ^{:key (name column)}
-                       [TableCell {}
-                        (format-column column (get-column row column) row)]))]))]]
-            [scroll-sensor/scroll-sensor show-more!]]))})))
+       (fn [{:keys [filters data columns column-align
+                    filter-type column-label-fn]
+             :or {filter-type {}}
+             :as opts}]
+         [:<>
+          [Table {}
+           [listing-header {:state state
+                            :filters filters
+                            :columns columns
+                            :filter-type filter-type
+                            :column-align column-align
+                            :column-label-fn column-label-fn}]
+           [listing-body
+            (merge opts
+                   {:rows (listing-items state data)})]]
+          (when default-show-count
+            [scroll-sensor/scroll-sensor (r/partial show-more! state)])])})))
 
 (defn- filtered-data [get-column data filters]
   (filter (fn [row]
@@ -141,7 +221,7 @@
                     filters))
           data))
 
-(defn table [{:keys [get-column get-column-compare data label after-title title-class]
+(defn table [{:keys [get-column data label after-title title-class]
               :as opts}]
   (r/with-let [filters (r/atom {})
                clear-filters! #(reset! filters {})]

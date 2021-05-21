@@ -15,7 +15,8 @@
             [teet.localization :refer [tr]]
             [teet.ui.project-context :as project-context]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.ui.url :as url]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -72,7 +73,8 @@
     :navigate {:page :cost-items}
     :hotkey "8"
     :feature-flag :cost-items
-    :authorization :cost-items/cost-items}
+    :authorization :cost-items/cost-items
+    :match-pages #{:cost-item :cost-items :cost-items-totals}}
    {:name :cooperation
     :label [:project :tabs :cooperation]
     :navigate {:page :cooperation}

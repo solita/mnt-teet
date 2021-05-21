@@ -197,30 +197,12 @@
                             :task/group :task.group/land-purchase}})))
 
 (deftest delete-activity
-  (testing "Activity can be deleted if doesn't have a procurement number"
+  (testing "Activity can be deleted"
     (tu/give-admin-permission tu/mock-user-boss)
     (create-new-activity)
-
-    ;; Let's give the activity a procurement number. In reality this would come from THK.
-    (tu/tx {:db/id (tu/get-data :new-activity-id)
-            :activity/procurement-nr "123 R 456"})
-
-    (is (thrown? Exception
-                 (tu/local-command tu/mock-user-boss
-                                   :activity/delete
-                                   {:db/id (tu/get-data :new-activity-id)})))
-
-    (is (not (:meta/deleted? (du/entity (tu/db)
-                                        (tu/get-data :new-activity-id)))))
-
-    ;; Now let's remove the procurement number
-    (tu/tx [:db/retract (tu/get-data :new-activity-id)
-            :activity/procurement-nr "123 R 456"])
-
     (tu/local-command tu/mock-user-boss
                       :activity/delete
                       {:db/id (tu/get-data :new-activity-id)})
-
     (is (:meta/deleted? (du/entity (tu/db)
                                    (tu/get-data :new-activity-id))))))
 

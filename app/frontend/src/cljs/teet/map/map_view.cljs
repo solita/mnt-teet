@@ -302,12 +302,15 @@
       [icons/maps-layers]]]))
 
 (defn map-container-style
-  []
-  {:display        :flex
-   :flex-direction :column
-   :flex           1
-   :position       :relative
-   :overflow       :hidden})
+  [full-height?]
+  (merge
+   {:display        :flex
+    :flex-direction :column
+    :flex           1
+    :position       :relative
+    :overflow       :hidden}
+   (when full-height?
+     {:height "100%"})))
 
 (defn- create-data-layers [ctx layers]
   (log/info "Create data layers: " layers)
@@ -320,7 +323,13 @@
                      layer)))
            layers)))
 
-(defn map-view [e! {:keys [config height class layer-controls?] :or {height "100%"} :as opts}
+(defn map-view [e!
+                {:keys [config height class layer-controls? allow-select?
+                        full-height?]
+                 :or {height "100%"
+                      allow-select? true
+                      full-height? false
+                      } :as opts}
                 {:keys [background-layer] :as map-data
                  :or   {background-layer ["kaart"]}}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
@@ -332,7 +341,7 @@
     (vreset! on-zoom (get-in map-data [:on-zoom]))
 
     (let [{:keys [extent]} map-data]
-      [:div {:class (<class map-container-style)}
+      [:div {:class (<class map-container-style full-height?)}
        (when layer-controls?
          [map-layer-controls e! map-data])
        [map-control-buttons e! map-data]
@@ -375,9 +384,10 @@
                      (when-let [on-click (:on-click opts)]
                        (on-click {:coordinate (js->clj (aget event "coordinate"))})))
 
-         :on-select (fn [[item & _] _event]
-                      (when-let [event (common-controller/map-item-selected item)]
-                        (e! event)))
+         :on-select (when allow-select?
+                      (fn [[item & _] _event]
+                        (when-let [event (common-controller/map-item-selected item)]
+                          (e! event))))
 
          :on-dblclick nil
 

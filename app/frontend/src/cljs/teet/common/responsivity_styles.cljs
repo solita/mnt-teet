@@ -9,7 +9,7 @@
 (def ^:const desktop-cutoff-width 1024)
 
 (def ^:const desktop-breakpoint (str desktop-cutoff-width "px"))
-
+(def ^:const mobile-breakpoint (str (- desktop-cutoff-width 1) "px"))
 
 (defonce window-width
          (let [width (r/atom js/document.body.clientWidth)]
@@ -23,11 +23,11 @@
 
 (defn mobile?
   []
-  (>= desktop-cutoff-width @window-width))
+  (> desktop-cutoff-width @window-width))
 
 (defn mobile-only-meta
   [style]
-  {:media {{:screen :only :max-width desktop-breakpoint} style}})
+  {:media {{:screen :only :max-width mobile-breakpoint} style}})
 
 (defn desktop-only-meta
   [style]

@@ -1,9 +1,56 @@
 (ns teet.asset.asset-db
+  "Asset database Datomic queries.
+
+  See [[teet.asset.asset-model]] namespace docstring for domain concept
+  documentation."
   (:require [clojure.walk :as walk]
             [datomic.client.api :as d]
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.asset.asset-model :as asset-model]))
+
+(def rules
+  "Helper rules for asset/component queries."
+  '[;; Determine THK project match for asset/component
+    [(project ?e ?project)
+     [?e :asset/project ?project]]
+
+    ;; Recursively the parent has the project
+    [(project ?e ?project)
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (project ?parent ?project)]
+
+
+    ;; Get a location attr for entity
+    [(location-attr ?e ?attr ?val)
+     ;; entity has location directly, use this
+     [?e :location/start-point _]
+     [?e ?attr ?val]]
+
+    [(location-attr ?e ?attr ?val)
+     ;; component inherits location, use parent
+     [?e :component/ctype ?ctype]
+     [?ctype :component/inherits-location? true]
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (location-attr ?parent ?attr ?val)]
+
+
+    ;; Find the entity where location attr is missing
+    ;; - entity is asset, check if it is missing
+    [(location-attr-missing ?e ?attr)
+     [?e :asset/fclass _]
+     [(missing? $ ?e ?attr)]]
+
+    ;; - entity inherits location, check if parent is missing
+    [(location-attr-missing ?e ?attr)
+     [?e :component/ctype ?ctype]
+     [?ctype :component/inherits-location? true]
+     (or [?parent :asset/components ?e]
+         [?parent :component/components ?e])
+     (location-attr-missing ?parent ?attr)]])
 
 (def ctype-pattern
   '[*
@@ -18,6 +65,14 @@
      [~'*
       {:attribute/_parent [~'* {:enum/_attribute [~'*]}]}
       {:ctype/_parent ~ctype-pattern}]}])
+
+(def material-pattern
+  '[*
+    {:material/fgroups
+     [*]}
+    {:attribute/_parent
+     [*
+      {:enum/_attribute [*]}]}])
 
 (defn- ctype? [x]
   (and (map? x)
@@ -47,26 +102,42 @@
     (child-ctypes db x)
     x))
 
+(defn last-atl-modification-time [db]
+  (ffirst
+   (d/q '[:find (max ?txi)
+          :where
+          [_ :tx/schema-imported-at _ ?tx]
+          [?tx :db/txInstant ?txi]] db)))
+
+
 (defn asset-type-library [db]
   (walk/postwalk
    (fn [x]
      (->> x
           remove-empty-selection-attributes
           (pull-child-ctypes db)))
-
-   {:ctype/common (d/pull db ctype-pattern :ctype/common)
+   {:tx/schema-imported-at (ffirst
+                            (d/q '[:find (max ?t)
+                                   :where [_ :tx/schema-imported-at ?t]]
+                                 db))
+    :ctype/common (d/pull db ctype-pattern :ctype/common)
     :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
                           :where [?fg :asset-schema/type :asset-schema.type/fgroup]
                           :in $ p]
-                        db type-library-pattern))}))
+                        db type-library-pattern))
+    :materials (mapv first
+                     (d/q '[:find (pull ?m p)
+                            :where [?m :asset-schema/type :asset-schema.type/material]
+                            :in $ p]
+                          db material-pattern))}))
 
 
 (defn project-cost-items
   "Pull all assets for the given project. Group by fgroup/fclass."
   [adb thk-project-id]
-  (->> (d/q '[:find (pull ?a [:db/id :common/name :common/status
+  (->> (d/q '[:find (pull ?a [:db/id :asset/oid :common/name :common/status
                               {:asset/fclass [:db/ident :asset-schema/label
                                               {:fclass/fgroup [:db/ident :asset-schema/label]}]}])
               :where
@@ -84,6 +155,223 @@
        (cu/map-vals (fn [cost-items-for-fgroup]
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
+
+(defn asset-with-components
+  "Pull asset and all its components with all attributes."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (map first
+       (d/q '[:find (pull ?e [*])
+              :where
+              [?e :asset/oid ?oid]
+              [(>= ?oid ?start)]
+              [(< ?oid ?end)]
+              :in $ ?start ?end]
+            db asset-oid (str asset-oid "."))))
+
+(defn- asset-component-oids
+  "Return all OIDs of components (at any level) contained in asset."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (mapv :v
+        (d/index-range db {:attrid :asset/oid
+                           :start (str asset-oid "-")
+                           :end (str asset-oid ".")})))
+
+(defn project-asset-oids
+  "Return all OIDs of assets in the given THK project."
+  [db thk-project-id]
+  (mapv first
+        (d/q {:query '{:find [?oid]
+                       :where [[?asset :asset/project ?project]
+                               [?asset :asset/oid ?oid]]
+                       :in [$ ?project]}
+              :args [db thk-project-id]})))
+
+(defn project-assets-and-components-matching-road
+  "Find OIDs of all project assets and components that match a given road.
+  If component inherits location from parent, the parent component location is used."
+  [db thk-project-id road-nr]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr ?e :location/road-nr ?road-nr)
+               [?e :asset/oid ?oid]
+               :in $ % ?project ?road-nr]
+             db rules thk-project-id road-nr)))
+
+(defn project-assets-and-components-with-road
+  "Find OIDs of all project assets and components that have a road defined."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr ?e :location/road-nr _)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
+(defn project-assets-and-components
+  "Find OIDs of all project assets and components."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
+(defn project-assets-and-components-without-road
+  "Find OIDs of all project assets and components where the road value is missing."
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find ?oid
+               :where
+               (project ?e ?project)
+               (location-attr-missing ?e :location/road-nr)
+               [?e :asset/oid ?oid]
+               :in $ % ?project]
+             db rules thk-project-id)))
+
+(defn project-asset-and-component-oids
+  "Return all OIDs of assets and their components for the given THK project."
+  [db thk-project-id]
+  (mapcat #(into [%] (asset-component-oids db %))
+          (project-asset-oids db thk-project-id)))
+
+(defn- cost-group-attrs-q
+  "Return all items in project with type, status and cost grouping attributes.
+  Returns map where key is item id and value is map of the values.
+  Only returns items that have some cost grouping attributes.
+
+  List of OID codes (`oids`) determines what assets/components to return."
+  [db oids]
+  (let [entity-attr-vals
+        (d/q '[:find ?a ?type-ident ?attr-ident ?val ?value-type-ident
+               :keys id type attr val val-type
+               :where
+               [?a :asset/oid ?oid]
+               (or
+                [?a :asset/fclass ?type]
+                [?a :component/ctype ?type])
+               [?a ?attr ?val]
+               (or [?attr :attribute/cost-grouping? true]
+                   [?attr :db/ident :common/status]
+                   [?attr :db/ident :location/road-nr])
+               [?attr :db/ident ?attr-ident]
+               [?type :db/ident ?type-ident]
+               [?attr :db/valueType ?value-type]
+               [?value-type :db/ident ?value-type-ident]
+               :in $ [?oid ...]]
+             db oids)
+
+        ;; Fetch all list item ref ids
+        list-item-ids (into #{}
+                         (keep (fn [{:keys [val-type val]}]
+                                 (when (= val-type :db.type/ref)
+                                   val)))
+                         entity-attr-vals)
+
+        ;; Fetch map from db id => map of id and ident
+        list-item-vals (into {}
+                             (comp
+                              (map first)
+                              (map (juxt :db/id identity)))
+                             (d/q '[:find (pull ?val [:db/id :db/ident])
+                                    :in $ [?val ...]]
+                                  db list-item-ids))]
+
+
+    (cu/keep-vals
+     ;; Keep only items that have cost grouping fields
+     ;; not just type, status amd road
+     (fn [v]
+       (when (seq (dissoc v :type :common/status :location/road-nr))
+         v))
+     ;; Group by feature/component id
+     (reduce
+      (fn [items {:keys [id type attr val val-type]}]
+        (update items id merge
+                {:type type
+                 attr (if (= val-type :db.type/ref)
+                        ;; Update ref vals to point to map with ident
+                        (list-item-vals val)
+                        val)}))
+      {}
+      entity-attr-vals))))
+
+(defn project-cost-group-prices
+  "Return all cost group prices for project."
+  [db thk-project-id]
+  (let [cost-group-keys [:db/id :cost-group/price :cost-group/project]]
+    (into {}
+          (comp
+           (map first)
+
+           ;; Split the map into key and value maps where the
+           ;; key contains all the cost grouping attributes
+           ;; and the value contains the pricing information
+           (map (juxt #(apply dissoc % cost-group-keys)
+                      #(select-keys % cost-group-keys))))
+          (d/q '[:find (pull ?e [*])
+                 :where [?e :cost-group/project ?project]
+                 :in $ ?project]
+               db thk-project-id))))
+
+(defn project-cost-groups-totals
+  "Summarize totals for project cost items.
+  Take all components for all assets and group them by cost-grouping attributes.
+
+  Counts quantities and total prices (if price info is known for
+  a group).
+
+  Optional `oids` lists OID codes to use, if omitted all project asset/component
+  OIDs are considered."
+  [db thk-project-id & [oids]]
+  (let [items (cost-group-attrs-q
+               db (if (some? oids)
+                    oids
+                    (project-asset-and-component-oids db thk-project-id)))
+        types (into #{} (map (comp :type val)) items)
+        type-qty-unit (into {}
+                            (d/q '[:find ?e ?u
+                                   :where [?e :component/quantity-unit ?u]
+                                   :in $ [?e ...]]
+                                 db types))
+        cost-group-prices (project-cost-group-prices db thk-project-id)]
+    (->>
+     items
+
+     ;; group by the same value
+     (group-by val)
+
+     ;; Determine quantity and price information for cost group
+     (mapv (fn [[{type :type :as item} items]]
+             (let [{p :cost-group/price :as cost-group}
+                   (cost-group-prices (dissoc item :type))
+
+                   quantity (if (= "fclass" (namespace type))
+                              ;; count number of features
+                              (count items)
+
+                              ;; count the quantity field values
+                              (or (ffirst
+                                   (d/q '[:find (sum ?q)
+                                          :where [?item :common/quantity ?q]
+                                          :in $ [?item ...]]
+                                        db (map key items))) 0))]
+               (merge item
+                      cost-group
+                      {:count (count items)
+                       :quantity quantity
+                       :quantity-unit (type-qty-unit type)}
+
+                      (when p
+                        {:cost-per-quantity-unit p
+                         :total-cost (* p quantity)}))))))))
 
 (defn cost-item-project
   "Returns THK project id for the cost item."
@@ -122,7 +410,7 @@
   Returns vector of [update-seq-tx oid] where update-seq-tx is a
   transaction data map to update the seq# of the fclass and oid
   is the string oid for the feature."
-  [db fclass]
+  [db owner-code fclass]
   {:pre [(keyword? fclass)]}
   (let [{:fclass/keys [oid-prefix oid-sequence-number]}
         (d/pull db [:fclass/oid-prefix :fclass/oid-sequence-number] fclass)]
@@ -132,26 +420,87 @@
     (let [seq-number (inc (or oid-sequence-number 0))]
       [{:db/ident fclass
         :fclass/oid-sequence-number seq-number}
-       (str "N40-" oid-prefix "-" seq-number)])))
+       (asset-model/asset-oid owner-code oid-prefix seq-number)])))
 
 (defn next-component-oid
   "Get next OID for a new component in feature."
   [db feature-oid]
-  {:pre (string? feature-oid)}
-  (str feature-oid "-"
-       (inc
-        (reduce (fn [max-num [component-oid]]
-                  (let [[_ _ _ n] (str/split component-oid #"\-")
-                        num (Long/parseLong n)]
-                    (max max-num num)))
-                0
-                (d/q '[:find ?oid
-                       :where
-                       [_ :asset/oid ?oid]
-                       [(> ?oid ?start)]
-                       [(< ?oid ?end)]
-                       :in $ ?start ?end]
-                     db
-                     ;; Finds all OIDs for this asset
-                     (str feature-oid "-")
-                     (str feature-oid "."))))))
+  {:pre [(asset-model/asset-oid? feature-oid)]}
+  (asset-model/component-oid
+   feature-oid
+   (inc
+    (reduce (fn [max-num [component-oid]]
+              (let [[_ _ _ n] (str/split component-oid #"\-")
+                    num (Long/parseLong n)]
+                (max max-num num)))
+            0
+            (d/q '[:find ?oid
+                   :where
+                   [_ :asset/oid ?oid]
+                   [(> ?oid ?start)]
+                   [(< ?oid ?end)]
+                   :in $ ?start ?end]
+                 db
+                 ;; Finds all OIDs for this asset
+                 (str feature-oid "-")
+                 (str feature-oid "."))))))
+
+(defn project-boq-version
+  "Fetch the latest BOQ version entity for the given THK project."
+  [db thk-project-id]
+  (ffirst
+   (d/q '[:find (pull ?e [*])
+          :where
+          [?e :boq-version/project ?project]
+          [?e :boq-version/created-at ?at]
+          (not-join [?project ?at]
+                    [?newer-lock :boq-version/project ?project]
+                    [?newer-lock :boq-version/created-at ?newer-at]
+                    [(> ?newer-at ?at)])
+          :in $ ?project]
+        db thk-project-id)))
+
+(defn project-boq-version-history
+  "Return all BOQ project versions (excluding unlocked versions)
+  for the given THK project"
+  [db thk-project-id]
+  (->>
+   (d/q '[:find (pull ?e [*])
+          :where
+          [?e :boq-version/project ?project]
+          [?e :boq-version/locked? true]
+          :in $ ?project] db thk-project-id)
+   (map first)
+   (sort-by :boq-version/created-at)
+   reverse))
+
+(defn latest-change-in-project
+  "Fetch latest timestamp and author UUID that has changed anything in the given THK project."
+  [db thk-project-id]
+  (first
+   (d/q '[:find ?max-txi ?author
+          :where
+          ;; Find the max tx time for any change in the given project
+          [(q '[:find (max ?txi)
+                :where
+                (or [?e :asset/project ?project]
+                    [?e :cost-group/project ?project]
+                    [?e :boq-version/project ?project])
+                [?e _ _ ?tx]
+                [?tx :db/txInstant ?txi]
+                :in $ ?project] $ ?project) [[?max-txi]]]
+
+          ;; Get the tx and its author
+          [?tx :db/txInstant ?max-txi]
+          [?tx :tx/author ?author]
+          :in $ ?project]
+        db thk-project-id)))
+
+(defn version-db
+  "Return db as of the given version id."
+  [db version-id]
+  (let [c (:boq-version/created-at (du/entity db version-id))]
+    (if-not c
+      (throw (ex-info "No version creation time found"
+                      {:version-id version-id}))
+      (d/as-of db c))))

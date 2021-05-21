@@ -3,7 +3,8 @@
   (:require [clj-http.client :as client]
             [clojure.set :as set]
             [clojure.string :as str]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [teet.road.road-model :as road-model])
   (:import (java.util Date)))
 
 (defrecord Client [endpoint username password credentials-atom])
@@ -66,15 +67,22 @@
 
 (def ^{:private true :const true}
   key-remapping
-  {:teeNumber :road-nr
-   :soiduteeNr :carriageway
-   :teeNimi :road-name
-   :algus :start-m
-   :lopp :end-m
-   :kaugus :distance
-   :maadress :m})
+  {:teeNumber [:road-nr]
+   :soiduteeNr [:carriageway]
+   :teeNimi [:road-name]
+   :algus [:start-km road-model/m->km]
+   :lopp [:end-km road-model/m->km]
+   :kaugus [:distance]
+   :maadress [:km road-model/m->km]})
 
-(def ^:private remap-response-keys-xf (map #(set/rename-keys % key-remapping)))
+(def ^:private remap-response-keys-xf
+  (map #(into {}
+              (map (fn [[key val]]
+                     (let [[new-key process-fn] (key-remapping key)
+                           new-key (or new-key key)
+                           process-fn (or process-fn identity)]
+                       [new-key (process-fn val)])))
+              %)))
 
 (defn road-by-geopoint
   "Return roads within given distance of point [x y]."

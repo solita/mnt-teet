@@ -171,22 +171,25 @@
   :view teet.asset.cost-items-view/cost-items-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
-                 :cost-item (get query-params :id)}}}
+                 :relevant-roads true}}}
 
- :new-cost-item
- {:path "/projects/:project/cost-items/new"
-  :parent :cost-items
-  :view teet.asset.cost-items-view/new-cost-item-page
+ :cost-items-totals
+ {:path "/projects/:project/cost-items-totals"
+  :parent :project
+  :view teet.asset.cost-items-view/cost-items-totals-page
   :state {:query :asset/project-cost-items
-          :args {:thk.project/id project}}}
+          :args {:thk.project/id project
+                 :cost-totals true
+                 :road (or (:road query-params) "all-roads")}}}
 
  :cost-item
- {:path "/projects/:project/cost-items/:id(\\d+)"
+ {:path "/projects/:project/cost-items/:id"
   :parent :cost-items
   :view teet.asset.cost-items-view/cost-item-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
-                 :cost-item (->long id)}}}
+                 :cost-item (let [oid (params :id)]
+                              (when (not= oid "new") oid))}}}
 
  :unauthorized
  {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
@@ -214,7 +217,38 @@
  :asset-type-library
  {:path "/asset/type-library"
   :view teet.asset.asset-library-view/asset-library-page
-  :crumb (tr [:asset :type-library-label])
-  :state {:query :asset/type-library
-          :args {}}}
+  :crumb (tr [:asset :type-library-label])}
+
+ :contracts
+ {:path "/contracts"
+  :view teet.contract.contracts-view/contracts-listing-view
+  :crumb (tr [:contract :contracts-listing])
+  :title (tr [:contract :contracts-listing])}
+
+ :contract
+ {:path "/contracts/:contract-ids"                          ;; /contracts/{procurement-id}-{procurement-part-id}
+  :view teet.contract.contract-view/contract-page
+  :extenal-links [teet.contract-contract-view/contract-links state]
+  :crumb (teet.contract.contract-model/contract-url-id state)
+  :title (teet.contract.contract-model/contract-name state)
+  :parent :contracts
+  :state {:query :contract/contract-page
+          :args {:contract-ids
+                 (clojure.string/split contract-ids #"-")}}}
+
+ :partners
+ {:path "/contracts/:contract-ids/partners"
+  :view teet.contract.contract-view/partner-page
+  :extenal-links [teet.contract-contract-view/contract-links state]
+  :crumb (tr [:contract :partners-listing])
+  :title (teet.contract.contract-model/contract-name state)
+  :parent :contract
+  :state {:query :contract/partner-page
+          :args {:contract-ids
+                 (clojure.string/split contract-ids #"-")}}}
+ :assets
+ {:path "/assets"
+  :view teet.asset.assets-view/assets-page
+  :crumb (tr [:asset :manager :link])
+  :title (tr [:asset :manager :link])}
  }

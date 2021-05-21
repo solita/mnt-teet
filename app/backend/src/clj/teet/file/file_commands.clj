@@ -19,10 +19,12 @@
             [teet.file.file-export :as file-export]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.integration.integration-email :as integration-email]
-            [teet.localization :refer [tr tr-enum with-language]]))
+            [teet.localization :refer [tr tr-enum with-language]]
+            [teet.util.url :as url-util])
+  (:import (java.util UUID)))
 
 (defn- new-file-key [{name :file/name}]
-  (str (java.util.UUID/randomUUID) "-" name))
+  (str (UUID/randomUUID) "-" name))
 
 (defn latest-file-version-id
   [db file-id]
@@ -131,7 +133,7 @@
         res (tx [{:db/id id
                   :file/upload-complete? true
                   :file/id (or file-id
-                               (java.util.UUID/randomUUID))}]
+                               (UUID/randomUUID))}]
                 (when file-id
                   ;; If moving :file/id from previous version, retract it from
                   ;; previous file entity
@@ -277,9 +279,16 @@
                  :file-seen/file+user [file-id user-id]
                  :file-seen/seen-at (java.util.Date.)})]})
 
+(defn maybe-update-vektorio-model-name! [conn db id]
+  (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
+        vektorio-config (environment/config-value :vektorio)]
+    (if vektorio-enabled?
+      (vektorio/update-model-in-vektorio! conn db vektorio-config id)
+      true)))
+
 (defcommand :file/modify
   {:doc "Modify task file info: part, group, sequence and name."
-   :context {:keys [user db]}
+   :context {:keys [conn user db]}
    :payload {id :db/id :as file}
    :project-id (project-db/file-project-id db id)
    :authorization {:document/overwrite-document {:db/id id}}
@@ -294,29 +303,38 @@
              :file/name
              filename-metadata/name->description-and-extension
              :description
-             file-model/valid-chars-in-description?)]
-   :transact [(list 'teet.file.file-tx/modify-file
-                    (merge file
-                           (meta-model/modification-meta user)))]})
+             file-model/valid-chars-in-description?)]}
+   (let [{db-after :db-after} (tx [(list 'teet.file.file-tx/modify-file
+                                         (merge file
+                                                (meta-model/modification-meta user)))])]
+            (try (do (maybe-update-vektorio-model-name! conn db-after id))
+                 (catch Exception e
+                   (if
+                     (some? (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+                     (db-api/fail!
+                       {:status 400
+                        :msg (str "Vektor.io error:" (get-in (ex-data e) [:vektorio-response :reason-phrase]))
+                        :error :vektorio-request-failed})
+                     (throw e))))))
 
 (defn- export-zip [{:keys [db user export-fn export-bucket email-subject-message] :as opts}]
   (if-let [email (:user/email (du/entity db (user-model/user-ref user)))]
     (future
       (try
         (let [{:keys [filename input-stream]} (export-fn)
-              s3-key (str (java.util.UUID/randomUUID))
+              s3-key (str (UUID/randomUUID))
               _response (integration-s3/put-object export-bucket
                                                    s3-key
                                                    input-stream)
-              download-url (integration-s3/presigned-url {:content-disposition (str "attachment; filename=" filename)
-                                                          :expiration-seconds (* 24 60 60)}
-                                                         "GET" export-bucket s3-key)]
+
+              redirect-url (url-util/query-url :file/redirect-to-zip {:s3-key s3-key
+                                                                      :filename filename})]
           (integration-email/send-email!
            {:to email
             :subject email-subject-message
             :body [{:type "text/plain; charset=utf-8"
                     :content (tr [:file :export-files-zip :email-body]
-                                 {:link (str "\n" download-url "\n")})}]}))
+                                 {:link (str "\n" redirect-url "\n")})}]}))
         (catch Throwable t
           (log/error t "Error exporting zip" opts))))
     (db-api/fail! {:error :user-has-no-email})))
