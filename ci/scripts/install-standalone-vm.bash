@@ -7,11 +7,11 @@
 
 set -euo pipefail 
 
-
 TEET_BRANCH=master
 TEET_GIT_URL=https://github.com/solita/mnt-teet.git
 export AWS_REGION=eu-central-1
 export AWS_DEFAULT_REGION=$AWS_REGION
+
 function gensecret {
     name="$1"
     touch "$name.secret"
@@ -38,7 +38,7 @@ function start-teet-app {
   :asset-db-name "asset"
   :client {:server-type :dev-local
            :system "teet"}}
-
+ :listen-address "0.0.0.0"
  :auth {:jwt-secret "$JWT_SECRET"
         :basic-auth-password "$(ssm-get /teet/auth/basic-auth-password"}
  :env :dev
@@ -107,21 +107,25 @@ EOF
     
 }
 
-function allow-datomic-bastion-ssh {
+function control-datomic-bastion-ssh-access {
     # also set up revocation for it in exit trap (but it's fail-open..)
     local SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)    
     local MYIP=$(curl http://checkip.amazonaws.com)
-    trap "aws ec2 revoke-security-group-ingress \
-	--group-id $SG \
-	--protocol tcp \
-	--port 22 \
-	--cidr $MYIP/32" EXIT
-    echo allowed ssh access to datomic bastion from ip $MYIP
-    aws ec2 authorize-security-group-ingress \
-	--group-id $SG \
-	--protocol tcp \
-	--port 22 \
-	--cidr $MYIP/32
+    if test x$1 = on; then
+	aws ec2 authorize-security-group-ingress \
+	    --group-id $SG \
+	    --protocol tcp \
+	    --port 22 \
+	    --cidr $MYIP/32
+	echo allowed ssh access to datomic bastion from ip $MYIP
+    else
+	echo revoke ssh access to datomic ip from $MYIP
+	aws ec2 revoke-security-group-ingress \
+	    --group-id $SG \
+	    --protocol tcp \
+	    --port 22 \
+	    --cidr $MYIP/32
+    fi
 }
 
 
@@ -174,17 +178,56 @@ function ssm-get-csv {
     IFS=", " read -ra SSMVALS <<< $v
 }
 
+function update-dyndns {
+    local dnsbasename="$1"
+    local dnssuffix="$(ssm-get /dev-testsetup/testvm-dns-suffix)"
+    local myv4addr="$(ec2metadata --public-ipv4)"
+    local format="$(ssm-get /dev-testsetup/testvm-dyndns-url-template)"
+    local url="$(printf ${format} "${dnsbasename}.${dnssuffix}" "${myv4addr}")"
+    curl  "${url}"
+}
 
-function setup-reverse-proxy {
-    MY_EMAIL=$(ssm-get /teet/email/from)
-    MY_DNS=$(ec2metadata --public-hostname)
+
+function new-certs {
+    local MY_EMAIL=$(ssm-get /teet/email/from)    
+    local MYDOMAINS=$(for x in a b c d e; do echo -n ,${x}.$DNS_SUFFIX; done | sed s/,//)
     certbot certonly \
 	    --standalone \
 	    --non-interactive \
 	    --agree-tos \
+	    --preferred-challenges http \
 	    --email $MY_EMAIL \
-	    --domains $MY_DNS
+	    --domains $MYDOMAINS
+ # output for reference:
+ # - Congratulations! Your certificate and chain have been saved at:
+ #   /etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem
+ #   Your key file has been saved at:
+ #   /etc/letsencrypt/live/a.${DNS_SUFFIX}/privkey.pem
+ #   Your cert will expire on <date>. To obtain a new or tweaked
+ #   version of this certificate in the future, simply run certbot
+ #   again. To non-interactively renew *all* of your certificates, run
+ #   "certbot renew"
+
 }
+
+function get-certs {
+    # we have to do the renew / cert bundle caching thing because of https://letsencrypt.org/docs/rate-limits/
+    aws s3 cp s3://${TEET_ENV}-build/standalonevm-certs.tgz .
+    tar -C /etc -xzf standalonevm-certs.tgz    
+    certbot renew # will renew only if expiry is imminent
+    tar -C /etc -zcf standalonevm-certs.tgz certbot
+    aws s3 cp standalonevm-certs.tgz s3://${TEET_ENV}-build/standalonevm-certs.tgz
+
+    openssl pkcs12 -export \
+	    -inkey /etc/letsencrypt/live/a.${DNS_SUFFIX}/privkey.pem -in /etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem \
+	    -out jetty.pkcs12 -passout 'pass:dummypass'
+
+    keytool -importkeystore -noprompt \
+	    -srckeystore jetty.pkcs12 -srcstoretype PKCS12 -srcstorepass dummypass \
+	    -destkeystore keystore -deststorepass storep
+
+}
+
 
 
 function install-deps-and-app {
@@ -204,7 +247,6 @@ function install-deps-and-app {
 
     git clone -b $TEET_BRANCH $TEET_GIT_URL
     
-    # db setup
     gensecret pgpasswd
     systemctl status docker | grep -q running || systemctl restart docker
     docker network create docker_teet
@@ -221,7 +263,10 @@ function install-deps-and-app {
     docker restart teetdb    
 
     TEET_ENV=$(ssm-get /teet/env)
-   
+    DNS_SUFFIX=$(ssm-get /dev-testsetup/testvm-dns-suffix)
+    
+    
+    
     test -f cognitect-dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
     unzip cognitect-dev-tools.zip
     cd cognitect-dev-tools-*
@@ -237,17 +282,19 @@ function install-deps-and-app {
     unzip datomic-cli*.zip
     install --mode=755 datomic-cli/datomic* /usr/local/bin/ 
 
-    allow-datomic-bastion-ssh
+    control-datomic-bastion-ssh-access on
     start-datomic-portforward    
     
     import-datomic-to-dev-local $(ssm-get /teet/datomic/db-name) teet
     import-datomic-to-dev-local $(ssm-get /teet/datomic/asset-db-name) asset
+    control-datomic-bastion-ssh-access off
     
     setup-postgres
+    update-dyndns a # tbd: select which dns name from the pool to assume
+    get-certs
     
-    start-teet-app # backend, frontend & postgrest
-    
-    # todo: config.edn for teet app setup
+    start-teet-app # config generation, backend, frontend & postgrest
+
     
     until netstat -pant | grep LISTEN | egrep -q ':4000.*LISTEN.*/java *$'; do
 	echo sleeping until backend starts listening on :4000
