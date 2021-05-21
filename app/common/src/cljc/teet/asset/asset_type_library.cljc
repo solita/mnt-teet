@@ -53,8 +53,10 @@
   (and (map? x)
        (= type (get-in x [:asset-schema/type :db/ident]))))
 
+(def fgroup? (partial has-type? :asset-schema.type/fgroup))
 (def fclass? (partial has-type? :asset-schema.type/fclass))
 (def ctype? (partial has-type? :asset-schema.type/ctype))
+(def material? (partial has-type? :asset-schema.type/material))
 
 (defn allowed-component-types
   "Return all ctypes that are allowed for the given fclass or ctype."

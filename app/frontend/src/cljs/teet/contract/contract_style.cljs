@@ -7,6 +7,11 @@
    :background-color :white
    :flex 1})
 
+(defn partners-page-container
+  []
+  {:padding "2rem"
+   :flex 1})
+
 (defn project-contract-container
   []
   ^{:pseudo {:last-of-type {:border-bottom 0}}}

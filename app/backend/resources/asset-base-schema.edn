@@ -278,4 +278,11 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
 
          ;; Remove old meter attrs from location ctype
          [[:db/retract :location/start-m :attribute/parent :ctype/location]
-          [:db/retract :location/end-m :attribute/parent :ctype/location]]]}]
+          [:db/retract :location/end-m :attribute/parent :ctype/location]]]}
+
+ {:db/ident :migration/materials
+  :txes [[{:db/ident :material/fgroups
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "The feature groups this material belongs to."}
+          {:db/ident :asset-schema.type/material :db/doc "Material type"}]]}]

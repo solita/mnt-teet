@@ -12,16 +12,26 @@
             [teet.project.project-style :as project-style]
             [teet.common.common-controller :as common-controller]
             [teet.ui.typography :as typography]
+            [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]))
 
-(def contract-pages
-  [{:name :contract-information
-    :label [:contract :contract-information]
-    :navigate {:page :contract}
-    :hotkey "1"}])
+(defn contract-pages []
+  (let [menu-items
+        [{:name :contract-information
+          :label [:contract :contract-information]
+          :navigate {:page :contract}
+          :href-fn #(str "#/contracts/" %)
+          :hotkey "1"}]]
+    (if (common-controller/feature-enabled? :contract-partners)
+      (conj menu-items {:name :partner-information
+                        :label [:contract :partner-information]
+                        :navigate {:page :partners}
+                        :href-fn #(str "#/contracts/" % "/partners")
+                        :hotkey "2"})
+      menu-items)))
 
 (defn- contract-menu-item [e! close-menu!
-                           {:keys [hotkey navigate] :as _item}
+                           {:keys [hotkey href-fn navigate] :as _item}
                            contract-id]
   (let [activate! #(do
                      (e! (common-controller/map->Navigate
@@ -35,7 +45,7 @@
                 page-name :name} _]
         [MenuItem {:on-click activate!
                    :component (r/reactify-component Link)
-                   :href (str "#/contracts/" contract-id)
+                   :href (href-fn contract-id)
                    :id (str "navigation-item-" (name page-name))
                    :class (str "project-menu-item-" (name (:page navigate)))
                    :classes {:root (<class project-style/project-view-selection-item)}}
@@ -67,7 +77,7 @@
           [ClickAwayListener {:on-click-away toggle-open!}
            [Paper
             (into [MenuList {}]
-                  (for [page contract-pages]
+                  (for [page (contract-pages)]
                     [contract-menu-item
                      e! toggle-open! page
                      (contract-model/contract-url-id contract)]))]]]]))))

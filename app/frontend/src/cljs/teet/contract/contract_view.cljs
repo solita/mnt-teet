@@ -189,3 +189,10 @@
        [target-table targets]
        [:span
         (tr [:contract :no-targets-for-contract])])]]])
+
+(defn partner-page
+  [e! app {:thk.contract/keys [targets] :as contract}]
+  [:div {:class (<class common-styles/flex-column-1)}
+   [contract-heading e! app contract]
+   [:div
+    [:div]]])
