@@ -1989,27 +1989,11 @@
          [{:db/ident :company-contract/company
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one}
-           :db/doc "Ensure there is only one contract per procurement-id and part-id combination"}]]}
-
-{:db/ident :migration/additional-file-statuses
- :txes [[{:db/ident :file.status/submitted :enum/attribute :file/status}
-         {:db/ident :file.status/returned :enum/attribute :file/status}
-         {:db/ident :file.status/valid :enum/attribute :file/status}
-         {:db/ident :file.status/invalid :enum/attribute :file/status}]]}
 
           {:db/ident :company-contract/contract
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "REFERENCES :thk.contract/..."}
-{:db/ident :migration/file-part-status
-  :txes [[{:db/ident :file.part/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :file.part.status/not-started :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/in-progress :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/waiting-for-review :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/reviewing :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/completed :enum/attribute :file.part/status}]]}
 
           {:db/ident :company-contract/lead-partner?
            :db/valueType :db.type/boolean
@@ -2072,7 +2056,24 @@
           {:db/ident :user/documents
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "CV's, certificates and other job related documents related to the user"}]]}]
+           :db/doc "CV's, certificates and other job related documents related to the user"}]]}
+
+{:db/ident :migration/additional-file-statuses
+ :txes [[{:db/ident :file.status/submitted :enum/attribute :file/status}
+         {:db/ident :file.status/returned :enum/attribute :file/status}
+         {:db/ident :file.status/valid :enum/attribute :file/status}
+         {:db/ident :file.status/invalid :enum/attribute :file/status}]]}
+
+{:db/ident :migration/file-part-status
+ :txes [[{:db/ident :file.part/status
+          :db/valueType :db.type/ref
+          :db/cardinality :db.cardinality/one}
+         {:db/ident :file.part.status/not-started :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/in-progress :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/waiting-for-review :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/reviewing :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/completed :enum/attribute :file.part/status}]]}
+
 {:db/ident :migration/copy-status-and-metainfo-from-task-to-part
   :txes [teet.migration.file-part-statuses/task-status-meta->file-part]}
 
