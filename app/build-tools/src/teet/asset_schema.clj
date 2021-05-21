@@ -252,7 +252,9 @@
 
           pset (read-pset workbook)
           list-items (read-list-items workbook)
+
           materials (read-material workbook)
+          material-by-name (map-by-name materials)
 
           unnamespaced->namespaced (unnamespaced-attr->namespaced-attr pset)
 
@@ -265,7 +267,7 @@
                 pset)
           exists? (into #{}
                         (map :name)
-                        (concat fgroup fclass ctype pset list-items))]
+                        (concat fgroup fclass ctype materials pset list-items))]
       (vec
        (concat
         ;; Include schema import date
@@ -338,9 +340,10 @@
           (for [item list-items
                 :let [attr (attrs-by-name (:property item))
                       attr-name (get-in attrs-by-name [(:property item) :name])
-                      ctype-or-fclass (or (get ctypes-by-name (:ctype attr))
-                                          (get fclass-by-name (:ctype attr)))
-                      all-exist? (and attr ctype-or-fclass
+                      ctype-fclass-or-material (or (get ctypes-by-name (:ctype attr))
+                                                   (get fclass-by-name (:ctype attr))
+                                                   (get material-by-name (:ctype attr)))
+                      all-exist? (and attr ctype-fclass-or-material
                                       (:name item)
                                       (exists? (:property item)))]
                 :when all-exist?]
