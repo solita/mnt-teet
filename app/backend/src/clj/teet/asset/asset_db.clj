@@ -69,7 +69,10 @@
 (def material-pattern
   '[*
     {:material/fgroups
-     [*]}])
+     [*]}
+    {:attribute/_parent
+     [*
+      {:enum/_attribute [*]}]}])
 
 (defn- ctype? [x]
   (and (map? x)

@@ -93,12 +93,13 @@
     (tr* fgroup :asset-schema/description)
     [child-links (:fclass/_fgroup fgroup)]]])
 
-(defn- material [_open material]
+(defn- material [open {attributes :attribute/_parent :as material}]
   [:<>
    [typography/Heading3
     (str (tr [:asset :type-library :material]) " " (tr* material))]
    [:div
     (tr* material :asset-schema/description)
+    [attribute-table open attributes]
     [child-links (:material/fgroups material)]]])
 
 
