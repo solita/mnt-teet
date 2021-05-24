@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+
 echo "Backup started"
 
 S3_BUCKET=$(aws ssm get-parameters --names "/teet/s3/backup-bucket" --query "Parameters[0].Value" | tr -d '"')
