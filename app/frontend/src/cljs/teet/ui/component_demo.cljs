@@ -359,7 +359,8 @@
     :component [mentions-demo]}
    {:id :contracts
     :heading "Contract components"
-    :component [contract-demo]}])
+    :component [contract-demo]}
+   ])
 
 (defn demo
   [e! {query :query :as _app}]

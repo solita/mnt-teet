@@ -260,11 +260,18 @@
    {:road-number nil
     :project-name nil
     :contract-name nil
-    :procurement-id nil
     :procurement-number nil
-    :ta/region nil
+    :contract-number nil
+    :region nil
     :contract-type nil
-    :contract-status nil}}},
+    :contract-status nil
+    :partner-name nil
+    :project-manager nil}}
+  :contracts-list
+  {:result nil
+   :results nil
+   :expand-all nil
+   :collapse-all nil}},
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",

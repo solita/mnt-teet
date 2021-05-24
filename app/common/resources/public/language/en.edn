@@ -260,12 +260,19 @@
    :inputs
    {:road-number "Road number"
     :project-name "Project name"
-    :contract-name "Procurement name"
-    :procurement-id "Procurement id"
-    :procurement-number "Contract number"
-    :ta/region "TA region"
+    :contract-name "Contract name"
+    :procurement-number "Procurement number"
+    :contract-number "Contract number"
+    :ta/region "Region"
     :contract-type "Contract type"
-    :contract-status "Contract status"}}}
+    :contract-status "Contract status"
+    :partner-name "Partner name"
+    :project-manager "TA Project manager"}}
+  :contracts-list
+  {:result "result"
+   :results "results"
+   :expand-all "Expand all"
+   :collapse-all "Collapse all"}}
  :cooperation
  {:response "Response",
   :application-delete-confirm "Delete the application?",
