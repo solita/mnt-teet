@@ -40,7 +40,7 @@ function start-teet-app {
            :system "teet"}}
  :listen-address "0.0.0.0"
  :auth {:jwt-secret "$JWT_SECRET"
-        :basic-auth-password "$(ssm-get /teet/auth/basic-auth-password"}
+        :basic-auth-password "$(ssm-get /teet/auth/basic-auth-password)"}
  :env :dev
  :api-url "http://localhost:3000"
  :enabled-features #{:road-information-view
@@ -74,7 +74,7 @@ n
  ;; Estonian Nature Information System (EELIS)
  :eelis {:wms-url "https://gsavalik.envir.ee/geoserver/eelis/ows"}
  :heritage {:wms-url "https://xgis.maaamet.ee/xgis2/service/clnl/muinsus"}
- :base-url "https://$MDNS:4000"
+ :base-url "https://$MYDNS:4443"
  :notify {:application-expire-days "45"}
  :email {:subject-prefix "LOCAL"
          :contact-address "local@dev.fi"
@@ -185,6 +185,7 @@ function update-dyndns {
     local format="$(ssm-get /dev-testsetup/testvm-dyndns-url-template)"
     local url="$(printf ${format} "${dnsbasename}.${dnssuffix}" "${myv4addr}")"
     curl  "${url}"
+    MYDNS="${dnsbasename}.${dnssuffix}"
 }
 
 
@@ -233,6 +234,7 @@ function get-certs {
 function install-deps-and-app {
     # set up deps and env
     test "$(whoami)" = root
+    export HOME="$(echo ~root)"
     mkdir -p /var/tmp/teetinstall
     cd /var/tmp/teetinstall
 
@@ -290,7 +292,7 @@ function install-deps-and-app {
     control-datomic-bastion-ssh-access off
     
     setup-postgres
-    update-dyndns a # tbd: select which dns name from the pool to assume
+    update-dyndns a # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
     
     start-teet-app # config generation, backend, frontend & postgrest
@@ -307,17 +309,38 @@ function run-in-ec2 {
     local SCRIPTPATH
     local SSHKEYID
     SCRIPTPATH="$(realpath $0)"
-    read -p 'ssh keypair name> ' SSHKEYID
-    aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name $SSHKEYID \
+    if [ $# -gt 0 ]; then
+	SSHKEYID="$1"
+    else
+	read -p 'ssh keypair name> ' SSHKEYID
+    fi
+    aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name ${SSHKEYID} \
         --user-data file://$SCRIPTPATH \
         --launch-template LaunchTemplateName=standalone-teetapp-template
 }
 
-if test $1 = launchvm; then
+
+if [ $# -gt 0 ]; then
+    if [ "$1" != launchvm ]; then
+	echo unknown arg "$1"
+	exit 1
+    fi
+    
     # assume we're running in codebuild or dev workstation
-    set -x
-    run-in-ec2    
+    if [ $# = 2 ]; then
+	run-in-ec2 "$2" # keypair name arg
+    else
+	run-in-ec2
+    fi
+    
 else
-    # assume we're running as the cloud-init script (aka user-data script) inside the vm
+    # assume we're running as the cloud-init script (aka user-data script, aka scripts-user script) inside the vm
+    # - log files on instance for troubleshooting: look for likes like this in /var/log/syslog:
+    # May 24 11:56:36 ip-xxx cloud-init[1271]: /var/lib/cloud/instance/scripts/part-001: line 319: <some bash error message>
+    # [...]
+    # May 24 11:56:36 ip-xxx cloud-init[1271]: 2021-05-24 11:56:36,942 - cc_scripts_user.py[WARNING]: Failed to run module scripts-user (scripts in /var/lib/cloud/instance/scripts)
+    echo starting teet app install
+    set -x
     install-deps-and-app
 fi
+
