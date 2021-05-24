@@ -245,7 +245,26 @@
  :contracts
  {:state-procurement-link "Hanke nr.",
   :external-link "Lepingu nr.",
-  :thk-procurement-link "THK"},
+  :thk-procurement-link "THK",
+  :quick-filters nil,
+  :shortcuts {:my-contracts nil, :all-contracts nil, :unassigned nil},
+  :filters
+  {:show-filters nil,
+   :hide-filters nil,
+   :select-input-placeholder nil,
+   :inputs
+   {:contract-number nil,
+    :ta/region nil,
+    :partner-name nil,
+    :project-manager nil,
+    :contract-status nil,
+    :contact-type nil,
+    :contract-name nil,
+    :procurement-number nil,
+    :object {name nil},
+    :road-number nil}},
+  :contracts-list
+  {:result nil, :results nil, :expand-all nil, :collapse-all nil}},
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",
@@ -408,6 +427,7 @@
   "Ümberkruntimiskava (krundijaotuskava)",
   :file.document-group/general "Üldosa, seletuskirjad ",
   :task.type/railroad "Raudtee",
+  :activity.name/owners-supervision "Ehitus",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
   :task.group/warranty "Garantii",
@@ -485,6 +505,7 @@
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/cost-list "Kululoend",
   :task.type/eia-pre-assessment "Keskkonnamõju eelhinnang",
+  :activity.name/road-safety-audit "Ehitus",
   :task.type/owners-supervision "Omanikujärelevalve",
   :task.group/study "Uuringud",
   :thk.contract.type/construction-works "Ehitustööd",
@@ -1311,9 +1332,12 @@
   :add-part "Lisan osa",
   :accept-review "Aktsepteerin ülesande",
   :confirm-delete-cancel "Ei",
-  :reopen "Reopen task",
+  :reopen-task-confirm
+  "Kas oled kindel, et soovid ülesande taasavada?",
+  :reopen "Taasava ülesanne",
   :reject-review "Lükkan tagasi",
   :documents "Dokumendid",
+  :reopen-task "Taasavan ülesande",
   :add-part-modal-title "Lisan ülesande osa",
   :part-deleted-successfully "Ülesande osa edukalt kustutatud",
   :submit-results "Esitan tulemused",
@@ -1328,21 +1352,22 @@
   :results "Tulemused"},
  :task-part
  {:reopen-successful "Ülesande osa on taasavatud",
-  :reopen-part "Reopen task part",
+  :reopen-part "Taasava ülesande osa",
   :reopen "Ava",
   :reopen-part-confirm
-  "Are you sure you wish to reopen this task part and all associated files?",
+  "Kas oled kindel, et soovid selle ülesande osa taasavada?",
   :submit-for-approval "Esitan ülevaatamiseks",
   :reject-part "Saada tagasi",
   :submit-results "Submit results",
   :reject "Saadan tagasi",
-  :approve-part "Approve results",
+  :approve-part "Võta vastu",
   :submit-results-confirm
-  "Are you sure you wish to submit this task part for review?",
-  :approve-part-confirm "Are you sure you wish approve the task part?",
+  "Kas oled kindel, et soovid selle ülesande ülevaatamiseks saata?",
+  :approve-part-confirm
+  "Kas oled kindel, et soovid selle ülesande osa vastu võtta?",
   :accept "Kooskõlastatud",
   :reject-part-confirm
-  "Are you sure you wish to send back the task part?"},
+  "Kas oled kindel, et soovid selle ülesande osa tagasi lükata?"},
  :unit-info {:owners-opinions "Maade omanike arvamused"},
  :unit-modal-page {:add-new-owner-opinion "Lisan uue arvamuse"},
  :user

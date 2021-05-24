@@ -181,7 +181,7 @@
                            task-id :activity/task-id
                            :as activity} activities
                           ;; Only process activities here
-                          :when (and id name (nil? task-id))
+                          :when (and id name (nil? task-id) (not (= id "18957")))
                           :let [{act-thk-id :thk.activity/id
                                  act-teet-id :activity-db-id} activity
                                 {act-db-id :db/id
@@ -191,7 +191,7 @@
                                   (lookup db [:integration/id act-teet-id])
                                   ;; Lookup using THK id
                                   (lookup db [:thk.activity/id act-thk-id]))
-                                _ (log/info "Received activity with THK id " act-thk-id
+                                _ (log/info "Received activity " activity " with THK id " act-thk-id
                                             (if act-db-id
                                               (str "having TEET :db/id " act-db-id)
                                               "without TEET id => creating new activity")
