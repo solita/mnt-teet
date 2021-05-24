@@ -532,7 +532,12 @@
                             :allowed-components (:ctype/_parent feature-class)}]
 
           [add-component-menu
-           (asset-type-library/allowed-component-types atl fclass)
+           (into []
+                 (asset-type-library/allowed-component-types atl fclass))
+           (e! cost-items-controller/->AddComponent)]
+          [add-component-menu
+           (into []
+                 (asset-type-library/allowed-material-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
 (defn- component-form-navigation [atl [asset :as component-path]]
