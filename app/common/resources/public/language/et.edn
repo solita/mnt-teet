@@ -245,7 +245,26 @@
  :contracts
  {:state-procurement-link "Hanke nr.",
   :external-link "Lepingu nr.",
-  :thk-procurement-link "THK"},
+  :thk-procurement-link "THK",
+  :quick-filters nil,
+  :shortcuts {:my-contracts nil, :all-contracts nil, :unassigned nil},
+  :filters
+  {:show-filters nil,
+   :hide-filters nil,
+   :select-input-placeholder nil,
+   :inputs
+   {:contract-number nil,
+    :project-name nil,
+    :ta/region nil,
+    :partner-name nil,
+    :project-manager nil,
+    :contract-status nil,
+    :contract-type nil,
+    :contract-name nil,
+    :procurement-number nil,
+    :road-number nil}},
+  :contracts-list
+  {:result nil, :results nil, :expand-all nil, :collapse-all nil}},
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",
@@ -408,6 +427,7 @@
   "Ümberkruntimiskava (krundijaotuskava)",
   :file.document-group/general "Üldosa, seletuskirjad ",
   :task.type/railroad "Raudtee",
+  :activity.name/owners-supervision "Omanike järelevalve",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
   :task.group/warranty "Garantii",
@@ -485,6 +505,7 @@
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/cost-list "Kululoend",
   :task.type/eia-pre-assessment "Keskkonnamõju eelhinnang",
+  :activity.name/road-safety-audit "Teeohutuse audit",
   :task.type/owners-supervision "Omanikujärelevalve",
   :task.group/study "Uuringud",
   :thk.contract.type/construction-works "Ehitustööd",
