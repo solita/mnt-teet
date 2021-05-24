@@ -100,7 +100,7 @@ function start-datomic-portforward {
 StrictHostKeyChecking no
 EOF
     tmux send-keys -t "$uuid" "datomic client access teet-datomic" ENTER
-    until netstat -pant | grep LISTEN | egrep -q '/ssh *$'; do
+    until netstat -pant | grep LISTEN | grep -E -q '/ssh *$'; do
 	echo sleeping until datomic ssh forward seems active
 	sleep 3
     done
@@ -109,22 +109,24 @@ EOF
 
 function control-datomic-bastion-ssh-access {
     # also set up revocation for it in exit trap (but it's fail-open..)
-    local SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)    
-    local MYIP=$(curl http://checkip.amazonaws.com)
-    if test x$1 = on; then
+    local SG
+    SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)    
+    local MYIP
+    MYIP=$(curl http://checkip.amazonaws.com)
+    if [ "$1" = on ]; then
 	aws ec2 authorize-security-group-ingress \
-	    --group-id $SG \
+	    --group-id "$SG" \
 	    --protocol tcp \
 	    --port 22 \
-	    --cidr $MYIP/32
-	echo allowed ssh access to datomic bastion from ip $MYIP
+	    --cidr "$MYIP"/32
+	echo allowed ssh access to datomic bastion from ip "$MYIP"
     else
-	echo revoke ssh access to datomic ip from $MYIP
+	echo revoke ssh access to datomic ip from "$MYIP"
 	aws ec2 revoke-security-group-ingress \
-	    --group-id $SG \
+	    --group-id "$SG" \
 	    --protocol tcp \
 	    --port 22 \
-	    --cidr $MYIP/32
+	    --cidr "$MYIP"/32
     fi
 }
 
@@ -133,7 +135,6 @@ function control-datomic-bastion-ssh-access {
 function import-datomic-to-dev-local {
     # run in backend directory, needs the deps
     local DATOMIC_SOURCE_DB_NAME="$1"
-    local DEST_DB_NAME="$2"
     mkdir -p ~/.datomic
     cd mnt-teet/app/backend
     clojure -A:dev -e "
@@ -162,10 +163,10 @@ function setup-postgres {
     SOURCE_DB_NAME=$AWS_SSM_DB_URI; SOURCE_DB_NAME=${AWS_SSM_DB_URI#*//}; SOURCE_DB_NAME=${SOURCE_DB_NAME#*/}
     SOURCE_DB_HOST=$AWS_SSM_DB_URI; SOURCE_DB_HOST=${AWS_SSM_DB_URI#*//}; SOURCE_DB_HOST=${SOURCE_DB_HOST%/*};
     createuser -h localhost -U postgres teetmaster
-    createdb -h localhost -U postgres $SOURCE_DB_NAME -O teetmaster
+    createdb -h localhost -U postgres "$SOURCE_DB_NAME" -O teetmaster
     psql -c "CREATE ROLE teeregister" -h localhost -U postgres
     psql -c "CREATE ROLE rdsadmin" -h localhost -U postgres
-    PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h $SOURCE_DB_HOST -U $SOURCE_DB_USER $SOURCE_DB_NAME | pg_restore -d "$SOURCE_DB_NAME" -h localhost -U postgres
+    PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" | pg_restore -d "$SOURCE_DB_NAME" -h localhost -U postgres
 }
 
 
@@ -173,10 +174,11 @@ function ssm-get {
     aws ssm get-parameter --name "$1" --query "Parameter.Value" --output text
 }
 
-function ssm-get-csv {
-    local v="$(aws ssm get-parameter --name "$1" --output text --query Parameter.Value)"
-    IFS=", " read -ra SSMVALS <<< $v
-}
+# unused now, could be used in cofig generation from ssm
+# function ssm-get-csv {
+#     local v="$(aws ssm get-parameter --name "$1" --output text --query Parameter.Value)"
+#     IFS=", " read -ra SSMVALS <<< $v
+# }
 
 function update-dyndns {
     local dnsbasename="$1"
@@ -190,15 +192,17 @@ function update-dyndns {
 
 
 function new-certs {
-    local MY_EMAIL=$(ssm-get /teet/email/from)    
-    local MYDOMAINS=$(for x in a b c d e; do echo -n ,${x}.$DNS_SUFFIX; done | sed s/,//)
+    local MY_EMAIL
+    MY_EMAIL=$(ssm-get /teet/email/from)    
+    local MYDOMAINS
+    MYDOMAINS="$(for x in a b c d e; do echo -n ,${x}."$DNS_SUFFIX"; done | sed s/,//)"
     certbot certonly \
 	    --standalone \
 	    --non-interactive \
 	    --agree-tos \
 	    --preferred-challenges http \
-	    --email $MY_EMAIL \
-	    --domains $MYDOMAINS
+	    --email "$MY_EMAIL" \
+	    --domains "$MYDOMAINS"
  # output for reference:
  # - Congratulations! Your certificate and chain have been saved at:
  #   /etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem
@@ -213,14 +217,14 @@ function new-certs {
 
 function get-certs {
     # we have to do the renew / cert bundle caching thing because of https://letsencrypt.org/docs/rate-limits/
-    aws s3 cp s3://${TEET_ENV}-build/standalonevm-certs.tgz .
+    aws s3 cp "${BUILD_S3_BUCKET}"/standalonevm-certs.tgz .
     tar -C /etc -xzf standalonevm-certs.tgz    
     certbot renew # will renew only if expiry is imminent
     tar -C /etc -zcf standalonevm-certs.tgz certbot
-    aws s3 cp standalonevm-certs.tgz s3://${TEET_ENV}-build/standalonevm-certs.tgz
+    aws s3 cp standalonevm-certs.tgz "${BUILD_S3_BUCKET}"/standalonevm-certs.tgz
 
     openssl pkcs12 -export \
-	    -inkey /etc/letsencrypt/live/a.${DNS_SUFFIX}/privkey.pem -in /etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem \
+	    -inkey "/etc/letsencrypt/live/a.${DNS_SUFFIX}/privkey.pem" -in "/etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem" \
 	    -out jetty.pkcs12 -passout 'pass:dummypass'
 
     keytool -importkeystore -noprompt \
@@ -234,7 +238,7 @@ function get-certs {
 function install-deps-and-app {
     # set up deps and env
     test "$(whoami)" = root
-    export HOME="$(echo ~root)"
+    export HOME=~root
     mkdir -p /var/tmp/teetinstall
     cd /var/tmp/teetinstall
 
@@ -259,25 +263,25 @@ function install-deps-and-app {
 	sleep 5
     done       
     for cmd in "apt-get update" "apt-get -y install --no-install-recommends postgresql-11-postgis-2.5 postgresql-11-postgis-2.5-scripts" ; do
-	docker exec -it teetdb $cmd
+	docker exec -it teetdb "$cmd"
     done
     docker exec teetdb sed -i -e '1i host all all 172.16.0.0/14 trust' /var/lib/postgresql/data/pg_hba.conf
     docker restart teetdb    
 
     TEET_ENV=$(ssm-get /teet/env)
     DNS_SUFFIX=$(ssm-get /dev-testsetup/testvm-dns-suffix)
+    BUILD_S3_BUCKET="s3://${TEET_ENV}-build"
     
     
-    
-    test -f cognitect-dev-tools.zip || aws s3 cp s3://${TEET_ENV}-build/cognitect-dev-tools.zip .
+    test -f cognitect-dev-tools.zip || aws s3 cp "${BUILD_S3_BUCKET}"/cognitect-dev-tools.zip .
     unzip cognitect-dev-tools.zip
     cd cognitect-dev-tools-*
     ./install
     cd ..      
 
-    test -f datomic-deps.tar.gz || aws s3 cp s3://${TEET_ENV}-build/datomic-deps.tar.gz .
+    test -f datomic-deps.tar.gz || aws s3 cp "${BUILD_S3_BUCKET}"/datomic-deps.tar.gz .
     tar -C ~ -zxf datomic-deps.tar.gz
-    test -f datomic-deps2.tar.gz || aws s3 cp s3://${TEET_ENV}-build/datomic-deps2.tar.gz .
+    test -f datomic-deps2.tar.gz || aws s3 cp "${BUILD_S3_BUCKET}"/datomic-deps2.tar.gz .
     tar -C ~ -zxf datomic-deps2.tar.gz
 
     wget https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.82.zip
@@ -287,8 +291,8 @@ function install-deps-and-app {
     control-datomic-bastion-ssh-access on
     start-datomic-portforward    
     
-    import-datomic-to-dev-local $(ssm-get /teet/datomic/db-name) teet
-    import-datomic-to-dev-local $(ssm-get /teet/datomic/asset-db-name) asset
+    import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
+    import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
     control-datomic-bastion-ssh-access off
     
     setup-postgres
@@ -298,7 +302,7 @@ function install-deps-and-app {
     start-teet-app # config generation, backend, frontend & postgrest
 
     
-    until netstat -pant | grep LISTEN | egrep -q ':4000.*LISTEN.*/java *$'; do
+    until netstat -pant | grep LISTEN | grep -E -q ':4000.*LISTEN.*/java *$'; do
 	echo sleeping until backend starts listening on :4000
 	sleep 3
     done
@@ -308,14 +312,14 @@ function install-deps-and-app {
 function run-in-ec2 {
     local SCRIPTPATH
     local SSHKEYID
-    SCRIPTPATH="$(realpath $0)"
+    SCRIPTPATH="$(realpath "$0")"
     if [ $# -gt 0 ]; then
 	SSHKEYID="$1"
     else
-	read -p 'ssh keypair name> ' SSHKEYID
+	read -r -p 'ssh keypair name> ' SSHKEYID
     fi
-    aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name ${SSHKEYID} \
-        --user-data file://$SCRIPTPATH \
+    aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name "${SSHKEYID}" \
+        --user-data "file://${SCRIPTPATH}" \
         --launch-template LaunchTemplateName=standalone-teetapp-template
 }
 
