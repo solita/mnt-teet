@@ -180,7 +180,7 @@
                                            (:file/name file))))
 
             key (new-file-key file)
-            res (tx [(list 'teet.file.file-tx/upload-file-to-task
+            res (tx [(list 'teet.file.file-tx/upload-file-to-task user
                            {:db/id task-id
                             :task/files
                             [(cu/without-nils
@@ -223,7 +223,7 @@
           version (or (some-> old-file :file/version inc) 1)
 
           key (new-file-key file)
-          tx-data [(list 'teet.file.file-tx/upload-file-to-task
+          tx-data [(list 'teet.file.file-tx/upload-file-to-task user
                          {:db/id (or task-id "new-task")
                           :task/files [(cu/without-nils
                                          (merge (select-keys file file-keys)

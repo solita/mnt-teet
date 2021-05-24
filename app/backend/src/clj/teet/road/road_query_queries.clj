@@ -238,8 +238,9 @@
 (defquery :road/point-by-road
   {:doc "Fetch point geometry baed on road address from Teeregister API."
    :config {client [:road-registry :api]}
-   :args {:keys [road-nr carriageway start-m]}
+   :args {:keys [road-nr carriageway start-km]}
    :project-id nil
    :authorization {}}
   (teeregister-api/point-by-road (teeregister-api/create-client client)
-                                 road-nr carriageway start-m))
+                                 road-nr carriageway
+                                 (-> start-km ->bigdec road-model/km->m)))

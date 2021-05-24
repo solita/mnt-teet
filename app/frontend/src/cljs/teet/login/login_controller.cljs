@@ -46,7 +46,7 @@
   CheckExistingSession ; Check existing token from browser localstorage storage
   (process-event [_ app]
     (let [app (assoc app :initialized? true)]
-      (when (and (not @common-controller/api-token) (not= (:page app) :login))
+      (when (not= (:page app) :login)
         (reset! common-controller/navigation-data-atom (select-keys app [:page :params :query])))
       (if @common-controller/api-token
         (t/fx (assoc app :checking-session? true)

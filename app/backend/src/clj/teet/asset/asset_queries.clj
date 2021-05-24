@@ -100,7 +100,7 @@
                             (when road
                               (cond
                                 (= road "all-roads")
-                                (asset-db/project-assets-and-components-with-road adb project-id)
+                                (asset-db/project-assets-and-components adb project-id)
 
                                 (= road "no-road-reference")
                                 (asset-db/project-assets-and-components-without-road adb project-id)

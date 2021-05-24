@@ -87,6 +87,11 @@
   []
   {:width "20%"})
 
+(defn partners-page-container
+  []
+  {:padding "2rem"
+   :flex 1})
+
 (defn project-contract-container-style
   []
   ^{:pseudo {:last-of-type {:border-bottom 0}}}
