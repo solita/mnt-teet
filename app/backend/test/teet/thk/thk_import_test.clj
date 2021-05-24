@@ -317,22 +317,22 @@
 (deftest activity-procurement-data ;; TEET-605
   (import-projects-csv!)
 
-  (testing "procurement nr and procurement id are imported"
+  (testing "procurement nr and procurement id are not imported into activity"
     (let [activity (ffirst (d/q '[:find (pull ?a [*])
                                   :where [?a :thk.activity/id "6594"]]
                                 (tu/db)))]
       (def activity* activity)
-      (is (= (:activity/procurement-id activity) "1"))
-      (is (= (:activity/procurement-nr activity) "3434"))))
+      (is (= (:activity/procurement-id activity) nil))
+      (is (= (:activity/procurement-nr activity) nil))))
 
-  (testing "procurement nr and id are exported"
+  (testing "procurement nr and id are not exported from activity"
     (export-csv)
     (let [export-rows (tu/get-data :export-rows)
           activity-row (cu/find-first #(= (get % "activity_id")
                                           "6594")
                                       export-rows)]
-      (is (= (get activity-row "activity_procurementid") "1"))
-      (is (= (get activity-row "activity_procurementno") "3434")))))
+      (is (= (get activity-row "activity_procurementid") ""))
+      (is (= (get activity-row "activity_procurementno") "")))))
 
 (deftest activity-deletion-timestamp
   (import-projects-csv!)

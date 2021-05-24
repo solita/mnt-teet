@@ -124,11 +124,13 @@
 (defn activity-decisions
   [db user activity-id search-term]
   (let [meetings
-        (link-db/fetch-links
-          db user
-          (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))
-          #(contains? % :meeting.decision/body)
-          (meta-query/without-deleted
+        (db-api-large-text/with-large-text
+          meeting-model/rich-text-fields
+          (link-db/fetch-links
+           db user
+           (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))
+           #(contains? % :meeting.decision/body)
+           (meta-query/without-deleted
             db
             (->> (d/q '[:find
                         (pull ?m [* :activity/_meetings
@@ -156,18 +158,20 @@
                       db activity-id)
                  (map #(assoc (first %) :meeting/locked-at (second %)))
                  (sort-by :meeting/start)
-                 reverse)))
+                 reverse))))
         decision-ids (matching-decision-ids search-term meetings)
         meetings-without-incomplete-uploads (meeting-db/without-incomplete-uploads meetings)]
     (filter-decisions decision-ids meetings-without-incomplete-uploads)))
 
 (defn project-decisions
   [db user project-id search-term]
-  (let [meetings (link-db/fetch-links
-                   db user
-                   (project-related-unit-ids db (environment/api-context) project-id)
-                   #(contains? % :meeting.decision/body)
-                   (meta-query/without-deleted
+  (let [meetings (db-api-large-text/with-large-text
+                   meeting-model/rich-text-fields
+                   (link-db/fetch-links
+                    db user
+                    (project-related-unit-ids db (environment/api-context) project-id)
+                    #(contains? % :meeting.decision/body)
+                    (meta-query/without-deleted
                      db
                      (->> (d/q '[:find
                                  (pull ?m [* {:activity/_meetings [:activity/name
@@ -198,7 +202,7 @@
                                db project-id)
                           (map #(assoc (first %) :meeting/locked-at (second %)))
                           (sort-by :meeting/start)
-                          reverse)))
+                          reverse))))
         decision-ids (matching-decision-ids search-term meetings)]
     (filter-decisions decision-ids meetings)))
 
@@ -289,21 +293,21 @@
                                        :link :thk.project/owner
                                        :access :read}}}
   (meeting-db/without-incomplete-uploads
-                 (db-api-large-text/with-large-text
-                   meeting-model/rich-text-fields
-                   (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
-                     (link-db/fetch-links
-                      db user
-                      valid-external-ids
-                      #(or (contains? % :meeting.agenda/topic)
-                           (contains? % :meeting.decision/body))
-                      (meta-query/without-deleted
-                       db
-                       {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-                        :meeting (fetch-meeting* db user meeting-id activity-id)}
+   (db-api-large-text/with-large-text
+     meeting-model/rich-text-fields
+     (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
+       (link-db/fetch-links
+        db user
+        valid-external-ids
+        #(or (contains? % :meeting.agenda/topic)
+             (contains? % :meeting.decision/body))
+        (meta-query/without-deleted
+         db
+         {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
+          :meeting (fetch-meeting* db user meeting-id activity-id)}
 
-                       (fn [entity]
-                         (contains? entity :link/to))))))))
+         (fn [entity]
+           (contains? entity :link/to))))))))
 
 
 (defquery :meeting/activity-meeting-history

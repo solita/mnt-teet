@@ -137,8 +137,11 @@
    :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}
    :vektorio {:api-key (->ssm [:vektorio :api-key] nil)
               :config (->ssm [:vektorio :config] {} (comp #(update % :file-extensions suffix-list)
-                                                          read-string))}
-   :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}})
+                                                      read-string))}
+   :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}
+   :contract {:state-procurement-url (->ssm [:contract :state-procurement-url] nil)
+              :thk-procurement-url (->ssm [:contract :thk-procurement-url] nil)}
+   })
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config

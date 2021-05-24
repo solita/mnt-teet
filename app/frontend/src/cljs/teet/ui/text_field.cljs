@@ -110,9 +110,10 @@
       [element (merge
                  (select-keys props
                               [:on-change :lang :on-focus :auto-complete
-                               :step :on-key-down :disabled :min :max :type :ref :value
+                               :step :on-key-down :disabled :min :max :type :ref
                                :required :id :on-blur :placeholder :pattern])
-                 {:style input-style
+                 {:value (or (:value props) "")
+                  :style input-style
                   :class (herb/join input-class
                                     (<class input-field-style
                                             error

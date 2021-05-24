@@ -5,19 +5,69 @@
             [teet.file.file-db :as file-db]
             [teet.activity.activity-db :as activity-db]
             [teet.meta.meta-query :as meta-query]
-            [teet.activity.activity-model :as activity-model]))
+            [teet.activity.activity-model :as activity-model]
+            [taoensso.timbre :as log]
+            [teet.user.user-model :as user-model])
+  (:import (java.util Date)))
 
 (defn activity-for-task-id
   [db task-id]
   (let [task (du/entity db task-id)]
     (get-in task [:activity/_tasks 0 :db/id])))
 
+(defn task-part-completion-attributes
+  [user]
+  {:file.part/completed-by (user-model/user-ref user)
+   :file.part/completed-at (Date.)})
+
+(defn task-completion-attributes
+  [user]
+  {:task/completed-by (user-model/user-ref user)
+   :task/completed-at (Date.)})
+
+(defn get-task-assignee-by-id
+  [db task-id]
+  (get-in (d/pull db [:task/assignee] task-id) [:task/assignee :db/id]))
+
 (defn task-file-parts
   [db task-id]
   (update
-    (meta-query/without-deleted db (d/pull db '[{:file.part/_task [:file.part/name :db/id :file.part/number :meta/deleted?]}] task-id))
+    (meta-query/without-deleted db
+                                (d/pull db '[{:file.part/_task [:file.part/name
+                                                                :db/id
+                                                                :file.part/number
+                                                                :file.part/status
+                                                                :file.part/completed-at
+                                                                :meta/deleted?]}] task-id))
     :file.part/_task
     #(sort-by :file.part/number %)))
+
+(defn not-reviewed-file-parts
+  [db task-eid]
+  (d/q '[:find ?p
+         :where
+         [?p :file.part/task ?t]
+         [(missing? $ ?p :file.part/completed-at)]
+         [(missing? $ ?p :meta/deleted?)]
+         :in $ ?t]
+       db task-eid))
+
+(defn not-reviewed-task-files
+  "Returns non-final version of files for a given task. Returns latest versions of files as vector
+  and adds all previous versions of a files as :versions key."
+  [db user task-eid]
+  (file-db/file-listing db user (mapv first
+                                      (d/q '[:find ?f
+                                             :where
+                                             [?t :task/files ?f]
+                                             [?f :file/upload-complete? true]
+                                             (or-join [?f]
+                                                      [(missing? $ ?f :file/part)]
+                                                      (and
+                                                        [?f :file/part ?p]
+                                                        [(missing? $ ?p :file.part/completed-at)]))
+                                             :in $ ?t]
+                                           db task-eid))))
 
 (defn task-file-listing
   "Returns files for a given task. Returns latest versions of files as vector
@@ -31,6 +81,17 @@
                                              :in $ ?t]
                                            db task-eid))))
 
+(defn task-part-file-listing
+  "Returns files for a given task part. Returns latest versions of files as vector
+  and adds all previous versions of a files as :versions key."
+  [db user part-eid]
+  (file-db/file-listing db user (mapv first
+                                      (d/q '[:find ?f
+                                             :where
+                                             [?f :file/part ?t]
+                                             [?f :file/upload-complete? true]
+                                             :in $ ?t]
+                                           db part-eid))))
 
 
 (defn valid-task-for-activity? [db activity-id {task-type :task/type :as _task}]

@@ -1,8 +1,10 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
+            [teet.theme.theme-spacing :as theme-spacing]
             [herb.core :refer [defglobal]]
             [garden.color :refer [darken]]
-            [garden.stylesheet :refer [at-media]]))
+            [garden.stylesheet :refer [at-media]]
+            [clojure.string :as str]))
 
 ;; Typography styles
 (def h1-desktop
@@ -168,6 +170,10 @@
    :padding-bottom "0.75rem"
    :margin-bottom  "0.5rem"
    :border-bottom  (str "1px solid " theme-colors/gray-light)})
+
+(defn gray-light-border-bottom
+  []
+  {:border-bottom  (str "1px solid " theme-colors/gray-light)})
 
 (defn top-info-spacing
   []
@@ -470,6 +476,17 @@
   [amount]
   {:padding-bottom (str amount "rem")})
 
+(defn margin
+  ([val]
+   (margin val val))
+  ([vertical horizontal]
+   (margin vertical horizontal vertical horizontal))
+  ([up right down left]
+   {:margin-top (str up "rem")
+    :margin-right (str right "rem")
+    :margin-bottom (str down "rem")
+    :margin-left (str left "rem")}))
+
 (defn padding
   "Add padding. Amounts specified in rem unit."
   ([vertical horizontal]
@@ -517,7 +534,7 @@
      :border-radius "3px"
      :line-height 1
      :background-color background
-     :padding "0.5rem"
+     :padding "0.5rem 0.7rem 0.5rem 0.5rem"
      :max-width "315px"}))
 
 (defn text-ellipsis [max-width]
@@ -559,3 +576,15 @@
          (when disabled?
            {:color theme-colors/text-disabled})))
 
+(defn indent-rem [rems]
+  {:padding-left (str rems "rem")})
+
+(defn content-scroll-max-height
+  "Return style for scrollable content with max-height, calculates
+  height from viewport height minus appbar and any provided
+  height values."
+  [& element-heights-above-content]
+  {:overflow-y :scroll
+   :max-height (str "calc(100vh - " theme-spacing/appbar-height " - "
+                    (str/join " - " element-heights-above-content)
+                    ")")})

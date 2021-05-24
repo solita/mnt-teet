@@ -22,7 +22,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Badge Grid ButtonBase]]
+            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -45,32 +45,70 @@
             [alandipert.storage-atom :refer [local-storage]]
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
-            [teet.ui.hotkeys :as hotkeys]
-            [teet.land.land-controller :as land-controller]
             [teet.project.project-menu :as project-menu]
             [teet.task.task-style :as task-style]
-            [teet.navigation.navigation-style :as navigation-style]))
+            [teet.navigation.navigation-style :as navigation-style]
+            [teet.contract.contract-style :as contract-style]
+            [teet.contract.contract-status :as contract-status]
+            [teet.contract.contract-model :as contract-model]))
+
+(defn contract-info
+  [{:thk.contract/keys [status] :as contract}]
+  [:div {:class (<class contract-style/project-contract-container)}
+   [:div {:class (<class common-styles/margin-bottom 1)}
+    [url/Link {:page :contract
+               :params {:contract-ids (contract-model/contract-url-id contract)}}
+     (contract-model/contract-name contract)]]
+   [contract-status/contract-status {:show-label? true}
+    status]])
+
+(defn project-contract-listing
+  [contracts]
+  [:<>
+   (for [contract contracts]
+     ^{:key (str (:db/id contract))}
+     [contract-info contract])])
+
+(defn project-related-contracts
+  [e! project]
+  (r/with-let [related-contracts-open? (r/atom true)
+               toggle-open #(swap! related-contracts-open? not)]
+    [:div
+     [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
+                              (<class common-styles/margin-bottom 2))}
+      [typography/TextBold (tr [:contract :related-contracts])]
+      [:div
+       [buttons/small-button-secondary
+        {:on-click toggle-open
+         :start-icon (if @related-contracts-open?
+                       (r/as-element [icons/navigation-expand-less])
+                       (r/as-element [icons/navigation-expand-more]))}
+        (tr [:buttons :close])]]]
+     [Collapse
+      {:in @related-contracts-open?}
+      [query/query
+       {:e! e!
+        :query :contracts/project-related-contracts
+        :args {:thk.project/id (:thk.project/id project)}
+        :simple-view [project-contract-listing]}]]]))
 
 (defn project-details
-  [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
-                          carriageway repair-method procurement-nr id] :as project}]
+  [e! {:thk.project/keys [road-nr carriageway repair-method] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
-    [:div.project-details-tab
-     [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 project-name]]
-     [:div [:span "THK id: " id]]
-     [:div [:span (tr [:project :information :estimated-duration])
-            ": "
-            (format/date estimated-start-date)] " \u2013 " (format/date estimated-end-date)]
+    [:div.project-details-tab {:class (<class common-styles/margin 1)}
      [:div [:span (tr [:project :information :road-number]) ": " road-nr]]
      [:div [:span (tr [:project :information :km-range]) ": "
             (.toFixed start-km 3) " \u2013 "
             (.toFixed end-km 3)]]
-     [:div [:span (tr [:project :information :procurement-number]) ": " procurement-nr]]
      [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]
      (when repair-method
-       [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])]))
+       [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])
+     (common-controller/when-feature
+       :contracts
+       [:<>
+        [Divider {:class (<class common-styles/margin 1 0)}]
+        [project-related-contracts e! project]])]))
 
 (defn heading-state
   [title select]
@@ -658,8 +696,7 @@
   [e! app project]
   (log/debug "project-page: project id" (:thk.project/id project))
   [project-context/provide
-   {:db/id (:db/id project)
-    :thk.project/id (:thk.project/id project)}
+   project
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-view e! app project]]])
@@ -674,7 +711,7 @@
            export-menu-items]}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
-     (select-keys project [:db/id :thk.project/id])
+     project
      [:<>
       [project-navigator-view/project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}

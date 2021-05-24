@@ -49,7 +49,8 @@
 
   "
   (:require #?(:cljs [goog.string :as gstr])
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.util.collection :as cu]))
 
 #?(:cljs (def ^:private format gstr/format))
 
@@ -68,6 +69,12 @@
   [oid]
   (and (string? oid)
        (boolean (re-matches component-pattern oid))))
+
+(defn asset-oid->fclass-oid-prefix
+  "Extract the asset fclass OID prefix from an asset OID instance."
+  [oid]
+  {:pre [(asset-oid? oid)]}
+  (subs oid 4 7))
 
 (defn asset-oid
   "Format asset OID for feature class prefix and seq number."
@@ -98,23 +105,10 @@
   c1 has child component c2
   and c2 has child component c3 (the component we want)"
   [asset component-oid]
-  (let [containing
-        (fn containing [path here]
-          (let [cs (concat (:asset/components here)
-                           (:component/components here))]
-            (if-let [c (some #(when (= component-oid (:asset/oid %))
-                                %) cs)]
-              ;; we found the component at this level
-              (into path [here c])
-
-              ;; not found here, recurse
-              (first
-               (for [sub cs
-                     :let [sub-path (containing (conj path here) sub)]
-                     :when sub-path]
-                 sub-path)))))]
-
-    (containing [] asset)))
+  (cu/find-path #(concat (:asset/components %)
+                         (:component/components %))
+                #(= component-oid (:asset/oid %))
+                asset))
 
 (def cost-totals-table-columns
   [:type :properties :common/status :quantity :cost-per-quantity-unit :total-cost])
@@ -127,3 +121,26 @@
 
 (def locked? "Key to check if version is locked"
   :boq-version/locked?)
+
+
+(def assets-listing-columns
+  "Columns to show in asset manager search results listing"
+  [:asset/oid :asset/fclass :location/road-address])
+
+(defmulti assets-listing-get-column (fn [_row column] column))
+
+(defmethod assets-listing-get-column :default [row column] (get row column))
+
+(defmethod assets-listing-get-column :location/road-address [row _]
+  (select-keys row [:location/road-nr :location/carriageway :location/start-km :location/end-km]))
+
+#?(:clj
+   (def ^:private location-km-format
+     (doto (java.text.NumberFormat/getNumberInstance)
+       (.setMinimumFractionDigits 6)
+       (.setMaximumFractionDigits 6))))
+
+#?(:clj (defn format-location-km [v]
+          (if-not v
+            ""
+            (.format location-km-format v))))

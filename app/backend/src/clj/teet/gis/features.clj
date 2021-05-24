@@ -5,7 +5,7 @@
             [teet.auth.jwt-token :as jwt-token]))
 
 
-(defn check-error [resp]
+(defn- check-error [resp]
   (if-let [err (:error resp)]
     (throw (ex-info "PostGIS API error" {:error err}))
     resp))

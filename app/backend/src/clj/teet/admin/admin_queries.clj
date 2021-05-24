@@ -4,7 +4,9 @@
             [clojure.string :as str]
             [teet.util.datomic :as du]
             [teet.environment :as environment]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [teet.asset.asset-model :as asset-model]
+            [teet.transit :as transit])
   (:import (java.util UUID)))
 
 (defmulti search-clause (fn [[field _value]] field))
@@ -143,19 +145,45 @@
                                #{} datoms)]))))
           links)))
 
-(defn ->eid [id]
+(defn contract->eid
+  "Parse procurement-id and part-id from the given id and return them as combined entity id"
+  [id]
+  (let [procurement-id (subs id (count "contract-"))
+        part-id-begin-idx (str/index-of procurement-id "-")]
+    [:thk.contract/procurement-id+procurement-part-id
+     (if (nil? part-id-begin-idx)
+       [procurement-id nil]
+       [(subs procurement-id 0 part-id-begin-idx)
+        (subs procurement-id (+ 1 part-id-begin-idx))])]))
+
+
+(defn ->eid
+  "Return [eid db-kw] for parsed id.
+  db-kw is either :teet or :asset and marks
+  what database should be used to fetch the info."
+  [id]
   (cond
+    (or (asset-model/asset-oid? id)
+        (asset-model/component-oid? id))
+    [[:asset/oid id] :asset]
+
+    (re-matches #"^a\d+$" id)
+    [(Long/parseLong (subs id 1)) :asset]
+
     (str/starts-with? id "project-")
-    [:thk.project/id (subs id 8)]
+    [[:thk.project/id (subs id 8)] :teet]
 
     (str/starts-with? id "user-")
-    [:user/person-id (subs id 5)]
+    [[:user/person-id (subs id 5)] :teet]
 
     (str/starts-with? id "file-")
-    [:file/id (UUID/fromString (subs id 5))]
+    [[:file/id (UUID/fromString (subs id 5))] :teet]
+
+    (str/starts-with? id "contract-")
+    [(contract->eid id) :teet]
 
     (re-matches #"^\d+$" id)
-    (Long/parseLong id)
+    [(Long/parseLong id) :teet]
 
     :else
     (throw (ex-info "Unrecognized entity id"
@@ -166,7 +194,7 @@
   (boolean
    (environment/when-feature :admin-inspector true)))
 
-(def user-info [:user/person-id :user/given-name :user/family-name])
+(def user-info [:db/id :user/person-id :user/given-name :user/family-name])
 
 (def user-info-attrs
   #{:meta/creator
@@ -198,25 +226,37 @@
        x))
    form))
 
+(defn- with-bigdec-format [x]
+  (transit/with-write-options
+    {java.math.BigDecimal pr-str}
+    x))
+
 (defquery :admin/entity-info
   {:doc "Pull all information about an entity"
-   :context {:keys [user db]}
+   :context {:keys [user] :as ctx}
    :args {string-id :id}
    :project-id nil
    :authorization {:admin/inspector {}}
    :pre [^{:error :not-found}
          (inspector-enabled?)]}
-  (let [id (:db/id (du/entity db (->eid string-id)))
-        entity (d/pull db '[*] id)]
-    (if (empty? (dissoc entity :db/id))
-      ;; entity only has :db/id, it is possibly retracted entity
-      {:entity entity
-       :ref-attrs #{}
-       :linked-from {}}
+  (with-bigdec-format
+    (let [[eid db-kw]  (->eid string-id)
+          db (case db-kw
+               :teet (:db ctx)
+               :asset (:asset-db ctx))
+          id (:db/id (du/entity db eid))
+          entity (d/pull db '[*] id)]
+      (if (empty? (dissoc entity :db/id))
+        ;; entity only has :db/id, it is possibly retracted entity
+        {:entity entity
+         :db db-kw
+         :ref-attrs #{}
+         :linked-from {}}
 
-      {:entity (expand-extra-attrs db entity)
-       :ref-attrs (ref-attrs db entity)
-       :linked-from (linked-from db id)})))
+        {:entity (expand-extra-attrs db entity)
+         :db db-kw
+         :ref-attrs (ref-attrs db entity)
+         :linked-from (linked-from db id)}))))
 
 
 (defn entity-tx-log
@@ -225,7 +265,7 @@
 
   Returns information about the transaction (id, time and author info)
   and all the changes to attributes (both added and removed)."
-  [db entity-id]
+  [user-db db entity-id]
   (->>
    ;; Pull all datoms affecting entity
    (d/q '[:find ?tx ?e ?a ?v ?add
@@ -245,7 +285,7 @@
         {:tx (update (d/pull db '[*] tx-id)
                      :tx/author (fn [author]
                                   (when author
-                                    (d/pull db user-info [:user/id author]))))
+                                    (d/pull user-db user-info [:user/id author]))))
 
          ;; group all changes by attribute
          :changes (reduce (fn [m [_tx _e a v add]]
@@ -260,11 +300,16 @@
 
 (defquery :admin/entity-history
   {:doc "Pull information about an entity transaction history."
-   :context {:keys [user db]}
+   :context {:keys [user] :as ctx}
    :args {string-id :id}
    :project-id nil
    :authorization {:admin/inspector {}}
    :pre [^{:error :not-found}
          (inspector-enabled?)]}
-  (let [id (:db/id (du/entity db (->eid string-id)))]
-    (entity-tx-log db id)))
+  (with-bigdec-format
+    (let [[eid db-kw] (->eid string-id)
+          db (case db-kw
+               :teet (:db ctx)
+               :asset (:asset-db ctx))
+          id (:db/id (du/entity db eid))]
+      (entity-tx-log (:db ctx) db id))))

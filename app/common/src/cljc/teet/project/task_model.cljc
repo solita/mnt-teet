@@ -1,7 +1,8 @@
 (ns teet.project.task-model
   (:require [teet.util.datomic :refer [id=] :as du]
             [teet.util.collection :refer [find-idx]]
-            [teet.util.date :as date]))
+            [teet.util.date :as date]
+            [taoensso.timbre :as log]))
 
 (def edit-form-keys
   #{:db/id
@@ -49,6 +50,13 @@
 (def waiting-for-review? (partial in-status :task.status/waiting-for-review))
 (def completed? (partial in-status :task.status/completed))
 
+(defn- part-in-status [status {part-status :file.part/status}]
+  (du/enum= status part-status))
+
+(def part-reviewing? (partial part-in-status :file.part.status/reviewing))
+(def part-waiting-for-review? (partial part-in-status :file.part.status/waiting-for-review))
+(def part-completed? (partial part-in-status :file.part.status/completed))
+
 (defn can-submit?
   "Determine if the task results can be submitted. If true, task
   result files can be added and the task can be sent for review."
@@ -75,3 +83,21 @@
                 :in-progress
                 :else
                 :unassigned)))
+
+(defn task-assignee
+  "Fetch task assignee based on task-id.
+  Goes through lifecycles and activities and returns a task assignee for matching id."
+  [{lcs :thk.project/lifecycles} task-id]
+  (some
+    (fn [{activities :thk.lifecycle/activities}]
+      (some (fn [{tasks :activity/tasks}]
+              (some #(when (id= (:db/id %) task-id) (:db/id (:task/assignee %))) tasks))
+            activities))
+    lcs))
+
+(defn can-submit-part?
+  "Check if the task part can be submitted."
+  [task-part]
+  (and (not (part-waiting-for-review? task-part))
+       (not (part-reviewing? task-part))
+       (not (part-completed? task-part))))

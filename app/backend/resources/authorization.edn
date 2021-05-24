@@ -5,6 +5,7 @@
   :internal-consultant :link,
   :external-consultant :link},
  :task/review {:admin :full, :manager :full},
+ :task/reopen {:admin :full, :manager :full},
  :task/task-information
  {:admin :full,
   :manager :full,
@@ -43,6 +44,13 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
+ :contracts/contract-details
+ {:admin :read,
+  :manager :read,
+  :internal-consultant :read,
+  :external-consultant :read,
+  :authenticated-guest :read,
+  :guest :read},
  :document/delete-comment
  {:admin :full,
   :manager :full,
@@ -57,8 +65,8 @@
  :document/upload-document
  {:admin :full,
   :manager :full,
-  :internal-consultant :link,
-  :external-consultant :link,
+  :internal-consultant :full,
+  :external-consultant :full,
   :authenticated-guest :link,
   :guest :link},
  :maintenance/asset-map
@@ -133,6 +141,8 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :link},
+ :cost-items/locking-unlocking-and-versioning
+ {:admin :full, :manager :full},
  :meeting/download-attachment
  {:admin :full,
   :manager :full,
@@ -261,6 +271,7 @@
  :land/delete-land-owner-opinions
  {:admin :full, :manager :full, :internal-consultant :full},
  :maintenance/write-asset {:admin :full, :manager :full},
+ :contracts/contract-editing {:admin :full, :manager :full},
  :admin/set-user-role {:admin :full, :manager :link},
  :maintenance/asset-listing
  {:admin :full,

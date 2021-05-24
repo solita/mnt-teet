@@ -243,4 +243,46 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :enum/attribute :boq-version/type}
           {:db/ident :boq-version.type/contract
            :enum/attribute :boq-version/type}]]}
- ]
+
+ {:db/ident :migration/tx-schema-import-time
+  :txes [[{:db/ident :tx/schema-imported-at
+           :db/doc "The timestamp of when the ROTL Excel was imported"
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/location-offset
+  :txes [[{:db/ident :location/start-offset-m
+           :db/doc "Offset meters from road at start."
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :attribute/parent :ctype/location}
+          {:db/ident :location/end-offset-m
+           :db/doc "Offset meters from road at end."
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :attribute/parent :ctype/location}]]}
+
+ {:db/ident :migration/location-km-accuracy
+  :txes [;; Add new km values as bigdec
+         [{:db/ident :location/start-km
+           :db/doc "Start kilometers (millimeter accuracy)."
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :attribute/parent :ctype/location}
+
+          {:db/ident :location/end-km
+           :db/doc "End kilometers (millimeter accuracy)."
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :attribute/parent :ctype/location}]
+
+         ;; Remove old meter attrs from location ctype
+         [[:db/retract :location/start-m :attribute/parent :ctype/location]
+          [:db/retract :location/end-m :attribute/parent :ctype/location]]]}
+
+ {:db/ident :migration/materials
+  :txes [[{:db/ident :material/fgroups
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "The feature groups this material belongs to."}
+          {:db/ident :asset-schema.type/material :db/doc "Material type"}]]}]

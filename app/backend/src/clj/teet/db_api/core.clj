@@ -82,6 +82,11 @@
          assoc request-name
          permissions))
 
+(defmacro with-last-modified [last-modified-code body]
+  `(with-meta
+     {:body (delay ~body)}
+     {:last-modified ~last-modified-code}))
+
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
@@ -189,22 +194,24 @@
                                        :msg "Pre check failed"
                                        :error ~error
                                        :pre-check ~(str pre)}))))
+               (~@(if-let [last-modified (:last-modified options)]
+                    (list `with-last-modified last-modified)
+                    (list `identity))
+                (let [~'%
+                      ~(if (and (= :command request-type) transact)
+                         `(select-keys (tx ~transact)
+                                       [:tempids])
+                         `(do ~@body))]
 
-               (let [~'%
-                     ~(if (and (= :command request-type) transact)
-                        `(select-keys (tx ~transact)
-                                      [:tempids])
-                        `(do ~@body))]
-
-                 ~@(for [post (:post options)]
-                     `(when-not ~post
-                        (throw (ex-info "Post check failed"
-                                        {:status 500
-                                         :msg "Internal server error"
-                                         :error :request-post-check-failed
-                                         :post-check ~(str post)}))))
-                 ;; Return result
-                 ~'%)))))))
+                  ~@(for [post (:post options)]
+                      `(when-not ~post
+                         (throw (ex-info "Post check failed"
+                                         {:status 500
+                                          :msg "Internal server error"
+                                          :error :request-post-check-failed
+                                          :post-check ~(str post)}))))
+                  ;; Return result
+                  ~'%))))))))
 
 (defmacro defcommand
   "Define a command.
@@ -329,6 +336,7 @@
                         :teet/error :too-long-string}))
        x))
    tx-data))
+
 
 (defn tx
   "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data.

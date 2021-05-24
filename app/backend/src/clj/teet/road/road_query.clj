@@ -2,6 +2,7 @@
   "Query road geometry and road objects from Teeregister"
   (:require [clojure.string :as str]
             [clojure.data.zip.xml :as z]
+            [teet.gis.entity-features :as entity-features]
             [teet.util.geo :as geo]
             [teet.log :as log]
             [teet.map.map-services :as map-services]))
@@ -9,7 +10,6 @@
 (defn- query-by-road-and-carriageway [road carriageway]
   (map-services/ogc-filter
    (map-services/query-by-values {:tee_number road :soidutee_nr carriageway})))
-
 
 (defn- ->int [txt]
   (Long/parseLong txt))
@@ -232,11 +232,40 @@
                  [type (map-services/fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
 
-(defn fetch-all-objects-for-road
-  [config road-part]
-  (into {}
-        (filter
-         (comp seq second)
-         (pmap (fn [type]
-                 [type (fetch-objects-of-type-for-road config type road-part)])
-               road-object-types))))
+(defn- collect-carriageways
+  "Group all the carriageways of a road into one map.
+  ```
+  (collect-carriageways [{:road-nr 1 :carriageway 1} {:road-nr 1 :carriageway 2} {:road-nr 2 :carriageway 1}])
+  => [{:road-nr 1 :carriageways [1 2]} {:road-nr 2 :carriageways [1]}]
+  ```"
+  [relevant-roads]
+  (->> relevant-roads
+       (group-by :road-nr)
+       (map (fn [[_road-nr roads-with-road-nr]]
+              (reduce (fn [road-with-carriageways road]
+                        (update road-with-carriageways :carriageways conj (:carriageway road)))
+                      (let [first-road (first roads-with-road-nr)]
+                        (-> first-road
+                            (dissoc :carriageway)
+                            (assoc :carriageways #{(:carriageway first-road)})))
+                      (rest roads-with-road-nr))))
+       (map #(update % :carriageways (comp vec sort)))))
+
+(defn fetch-relevant-roads-for-project-cost-items
+  "Returns the road itself, along with all the roads that intersect the
+  project road object (radius 50m)"
+  [ctx integration-id buffer-meters]
+  {:pre [integration-id]}
+  (let [road-object-search-geometry (entity-features/entity-search-area-gml ctx
+                                                                            integration-id
+                                                                            buffer-meters)]
+    (->> (map-services/fetch-intersecting-objects-of-type ctx
+                                                          "ms:teeosa"
+                                                          road-object-search-geometry
+                                                          {:return-properties [:ms:tee_number :ms:soidutee_nr :ms:nimi]})
+         (map (fn [road-part]
+                {:road-nr (some-> road-part :ms:tee_number ->int)
+                 :carriageway (some-> road-part :ms:soidutee_nr ->int)
+                 :road-name (some-> road-part :ms:nimi)}))
+         collect-carriageways
+         set)))

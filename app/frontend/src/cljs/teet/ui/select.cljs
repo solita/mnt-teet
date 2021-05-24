@@ -11,7 +11,7 @@
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
-                                         Popper CircularProgress Paper Link Divider]]
+                                         Popper CircularProgress Paper Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util :refer [mapc]]
             ["react"]
@@ -388,10 +388,15 @@
   [{:keys [e! value on-change label required error
            format-result
            show-label? after-results-action
-           query placeholder no-results]
+           query placeholder no-results clear-value
+           start-icon input-button-icon input-element]
     :or {show-label? true
          placeholder (tr [:user :autocomplete :placeholder])
-         no-results (tr [:user :autocomplete :no-options])}}]
+         no-results (tr [:user :autocomplete :no-options])
+         start-icon icons/action-search
+         input-button-icon icons/content-clear
+         input-element TextField}
+    :as opts}]
   (r/with-let [state (r/atom {:loading? false
                               :results nil
                               :open? false
@@ -399,70 +404,76 @@
                input-ref (atom nil)
                set-ref! #(reset! input-ref %)
                on-key-down (partial arrow-navigation state on-change)]
-    (let [{:keys [loading? results open? input highlight]} @state]
+    (let [{:keys [loading? results open? input highlight]} @state
+          current-input-ref (or (:input-ref opts) @input-ref) ]
       [:<>
-       [TextField {:ref set-ref!
-                   :label label
-                   :show-label? show-label?
-                   :required required
-                   :error error
-                   :start-icon icons/action-search
-                   :placeholder placeholder
-                   :on-key-down on-key-down
-                   :on-blur #(js/setTimeout
-                               ;; Delay closing because we might be blurring
-                               ;; because user clicked one of the options
-                               (fn [] (swap! state assoc :open? false))
-                               200)
-                   :value (if value
-                            (format-result value)
-                            input)
-                   :on-focus #(when (and (seq results) (>= (count input) 2))
-                                (swap! state assoc :open? true))
-                   :on-change (fn [e]
-                                (let [t (-> e .-target .-value)
-                                      loading? (>= (count t) 2)]
-                                  (when value
-                                    (on-change nil))
+       [input-element
+        (merge {:ref set-ref!
+                :label label
+                :hide-label? (not show-label?)
+                :required required
+                :error error
+                :placeholder placeholder
+                :on-key-down on-key-down
+                :on-blur #(js/setTimeout
+                           ;; Delay closing because we might be blurring
+                           ;; because user clicked one of the options
+                           (fn [] (swap! state assoc :open? false))
+                           200)
+                :value (if value
+                         (format-result value)
+                         input)
+                :on-focus #(when (and (seq results) (>= (count input) 2))
+                             (swap! state assoc :open? true))
+                :on-change (fn [e]
+                             (let [t (-> e .-target .-value)
+                                   loading? (>= (count t) 2)]
+                               (when value
+                                 (on-change nil))
 
-                                  (swap! state
-                                         #(assoc %
-                                            :input t
-                                            :open? loading?
-                                            :loading? loading?))
+                               (swap! state
+                                      #(assoc %
+                                              :input t
+                                              :open? loading?
+                                              :loading? loading?))
 
-                                  (when loading?
-                                    (let [result-fn-or-query-map (query t)]
-                                      (if (fn? result-fn-or-query-map)
-                                        (let [results (result-fn-or-query-map)]
-                                          (swap! state merge {:loading? false
-                                                              :open? true
-                                                              :results results
-                                                              :highlight (first results)}))
-                                        (e! (->CompleteSearch result-fn-or-query-map
-                                                              (fn [results]
-                                                                (swap! state assoc
-                                                                       :loading? false
-                                                                       :open? true
-                                                                       :results results
-                                                                       :highlight (first results))))))))))
-                   :input-button-click #(do
-                                          (on-change nil)
-                                          (swap! state assoc :input "")
-                                          (r/after-render
-                                            (fn []
-                                              (.focus @input-ref))))
-                   :input-button-icon icons/content-clear}]
+                               (when loading?
+                                 (let [result-fn-or-query-map (query t)]
+                                   (if (fn? result-fn-or-query-map)
+                                     (let [results (result-fn-or-query-map)]
+                                       (swap! state merge {:loading? false
+                                                           :open? true
+                                                           :results results
+                                                           :highlight (first results)}))
+                                     (e! (->CompleteSearch result-fn-or-query-map
+                                                           (fn [results]
+                                                             (swap! state assoc
+                                                                    :loading? false
+                                                                    :open? true
+                                                                    :results results
+                                                                    :highlight (first results))))))))))
+                :input-button-click #(do
+                                       (on-change clear-value)
+                                       (swap! state assoc :input "")
+                                       (r/after-render
+                                        (fn []
+                                          (.focus @input-ref))))}
+               (when start-icon
+                 {:start-icon icons/action-search})
+               (when input-button-icon
+                 {:input-button-icon input-button-icon})
+               (when-let [ic (:input-class opts)]
+                 {:class ic}))]
        (when open?
          [Popper {:open true
-                  :anchorEl @input-ref
+                  :anchorEl current-input-ref
                   :placement "bottom"
                   :modifiers #js {:hide #js {:enabled false}
                                   :preventOverflow #js {:enabled false}}
 
                   :style {:z-index 9999} ; Must have high z-index to use in modals
                   }
-          [Paper {:style {:width (.-clientWidth @input-ref) :height 300}
+          [Paper {:style {:width (.-clientWidth current-input-ref) :height 300}
                   :class ["user-select-popper" (<class user-select-popper)]}
            (if loading?
              [CircularProgress {:size 20}]
@@ -488,6 +499,80 @@
                   [buttons/link-button
                    {:on-click on-click} title]]])])]])])))
 
+(defn- multiselect-chip-style []
+  ^{:pseudo {:focus {:border-color "#40a9ff"
+                     :background-color "#e6f7ff"}}
+    :combinators {[:> :span] {:overflow "hidden"
+                              :white-space "nowrap"
+                              :text-overflow "ellipsis"}
+                  [:> :.material-icons] {:font-size "12px"
+                                         :cursor "pointer"
+                                         :padding "4px"}}}
+  {:display "flex"
+   :align-items "center"
+   :height "24px"
+   :margin "2px"
+   :line-height "22px"
+   :background-color "#fafafa"
+   :border "1px solid #e8e8e8"
+   :border-radius "2px"
+   :box-sizing "content-box"
+   :padding "0 4px 0 10px"
+   :outline "0"
+   :overflow "hidden"})
+
+
+(defn- selected-item-chip [{:keys [format-result format-result-chip on-change value]
+                            :or {format-result str}} item]
+  [:div {:class (<class multiselect-chip-style)}
+   [:span ((or format-result-chip format-result) item)]
+   [icons/navigation-close
+    {:on-click #(on-change (disj (or value #{}) item))}]])
+
+(defn- multiselect-input-wrapper-style
+  []
+  ^{:pseudo {:hover {:border-color "#40a9ff"}
+             :focused {:border-color "#40a9ff"
+                       :box-shadow "0 0 0 2px rgba(24, 144, 255, 0.2)"}}
+    :combinators {[:> :input] {:font-size "14px"
+                               :height "30px"
+                               :display "inline-block"
+                               :box-sizing "border-box"
+                               :padding "4px 6px"
+                               :width 0
+                               :min-width "100px"
+                               :flex-grow 1
+                               :border 0
+                               :margin 0
+                               :outline 0}}}
+  {:width "300px"
+   :border "1px solid #d9d9d9"
+   :background-color "#fff"
+   :border-radius "4px"
+   :padding "1px"
+   :display "flex"
+   :flex-wrap "wrap"})
+
+(defn select-search-multiple
+  "Multiple select with select-search. Contains a list of chips for results.
+  Value is a set of selected items."
+  [{:keys [on-change value] :as opts}]
+  (r/with-let [input-ref (r/atom nil)
+               set-input-ref! #(reset! input-ref %)]
+    (.log js/console "inputti on " @input-ref)
+    [:div.select-search-multiple {:class (<class multiselect-input-wrapper-style)
+                                  :ref set-input-ref!}
+     (mapc (r/partial selected-item-chip opts) value)
+     ^{:key (str (count value))} ; remount search to clear it's text search after every change
+     [select-search
+      (merge opts
+             {:input-element :input
+              :input-ref @input-ref
+              :show-label? false
+              :start-icon nil :input-button-icon nil
+              :value nil
+              :on-change #(on-change (conj (or value #{}) %))})]]))
+
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error
@@ -501,6 +586,7 @@
     (let [{:keys [loading? users open? input highlight]} @state]
       [:<>
        [TextField {:ref #(reset! input-ref %)
+                   :id "select-user"
                    :label label
                    :show-label? show-label?
                    :required required

@@ -1,6 +1,6 @@
 context("Admin inspector", () => {
     before(() => {
-        cy.dummyLogin("Danny")
+        cy.dummyLogin("benjamin")
         cy.visit("#/admin/inspect/user-EE12345678900") // inspect danny user entity
     })
 
