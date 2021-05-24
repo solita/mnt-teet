@@ -273,7 +273,7 @@
                                               :thk.contract/procurement-part-id
                                               :thk.contract/type])
                   (meta-model/system-created))]
-          (log/warn "No targets found for contract with ids: " contract-ids)))
+          (log/warn "No targets found for contract with ids: " contract-ids "Contract row details: " contract-info)))
       (log/info "Contract with ids: " contract-ids " already exists nothing is done"))))
 
 (defn final-contract?
