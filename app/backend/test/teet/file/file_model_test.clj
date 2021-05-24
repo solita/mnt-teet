@@ -11,6 +11,6 @@
 (deftest file-editable
   (is (true? (file-model/editable? {:file/status :file.status/draft})))
   (is (true? (file-model/editable? {:file/status {:db/ident :file.status/draft}})))
-  (is (true? (file-model/editable? {})) "Defaults to editable if no status info")
+  (is (false? (file-model/editable? {})) "Defaults to editable if no status info")
   (is (false? (file-model/editable? {:file/status :file.status/final})))
   (is (false? (file-model/editable? {:file/status {:db/ident :file.status/final}}))))

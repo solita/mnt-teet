@@ -382,7 +382,9 @@
    (with-redefs [file-storage/upload-url (fn [name]
                                            (str "UPLOAD:" name))]
      (let [{:keys [url task-id file]}
-           (local-command (if previous-version-id
+           (local-command
+             (logged-user)
+             (if previous-version-id
                             :file/replace
                             :file/upload)
                           (merge

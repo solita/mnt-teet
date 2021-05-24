@@ -586,6 +586,7 @@
     (let [{:keys [loading? users open? input highlight]} @state]
       [:<>
        [TextField {:ref #(reset! input-ref %)
+                   :id "select-user"
                    :label label
                    :show-label? show-label?
                    :required required

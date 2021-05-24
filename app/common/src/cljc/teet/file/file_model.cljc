@@ -4,7 +4,8 @@
             [teet.util.datomic :as du]
             [teet.file.filename-metadata :as filename-metadata]
             [clojure.set :as set]
-            #?(:cljs [teet.file.file-spec :as file-spec])))
+            #?(:cljs [teet.file.file-spec :as file-spec])
+            [taoensso.timbre :as log]))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
 
@@ -107,4 +108,6 @@
 (defn editable?
   "Check if file edit should be allowed based on status."
   [{status :file/status}]
-  (not (du/enum= status :file.status/final)))
+  (or
+    (du/enum= status :file.status/draft)
+    (du/enum= status :file.status/returned)))
