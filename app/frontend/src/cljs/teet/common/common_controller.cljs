@@ -311,7 +311,7 @@
 
 (def ^:private default-fetch-timeout-ms 30000)
 
-(defn- fetch*
+(defn fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns a Promise yielding a response data or app-state map."
   [e! error-event & [url authless-arg-map-js fetch-timeout-ms]]
