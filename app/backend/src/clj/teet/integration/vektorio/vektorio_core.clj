@@ -1,5 +1,6 @@
 (ns teet.integration.vektorio.vektorio-core
   (:require [teet.integration.vektorio.vektorio-client :as vektorio-client]
+            [teet.integration.vektorio.vektorio-db :as vektorio-db]
             [datomic.client.api :as d]
             [teet.project.project-db :as project-db]
             [teet.log :as log]
@@ -51,27 +52,8 @@
 (defn- vektorio-filepath
   "Returns {activity-code - activity-name}/{task-code - task-name}/{DD - file-part-name} for given file"
   [db file-id]
-  (let [task-activity-code (first (d/q '[:find ?activity-code ?activity-desc ?task-code ?task-desc
-                                         :in $ ?file
-                                         :keys activity-code activity-name task-code task-name
-                                         :where
-                                         [?task :task/files ?file]
-                                         [?task :task/type ?type]
-                                         [?activity :activity/tasks ?task]
-                                         [?activity :activity/name ?activity-name]
-                                         [?activity-name :db/ident ?activity-desc]
-                                         [?activity-name :filename/code ?activity-code]
-                                         [?type :filename/code ?task-code]
-                                         [?type :db/ident ?task-desc]]
-                                       db file-id))
-        file-part (first (d/q '[:find ?part-name ?part-number
-                                :in $ ?file
-                                :keys part-name part-number
-                                :where
-                                [?file :file/part ?file-part]
-                                [?file-part :file.part/name ?part-name]
-                                [?file-part :file.part/number ?part-number]]
-                              db file-id))]
+  (let [task-activity-code (vektorio-db/activity-and-task-info db file-id)
+        file-part (vektorio-db/file-part-info db file-id)]
         (str
           (:activity-code task-activity-code) " - "
           (tr-enum (:activity-name task-activity-code)) "/"
@@ -79,7 +61,7 @@
           (tr-enum (:task-name task-activity-code))
           (if (some? file-part)
             (str "/" (format "%02d" (:part-number file-part)) " - " (:part-name file-part))
-            (str "/00 - " (tr [:file-upload :general-part]))))))
+            (str "/00 - " (with-language :et (tr [:file-upload :general-part])))))))
 
 (defn- vektorio-filename
   "Returns for example '02_1_Uskuna.dwg'"
