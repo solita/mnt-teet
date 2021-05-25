@@ -634,4 +634,5 @@
                       (on-scroll)))
                   #js {:threshold #js [1]})]
     (fn [_]
-      [:span {:ref #(.observe observer %)}])))
+      [:span {:ref #(when %
+                      (.observe observer %))}])))
