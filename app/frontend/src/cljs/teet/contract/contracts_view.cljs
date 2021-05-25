@@ -28,16 +28,18 @@
                                                     (fn [x] (not x)))
                                       :open? @container-open?}
      [:span contract-name]
-     [:span (pr-str contract)]
-     [contract-view/contract-procurement-link contract]
-     (when external-link
-       [contract-view/contract-external-link contract])
-     [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
-      (str/upper-case
-        (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
-     [url/Link {:page :contract
-                :params {:contract-ids (contract-model/contract-url-id contract)}}
-      (str "LINK TO THIS CONTRACT" (contract-model/contract-url-id contract))]]))
+
+     [:<>
+      [:span (pr-str contract)]
+      [contract-view/contract-procurement-link contract]
+      (when external-link
+        [contract-view/contract-external-link contract])
+      [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
+        (str/upper-case
+          (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
+      [url/Link {:page :contract
+                 :params {:contract-ids (contract-model/contract-url-id contract)}}
+       (str "LINK TO THIS CONTRACT" (contract-model/contract-url-id contract))]]]))
 
 (defn toggle-list-expansion-button
   [list-expansion? toggle-list-expansion]
