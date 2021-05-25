@@ -182,6 +182,8 @@
 
 (s/def :assets-search/fclass (s/coll-of keyword?))
 
+(def ^:private result-count-limit 1000)
+
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
@@ -189,28 +191,73 @@
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
-  (let [assets (mapv first
-                     (d/q '[:find (pull ?a [:asset/fclass :common/status :asset/oid
-                                            :location/road-nr :location/carriageway
-                                            :location/start-km :location/end-km
-                                            :location/start-point :location/end-point])
-                            :where
-                            [?a :asset/fclass ?fclass]
-                            :in $ [?fclass ...]]
-                          adb
-                          fclass))]
-    {:assets (mapv #(-> %
+  (let [assets
+        (map first
+             (take (inc result-count-limit)
+                   (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
+                                             :location/road-nr :location/carriageway
+                                             :location/start-km :location/end-km
+                                             :location/start-point :location/end-point])
+                             :where
+                             [?a :asset/fclass ?fclass]
+                             :in $ [?fclass ...]]
+                           adb
+                           fclass)))
+        more-results? (> (count assets) result-count-limit)
+        assets (take result-count-limit assets)]
+    {:more-results? more-results?
+     :result-count-limit result-count-limit
+     :assets (mapv #(-> %
                         (dissoc :location/start-point :location/end-point)
                         (cu/update-in-if-exists [:location/start-km] asset-model/format-location-km)
                         (cu/update-in-if-exists [:location/end-km] asset-model/format-location-km))
-                   assets)
-     :geojson (cheshire/encode
-               {:type "FeatureCollection"
-                :features
-                (for [{:location/keys [start-point end-point] :as a} assets
-                      :when (and start-point end-point)]
-                  {:type "Feature"
-                   :properties {"oid" (:asset/oid a)
-                                "fclass" (:db/ident (:asset/fclass a))}
-                   :geometry {:type "LineString"
-                              :coordinates [start-point end-point]}})})}))
+                   assets)}))
+
+(defquery :assets/geojson
+  {:doc "Return GeoJSON for assets found by search."
+   :spec (s/keys :opt-un [:assets-search/fclass])
+   :args {:keys [fclass xmin ymin xmax ymax] :as args}
+   :context {:keys [db user] adb :asset-db}
+   :project-id nil
+   :authorization {}}
+  (let [assets
+        (map first
+             (d/qseq '[:find (pull ?a [:asset/fclass :asset/oid
+                                       :location/start-point :location/end-point])
+                       :where
+                       [?a :asset/fclass ?fclass]
+                       ;; PENDING: move from tuples to -x/-y attrs
+                       ;; This allows much more efficient index access
+                       ;; for the bbox query, now we need to pull and
+                       ;; untuple everything
+                       (or-join [?a ?xmin ?ymin ?xmax ?ymax]
+                                (and [?a :location/start-point ?p]
+                                     [(untuple ?p) [?x ?y]]
+                                     [(<= ?xmin ?x)]
+                                     [(<= ?x ?xmax)]
+                                     [(<= ?ymin ?y)]
+                                     [(<= ?y ?ymax)])
+                                (and [?a :location/end-point ?p]
+                                     [(untuple ?p) [?x ?y]]
+                                     [(<= ?xmin ?x)]
+                                     [(<= ?x ?xmax)]
+                                     [(<= ?ymin ?y)]
+                                     [(<= ?y ?ymax)]))
+                       :in $ [?fclass ...] ?xmin ?ymin ?xmax ?ymax]
+                     adb
+                     fclass
+                     (bigdec xmin) (bigdec ymin)
+                     (bigdec xmax) (bigdec ymax)))]
+    ^{:format :raw}
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (cheshire/encode
+            {:type "FeatureCollection"
+             :features
+             (for [{:location/keys [start-point end-point] :as a} assets
+                   :when (and start-point end-point)]
+               {:type "Feature"
+                :properties {"oid" (:asset/oid a)
+                             "fclass" (:db/ident (:asset/fclass a))}
+                :geometry {:type "LineString"
+                           :coordinates [start-point end-point]}})})}))

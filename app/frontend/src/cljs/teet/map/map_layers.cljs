@@ -14,7 +14,8 @@
             [ol.format.WFS]
             [ol.format.GeoJSON]
             [ol.loadingstrategy :as ol-loadingstrategy]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.common-controller :as common-controller]))
 
 
 (def ^:const default-projection "EPSG:3301")
@@ -214,6 +215,42 @@
                        :single-line? false
                        :height 300}))
        {name (layer/->OpenLayersTaso layer)}))))
+
+(defn query-layer
+  "Layer for query that returns GeoJSON for area."
+  [e! query payload {:keys [style-fn min-resolution max-resolution] :as opts}]
+  (let [source (ol.source.Vector. #js {:projection "EPSG:3301"
+                                       :strategy ol-loadingstrategy/bbox
+                                       :format (ol.format.GeoJSON.
+                                                #js {:defaultDataProjection "EPSG:3301"})})
+        layer (ol.layer.Vector.
+               #js {:updateWhileInteracting false
+                    :source source})
+
+        loader (fn [extent _ _]
+                 (let [url (common-controller/query-url
+                            query (merge payload
+                                         (zipmap [:xmin :ymin :xmax :ymax]
+                                                 extent)))]
+                   (js/console.log "FETCH GEOJSON QUERY URL: " url)
+                   (-> (common-controller/fetch* e! nil url)
+                       (.then #(.json %))
+                       (.then (fn [json]
+                                (def *json json)
+                                (let [features (-> source
+                                                   .getFormat
+                                                   (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
+                                  (def *features features)
+                                  (doto source
+                                    (.addFeatures features)
+                                    .refresh)))))))]
+    (when min-resolution
+      (.setMinResolution layer min-resolution))
+    (when max-resolution
+      (.setMaxResolution layer max-resolution))
+    (.setLoader source loader)
+    (.setStyle layer style-fn)
+    (layer/->OpenLayersTaso layer)))
 
 
 (defmethod create-data-layer :teeregister

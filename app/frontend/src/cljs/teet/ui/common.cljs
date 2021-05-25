@@ -632,3 +632,13 @@
     [:div
      {:style {:padding-left "0.3em"}}
      [typography/Text (format/date value)]]]])
+
+(defn scroll-sensor [on-scroll]
+  (let [observer (js/IntersectionObserver.
+                  (fn [entries]
+                    (when (.-isIntersecting (aget entries 0))
+                      (on-scroll)))
+                  #js {:threshold #js [1]})]
+    (fn [_]
+      [:span {:ref #(when %
+                      (.observe observer %))}])))
