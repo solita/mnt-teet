@@ -10,7 +10,6 @@
   [x]
   (when (string? x)
     (-> x str/trim
-        (str/replace #"\h" "")
         (str/replace #"\s" "")
         (str/replace "," ".")
         (str/replace "−" "-"))))
