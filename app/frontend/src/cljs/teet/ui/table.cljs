@@ -11,8 +11,8 @@
             [reagent.core :as r]
             [teet.ui.util :refer [mapc]]
             [teet.ui.icons :as icons]
-            [postgrest-ui.components.scroll-sensor :as scroll-sensor]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.ui.common :as common-ui]))
 
 (defn table-filter-style
   []
@@ -200,7 +200,8 @@
             (merge opts
                    {:rows (listing-items state data)})]]
           (when default-show-count
-            [scroll-sensor/scroll-sensor (r/partial show-more! state)])])})))
+            [common-ui/scroll-sensor
+             (r/partial show-more! state)])])})))
 
 (defn- filtered-data [get-column data filters]
   (filter (fn [row]

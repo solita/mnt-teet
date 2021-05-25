@@ -59,7 +59,8 @@
          [:div
           [typography/Heading1 (tr [:asset :manager :link])]
           [table/listing-table
-           {:columns asset-model/assets-listing-columns
+           {:default-show-count 100
+            :columns asset-model/assets-listing-columns
             :get-column asset-model/assets-listing-get-column
             :format-column format-assets-column
             :data assets
