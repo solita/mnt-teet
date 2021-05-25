@@ -222,37 +222,29 @@
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
 
-(defn tasks-tx-data [db [project-id rows]]
-  (let [prj (first rows)
-        phases (group-by :thk.lifecycle/id rows)
-        phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
+(defn- get-project-attrs [db project-id rows]
+  (let [phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
         phase-est-ends (keep :thk.lifecycle/estimated-end-date rows)
+        thk-project (lookup db [:thk.project/id project-id])]
+    {:prj (first rows)
+     :phases (group-by :thk.lifecycle/id rows)
 
-        project-est-start (first (sort phase-est-starts))
-        project-est-end (last (sort phase-est-ends))
+     :project-est-start (first (sort phase-est-starts))
+     :project-est-end (last (sort phase-est-ends))
 
-        ;; Lookup existing :db/id and :integration/id based on THK
-        ;; project id
-        {proj-db-id :db/id
-         proj-integration-id :integration/id}
-        (lookup db [:thk.project/id project-id])
+     :proj-integration-id (:integration/id thk-project)
+     :proj-db-id (:db/id thk-project)
 
-        ;; Create new :integration/id if project does not have it
-        proj-integration-id (or proj-integration-id
-                              (let [new-uuid (integration-id/unused-random-small-uuid db)]
-                                (log/info "Creating new UUID for THK project "
-                                  project-id " => " new-uuid)
-                                new-uuid))
+     :project-exists? (some? (:db/id thk-project))
+     :project-has-owner? (and (some? (:db/id thk-project))
+                           (project-db/project-has-owner? db [:thk.project/id project-id]))}))
 
-
-        project-exists? (some? proj-db-id)
-        project-has-owner? (and project-exists?
-                             (project-db/project-has-owner? db [:thk.project/id project-id]))]
-
+(defn tasks-tx-data [db [project-id rows]]
+  (let [attrs (get-project-attrs db project-id rows)]
     (into
       [(cu/without-nils
          (merge
-           (select-keys prj #{:thk.project/id
+           (select-keys (:prj attrs) #{:thk.project/id
                               :thk.project/road-nr
                               :thk.project/bridge-nr
                               :thk.project/start-m
@@ -263,23 +255,23 @@
                               :thk.project/name})
 
            ;; Use THK provided owner only if project does not exist or doesn't have owner in TEET yet
-           (when (or (not project-exists?)
-                   (not project-has-owner?))
-                 (select-keys prj #{:thk.project/owner}))
+           (when (or (not (:project-exists? attrs))
+                   (not (:project-has-owner? attrs)))
+                 (select-keys (:prj attrs) #{:thk.project/owner}))
 
-           (if project-exists?
-             {:db/id proj-db-id
-              :integration/id proj-integration-id}
+           (if (:project-exists? attrs)
+             {:db/id (:proj-db-id attrs)
+              :integration/id (:proj-integration-id attrs)}
              {:db/id (str "prj-" project-id)
-              :integration/id proj-integration-id})
+              :integration/id (:proj-integration-id attrs)})
 
-           {:thk.project/estimated-start-date project-est-start
-            :thk.project/estimated-end-date project-est-end
+           {:thk.project/estimated-start-date (:project-est-start attrs)
+            :thk.project/estimated-end-date (:project-est-end attrs)
             :thk.project/integration-info (integration-info
-                                            prj thk-mapping/object-integration-info-fields)
+                                            (:prj attrs) thk-mapping/object-integration-info-fields)
             :thk.project/lifecycles
             (into []
-              (for [[id activities] phases
+              (for [[id activities] (:phases attrs)
                     :let [phase (first activities)
                           lc-thk-id (:thk.lifecycle/id phase)
                           lc-teet-id (:lifecycle-db-id phase)
@@ -349,8 +341,7 @@
 
                          {:activity/integration-info (integration-info
                                                        activity
-                                                       thk-mapping/activity-integration-info-fields)}))}))))}))]
-      (task-updates rows))))
+                                                       thk-mapping/activity-integration-info-fields)}))}))))}))])))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
