@@ -264,7 +264,11 @@
     :procurement-number nil,
     :road-number nil}},
   :contracts-list
-  {:result nil, :results nil, :expand-all nil, :collapse-all nil}},
+  {:result nil,
+   :results nil,
+   :expand-all nil,
+   :collapse-all nil,
+   :view nil}},
  :cooperation
  {:response "Vastus",
   :application-delete-confirm "Kustutan taotluse?",

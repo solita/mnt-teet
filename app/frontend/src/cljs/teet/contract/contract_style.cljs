@@ -10,7 +10,7 @@
 
 (defn contract-card-style
   []
-  {:padding "1rem 1rem 1rem 1.5rem"
+  {:padding "0.8rem"
    :box-shadow theme-colors/card-box-shadow
    :background-color theme-colors/card-background-extra-light
    :margin-top "1rem"})
@@ -21,8 +21,25 @@
 
 (defn contract-card-style-header
   []
-  {})
+  ^{:combinators
+    {[:> :h3] {:display :none}
+     [:> :span :button] {:margin-right "0.3rem"}}}
+  {:display :flex})
 
+(defn contract-card-header-component-style
+  []
+  ^{:combinators
+    {[:> :h4] {:font-size "1rem"
+               :font-weight "700"
+               :text-transform :uppercase
+               :margin "0 0.8rem"
+               :flex 1}}}
+  {:display :flex
+   :flex 1})
+(defn contract-card-header-component-status-style
+  []
+  {:height "1.75rem"
+   :display :flex})
 (defn contracts-list-style
   []
   {:margin-top "3.857rem"})

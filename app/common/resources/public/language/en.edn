@@ -273,7 +273,8 @@
   {:result "Result",
    :results "Results",
    :expand-all "Expand all",
-   :collapse-all "Collapse all"}},
+   :collapse-all "Collapse all",
+   :view "View"}},
  :cooperation
  {:response "Response",
   :application-delete-confirm "Delete the application?",

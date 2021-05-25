@@ -18,28 +18,36 @@
             [teet.contract.contract-view :as contract-view]
             [teet.contract.contract-style :as contract-style]
             [teet.ui.typography :as typography]
-            [teet.ui.container :as container]))
+            [teet.ui.container :as container]
+            [teet.contract.contract-status :as contract-status]))
 
 (defn contract-card-header
-  [contract-status contract-name contract-url]
-  [:div {:class "contract-header-component-style"}]
+  [contract-status contract-name contract-url-id]
+  [:div {:class (<class contract-style/contract-card-header-component-style)}
+   [contract-status/contract-status
+    {:container-class (<class contract-style/contract-card-header-component-status-style)
+     :show-label? false}
+    contract-status]
+   [:h4 contract-name]
+   [url/Link {:page :contract
+              :params {:contract-ids contract-url-id}}
+    (str (tr [:contracts :contracts-list :view]))]]
   )
 (defn contract-card
   [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
        contract-name :thk.contract/name :as contract}]
-  (r/with-let [container-open? (r/atom false)
-               contract-url [url/Link {:page :contract
-                                       :params {:contract-ids (contract-model/contract-url-id contract)}}
-                             (str "LINK TO THIS CONTRACT" (contract-model/contract-url-id contract))]]
+  (r/with-let [container-open? (r/atom false)]
     [container/collapsible-container {:class (<class contract-style/contract-card-style)
                                       :header-class (<class contract-style/contract-card-style-header)
                                       :container-class (<class contract-style/contract-card-style-container)
-                                      :side-component (contract-card-header "" contract-name contract-url)
+                                      :side-component (contract-card-header
+                                                        (:thk.contract/status contract)
+                                                        contract-name
+                                                        (contract-model/contract-url-id contract))
                                       :on-toggle #(swap! container-open?
                                                     (fn [x] (not x)))
                                       :open? @container-open?}
-     [:span contract-name]
-
+     ""
      [:<>
       [:span (pr-str contract)]
       [contract-view/contract-procurement-link contract]
@@ -115,7 +123,7 @@
                                      :box-sizing :border-box
                                      :height "1.5rem"}
                              :on-click toggle-filters-visibility
-                             :start-icon (r/as-element [icons/content-filter-alt])}
+                             :start-icon (r/as-element [icons/content-filter-alt-outlined])}
    (if filters-visibility?
      (tr [:contracts :filters :hide-filters])
      (tr [:contracts :filters :show-filters]))])

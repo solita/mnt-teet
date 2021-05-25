@@ -507,20 +507,26 @@
        [typography/TextBold title]
        [typography/Text body]]]]))
 
+(defn popper-tooltip-container-style
+  []
+  {:display :block})
 
 (defn popper-tooltip
   "Wrap component in an error tooltip. When component is hovered, the
   error message is displayed.
 
   If msg is nil, the component is returned as is.
-  Otherwise msg must be a map containig :title and :body  for the error message."
-  [{:keys [title body variant icon] :as msg
+  Otherwise msg must be a map containing :title and :body  for the error message."
+  [{:keys [title body variant icon class] :as msg
     :or {variant :error}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
                set-anchor-el! #(reset! anchor-el %)
                enter! #(reset! hover? true)
-               leave! #(reset! hover? false)]
+               leave! #(reset! hover? false)
+               container-class (if (nil? class)
+                                 (<class popper-tooltip-container-style)
+                                 class)]
     (if (nil? msg)
       component
       [:div {:on-mouse-enter enter!
@@ -530,7 +536,7 @@
              :on-blur leave!
              :ref set-anchor-el!
              :tabIndex 0
-             :style {:display :inline-block}}
+             :class container-class}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
                 :open @hover?
