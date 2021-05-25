@@ -534,10 +534,6 @@
           [add-component-menu
            (into []
                  (asset-type-library/allowed-component-types atl fclass))
-           (e! cost-items-controller/->AddComponent)]
-          [add-component-menu
-           (into []
-                 (asset-type-library/allowed-material-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
 (defn- component-form-navigation [atl [asset :as component-path]]
@@ -610,10 +606,17 @@
          [form/footer2]]]
 
        (when (not new?)
-         (let [allowed-components (asset-type-library/allowed-component-types atl ctype)]
-           (when (seq allowed-components)
-             [add-component-menu allowed-components
-              (e! cost-items-controller/->AddComponent)])))])))
+         [:<>
+          ;; Should have only either, never both
+          (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
+            [add-component-menu
+             allowed-components
+             (e! cost-items-controller/->AddComponent)])
+          (when-let [allowed-materials (asset-type-library/allowed-material-types atl ctype)]
+            [add-component-menu
+             allowed-materials
+             ;; TODO: AddMaterial
+             (e! cost-items-controller/->AddComponent)])])])))
 
 (defn component-form
   [e! atl component-oid cost-item-data]

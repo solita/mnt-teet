@@ -59,6 +59,14 @@
 (def material? (partial has-type? :asset-schema.type/material))
 
 
+(defn leaf-ctype?
+  "Is `ctype`
+   - a component type
+   - that has no child component types"
+  [ctype]
+  (and (ctype? ctype)
+       (empty? (:ctype/_parent ctype))))
+
 (defn allowed-component-types
   "Return all ctypes that are allowed for the given fclass or ctype."
   [atl fclass-or-ctype]
@@ -69,26 +77,23 @@
                                             (= (:db/ident %) ident))
                                       atl))))
 
-(defn feature-group
-  [atl fclass-or-ctype]
-  (-> (type-hierarchy atl fclass-or-ctype)
-      first ;; [<fgroups> <fclasses> <ctypes> ...]
-      :db/ident))
-
 (defn allowed-material-types
   "Return all materials and products that are allowed for the given fclass or ctype"
   [atl fclass-or-ctype]
-  (if-let [fgroup (feature-group atl fclass-or-ctype)]
-    (->> atl
-         :materials
-         ;; Is the fgroup in material's :material/fgroups?
-         (filter (fn [material]
-                   (->> material
-                        :material/fgroups
-                        (map :db/ident)
-                        set
-                        fgroup))))
-    []))
+  (let [hierarchy (type-hierarchy atl fclass-or-ctype)
+        node (last hierarchy)
+        fgroup (-> hierarchy first :db/ident)]
+    (if (leaf-ctype? node)
+      (->> atl
+           :materials
+           ;; Is the fgroup in material's :material/fgroups?
+           (filter (fn [material]
+                     (->> material
+                          :material/fgroups
+                          (map :db/ident)
+                          set
+                          fgroup))))
+      [])))
 
 (defn- item-by-ident*
   [atl ident]

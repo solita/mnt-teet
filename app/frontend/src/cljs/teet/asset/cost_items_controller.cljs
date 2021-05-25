@@ -10,8 +10,7 @@
             [teet.routes :as routes]
             cljs.reader
             [teet.asset.asset-type-library :as asset-type-library]
-            [reagent.core :as r]
-            [teet.ui.format :as format]))
+            [reagent.core :as r]))
 
 (defrecord AddComponentCancel [id])
 
@@ -75,6 +74,9 @@
 (defrecord DeleteComponent [id])
 (defrecord SaveComponent [component-id])
 (defrecord SaveComponentResponse [response])
+(defrecord DeleteMaterial [id])
+(defrecord SaveMaterial [material-id])
+(defrecord SaveMaterialResponse [response])
 
 (defrecord UpdateForm [form-data])
 
