@@ -222,6 +222,13 @@
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
 
+(defn add-tasks [rows]
+  ;; TODO: implement
+  )
+
+(defn tasks-tx-data [db [project-id rows]]
+  (add-tasks rows))
+
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
        (not (excluded-project-types (:thk.project/repair-method p1)))))
@@ -310,6 +317,18 @@
                project-tx-maps))))
         projects-csv))
 
+(defn- thk-import-tasks-tx [db url projects-csv]
+  (into [{:db/id "datomic.tx"
+          :integration/source-uri url}]
+    (mapcat
+      (fn [prj]                                          ;; {"project-id" [{"rows"}..]}
+        (when (teet-project? prj)
+              (let [project-tx-maps (tasks-tx-data db prj)
+                    {:thk.project/keys [id lifecycles] :as _project}
+                    (first project-tx-maps)]
+                project-tx-maps))))
+    projects-csv))
+
 (defn- check-unique-activity-ids [projects]
   (into {}
         (keep (fn [project]
@@ -354,3 +373,8 @@
     (let [db (d/db connection)]
       (d/transact connection
                   {:tx-data (thk-import-projects-tx db url projects)}))))
+
+(defn import-thk-tasks! [connection url projects]
+  (let [db (d/db connection)]
+    (d/transact connection
+      {:tx-data (thk-import-tasks-tx db url projects)})))
