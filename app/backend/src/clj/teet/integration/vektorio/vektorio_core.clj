@@ -5,7 +5,7 @@
             [teet.log :as log]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.file.file-storage :as file-storage]
-            [clojure.string :as str]
+            [teet.localization :refer [with-language tr-enum tr]]
             [teet.file.file-db :as file-db]
             [teet.file.filename-metadata :as filename-metadata]))
 
@@ -49,19 +49,37 @@
       (create-project-in-vektorio! conn vektor-config project-id))))
 
 (defn- vektorio-filepath
-  "Returns {activity-code}/{task-code} for given file"
+  "Returns {activity-code - activity-name}/{task-code - task-name}/{DD - file-part-name} for given file"
   [db file-id]
-  (let [task-activity-code (first (d/q '[:find ?activity-code ?task-code
+  (let [task-activity-code (first (d/q '[:find ?activity-code ?activity-desc ?task-code ?task-desc
                                          :in $ ?file
+                                         :keys activity-code activity-name task-code task-name
                                          :where
                                          [?task :task/files ?file]
                                          [?task :task/type ?type]
                                          [?activity :activity/tasks ?task]
                                          [?activity :activity/name ?activity-name]
+                                         [?activity-name :db/ident ?activity-desc]
                                          [?activity-name :filename/code ?activity-code]
-                                         [?type :filename/code ?task-code]]
-                                       db file-id))]
-    (str/join "/" task-activity-code)))
+                                         [?type :filename/code ?task-code]
+                                         [?type :db/ident ?task-desc]]
+                                       db file-id))
+        file-part (first (d/q '[:find ?part-name ?part-number
+                                :in $ ?file
+                                :keys part-name part-number
+                                :where
+                                [?file :file/part ?file-part]
+                                [?file-part :file.part/name ?part-name]
+                                [?file-part :file.part/number ?part-number]]
+                              db file-id))]
+        (str
+          (:activity-code task-activity-code) " - "
+          (tr-enum (:activity-name task-activity-code)) "/"
+          (:task-code task-activity-code) " - "
+          (tr-enum (:task-name task-activity-code))
+          (if (some? file-part)
+            (str "/" (format "%02d" (:part-number file-part)) " - " (:part-name file-part))
+            (str "/00 - " (tr [:file-upload :general-part]))))))
 
 (defn- vektorio-filename
   "Returns for example '02_1_Uskuna.dwg'"
