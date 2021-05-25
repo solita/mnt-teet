@@ -377,11 +377,12 @@
   "Show line between start->end points of asset location and
 an icon based on asset class."
   [^ol.render.Feature feature _res]
+  ;;(js/console.log "asset map " feature)
   (let [oid (some-> feature .getProperties (aget "oid"))
         cls (some-> oid asset-model/asset-oid->fclass-oid-prefix)
         center (-> feature .getGeometry .getExtent
                    ol-extent/getCenter ol.geom.Point.)]
-    #js [(ol.style.Style.
+    #js [#_(ol.style.Style.
           #js {:geometry center
                :image (ol.style.Icon.
                        #js {:anchor #js [0.5 0.5]

@@ -31,7 +31,9 @@
                  {:keys [min-resolution max-resolution z-index opacity on-select]
                   :or {z-index 99
                        opacity 1}}]
-  (mvt/->MVT (str endpoint "/rpc/" rpc-name) ; base url
+  (mvt/->MVT (if-let [url-fn (:url-fn endpoint)]
+               url-fn
+               (str endpoint "/rpc/" rpc-name)) ; base url
              rpc-name ; source-name
              default-projection
              nil ; extent

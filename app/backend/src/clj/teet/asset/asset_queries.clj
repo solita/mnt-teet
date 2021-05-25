@@ -5,6 +5,7 @@
             [teet.asset.asset-db :as asset-db]
             [teet.asset.asset-model :as asset-model]
             [teet.asset.asset-type-library :as asset-type-library]
+            [teet.asset.asset-mvt :as asset-mvt]
             [teet.db-api.core :as db-api :refer [defquery]]
             [teet.environment :as environment]
             [teet.localization :as localization :refer [with-language tr tr-enum]]
@@ -17,7 +18,7 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [cheshire.core :as cheshire]
-            [teet.util.coerce :refer [->long]]
+            [teet.util.coerce :refer [->long ->bigdec]]
             [teet.util.collection :as cu]))
 
 (defquery :asset/type-library
@@ -180,26 +181,34 @@
   (asset-db/project-boq-version-history adb project-id))
 
 
+(s/def :assets-search/criteria (s/keys :opt-un [:assets-search/fclass]))
 (s/def :assets-search/fclass (s/coll-of keyword?))
+
+(def ^:private result-count-limit 1000)
 
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
-   :spec (s/keys :opt-un [:assets-search/fclass])
+   :spec :assets-search/criteria
    :args {fclass :fclass}
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
   (let [assets (mapv first
-                     (d/q '[:find (pull ?a [:asset/fclass :common/status :asset/oid
-                                            :location/road-nr :location/carriageway
-                                            :location/start-km :location/end-km
-                                            :location/start-point :location/end-point])
-                            :where
-                            [?a :asset/fclass ?fclass]
-                            :in $ [?fclass ...]]
-                          adb
-                          fclass))]
-    {:assets (mapv #(-> %
+                     (take (inc result-count-limit)
+                           (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
+                                                     :location/road-nr :location/carriageway
+                                                     :location/start-km :location/end-km
+                                                     :location/start-point :location/end-point])
+                                     :where
+                                     [?a :asset/fclass ?fclass]
+                                     :in $ [?fclass ...]]
+                                   adb
+                                   fclass)))
+        more-results? (> (count assets) result-count-limit)
+        assets (take result-count-limit assets)]
+    {:more-results? more-results?
+     :result-count-limit result-count-limit
+     :assets (mapv #(-> %
                         (dissoc :location/start-point :location/end-point)
                         (cu/update-in-if-exists [:location/start-km] asset-model/format-location-km)
                         (cu/update-in-if-exists [:location/end-km] asset-model/format-location-km))
@@ -214,3 +223,51 @@
                                 "fclass" (:db/ident (:asset/fclass a))}
                    :geometry {:type "LineString"
                               :coordinates [start-point end-point]}})})}))
+
+(defquery :assets/mvt
+  {:doc "Return MVT tiles for asset search"
+   :spec :assets-search/criteria
+   :context {:keys [db user] adb :asset-db}
+   :args {fclass :fclass :as args}
+   :project-id nil
+   :authorization {}}
+  (let [{:strs [xmin ymin xmax ymax]} args]
+    ^{:format :raw}
+    {:status 200
+     :headers {"Content-Type" "application/octet-stream"}
+     :body (asset-mvt/mvt
+            "foo"
+            (for [[asset] (d/qseq '[:find (pull ?a [:location/start-point
+                                                    :location/end-point])
+                                    :in $ [?fclass ...] ?xmin ?ymin ?xmax ?ymax
+                                    :where
+                                    [?a :asset/fclass ?fclass]
+                                    ;; FIXME: move from tuples to -x/-y attrs
+                                    (or-join [?a ?xmin ?ymin ?xmax ?ymax]
+                                             (and [?a :location/start-point ?p]
+                                                  [(untuple ?p) [?x ?y]]
+                                                  [(<= ?xmin ?x)]
+                                                  [(<= ?x ?xmax)]
+                                                  [(<= ?ymin ?y)]
+                                                  [(<= ?y ?ymax)])
+                                             (and [?a :location/end-point ?p]
+                                                  [(untuple ?p) [?x ?y]]
+                                                  [(<= ?xmin ?x)]
+                                                  [(<= ?x ?xmax)]
+                                                  [(<= ?ymin ?y)]
+                                                  [(<= ?y ?ymax)]))]
+                                  adb
+                                  fclass
+                                  (->bigdec xmin) (->bigdec ymin)
+                                  (->bigdec xmax) (->bigdec ymax))
+                  :when (and (:location/start-point asset)
+                             (:location/end-point asset))
+                  ;; FIXME: scale lines from xrange/yrange to 0-4096
+                  :let [[sx sy] (:location/start-point asset)
+                        [ex ey] (:location/end-point asset)
+                        sx (int (Math/round (- sx xmin)))
+                        ex (int (Math/round (- ex xmin)))
+                        sy (int (Math/round (- sy ymin)))
+                        ey (int (Math/round (- ey ymin)))]]
+              {:location/start-point [sx sy]
+               :location/end-point [ex ey]}))}))
