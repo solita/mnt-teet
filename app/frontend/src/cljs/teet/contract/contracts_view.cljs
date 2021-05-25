@@ -20,11 +20,22 @@
             [teet.ui.typography :as typography]
             [teet.ui.container :as container]))
 
+(defn contract-card-header
+  [contract-status contract-name contract-url]
+  [:div {:class "contract-header-component-style"}]
+  )
 (defn contract-card
   [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
        contract-name :thk.contract/name :as contract}]
-  (r/with-let [container-open? (r/atom false)]
-    [container/collapsible-container {:on-toggle #(swap! container-open?
+  (r/with-let [container-open? (r/atom false)
+               contract-url [url/Link {:page :contract
+                                       :params {:contract-ids (contract-model/contract-url-id contract)}}
+                             (str "LINK TO THIS CONTRACT" (contract-model/contract-url-id contract))]]
+    [container/collapsible-container {:class (<class contract-style/contract-card-style)
+                                      :header-class (<class contract-style/contract-card-style-header)
+                                      :container-class (<class contract-style/contract-card-style-container)
+                                      :side-component (contract-card-header "" contract-name contract-url)
+                                      :on-toggle #(swap! container-open?
                                                     (fn [x] (not x)))
                                       :open? @container-open?}
      [:span contract-name]
@@ -102,7 +113,7 @@
                                      :box-sizing :border-box
                                      :height "1.5rem"}
                              :on-click toggle-filters-visibility
-                             :start-icon (r/as-element [icons/content-filter-alt-outlined])}
+                             :start-icon (r/as-element [icons/content-filter-alt])}
    (if filters-visibility?
      (tr [:contracts :filters :hide-filters])
      (tr [:contracts :filters :show-filters]))])

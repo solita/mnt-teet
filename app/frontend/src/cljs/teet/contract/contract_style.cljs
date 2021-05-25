@@ -10,7 +10,19 @@
 
 (defn contract-card-style
   []
+  {:padding "1rem 1rem 1rem 1.5rem"
+   :box-shadow theme-colors/card-box-shadow
+   :background-color theme-colors/card-background-extra-light
+   :margin-top "1rem"})
+
+(defn contract-card-style-container
+  []
+  {:padding "0"})
+
+(defn contract-card-style-header
+  []
   {})
+
 (defn contracts-list-style
   []
   {:margin-top "3.857rem"})
