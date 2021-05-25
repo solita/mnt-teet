@@ -77,8 +77,7 @@
            description extension]}]
   (str/join "_"
             (remove nil?
-                    [part
-                     (when document-group
+                    [(when document-group
                        (str document-group
                             (when sequence-number
                               (str "-" sequence-number))))
