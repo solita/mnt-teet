@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 
-# script that installs teet app, postgresql db, and postgrest api on one server
-# (to be decided: use datomic-local vs existing datomic?)
+# script that installs teet app, postgresql db, datomic local, postgrest api on one vm
+
 
 # exit on unhandled error status, error on undefined var references, consider pipelines failed when either side fails
-
 set -euo pipefail 
 
-TEET_BRANCH=master
 TEET_GIT_URL=https://github.com/solita/mnt-teet.git
 export AWS_REGION=eu-central-1
 export AWS_DEFAULT_REGION=$AWS_REGION
 
+# used just for postgres password now
 function gensecret {
     name="$1"
     touch "$name.secret"
@@ -165,8 +164,13 @@ function setup-postgres {
     createuser -h localhost -U postgres teetmaster
     createdb -h localhost -U postgres "$SOURCE_DB_NAME" -O teetmaster
     psql -c "CREATE ROLE teeregister" -h localhost -U postgres
+    psql -c "CREATE ROLE teet_user" -h localhost -U postgres
+    psql -c "CREATE ROLE teet_backend" -h localhost -U postgres
     psql -c "CREATE ROLE rdsadmin" -h localhost -U postgres
+    psql -c "CREATE ROLE teet WITH LOGIN SUPERUSER" -h localhost -U postgres
+    psql -c "CREATE ROLE authenticator LOGIN" -h localhost -U postgres
     PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" | pg_restore -d "$SOURCE_DB_NAME" -h localhost -U postgres
+    psql -c "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;" -h localhost -U postgres
 }
 
 
@@ -229,10 +233,16 @@ function get-certs {
 
     keytool -importkeystore -noprompt \
 	    -srckeystore jetty.pkcs12 -srcstoretype PKCS12 -srcstorepass dummypass \
-	    -destkeystore keystore -deststorepass storep
+	    -destkeystore teet.keystore -deststorepass storep
 
 }
 
+function detect-instance-branch {
+    local myid
+    myid="$(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
+    TEET_BRANCH="$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=teet-branch" | jq -r ".Tags[0].Value")"
+
+}
 
 
 function install-deps-and-app {
@@ -250,8 +260,9 @@ function install-deps-and-app {
     ./linux-install-1.10.3.822.sh
     clojure -e true > /dev/null
 
-
-    git clone -b $TEET_BRANCH $TEET_GIT_URL
+    detect-instance-branch # will set TEET_BRANCH read from instance tags
+    echo checking out "$TEET_GIT_URL" branch "$TEET_BRANCH"
+    git clone -b "$TEET_BRANCH" "$TEET_GIT_URL"
     
     gensecret pgpasswd
     systemctl status docker | grep -q running || systemctl restart docker
@@ -263,9 +274,10 @@ function install-deps-and-app {
 	sleep 5
     done       
     for cmd in "apt-get update" "apt-get -y install --no-install-recommends postgresql-11-postgis-2.5 postgresql-11-postgis-2.5-scripts" ; do
-	docker exec -it teetdb "$cmd"
+	docker exec -i teetdb bash -c "$cmd"
     done
     docker exec teetdb sed -i -e '1i host all all 172.16.0.0/14 trust' /var/lib/postgresql/data/pg_hba.conf
+    echo -e "max_wal_senders = 0\nwal_level = minimal\nfsync = off\nfull_page_writes = off\n" | docker exec -i teetdb bash -c 'cat >> /var/lib/postgresql/data/postgresql.conf' # try to make loading faster
     docker restart teetdb    
 
     TEET_ENV=$(ssm-get /teet/env)
@@ -312,6 +324,9 @@ function install-deps-and-app {
 function run-in-ec2 {
     local SCRIPTPATH
     local SSHKEYID
+    local THISBRANCH
+    THISBRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    echo using branch "$THISBRANCH"
     SCRIPTPATH="$(realpath "$0")"
     if [ $# -gt 0 ]; then
 	SSHKEYID="$1"
@@ -320,6 +335,7 @@ function run-in-ec2 {
     fi
     aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name "${SSHKEYID}" \
         --user-data "file://${SCRIPTPATH}" \
+	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}}]"  \
         --launch-template LaunchTemplateName=standalone-teetapp-template
 }
 
