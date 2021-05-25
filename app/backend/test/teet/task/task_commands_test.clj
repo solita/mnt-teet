@@ -178,3 +178,64 @@
                         {:file-id (:db/id (tu/get-data :file))})
 
       (is (tu/local-command :task/delete {:db/id (tu/get-data :task-id)})))))
+
+(def fake-upload tu/fake-upload)
+
+(deftest file-part-review-process
+  (tu/local-login tu/mock-user-boss)
+  (tu/store-data!
+    :task-id
+    (tu/create-task {:user tu/mock-user-boss
+                     :activity (tu/->db-id "p1-lc1-act1")
+                     :task {:task/type :task.type/third-party-review
+                            :task/group :task.group/land-purchase}}))
+
+  ;; Upload file under a task part
+  (tu/store-data!
+    :original-file
+    (fake-upload (tu/get-data :task-id)
+                 {:file/name "file in part 1.png"
+                  :file/size 4096
+                  :file/document-group :file.document-group/annexes
+                  :file/sequence-number 420
+                  :file/part {:file.part/number 1
+                              :file.part/name "this is the part"
+                              :file.part/status :file.part.status/in-progress}}))
+
+  (tu/store-data!
+    :original-part-id
+    (get-in (du/entity (tu/db) (:db/id (tu/get-data :original-file)))
+            [:file/part :db/id]))
+
+  (testing "Submitting task part for review"
+    (tu/local-command :task/task-part-submit
+                      {:taskpart-id (tu/get-data :original-part-id)
+                       :task-id (tu/get-data :task-id)})
+
+    (is (= (:db/ident (:file.part/status (du/entity (tu/db) (tu/get-data :original-part-id)))) :file.part.status/waiting-for-review)
+        "File part has been submitted"))
+
+  (testing "Setting task part as in review"
+    (tu/local-command :task/start-task-part-review
+                      {:taskpart-id (tu/get-data :original-part-id)
+                       :task-id (tu/get-data :task-id)})
+
+    (is (= (:db/ident (:file.part/status (du/entity (tu/db) (tu/get-data :original-part-id)))) :file.part.status/reviewing)
+        "File part is now in review"))
+
+  (testing "Setting task part as completed"
+    (tu/local-command :task/task-part-review
+                      {:taskpart-id (tu/get-data :original-part-id)
+                       :task-id (tu/get-data :task-id)
+                       :result :accept})
+
+    (is (= (:db/ident (:file.part/status (du/entity (tu/db) (tu/get-data :original-part-id)))) :file.part.status/completed)
+        "File part is now completed"))
+
+  (testing "Re-opening task part"
+    (tu/local-command :task/task-part-reopen
+                      {:taskpart-id (tu/get-data :original-part-id)
+                       :task-id (tu/get-data :task-id)})
+
+    (is (= (:db/ident (:file.part/status (du/entity (tu/db) (tu/get-data :original-part-id)))) :file.part.status/in-progress)
+        "File part is now re-opened")))

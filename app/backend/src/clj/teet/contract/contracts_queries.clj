@@ -47,18 +47,29 @@
             [(teet.util.string/contains-words? ?contract-name ?contract-name-search-value)]]
    :in {'?contract-name-search-value (str/lower-case value)}})
 
-(defmethod contract-search-clause :procurement-id
+(defmethod contract-search-clause :contract-number
   [[_ value] _]
-  {:where '[[?c :thk.contract/procurement-id ?proc-id]
-            [(get-else $ ?c :thk.contract/procurement-part-id ?proc-id) ?procurement-id]
-            [(teet.util.string/contains-words? ?procurement-id ?procurement-id-search-value)]]
-   :in {'?procurement-id-search-value value}})
+  {:where '[[?c :thk.contract/number ?thk-contract-number]
+            [(teet.util.string/contains-words? ?thk-contract-number ?contract-number-search-value)]]
+   :in {'?contract-number-search-value value}})
 
 (defmethod contract-search-clause :procurement-number
   [[_ value] _]
   {:where '[[?c :thk.contract/procurement-number ?proc-number]
             [(teet.util.string/contains-words? ?proc-number ?proc-number-search-value)]]
    :in {'?proc-number-search-value value}})
+
+(defmethod contract-search-clause :project-manager
+  [[_ {value :db/id}] _]
+  {:where '[(contract-target-activity ?c ?activity)
+            [?activity :activity/manager ?ac-manager]
+            [(= ?ac-manager ?search-user)]]
+   :in {'?search-user value}})
+
+(defmethod contract-search-clause :partner-name
+  [[_ {value :db/id}] _]
+  {:where '[[(missing? $ ?c :thk.contract/procurement-id)]] ;; TODO ADD ACTUAL QUERY WHEN WE HAVE PARTNERS
+   :in {}})
 
 (defmethod contract-search-clause :ta/region
   [[_ value] _]

@@ -254,14 +254,14 @@
    :select-input-placeholder nil,
    :inputs
    {:contract-number nil,
+    :project-name nil,
     :ta/region nil,
     :partner-name nil,
     :project-manager nil,
     :contract-status nil,
-    :contact-type nil,
+    :contract-type nil,
     :contract-name nil,
     :procurement-number nil,
-    :object {name nil},
     :road-number nil}},
   :contracts-list
   {:result nil, :results nil, :expand-all nil, :collapse-all nil}},

@@ -168,12 +168,12 @@
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
-      {:e!              e!
-       :value           files-form
+      {:e! e!
+       :value files-form
        :on-change-event file-controller/->UpdateFilesForm
-       :save-event      #(file-controller/->AddFilesToTask files-form task close! linked-from)
+       :save-event #(file-controller/->AddFilesToTask files-form task close! linked-from)
        :cancel-fn close!
-       :in-progress?    upload-progress
+       :in-progress? upload-progress
        :spec :task/add-files}
       (when (seq (:file.part/_task task))
         ^{:attribute :file/part}
@@ -217,15 +217,118 @@
                     (tr [:fields :validation-error :file.part/name])
                     :else
                     nil))}
-    [TextField {}]]])
+    [TextField {:id :task-part-name}]]])
+
+(defn- task-part-review-button
+  "Button with confirmation that is displayed for task part review actions."
+  [{:keys [action title-text modal-text button-type button-params button-text]}]
+  [buttons/button-with-confirm
+   {:action action
+    :modal-title (str title-text "?")
+    :confirm-button-text  (tr [:buttons :confirm])
+    :cancel-button-text  (tr [:buttons :cancel])
+    :modal-text modal-text
+    :close-on-action? true}
+   [button-type (merge button-params
+                       {:size :small
+                        :onclick action})
+    button-text]])
+
+(defn task-part-buttons [e! task task-part]
+  (let [task-part-status (:db/ident (:file.part/status task-part))]
+    (when (task-model/can-submit? task)
+      [:div
+       {:class [(<class common-styles/padding-bottom 1)
+                (<class common-styles/margin 0.5)]}
+       [:<>
+        (case task-part-status
+          :file.part.status/in-progress
+          [when-authorized :task/submit task
+           [task-part-review-button
+            {:action (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))
+             :title-text (tr [:task-part :submit-results])
+             :modal-text (tr [:task-part :submit-results-confirm])
+             :button-type buttons/button-primary
+             :button-params {:id (str "submit-button-" (:db/id task-part))}
+             :button-text (tr [:task-part :submit-for-approval])}]]
+
+          :file.part.status/reviewing
+          [when-authorized :task/review task
+           [:<>
+            [task-part-review-button
+             {:action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :accept)
+              :title-text (tr [:task-part :approve-part])
+              :modal-text (tr [:task-part :approve-part-confirm])
+              :button-type buttons/button-green
+              :button-params {:id (str "accept-button-" (:db/id task-part))
+                              :class (<class common-styles/margin-right 1)}
+              :button-text (tr [:task-part :accept])}]
+            [task-part-review-button
+             {:action (e! task-controller/->ReviewTaskPart(:db/id task) (:db/id task-part) :reject)
+              :title-text (tr [:task-part :reject-part])
+              :modal-text (tr [:task-part :reject-part-confirm])
+              :button-type buttons/button-warning
+              :button-params {:id (str "reject-button-" (:db/id task-part))}
+              :button-text (tr [:task-part :reject])}]]]
+
+          :file.part.status/completed
+          [when-authorized :task/reopen-task task
+           [task-part-review-button
+            {:action (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))
+             :title-text (tr [:task-part :reopen-part])
+             :modal-text (tr [:task-part :reopen-part-confirm])
+             :button-type buttons/button-primary
+             :button-params {:id (str "reopen-button-" (:db/id task-part))}
+             :button-text (tr [:task-part :reopen])}]]
+          [:<>])]])))
+
+(defn- start-task-part-review [e! task-id task-part-id]
+  (e! (task-controller/->StartTaskPartReview task-id task-part-id))
+  (fn [_]
+    [:span]))
+
+(defn task-part-button-area
+  [e! task file-part assignee?]
+  (let [task-part-status (:db/ident (:file.part/status file-part))]
+    [:<>
+     (when (and assignee? (du/enum= task-part-status :file.part.status/waiting-for-review))
+          [start-task-part-review e! (:db/id task) (:db/id file-part)])
+     [when-authorized :task/submit task
+      [task-part-buttons e! task file-part]]]))
+
+(defn task-part-heading
+  [e! {heading :heading
+       number :number} file-part opts]
+  [:div
+   [:div {:class [(<class common-styles/margin-bottom 0.5)
+                  (<class common-styles/space-between-center)]}
+    [:div {:class [(<class common-styles/flex-row-end)
+                   (<class common-styles/margin-right 0.5)]}
+     [typography/Heading3 {:class (<class common-styles/margin-right 0.5)}
+      heading]
+     (when number
+       [typography/Heading4
+        {:style {:white-space :nowrap
+                 :color theme-colors/gray-light}}
+        (gstr/format "#%02d" number)])]
+    [:div {:style {:padding-top "5px"}}
+     (when-let [action-comp (:action opts)]
+       action-comp)]]
+   [:div {:class [(<class common-styles/margin-right 2)
+                  (<class common-styles/margin-bottom 1)]}
+    (tr-enum (:file.part/status file-part))]
+   ])
 
 (defn file-section-view
   [{:keys [e! upload! sort-by-value allow-replacement-opts
-           land-acquisition?]} task file-part files]
+           land-acquisition?]} task file-part assignee? files]
   [:div
-   [file-view/file-part-heading {:heading (:file.part/name file-part)
-                                 :number (:file.part/number file-part)}
-    {:action (when (task-model/can-submit? task)
+   {:class [(<class common-styles/margin 1 0 1.5 0)
+            (<class common-styles/gray-light-border-bottom)]}
+   [task-part-heading e! {:heading (:file.part/name file-part)
+                          :number (:file.part/number file-part)
+                          :file-count (count files)} file-part
+    {:action (when (and (task-model/can-submit? task) (task-model/can-submit-part? file-part))
                [when-authorized
                 :task/create-part task
                 [:div {:class (<class common-styles/flex-row)}
@@ -242,15 +345,18 @@
                      :style {:margin-right "0.5rem"}}
                     (tr [:buttons :edit])]}]
                  [buttons/button-primary {:size :small
+                                          :id (str "tp-upload-" (:file.part/number file-part))
                                           :start-icon (r/as-element [icons/content-add])
                                           :on-click #(upload! {:file/part file-part})}
                   (tr [:buttons :upload])]]])}]
    (if (seq files)
-     [file-view/file-list2 {:e! e!
+     [:<>
+      [file-view/file-list2 {:e! e!
                             :allow-replacement-opts allow-replacement-opts
                             :sort-by-value sort-by-value
                             :download? true
                             :land-acquisition? land-acquisition?} files]
+      [task-part-button-area e! task file-part assignee?]]
      [file-view/no-files])])
 
 (defn task-file-heading
@@ -259,9 +365,8 @@
   [:div {:class [(<class common-styles/space-between-center)
                  (<class common-styles/margin-bottom 1)]}
 
-   [:div {:style {:margin-right "0.5rem"
-                  :display :flex
-                  :align-items :flex-end}}
+   [:div {:class [(<class common-styles/margin-right 0.5)
+                  (<class common-styles/flex-align-end)]}
     [typography/Heading2 {:style {:margin-right "0.5rem"
                                   :display :inline-block}}
      (tr [:common :files])]
@@ -276,7 +381,7 @@
         (tr [:buttons :upload])]]])])
 
 (defn- file-content-view
-  [e! upload! activity task files-form project-id files parts selected-part]
+  [e! upload! activity task assignee? files-form project-id files parts selected-part]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
     (let [allow-replacement-opts (when (task-model/can-submit? task)
@@ -291,13 +396,17 @@
                                         :items items-for-sort-select}]
        (when (or (nil? selected-part) (zero? (:file.part/number selected-part))) ;; if some other part is selected hide this
          (let [general-files (remove #(contains? % :file/part) files)]
-           [file-view/file-list2 {:e! e!
+           [:div {:style
+                  {:border-bottom (str "solid " theme-colors/gray-light " 1px")
+                   :margin-bottom "1.5em"
+                   :margin-top "1em"}}
+            [file-view/file-list2 {:e! e!
                                   :allow-replacement-opts allow-replacement-opts
                                   :sort-by-value @sort-by-atom
                                   :download? true
                                   :land-acquisition? land-acquisition?
                                   :data-cy "task-file-list"}
-            general-files]))
+            general-files]]))
        [:div
         (when (not (zero? (:file.part/number selected-part)))
           (mapc
@@ -307,7 +416,7 @@
                                   :allow-replacement-opts allow-replacement-opts
                                   :upload! upload!
                                   :land-acquisition? land-acquisition?}
-               task part
+               task part assignee?
                (filterv
                  (fn [file]
                    (= (:db/id part) (get-in file [:file/part :db/id])))
@@ -317,12 +426,12 @@
               [selected-part])))]])))
 
 (defn- task-file-view
-  [e! activity task upload! files-form project-id]
+  [e! activity task assignee? upload! files-form project-id]
   (let [parts (:file.part/_task task)
         files (:task/files task)]
     [:div
      [file-view/file-search files parts
-      [file-content-view e! upload! activity task files-form project-id]]
+      [file-content-view e! upload! activity task assignee? files-form project-id]]
      (when (task-model/can-submit? task)
        [when-authorized :task/create-part
         task
@@ -332,7 +441,8 @@
           :button-component
           [buttons/button-secondary
            {:start-icon (r/as-element
-                          [icons/content-add])}
+                          [icons/content-add])
+            :data-cy "task-add-file-part"}
            (tr [:task :add-part])]}]])]))
 
 (defn file-upload-controls
@@ -369,7 +479,7 @@
          close! linked-from]]])))
 
 (defn task-details
-  [e! new-document project-id activity {:task/keys [description files] :as task} files-form]
+  [e! new-document project-id activity {:task/keys [description files] :as task} assignee? files-form]
   (r/with-let [upload-controls (file-upload-controls e!)]
     ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
@@ -377,7 +487,7 @@
        [typography/Paragraph
         [rich-text-editor/display-markdown description]])
      [task-basic-info task]
-     [task-file-view e! activity task (:upload! upload-controls) files-form project-id]
+     [task-file-view e! activity task assignee? (:upload! upload-controls) files-form project-id]
      [task-file-upload {:e! e!
                         :task task
                         :activity activity
@@ -396,7 +506,20 @@
          [buttons/button-warning {:on-click (e! task-controller/->Review :reject)}
           (tr [:task :reject-review])]
          [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
-          (tr [:task :accept-review])]]])]))
+          (tr [:task :accept-review])]]])
+     (when (task-model/completed? task)
+       [when-authorized :task/reopen-task task
+        [:div.task-reopen-button {:style {:display :flex :justify-content :space-between}}
+         [buttons/button-with-confirm
+          {:id (str "reopen-button-" (:db/id task))
+           :action (e! task-controller/->ReopenTask)
+           :modal-title (str (tr [:task :reopen-task]) "?")
+           :confirm-button-text  (tr [:buttons :confirm])
+           :cancel-button-text  (tr [:buttons :cancel])
+           :modal-text (tr [:task :reopen-task-confirm])
+           :close-on-action? true}
+          [buttons/button-primary {:on-click (e! task-controller/->ReopenTask)}
+           (tr [:task :reopen])]]]])]))
 
 (defn- edit-task-form [e! {:keys [max-date min-date allow-delete?]}
                        close-event form-atom ]
@@ -446,6 +569,7 @@
 (defn- edit-task-form-button [e! activity task allow-delete?]
   [form/form-modal-button
    {:e! e!
+    :id "edit-task-button"
     :button-component [buttons/button-secondary {}
                        (tr [:buttons :edit])]
     :modal-title (tr [:project :edit-task])
@@ -476,8 +600,8 @@
     [:span]))
 
 (defn- task-page-content
-  [e! app activity {status :task/status :as task} pm? files-form]
-  [:div.task-page
+  [e! app activity {status :task/status :as task} pm? assignee? files-form]
+  [:div.task-page {:class (<class common-styles/margin-bottom 2)}
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
       [start-review e!]])
@@ -496,7 +620,7 @@
      common-controller/->Refresh}
     [task-details e! (:new-document app)
      (get-in app [:params :project])
-     activity task files-form]]])
+     activity task assignee? files-form]]])
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
@@ -523,7 +647,8 @@
                    :thk.project/lifecycles some?
                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
                                                (du/find-by-id task-id tasks)))
-        task (project-model/task-by-id project task-id)]
+        task (project-model/task-by-id project task-id)
+        assignee (task-model/task-assignee project task-id)]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
@@ -537,4 +662,5 @@
       task
       (= (:db/id user)
          (:db/id activity-manager))
+      (= (:db/id user) assignee)
       (:files-form project)]]))

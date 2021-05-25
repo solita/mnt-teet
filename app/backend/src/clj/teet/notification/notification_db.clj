@@ -58,8 +58,9 @@
       (meta-model/system-created))))
 
 (def notification-keys [:db/id :notification/status
-                        :notification/target :notification/type
+                        :notification/type
                         :meta/created-at :meta/creator
+                        {:notification/target [:db/id :file.part/name :file.part/number]}
                         {:notification/project [:db/id
                                                 :thk.project/id :thk.project/name
                                                 :thk.project/project-name]}])

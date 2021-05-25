@@ -60,7 +60,7 @@
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :color "#005AA3"})
+   :color theme-colors/primary})
 
 (def link-1
   (with-meta
@@ -170,6 +170,10 @@
    :padding-bottom "0.75rem"
    :margin-bottom  "0.5rem"
    :border-bottom  (str "1px solid " theme-colors/gray-light)})
+
+(defn gray-light-border-bottom
+  []
+  {:border-bottom  (str "1px solid " theme-colors/gray-light)})
 
 (defn top-info-spacing
   []
@@ -432,11 +436,14 @@
                   :bold
                   :normal)})
 
-(defn white-link-button-style
+(defn white-text
+  []
+  {:color theme-colors/white})
+
+(defn link-button-style
   []
   ^{:pseudo {:hover {:text-decoration :none}}}
-  {:color theme-colors/white
-   :display :flex
+  {:display :flex
    :text-decoration :underline
    :align-items :center})
 
@@ -565,7 +572,8 @@
 
 (defn input-label-style
   [disabled? dark-theme?]
-  (merge {:display :block
+  (merge ^{:combinators {[:> :p] {:margin-bottom "0.25rem"}}}
+    {:display :block
           :color (if dark-theme?
                    theme-colors/white
                    theme-colors/black-coral)}

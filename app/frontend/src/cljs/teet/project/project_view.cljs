@@ -54,7 +54,7 @@
 
 (defn contract-info
   [{:thk.contract/keys [status] :as contract}]
-  [:div {:class (<class contract-style/project-contract-container)}
+  [:div {:class (<class contract-style/project-contract-container-style)}
    [:div {:class (<class common-styles/margin-bottom 1)}
     [url/Link {:page :contract
                :params {:contract-ids (contract-model/contract-url-id contract)}}

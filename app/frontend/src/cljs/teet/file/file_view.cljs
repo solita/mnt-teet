@@ -35,7 +35,8 @@
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            [teet.ui.common :as common-ui]))
+            [teet.ui.common :as common-ui]
+            [taoensso.timbre :as log]))
 
 
 
@@ -121,37 +122,39 @@
   (r/with-let [search-term (r/atom "")
                on-change #(let [val (-> % .-target .-value)]
                             (reset! search-term val))
-               selected-part (r/atom nil)
-               change-part #(do (reset! selected-part %))]
-    [:div
-     [:div {:class [(<class common-styles/flex-row)
-                    (<class common-styles/margin-bottom 1)]}
-      [TextField {:value @search-term
-                  :style {:margin-right "1rem"
-                          :flex 1}
-                  :placeholder (tr [:file :filter-file-listing])
-                  :start-icon icons/action-search
-                  :on-change on-change}]
-      [:div {:style {:flex 1}}
-       [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
-                                             :file.part/number 0}]
-                                           parts)
-                            :format-item (fn [{:file.part/keys [name number]}]
-                                           (gstr/format "%s #%02d" name number))
-                            :on-change change-part
-                            :value @selected-part
-                            :empty-selection-label (tr [:file :all-parts])
-                            :show-empty-selection? true}]]]
-     (conj
-       file-component
-       (filterv
-         (fn [{:file/keys [name] :as file}]
-           (and
-             (str/includes? (str/lower-case name) (str/lower-case @search-term))
-             file))
-         files)
-       parts
-       @selected-part)]))
+               selected-part-id (r/atom nil)
+               change-part #(reset! selected-part-id (:file.part/number %))]
+              (let [selected-part (when @selected-part-id
+                                    (first (filter (comp #(= @selected-part-id %) :file.part/number) parts)))]
+               [:div
+                [:div {:class [(<class common-styles/flex-row)
+                               (<class common-styles/margin-bottom 1)]}
+                 [TextField {:value @search-term
+                             :style {:margin-right "1rem"
+                                     :flex 1}
+                             :placeholder (tr [:file :filter-file-listing])
+                             :start-icon icons/action-search
+                             :on-change on-change}]
+                 [:div {:style {:flex 1}}
+                  [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
+                                                        :file.part/number 0}]
+                                                      parts)
+                                       :format-item (fn [{:file.part/keys [name number]}]
+                                                      (gstr/format "%s #%02d" name number))
+                                       :on-change change-part
+                                       :value selected-part
+                                       :empty-selection-label (tr [:file :all-parts])
+                                       :show-empty-selection? true}]]]
+                (conj
+                  file-component
+                  (filterv
+                    (fn [{:file/keys [name] :as file}]
+                      (and
+                        (str/includes? (str/lower-case name) (str/lower-case @search-term))
+                        file))
+                    files)
+                  parts
+                  selected-part)])))
 
 (defn file-comments-text
   [{:comment/keys [counts] :as file}]
@@ -543,7 +546,7 @@
            [:<>
             (when (and can-submit?
                        (nil? latest-file)
-                       (du/enum= :file.status/draft (:file/status file)))
+                       (file-model/editable? file))
               [file-replacement-modal-button {:e! e!
                                               :project-id project-id
                                               :task task
@@ -609,31 +612,15 @@
                                          :entity-id (:db/id @selected-file)
                                          :show-comment-form? false}]])]])))
 
-(defn file-part-heading
-  [{heading :heading
-    number :number} opts]
-  [:div {:style {:margin-bottom "1.5rem"
-                 :display :flex
-                 :justify-content :space-between}}
-   [:div {:class (<class common-styles/flex-row-end)
-          :style {:margin-right "0.5rem"}}
-    [typography/Heading2 {:style {:margin-right "0.5rem"}}
-     heading]
-    (when number
-      [typography/GrayText
-       {:style {:white-space :nowrap}}
-       (goog.string/format "#%02d" number)])]
-   [:div
-    (when-let [action-comp (:action opts)]
-      action-comp)]])
-
 (defn no-files
   []
-  [typography/GrayText {:class [(<class typography/gray-text-style)
+  [typography/GrayTextDiv {:class [(<class typography/gray-text-style)
                                 (<class common-styles/flex-row)
                                 (<class common-styles/margin-bottom 1)]}
-   [ti/file {:style {:margin-right "0.5rem"}}]
-   [:span (tr [:file :no-files])]])
+   [:div {:class [(<class common-styles/flex-row)
+                  (<class common-styles/margin-bottom 1.5)]}
+    [ti/file {:class (<class common-styles/margin-right 0.5)}]
+   [:span {:class (<class common-styles/flex-align-center)} (tr [:file :no-files])]]])
 
 (defn- file-edit-name [{:keys [value on-change error error-text]}]
   (let [[name original-name] value
@@ -783,13 +770,14 @@
                      [:span {:class (<class common-styles/overflow-ellipsis)}
                       description]
                      [typography/GrayText {:style {:display :inline-block
-                                                   :margin "0 0.5rem"}}
+                                                   :margin  "0 0.5rem"}}
                       (str/upper-case extension)]]
-                    [:div {:style {:flex-grow 1
+                    [:div {:style {:flex-grow  1
                                    :text-align :end}}
-                     [buttons/button-secondary {:on-click #(reset! edit-open? true)
-                                                :data-cy "edit-file-button"}
-                      (tr [:buttons :edit])]]]
+                     (when (file-model/editable? file)
+                       [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                                  :data-cy  "edit-file-button"}
+                        (tr [:buttons :edit])])]]
                    [file-identifying-info (du/enum= :activity.name/land-acquisition
                                                     (:activity/name activity))
                     file]
@@ -808,8 +796,15 @@
                      :entity-type :file
                      :show-comment-form? (not old?)}
                     (when file
-                      [file-details {:e! e! :app app :project-id project-id :task task
-                                     :file file :latest-file latest-file
+                      [file-details {:e! e!
+                                     :app app
+                                     :project-id project-id
+                                     :task task
+                                     :file file
+                                     :latest-file latest-file
                                      :file-part file-part
-                                     :can-submit? (task-model/can-submit? task)
+                                     :can-submit? (if
+                                                    (> 0 (:file.part/number file-part))
+                                                    (task-model/can-submit-part? file-part)
+                                                    (task-model/can-submit? task))
                                      :replace-form (:files-form project)}])]]]]]))))})))

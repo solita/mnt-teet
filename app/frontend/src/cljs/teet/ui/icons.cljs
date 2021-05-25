@@ -431,6 +431,7 @@
   "content_copy"
   "file_copy"
   "filter_list"
+  "filter_alt"
   "flag"
   "font_download"
   "forward"

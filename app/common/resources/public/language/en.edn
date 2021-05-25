@@ -260,14 +260,14 @@
    :select-input-placeholder "Select",
    :inputs
    {:contract-number "Contract number",
+    :project-name "Object name",
     :ta/region "Region",
     :partner-name "Partner name",
     :project-manager "Project manager",
     :contract-status "Contract status",
-    :contact-type "Contact type",
+    :contract-type "Contact type",
     :contract-name "Procurement name",
     :procurement-number "Procurement number",
-    :object {name "Object name"},
     :road-number "Road number"}},
   :contracts-list
   {:result "Result",

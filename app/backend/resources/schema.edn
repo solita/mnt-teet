@@ -2056,5 +2056,47 @@
           {:db/ident :user/documents
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "CV's, certificates and other job related documents related to the user"}]]}]
+           :db/doc "CV's, certificates and other job related documents related to the user"}]]}
+
+{:db/ident :migration/additional-file-statuses
+ :txes [[{:db/ident :file.status/submitted :enum/attribute :file/status}
+         {:db/ident :file.status/returned :enum/attribute :file/status}
+         {:db/ident :file.status/valid :enum/attribute :file/status}
+         {:db/ident :file.status/invalid :enum/attribute :file/status}]]}
+
+{:db/ident :migration/file-part-status
+ :txes [[{:db/ident :file.part/status
+          :db/valueType :db.type/ref
+          :db/cardinality :db.cardinality/one}
+         {:db/ident :file.part.status/not-started :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/in-progress :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/waiting-for-review :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/reviewing :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/completed :enum/attribute :file.part/status}]]}
+
+{:db/ident :migration/copy-status-and-metainfo-from-task-to-part
+  :txes [teet.migration.file-part-statuses/task-status-meta->file-part]}
+
+{:db/ident :migration/file-part-review-notifications
+  :txes [[{:db/ident :notification.type/task-part-waiting-for-review :enum/attribute :notification/type}
+          {:db/ident :notification.type/task-part-review-accepted :enum/attribute :notification/type}
+          {:db/ident :notification.type/task-part-review-rejected :enum/attribute :notification/type}]]}
+
+{:db/ident :migration/file-part-and-task-completion-attributes
+  :txes [[{:db/ident :file.part/completed-at
+            :db/valueType :db.type/instant
+            :db/cardinality :db.cardinality/one
+            :db/doc "Timestamp of task part completion"}
+          {:db/ident :file.part/completed-by
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to user entity who completed the task part"}
+          {:db/ident :task/completed-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of task completion"}
+          {:db/ident :task/completed-by
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to user entity who completed the task"}]]}]
 
