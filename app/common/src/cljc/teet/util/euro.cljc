@@ -1,6 +1,7 @@
 (ns teet.util.euro
   "Formatting and parsing of euro amounts."
-  (:require [clojure.string :as str])
+  (:require [clojure.string :as str]
+            [teet.util.coerce :as coerce-util])
   #?(:clj (:import (java.util Locale)
                    (java.text NumberFormat))))
 
@@ -28,11 +29,8 @@
   "Parse string as euro number, string can contain whitespace and end with € symbol."
   [s]
   (let [euro-string (-> s
-                        (str/replace #"\h" "")
-                        (str/replace #"\s" "")
-                        (str/replace "€" "")
-                        (str/replace "," ".")
-                        (str/replace "−" "-"))]
+                        coerce-util/normalize-number-chars
+                        (str/replace "€" ""))]
     (if (re-matches euro-pattern euro-string)
       (#?(:clj bigdec :cljs js/parseFloat) euro-string)
       ;; The behavior difference below mirrors that of `bigdec` vs `js/parseFloat`

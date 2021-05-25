@@ -1,7 +1,7 @@
 (ns teet.util.coerce
   (:require [clojure.string :as str]))
 
-(defn- normalize-number-chars
+(defn normalize-number-chars
   "Normalize formatted number to parseable.
   Replaces comma with point and different minus character
   with the regular one.
@@ -10,6 +10,8 @@
   [x]
   (when (string? x)
     (-> x str/trim
+        (str/replace #"\h" "")
+        (str/replace #"\s" "")
         (str/replace "," ".")
         (str/replace "−" "-"))))
 
