@@ -11,7 +11,8 @@
             [teet.road.road-model :as road-model]
             [datomic.client.api :as d]
             [teet.environment :as environment]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [cheshire.core :as cheshire]))
 
 
 (defn- road-registry-objects [config type gml-area]
@@ -30,15 +31,6 @@
             y1 "," x2 " "
             y1 "," x1)]]]]))
 
-(comment
-  (def c (merge {:cache-atom (atom {})}
-                (teet.environment/config-value :road-registry)))
-  (def t "ms:n_truup")
-  (def a (gml-area [670129.826,6477718.11221264] [694216.75673899,6601718.11221264]))
-
-  (def culverts (road-registry-objects c t a)))
-
-
 (defn line-segment-for-point-on-road [client point road-nr carriageway meters]
   (when-let [part (first
                    (filter
@@ -49,21 +41,6 @@
                       (min (geo/distance start point)
                            (geo/distance end point)))
                     (partition 2 1 (:geometry part))))))
-
-(comment
-  (def p [686949.826319 6592511.04017])
-  ;; calculate closest line segment on road to line
-  (def ls (line-segment-for-point-on-road c p 3200014 1 593))
-
-  ;; calculate road angle
-  (def ang (geo/angle ls))
-
-  ;; width of the culvert
-  (def trpik 21.5)
-
-  {:start (geo/offset-point p ang (/ trpik 2))
-   :end (geo/offset-point p ang (/ trpik -2))}
-  )
 
 (defn point-to-perpendicular-line
   "Turn a point on the road centerline to a line start/end pair perpendicular to the road.
@@ -121,50 +98,33 @@
 
 (def ^:private culvert-mapping
   {:asset/fclass :fclass/culvert
-   :asset/oid (from-wfs :ms:oid #(str "N40-TRP-" %))
-   :culvert/culvertpipenumber (from-wfs :ms:truup ->long) ;	Integer	Number of pipes	tk
+   :culvert/culvertpipenumber (from-wfs :ms:truup ->long)
    ::location (from-point-to-perpendicular-line :ms:trpik)
    :location/road-nr (from-wfs :ms:tee_number ->long)
    :location/carriageway (from-wfs :ms:soidutee_nr ->long)
    :location/start-km (from-wfs :ms:teeosa_meeter (comp bigdec road-model/m->km ->bigdec))
 
-   ;; No status items in current schema file
+   ;; FIXME: No status items in current schema file
    #_:common/status #_(from-wfs :ms:hinne_trhinne_xv #(when (= % "0")
                                                         :item/abandoned))
 
    :asset/components
-   [
-    {:component/ctype :ctype/culvertpipe
-     ;;:asset/oid (from-wfs :ms:oid #(str "N40-TRP-" % "-00001"))
-
+   [{:component/ctype :ctype/culvertpipe
      ;; RR units in meters
      :culvertpipe/culvertpipediameter (from-wfs :ms:trava #(some-> % ->bigdec (* 1000M)))
      :culvertpipe/culvertpipelenght (from-wfs :ms:trpik ->bigdec)}
 
     ;; If otsad_trotsad_xv = 1, create 2 culverthead components
     (from-conditional #(= (:ms:otsad_trotsad_xv %) "1")
-                      {:component/ctype :ctype/culverthead
-                       ;;:asset/oid (from-wfs :ms:oid #(str "N40-TRP-" % "-00002"))
-                       })
+                      {:component/ctype :ctype/culverthead})
     (from-conditional #(= (:ms:otsad_trotsad_xv %) "1")
-                      {:component/ctype :ctype/culverthead
-                       ;;:asset/oid (from-wfs :ms:oid #(str "N40-TRP-" % "-00003"))
-                       })
+                      {:component/ctype :ctype/culverthead})
 
     ;; If otsad_trotsad_xv > 1, create 2 culvertprotection components
     (from-conditional #(some-> % :ms:otsad_trotsad_xv ->long (> 1))
-                      {:component/ctype :ctype/culvertprotection
-                      ;; :asset/oid (from-wfs :ms:oid #(str "N40-TRP-" % "-00002"))
-                       })
+                      {:component/ctype :ctype/culvertprotection})
     (from-conditional #(some-> % :ms:otsad_trotsad_xv ->long (> 1))
-                      {:component/ctype :ctype/culvertprotection
-                       ;;:asset/oid (from-wfs :ms:oid #(str "N40-TRP-" % "-00003"))
-                       })
-
-    ]})
-
-(def ^:private mapping
-  {"ms:n_truup" culvert-mapping})
+                      {:component/ctype :ctype/culvertprotection})]})
 
 (defn- recursive-convert [ctx wfs-feature here]
   (cond
@@ -185,32 +145,20 @@
 
     :else here))
 
-(defn import-road-registry-features! [conn ctx fclass wfs-type [upper-left lower-right]]
-  (let [type-mapping (mapping wfs-type)]
-    (when-not type-mapping
-      (throw (ex-info "No WFS -> asset type mapping"
-                      {:wfs-type wfs-type})))
-    (let [objects (road-registry-objects ctx wfs-type (gml-area upper-left lower-right))]
-      (log/debug "Found" (count objects) "WFS objects to import.")
-      (when (seq objects)
-        (d/transact
-         conn
-         {:tx-data
-          [(list 'teet.asset.asset-tx/import-assets
-                 (environment/config-value :asset :default-owner-code)
-                 fclass
-                 (mapv #(merge
-                         {:asset/road-registry-oid (->long (:ms:oid %))}
-                         (recursive-convert ctx % type-mapping))
-                       objects))]})))))
-
-(comment
-  (def c (merge {:cache-atom (atom {})}
-                                         (teet.environment/config-value :road-registry)))
-  (import-road-registry-features! (teet.environment/asset-connection)
-                                  c
-                                  :fclass/culvert "ms:n_truup"
-                                  [[670129.826,6477718.11221264] [694216.75673899,6601718.11221264]]))
+(defn import-road-registry-features! [conn ctx fclass wfs-type type-mapping [upper-left lower-right]]
+  (let [objects (road-registry-objects ctx wfs-type (gml-area upper-left lower-right))]
+    (log/debug "Found" (count objects) "WFS objects to import.")
+    (when (seq objects)
+      (d/transact
+       conn
+       {:tx-data
+        [(list 'teet.asset.asset-tx/import-assets
+               (environment/config-value :asset :default-owner-code)
+               fclass
+               (mapv #(merge
+                       {:asset/road-registry-oid (->long (:ms:oid %))}
+                       (recursive-convert ctx % type-mapping))
+                     objects))]}))))
 
 (def ^:private epsg-3301-bounds
   {:minx 282560.67
@@ -230,21 +178,25 @@
          [[minx y] [maxx (+ y ystep)]]
          (estonia-slices n (+ y ystep))))))))
 
-(comment
-  (doseq [slice (estonia-slices 50)]
-    (println "Importing area slice: " slice)
-    (import-road-registry-features!
-     (environment/asset-connection)
-     (assoc c :cache-atom (atom {}))
-     :fclass/culvert "ms:n_truup"
-     slice)))
+(def ^:private import-config
+  {:fclass/culvert {:wfs-type "ms:n_truup"
+                    :mapping culvert-mapping}})
 
-(comment
-  ;; delete all culverts for testing import
-  (doseq [ids (partition-all 1000
-                             (d/q '[:find ?a :where [?a :asset/fclass ?fc] :in $ ?fc]
-                                  (environment/asset-db) :fclass/culvert))]
-    (d/transact (environment/asset-connection)
-                {:tx-data (for [[id] ids]
-                            [:db/retractEntity id])}))
-  )
+(defn import-ion [event]
+  (let [fclass-name (-> event :input (cheshire/decode keyword) :fclass)
+        fclass (keyword "fclass" fclass-name)
+        {:keys [wfs-type mapping] :as c} (import-config fclass)
+        client (environment/config-value :road-registry)]
+    (if-not c
+      (log/error "No import config found, specify proper :fclass name part"
+                 {:fclass-name fclass-name})
+      (do
+        (future
+          (doseq [slice (estonia-slices 100)]
+            (log/info "Importing area slice: " slice)
+            (import-road-registry-features!
+             (environment/asset-connection)
+             (assoc client :cache-atom (atom {})) ; cache per slice
+             fclass wfs-type mapping
+             slice)))
+        "{\"success\": true}"))))

@@ -77,7 +77,12 @@
             :description "Delete user email addresses from user information stored in Datomic"}
 
            :notify
-            {:fn teet.notification.notification-ion/notify
-             :description "Scheduled notifications"}}
+           {:fn teet.notification.notification-ion/notify
+            :description "Scheduled notifications"}
+
+           :asset-import
+           {:fn teet.asset.asset-road-registry-import/import-ion
+            :description "Import road registry WFS objects by type"}
+           }
 
  :app-name "teet-datomic"}
