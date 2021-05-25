@@ -54,14 +54,15 @@
   [db file-id]
   (let [task-activity-code (vektorio-db/activity-and-task-info db file-id)
         file-part (vektorio-db/file-part-info db file-id)]
-        (str
-          (:activity-code task-activity-code) " - "
-          (tr-enum (:activity-name task-activity-code)) "/"
-          (:task-code task-activity-code) " - "
-          (tr-enum (:task-name task-activity-code))
-          (if (some? file-part)
-            (str "/" (format "%02d" (:part-number file-part)) " - " (:part-name file-part))
-            (str "/00 - " (with-language :et (tr [:file-upload :general-part])))))))
+    (with-language :et
+                   (str
+                     (:activity-code task-activity-code) " - "
+                     (tr-enum (:activity-name task-activity-code)) "/"
+                     (:task-code task-activity-code) " - "
+                     (tr-enum (:task-name task-activity-code))
+                     (if (some? file-part)
+                       (str "/" (format "%02d" (:part-number file-part)) " - " (:part-name file-part))
+                       (str "/00 - " (tr [:file-upload :general-part])))))))
 
 (defn- vektorio-filename
   "Returns for example '02_1_Uskuna.dwg'"
