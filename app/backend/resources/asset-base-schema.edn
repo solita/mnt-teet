@@ -291,4 +291,8 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
            :db/isComponent true
-           :db/doc "The materials for the component"}]]}]
+           :db/doc "The materials for the component"}
+          {:db/ident :material/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "The type of a material"}]]}]

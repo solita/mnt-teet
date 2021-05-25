@@ -41,6 +41,24 @@
        (cu/without-nils
         (assoc component :asset/oid component-oid))])))
 
+(defn save-material
+  "Create or update component.
+  Creates new OID for new components based on parent asset."
+  [db parent-oid {id :db/id :as material}]
+  (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
+    (throw (ex-info "Not a leaf component OID"
+                    {:parent-oid parent-oid})))
+  ;; TODO: spec
+  (when (not (:material/type material))
+    (throw (ex-info "No material type"
+                    {:parent-oid parent-oid})))
+  (if (number? id)
+    (du/modify-entity-retract-nils db material)
+    [[:db/add [:asset/oid parent-oid]
+      :component/materials
+      (:db/id material)]
+     (cu/without-nils material)]))
+
 (defn lock
   "Create new lock for project BOQ."
   [db {:boq-version/keys [project type] :as lock}]
