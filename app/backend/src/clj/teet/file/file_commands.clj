@@ -224,25 +224,28 @@
 
           key (new-file-key file)
           tx-data [(list 'teet.file.file-tx/upload-file-to-task user
-                         {:db/id (or task-id "new-task")
-                          :task/files [(cu/without-nils
-                                         (merge (select-keys file file-keys)
-                                                {:db/id "new-file"
-                                                 :file/s3-key key
-                                                 :file/status :file.status/draft
-                                                 :file/version version
-                                                 :file/original-name (:file/name file)}
-                                                (when (:file/description file)
-                                                  {:file/name (str (:file/description file) "." (:file/extension file))})
-                                                (when old-file
-                                                  {:file/previous-version (:db/id old-file)})
+                         (merge
+                           {:db/id (or task-id "new-task")
+                                   :task/files [(cu/without-nils
+                                                  (merge (select-keys file file-keys)
+                                                         {:db/id "new-file"
+                                                          :file/s3-key key
+                                                          :file/status :file.status/draft
+                                                          :file/version version
+                                                          :file/original-name (:file/name file)}
+                                                         (when (:file/description file)
+                                                               {:file/name (str (:file/description file) "." (:file/extension file))})
+                                                         (when old-file
+                                                               {:file/previous-version (:db/id old-file)})
 
-                                                ;; Replacement version is uploaded to the same part
-                                                (when-let [old-part (:file/part old-file)]
-                                                  {:file/part old-part})
-                                                (when-let [old-seq-number (:file/sequence-number old-file)]
-                                                  {:file/sequence-number old-seq-number})
-                                                (creation-meta user)))]})]
+                                                         ;; Replacement version is uploaded to the same part
+                                                         (when-let [old-part (:file/part old-file)]
+                                                         {:file/part old-part})
+                                                         (when-let [old-seq-number (:file/sequence-number old-file)]
+                                                         {:file/sequence-number old-seq-number})
+                                                         (creation-meta user)))]}
+                           (when (du/enum= (:task/status (d/pull db [:task/status] task-id)) :task.status/not-started)
+                                 {:task/status :task.status/in-progress})))]
           res (tx tx-data)
           t-id (or task-id (get-in res [:tempids "new-task"]))
           file-id (get-in res [:tempids "new-file"])]

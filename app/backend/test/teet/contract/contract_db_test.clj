@@ -12,7 +12,12 @@
     :thk.contract/procurement-id "123"
     :thk.contract/procurement-part-id "12"}
 
-   {:db/id "in-progress-contract"
+   {:db/id "signed-contract2"
+    :thk.contract/procurement-id "22"
+    :thk.contract/procurement-part-id "33"
+    :thk.contract/start-of-work (dateu/inc-days (dateu/now) 5)}
+
+   {:db/id "in-progress-contract1"
     :thk.contract/procurement-id "123"
     :thk.contract/procurement-part-id "123"
     :thk.contract/start-of-work (dateu/dec-days (dateu/now) 5)
@@ -24,6 +29,11 @@
     :thk.contract/start-of-work (dateu/dec-days (dateu/now) 5)
     :thk.contract/deadline (dateu/inc-days (dateu/now) 15)
     :thk.contract/extended-deadline (dateu/inc-days (dateu/now) 32)}
+
+   {:db/id "in-progress-contract3"
+    :thk.contract/procurement-id "33"
+    :thk.contract/procurement-part-id "44"
+    :thk.contract/start-of-work (dateu/dec-days (dateu/now) 5)}
 
    {:db/id "deadline-approaching"
     :thk.contract/procurement-id "11"
@@ -76,6 +86,21 @@
                        [:thk.contract/procurement-id+procurement-part-id ["123" "12"]])]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/signed))))
+
+    (testing "If contract start of work in the future the contract status is :thk.contract.status/signed"
+      (let [contract (contract-db/get-contract
+                       (tu/db)
+                       [:thk.contract/procurement-id+procurement-part-id ["22" "33"]])]
+        (is (= (:thk.contract/status contract)
+               :thk.contract.status/signed))))
+
+    (testing "If contract has no deadlines and start of work passed the contract status is :thk.contract.status/in-progress"
+      (let [contract (contract-db/get-contract
+                       (tu/db)
+                       [:thk.contract/procurement-id+procurement-part-id ["33" "44"]])]
+        (is (= (:thk.contract/status contract)
+               :thk.contract.status/in-progress))))
+
     (testing "After start of work date and time until deadline is more than 30 days status is in-progress"
       (let [contract (contract-db/get-contract
                        (tu/db)
