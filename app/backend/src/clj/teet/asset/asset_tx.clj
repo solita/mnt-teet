@@ -47,37 +47,44 @@
                     (= :asset/oid (first %)))
               form))
 
-(defn import-asset
-  "Import full asset with components. Creates new OIDs for asset and all
-  the components if they are not present."
-  [db owner-code {existing-oid :asset/oid :as asset}]
-  {:pre [(or
-          ;; No asset OID at toplevel, check that there are no OIDs
-          ;; in child components either
-          (and (nil? existing-oid)
-               (empty? (collect-oids (:asset/components asset))))
+(defn import-assets
+  "Import assets of the given type from road registry.
+  Creates new OIDs for asset/components if they don't exist yet."
+  [db owner-code fclass assets]
 
-          ;; Asset provided at toplevel, check that all component OIDs
-          ;; are sub-OIDs of the asset
-          (and (asset-model/asset-oid? existing-oid)
-               (every? (fn [[_ component-oid]]
-                         (= existing-oid
-                            (asset-model/component-asset-oid component-oid)))
-                       (collect-oids (:asset/components asset)))))]}
-  (let [oid (or existing-oid
-                (asset-db/next-oid db owner-code (:asset/fclass asset)))]
-    [(-> asset
-         (assoc :asset/oid oid)
-         (update :asset/components
-                 (fn [components]
-                   (walk/prewalk
-                    (fn [x]
-                      (if (and (map? x)
-                               (contains? x :component/ctype)
-                               (not (contains? x :asset/oid)))
-                        (assoc x :asset/oid (asset-db/next-component-oid db oid))
-                        x))
-                    components))))]))
+  (let [{:fclass/keys [oid-prefix oid-sequence-number]}
+        (d/pull db '[:fclass/oid-prefix :fclass/oid-sequence-number] fclass)
+
+        asset-seq-num (atom (or oid-sequence-number 0))
+        next-asset-oid! #(asset-model/asset-oid owner-code oid-prefix
+                                                (swap! asset-seq-num inc))]
+    (conj
+     (mapv
+      (fn [{rr-oid :asset/road-registry-oid :as asset}]
+        (let [existing-oid (:asset/oid (d/pull db '[:asset/oid]
+                                               [:asset/road-registry-oid rr-oid]))
+              oid (or existing-oid
+                      (next-asset-oid!))
+
+              component-seq-num (atom (asset-db/max-component-oid-number
+                                       db oid))
+              next-component-id! #(asset-model/component-oid
+                                   oid
+                                   (swap! component-seq-num inc))]
+          (-> asset
+              (assoc :asset/oid oid)
+              (update :asset/components
+                      ;; FIXME: currently only 1st level of components
+                      ;; supported in import.
+                      (fn [components]
+                        (mapv #(assoc % :asset/oid (next-component-id!))
+                              components))))))
+      assets)
+
+     ;; Update asset OID counter
+     {:db/ident fclass
+      :fclass/oid-sequence-number @asset-seq-num})))
+
 (defn lock
   "Create new lock for project BOQ."
   [db {:boq-version/keys [project type] :as lock}]

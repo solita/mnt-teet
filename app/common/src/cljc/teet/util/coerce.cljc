@@ -49,3 +49,8 @@
   in cljs returns JS number"
   (partial to-number #?(:clj #(Long/parseLong %)
                         :cljs #(js/parseInt %)) long))
+
+(def ->double
+  "Coerce x to double."
+  (partial to-number #?(:clj #(Double/parseDouble %)
+                        :cljs #(js/parseFloat %)) double))
