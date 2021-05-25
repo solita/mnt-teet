@@ -222,12 +222,135 @@
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
 
-(defn add-tasks [rows]
-  ;; TODO: implement
-  )
-
 (defn tasks-tx-data [db [project-id rows]]
-  (add-tasks rows))
+  (let [prj (first rows)
+        phases (group-by :thk.lifecycle/id rows)
+        phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
+        phase-est-ends (keep :thk.lifecycle/estimated-end-date rows)
+
+        project-est-start (first (sort phase-est-starts))
+        project-est-end (last (sort phase-est-ends))
+
+        ;; Lookup existing :db/id and :integration/id based on THK
+        ;; project id
+        {proj-db-id :db/id
+         proj-integration-id :integration/id}
+        (lookup db [:thk.project/id project-id])
+
+        ;; Create new :integration/id if project does not have it
+        proj-integration-id (or proj-integration-id
+                              (let [new-uuid (integration-id/unused-random-small-uuid db)]
+                                (log/info "Creating new UUID for THK project "
+                                  project-id " => " new-uuid)
+                                new-uuid))
+
+
+        project-exists? (some? proj-db-id)
+        project-has-owner? (and project-exists?
+                             (project-db/project-has-owner? db [:thk.project/id project-id]))]
+
+    (into
+      [(cu/without-nils
+         (merge
+           (select-keys prj #{:thk.project/id
+                              :thk.project/road-nr
+                              :thk.project/bridge-nr
+                              :thk.project/start-m
+                              :thk.project/end-m
+                              :thk.project/repair-method
+                              :thk.project/region-name
+                              :thk.project/carriageway
+                              :thk.project/name})
+
+           ;; Use THK provided owner only if project does not exist or doesn't have owner in TEET yet
+           (when (or (not project-exists?)
+                   (not project-has-owner?))
+                 (select-keys prj #{:thk.project/owner}))
+
+           (if project-exists?
+             {:db/id proj-db-id
+              :integration/id proj-integration-id}
+             {:db/id (str "prj-" project-id)
+              :integration/id proj-integration-id})
+
+           {:thk.project/estimated-start-date project-est-start
+            :thk.project/estimated-end-date project-est-end
+            :thk.project/integration-info (integration-info
+                                            prj thk-mapping/object-integration-info-fields)
+            :thk.project/lifecycles
+            (into []
+              (for [[id activities] phases
+                    :let [phase (first activities)
+                          lc-thk-id (:thk.lifecycle/id phase)
+                          lc-teet-id (:lifecycle-db-id phase)
+                          {lc-db-id :db/id
+                           lc-integration-id :integration/id}
+                          (if lc-teet-id
+                            ;; If THK sent TEET id field, lookup using that
+                            (lookup db [:integration/id lc-teet-id])
+                            ;; otherwise lookup using THK id
+                            (lookup db [:thk.lifecycle/id lc-thk-id]))
+
+                          _ (log/info "Received lifecycle with THK id " lc-thk-id
+                              (if lc-db-id
+                                (str "having TEET :db/id " lc-db-id)
+                                "without TEET id => creating new lifecycle")
+                              (when lc-teet-id
+                                    (str "having TEET :integration/id " lc-teet-id)))
+                          lc-integration-id (or lc-integration-id
+                                              (let [new-uuid (integration-id/unused-random-small-uuid db)]
+                                                (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
+                                                new-uuid))]]
+                (cu/without-nils
+                  (merge
+                    (select-keys phase #{:thk.lifecycle/type
+                                         :thk.lifecycle/estimated-start-date
+                                         :thk.lifecycle/estimated-end-date
+                                         :thk.lifecycle/id})
+                    {:db/id lc-db-id
+                     :integration/id lc-integration-id}
+
+                    {:thk.lifecycle/integration-info (integration-info phase
+                                                       thk-mapping/phase-integration-info-fields)
+                     :thk.lifecycle/activities
+                     (for [{id :thk.activity/id
+                            name :activity/name
+                            task-id :activity/task-id
+                            :as activity} activities
+                           ;; Only process 4006 and 4009 typefk activities here
+                           :when (and id name (or (= id "18957")))
+                           :let [{act-thk-id :thk.activity/id
+                                  act-teet-id :activity-db-id} activity
+                                 {act-db-id :db/id
+                                  act-integration-id :integration/id}
+                                 (if act-teet-id
+                                   ;; Lookup using TEET id
+                                   (lookup db [:integration/id act-teet-id])
+                                   ;; Lookup using THK id
+                                   (lookup db [:thk.activity/id act-thk-id]))
+                                 _ (log/info "Received activity " activity " with THK id " act-thk-id
+                                     (str "having TEET :db/id " act-db-id)
+                                     (when act-integration-id (str "having TEET :integration/id " act-integration-id)))]]
+                       (merge
+                         (cu/without-nils
+                           (select-keys activity #{:thk.activity/id
+                                                   :activity/estimated-start-date
+                                                   :activity/estimated-end-date
+                                                   :activity/name
+                                                   :activity/status}))
+                         (if act-db-id
+                           ;; Existing activity
+                           {:db/id act-db-id
+                            :integration/id act-integration-id}
+
+                           ;; New activity, create integration id
+                           {:db/id (str "act-" id)
+                            :integration/id act-integration-id})
+
+                         {:activity/integration-info (integration-info
+                                                       activity
+                                                       thk-mapping/activity-integration-info-fields)}))}))))}))]
+      (task-updates rows))))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
@@ -323,10 +446,10 @@
     (mapcat
       (fn [prj]                                          ;; {"project-id" [{"rows"}..]}
         (when (teet-project? prj)
-              (let [project-tx-maps (tasks-tx-data db prj)
+              (let [tasks-tx-maps (tasks-tx-data db prj)
                     {:thk.project/keys [id lifecycles] :as _project}
-                    (first project-tx-maps)]
-                project-tx-maps))))
+                    (first tasks-tx-maps)]
+                tasks-tx-maps))))
     projects-csv))
 
 (defn- check-unique-activity-ids [projects]
