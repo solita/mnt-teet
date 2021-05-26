@@ -356,11 +356,7 @@
                                                    (get material-by-name (:ctype attr)))
                       all-exist? (and attr ctype-fclass-or-material
                                       (:name item)
-                                      (exists? (:property item)))
-                      _ (when-not all-exist?
-                          (println attr " all exist? " [attr ctype-fclass-or-material
-                                                        (:name item)
-                                                        (exists? (:property item))] ))]
+                                      (exists? (:property item)))]
                 :when all-exist?]
             (merge
              (common-attrs :asset-schema.type/enum item)
