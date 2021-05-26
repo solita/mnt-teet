@@ -32,8 +32,9 @@
               (update row
                       (first k)
                       (fn [names-string]
-                        (->> (str/split names-string #"\s*,\s*")
-                             (mapv parse-name))))
+                        (when-not (str/blank? names-string)
+                          (->> (str/split names-string #"\s*,\s*")
+                               (mapv parse-name)))))
               (update row k parse-name)))
           % name-keys)
         rows))
