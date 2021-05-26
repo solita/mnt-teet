@@ -110,6 +110,20 @@
                 #(= component-oid (:asset/oid %))
                 asset))
 
+(defn find-material-path
+  "Return vector containing all parents of component from asset to the component.
+  For example:
+  [a c1 c2 c3]
+  where a is the asset, that has component c1
+  c1 has child component c2
+  and c2 has child component c3 (the component we want)"
+  [asset material-id]
+  (cu/find-path #(concat (:asset/components %)
+                         (:component/components %)
+                         (:component/materials %))
+                #(= material-id (:db/id %))
+                asset))
+
 (def cost-totals-table-columns
   [:type :properties :common/status :quantity :cost-per-quantity-unit :total-cost])
 

@@ -616,7 +616,7 @@
             [add-component-menu
              allowed-materials
              ;; TODO: AddMaterial
-             (e! cost-items-controller/->AddComponent)])])])))
+             (e! cost-items-controller/->AddMaterial)])])])))
 
 (defn component-form
   [e! atl component-oid cost-item-data]
@@ -626,6 +626,60 @@
   (if (nil? (asset-model/find-component-path cost-item-data component-oid))
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
+
+
+(defn- material-form* [e! atl material-oid cost-item-data]
+  (r/with-let [initial-material-data
+               (last (asset-model/find-material-path cost-item-data
+                                                      material-oid))
+               new? (string? (:db/id initial-material-data))
+               material-type (asset-type-library/item-by-ident
+                              atl
+                              (:material/type initial-material-data))
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :material nil)
+                              #(cost-items-controller/->UpdateForm initial-material-data))]
+    (let [material-path (asset-model/find-material-path cost-item-data material-oid)
+          material-data (last material-path)]
+      (println material-oid material-data)
+      [:<>
+       #_(when (asset-model/material-oid? material-oid)
+         [typography/Heading2 material-oid])
+       #_[material-form-navigation atl material-path]
+
+       [form/form2
+        {:e! e!
+         :on-change-event cost-items-controller/->UpdateMaterialForm
+         :value material-data
+         :save-event cost-items-controller/->SaveMaterial
+         :cancel-event cancel-event
+         :disable-buttons? (= material-data initial-material-data)}
+
+        ;; Attributes for material
+        [form-paper
+         [:<>
+          (label material-type)
+          [attributes {:e! e!
+                       :attributes (some-> material-type :attribute/_parent)
+                       :inherits-location? true
+                       :material-oid material-oid
+                       :cost-item-data cost-item-data
+                       :common? false
+                       :material-type material-type}]]]
+
+        [:div {:class (<class common-styles/flex-row-space-between)
+               :style {:align-items :center}}
+         [url/Link {:page :cost-item
+                    :params {:id (:asset/oid cost-item-data)}}
+          (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
+         [form/footer2]]]])))
+
+(defn material-form
+  [e! atl material-id cost-item-data]
+  (if (nil? (asset-model/find-material-path cost-item-data material-id))
+    [CircularProgress]
+    [material-form* e! atl material-id cost-item-data]))
+
 
 (defn- add-cost-item [app version]
   (when-not (asset-model/locked? version)
@@ -1076,7 +1130,8 @@
   [e! {:keys [query params asset-type-library] :as app} {:keys [cost-item version relevant-roads] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
-                      (and (asset-model/component-oid? oid) oid))]
+                      (and (asset-model/component-oid? oid) oid))
+        material (get query :material)]
     (if (= "new" oid)
       [new-cost-item-page e! app state]
 
@@ -1085,12 +1140,17 @@
         :app app
         :state state
         :left-panel-action [add-cost-item app version]}
-       (if component
-         ^{:key component}
-         [component-form e! asset-type-library component cost-item]
+       (cond material
+             ^{:key material}
+             [material-form e! asset-type-library material cost-item]
 
-         ^{:key oid}
-         [cost-item-form e! asset-type-library relevant-roads cost-item])])))
+             component
+             ^{:key component}
+             [component-form e! asset-type-library component cost-item]
+
+             :else
+             ^{:key oid}
+             [cost-item-form e! asset-type-library relevant-roads cost-item])])))
 
 (defn cost-item-page [e! app state]
   [wrap-atl-loader cost-item-page* e! app state])
