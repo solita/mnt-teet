@@ -31,28 +31,25 @@
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
   [common/external-contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
-   (str/upper-case
-     (str (tr [:contracts :state-procurement-link]) " " procurement-number))])
+   (str (tr [:contracts :state-procurement-link]) " " procurement-number)])
 
 (defn contract-external-link
   [{:thk.contract/keys [external-link procurement-number]}]
   (when external-link
     [common/external-contract-link {:href external-link}
-     (str/upper-case
-       (str (tr [:contracts :external-link]) " " procurement-number))]))
+     (str (tr [:contracts :external-link]) " " procurement-number)]))
 
 (defn contract-thk-link
   [{:thk.contract/keys [procurement-id]}]
   [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
-   (str/upper-case
-     (str (tr [:contracts :thk-procurement-link]) " " procurement-id))])
+   (str (tr [:contracts :thk-procurement-link]) " " procurement-id)])
 
 (defn contract-external-links
   [contract]
   [:div {:class (herb.core/join (<class common-styles/flex-row)
                                 (<class responsivity-styles/visible-desktop-only))}
    [contract-procurement-link contract]
-   [contract-external-link contract]
+   ;[contract-external-link contract]
    [contract-thk-link contract]])
 
 (defn target-table
@@ -135,9 +132,10 @@
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
                         warranty-end-date cost] :as contract}]
   [common/basic-information-row
-   {:right-align-last? false}
+   {:right-align-last? false
+    :font-size "0.875rem"}
    [[(tr [:contract :status])
-     [contract-status/contract-status {:show-label? true}
+     [contract-status/contract-status {:show-label? true :size 15}
       (:thk.contract/status contract)]]
     (when-let [region (:ta/region contract)]
       [(tr [:fields :ta/region])

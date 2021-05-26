@@ -31,34 +31,27 @@
    [:h4 contract-name]
    [url/Link {:page :contract
               :params {:contract-ids contract-url-id}}
-    (str (tr [:contracts :contracts-list :view]))]]
-  )
+    (str (tr [:contracts :contracts-list :view]))]])
+
 (defn contract-card
-  [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
-       contract-name :thk.contract/name :as contract}]
-  (r/with-let [container-open? (r/atom false)]
+  ;[e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
+  ;     contract-name :contract-model/name :as contract}]
+  [e! contract contract-expansion-atom]
+  (r/with-let []
     [container/collapsible-container {:class (<class contract-style/contract-card-style)
                                       :header-class (<class contract-style/contract-card-style-header)
                                       :container-class (<class contract-style/contract-card-style-container)
                                       :side-component (contract-card-header
                                                         (:thk.contract/status contract)
-                                                        contract-name
+                                                        (contract-model/contract-name contract)
                                                         (contract-model/contract-url-id contract))
-                                      :on-toggle #(swap! container-open?
-                                                    (fn [x] (not x)))
-                                      :open? @container-open?}
+                                      :on-toggle #(swap! contract-expansion-atom
+                                                    update-in [(:db/id contract)] (fn [x] (not x)))
+                                      :open? (get @contract-expansion-atom (:db/id contract))}
      ""
      [:<>
-      [:span (pr-str contract)]
-      [contract-view/contract-procurement-link contract]
-      (when external-link
-        [contract-view/contract-external-link contract])
-      [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
-        (str/upper-case
-          (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
-      [url/Link {:page :contract
-                 :params {:contract-ids (contract-model/contract-url-id contract)}}
-       (str "LINK TO THIS CONTRACT" (contract-model/contract-url-id contract))]]]))
+      [contract-view/contract-external-links contract]
+      [contract-view/contract-information-row contract]]]))
 
 (defn toggle-list-expansion-button
   [list-expansion? toggle-list-expansion]
@@ -83,10 +76,10 @@
 
 (defn contracts-list
   [e! contracts]
-  (r/with-let [list-expansion? (r/atom false)
-               contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))
+  (r/with-let [list-expansion? (r/atom true)
+               contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) @list-expansion?)) {} contracts))
                toggle-list-expansion #(do
-                                        (swap! list-expansion? not)
+                                        (swap! list-expansion? (fn [x] (not x)))
                                         (swap! contract-expansion (reduce
                                                                     (fn
                                                                       [agg x]
@@ -99,11 +92,7 @@
      (doall
        (for [contract contracts]
          ^{:key (str (:db/id contract))}
-         [contract-card e! contract]))]))
-
-;[contract-card {:e! e!
-;                :contract contract
-;                :expanded? ((:db/id contract) @contract-expansion)}]
+         [contract-card e! contract contract-expansion]))]))
 
 (def filter-options
   [:my-contracts

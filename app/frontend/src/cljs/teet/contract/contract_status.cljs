@@ -55,7 +55,6 @@
     [:success [icons/action-check-circle-outlined {:style {:color theme-colors/success}}]]
     "error"))
 
-
 (defn contract-status
   [{:keys [show-label? size container-class] :as _opts} status]
   (let [[tooltip-variant icon] (contract-status->variant-icon status)

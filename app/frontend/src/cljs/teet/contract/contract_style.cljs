@@ -55,7 +55,6 @@
     {[:> :span] {:color theme-colors/primary
                  :margin-left "0.25rem"}}}
   {:font-size "0.875rem"
-   :display :none ; TODO temporarily hidden until the functionality is implemented
    :flex-direction :row-reverse
    :color theme-colors/text-medium-emphasis
    :text-decoration :none})

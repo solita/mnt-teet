@@ -4,7 +4,8 @@
             [teet.util.collection :as cu]
             [clojure.string :as str]
             [teet.contract.contract-db :as contract-db]
-            [teet.contract.contract-model :as contract-model])
+            [teet.contract.contract-model :as contract-model]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 (defmulti contract-search-clause (fn [[attribute _value] _user]
@@ -134,4 +135,5 @@
   (->> (contract-db/project-related-contracts db [:thk.project/id project-id])
        (sort-by
          (comp contract-model/contract-status-order :thk.contract/status))
-       vec))
+       vec
+    (mapv du/idents->keywords)))
