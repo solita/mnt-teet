@@ -199,25 +199,27 @@
   "Return set of :db/id value sof entities whose location
   start-point or end-point is within the bounding box."
   [db xmin ymin xmax ymax]
-  (let [entities-within-y-range
+  (let [entities-within-range
         (comp
+         (take-while (fn [{[x _y] :v}]
+                       (<= x xmax)))
          (filter (fn [{[_x y] :v}]
                    (<= ymin y ymax)))
          (map :e))
 
         start-within
         (into #{}
-              entities-within-y-range
+              entities-within-range
               (d/index-range db {:attrid :location/start-point
-                                 :start  [xmin ymin]
-                                 :end  [xmax ymax]}))
+                                 :start [xmin ymin]
+                                 :limit -1}))
 
         end-within
         (into #{}
-              entities-within-y-range
+              entities-within-range
               (d/index-range db {:attrid :location/end-point
                                  :start [xmin ymin]
-                                 :end [xmax ymax]}))]
+                                 :limit -1}))]
     (set/union start-within end-within)))
 
 (defn fclass=
@@ -272,8 +274,7 @@
                            (bigdec xmin) (bigdec ymin)
                            (bigdec xmax) (bigdec ymax))
                       (reduce set/union
-                              (map (partial fclass= adb) fclass)))
-                     fclass))]
+                              (map (partial fclass= adb) fclass)))))]
     ^{:format :raw}
     {:status 200
      :headers {"Content-Type" "application/json"}
