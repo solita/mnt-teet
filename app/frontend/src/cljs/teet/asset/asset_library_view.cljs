@@ -204,7 +204,7 @@
       (fn [_e! {atl :asset-type-library :as _app}]
         (if-not atl
           [CircularProgress {}]
-          (let [{:keys [fgroups materials] common :ctype/common
+          (let [{:keys [fgroups materials]
                  modified :tx/schema-imported-at} atl]
             [:<>
              [:div {:class (<class common-styles/flex-row-space-between)
@@ -219,11 +219,28 @@
               [Grid {:container true :spacing 0 :wrap :wrap}
                [scrollable-grid 4
                 [:<>
-                 ^{:key "common"}
+                 ^{:key "common-component"}
                  [rotl-tree {:open @open :toggle! toggle!
                              :focus @focus
-                             :label (tr [:asset :type-library :common-ctype])}
-                  common]
+                             :label (str (tr [:asset :type-library :common-ctype])
+                                         ": "
+                                         (tr [:asset :type-library :ctype]))}
+                  (:ctype/component atl)]
+                 ^{:key "common-feature"}
+                 [rotl-tree {:open @open :toggle! toggle!
+                             :focus @focus
+                             :label (str (tr [:asset :type-library :common-ctype])
+                                         ": "
+                                         (tr [:asset :type-library :fclass]))}
+                  (:ctype/feature atl)]
+                 ^{:key "common-material"}
+                 [rotl-tree {:open @open :toggle! toggle!
+                             :focus @focus
+                             :label (str (tr [:asset :type-library :common-ctype])
+                                         ": "
+                                         (tr [:asset :type-library :material]))}
+                  (:ctype/material atl)]
+
                  ^{:key "fgroups"}
                  [rotl-tree {:open @open :toggle! toggle!
                              :focus @focus
@@ -239,7 +256,9 @@
                [scrollable-grid 8
                 [:div {:style {:padding "1rem"}}
                  (when-let [item-kw @focus]
-                   (let [item (if (= item-kw :ctype/common)
-                                common
+                   (let [item (condp = item-kw
+                                :ctype/component (:ctype/component atl)
+                                :ctype/feature (:ctype/feature atl)
+                                :ctype/material (:ctype/material atl)
                                 (asset-type-library/item-by-ident atl item-kw))]
                      [rotl-item item]))]]]]])))})))
