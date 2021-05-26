@@ -44,13 +44,13 @@
          cookies/wrap-cookies
          (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
          (jetty/run-jetty (merge
-                           {:http? true :port http-port
+                           {:http? true :port http-port :join? false
                             :host (:listen-address config)}
-                           (if (-> "../../teet.keystore" io/file .exists)
+                           (if (-> "../../../teet.keystore" io/file .exists)
                              (do
                                (log/info "found keystore, starting tls sever too")
                                {:ssl? true :ssl-port https-port 
-                                :keystore "../../teet.keystore" :key-password "dummypass"})
+                                :keystore "../../../teet.keystore" :key-password "dummypass"})
                              (do
                                (log/info "keystore not found, not listening on tls port")
                                {}))))))))
