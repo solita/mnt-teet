@@ -24,6 +24,16 @@ function start-teet-app {
     mkdir -p mnt-teet-private
     JWT_SECRET=$(head -c 42 /dev/urandom | base64)
 
+    for x in $(seq 10); do
+	if docker pull postgrest/postgrest; then
+	    break
+	else
+	    echo docker pull failed, retrying after 30s sleep, retry $x of 10
+	    sleep 30
+	fi
+    done
+    
+    
     docker run --network docker_teet --name teetapi -p 127.0.0.1:3000:3000 \
        -e PGRST_DB_URI="$DB_URI" \
        -e PGRST_DB_ANON_ROLE="teet_anon" \
@@ -170,9 +180,8 @@ function setup-postgres {
     psql -c "CREATE ROLE teet WITH LOGIN SUPERUSER" -h localhost -U postgres
     psql -c "CREATE ROLE authenticator LOGIN" -h localhost -U postgres
     PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" | pg_restore -d "$SOURCE_DB_NAME" -h localhost -U postgres
-    psql -c "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;" -h localhost -U postgres
+    psql -c "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;" -h localhost -U postgres teet
 }
-
 
 function ssm-get {
     aws ssm get-parameter --name "$1" --query "Parameter.Value" --output text
@@ -224,9 +233,14 @@ function get-certs {
     aws s3 cp "${BUILD_S3_BUCKET}"/standalonevm-certs.tgz .
     tar -C /etc -xzf standalonevm-certs.tgz    
     certbot renew # will renew only if expiry is imminent
-    tar -C /etc -zcf standalonevm-certs.tgz certbot
+    tar -C /etc -zcf standalonevm-certs.tgz letsencrypt
     aws s3 cp standalonevm-certs.tgz "${BUILD_S3_BUCKET}"/standalonevm-certs.tgz
 
+    # don't want bundled cron job to do renewals without saving certs
+    rm -f /etc/cron.d/certbot
+    systemctl stop certbot.timer
+    systemctl disable certbot.timer
+    
     openssl pkcs12 -export \
 	    -inkey "/etc/letsencrypt/live/a.${DNS_SUFFIX}/privkey.pem" -in "/etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem" \
 	    -out jetty.pkcs12 -passout 'pass:dummypass'
@@ -307,9 +321,10 @@ function install-deps-and-app {
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
     control-datomic-bastion-ssh-access off
     
-    setup-postgres
     update-dyndns a # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
+
+    setup-postgres
     
     start-teet-app # config generation, backend, frontend & postgrest
 
@@ -363,4 +378,3 @@ else
     set -x
     install-deps-and-app
 fi
-
