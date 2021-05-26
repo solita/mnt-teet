@@ -227,27 +227,46 @@
   [db fclass]
   (e= db :asset/fclass fclass))
 
+(defmulti search-by (fn [_db key _value] key))
+
+(defmethod search-by :fclass [db _ fclasses]
+  (apply set/union
+         (map #(fclass= db %)
+              fclasses)))
+
+(defmethod search-by :common/status [db _ statuses]
+  (apply set/union (map #(e= db :common/status %) statuses)))
+
+(defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
+  (bbq db xmin ymin xmax ymax))
+
+(defn- search-by-map [db criteria-map]
+  (reduce-kv (fn [acc by val]
+               (let [result (search-by db by val)]
+                 (if (nil? acc)
+                   result
+                   (set/intersection acc result))))
+             nil
+             criteria-map))
+
+
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
-   :args {fclass :fclass}
+   :args search-criteria
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
-  (let [assets
+  (let [ids (take result-count-limit
+                  (search-by-map adb search-criteria))
+        more-results? (> (count ids) result-count-limit)
+        assets
         (map first
-             (take (inc result-count-limit)
-                   (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
-                                             :location/road-nr :location/carriageway
-                                             :location/start-km :location/end-km
-                                             :location/start-point :location/end-point])
-                             :where
-                             [?a :asset/fclass ?fclass]
-                             :in $ [?fclass ...]]
-                           adb
-                           fclass)))
-        more-results? (> (count assets) result-count-limit)
-        assets (take result-count-limit assets)]
+             (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
+                                       :location/road-nr :location/carriageway
+                                       :location/start-km :location/end-km])
+                       :in $ [?a ...]]
+                     adb (take result-count-limit ids)))]
     {:more-results? more-results?
      :result-count-limit result-count-limit
      :assets (mapv #(-> %
@@ -259,22 +278,18 @@
 (defquery :assets/geojson
   {:doc "Return GeoJSON for assets found by search."
    :spec (s/keys :opt-un [:assets-search/fclass])
-   :args {:keys [fclass xmin ymin xmax ymax] :as args}
+   :args criteria
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
-  (let [assets
+  (let [criteria (update criteria :bbox #(mapv bigdec %))
+        assets
         (map first
              (d/qseq '[:find (pull ?a [:asset/fclass :asset/oid
                                        :location/start-point :location/end-point])
                        :in $ [?a ...]]
                      adb
-                     (set/intersection
-                      (bbq adb
-                           (bigdec xmin) (bigdec ymin)
-                           (bigdec xmax) (bigdec ymax))
-                      (reduce set/union
-                              (map (partial fclass= adb) fclass)))))]
+                     (search-by-map adb criteria)))]
     ^{:format :raw}
     {:status 200
      :headers {"Content-Type" "application/json"}
