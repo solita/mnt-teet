@@ -18,7 +18,8 @@
             [clojure.string :as str]
             [cheshire.core :as cheshire]
             [teet.util.coerce :refer [->long]]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.set :as set]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -184,6 +185,46 @@
 
 (def ^:private result-count-limit 1000)
 
+(defn- e=
+  "return set of :db/id values of entities that have
+  the exact value for attribute"
+  [db attr value]
+  (into #{}
+        (map :e)
+        (d/datoms db {:index :avet
+                      :limit -1
+                      :components [attr value]})))
+
+(defn- bbq
+  "Return set of :db/id value sof entities whose location
+  start-point or end-point is within the bounding box."
+  [db xmin ymin xmax ymax]
+  (let [entities-within-y-range
+        (comp
+         (filter (fn [{[_x y] :v}]
+                   (<= ymin y ymax)))
+         (map :e))
+
+        start-within
+        (into #{}
+              entities-within-y-range
+              (d/index-range db {:attrid :location/start-point
+                                 :start  [xmin ymin]
+                                 :end  [xmax ymax]}))
+
+        end-within
+        (into #{}
+              entities-within-y-range
+              (d/index-range db {:attrid :location/end-point
+                                 :start [xmin ymin]
+                                 :end [xmax ymax]}))]
+    (set/union start-within end-within)))
+
+(defn fclass=
+  "Find entities belonging to a single fclass"
+  [db fclass]
+  (e= db :asset/fclass fclass))
+
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
@@ -224,30 +265,15 @@
         (map first
              (d/qseq '[:find (pull ?a [:asset/fclass :asset/oid
                                        :location/start-point :location/end-point])
-                       :where
-                       [?a :asset/fclass ?fclass]
-                       ;; PENDING: move from tuples to -x/-y attrs
-                       ;; This allows much more efficient index access
-                       ;; for the bbox query, now we need to pull and
-                       ;; untuple everything
-                       (or-join [?a ?xmin ?ymin ?xmax ?ymax]
-                                (and [?a :location/start-point ?p]
-                                     [(untuple ?p) [?x ?y]]
-                                     [(<= ?xmin ?x)]
-                                     [(<= ?x ?xmax)]
-                                     [(<= ?ymin ?y)]
-                                     [(<= ?y ?ymax)])
-                                (and [?a :location/end-point ?p]
-                                     [(untuple ?p) [?x ?y]]
-                                     [(<= ?xmin ?x)]
-                                     [(<= ?x ?xmax)]
-                                     [(<= ?ymin ?y)]
-                                     [(<= ?y ?ymax)]))
-                       :in $ [?fclass ...] ?xmin ?ymin ?xmax ?ymax]
+                       :in $ [?a ...]]
                      adb
-                     fclass
-                     (bigdec xmin) (bigdec ymin)
-                     (bigdec xmax) (bigdec ymax)))]
+                     (set/intersection
+                      (bbq adb
+                           (bigdec xmin) (bigdec ymin)
+                           (bigdec xmax) (bigdec ymax))
+                      (reduce set/union
+                              (map (partial fclass= adb) fclass)))
+                     fclass))]
     ^{:format :raw}
     {:status 200
      :headers {"Content-Type" "application/json"}
