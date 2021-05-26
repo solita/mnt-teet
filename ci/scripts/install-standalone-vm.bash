@@ -101,7 +101,7 @@ EOF
     tmux new -d -s "$uuid"
     tmux splitw -h -t "${uuid}:0.0"
     tmux send-keys -t "${uuid}.0" "cd mnt-teet/app/backend && clj -A:dev" ENTER "(restart)" ENTER
-    tmux send-keys -t "${uuid}.1" "cd mnt-teet/app/frontend && ./dev.sh" ENTER
+    tmux send-keys -t "${uuid}.1" "cd mnt-teet/app/frontend && chown -R ubuntu:ubuntu . && sudo -u ubuntu npm install && bash build.sh" ENTER
     # tmux a -t "$uuid"
 }
 
@@ -250,7 +250,7 @@ function get-certs {
 
     keytool -importkeystore -noprompt \
 	    -srckeystore jetty.pkcs12 -srcstoretype PKCS12 -srcstorepass dummypass \
-	    -destkeystore teet.keystore -deststorepass storep
+	    -destkeystore teet.keystore -deststorepass dummypass
 
 }
 
@@ -270,7 +270,7 @@ function install-deps-and-app {
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools certbot
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools certbot npm
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
