@@ -389,8 +389,10 @@
            format-result
            show-label? after-results-action
            query placeholder no-results clear-value
-           start-icon input-button-icon input-element]
+           start-icon input-button-icon input-element
+           query-threshold]
     :or {show-label? true
+         query-threshold 2
          placeholder (tr [:user :autocomplete :placeholder])
          no-results (tr [:user :autocomplete :no-options])
          start-icon icons/action-search
@@ -405,7 +407,21 @@
                set-ref! #(reset! input-ref %)
                on-key-down (partial arrow-navigation state on-change)]
     (let [{:keys [loading? results open? input highlight]} @state
-          current-input-ref (or (:input-ref opts) @input-ref) ]
+          current-input-ref (or (:input-ref opts) @input-ref)
+          load! #(let [result-fn-or-query-map (query %)]
+                   (if (fn? result-fn-or-query-map)
+                     (let [results (result-fn-or-query-map)]
+                       (swap! state merge {:loading? false
+                                           :open? true
+                                           :results results
+                                           :highlight (first results)}))
+                     (e! (->CompleteSearch result-fn-or-query-map
+                                           (fn [results]
+                                             (swap! state assoc
+                                                    :loading? false
+                                                    :open? true
+                                                    :results results
+                                                    :highlight (first results)))))))]
       [:<>
        [input-element
         (merge {:ref set-ref!
@@ -423,11 +439,18 @@
                 :value (if value
                          (format-result value)
                          input)
-                :on-focus #(when (and (seq results) (>= (count input) 2))
-                             (swap! state assoc :open? true))
+                :on-focus #(if (and (empty? results)
+                                    (zero? query-threshold))
+                             ;; If query threshold is zero, search immediately
+                             ;; even if user hasn't typed anything
+                             (load! input)
+
+                             (when (and (seq results)
+                                        (>= (count input) query-threshold))
+                               (swap! state assoc :open? true)))
                 :on-change (fn [e]
                              (let [t (-> e .-target .-value)
-                                   loading? (>= (count t) 2)]
+                                   loading? (>= (count t) query-threshold)]
                                (when value
                                  (on-change nil))
 
@@ -438,20 +461,7 @@
                                               :loading? loading?))
 
                                (when loading?
-                                 (let [result-fn-or-query-map (query t)]
-                                   (if (fn? result-fn-or-query-map)
-                                     (let [results (result-fn-or-query-map)]
-                                       (swap! state merge {:loading? false
-                                                           :open? true
-                                                           :results results
-                                                           :highlight (first results)}))
-                                     (e! (->CompleteSearch result-fn-or-query-map
-                                                           (fn [results]
-                                                             (swap! state assoc
-                                                                    :loading? false
-                                                                    :open? true
-                                                                    :results results
-                                                                    :highlight (first results))))))))))
+                                 (load! t))))
                 :input-button-click #(do
                                        (on-change clear-value)
                                        (swap! state assoc :input "")
@@ -559,7 +569,6 @@
   [{:keys [on-change value] :as opts}]
   (r/with-let [input-ref (r/atom nil)
                set-input-ref! #(reset! input-ref %)]
-    (.log js/console "inputti on " @input-ref)
     [:div.select-search-multiple {:class (<class multiselect-input-wrapper-style)
                                   :ref set-input-ref!}
      (mapc (r/partial selected-item-chip opts) value)

@@ -90,3 +90,22 @@
                      :when (string/contains-words? (format-fg-and-fc result) text)]
 
                  result)))}])
+
+(defn select-listitem-multiple [{:keys [atl attribute]}]
+  (let [attr (asset-type-library/item-by-ident atl attribute)
+        values (:enum/_attribute attr)]
+    (fn [{:keys [e! on-change value]}]
+      [select/select-search-multiple
+       {:e! e!
+        :placeholder (str (label attr) "...")
+        :value value
+        :on-change on-change
+        :format-result label
+        :query-threshold 0 ; always do "query"
+        :query (fn [text]
+                 #(if (str/blank? text)
+                    values
+                    (into []
+                          (filter (fn [v]
+                                    (string/contains-words? (label v) text)))
+                          values)))}])))
