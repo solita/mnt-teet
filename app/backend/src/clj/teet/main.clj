@@ -18,6 +18,11 @@
 
 (def server nil)
 
+(defn wrap-nil [handler]
+   (fn [request]
+    (let [rv (handler request)]
+       (or rv {:status 404 :headers {"Content-Type" "text/plain"} :body "Not found\n"}))))
+
 (defn start [{:keys [http-port https-port tara mode] :as config}]
   (environment/log-timezone-config!)
   (alter-var-root
@@ -40,6 +45,7 @@
               (login-fake-routes/fake-login-routes)))
           (db-api-dev/db-api-routes)
           (routes/teet-routes config))
+         wrap-nil
          params/wrap-params
          cookies/wrap-cookies
          (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
@@ -56,7 +62,7 @@
                                {}))))))))
 
 (defn stop []
-  (server))
+  (.stop server))
 
 (defn restart
   ([]
