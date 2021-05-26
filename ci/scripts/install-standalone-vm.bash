@@ -34,22 +34,26 @@ function start-teet-app {
     done
     
     
-    docker run --network docker_teet --name teetapi -p 127.0.0.1:3000:3000 \
+    docker run -d --network docker_teet --name teetapi -p 127.0.0.1:3000:3000 \
        -e PGRST_DB_URI="$DB_URI" \
        -e PGRST_DB_ANON_ROLE="teet_anon" \
        -e PGRST_DB_SCHEMA="teet" \
        -e PGRST_JWT_SECRET="$JWT_SECRET" \
        postgrest/postgrest    
-
+    cat > ~/.datomic/dev-local.edn <<EOF
+{:storage-dir "/home/root/.datomic/dev-local-data"}
+EOF
+    
     cat > mnt-teet-private/config.edn <<EOF
 {:datomic
  {:db-name "teet"
   :asset-db-name "asset"
   :client {:server-type :dev-local
+           :storage-dir "$HOME/.datomic/dev-local-data"
            :system "teet"}}
  :listen-address "0.0.0.0"
  :auth {:jwt-secret "$JWT_SECRET"
-        :basic-auth-password "$(ssm-get /teet/auth/basic-auth-password)"}
+        :basic-auth-password "$(ssm-get /teet/api/basic-auth-password)"}
  :env :dev
  :api-url "http://localhost:3000"
  :enabled-features #{:road-information-view
@@ -68,7 +72,6 @@ function start-teet-app {
 
  :file {:allowed-suffixes #{"doc" "docx" "xlsx" "xls" "ppt" "pptx" "rtf" "odf" "pdf" "dwf" "dwg" "dgn" "dxf" "shp" "dbf" "kml" "kmz" "ifc" "xml" "bcf" "rvt" "skp" "3dm" "ags" "gpx" "png" "jpg" "jpeg" "tif" "tiff" "ecw" "shx" "lin" "wav" "mp3" "ogg" "aac" "mov" "mp4" "m4v" "avi" "las"}
         :image-suffixes #{"png" "jpg" "jpeg" "tif" "tiff" "ecw"}}
-n
  :xroad {:query-url "$(ssm-get /teet/xroad-query-url)"
          :instance-id "$(ssm-get /teet/xroad-instance-id)"}
 
