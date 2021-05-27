@@ -428,7 +428,7 @@
                     {:margin-left "-0.9rem"}))}])))])
 
 (defn- component-rows [{:keys [e! level components locked?
-                               delete-component!]}]
+                               delete-fn children-label-fn]}]
   (when (seq components)
     [:<>
      (doall
@@ -441,7 +441,7 @@
            [component-tree-level-indent level]
            [url/Link {:page :cost-item
                       :params {:id (:asset/oid c)}}
-            (:asset/oid c)]]
+            (children-label-fn c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 35 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
@@ -453,27 +453,53 @@
               [buttons/delete-button-with-confirm
                {:small? true
                 :icon-position :start
-                :action (r/partial delete-component! (:db/id c))}
+                :action (r/partial delete-fn (:db/id c))}
                (tr [:buttons :delete])]])]]
          [component-rows {:e! e!
                           :locked? locked?
                           :components (:component/components c)
                           :level (inc (or level 0))}]]))]))
 
-(defn- components-tree*
+(defn- children-tree*
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! asset]} locked?]
+  [{:keys [e! parent label-fn children-fn children-label-fn delete-fn]} locked?]
   [:<>
-   [typography/Heading3 (tr [:asset :components :label])
-    (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
+   [typography/Heading3 (label-fn parent)]
    [component-rows {:e! e!
                     :locked? locked?
-                    :components (:asset/components asset)
-                    :delete-component! (e! cost-items-controller/->DeleteComponent)}]])
+                    :components (children-fn parent)
+                    :children-label-fn children-label-fn
+                    :delete-fn delete-fn}]])
 
-(defn- components-tree [opts]
+(defn- components-tree
+  "Relevant options:
+   - label-fn takes the asset, produces
+   - delete-fn when called with db/id deletes the said entity"
+  [asset {:keys [e!] :as opts}]
   [context/consume :locked?
-   [components-tree* opts]])
+   [children-tree* (assoc opts
+                          :parent asset
+                          :label-fn #(str (tr [:asset :components :label])
+                                          " ("
+                                          (cu/count-matching-deep :component/ctype
+                                                                  (:asset/components %))
+                                          ")")
+                          :children-label-fn :asset/oid
+                          :children-fn :asset/components
+                          :delete-fn (e! cost-items-controller/->DeleteComponent))]])
+
+(defn- material-label [atl m]
+  (->> m :material/type (asset-type-library/item-by-ident atl) tr*))
+
+(defn- materials-list
+  [component {:keys [e! atl] :as opts}]
+  [context/consume :locked?
+   [children-tree* (assoc opts
+                          :parent component
+                          :label-fn (constantly (tr [:asset :materials :label]))
+                          :children-fn :component/materials
+                          :children-label-fn #(str (:asset/oid %) " " (material-label atl %))
+                          :delete-fn (e! cost-items-controller/->DeleteMaterial))]])
 
 (defn- form-paper
   "Wrap the form input portion in a light gray paper."
@@ -527,9 +553,8 @@
        ;; Components (show only for existing)
        (when initial-data
          [:<>
-          [components-tree {:e! e!
-                            :asset form-data
-                            :allowed-components (:ctype/_parent feature-class)}]
+          [components-tree  form-data
+                            {:e! e!}]
 
           [add-component-menu
            (tr [:asset :add-component])
@@ -559,9 +584,6 @@
                          component-path)]
              [label-for p])
            (repeat " / "))))])
-
-(defn- material-label [atl m]
-  (->> m :material/type (asset-type-library/item-by-ident atl) tr*))
 
 (defn- component-form* [e! atl component-oid cost-item-data]
   (r/with-let [materials-open? (r/atom false)
@@ -603,15 +625,8 @@
                        :common? true
                        :ctype ctype}]]]
 
-        (when-let [materials (:component/materials component-data)]
-          [container/collapsible-container
-           {:open? @materials-open?
-            :on-toggle (r/partial swap! materials-open? not)}
-           (tr [:asset :type-library :material])
-           [:<>
-            (doall
-             (for [m materials]
-               [panels/panel {:title (material-label atl m)}]))]])
+        (when (:component/materials component-data)
+          [materials-list component-data {:e! e! :atl atl}])
 
         (when (not new?)
           [:<>

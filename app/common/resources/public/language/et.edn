@@ -92,6 +92,7 @@
   :manager {:link "Varad", :result-count "{count} nähtust"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
+  :materials {:label "Materjalid"},
   :location
   {:hide-map "Peida kaart",
    :no-road-found-for-points "Punktide jaoks ei leitud teed",
@@ -221,6 +222,7 @@
  :contract
  {:no-targets-for-contract
   "Lepingu integreerimine ei õnnestunud ja sellel lepingul pole kehtivaid eesmärke.\nVeateate saamiseks pöörduge administratsiooni poole",
+  :partner-information-text nil,
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
