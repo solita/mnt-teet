@@ -1,8 +1,8 @@
 {:account
  {:account-edited "Account information edited.",
   :logout "Logout",
-  :my-details "MY DETAILS",
   :my-account "My account",
+  :my-details "MY DETAILS",
   :save-information "Save information"},
  :activity
  {:note-all-tasks-need-to-be-completed
@@ -12,12 +12,12 @@
   :waiting-for-submission "Results have not yet been submitted"},
  :activity-approval
  {:activity.status/archived "Archive this activity",
-  :submit-for-approval "Submit activity for approval",
   :activity.status/canceled "Cancel this activity",
   :activity.status/completed "Approve this activity",
   :approve-activity-confirm
   "Activity status will be set to Completed.",
-  :reject-activity-confirm "Activity status will be updated."},
+  :reject-activity-confirm "Activity status will be updated.",
+  :submit-for-approval "Submit activity for approval"},
  :admin
  {:create-user "Add user",
   :no-current-permissions "No current permissions",
@@ -68,35 +68,34 @@
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate
-  {:only-whitespace "Field cannot contain only whitespace",
-   :max-value "Maximum allowed value: {max-value}",
-   :min-value "Minimum allowed value: {min-value}",
+  {:decimal-format "Insert decimal value",
    :decimal-precision
    "Number precision too large. Maximum allowed is {precision}.",
    :integer-format "Insert integer value",
-   :decimal-format "Insert decimal value",
+   :max-length "Text too long, insert at most {max-length} characters",
+   :max-value "Maximum allowed value: {max-value}",
    :min-length
    "Text too short, insert at least {min-length} characters",
-   :max-length
-   "Text too long, insert at most {max-length} characters"},
+   :min-value "Minimum allowed value: {min-value}",
+   :only-whitespace "Field cannot contain only whitespace"},
   :unofficial-version "Unofficial",
   :no-matching-feature-classes "No matching feature classes.",
   :add-component "Add component",
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
   :cost-item-saved "Cost item saved",
-  :page {:cost-items-totals "Totals", :cost-items "Assets"},
+  :page {:cost-items "Assets", :cost-items-totals "Totals"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
   :export-boq-filename "THK-{project}-BOQ-{version}.xlsx",
   :save-boq-version "Save BOQ version",
-  :manager {:link "Assets"},
+  :manager {:link "Assets", :result-count "{count} features"},
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
   :location
-  {:show-map "Show map",
-   :hide-map "Hide map",
-   :no-road-found-for-points "No road found for points"},
+  {:hide-map "Hide map",
+   :no-road-found-for-points "No road found for points",
+   :show-map "Show map"},
   :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
@@ -122,10 +121,10 @@
    :component-inherits-location
    "Component inherits location from parent"},
   :field-group
-  {:location "Location",
+  {:common "Common",
    :cost-grouping "Cost grouping",
-   :common "Common",
-   :details "Details"},
+   :details "Details",
+   :location "Location"},
   :unlock-for-edits "Unlock for edits"},
  :buttons
  {:confirm "Confirm",
@@ -145,10 +144,10 @@
   :copy-to-clipboard "Copy all text",
   :upload "Upload"},
  :cadastral-group
- {"Avalik-õiguslik omand" "Public property",
+ {"" "Undefined",
+  "Avalik-õiguslik omand" "Public property",
   "Eraomand" "Private property",
   "Kiinistamata eraomand" "Unregistered private property",
-  "" "Undefined",
   "Munitsipaalomand" "Municipal property",
   "Omand väljaselgitamisel" "Property on identification",
   "Riigiomand" "State owned",
@@ -223,57 +222,63 @@
  {:no-targets-for-contract
   "Contract integration failed and this contract doesn't have any valid targets. Contact administration for a bug report",
   :thk.contract.status/deadline-approaching "Deadline approaching",
+  :company-search-placeholder "Enter company name or business id",
   :related-contracts "RELATED CONTRACTS",
   :thk.contract/type "Type",
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",
+  :add-company-not-in-teet "Add a company not in TEET",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
+  :add-company "Add company",
   :status "Status",
   :table-heading
-  {:project "Project",
+  {:activity "Activity",
+   :project "Project",
    :project-manager "Project manager",
-   :activity "Activity",
    :task "Task"},
   :contract-related-entities "Contract related entities",
+  :no-companies-matching-search "No companies found matching search",
   :partners-listing "Partners listing",
   :thk.contract.status/signed "Signed",
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",
+  :company-search-label "Company search",
   :contracts-listing "Contract listing",
   :edit-contract "Contract information",
   :thk.contract.status/in-progress "In progress"},
  :contracts
- {:state-procurement-link "Procurement no.",
+ {:contracts-list
+  {:collapse-all "Collapse all",
+   :expand-all "Expand all",
+   :result "Result",
+   :results "results",
+   :view "View"},
   :external-link "Contract no.",
-  :thk-procurement-link "THK",
-  :quick-filters "Quick filters",
-  :shortcuts
-  {:my-contracts "My contracts",
-   :all-contracts "All contracts",
-   :unassigned "Unassigned"},
   :filters
-  {:show-filters "Show filters",
-   :hide-filters "Hide filters",
-   :select-input-placeholder "Select",
+  {:hide-filters "Hide filters",
    :inputs
    {:contract-number "Contract number",
     :project-name "Object name",
     :ta/region "Region",
     :partner-name "Partner name",
-    :project-manager "Project manager",
+    :project-manager "TA Project manager",
     :contract-status "Contract status",
     :contract-type "Contact type",
     :contract-name "Procurement name",
     :procurement-number "Procurement number",
-    :road-number "Road number"}},
-  :contracts-list
-  {:result "Result",
-   :results "Results",
-   :expand-all "Expand all",
-   :collapse-all "Collapse all"}},
+    :road-number "Road number"},
+   :select-input-placeholder "Select",
+   :show-filters "Show filters"},
+  :quick-filters "Quick filters",
+  :shortcuts
+  {:all-contracts "All contracts",
+   :my-contracts "My contracts",
+   :unassigned "Unassigned"},
+  :state-procurement-link "Procurement no.",
+  :thk-procurement-link "THK"},
  :cooperation
  {:response "Response",
   :application-delete-confirm "Delete the application?",
@@ -304,29 +309,29 @@
   :add-application-contact "Add contact",
   :third-party-deleted "Involved party deleted",
   :export
-  {:cooperation.application.response-type/opinion
-   {:user-column nil,
-    :content-column nil,
-    :header "OPINIONS",
-    :decision-column nil},
-   :preview "Preview",
-   :cooperation.application.response-type/other
-   {:user-column nil,
-    :header nil,
+  {:cooperation.application.response-type/consent
+   {:content-column nil,
     :decision-column nil,
-    :content-column nil},
-   :seq#-column nil,
+    :header nil,
+    :user-column nil},
    :cooperation.application.response-type/coordination
-   {:user-column nil,
-    :content-column nil,
+   {:content-column nil,
+    :decision-column nil,
     :header nil,
-    :decision-column nil},
-   :title "Involved parties summary table",
-   :cooperation.application.response-type/consent
-   {:user-column nil,
-    :content-column nil,
+    :user-column nil},
+   :cooperation.application.response-type/opinion
+   {:content-column nil,
+    :decision-column nil,
+    :header "OPINIONS",
+    :user-column nil},
+   :cooperation.application.response-type/other
+   {:content-column nil,
+    :decision-column nil,
     :header nil,
-    :decision-column nil}},
+    :user-column nil},
+   :preview "Preview",
+   :seq#-column nil,
+   :title "Involved parties summary table"},
   :newest-application "Newest application",
   :create-opinion-button "Opinion of Competent Authority",
   :application-edited "Application edited succesfully",
@@ -347,14 +352,14 @@
   :waiting-for-opinion "Waiting for opinion",
   :new-third-party-title "Add involved party",
   :error
-  {:response-not-given "Files can be added after response is added",
-   :coordination-task-missing
+  {:coordination-task-missing
    "Coordination task does not exist for the activity.",
    :coordination-task-status-no-upload
    "Coordination task state does not allow file uploading.",
-   :upload-not-allowed "Upload not allowed",
    :response-not-editable
-   "Response has an opinion added and can't be edited."},
+   "Response has an opinion added and can't be edited.",
+   :response-not-given "Files can be added after response is added",
+   :upload-not-allowed "Upload not allowed"},
   :response-of-third-party "Response of involved party",
   :opinion-created "Opinion created successfully",
   :response-created "Response created successfully",
@@ -365,30 +370,31 @@
   :opinion-saved "Opinion saved successfully",
   :new-third-party "Add involved party",
   :results "{count} results"},
+ :countries {:ee "Estonia", :fi "Finland"},
  :dashboard
- {:open "Open",
+ {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",
-  :notifications "Notifications",
-  :activities-and-tasks "Activities and tasks",
   :no-notifications-for-project
   "You have no notifications related to this project",
+  :notifications "Notifications",
+  :open "Open",
   :title "Dashboard"},
  :data-tab
  {:cadastral-unit-count "Currently showing {count} cadastral units",
   :restriction-count "Currently showing {count} restrictions"},
  :date-range {:error-text "Possible dates: {start} – {end}"},
  :document
- {:deleted-notification "Document deleted successfully",
+ {:comments "Comments",
+  :deleted-notification "Document deleted successfully",
   :file-deleted-notification "File deleted successfully",
   :file-too-large "file is too large",
   :invalid-file-type "file type is not valid",
-  :comments "Comments",
-  :updated "Updated",
-  :new-comment "New comment"},
+  :new-comment "New comment",
+  :updated "Updated"},
  :drag
- {:drop-to-meeting-decision "Attach file to meeting decision",
-  :drop-to-comment "Add images to comment",
+ {:drop-to-comment "Add images to comment",
   :drop-to-meeting-agenda "Attach file to meeting agenda",
+  :drop-to-meeting-decision "Attach file to meeting decision",
   :drop-to-task "Upload files to task",
   :no-drop-zone "No drop zone"},
  :email
@@ -684,15 +690,15 @@
   :task.type/road "Road",
   :cooperation.application.response-type/coordination "Coordination"},
  :environment
- {:info-text
+ {:build-time "Last build happened at",
+  :info-text
   {:dev
    "You are using the development environment of teet. Information saved here may be lost.",
    :prelive
    "You are using the training environment of TEET. From time to time the data in the environment is updated and the manually added data disappears.",
    :test
    "You are using the test environment of TEET. From time to time the data in the environment is updated and the manually added data disappears."},
-  :version "Version",
-  :build-time "Last build happened at"},
+  :version "Version"},
  :error
  {:file-metadata-not-unique
   "Uploading this file with the given metadata would create a duplicate file under the task or duplicate files already exist for this task",
@@ -783,6 +789,7 @@
   :cooperation.contact/id-code "Business reg / personal ID code",
   :file.part/name "Part name",
   :task/group "Task group",
+  :company/business-registry-code "Business registry code",
   :file/part "Part",
   :cooperation.3rd-party/name "Involved party name",
   :file/version "Version",
@@ -811,6 +818,7 @@
   :thk.project/end-km "End km",
   :cooperation.application/response-deadline "Response deadline",
   :thk.project/start-km "Start km",
+  :company/name "Company name",
   :cooperation.response/content "Response content",
   "projectgroup" {"activity" "Activities"},
   :file/original-name "Original filename",
@@ -836,6 +844,7 @@
   "Respondents connection to the land",
   :thk.contract/warranty-period "Warranty period",
   :land-acquisition/pos-number "POS#",
+  :company/country "Country",
   :meeting.agenda/responsible "Responsible person",
   :document/sub-category "Document subtype",
   :location/road-address "Road address",
@@ -870,6 +879,7 @@
   :land-owner-opinion/activity "Activity",
   :file/timestamp "Upload date",
   :cooperation.3rd-party/email "E-mail address",
+  :company/phone-numbers "Company phone number",
   :user/email "Email",
   :land-acquisition/area-to-obtain "Area to obtain",
   :file/sequence-number "#",
@@ -888,6 +898,7 @@
   :meeting/links "Links",
   :activity/name "Activity name",
   :location/start-km "Start km",
+  :company/emails "Company e-mail",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :boq-version/type "Update version status",
@@ -919,18 +930,18 @@
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
   :export-files-zip
-  {:email-body
-   "Download from: \n{link}\nThe link is valid for 24 hours.",
-   :activity-button "Email link to files related to the activity ",
-   :task-button "Email link to files related to the task ",
+  {:activity-button "Email link to files related to the activity ",
    :activity-email-subject
    "The export of activity-related documents has ended",
    :activity-success
    "Documents related to the activity are exported. A link to the documents will be emailed to you shortly",
-   :task-success
-   "Documents related to the task are exported. A link to the documents will be emailed to you shortly",
+   :email-body
+   "Download from: \n{link}\nThe link is valid for 24 hours.",
+   :task-button "Email link to files related to the task ",
    :task-email-subject
-   "The export of task-related documents has ended"},
+   "The export of task-related documents has ended",
+   :task-success
+   "Documents related to the task are exported. A link to the documents will be emailed to you shortly"},
   :replace-dialog-title "Upload new version ",
   :edit-info "Last edited {date} by {author}",
   :other-versions "Other versions",
@@ -939,10 +950,10 @@
   :full-name "TEET Full name",
   :switch-to-latest-version "Switch back to latest version",
   :sort-by
-  {:file/type "Sort by file type",
-   :meta/created-at "Sort by date",
-   :file/name "Sort by name",
-   :file/status "Sort by status"},
+  {:file/name "Sort by name",
+   :file/status "Sort by status",
+   :file/type "Sort by file type",
+   :meta/created-at "Sort by date"},
   :replace-dialog-info-text
   "Don't worry we will keep the current version, so you can go back to it if you need to.",
   :version "Version {num}",
@@ -1010,9 +1021,9 @@
   :cadastral-filter-label "Cadastral unit number",
   :unit-name-id "Unit name and id",
   :quality
-  {:bad "Bad",
+  {:any "Any",
+   :bad "Bad",
    :good "Good (L-Est)",
-   :any "Any",
    :questionable "Questionable"},
   :filter-label "Filter units",
   :total-excluding-process "Total excluding process fees:",
@@ -1036,12 +1047,12 @@
   :comments "Comments",
   :mortgages "Mortgages",
   :modal-title
-  {:mortgages "Mortgages",
-   :burdens "Burdens",
-   :costs "Acquisition costs",
-   :owners-opinions "Land owners opinions",
+  {:burdens "Burdens",
    :comments "Comments",
-   :files "Files attached to this unit"},
+   :costs "Acquisition costs",
+   :files "Files attached to this unit",
+   :mortgages "Mortgages",
+   :owners-opinions "Land owners opinions"},
   :costs "Acquisition costs",
   :mortgage "Mortgage",
   :owner-opinions "Opinions",
@@ -1059,10 +1070,10 @@
   :choose-activity "Choose an activity",
   :update {:success-message "Opinion successfully edited"},
   :delete
-  {:success-message "Opinion deleted",
-   :cancel-text "No, return back",
+  {:cancel-text "No, return back",
    :confirmation-text
-   "All information will be deleted and cannot be recovered"},
+   "All information will be deleted and cannot be recovered",
+   :success-message "Opinion deleted"},
   :export
   {:units-with-opinions nil,
    :estate-num-name nil,
@@ -1077,24 +1088,26 @@
   :choose-type "Choose a type",
   :edit-opinion "EDIT OPINION"},
  :link
- {:search {:no-results "No results", :placeholder "Link..."},
+ {:land-unit-not-in-project "Not selected in project",
+  :no-units-in-estate-selected "No units selected in the project",
+  :search {:no-results "No results", :placeholder "Link..."},
+  :target-deleted "Deleted by {user} at {at}",
   :type-label
-  {:file "File",
+  {:appendix "Appendix",
    :cadastral-unit "Cadastral unit",
    :estate "Estate",
-   :appendix "Appendix",
-   :task "Task"},
-  :target-deleted "Deleted by {user} at {at}",
-  :land-unit-not-in-project "Not selected in project",
-  :no-units-in-estate-selected "No units selected in the project"},
+   :file "File",
+   :task "Task"}},
  :login
- {:username "Username",
-  :password "Password",
+ {:greetings-text
+  "Road life cycle information management and common data environment TEET",
   :login "Login",
-  :greetings-text
-  "Road life cycle information management and common data environment TEET"},
+  :password "Password",
+  :username "Username"},
  :map
  {:aerial-view "Aerial view",
+  :clear-selections "Clear selections",
+  :display "Map display",
   :layers
   {:no-filters "No filters available",
    :projects "Projects",
@@ -1107,9 +1120,7 @@
    :cadastral-units "Cadastral units",
    :no-layers "No map layers",
    :land-surveys "Land surveys"},
-  :display "Map display",
   :map-layers "Map layers",
-  :clear-selections "Clear selections",
   :select-all "Select all"},
  :meeting
  {:notifications-help
@@ -1215,12 +1226,12 @@
  :page-title {:project-list "{name} project"},
  :people-tab
  {:active "ACTIVE",
-  :managers "Managers",
   :consultants "Consultants",
-  :invite-user "Invite new user to TEET",
-  :other-users "Other users",
   :hide-history "Hide history",
+  :invite-user "Invite new user to TEET",
+  :managers "Managers",
   :no-other-users "No other users",
+  :other-users "Other users",
   :show-history "Show history"},
  :project
  {:add-users "Add users",
@@ -1264,14 +1275,14 @@
   :add-task "Add task",
   :draw-selection
   {:deselect "Deselect areas",
-   :select "Select areas",
-   :link "Draw selection on map"},
+   :link "Draw selection on map",
+   :select "Select areas"},
   :information
-  {:estimated-duration "Estimated duration",
-   :procurement-number "Procurement number",
+  {:carriageway "CW",
+   :estimated-duration "Estimated duration",
    :km-range "Km range",
+   :procurement-number "Procurement number",
    :repair-method "Method",
-   :carriageway "CW",
    :road-number "Road number"},
   :add-tasks "Add tasks",
   :activities "Project activities",
@@ -1283,20 +1294,20 @@
   :activities-tab "Activities"},
  :project-groups {:title "Project groups"},
  :projects
- {:map-view "Map",
-  :filters
+ {:filters
   {:all "All projects",
-   :unassigned-only "Unassigned projects only",
-   :my-projects "My projects"},
-  :title "Projects",
+   :my-projects "My projects",
+   :unassigned-only "Unassigned projects only"},
   :list-view "Project list",
-  :no-activities "No activities"},
+  :map-view "Map",
+  :no-activities "No activities",
+  :title "Projects"},
  :roles
  {:authenticated-guest "Authenticated guest",
-  :guest "Guest",
-  :manager "Project manager",
-  :internal-consultant "Internal consultant",
   :external-consultant "External consultant",
+  :guest "Guest",
+  :internal-consultant "Internal consultant",
+  :manager "Project manager",
   :owner "Owner"},
  :search {:clear-filters "Clear filters", :quick-search "Search"},
  :search-area
@@ -1318,11 +1329,11 @@
   :inclusion-distance-placeholder "Give value to show related areas",
   :component-title "Related features search area"},
  :tab-names
- {:upcoming "Upcoming",
-  :notes "Comments",
+ {:decisions "Decisions",
+  :details "Details",
   :history "History",
-  :decisions "Decisions",
-  :details "Details"},
+  :notes "Comments",
+  :upcoming "Upcoming"},
  :task
  {:task-overview "Task overview",
   :edit-part-modal-title "Edit task part",
@@ -1376,15 +1387,15 @@
  :unit-info {:owners-opinions "Land owners opinions"},
  :unit-modal-page {:add-new-owner-opinion "Add new opinion"},
  :user
- {:unregistered "User",
-  :autocomplete
-  {:no-options "User not found",
-   :loading "Searching users...",
+ {:autocomplete
+  {:loading "Searching users...",
+   :no-options "User not found",
    :placeholder "Type name..."},
-  :role "Role"},
+  :role "Role",
+  :unregistered "User"},
  :validation {:invalid-email "Invalid email address"},
  :warning
- {:version-mismatch
-  "A new version of the application has been deployed. Please refresh the page.",
-  :deploying
-  "A new version of the application is being deployed. Please wait for a few minutes and refresh the page."}}
+ {:deploying
+  "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",
+  :version-mismatch
+  "A new version of the application has been deployed. Please refresh the page."}}

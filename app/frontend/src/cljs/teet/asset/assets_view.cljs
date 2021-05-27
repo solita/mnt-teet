@@ -15,7 +15,8 @@
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
             [teet.log :as log]
-            [teet.ui.material-ui :refer [CircularProgress]]))
+            [teet.ui.material-ui :refer [CircularProgress Paper]]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn filter-component [{filters :filters-atom :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -29,13 +30,19 @@
   (let [opts {:e! e!
               :filters-atom filters
               :atl atl}]
-    [:div {:style {:padding "1rem"}}
+    [:div {:style {:padding "1rem"
+                   :background-color theme-colors/white
+                   :height "100%"}}
      (if @collapsed?
-       [:a {:on-click #(reset! collapsed? false)
-            :style {:display :inline-block
-                    :transform "rotate(-90deg) translateY(-30px)"
-                    :cursor :pointer}}
-        (tr [:search :quick-search])]
+       [:<>
+        [icons/navigation-arrow-right {:on-click #(reset! collapsed? false)
+                                       :style {:position :relative
+                                               :left "-15px"}}]
+        [:a {:on-click #(reset! collapsed? false)
+             :style {:display :inline-block
+                     :transform "rotate(-90deg) translate(-30px,-30px)"
+                     :cursor :pointer}}
+         (tr [:search :quick-search])]]
 
        [:<>
         [icons/navigation-arrow-left {:on-click #(reset! collapsed? true)
@@ -78,11 +85,15 @@
             (next-map-key!))))
 
       :reagent-render
-      (fn [e! atl assets-query {:keys [assets]}]
+      (fn [e! atl assets-query {:keys [assets more-results? result-count-limit]}]
         [vertical-split-pane {:defaultSize 400 :primary "second"
                               :on-drag-finished next-map-key!}
-         [:div
-          [typography/Heading1 (tr [:asset :manager :link])]
+         [:div {:style {:background-color theme-colors/white
+                        :padding "0.5rem"}}
+          [typography/Heading1 (tr [:asset :manager :result-count]
+                                   {:count (if more-results?
+                                             (str result-count-limit "+")
+                                             (count assets))})]
           [table/listing-table
            {:default-show-count 100
             :columns asset-model/assets-listing-columns
