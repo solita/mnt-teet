@@ -1,41 +1,41 @@
 (ns teet.asset.cost-items-view
   "Cost items view"
-  (:require [teet.project.project-view :as project-view]
-            [teet.ui.typography :as typography]
-            [teet.localization :refer [tr tr-enum] :as localization]
-            [teet.ui.buttons :as buttons]
+  (:require [clojure.string :as str]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.form :as form]
-            [teet.ui.select :as select]
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-type-library :as asset-type-library]
             [teet.asset.asset-ui :as asset-ui
              :refer [tr* label label-for select-fgroup-and-fclass]]
-            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
-            [teet.ui.text-field :as text-field]
-            [clojure.string :as str]
-            [teet.util.collection :as cu]
-            [teet.util.datomic :as du]
-            [teet.ui.context :as context]
-            [teet.ui.icons :as icons]
-            [herb.core :refer [<class]]
-            [teet.ui.common :as common]
-            [teet.ui.container :as container]
             [teet.asset.cost-items-controller :as cost-items-controller]
-            [teet.asset.asset-type-library :as asset-type-library]
-            [teet.asset.asset-model :as asset-model]
-            [teet.ui.url :as url]
+            [teet.asset.cost-items-map-view :as cost-items-map-view]
+            [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.localization :refer [tr tr-enum] :as localization]
+            [teet.project.project-view :as project-view]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.table :as table]
-            [teet.user.user-model :as user-model]
-            [teet.ui.format :as fmt]
-            [teet.ui.panels :as panels]
-            [teet.ui.query :as query]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.container :as container]
+            [teet.ui.context :as context]
             [teet.ui.date-picker :as date-picker]
-            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.ui.form :as form]
+            [teet.ui.format :as fmt]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
+            [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
-            [teet.asset.cost-items-map-view :as cost-items-map-view]))
+            [teet.ui.query :as query]
+            [teet.ui.select :as select]
+            [teet.ui.table :as table]
+            [teet.ui.text-field :as text-field]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]))
 
 
 
@@ -387,12 +387,12 @@
   [opts]
   [context/consume-many [:rotl :locked?] [attributes* opts]])
 
-(defn- add-component-menu* [allowed-components add-component! locked?]
+(defn- add-component-menu* [menu-label allowed-components add-component! locked?]
   (when-not locked?
     [:<>
      (if (> (count allowed-components) 3)
        [common/context-menu
-        {:label (tr [:asset :add-component])
+        {:label menu-label
          :icon [icons/content-add-circle-outline]
          :items (for [c allowed-components]
                   {:label (label c)
@@ -407,9 +407,9 @@
                                       :start-icon (r/as-element [icons/content-add])}
             (label c)]])))]))
 
-(defn- add-component-menu [allowed-components add-component!]
+(defn- add-component-menu [menu-label allowed-components add-component!]
   [context/consume :locked?
-   [add-component-menu* allowed-components add-component!]])
+   [add-component-menu* menu-label allowed-components add-component!]])
 
 
 
@@ -532,6 +532,7 @@
                             :allowed-components (:ctype/_parent feature-class)}]
 
           [add-component-menu
+           (tr [:asset :add-component])
            (into []
                  (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
@@ -559,8 +560,12 @@
              [label-for p])
            (repeat " / "))))])
 
+(defn- material-label [atl m]
+  (->> m :material/type (asset-type-library/item-by-ident atl) tr*))
+
 (defn- component-form* [e! atl component-oid cost-item-data]
-  (r/with-let [initial-component-data
+  (r/with-let [materials-open? (r/atom false)
+               initial-component-data
                (last (asset-model/find-component-path cost-item-data
                                                       component-oid))
                new? (string? (:db/id initial-component-data))
@@ -598,25 +603,37 @@
                        :common? true
                        :ctype ctype}]]]
 
+        (when-let [materials (:component/materials component-data)]
+          [container/collapsible-container
+           {:open? @materials-open?
+            :on-toggle (r/partial swap! materials-open? not)}
+           (tr [:asset :type-library :material])
+           [:<>
+            (doall
+             (for [m materials]
+               [panels/panel {:title (material-label atl m)}]))]])
+
+        (when (not new?)
+          [:<>
+           ;; Should have only either, never both
+           (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
+             [add-component-menu
+              (tr [:asset :add-component])
+              allowed-components
+              (e! cost-items-controller/->AddComponent)])
+           (when-let [allowed-materials (asset-type-library/allowed-material-types atl ctype)]
+             [add-component-menu
+              (tr [:asset :add-material])
+              allowed-materials
+              ;; TODO: AddMaterial
+              (e! cost-items-controller/->AddMaterial)])])
+
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
          [url/Link {:page :cost-item
                     :params {:id (:asset/oid cost-item-data)}}
           (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
-         [form/footer2]]]
-
-       (when (not new?)
-         [:<>
-          ;; Should have only either, never both
-          (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
-            [add-component-menu
-             allowed-components
-             (e! cost-items-controller/->AddComponent)])
-          (when-let [allowed-materials (asset-type-library/allowed-material-types atl ctype)]
-            [add-component-menu
-             allowed-materials
-             ;; TODO: AddMaterial
-             (e! cost-items-controller/->AddMaterial)])])])))
+         [form/footer2]]]])))
 
 (defn component-form
   [e! atl component-oid cost-item-data]
