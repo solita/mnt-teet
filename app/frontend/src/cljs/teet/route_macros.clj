@@ -92,8 +92,10 @@
                                    :state-path [:route ~route-name]
                                    :refresh ~'refresh}]
 
-                                ;; Otherwise just call view with e! and app
-                                `[~view ~'e! ~'app])}))])
+                                ;; Otherwise just call view with e!, app
+                                ;; and page state
+                                `[~view ~'e! ~'app
+                                  (get-in ~'app [:route ~route-name])])}))])
               defs)
 
            [:div "Unrecognized page: " (str page#)])))))
