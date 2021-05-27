@@ -546,7 +546,6 @@
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
                         :cost-item-data form-data
-                        ;; TODO: cost-item-data here as well
                         :common :ctype/feature
                         :inherits-location? false
                         :relevant-roads relevant-roads}]])
@@ -643,7 +642,6 @@
              [add-component-menu
               (tr [:asset :add-material])
               allowed-materials
-              ;; TODO: AddMaterial
               (e! cost-items-controller/->AddMaterial)])])
 
         [:div {:class (<class common-styles/flex-row-space-between)
