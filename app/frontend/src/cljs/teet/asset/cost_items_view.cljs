@@ -630,7 +630,7 @@
 
 (defn- material-form* [e! atl material-oid cost-item-data]
   (r/with-let [initial-material-data
-               (last (asset-model/find-material-path cost-item-data
+               (last (asset-model/find-component-path cost-item-data
                                                       material-oid))
                new? (string? (:db/id initial-material-data))
                material-type (asset-type-library/item-by-ident
@@ -639,7 +639,7 @@
                cancel-event (if new?
                               #(common-controller/->SetQueryParam :material nil)
                               #(cost-items-controller/->UpdateForm initial-material-data))]
-    (let [material-path (asset-model/find-material-path cost-item-data material-oid)
+    (let [material-path (asset-model/find-component-path cost-item-data material-oid)
           material-data (last material-path)]
       (println material-oid material-data)
       [:<>
@@ -676,7 +676,7 @@
 
 (defn material-form
   [e! atl material-id cost-item-data]
-  (if (nil? (asset-model/find-material-path cost-item-data material-id))
+  (if (nil? (asset-model/find-component-path cost-item-data material-id))
     [CircularProgress]
     [material-form* e! atl material-id cost-item-data]))
 

@@ -57,7 +57,10 @@
     [[:db/add [:asset/oid parent-oid]
       :component/materials
       (:db/id material)]
-     (cu/without-nils material)]))
+     (cu/without-nils
+      (assoc material
+             :asset/oid
+             (asset-db/next-material-oid db parent-oid)))]))
 
 (defn lock
   "Create new lock for project BOQ."

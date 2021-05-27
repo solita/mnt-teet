@@ -323,7 +323,6 @@
                       (update parent :component/materials
                               #(conj (or % [])
                                      {:db/id new-id
-                                      ;; For the time being, this is used for compatibility with existing code
                                       :asset/oid new-id
                                       :material/type type}))))
        {:tuck.effect/type :navigate
@@ -354,7 +353,7 @@
       (let [form-data (form-state app)
             {parent-id :asset/oid}
             (-> (common-controller/page-state app :cost-item)
-                (asset-model/find-material-path (:db/id form-data))
+                (asset-model/find-component-path (:asset/oid form-data))
                 butlast last)]
         (cljs.pprint/pprint form-data)
         (t/fx app
@@ -363,7 +362,6 @@
                :payload {:project-id (get-in app [:params :project])
                          :parent-id parent-id
                          :material (dissoc form-data
-                                           :asset/oid
                                            :material/materials
                                            :location/geojson)}
                :result-event ->SaveMaterialResponse}))))

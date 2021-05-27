@@ -57,6 +57,7 @@
 
 (def ^:private asset-pattern #"^...-\w{3}-\d{6}$")
 (def ^:private component-pattern #"^...-\w{3}-\d{6}-\d{5}$")
+(def ^:private material-pattern #"^...-\w{3}-\d{6}-\d{5}-\d{3}$")
 
 (defn asset-oid?
   "Check if given OID refers to asset."
@@ -69,6 +70,12 @@
   [oid]
   (and (string? oid)
        (boolean (re-matches component-pattern oid))))
+
+(defn material-oid?
+  "Check if given OID refers to a material."
+  [oid]
+  (and (string? oid)
+       (boolean (re-matches material-pattern oid))))
 
 (defn asset-oid->fclass-oid-prefix
   "Extract the asset fclass OID prefix from an asset OID instance."
@@ -88,6 +95,13 @@
   {:post [(component-oid? %)]}
   (format "%s-%05d" asset-oid sequence-number))
 
+(defn material-oid
+  "Format component OID for asset OID and seq number."
+  [component-oid sequence-number]
+  {:pre [(component-oid? component-oid)]
+   :post [(material-oid? %)]}
+  (format "%s-%03d" component-oid sequence-number))
+
 (defn component-asset-oid
   "Given component OID, return the OID of the parent asset."
   [component-oid]
@@ -98,7 +112,8 @@
       (->> (str/join "-"))))
 
 (defn find-component-path
-  "Return vector containing all parents of component from asset to the component.
+  "Return vector containing all parents of component or material from asset to
+  the component or material.
   For example:
   [a c1 c2 c3]
   where a is the asset, that has component c1
@@ -106,22 +121,9 @@
   and c2 has child component c3 (the component we want)"
   [asset component-oid]
   (cu/find-path #(concat (:asset/components %)
-                         (:component/components %))
-                #(= component-oid (:asset/oid %))
-                asset))
-
-(defn find-material-path
-  "Return vector containing all parents of component from asset to the component.
-  For example:
-  [a c1 c2 c3]
-  where a is the asset, that has component c1
-  c1 has child component c2
-  and c2 has child component c3 (the component we want)"
-  [asset material-id]
-  (cu/find-path #(concat (:asset/components %)
                          (:component/components %)
                          (:component/materials %))
-                #(= material-id (:db/id %))
+                #(= component-oid (:asset/oid %))
                 asset))
 
 (def cost-totals-table-columns

@@ -452,6 +452,29 @@
                  (str feature-oid "-")
                  (str feature-oid "."))))))
 
+(defn next-material-oid
+  "Get next OID for a new material in component."
+  [db component-oid]
+  {:pre [(asset-model/component-oid? component-oid)]}
+  (asset-model/material-oid
+   component-oid
+   (inc
+    (reduce (fn [max-num [component-oid]]
+              (let [[_ _ _ _ n] (str/split component-oid #"\-")
+                    num (Long/parseLong n)]
+                (max max-num num)))
+            0
+            (d/q '[:find ?oid
+                   :where
+                   [_ :asset/oid ?oid]
+                   [(> ?oid ?start)]
+                   [(< ?oid ?end)]
+                   :in $ ?start ?end]
+                 db
+                 ;; Finds all material OIDs for this component
+                 (str component-oid "-")
+                 (str component-oid "."))))))
+
 (defn project-boq-version
   "Fetch the latest BOQ version entity for the given THK project."
   [db thk-project-id]
