@@ -7,12 +7,10 @@
             [teet.localization :refer [tr]]
             [herb.core :refer [<class]]
             [teet.ui.material-ui :refer [MenuList MenuItem
-                                         IconButton ClickAwayListener Paper
+                                         ClickAwayListener Paper
                                          Popper Link]]
             [teet.project.project-style :as project-style]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.typography :as typography]
-            [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]))
 
 (defn contract-pages []
@@ -23,9 +21,9 @@
           :href-fn #(str "#/contracts/" %)
           :hotkey "1"}]]
     (if (common-controller/feature-enabled? :contract-partners)
-      (conj menu-items {:name :partner-information
+      (conj menu-items {:name :contract-partners
                         :label [:contract :partner-information]
-                        :navigate {:page :partners}
+                        :navigate {:page :contract-partners}
                         :href-fn #(str "#/contracts/" % "/partners")
                         :hotkey "2"})
       menu-items)))
