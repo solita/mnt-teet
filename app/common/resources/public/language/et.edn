@@ -54,6 +54,7 @@
  :asset
  {:unlock-contract-boq-warning
   "Kululoend on aktiivses lepingus. Selle muutmine tähendab lepingu muudatust. Kas oled kindel, et soovid avada kululoendi muudatusteks?",
+  :add-material "Lisan materjal",
   :totals-table
   {:properties "Kulude grupeerimine",
    :project-total "Kokku {total} EUR",
@@ -91,6 +92,7 @@
   :manager {:link "Varad", :result-count "{count} nähtust"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
+  :materials {:label "Materjalid"},
   :location
   {:hide-map "Peida kaart",
    :no-road-found-for-points "Punktide jaoks ei leitud teed",
@@ -109,6 +111,7 @@
    :fgroup "Vara grupp",
    :header "Tee olemi tüübiteek (TOTT) ",
    :common-ctype "Ühised omadused",
+   :product "Tooted",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
@@ -219,6 +222,7 @@
  :contract
  {:no-targets-for-contract
   "Lepingu integreerimine ei õnnestunud ja sellel lepingul pole kehtivaid eesmärke.\nVeateate saamiseks pöörduge administratsiooni poole",
+  :partner-information-text nil,
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
@@ -738,6 +742,7 @@
   "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
   "Ülesande staatus ei luba selle alla faile üles laadida",
+  :business-registry-code-in-use nil,
   :file-too-large "Fail on liiga suur",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
