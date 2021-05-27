@@ -394,7 +394,7 @@
   "Returns the THK project id for the material."
   [db material-id]
   (let [material (du/entity db material-id)]
-    (when-let [component-id (:component/_materials material)]
+    (when-let [component-id (-> material :component/_materials :db/id)]
       (component-project db component-id))))
 
 (defn item-type

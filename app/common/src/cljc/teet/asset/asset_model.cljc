@@ -111,6 +111,14 @@
       butlast
       (->> (str/join "-"))))
 
+(defn material-asset-oid
+  "Given material OID, return the OID of the parent asset."
+  [material-oid]
+  {:pre [(material-oid? material-oid)]}
+  (->> (str/split material-oid #"-")
+       (drop-last 2)
+       (str/join "-")))
+
 (defn find-component-path
   "Return vector containing all parents of component or material from asset to
   the component or material.
