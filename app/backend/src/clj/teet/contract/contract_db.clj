@@ -66,7 +66,7 @@
               (and (contract-deadline ?c ?act-dl)
                    [(teet.util.date/dec-days ?act-dl 30) ?deadline-soon]
                    [(> ?act-dl ?now)]
-                   [(> ?now ?deadline-soon)])
+                   [(< ?now ?deadline-soon)])
               (and [(missing? $ ?c :thk.contract/deadline)]
                    [(missing? $ ?c :thk.contract/extended-deadline)]))
      [(ground :thk.contract.status/signed) ?s]]
