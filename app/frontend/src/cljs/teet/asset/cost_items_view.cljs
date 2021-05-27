@@ -632,7 +632,7 @@
           [materials-list component-data {:e! e! :atl atl}])
 
         (when (not new?)
-          [:<>
+          [:div
            ;; Should have only either, never both
            (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
              [add-component-menu
