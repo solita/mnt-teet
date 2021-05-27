@@ -120,7 +120,9 @@
                             (d/q '[:find (max ?t)
                                    :where [_ :tx/schema-imported-at ?t]]
                                  db))
-    :ctype/common (d/pull db ctype-pattern :ctype/common)
+    :ctype/component (d/pull db ctype-pattern :ctype/component)
+    :ctype/feature (d/pull db ctype-pattern :ctype/feature)
+    :ctype/material (d/pull db ctype-pattern :ctype/material)
     :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)
@@ -429,28 +431,33 @@
         :fclass/oid-sequence-number seq-number}
        (asset-model/asset-oid owner-code oid-prefix seq-number)])))
 
+(defn max-component-oid-number
+  "Get max OID sequence number for a component in asset.
+  If the asset has no components yet, returns zero."
+  [db feature-oid]
+  (reduce (fn [max-num [component-oid]]
+            (let [[_ _ _ n] (str/split component-oid #"\-")
+                  num (Long/parseLong n)]
+              (max max-num num)))
+          0
+          (d/q '[:find ?oid
+                 :where
+                 [_ :asset/oid ?oid]
+                 [(> ?oid ?start)]
+                 [(< ?oid ?end)]
+                 :in $ ?start ?end]
+               db
+               ;; Finds all OIDs for this asset
+               (str feature-oid "-")
+               (str feature-oid "."))))
+
 (defn next-component-oid
   "Get next OID for a new component in feature."
   [db feature-oid]
   {:pre [(asset-model/asset-oid? feature-oid)]}
   (asset-model/component-oid
    feature-oid
-   (inc
-    (reduce (fn [max-num [component-oid]]
-              (let [[_ _ _ n] (str/split component-oid #"\-")
-                    num (Long/parseLong n)]
-                (max max-num num)))
-            0
-            (d/q '[:find ?oid
-                   :where
-                   [_ :asset/oid ?oid]
-                   [(> ?oid ?start)]
-                   [(< ?oid ?end)]
-                   :in $ ?start ?end]
-                 db
-                 ;; Finds all OIDs for this asset
-                 (str feature-oid "-")
-                 (str feature-oid "."))))))
+   (inc (max-component-oid-number db feature-oid))))
 
 (defn next-material-oid
   "Get next OID for a new material in component."

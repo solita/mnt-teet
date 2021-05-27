@@ -202,6 +202,7 @@
     :notification/target
     :task/assignee
     :activity/manager
+    :file.part/completed-by
     :file-seen/user
     :meeting/organizer
     :meeting.agenda/responsible

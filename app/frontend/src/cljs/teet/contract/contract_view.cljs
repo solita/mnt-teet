@@ -168,7 +168,7 @@
   [e! app {:thk.contract/keys [targets] :as contract}]
   [:div {:class (<class common-styles/flex-column-1)}
    [contract-heading e! app contract]
-   [:div {:class (<class contract-style/contract-page-container)}
+   [:div {:class (<class contract-style/contract-page-container-style)}
     [:div {:class (<class common-styles/margin-bottom 1)}
      [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                               (<class common-styles/margin-bottom 2))}

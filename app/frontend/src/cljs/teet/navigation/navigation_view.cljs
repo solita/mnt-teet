@@ -113,7 +113,7 @@
      [view-link {:open? open?
                  :current-page page
                  :link {:page :contracts}
-                 :icon icons/action-description
+                 :icon icons/action-description-outlined
                  :name (tr [:contract :contracts-listing])}])
    (when-feature :asset-db
      [view-link {:open? open?

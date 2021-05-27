@@ -149,7 +149,7 @@
 
 (def assets-listing-columns
   "Columns to show in asset manager search results listing"
-  [:asset/oid :asset/fclass :location/road-address])
+  [:asset/oid :asset/fclass :location/road-address :common/status])
 
 (defmulti assets-listing-get-column (fn [_row column] column))
 

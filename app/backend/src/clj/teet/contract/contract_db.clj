@@ -59,13 +59,22 @@
     [(contract-status ?c ?s ?now)
      [(missing? $ ?c :thk.contract/start-of-work)]
      [(ground :thk.contract.status/signed) ?s]]
+    [(contract-status ?c ?s ?now)
+     [?c :thk.contract/start-of-work ?start-of-work]
+     [(< ?now ?start-of-work)]
+     [(ground :thk.contract.status/signed) ?s]]
     ;In progress - start of work given and that date has passed and deadline > 30
     [(contract-status ?c ?s ?now)
      [?c :thk.contract/start-of-work ?start]
      [(< ?start ?now)]
-     (contract-deadline ?c ?act-dl)
-     [(teet.util.date/dec-days ?act-dl 30) ?deadline-soon]
-     [(< ?now ?deadline-soon)]
+     (or-join [?c ?now ?act-dl]
+              (and
+                (contract-deadline ?c ?act-dl)
+                [(teet.util.date/dec-days ?act-dl 30) ?deadline-soon]
+                [(< ?now ?deadline-soon)])
+              (and
+                [(missing? $ ?c :thk.contract/deadline)]
+                [(missing? $ ?c :thk.contract/actual-deadline)]))
      [(ground :thk.contract.status/in-progress) ?s]]
     ;Deadline approaching - Days until deadline < 30 deadline is given
     [(contract-status ?c ?s ?now)
