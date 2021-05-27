@@ -78,7 +78,8 @@
             ["@material-ui/core/SnackbarContent" :as mui-SnackbarContent]
             ["@material-ui/core/Badge" :as mui-Badge]
             ["@material-ui/core/TextField" :as mui-TextField]
-            ["@material-ui/lab/Autocomplete" :as mui-Autocomplete])
+            ["@material-ui/lab/Autocomplete" :as mui-Autocomplete]
+            ["@material-ui/core/Slider" :as mui-Slider])
 
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
 
@@ -137,3 +138,5 @@
 
 ;; Labs components
 (define-mui-components Autocomplete)
+
+(define-mui-components Slider)
