@@ -193,7 +193,7 @@
                  {:fclass-name fclass-name})
       (do
         (future
-          (doseq [slice (estonia-slices 100)]
+          (doseq [slice (reverse (estonia-slices 100))]
             (log/info "Importing area slice: " slice)
             (try
               (import-road-registry-features!
