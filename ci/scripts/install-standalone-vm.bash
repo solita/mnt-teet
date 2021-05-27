@@ -18,21 +18,25 @@ function gensecret {
     head -c 20 /dev/urandom | base64 > "$name.secret"
 }
 
-function start-teet-app {
-    local DB_URI="postgres://authenticator@teetdb:5432/teet"
-
-    mkdir -p mnt-teet-private
-    JWT_SECRET=$(head -c 42 /dev/urandom | base64)
-
+function patient-docker-pull {
     for x in $(seq 10); do
-	if docker pull postgrest/postgrest; then
+	if docker pull "$1"; then
 	    break
 	else
 	    echo docker pull failed, retrying after 30s sleep, retry $x of 10
 	    sleep 30
 	fi
     done
-    
+}
+
+
+function start-teet-app {
+    local DB_URI="postgres://authenticator@teetdb:5432/teet"
+
+    mkdir -p mnt-teet-private
+    JWT_SECRET=$(head -c 42 /dev/urandom | base64)
+
+    patient-docker-pull postgrest/postgrest
     
     docker run -d --network docker_teet --name teetapi -p 127.0.0.1:3000:3000 \
        -e PGRST_DB_URI="$DB_URI" \
@@ -50,7 +54,7 @@ EOF
   :asset-db-name "asset"
   :client {:server-type :dev-local
            :storage-dir "$HOME/.datomic/dev-local-data"
-           :system "teet"}}
+           :system "teet-test-env"}}
  :listen-address "0.0.0.0"
  :auth {:jwt-secret "$JWT_SECRET"
         :basic-auth-password "$(ssm-get /teet/api/basic-auth-password)"}
@@ -101,7 +105,7 @@ EOF
     tmux new -d -s "$uuid"
     tmux splitw -h -t "${uuid}:0.0"
     tmux send-keys -t "${uuid}.0" "cd mnt-teet/app/backend && clj -A:dev" ENTER "(restart)" ENTER
-    tmux send-keys -t "${uuid}.1" "cd mnt-teet/app/frontend && chown -R ubuntu:ubuntu . && sudo -u ubuntu npm install && bash build.sh" ENTER
+    tmux send-keys -t "${uuid}.1" "cd mnt-teet/app/frontend && chown -R ubuntu:ubuntu . && sudo -u ubuntu npm install && bash build.sh && ./dev.sh" ENTER
     # tmux a -t "$uuid"
 }
 
@@ -262,6 +266,22 @@ function detect-instance-branch {
 }
 
 
+function install-caddy {
+    patient-docker-pull caddy:2-alpine
+    cat > Caddyfile <<EOF
+
+${MYDNS}:443 {
+  reverse_proxy teetapi:3000
+  tls /etc/letsencrypt/live/$MYDNS/fullchain.pem /etc/letsencrypt/live/$MYDNS/privkey.pem
+
+}
+
+EOF
+    docker run --network docker_teet -p 0.0.0.0:3443:443 -v $PWD/Caddyfile:/etc/caddy/Caddyfile:ro -v /etc/letsencrypt:/etc/letsencrypt caddy:2-alpine
+}
+
+
+
 function install-deps-and-app {
     # set up deps and env
     test "$(whoami)" = root
@@ -326,7 +346,8 @@ function install-deps-and-app {
     
     update-dyndns a # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
-
+    
+    install-caddy
     setup-postgres
     
     start-teet-app # config generation, backend, frontend & postgrest
@@ -343,6 +364,10 @@ function run-in-ec2 {
     local SCRIPTPATH
     local SSHKEYID
     local THISBRANCH
+    local RUNINFOFILE
+    local INSTANCEID
+    local SLEEPSECS
+    RUNINFOFILE="$(mktemp /tmp/runinfoXXXXX.json)"
     THISBRANCH="$(git rev-parse --abbrev-ref HEAD)"
     echo using branch "$THISBRANCH"
     SCRIPTPATH="$(realpath "$0")"
@@ -354,7 +379,13 @@ function run-in-ec2 {
     aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name "${SSHKEYID}" \
         --user-data "file://${SCRIPTPATH}" \
 	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}}]"  \
-        --launch-template LaunchTemplateName=standalone-teetapp-template
+        --launch-template LaunchTemplateName=standalone-teetapp-template | tee "$RUNINFOFILE"
+    INSTANCEID="$(jq -r .Instances[0].InstanceId < "$RUNINFOFILE")"
+    SLEEPSECS="$[60 * 60 * 8 - 300]"
+    echo Will terminate instance "$INSTANCEID" on "$(date --iso=seconds -d "now + $SLEEPSECS seconds")"
+    echo "(Toggle termination protection on the instance to prevent automatic termination)"
+    sleep $[60 * 60 * 8 - 300] # 5 mins short of 8 hours, for 8 build codebuild time limit
+    aws ec2 terminate-instances --instance-ids "$INSTANCEID"
 }
 
 
