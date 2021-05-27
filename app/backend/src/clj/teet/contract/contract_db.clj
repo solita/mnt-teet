@@ -81,7 +81,7 @@
                 [(< ?now ?deadline-soon)])
               (and
                 [(missing? $ ?c :thk.contract/deadline)]
-                [(missing? $ ?c :thk.contract/actual-deadline)]))
+                [(missing? $ ?c :thk.contract/extended-deadline)]))
      [(ground :thk.contract.status/in-progress) ?s]]
     ;Deadline approaching - Days until deadline < 30 deadline is given
     [(contract-status ?c ?s ?now)
