@@ -14,7 +14,8 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.ui.context :as context]
             [teet.ui.icons :as icons]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.ui.material-ui :refer [CircularProgress]]))
 
 (defn filter-component [{filters :filters-atom :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -101,14 +102,16 @@
 (defn assets-page [e! app]
   (r/with-let [filters (r/atom {})
                filters-collapsed? (r/atom false)]
-    [context/provide :rotl (asset-type-library/rotl-map (:asset-type-library app))
-     [vertical-split-pane {:minSize 50
-                           :defaultSize (if @filters-collapsed? 30 330)
-                           :allowResize false}
-      [asset-filters e! (:asset-type-library app) filters filters-collapsed?]
-      [:div
+    (if-not (:asset-type-library app)
+      [CircularProgress]
+      [context/provide :rotl (asset-type-library/rotl-map (:asset-type-library app))
+       [vertical-split-pane {:minSize 50
+                             :defaultSize (if @filters-collapsed? 30 330)
+                             :allowResize false}
+        [asset-filters e! (:asset-type-library app) filters filters-collapsed?]
+        [:div
 
-       (when-let [q (assets-controller/assets-query @filters)]
-         [query/query
-          (merge q {:e! e!
-                    :simple-view [assets-results e! (:asset-type-library app) q]})])]]]))
+         (when-let [q (assets-controller/assets-query @filters)]
+           [query/query
+            (merge q {:e! e!
+                      :simple-view [assets-results e! (:asset-type-library app) q]})])]]])))
