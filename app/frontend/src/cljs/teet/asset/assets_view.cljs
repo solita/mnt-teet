@@ -61,7 +61,7 @@
                   (when end-km
                     (str end-km "km"))))))
 
-    :asset/fclass
+    (:asset/fclass :common/status)
     [asset-ui/label-for (:db/ident value)]
 
     (str value)))
@@ -78,7 +78,7 @@
             (next-map-key!))))
 
       :reagent-render
-      (fn [e! _atl assets-query {:keys [assets]}]
+      (fn [e! atl assets-query {:keys [assets]}]
         [vertical-split-pane {:defaultSize 400 :primary "second"
                               :on-drag-finished next-map-key!}
          [:div
@@ -87,6 +87,8 @@
            {:default-show-count 100
             :columns asset-model/assets-listing-columns
             :get-column asset-model/assets-listing-get-column
+            :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                                  (tr [:fields %]))
             :format-column format-assets-column
             :data assets
             :key :asset/oid}]]
