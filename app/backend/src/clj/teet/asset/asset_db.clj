@@ -171,7 +171,7 @@
               :in $ ?start ?end]
             db asset-oid (str asset-oid "."))))
 
-(defn- asset-component-oids
+(defn- asset-component-and-material-oids
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
   {:pre [(asset-model/asset-oid? asset-oid)]}
@@ -238,11 +238,11 @@
                :in $ % ?project]
              db rules thk-project-id)))
 
-(defn project-asset-and-component-oids
+(defn asset-component-and-material-oids-of-project
   "Return all OIDs of assets and their components for the given THK project."
   [db thk-project-id]
-  (mapcat #(into [%] (asset-component-oids db %))
-          (project-asset-oids db thk-project-id)))
+  (->> (project-asset-oids db thk-project-id)
+       (mapcat #(into [%] (asset-component-and-material-oids db %)))))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.
@@ -258,7 +258,8 @@
                [?a :asset/oid ?oid]
                (or
                 [?a :asset/fclass ?type]
-                [?a :component/ctype ?type])
+                [?a :component/ctype ?type]
+                [?a :material/type ?type])
                [?a ?attr ?val]
                (or [?attr :attribute/cost-grouping? true]
                    [?attr :db/ident :common/status]
@@ -269,7 +270,6 @@
                [?value-type :db/ident ?value-type-ident]
                :in $ [?oid ...]]
              db oids)
-
         ;; Fetch all list item ref ids
         list-item-ids (into #{}
                          (keep (fn [{:keys [val-type val]}]
@@ -333,47 +333,47 @@
   Optional `oids` lists OID codes to use, if omitted all project asset/component
   OIDs are considered."
   [db thk-project-id & [oids]]
-  (let [items (cost-group-attrs-q
+    (let [items (cost-group-attrs-q
                db (if (some? oids)
                     oids
-                    (project-asset-and-component-oids db thk-project-id)))
-        types (into #{} (map (comp :type val)) items)
-        type-qty-unit (into {}
-                            (d/q '[:find ?e ?u
-                                   :where [?e :component/quantity-unit ?u]
-                                   :in $ [?e ...]]
-                                 db types))
-        cost-group-prices (project-cost-group-prices db thk-project-id)]
-    (->>
-     items
+                    (asset-component-and-material-oids-of-project db thk-project-id)))
+          types (into #{} (map (comp :type val)) items)
+          type-qty-unit (into {}
+                              (d/q '[:find ?e ?u
+                                     :where [?e :component/quantity-unit ?u]
+                                     :in $ [?e ...]]
+                                   db types))
+          cost-group-prices (project-cost-group-prices db thk-project-id)]
+      (->>
+       items
 
-     ;; group by the same value
-     (group-by val)
+       ;; group by the same value
+       (group-by val)
 
-     ;; Determine quantity and price information for cost group
-     (mapv (fn [[{type :type :as item} items]]
-             (let [{p :cost-group/price :as cost-group}
-                   (cost-group-prices (dissoc item :type))
+       ;; Determine quantity and price information for cost group
+       (mapv (fn [[{type :type :as item} items]]
+               (let [{p :cost-group/price :as cost-group}
+                     (cost-group-prices (dissoc item :type))
 
-                   quantity (if (= "fclass" (namespace type))
-                              ;; count number of features
-                              (count items)
+                     quantity (if (= "fclass" (namespace type))
+                                ;; count number of features
+                                (count items)
 
-                              ;; count the quantity field values
-                              (or (ffirst
-                                   (d/q '[:find (sum ?q)
-                                          :where [?item :common/quantity ?q]
-                                          :in $ [?item ...]]
-                                        db (map key items))) 0))]
-               (merge item
-                      cost-group
-                      {:count (count items)
-                       :quantity quantity
-                       :quantity-unit (type-qty-unit type)}
+                                ;; count the quantity field values
+                                (or (ffirst
+                                     (d/q '[:find (sum ?q)
+                                            :where [?item :common/quantity ?q]
+                                            :in $ [?item ...]]
+                                          db (map key items))) 0))]
+                 (merge item
+                        cost-group
+                        {:count (count items)
+                         :quantity quantity
+                         :quantity-unit (type-qty-unit type)}
 
-                      (when p
-                        {:cost-per-quantity-unit p
-                         :total-cost (* p quantity)}))))))))
+                        (when p
+                          {:cost-per-quantity-unit p
+                           :total-cost (* p quantity)}))))))))
 
 (defn cost-item-project
   "Returns THK project id for the cost item."

@@ -1006,7 +1006,9 @@
   [table/listing-table-body-component listing-opts
    [container/collapsible-container-heading
     {:container-class [(<class common-styles/flex-row)
-                       (when (= "fclass" (namespace ident))
+                       ;; Temporary solution to prevent frontend from breaking
+                       (when (and (keyword? ident)
+                                  (= "fclass" (namespace ident)))
                          (<class common-styles/indent-rem 1))]
      :open? (not (closed-set ident))
      :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
@@ -1078,6 +1080,7 @@
           grouped-totals (->> filtered-cost-groups
                               (group-by (comp first :ui/group))
                               ;; sort by translated fgroup label
+
                               (sort-by (comp label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
@@ -1111,23 +1114,24 @@
           (for [[fg fgroup-rows] grouped-totals
                 :let [ident (:db/ident fg)
                       open? (not (closed-totals ident))]]
-            ^{:key (str ident)}
-            [:<>
-             [table-section-header e! listing-opts closed-totals fg
-              (get-in totals [:fclass-and-fgroup-totals (:db/ident fg)])]
-             (when open?
-               [:<>
-                (doall
-                 (for [[fc fclass-rows] (group-by (comp second :ui/group)
-                                                  fgroup-rows)
-                       :let [ident (:db/ident fc)
-                             open? (not (closed-totals ident))]]
-                   ^{:key (str ident)}
-                   [:<>
-                    [table-section-header e! listing-opts closed-totals fc
-                     (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
-                    (when open?
-                      [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
+            (do
+              ^{:key (str ident)}
+              [:<>
+               [table-section-header e! listing-opts closed-totals fg
+                (get-in totals [:fclass-and-fgroup-totals (:db/ident fg)])]
+               (when open?
+                 [:<>
+                  (doall
+                   (for [[fc fclass-rows] (group-by (comp second :ui/group)
+                                                    fgroup-rows)
+                         :let [ident (:db/ident fc)
+                               open? (not (closed-totals ident))]]
+                     ^{:key (str ident)}
+                     [:<>
+                      [table-section-header e! listing-opts closed-totals fc
+                       (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
+                      (when open?
+                        [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])])))]]])))
 
 (defn cost-items-totals-page [e! app state]
   [wrap-atl-loader cost-items-totals-page* e! app state])

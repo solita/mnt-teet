@@ -101,13 +101,14 @@
                             (when road
                               (cond
                                 (= road "all-roads")
-                                (asset-db/project-assets-and-components adb project-id)
+                                (asset-db/asset-component-and-material-oids-of-project adb project-id)
 
                                 (= road "no-road-reference")
                                 (asset-db/project-assets-and-components-without-road adb project-id)
                                 :else
                                 (asset-db/project-assets-and-components-matching-road
                                  adb project-id (->long road)))))]
+           (clojure.pprint/pprint cost-groups)
            {:cost-totals
             {:cost-groups cost-groups
              :fclass-and-fgroup-totals (fclass-and-fgroup-totals atl cost-groups)

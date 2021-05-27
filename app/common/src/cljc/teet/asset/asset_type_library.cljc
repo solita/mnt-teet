@@ -42,10 +42,12 @@
   "Find each hierarchy parent of given fclass or ctype."
   [atl node]
   (vec
-   (drop 1                              ; drop 1st :fgroups level
+   (drop 1 ; drop 1st :fgroups level
          (cu/find-path #(concat (:fgroups %)
                                 (:fclass/_fgroup %)
-                                (:ctype/_parent %))
+                                (:ctype/_parent %)
+                                (:materials %)
+                                #_(:material/_parent %))
                        #(du/enum= node %)
                        atl))))
 
