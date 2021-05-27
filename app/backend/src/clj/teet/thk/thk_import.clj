@@ -16,7 +16,8 @@
             [teet.project.project-db :as project-db]
             [teet.integration.integration-id :as integration-id]
             [teet.meta.meta-model :as meta-model])
-  (:import (org.apache.commons.io.input BOMInputStream)))
+  (:import (org.apache.commons.io.input BOMInputStream))
+  (:import (java.util Date)))
 
 (def excluded-project-types #{"TUGI"})
 
@@ -222,6 +223,10 @@
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
 
+(defn get-project-construction-activity
+  [rows]
+  (first (filter (comp #{:activity.name/construction} :activity/name) rows)))
+
 (defn- get-project-attrs [db project-id rows]
   (let [phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
         phase-est-ends (keep :thk.lifecycle/estimated-end-date rows)
@@ -237,111 +242,46 @@
 
      :project-exists? (some? (:db/id thk-project))
      :project-has-owner? (and (some? (:db/id thk-project))
-                           (project-db/project-has-owner? db [:thk.project/id project-id]))}))
+                           (project-db/project-has-owner? db [:thk.project/id project-id]))
+     :construction-activity (get-project-construction-activity rows)}))
+
+
+(defn add-task-from-thk
+  "Returns TX data for new task with given params for given construction activity-id"
+  [db thk-activity-task-data construction-activity-id ]
+  (let [start-date (:activity/estimated-start-date thk-activity-task-data)
+        end-date (:activity/estimated-end-date thk-activity-task-data)
+        id-placeholder (str "NEW-TASK-"
+                         (name :task.group/construction) "-"
+                         (name :task.type/owners-supervision))
+        task-tx-data {:db/id construction-activity-id
+                      :activity/tasks [{:db/id id-placeholder
+                                        :task/group :task.group/construction-quality-assurance
+                                        :task/type :task.type/owners-supervision
+                                        :task/send-to-thk? true
+                                        :task/status :task.status/in-progress
+                                        :task/estimated-end-date end-date
+                                        :task/estimated-start-date start-date
+                                        :integration/id (integration-id/unused-random-small-uuid db)
+                                        :meta/created-at (Date.)
+                                        }]}]
+    task-tx-data))
 
 (defn tasks-tx-data [db [project-id rows]]
-  (let [attrs (get-project-attrs db project-id rows)]
-    (into
-      [(cu/without-nils
-         (merge
-           (select-keys (:prj attrs) #{:thk.project/id
-                              :thk.project/road-nr
-                              :thk.project/bridge-nr
-                              :thk.project/start-m
-                              :thk.project/end-m
-                              :thk.project/repair-method
-                              :thk.project/region-name
-                              :thk.project/carriageway
-                              :thk.project/name})
-
-           ;; Use THK provided owner only if project does not exist or doesn't have owner in TEET yet
-           (when (or (not (:project-exists? attrs))
-                   (not (:project-has-owner? attrs)))
-                 (select-keys (:prj attrs) #{:thk.project/owner}))
-
-           (if (:project-exists? attrs)
-             {:db/id (:proj-db-id attrs)
-              :integration/id (:proj-integration-id attrs)}
-             {:db/id (str "prj-" project-id)
-              :integration/id (:proj-integration-id attrs)})
-
-           {:thk.project/estimated-start-date (:project-est-start attrs)
-            :thk.project/estimated-end-date (:project-est-end attrs)
-            :thk.project/integration-info (integration-info
-                                            (:prj attrs) thk-mapping/object-integration-info-fields)
-            :thk.project/lifecycles
-            (into []
-              (for [[id activities] (:phases attrs)
-                    :let [phase (first activities)
-                          lc-thk-id (:thk.lifecycle/id phase)
-                          lc-teet-id (:lifecycle-db-id phase)
-                          {lc-db-id :db/id
-                           lc-integration-id :integration/id}
-                          (if lc-teet-id
-                            ;; If THK sent TEET id field, lookup using that
-                            (lookup db [:integration/id lc-teet-id])
-                            ;; otherwise lookup using THK id
-                            (lookup db [:thk.lifecycle/id lc-thk-id]))
-
-                          _ (log/info "Received lifecycle with THK id " lc-thk-id
-                              (if lc-db-id
-                                (str "having TEET :db/id " lc-db-id)
-                                "without TEET id => creating new lifecycle")
-                              (when lc-teet-id
-                                    (str "having TEET :integration/id " lc-teet-id)))
-                          lc-integration-id (or lc-integration-id
-                                              (let [new-uuid (integration-id/unused-random-small-uuid db)]
-                                                (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
-                                                new-uuid))]]
-                (cu/without-nils
-                  (merge
-                    (select-keys phase #{:thk.lifecycle/type
-                                         :thk.lifecycle/estimated-start-date
-                                         :thk.lifecycle/estimated-end-date
-                                         :thk.lifecycle/id})
-                    {:db/id lc-db-id
-                     :integration/id lc-integration-id}
-
-                    {:thk.lifecycle/integration-info (integration-info phase
-                                                       thk-mapping/phase-integration-info-fields)
-                     :thk.lifecycle/activities
-                     (for [{id :thk.activity/id
-                            name :activity/name
-                            task-id :activity/task-id
-                            :as activity} activities
-                           ;; Only process 4006 and 4009 typefk activities here
-                           :when (and id name (or (= id "18957")))
-                           :let [{act-thk-id :thk.activity/id
-                                  act-teet-id :activity-db-id} activity
-                                 {act-db-id :db/id
-                                  act-integration-id :integration/id}
-                                 (if act-teet-id
-                                   ;; Lookup using TEET id
-                                   (lookup db [:integration/id act-teet-id])
-                                   ;; Lookup using THK id
-                                   (lookup db [:thk.activity/id act-thk-id]))
-                                 _ (log/info "Received activity " activity " with THK id " act-thk-id
-                                     (str "having TEET :db/id " act-db-id)
-                                     (when act-integration-id (str "having TEET :integration/id " act-integration-id)))]]
-                       (merge
-                         (cu/without-nils
-                           (select-keys activity #{:thk.activity/id
-                                                   :activity/estimated-start-date
-                                                   :activity/estimated-end-date
-                                                   :activity/name
-                                                   :activity/status}))
-                         (if act-db-id
-                           ;; Existing activity
-                           {:db/id act-db-id
-                            :integration/id act-integration-id}
-
-                           ;; New activity, create integration id
-                           {:db/id (str "act-" id)
-                            :integration/id act-integration-id})
-
-                         {:activity/integration-info (integration-info
-                                                       activity
-                                                       thk-mapping/activity-integration-info-fields)}))}))))}))])))
+  (let [attrs (get-project-attrs db project-id rows)
+        ;; will collect new tasks tx-s as [{task1 params} {task2 params} ...]
+        ;; for all project's Activities of types: 4006 and 4009
+        phases (:phases attrs)
+        tx-data {:new-tasks []}]
+    (println "PHASES count" (count phases))
+    (for [[phase-id activities] phases]
+      (map
+        ;; Only process 4006 and 4009 typefk activities here
+        #(comp
+           (println "Received activity" (:activity-db-id %))
+           (assoc tx-data :new-tasks (add-task-from-thk db % (:activity-db-id %))))
+        (filter #(= (:activity/name %) :activity.name/construction) activities)))
+   (:new-tasks tx-data)))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
@@ -432,16 +372,18 @@
         projects-csv))
 
 (defn- thk-import-tasks-tx [db url projects-csv]
-  (into [{:db/id "datomic.tx"
-          :integration/source-uri url}]
-    (mapcat
-      (fn [prj]                                          ;; {"project-id" [{"rows"}..]}
-        (when (teet-project? prj)
-              (let [tasks-tx-maps (tasks-tx-data db prj)
-                    {:thk.project/keys [id lifecycles] :as _project}
-                    (first tasks-tx-maps)]
-                tasks-tx-maps))))
-    projects-csv))
+  (let [tx-import-tasks (into [{:db/id "datomic.tx"
+                :integration/source-uri url}]
+          (mapcat
+            (fn [prj]                                       ;; {"project-id" [{"rows"}..]}
+              (when (teet-project? prj)
+                    (let [tasks-tx-maps (tasks-tx-data db prj)
+                          {:thk.project/keys [id lifecycles] :as _project}
+                          (first tasks-tx-maps)]
+                      tasks-tx-maps))))
+          projects-csv)]
+    (println "TX-IMPORT-TASKS" tx-import-tasks)
+    tx-import-tasks))
 
 (defn- check-unique-activity-ids [projects]
   (into {}

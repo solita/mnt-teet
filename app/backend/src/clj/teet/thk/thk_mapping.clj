@@ -86,7 +86,7 @@
    "4102" :activity.status/in-progress  ;; Töös
    ;;  4103 Garantiiaeg
    "4104" :activity.status/completed ;; Lõpetatud
-   ;;  4106 Hankeplaanis
+   "4106" :activity.status/in-progress ;;Hankeplaanis
    ;; Unmapped status
    ;;:activity.status/other
    })
