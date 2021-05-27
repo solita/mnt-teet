@@ -676,7 +676,6 @@
                               #(cost-items-controller/->ResetMaterialForm initial-material-data))]
     (let [material-path (asset-model/find-component-path cost-item-data material-oid)
           material-data (last material-path)]
-      (println material-oid material-data)
       [:<>
        (when (asset-model/material-oid? material-oid)
          [typography/Heading2 material-oid])

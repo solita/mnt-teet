@@ -356,7 +356,6 @@
             (-> (common-controller/page-state app :cost-item)
                 (asset-model/find-component-path (:asset/oid form-data))
                 butlast last)]
-        (cljs.pprint/pprint form-data)
         (t/fx app
               {:tuck.effect/type :command!
                :command :asset/save-material
@@ -398,7 +397,6 @@
 
   UpdateForm
   (process-event [{:keys [form-data]} app]
-    (println "UpdateForm")
     (if (locked? app)
       (do
         (log/debug "Not editing form, BOQ version is locked.")
