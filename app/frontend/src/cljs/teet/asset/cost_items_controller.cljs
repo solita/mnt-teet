@@ -125,8 +125,7 @@
      ;; component query parameter specifies new component to add
      (get-in app [:query :material])
      ;; or existing material
-     (when (and (not (asset-model/component-oid? id))
-                (not (asset-model/asset-oid? id)))
+     (when (asset-model/material-oid? id)
        id))))
 
 (defn- children-by-key [asset-or-component k]
