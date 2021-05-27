@@ -106,6 +106,20 @@
               (tempids id)
               id))))
 
+(defcommand :asset/delete-material
+  {:doc "Delete a material in an existing component."
+   :context {:keys [user db]
+             adb :asset-db}
+   :payload {project-id :project-id material-id :db/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/delete-cost-items {}}
+   :pre [(= project-id (asset-db/material-project adb material-id))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]
+   :transact
+   ^{:db :asset}
+   [[:db/retractEntity material-id]]})
+
 (defn- valid-cost-group-price?
   "We want the price to be
    - non-negative

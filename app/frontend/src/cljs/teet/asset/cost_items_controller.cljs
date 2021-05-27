@@ -79,6 +79,7 @@
 (defrecord SaveMaterialResponse [response])
 (defrecord AddMaterial [type])
 (defrecord UpdateMaterialForm [form-data])
+(defrecord ResetMaterialForm [form-data])
 
 (defrecord UpdateForm [form-data])
 
@@ -339,7 +340,7 @@
       (let [project-id (get-in app [:params :project])]
         (t/fx app
               {:tuck.effect/type :command!
-               :command :asset/delete-material ;; TODO does not yet exist
+               :command :asset/delete-material
                :payload {:db/id id
                          :project-id project-id}
                :result-event common-controller/->Refresh}))))
@@ -387,8 +388,17 @@
         app)
       (update-material-form app #(merge % form-data))))
 
+  ResetMaterialForm
+  (process-event [{:keys [form-data]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not editing form, BOQ version is locked.")
+        app)
+      (update-material-form app (constantly form-data))))
+
   UpdateForm
   (process-event [{:keys [form-data]} app]
+    (println "UpdateForm")
     (if (locked? app)
       (do
         (log/debug "Not editing form, BOQ version is locked.")

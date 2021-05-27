@@ -562,12 +562,12 @@
                  (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
-(defn- component-form-navigation [atl [asset :as component-path]]
+(defn- component-form-navigation [atl component-path]
   [:<>
    [breadcrumbs/breadcrumbs
     (for [p component-path]
       {:link [url/Link {:page :cost-item
-                        :params {:id (:asset/oid asset)}}
+                        :params {:id (:asset/oid p)}}
               (:asset/oid p)]
        :title (if (number? (:db/id p))
                 (:asset/oid p)
@@ -580,14 +580,14 @@
                                       atl
                                       (:asset/fclass (first component-path))))]
                          (map #(or (:asset/fclass %)
-                                   (:component/ctype %)))
+                                   (:component/ctype %)
+                                   (:material/type %)))
                          component-path)]
              [label-for p])
            (repeat " / "))))])
 
 (defn- component-form* [e! atl component-oid cost-item-data]
-  (r/with-let [materials-open? (r/atom false)
-               initial-component-data
+  (r/with-let [initial-component-data
                (last (asset-model/find-component-path cost-item-data
                                                       component-oid))
                new? (string? (:db/id initial-component-data))
@@ -670,14 +670,14 @@
                               (:material/type initial-material-data))
                cancel-event (if new?
                               #(common-controller/->SetQueryParam :material nil)
-                              #(cost-items-controller/->UpdateForm initial-material-data))]
+                              #(cost-items-controller/->ResetMaterialForm initial-material-data))]
     (let [material-path (asset-model/find-component-path cost-item-data material-oid)
           material-data (last material-path)]
       (println material-oid material-data)
       [:<>
-       #_(when (asset-model/material-oid? material-oid)
+       (when (asset-model/material-oid? material-oid)
          [typography/Heading2 material-oid])
-       #_[material-form-navigation atl material-path]
+       [component-form-navigation atl material-path]
 
        [form/form2
         {:e! e!
@@ -703,14 +703,15 @@
                :style {:align-items :center}}
          [url/Link {:page :cost-item
                     :params {:id (:asset/oid cost-item-data)}}
-          (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
+          (tr [:asset :back-to-cost-item] {:name (or (:common/name cost-item-data)
+                                                     (:asset/oid cost-item-data))})]
          [form/footer2]]]])))
 
 (defn material-form
-  [e! atl material-id cost-item-data]
-  (if (nil? (asset-model/find-component-path cost-item-data material-id))
+  [e! atl material-oid cost-item-data]
+  (if (nil? (asset-model/find-component-path cost-item-data material-oid))
     [CircularProgress]
-    [material-form* e! atl material-id cost-item-data]))
+    [material-form* e! atl material-oid cost-item-data]))
 
 
 (defn- add-cost-item [app version]
@@ -726,7 +727,7 @@
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items fgroup-link-fn fclass-link-fn list-features?]
+  [{:keys [_e! _app cost-items fgroup-link-fn fclass-link-fn list-features?]
     :or {list-features? true}}]
   (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
@@ -1163,7 +1164,8 @@
   (let [oid (:id params)
         component (or (get query :component)
                       (and (asset-model/component-oid? oid) oid))
-        material (get query :material)]
+        material (or (get query :material)
+                     (and (asset-model/material-oid? oid) oid))]
     (if (= "new" oid)
       [new-cost-item-page e! app state]
 
