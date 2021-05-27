@@ -257,7 +257,7 @@
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
-  (let [ids (take result-count-limit
+  (let [ids (take (inc result-count-limit)
                   (search-by-map adb search-criteria))
         more-results? (> (count ids) result-count-limit)
         assets
