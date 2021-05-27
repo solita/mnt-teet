@@ -120,7 +120,9 @@
                             (d/q '[:find (max ?t)
                                    :where [_ :tx/schema-imported-at ?t]]
                                  db))
-    :ctype/common (d/pull db ctype-pattern :ctype/common)
+    :ctype/component (d/pull db ctype-pattern :ctype/component)
+    :ctype/feature (d/pull db ctype-pattern :ctype/feature)
+    :ctype/material (d/pull db ctype-pattern :ctype/material)
     :ctype/location (d/pull db ctype-pattern :ctype/location)
     :fgroups (mapv first
                    (d/q '[:find (pull ?fg p)

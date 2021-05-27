@@ -18,7 +18,8 @@
             [clojure.string :as str]
             [cheshire.core :as cheshire]
             [teet.util.coerce :refer [->long]]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.set :as set]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -184,27 +185,88 @@
 
 (def ^:private result-count-limit 1000)
 
+(defn- e=
+  "return set of :db/id values of entities that have
+  the exact value for attribute"
+  [db attr value]
+  (into #{}
+        (map :e)
+        (d/datoms db {:index :avet
+                      :limit -1
+                      :components [attr value]})))
+
+(defn- bbq
+  "Return set of :db/id value sof entities whose location
+  start-point or end-point is within the bounding box."
+  [db xmin ymin xmax ymax]
+  (let [entities-within-range
+        (comp
+         (take-while (fn [{[x _y] :v}]
+                       (<= x xmax)))
+         (filter (fn [{[_x y] :v}]
+                   (<= ymin y ymax)))
+         (map :e))
+
+        start-within
+        (into #{}
+              entities-within-range
+              (d/index-range db {:attrid :location/start-point
+                                 :start [xmin ymin]
+                                 :limit -1}))
+
+        end-within
+        (into #{}
+              entities-within-range
+              (d/index-range db {:attrid :location/end-point
+                                 :start [xmin ymin]
+                                 :limit -1}))]
+    (set/union start-within end-within)))
+
+(defn fclass=
+  "Find entities belonging to a single fclass"
+  [db fclass]
+  (e= db :asset/fclass fclass))
+
+(defmulti search-by (fn [_db key _value] key))
+
+(defmethod search-by :fclass [db _ fclasses]
+  (apply set/union
+         (map #(fclass= db %)
+              fclasses)))
+
+(defmethod search-by :common/status [db _ statuses]
+  (apply set/union (map #(e= db :common/status %) statuses)))
+
+(defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
+  (bbq db xmin ymin xmax ymax))
+
+(defn- search-by-map [db criteria-map]
+  (reduce-kv (fn [acc by val]
+               (let [result (search-by db by val)]
+                 (if (nil? acc)
+                   result
+                   (set/intersection acc result))))
+             nil
+             criteria-map))
+
+
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
-   :args {fclass :fclass}
+   :args search-criteria
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
-  (let [assets
+  (let [ids (take (inc result-count-limit)
+                  (search-by-map adb search-criteria))
+        more-results? (> (count ids) result-count-limit)
+        assets
         (map first
-             (take (inc result-count-limit)
-                   (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
-                                             :location/road-nr :location/carriageway
-                                             :location/start-km :location/end-km
-                                             :location/start-point :location/end-point])
-                             :where
-                             [?a :asset/fclass ?fclass]
-                             :in $ [?fclass ...]]
-                           adb
-                           fclass)))
-        more-results? (> (count assets) result-count-limit)
-        assets (take result-count-limit assets)]
+             (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
+                                       :location/road-nr :location/carriageway
+                                       :location/start-km :location/end-km])
+                       :in $ [?a ...]]
+                     adb (take result-count-limit ids)))]
     {:more-results? more-results?
      :result-count-limit result-count-limit
      :assets (mapv #(-> %
@@ -216,38 +278,18 @@
 (defquery :assets/geojson
   {:doc "Return GeoJSON for assets found by search."
    :spec (s/keys :opt-un [:assets-search/fclass])
-   :args {:keys [fclass xmin ymin xmax ymax] :as args}
+   :args criteria
    :context {:keys [db user] adb :asset-db}
    :project-id nil
    :authorization {}}
-  (let [assets
+  (let [criteria (update criteria :bbox #(mapv bigdec %))
+        assets
         (map first
              (d/qseq '[:find (pull ?a [:asset/fclass :asset/oid
                                        :location/start-point :location/end-point])
-                       :where
-                       [?a :asset/fclass ?fclass]
-                       ;; PENDING: move from tuples to -x/-y attrs
-                       ;; This allows much more efficient index access
-                       ;; for the bbox query, now we need to pull and
-                       ;; untuple everything
-                       (or-join [?a ?xmin ?ymin ?xmax ?ymax]
-                                (and [?a :location/start-point ?p]
-                                     [(untuple ?p) [?x ?y]]
-                                     [(<= ?xmin ?x)]
-                                     [(<= ?x ?xmax)]
-                                     [(<= ?ymin ?y)]
-                                     [(<= ?y ?ymax)])
-                                (and [?a :location/end-point ?p]
-                                     [(untuple ?p) [?x ?y]]
-                                     [(<= ?xmin ?x)]
-                                     [(<= ?x ?xmax)]
-                                     [(<= ?ymin ?y)]
-                                     [(<= ?y ?ymax)]))
-                       :in $ [?fclass ...] ?xmin ?ymin ?xmax ?ymax]
+                       :in $ [?a ...]]
                      adb
-                     fclass
-                     (bigdec xmin) (bigdec ymin)
-                     (bigdec xmax) (bigdec ymax)))]
+                     (search-by-map adb criteria)))]
     ^{:format :raw}
     {:status 200
      :headers {"Content-Type" "application/json"}

@@ -292,4 +292,8 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :db/valueType :db.type/long
            :db/unique :db.unique/identity
            :db/cardinality :db.cardinality/one
-           :db/doc "The OID code in road registry."}]]}]
+           :db/doc "The OID code in road registry."}]]}
+
+ {:db/ident :migration/property-multiple-ctypes
+  :txes [[{:db/ident :attribute/parent
+           :db/cardinality :db.cardinality/many}]]}]

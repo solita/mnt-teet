@@ -119,13 +119,14 @@
             ;; no validation otherwise
             nil)))))
 
-(defn- attribute-group [{ident :db/ident
+(defn- attribute-group [common-attr-idents
+                        {ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
   (cond
     cost-grouping?
     :cost-grouping
 
-    (= "common" (namespace ident))
+    (common-attr-idents ident)
     :common
 
     :else
@@ -283,13 +284,15 @@
        [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]]))
 
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
-                            common? ctype]}
+                            common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
-    (let [common-attrs (:attribute/_parent (:ctype/common rotl))
-          attrs-groups (->> (concat (when common? common-attrs) attributes)
-                            (group-by attribute-group)
+    (let [_ (def *c (some-> common rotl))
+          common-attrs (some-> common rotl :attribute/_parent)
+          common-attr-idents (into #{} (map :db/ident) common-attrs)
+          attrs-groups (->> (concat common-attrs attributes)
+                            (group-by (partial attribute-group common-attr-idents))
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
                                                     label))))]
@@ -518,7 +521,7 @@
                         :attributes (some-> feature-class :attribute/_parent)
                         :cost-item-data form-data
                         ;; TODO: cost-item-data here as well
-                        :common? false
+                        :common :ctype/feature
                         :inherits-location? false
                         :relevant-roads relevant-roads}]])
 
@@ -594,7 +597,7 @@
                        :inherits-location? (:component/inherits-location? ctype)
                        :component-oid component-oid
                        :cost-item-data cost-item-data
-                       :common? true
+                       :common :ctype/component
                        :ctype ctype}]]]
 
         [:div {:class (<class common-styles/flex-row-space-between)
