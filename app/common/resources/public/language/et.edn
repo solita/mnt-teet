@@ -1,8 +1,8 @@
 {:account
  {:account-edited "Konto muudetud",
   :logout "Logout",
-  :my-details "MINU ANDMED",
   :my-account "Minu konto",
+  :my-details "MINU ANDMED",
   :save-information "Salvestan andmed"},
  :activity
  {:note-all-tasks-need-to-be-completed
@@ -12,11 +12,11 @@
   :waiting-for-submission "Tulemusi ei ole veel esitatud"},
  :activity-approval
  {:activity.status/archived "Arhiveerin tegevuse",
-  :submit-for-approval "Esitan tegevuse",
   :activity.status/canceled "Katkestan tegevuse",
   :activity.status/completed "Kinnitan tegevuse",
   :approve-activity-confirm "Tegevuse staatus märgitakse lõpetatuks",
-  :reject-activity-confirm "Tegevuse staatus uuendatakse"},
+  :reject-activity-confirm "Tegevuse staatus uuendatakse",
+  :submit-for-approval "Esitan tegevuse"},
  :admin
  {:create-user "Lisan kasutaja",
   :no-current-permissions "Kehtivad ligipääsud puuduvad",
@@ -54,6 +54,7 @@
  :asset
  {:unlock-contract-boq-warning
   "Kululoend on aktiivses lepingus. Selle muutmine tähendab lepingu muudatust. Kas oled kindel, et soovid avada kululoendi muudatusteks?",
+  :add-material "Lisan materjal",
   :totals-table
   {:properties "Kulude grupeerimine",
    :project-total "Kokku {total} EUR",
@@ -67,34 +68,34 @@
   :add-cost-item "Lisan vara",
   :export-boq "Kululoendi eksport",
   :validate
-  {:only-whitespace "Ainult tühik ei ole lubatud.",
-   :max-value "Lubatud maksimaalne väärtus on {max-value}",
-   :min-value "Lubatud minimaalne väärtus on {min-value}",
+  {:decimal-format "Sisestage kümnendväärtus",
    :decimal-precision
    "Numbri täpsus on liiga suur. Lubatud on {precision} kohta peale punkti.",
    :integer-format "Sisesta täisarv",
-   :decimal-format "Sisestage kümnendväärtus",
+   :max-length
+   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit",
+   :max-value "Lubatud maksimaalne väärtus on {max-value}",
    :min-length
    "Tekst liiga lühike, sisesta vähemalt {min-length} sümbolit",
-   :max-length
-   "Tekst liiga pikk, sisesta maksimaalselt {max-value} sümbolit"},
+   :min-value "Lubatud minimaalne väärtus on {min-value}",
+   :only-whitespace "Ainult tühik ei ole lubatud."},
   :unofficial-version "Mitteametlik",
   :no-matching-feature-classes "Pole vastavat vara liiki",
   :add-component "Lisan komponendi",
   :unlock-tender-boq-warning
   "Kululoend on hetkel hankes, kas oled kindel , et soovid seda muuta? Hanke kululoendi muutmisel tuleb teavitada pakkujaid ning vajadusel muuta pakkumuste esitamise tähtaega.",
   :cost-item-saved "Vara salvestatud",
-  :page {:cost-items-totals "Summad", :cost-items "Varad"},
+  :page {:cost-items "Varad", :cost-items-totals "Summad"},
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
-  :manager {:link "Varad"},
+  :manager {:link "Varad", :result-count "{count} nähtust"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :location
-  {:show-map "Näita kaarti",
-   :hide-map "Peida kaart",
-   :no-road-found-for-points "Punktide jaoks ei leitud teed"},
+  {:hide-map "Peida kaart",
+   :no-road-found-for-points "Punktide jaoks ei leitud teed",
+   :show-map "Näita kaarti"},
   :confirm-unlock-for-edits "Jah, ava",
   :type-library
   {:description "Kirjeldus",
@@ -109,6 +110,7 @@
    :fgroup "Vara grupp",
    :header "Tee olemi tüübiteek (TOTT) ",
    :common-ctype "Ühised omadused",
+   :product "Tooted",
    :link "TOTT",
    :label "Silt",
    :values "Väärtused",
@@ -119,10 +121,10 @@
    :attributes "Tunnused",
    :component-inherits-location "Komponent pärib asukoha vanemalt"},
   :field-group
-  {:location "Asukoht",
+  {:common "Ühine",
    :cost-grouping "Kulude grupeerimine",
-   :common "Ühine",
-   :details "Üksikasjad"},
+   :details "Üksikasjad",
+   :location "Asukoht"},
   :unlock-for-edits "Avage muudatuste tegemiseks"},
  :buttons
  {:confirm "Kinnitan",
@@ -142,10 +144,10 @@
   :copy-to-clipboard "Kopeeri tekst",
   :upload "Laadin üles"},
  :cadastral-group
- {"Avalik-õiguslik omand" "Avalik-õiguslik omand",
+ {"" "Määratlemata",
+  "Avalik-õiguslik omand" "Avalik-õiguslik omand",
   "Eraomand" "Eraomand",
   "Kiinistamata eraomand" "Kinnistamata eraomand",
-  "" "Määratlemata",
   "Munitsipaalomand" "Munitsipaalomand",
   "Omand väljaselgitamisel" "Omand väljaselgitamisel",
   "Riigiomand" "Riigiomand",
@@ -220,31 +222,64 @@
  {:no-targets-for-contract
   "Lepingu integreerimine ei õnnestunud ja sellel lepingul pole kehtivaid eesmärke.\nVeateate saamiseks pöörduge administratsiooni poole",
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
+  :company-search-placeholder
+  "Sisesta ettevõtte nimi või äriregistri kood",
   :related-contracts "SEOTUD LEPINGUD",
   :thk.contract/type "Tüüp",
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
   :thk.contract.status/deadline-overdue "Tähtaeg on hilinenud",
+  :add-company-not-in-teet "Lisa uus ettevõtte",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
+  :add-company "Lisa ettevõtte",
   :status "Staatus",
   :table-heading
-  {:project "Projekt",
+  {:activity "Tegevus",
+   :project "Projekt",
    :project-manager "Projektijuht",
-   :activity "Tegevus",
    :task "Ülesanne"},
   :contract-related-entities "Lepinguga seotud üksused",
+  :no-companies-matching-search
+  "Otsingule vastavaid ettevõtteid ei leitud",
   :partners-listing "Partnerite loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Valmis",
+  :company-search-label "Ettevõtte otsing",
   :contracts-listing "Lepingute loetelu",
   :edit-contract "Lepingu info",
   :thk.contract.status/in-progress "Töös"},
  :contracts
- {:state-procurement-link "Hanke nr.",
+ {:contracts-list
+  {:collapse-all "Ahenda kõik",
+   :expand-all "Laeinda kõik",
+   :result "Tulemus",
+   :results "tulemust",
+   :view "Vaata"},
   :external-link "Lepingu nr.",
+  :filters
+  {:hide-filters "Peida filtrid",
+   :inputs
+   {:contract-number "Lepingu number",
+    :project-name "Objekti nimi",
+    :ta/region "Regioon",
+    :partner-name "Lepingupartneri nimi",
+    :project-manager "TA projektijuht",
+    :contract-status "Lepingu staatus",
+    :contract-type "Lepingu liik",
+    :contract-name "Hanke nimetus",
+    :procurement-number "Hanke number",
+    :road-number "Tee number"},
+   :select-input-placeholder "Vali",
+   :show-filters "Näita filtreid"},
+  :quick-filters "Kiirotsing",
+  :shortcuts
+  {:all-contracts "Kõik lepingud",
+   :my-contracts "Minu lepingud",
+   :unassigned "Määramata lepingud"},
+  :state-procurement-link "Hanke nr.",
   :thk-procurement-link "THK"},
  :cooperation
  {:response "Vastus",
@@ -276,29 +311,29 @@
   :add-application-contact "Lisan kontakti",
   :third-party-deleted "Kaasatud osapool kustutatud",
   :export
-  {:cooperation.application.response-type/opinion
-   {:user-column "Arvamuse esitaja",
-    :content-column "Arvamuse sisu",
-    :header "ARVAMUSED ",
-    :decision-column "Otsus esitatud arvamuse osas"},
-   :preview "Eelvaade",
-   :cooperation.application.response-type/other
-   {:user-column "Esitaja",
-    :header "MUU",
-    :decision-column "Otsus",
-    :content-column "Sisu"},
-   :seq#-column "Jrk nr",
-   :cooperation.application.response-type/coordination
-   {:user-column "Kaasatud kooskõlastaja",
-    :content-column "Kooskõlastuse sisu",
-    :header "KOOSKÕLASTUSED",
-    :decision-column "Otsus esitatud kooskõlastuse osas"},
-   :title "Kaasatud osapoolte koondtabel",
-   :cooperation.application.response-type/consent
-   {:user-column "Nõusoleku esitaja",
-    :content-column "Nõusoleku sisu",
+  {:cooperation.application.response-type/consent
+   {:content-column "Nõusoleku sisu",
+    :decision-column "Otsus esitatud nõusoleku osas",
     :header "NÕUSOLEKUD",
-    :decision-column "Otsus esitatud nõusoleku osas"}},
+    :user-column "Nõusoleku esitaja"},
+   :cooperation.application.response-type/coordination
+   {:content-column "Kooskõlastuse sisu",
+    :decision-column "Otsus esitatud kooskõlastuse osas",
+    :header "KOOSKÕLASTUSED",
+    :user-column "Kaasatud kooskõlastaja"},
+   :cooperation.application.response-type/opinion
+   {:content-column "Arvamuse sisu",
+    :decision-column "Otsus esitatud arvamuse osas",
+    :header "ARVAMUSED ",
+    :user-column "Arvamuse esitaja"},
+   :cooperation.application.response-type/other
+   {:content-column "Sisu",
+    :decision-column "Otsus",
+    :header "MUU",
+    :user-column "Esitaja"},
+   :preview "Eelvaade",
+   :seq#-column "Jrk nr",
+   :title "Kaasatud osapoolte koondtabel"},
   :newest-application "Uusim pöördumine",
   :create-opinion-button "Lisan ametliku seisukoha",
   :application-edited "Taotlus edukalt muutetud",
@@ -319,13 +354,13 @@
   :waiting-for-opinion "Ootab seisukohta",
   :new-third-party-title "Kaasatud osapoole lisamine",
   :error
-  {:response-not-given "Faile saab lisada peale vastuse lisamist",
-   :coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
+  {:coordination-task-missing "Tegevusel puudub kooskõlastusülesanne.",
    :coordination-task-status-no-upload
    "Ülesande staatus ei luba failide lisamist.",
-   :upload-not-allowed "Üleslaadimine pole lubatud",
    :response-not-editable
-   "Vastusele on seisukoht lisatud ja vastust ei saa enam muuta. "},
+   "Vastusele on seisukoht lisatud ja vastust ei saa enam muuta. ",
+   :response-not-given "Faile saab lisada peale vastuse lisamist",
+   :upload-not-allowed "Üleslaadimine pole lubatud"},
   :response-of-third-party "Kaasatud osapoole vastus",
   :opinion-created "Seisukoht edukalt loodud",
   :response-created "Vastus edukalt loodud",
@@ -336,30 +371,31 @@
   :opinion-saved "Seisukoht edukalt salvestatud",
   :new-third-party "Lisan kaasatud osapoole",
   :results "{count} tulemust"},
+ :countries {:ee nil, :fi nil},
  :dashboard
- {:open "Avan",
+ {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
-  :notifications "Teavitused",
-  :activities-and-tasks "Tegevused ja ülesanded",
   :no-notifications-for-project
   "Teil pole selle projektiga seotud teatisi",
+  :notifications "Teavitused",
+  :open "Avan",
   :title "Töölaud"},
  :data-tab
  {:cadastral-unit-count "Praegu kuvatakse {count} katastriüksus(t)",
   :restriction-count "Praegu kuvatakse {count} kitsendus(t)"},
  :date-range {:error-text "Võimalikud kuupäevad: {start} – {end}"},
  :document
- {:deleted-notification "Dokument edukalt kustutatud",
+ {:comments "Märkused",
+  :deleted-notification "Dokument edukalt kustutatud",
   :file-deleted-notification "Fail edukalt kustutatud",
   :file-too-large "Fail on liiga suur",
   :invalid-file-type "Failitüüp ei ole toetatud",
-  :comments "Märkused",
-  :updated "Uuendatud",
-  :new-comment "Uus märkus"},
+  :new-comment "Uus märkus",
+  :updated "Uuendatud"},
  :drag
- {:drop-to-meeting-decision "Lisan koosoleku otsusele faile",
-  :drop-to-comment "Lisan märkusele pilte",
+ {:drop-to-comment "Lisan märkusele pilte",
   :drop-to-meeting-agenda "Lisan päevakavapunktile faile",
+  :drop-to-meeting-decision "Lisan koosoleku otsusele faile",
   :drop-to-task "Lisan ülesandele faile",
   :no-drop-zone "Siia ei saa faile lohistada"},
  :email
@@ -408,6 +444,7 @@
   "Ümberkruntimiskava (krundijaotuskava)",
   :file.document-group/general "Üldosa, seletuskirjad ",
   :task.type/railroad "Raudtee",
+  :activity.name/owners-supervision "Omanike järelevalve",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
   :task.group/warranty "Garantii",
@@ -485,6 +522,7 @@
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/cost-list "Kululoend",
   :task.type/eia-pre-assessment "Keskkonnamõju eelhinnang",
+  :activity.name/road-safety-audit "Teeohutuse audit",
   :task.type/owners-supervision "Omanikujärelevalve",
   :task.group/study "Uuringud",
   :thk.contract.type/construction-works "Ehitustööd",
@@ -651,15 +689,15 @@
   :task.type/road "Tee",
   :cooperation.application.response-type/coordination "Kooskõlastus"},
  :environment
- {:info-text
+ {:build-time "Viimane versiooniuuendus toimus",
+  :info-text
   {:dev
    "Kasutad TEETu arenduskeskkonda. Aeg-ajalt andmeid keskkonnas kustutatakse.",
    :prelive
    "Kasutad TEETu koolituskeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad.",
    :test
    "Kasutad TEETu testkeskkonda. Aeg-ajalt andmeid keskkonnas uuendatakse ja vahepeal lisatud kaovad. "},
-  :version "Versioon",
-  :build-time "Viimane versiooniuuendus toimus"},
+  :version "Versioon"},
  :error
  {:file-metadata-not-unique
   "Selle faili üleslaadimine antud metaandmetega tekitaks ülesandesse duplikaat faili või ülesandes on juba duplikaat failid.",
@@ -748,6 +786,7 @@
   :cooperation.contact/id-code "Reg. nr / isikukood",
   :file.part/name "Ülesande osa nimi",
   :task/group "Ülesande grupp",
+  :company/business-registry-code "Äriregistri kood",
   :file/part "Osa",
   :cooperation.3rd-party/name "Kaasatud osapoole nimi",
   :file/version "Versioon",
@@ -777,6 +816,7 @@
   :thk.project/end-km "Lõpp km",
   :cooperation.application/response-deadline "Taotluse tähtaeg",
   :thk.project/start-km "Algus km",
+  :company/name "Ettevõtte nimi",
   :cooperation.response/content "Vastuse sisu",
   "projectgroup" {"activity" "Etapp"},
   :file/original-name "Algupärane failinimi",
@@ -802,6 +842,7 @@
   "Vastaja seotus maaga",
   :thk.contract/warranty-period "Garantii periood",
   :land-acquisition/pos-number "POS#",
+  :company/country "Riik",
   :meeting.agenda/responsible "Vastutav isik",
   :document/sub-category "Dokumendi alamtüüp",
   :location/road-address "Tee aadress",
@@ -836,6 +877,7 @@
   :land-owner-opinion/activity "Tegevus",
   :file/timestamp "Üleslaadimise kuupäev",
   :cooperation.3rd-party/email "E-post",
+  :company/phone-numbers "Ettevõtte telefoni number",
   :user/email "E-post",
   :land-acquisition/area-to-obtain "Omandatav ala",
   :file/sequence-number "#",
@@ -854,6 +896,7 @@
   :meeting/links "Lingid",
   :activity/name "Tegevuse nimi",
   :location/start-km "Algus km",
+  :company/emails "Ettevõtte e-posti aadress",
   :estate-compensation/amount "Summa",
   :document/category "Dokumendi tüüp",
   :boq-version/type "Värskenda versiooni olekut",
@@ -885,18 +928,18 @@
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
   :export-files-zip
-  {:email-body "Lae alla siit: \n{link} \nLink kehtib 24 tundi.",
-   :activity-button
+  {:activity-button
    "Saadan viite tegevusega seotud failidele e-postiga",
-   :task-button "Saadan viite ülesandega seotud failidele e-postiga",
    :activity-email-subject
    "Tegevusega seotud dokumentide eksport on lõppenud",
    :activity-success
    "Toimub tegevusega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
-   :task-success
-   "Toimub ülesandega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga",
+   :email-body "Lae alla siit: \n{link} \nLink kehtib 24 tundi.",
+   :task-button "Saadan viite ülesandega seotud failidele e-postiga",
    :task-email-subject
-   "Ülesandega seotud dokumentide eksport on lõppenud"},
+   "Ülesandega seotud dokumentide eksport on lõppenud",
+   :task-success
+   "Toimub ülesandega seotud dokumentide eksport. Dokumentide link saadetakse sulle peagi e-postiga"},
   :replace-dialog-title "Laen üles uue versiooni",
   :edit-info "Viimati muudetud {author} {date} ",
   :other-versions "Muud versioonid",
@@ -905,10 +948,10 @@
   :full-name "TEET failinimi",
   :switch-to-latest-version "Lülitan tagasi uusimale versioonile",
   :sort-by
-  {:file/type "Sorteerin failitüübi järgi",
-   :meta/created-at "Sorteerin kuupäeva järgi",
-   :file/name "Sorteerin nime järgi",
-   :file/status "Sorteerin staatuse järgi"},
+  {:file/name "Sorteerin nime järgi",
+   :file/status "Sorteerin staatuse järgi",
+   :file/type "Sorteerin failitüübi järgi",
+   :meta/created-at "Sorteerin kuupäeva järgi"},
   :replace-dialog-info-text
   "Ära muretse, eelmine versioon jääb alles ning sa leiad selle faili detailvaatest.",
   :version "Versioon {num}",
@@ -975,9 +1018,9 @@
   :cadastral-filter-label "Katastriüksuse number",
   :unit-name-id "Üksuse nimi ja tunnus",
   :quality
-  {:bad "Halb",
+  {:any "Kõik",
+   :bad "Halb",
    :good "Hea (L-Est)",
-   :any "Kõik",
    :questionable "Küsitav"},
   :filter-label "Filtreerin üksused",
   :total-excluding-process "Kokku ilma protseduuri tasudeta:",
@@ -1001,12 +1044,12 @@
   :comments "Märkused",
   :mortgages "Hüpoteeki",
   :modal-title
-  {:mortgages "Hüpoteegid",
-   :burdens "Koormatised",
-   :costs "Kulud",
-   :owners-opinions "Maade omanike arvamused",
+  {:burdens "Koormatised",
    :comments "Märkused",
-   :files "Üksusega seotud failid"},
+   :costs "Kulud",
+   :files "Üksusega seotud failid",
+   :mortgages "Hüpoteegid",
+   :owners-opinions "Maade omanike arvamused"},
   :costs "Kulud",
   :mortgage "Hüpoteek",
   :owner-opinions "Arvamused",
@@ -1024,10 +1067,9 @@
   :choose-activity "Valin tegevuse",
   :update {:success-message "Arvamuse muutmine õnnestus"},
   :delete
-  {:success-message "Arvamus kustutatud",
-   :cancel-text "Ei, pöördun tagasi",
-   :confirmation-text
-   "Kogu info kustutatakse ja seda ei saa taastada"},
+  {:cancel-text "Ei, pöördun tagasi",
+   :confirmation-text "Kogu info kustutatakse ja seda ei saa taastada",
+   :success-message "Arvamus kustutatud"},
   :export
   {:units-with-opinions "1.1 Piirnevate kinnisasjade omanikud",
    :estate-num-name "Kinnisasja number; Kinnisasja nimi",
@@ -1044,26 +1086,28 @@
   :choose-type "Valin liigi",
   :edit-opinion "MUUDAN ARVAMUST"},
  :link
- {:search
+ {:land-unit-not-in-project "Projektis pole valitud",
+  :no-units-in-estate-selected "Projektis pole valitud üksusi",
+  :search
   {:no-results "Ei leitud ühtki vastet",
    :placeholder "Lisan viite..."},
+  :target-deleted "Kustutatud {user} poolt {at}",
   :type-label
-  {:file "Fail",
+  {:appendix "Lisa",
    :cadastral-unit "Katastriüksus",
    :estate "Kinnistu",
-   :appendix "Lisa",
-   :task "Ülesanne"},
-  :target-deleted "Kustutatud {user} poolt {at}",
-  :land-unit-not-in-project "Projektis pole valitud",
-  :no-units-in-estate-selected "Projektis pole valitud üksusi"},
+   :file "Fail",
+   :task "Ülesanne"}},
  :login
- {:username "Kasutaja",
-  :password "Salasõna",
+ {:greetings-text
+  "Tee elukaare teabe ning andmete haldamise ja vahetamise keskkond TEET",
   :login "Sisenen",
-  :greetings-text
-  "Tee elukaare teabe ning andmete haldamise ja vahetamise keskkond TEET"},
+  :password "Salasõna",
+  :username "Kasutaja"},
  :map
  {:aerial-view "Aerofoto",
+  :clear-selections "Tühjendan valikud",
+  :display "Kaardi tüüp",
   :layers
   {:no-filters "Filtrid või lisakihid puuduvad",
    :projects "Projektid",
@@ -1076,9 +1120,7 @@
    :cadastral-units "Katastriüksused",
    :no-layers "Kihid puuduvad",
    :land-surveys "Maa uuring"},
-  :display "Kaardi tüüp",
   :map-layers "Kaardikihid",
-  :clear-selections "Tühjendan valikud",
   :select-all "Valin kõik"},
  :meeting
  {:notifications-help
@@ -1185,12 +1227,12 @@
  :page-title {:project-list "{name} projekt"},
  :people-tab
  {:active "AKTIIVNE",
-  :managers "Juhid",
   :consultants "Konsultandid",
-  :invite-user "Lisan uue kasutaja",
-  :other-users "Muud kasutajad",
   :hide-history "Peidan ajaloo",
+  :invite-user "Lisan uue kasutaja",
+  :managers "Juhid",
   :no-other-users "Teisi kasutajaid pole",
+  :other-users "Muud kasutajad",
   :show-history "Vaatan ajalugu"},
  :project
  {:add-users "Lisan kasutajaid",
@@ -1235,14 +1277,14 @@
   :add-task "Lisan ülesande",
   :draw-selection
   {:deselect "Eemaldan nimekirjast",
-   :select "Lisan nimekirja",
-   :link "Valin alad kaardilt"},
+   :link "Valin alad kaardilt",
+   :select "Lisan nimekirja"},
   :information
-  {:estimated-duration "Eeldatav kestus",
-   :procurement-number "Hanke number",
+  {:carriageway "SO",
+   :estimated-duration "Eeldatav kestus",
    :km-range "Km ulatus",
+   :procurement-number "Hanke number",
    :repair-method "Meede",
-   :carriageway "SO",
    :road-number "Tee number"},
   :add-tasks "Lisan ülesandeid",
   :activities "Projekti tegevused",
@@ -1254,20 +1296,20 @@
   :activities-tab "Tegevused"},
  :project-groups {:title "Projektirühmad"},
  :projects
- {:map-view "Kaart",
-  :filters
+ {:filters
   {:all "Kõik projektid",
-   :unassigned-only "Määramata projektid",
-   :my-projects "Minu projektid"},
-  :title "Projektid",
+   :my-projects "Minu projektid",
+   :unassigned-only "Määramata projektid"},
   :list-view "Projektide loetelu",
-  :no-activities "Tegevused puuduvad"},
+  :map-view "Kaart",
+  :no-activities "Tegevused puuduvad",
+  :title "Projektid"},
  :roles
  {:authenticated-guest "Autenditud külaline",
-  :guest "Külaline",
-  :manager "Projektijuht",
-  :internal-consultant "Sisemine konsultant",
   :external-consultant "Väline konsultant",
+  :guest "Külaline",
+  :internal-consultant "Sisemine konsultant",
+  :manager "Projektijuht",
   :owner "Vastutav isik"},
  :search {:clear-filters "Eemaldan filtrid", :quick-search "Otsin"},
  :search-area
@@ -1290,11 +1332,11 @@
   "Sisestan väärtuse seotud piirkondade kuvamiseks",
   :component-title "Seotud objektide otsinguala"},
  :tab-names
- {:upcoming "Eesolevad",
-  :notes "Märkused",
+ {:decisions "Otsused",
+  :details "Üksikasjad",
   :history "Möödunud",
-  :decisions "Otsused",
-  :details "Üksikasjad"},
+  :notes "Märkused",
+  :upcoming "Eesolevad"},
  :task
  {:task-overview "Ülesande ülevaade",
   :edit-part-modal-title "Muudan ülesande osa",
@@ -1350,15 +1392,15 @@
  :unit-info {:owners-opinions "Maade omanike arvamused"},
  :unit-modal-page {:add-new-owner-opinion "Lisan uue arvamuse"},
  :user
- {:unregistered "Kasutaja",
-  :autocomplete
-  {:no-options "Kasutajat ei leitud",
-   :loading "Otsin kasutajaid...",
+ {:autocomplete
+  {:loading "Otsin kasutajaid...",
+   :no-options "Kasutajat ei leitud",
    :placeholder "Sisestan nime..."},
-  :role "Roll"},
+  :role "Roll",
+  :unregistered "Kasutaja"},
  :validation {:invalid-email "Vale emaili aadress"},
  :warning
- {:version-mismatch
-  "Rakenduse uus versioon on laetud. Palun värskenda lehte.",
-  :deploying
-  "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte."}}
+ {:deploying
+  "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
+  :version-mismatch
+  "Rakenduse uus versioon on laetud. Palun värskenda lehte."}}
