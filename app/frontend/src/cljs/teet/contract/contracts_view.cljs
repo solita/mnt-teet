@@ -47,8 +47,9 @@
                                       :open? (get @contract-expansion-atom (:db/id contract))}
      ""
      [:div {:class (<class contract-style/contract-card-details-style)}
-      [contract-view/contract-external-links contract]
-      [contract-view/contract-information-row contract]]]))
+      [contract-common/contract-external-links contract]
+      [contract-common/contract-information-row contract]
+      ]]))
 
 (defn toggle-list-expansion-button
   [list-expansion? toggle-list-expansion]
