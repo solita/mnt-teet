@@ -223,9 +223,15 @@
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
 
-(defn get-project-construction-activity
-  [rows]
-  (first (filter (comp #{:activity.name/construction} :activity/name) rows)))
+(defn get-project-construction-activity-db-id
+  [db rows]
+  (let [construction-activity (first (filter (comp #{:activity.name/construction} :activity/name) rows))
+        construction-activity-integration-id (:activity-db-id construction-activity)
+        construction-activity-ids (lookup db [:integration/id construction-activity-integration-id])]
+    (println "Construction activity " construction-activity)
+    (println "Construction activity :activity-integration-id" construction-activity-integration-id)
+    (println "Construction activity :db/id" (:db/id construction-activity-ids))
+    (:db/id construction-activity-ids)))
 
 (defn- get-project-attrs [db project-id rows]
   (let [phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
@@ -243,7 +249,7 @@
      :project-exists? (some? (:db/id thk-project))
      :project-has-owner? (and (some? (:db/id thk-project))
                            (project-db/project-has-owner? db [:thk.project/id project-id]))
-     :construction-activity (get-project-construction-activity rows)}))
+     :construction-activity-db-id (get-project-construction-activity-db-id db rows)}))
 
 
 (defn add-task-from-thk
@@ -273,7 +279,7 @@
    for all project's Activities of types: 4006 and 4009"
   [db [project-id rows]]
   (let [attrs (get-project-attrs db project-id rows)
-        construction-activity-id (:activity-db-id (:construction-activity attrs))
+        construction-activity-id (:construction-activity-db-id attrs)
         _ (println "COUNT of ROWS " (count rows))
         tx-data (reduce
                      #(conj (:new-tasks %1)
@@ -283,7 +289,7 @@
                                 (= (:activity/name %) :activity.name/owners-supervision)
                                 (= (:activity/name %) :activity.name/road-safety-audit)) rows))]
     (log/info "NEW TASKS: [" tx-data "]")
-   (:new-tasks tx-data)))
+    tx-data))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
@@ -379,9 +385,8 @@
           (mapcat
             (fn [prj]                                       ;; {"project-id" [{"rows"}..]}
               (when (teet-project? prj)
-                    (let [tasks-tx-maps (tasks-tx-data db prj)
-                          {:thk.project/keys [id lifecycles] :as _project}
-                          (first tasks-tx-maps)]
+                    (let [tasks-tx-maps (tasks-tx-data db prj)]
+                      (println "FROM TRANSDUSER tasks-tx-maps:" tasks-tx-maps)
                       tasks-tx-maps))))
           projects-csv)]
     (println "TX-IMPORT-TASKS" tx-import-tasks)
