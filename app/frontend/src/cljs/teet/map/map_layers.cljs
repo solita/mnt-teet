@@ -176,7 +176,7 @@
                              :params #js {:LAYERS layer
                                           :FORMAT "image/png"}})})]
        (.set layer "teet-source" name)
-       [name (layer/->OpenLayersTaso layer)]))))
+       [name (layer/->OpenLayersTaso layer nil)]))))
 
 (def create-wfs-layer
   (memoize
@@ -214,7 +214,7 @@
                       {:background-color theme-colors/gray-dark
                        :single-line? false
                        :height 300}))
-       {name (layer/->OpenLayersTaso layer)}))))
+       {name (layer/->OpenLayersTaso layer nil)}))))
 
 (defn query-layer
   "Layer for query that returns GeoJSON for area."
@@ -246,7 +246,7 @@
       (.setMaxResolution layer max-resolution))
     (.setLoader source loader)
     (.setStyle layer style-fn)
-    (layer/->OpenLayersTaso layer)))
+    (layer/->OpenLayersTaso layer nil)))
 
 
 (defmethod create-data-layer :teeregister

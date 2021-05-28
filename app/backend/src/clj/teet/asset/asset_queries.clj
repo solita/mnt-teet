@@ -264,7 +264,8 @@
         (map first
              (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
                                        :location/road-nr :location/carriageway
-                                       :location/start-km :location/end-km])
+                                       :location/start-km :location/end-km
+                                       :location/start-point :location/end-point])
                        :in $ [?a ...]]
                      adb (take result-count-limit ids)))]
     {:more-results? more-results?
@@ -273,7 +274,17 @@
                         (dissoc :location/start-point :location/end-point)
                         (cu/update-in-if-exists [:location/start-km] asset-model/format-location-km)
                         (cu/update-in-if-exists [:location/end-km] asset-model/format-location-km))
-                   assets)}))
+                   assets)
+     :geojson (cheshire/encode
+               {:type "FeatureCollection"
+                :features
+                (for [{:location/keys [start-point end-point] :as a} assets
+                      :when (and start-point end-point)]
+                  {:type "Feature"
+                   :properties {"oid" (:asset/oid a)
+                                "fclass" (:db/ident (:asset/fclass a))}
+                   :geometry {:type "LineString"
+                              :coordinates [start-point end-point]}})})}))
 
 (defquery :assets/geojson
   {:doc "Return GeoJSON for assets found by search."

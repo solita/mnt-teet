@@ -19,7 +19,14 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.util.collection :as cu]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [teet.map.openlayers.layer :as layer]
+
+            [ol.Map]
+            [ol.layer.Vector]
+            [ol.source.Vector]
+            [ol.Feature]
+            [ol.geom.Circle]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -35,9 +42,12 @@
            :on-change (fn [_evt v] (on-change v))}])
 
 (defmulti search-by-fields (fn [_e! _atl criteria] (:search-by criteria)))
+(defmulti search-by-map-layers (fn [_e! _atl criteria] (:search-by criteria)))
 
 (defmethod search-by-fields :default [_ _ _]
   [:span])
+
+(defmethod search-by-map-layers :default [_ _ _] {})
 
 (defmethod search-by-fields :current-location
   [e! atl {location :location radius :radius :as filters}]
@@ -45,6 +55,25 @@
   [filter-component {:e! e! :filters filters :atl atl}
    :radius "Radius"
    [radius-slider {}]])
+
+(defn- location-layer [location radius]
+  (let [g (ol.geom.Circle. (into-array location) radius)]
+    (layer/ol-layer
+     (ol.layer.Vector.
+      #js {:projection "EPSG:3301"
+           :source (ol.source.Vector.
+                    #js {:features
+                         #js [(doto (ol.Feature. #js {:geometry g} )
+                                (.setProperties #js {:radius radius}))]})
+           :style map-features/current-location-radius-style})
+     (fn [^ol.Map ol3 _layer]
+       (.fit (.getView ol3) g)))))
+
+(defmethod search-by-map-layers :current-location
+  [e! atl {:keys [location radius]}]
+  (when (and location radius)
+    {:search-by-current-location
+     (location-layer location radius)}))
 
 (defn- asset-filters [e! atl filters collapsed?]
   (let [opts {:e! e! :atl atl :filters filters}]
@@ -120,20 +149,20 @@
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
 
-(defn- assets-results [_ _ _ _]
+(defn- assets-results [_ _ _ _ _] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
     (r/create-class
      {:component-did-update
       (fn [this
-           [_ _ _ old-query _]]
-        (let [[_ _ _ new-query _] (r/argv this)]
+           [_ _ _ _ old-query _]]
+        (let [[_ _ _ _ new-query _] (r/argv this)]
           (when (not= old-query new-query)
             (next-map-key!))))
 
       :reagent-render
-      (fn [e! atl assets-query {:keys [assets more-results? result-count-limit]}]
+      (fn [e! atl criteria assets-query {:keys [assets geojson more-results? result-count-limit]}]
         (let [table-pane
               [:div {:style {:background-color theme-colors/white
                              :padding "0.5rem"}}
@@ -156,10 +185,16 @@
               [map-view/map-view e!
                {:full-height? true
                 :layers
-                {:asset-results
-                 (map-layers/query-layer e! :assets/geojson (:args assets-query)
-                                         {:style-fn map-features/asset-line-and-icon
-                                          :max-resolution 100})}}]]
+                (merge
+                 (search-by-map-layers e! atl criteria)
+                 (when geojson
+                   {:asset-results
+                    (map-layers/geojson-data-layer
+                     "asset-results"
+                     (js/JSON.parse geojson)
+                     map-features/asset-line-and-icon
+                     {;:fit-on-load? true
+                      })}))}]]
           [:<>
            [table-and-map-toggle show]
            (condp = @show
@@ -185,4 +220,4 @@
                              :defaultSize (if @filters-collapsed? 30 330)
                              :allowResize false}
         [asset-filters e! atl criteria filters-collapsed?]
-        [assets-results e! atl query results]]])))
+        [assets-results e! atl criteria query results]]])))
