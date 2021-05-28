@@ -174,7 +174,9 @@
             (next-map-key!))))
 
       :reagent-render
-      (fn [e! atl criteria assets-query {:keys [assets geojson more-results? result-count-limit]}]
+      (fn [e! atl criteria assets-query
+           {:keys [assets geojson more-results? result-count-limit
+                   highlight-oid]}]
         (let [table-pane
               [:div {:style {:background-color theme-colors/white
                              :padding "0.5rem"}}
@@ -188,6 +190,7 @@
                  :get-column asset-model/assets-listing-get-column
                  :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
                                        (tr [:fields %]))
+                 :on-row-hover (e! assets-controller/->HighlightResult)
                  :format-column format-assets-column
                  :data assets
                  :key :asset/oid}]]
@@ -205,7 +208,7 @@
                      (map-layers/geojson-data-layer
                       "asset-results"
                       (js/JSON.parse geojson)
-                      map-features/asset-line-and-icon
+                      (partial map-features/asset-line-and-icon highlight-oid)
                       {;:fit-on-load? true
                        })}))}]
                (when (= :current-location (:search-by criteria))
