@@ -81,6 +81,45 @@
               (tempids id)
               id))))
 
+(defcommand :asset/save-material
+  {:doc "Save material for a leaf component."
+   :context {:keys [user db]
+             adb :asset-db}
+   :payload {:keys [project-id parent-id material]}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/edit-cost-items {}}
+   :pre [(or (string? (:db/id material))
+             (= project-id (asset-db/material-project adb (:db/id material))))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]}
+  (let [id (:db/id material)
+        {:keys [db-after tempids]}
+        (tx
+         ^{:db :asset}
+         [(list 'teet.asset.asset-tx/save-material
+                parent-id
+                (asset-type-library/form->db
+                 (asset-type-library/rotl-map (asset-db/asset-type-library adb))
+                 material))])]
+    (d/pull db-after [:asset/oid]
+            (if (string? id)
+              (tempids id)
+              id))))
+
+(defcommand :asset/delete-material
+  {:doc "Delete a material in an existing component."
+   :context {:keys [user db]
+             adb :asset-db}
+   :payload {project-id :project-id material-id :db/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cost-items/delete-cost-items {}}
+   :pre [(= project-id (asset-db/material-project adb material-id))
+         ^{:error :boq-is-locked}
+         (boq-unlocked? adb project-id)]
+   :transact
+   ^{:db :asset}
+   [[:db/retractEntity material-id]]})
+
 (defn- valid-cost-group-price?
   "We want the price to be
    - non-negative

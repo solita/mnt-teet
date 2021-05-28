@@ -118,9 +118,14 @@
                       ;; Always pull the full asset even when focusing on a
                       ;; specific subcomponent.
                       ;; PENDING: what if there are thousands?
-                      (if (asset-model/component-oid? cost-item)
-                        (asset-model/component-asset-oid cost-item)
-                        cost-item))})))))
+                      (cond (asset-model/component-oid? cost-item)
+                            (asset-model/component-asset-oid cost-item)
+
+                            (asset-model/material-oid? cost-item)
+                            (asset-model/material-asset-oid cost-item)
+
+                            :else
+                            cost-item))})))))
 
 (s/def :boq-export/version integer?)
 (s/def :boq-export/unit-prices? boolean?)
