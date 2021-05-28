@@ -9,6 +9,8 @@
 (defrecord Search []) ; execute search on backend
 (defrecord SearchResults [results])
 
+(defrecord HighlightResult [result]) ; higlight a result item
+
 ;; Set search area by current location
 (defrecord SearchByCurrentLocation [])
 (defrecord SetCurrentLocation []) ; called when location changes
@@ -85,6 +87,7 @@
     (common-controller/update-page-state
      app [:criteria] merge
      {:search-by :current-location
+      :radius 10
       :ol-geolocation
       (doto (ol.Geolocation.
              #js {:projection "EPSG:3301"})
@@ -96,4 +99,10 @@
     (common-controller/update-page-state
      app [:criteria]
      (fn [{^ol.Geolocation g :ol-geolocation :as state}]
-       (assoc state :location (.getPosition g))))))
+       (assoc state :location (.getPosition g)))))
+
+  HighlightResult
+  (process-event [{result :result} app]
+    (common-controller/assoc-page-state
+     app
+     [:results :highlight-oid] (:asset/oid result))))

@@ -90,7 +90,8 @@
   "Search feature group or class...",
   :export-boq-filename "THK-{project}-BOQ-{version}.xlsx",
   :save-boq-version "Save BOQ version",
-  :manager {:link "Assets", :result-count "{count} features"},
+  :manager
+  {:link "Assets", :result-count "{count} features", :radius "Radius"},
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
   :materials {:label "Materials"},
