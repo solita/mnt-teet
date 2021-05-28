@@ -19,7 +19,8 @@
             [cheshire.core :as cheshire]
             [teet.util.coerce :refer [->long]]
             [teet.util.collection :as cu]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.util.geo :as geo]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -198,29 +199,32 @@
 (defn- bbq
   "Return set of :db/id value sof entities whose location
   start-point or end-point is within the bounding box."
-  [db xmin ymin xmax ymax]
-  (let [entities-within-range
-        (comp
-         (take-while (fn [{[x _y] :v}]
-                       (<= x xmax)))
-         (filter (fn [{[_x y] :v}]
-                   (<= ymin y ymax)))
-         (map :e))
+  ([db xmin ymin xmax ymax]
+   (bbq db xmin ymin xmax ymax (constantly true)))
+  ([db xmin ymin xmax ymax point-filter-fn]
+   (let [entities-within-range
+         (comp
+          (take-while (fn [{[x _y] :v}]
+                        (<= x xmax)))
+          (filter (fn [{[_x y] :v}]
+                    (<= ymin y ymax)))
+          (filter point-filter-fn)
+          (map :e))
 
-        start-within
-        (into #{}
-              entities-within-range
-              (d/index-range db {:attrid :location/start-point
-                                 :start [xmin ymin]
-                                 :limit -1}))
+         start-within
+         (into #{}
+               entities-within-range
+               (d/index-range db {:attrid :location/start-point
+                                  :start [xmin ymin]
+                                  :limit -1}))
 
-        end-within
-        (into #{}
-              entities-within-range
-              (d/index-range db {:attrid :location/end-point
-                                 :start [xmin ymin]
-                                 :limit -1}))]
-    (set/union start-within end-within)))
+         end-within
+         (into #{}
+               entities-within-range
+               (d/index-range db {:attrid :location/end-point
+                                  :start [xmin ymin]
+                                  :limit -1}))]
+     (set/union start-within end-within))))
 
 (defn fclass=
   "Find entities belonging to a single fclass"
@@ -239,6 +243,11 @@
 
 (defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
   (bbq db xmin ymin xmax ymax))
+
+(defmethod search-by :current-location [db _ [x y radius]]
+  (bbq db (- x radius) (- y radius) (+ x radius) (+ y radius)
+       (fn [{point :v}]
+         (<= (geo/distance point [x y]) radius))))
 
 (defn- search-by-map [db criteria-map]
   (reduce-kv (fn [acc by val]

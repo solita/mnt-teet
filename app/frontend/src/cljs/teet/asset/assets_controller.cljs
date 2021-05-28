@@ -33,6 +33,12 @@
     (assoc out :common/status s)
     out))
 
+(defmethod search-criteria :location [out {[x y] :location
+                                           :keys [radius search-by]}]
+  (if (= search-by :current-location)
+    (assoc out :current-location [x y radius])
+    out))
+
 (defn assets-query [criteria]
   (let [args (reduce (fn [out key]
                        (search-criteria out criteria key))
