@@ -104,9 +104,10 @@
    :location/carriageway (from-wfs :ms:soidutee_nr ->long)
    :location/start-km (from-wfs :ms:teeosa_meeter (comp bigdec road-model/m->km ->bigdec))
 
-   ;; FIXME: No status items in current schema file
-   #_:common/status #_(from-wfs :ms:hinne_trhinne_xv #(when (= % "0")
-                                                        :item/abandoned))
+   :common/status (from-wfs :ms:hinne_trhinne_xv
+                            #(if (= % "0")
+                               :item/abandoned
+                               :item/inuse))
 
    :asset/components
    [{:component/ctype :ctype/culvertpipe
@@ -192,11 +193,17 @@
                  {:fclass-name fclass-name})
       (do
         (future
-          (doseq [slice (estonia-slices 100)]
+          (doseq [slice (reverse (estonia-slices 100))]
             (log/info "Importing area slice: " slice)
-            (import-road-registry-features!
-             (environment/asset-connection)
-             (assoc client :cache-atom (atom {})) ; cache per slice
-             fclass wfs-type mapping
-             slice)))
+            (try
+              (import-road-registry-features!
+               (environment/asset-connection)
+               (assoc client :cache-atom (atom {})) ; cache per slice
+               fclass wfs-type mapping
+               slice)
+              (catch Exception e
+                (log/error e "Error while import slice")))))
         "{\"success\": true}"))))
+
+(comment
+  (import-ion {:input "{\"fclass\": \"culvert\"}"}))

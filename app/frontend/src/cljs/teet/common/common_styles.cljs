@@ -492,6 +492,8 @@
 
 (defn padding
   "Add padding. Amounts specified in rem unit."
+  ([all]
+   (padding all all))
   ([vertical horizontal]
    (padding vertical horizontal vertical horizontal))
   ([up right down left]
@@ -553,6 +555,17 @@
   []
   {:display :flex
    :flex-direction :column
+   :flex 1})
+
+(defn flex-1
+  []
+  {:flex 1})
+
+(defn flex-1-align-center-justify-center
+  []
+  {:display :flex
+   :justify-content :center
+   :align-items :center
    :flex 1})
 
 (defn min-width-0

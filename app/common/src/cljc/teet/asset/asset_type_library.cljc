@@ -58,6 +58,15 @@
 (def ctype? (partial has-type? :asset-schema.type/ctype))
 (def material? (partial has-type? :asset-schema.type/material))
 
+
+(defn leaf-ctype?
+  "Is `ctype`
+   - a component type
+   - that has no child component types"
+  [ctype]
+  (and (ctype? ctype)
+       (empty? (:ctype/_parent ctype))))
+
 (defn allowed-component-types
   "Return all ctypes that are allowed for the given fclass or ctype."
   [atl fclass-or-ctype]
@@ -67,6 +76,24 @@
     (:ctype/_parent (cu/find-matching #(and (or (fclass? %) (ctype? %))
                                             (= (:db/ident %) ident))
                                       atl))))
+
+(defn allowed-material-types
+  "Return all materials and products that are allowed for the given fclass or ctype"
+  [atl fclass-or-ctype]
+  (let [hierarchy (type-hierarchy atl fclass-or-ctype)
+        node (last hierarchy)
+        fgroup (-> hierarchy first :db/ident)]
+    (if (leaf-ctype? node)
+      (->> atl
+           :materials
+           ;; Is the fgroup in material's :material/fgroups?
+           (filter (fn [material]
+                     (->> material
+                          :material/fgroups
+                          (map :db/ident)
+                          set
+                          fgroup))))
+      [])))
 
 (defn- item-by-ident*
   [atl ident]

@@ -230,17 +230,13 @@
         loader (fn [extent _ _]
                  (let [url (common-controller/query-url
                             query (merge payload
-                                         (zipmap [:xmin :ymin :xmax :ymax]
-                                                 extent)))]
-                   (js/console.log "FETCH GEOJSON QUERY URL: " url)
+                                         {:bbox extent}))]
                    (-> (common-controller/fetch* e! nil url)
                        (.then #(.json %))
                        (.then (fn [json]
-                                (def *json json)
                                 (let [features (-> source
                                                    .getFormat
                                                    (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
-                                  (def *features features)
                                   (doto source
                                     (.addFeatures features)
                                     .refresh)))))))]

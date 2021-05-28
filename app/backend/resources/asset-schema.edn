@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-05-26T07:52:56.508-00:00"}
+  :tx/schema-imported-at #inst "2021-05-27T13:23:06.982-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -4204,11 +4204,50 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Heakskiidetud" "Approved"],
   :enum/attribute ":common/status"}
+ {:db/id ":item/artificalrock",
+  :db/ident :item/artificalrock,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["tehiskivim" "artificial rock"],
+  :enum/attribute ":crushedstone/stonetype"}
  {:db/id ":item/asdesigned",
   :db/ident :item/asdesigned,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Projekteeritud" "As-designed"],
   :enum/attribute ":common/status"}
+ {:db/id ":item/asphalttypedenseasphaltacsurf",
+  :db/ident :item/asphalttypedenseasphaltacsurf,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Tihe asfaltbetoon (AC Surf)" "Dense asphalt (AC Surf)"],
+  :enum/attribute ":asphalt/asphalttype"}
+ {:db/id ":item/asphalttypelightasphaltkab",
+  :db/ident :item/asphalttypelightasphaltkab,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kergasfaltbetoon (KAB)" "Light asphalt (KAB)"],
+  :enum/attribute ":asphalt/asphalttype"}
+ {:db/id ":item/asphalttypepermeableasphaltpa",
+  :db/ident :item/asphalttypepermeableasphaltpa,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Dreenasfaltbetoon (PA)" "Permeable asphalt (PA)"],
+  :enum/attribute ":asphalt/asphalttype"}
+ {:db/id ":item/asphalttypeporousasphaltacbase",
+  :db/ident :item/asphalttypeporousasphaltacbase,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Poorne asfaltbetoon (AC Base)" "Porous asphalt (AC Base)"],
+  :enum/attribute ":asphalt/asphalttype"}
+ {:db/id ":item/asphalttypestonemasticsasphalt",
+  :db/ident :item/asphalttypestonemasticsasphalt,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["Killustikmastiksasfalt (SMA)" "Stone mastics asphalt"],
+  :enum/attribute ":asphalt/asphalttype"}
+ {:db/id ":item/asphalttypevas",
+  :db/ident :item/asphalttypevas,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Valuasfalt (VAS)" "(VAS)"],
+  :enum/attribute ":asphalt/asphalttype"}
  {:db/id ":item/bcl_h1",
   :db/ident :item/bcl_h1,
   :asset-schema/type :asset-schema.type/enum,
@@ -4376,6 +4415,26 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Puit" "Timber"],
   :enum/attribute ":column/columnmaterial"}
+ {:db/id ":item/concreteclassC25",
+  :db/ident :item/concreteclassC25,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C25" "C25"],
+  :enum/attribute ":concrete/concreteclass"}
+ {:db/id ":item/concreteclassC35",
+  :db/ident :item/concreteclassC35,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C35" "C35"],
+  :enum/attribute ":concrete/concreteclass"}
+ {:db/id ":item/concreteclassC45",
+  :db/ident :item/concreteclassC45,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C45" "C45"],
+  :enum/attribute ":concrete/concreteclass"}
+ {:db/id ":item/concreteclassC55",
+  :db/ident :item/concreteclassC55,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C55" "C55"],
+  :enum/attribute ":concrete/concreteclass"}
  {:db/id ":item/created",
   :db/ident :item/created,
   :asset-schema/type :asset-schema.type/enum,
@@ -4423,6 +4482,11 @@
   ["Elastse täitega deformatsioonivuuk"
    "flexible plug expansion joint"],
   :enum/attribute ":expansionjoint/expansionjointtype"}
+ {:db/id ":item/ingeousrouck",
+  :db/ident :item/ingeousrouck,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["tardkivim" "igneous rock"],
+  :enum/attribute ":crushedstone/stonetype"}
  {:db/id ":item/inuse",
   :db/ident :item/inuse,
   :asset-schema/type :asset-schema.type/enum,
@@ -4501,6 +4565,11 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Lammutatud" "Demolished"],
   :enum/attribute ":common/status"}
+ {:db/id ":item/sedimentaryrock",
+  :db/ident :item/sedimentaryrock,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["settekivim" "sedimentary rock"],
+  :enum/attribute ":crushedstone/stonetype"}
  {:db/id ":item/signfoundationfoundationtypeconcretecircular",
   :db/ident :item/signfoundationfoundationtypeconcretecircular,
   :asset-schema/type :asset-schema.type/enum,

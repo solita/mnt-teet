@@ -10,8 +10,7 @@
             [teet.routes :as routes]
             cljs.reader
             [teet.asset.asset-type-library :as asset-type-library]
-            [reagent.core :as r]
-            [teet.ui.format :as format]))
+            [reagent.core :as r]))
 
 (defrecord AddComponentCancel [id])
 
@@ -75,6 +74,12 @@
 (defrecord DeleteComponent [id])
 (defrecord SaveComponent [component-id])
 (defrecord SaveComponentResponse [response])
+(defrecord DeleteMaterial [id])
+(defrecord SaveMaterial [material-id])
+(defrecord SaveMaterialResponse [response])
+(defrecord AddMaterial [type])
+(defrecord UpdateMaterialForm [form-data])
+(defrecord ResetMaterialForm [form-data])
 
 (defrecord UpdateForm [form-data])
 
@@ -114,15 +119,38 @@
      (and (asset-model/component-oid? id)
           id))))
 
+(defn- form-material-id [app]
+  (let [id (get-in app [:params :id])]
+    (or
+     ;; component query parameter specifies new component to add
+     (get-in app [:query :material])
+     ;; or existing material
+     (when (asset-model/material-oid? id)
+       id))))
+
+(defn- children-by-key [asset-or-component k]
+  (when-let [children (not-empty (k asset-or-component))]
+    [k children]))
+
+(defn- children
+  "Find children of the asset or component, returning [<chilren-key> <children>],
+   eg. [:component/materials <materials>]"
+  [asset-or-component]
+  (->> [:asset/components :component/components :component/materials]
+       (map (partial children-by-key asset-or-component))
+       (some identity)))
+
 (defn- form-state
   "Return the current form state."
   [app]
-  (if-let [component-id (form-component-id app)]
+  (if-let [target-id (or (form-material-id app)
+                         (form-component-id app))]
     ;; Get some nested component by id
     (let [by-id (fn by-id [{oid :asset/oid :as c}]
-                  (if (= component-id oid)
+                  (if (= target-id oid)
                     c
-                    (some by-id (:component/components c))))]
+                    (let [[_ cs] (children c)]
+                      (some by-id cs))))]
       (some by-id
             (common-controller/page-state app :cost-item :asset/components)))
 
@@ -134,8 +162,8 @@
           (let [c (if (= component-id oid)
                     (apply update-fn c args)
                     c)]
-            (if-let [sub-components (:component/components c)]
-              (assoc c :component/components
+            (if-let [[subcomponent-key sub-components] (children c)]
+              (assoc c subcomponent-key
                      (update-component sub-components component-id update-fn args))
               c))) components))
 
@@ -152,6 +180,15 @@
     ;; Update asset itself
     (apply common-controller/update-page-state
            app [:cost-item] update-fn args)))
+
+(defn- update-material-form
+  "Update material form state."
+  [app update-fn & args]
+  ;; Update some nested component by id
+  (common-controller/update-page-state
+   app [:cost-item :asset/components]
+   update-component (form-material-id app) update-fn args))
+
 
 (def locked?
   "Check from app state if BOQ version is locked."
@@ -276,6 +313,86 @@
                                         {:id oid})
                          :query nil})
                       common-controller/refresh-fx]))))
+
+  AddMaterial
+  (process-event [{:keys [type component-oid]} {:keys [page params query] :as app}]
+    (let [new-id (next-id! "m")]
+      (t/fx
+       (update-form app
+                    (fn [parent]
+                      (update parent :component/materials
+                              #(conj (or % [])
+                                     {:db/id new-id
+                                      :asset/oid new-id
+                                      :material/type type}))))
+       {:tuck.effect/type :navigate
+        :params params
+        :page page
+        :query (merge query {:material new-id})})))
+
+  DeleteMaterial
+  (process-event [{:keys [fetched-cost-item-atom id]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not deleting material, BOQ version is locked.")
+        app)
+      (let [project-id (get-in app [:params :project])]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/delete-material
+               :payload {:db/id id
+                         :project-id project-id}
+               :result-event common-controller/->Refresh}))))
+
+  SaveMaterial
+  (process-event [_ app]
+    (if (locked? app)
+      (do
+        (log/debug "Not saving, BOQ version is locked.")
+        app)
+      (let [form-data (form-state app)
+            {parent-id :asset/oid}
+            (-> (common-controller/page-state app :cost-item)
+                (asset-model/find-component-path (:asset/oid form-data))
+                butlast last)]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/save-material
+               :payload {:project-id (get-in app [:params :project])
+                         :parent-id parent-id
+                         :material (dissoc form-data
+                                           :material/materials
+                                           :location/geojson)}
+               :result-event ->SaveMaterialResponse}))))
+
+  SaveMaterialResponse
+  (process-event [{:keys [response]} {params :params :as app}]
+    (let [oid (:asset/oid response)]
+      (apply t/fx app
+             (remove nil?
+                     [(when (not= oid (params :id))
+                        {:tuck.effect/type :navigate
+                         :page :cost-item
+                         :params (merge (:params app)
+                                        {:id oid})
+                         :query nil})
+                      common-controller/refresh-fx]))))
+
+  UpdateMaterialForm
+  (process-event [{:keys [form-data]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not editing form, BOQ version is locked.")
+        app)
+      (update-material-form app #(merge % form-data))))
+
+  ResetMaterialForm
+  (process-event [{:keys [form-data]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not editing form, BOQ version is locked.")
+        app)
+      (update-material-form app (constantly form-data))))
 
   UpdateForm
   (process-event [{:keys [form-data]} app]

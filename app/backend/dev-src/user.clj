@@ -57,6 +57,12 @@
   (d/transact (environment/datomic-connection)
               {:tx-data (into [] maps)}))
 
+(defn atx
+  "Transact given maps to asset db"
+  [& maps]
+  (d/transact (asset-connection)
+              {:xt-data (into [] maps)}))
+
 (def mock-users tu/mock-users)
 
 (def manager-uid tu/manager-id)

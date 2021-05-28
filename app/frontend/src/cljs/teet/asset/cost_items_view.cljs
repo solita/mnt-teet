@@ -1,41 +1,41 @@
 (ns teet.asset.cost-items-view
   "Cost items view"
-  (:require [teet.project.project-view :as project-view]
-            [teet.ui.typography :as typography]
-            [teet.localization :refer [tr tr-enum] :as localization]
-            [teet.ui.buttons :as buttons]
+  (:require [clojure.string :as str]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.form :as form]
-            [teet.ui.select :as select]
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-type-library :as asset-type-library]
             [teet.asset.asset-ui :as asset-ui
              :refer [tr* label label-for select-fgroup-and-fclass]]
-            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
-            [teet.ui.text-field :as text-field]
-            [clojure.string :as str]
-            [teet.util.collection :as cu]
-            [teet.util.datomic :as du]
-            [teet.ui.context :as context]
-            [teet.ui.icons :as icons]
-            [herb.core :refer [<class]]
-            [teet.ui.common :as common]
-            [teet.ui.container :as container]
             [teet.asset.cost-items-controller :as cost-items-controller]
-            [teet.asset.asset-type-library :as asset-type-library]
-            [teet.asset.asset-model :as asset-model]
-            [teet.ui.url :as url]
+            [teet.asset.cost-items-map-view :as cost-items-map-view]
+            [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.localization :refer [tr tr-enum] :as localization]
+            [teet.project.project-view :as project-view]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.table :as table]
-            [teet.user.user-model :as user-model]
-            [teet.ui.format :as fmt]
-            [teet.ui.panels :as panels]
-            [teet.ui.query :as query]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.container :as container]
+            [teet.ui.context :as context]
             [teet.ui.date-picker :as date-picker]
-            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.ui.form :as form]
+            [teet.ui.format :as fmt]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
+            [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
-            [teet.asset.cost-items-map-view :as cost-items-map-view]))
+            [teet.ui.query :as query]
+            [teet.ui.select :as select]
+            [teet.ui.table :as table]
+            [teet.ui.text-field :as text-field]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]))
 
 
 
@@ -390,12 +390,12 @@
   [opts]
   [context/consume-many [:rotl :locked?] [attributes* opts]])
 
-(defn- add-component-menu* [allowed-components add-component! locked?]
+(defn- add-component-menu* [menu-label allowed-components add-component! locked?]
   (when-not locked?
     [:<>
      (if (> (count allowed-components) 3)
        [common/context-menu
-        {:label (tr [:asset :add-component])
+        {:label menu-label
          :icon [icons/content-add-circle-outline]
          :items (for [c allowed-components]
                   {:label (label c)
@@ -410,9 +410,9 @@
                                       :start-icon (r/as-element [icons/content-add])}
             (label c)]])))]))
 
-(defn- add-component-menu [allowed-components add-component!]
+(defn- add-component-menu [menu-label allowed-components add-component!]
   [context/consume :locked?
-   [add-component-menu* allowed-components add-component!]])
+   [add-component-menu* menu-label allowed-components add-component!]])
 
 
 
@@ -431,7 +431,7 @@
                     {:margin-left "-0.9rem"}))}])))])
 
 (defn- component-rows [{:keys [e! level components locked?
-                               delete-component!]}]
+                               delete-fn children-label-fn]}]
   (when (seq components)
     [:<>
      (doall
@@ -444,7 +444,7 @@
            [component-tree-level-indent level]
            [url/Link {:page :cost-item
                       :params {:id (:asset/oid c)}}
-            (:asset/oid c)]]
+            (children-label-fn c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 35 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
@@ -456,27 +456,55 @@
               [buttons/delete-button-with-confirm
                {:small? true
                 :icon-position :start
-                :action (r/partial delete-component! (:db/id c))}
+                :action (r/partial delete-fn (:db/id c))}
                (tr [:buttons :delete])]])]]
          [component-rows {:e! e!
                           :locked? locked?
                           :components (:component/components c)
+                          :children-label-fn children-label-fn
+                          :delete-fn delete-fn
                           :level (inc (or level 0))}]]))]))
 
-(defn- components-tree*
+(defn- children-tree*
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! asset]} locked?]
+  [{:keys [e! parent label-fn children-fn children-label-fn delete-fn]} locked?]
   [:<>
-   [typography/Heading3 (tr [:asset :components :label])
-    (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
+   [typography/Heading3 (label-fn parent)]
    [component-rows {:e! e!
                     :locked? locked?
-                    :components (:asset/components asset)
-                    :delete-component! (e! cost-items-controller/->DeleteComponent)}]])
+                    :components (children-fn parent)
+                    :children-label-fn children-label-fn
+                    :delete-fn delete-fn}]])
 
-(defn- components-tree [opts]
+(defn- components-tree
+  "Relevant options:
+   - label-fn takes the asset, produces
+   - delete-fn when called with db/id deletes the said entity"
+  [asset {:keys [e!] :as opts}]
   [context/consume :locked?
-   [components-tree* opts]])
+   [children-tree* (assoc opts
+                          :parent asset
+                          :label-fn #(str (tr [:asset :components :label])
+                                          " ("
+                                          (cu/count-matching-deep :component/ctype
+                                                                  (:asset/components %))
+                                          ")")
+                          :children-label-fn :asset/oid
+                          :children-fn :asset/components
+                          :delete-fn (e! cost-items-controller/->DeleteComponent))]])
+
+(defn- material-label [atl m]
+  (->> m :material/type (asset-type-library/item-by-ident atl) tr*))
+
+(defn- materials-list
+  [component {:keys [e! atl] :as opts}]
+  [context/consume :locked?
+   [children-tree* (assoc opts
+                          :parent component
+                          :label-fn (constantly (tr [:asset :materials :label]))
+                          :children-fn :component/materials
+                          :children-label-fn #(str (:asset/oid %) " " (material-label atl %))
+                          :delete-fn (e! cost-items-controller/->DeleteMaterial))]])
 
 (defn- form-paper
   "Wrap the form input portion in a light gray paper."
@@ -520,7 +548,6 @@
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
                         :cost-item-data form-data
-                        ;; TODO: cost-item-data here as well
                         :common :ctype/feature
                         :inherits-location? false
                         :relevant-roads relevant-roads}]])
@@ -530,20 +557,21 @@
        ;; Components (show only for existing)
        (when initial-data
          [:<>
-          [components-tree {:e! e!
-                            :asset form-data
-                            :allowed-components (:ctype/_parent feature-class)}]
+          [components-tree  form-data
+                            {:e! e!}]
 
           [add-component-menu
-           (asset-type-library/allowed-component-types atl fclass)
+           (tr [:asset :add-component])
+           (into []
+                 (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
-(defn- component-form-navigation [atl [asset :as component-path]]
+(defn- component-form-navigation [atl component-path]
   [:<>
    [breadcrumbs/breadcrumbs
     (for [p component-path]
       {:link [url/Link {:page :cost-item
-                        :params {:id (:asset/oid asset)}}
+                        :params {:id (:asset/oid p)}}
               (:asset/oid p)]
        :title (if (number? (:db/id p))
                 (:asset/oid p)
@@ -556,7 +584,8 @@
                                       atl
                                       (:asset/fclass (first component-path))))]
                          (map #(or (:asset/fclass %)
-                                   (:component/ctype %)))
+                                   (:component/ctype %)
+                                   (:material/type %)))
                          component-path)]
              [label-for p])
            (repeat " / "))))])
@@ -600,18 +629,29 @@
                        :common :ctype/component
                        :ctype ctype}]]]
 
+        (when (:component/materials component-data)
+          [materials-list component-data {:e! e! :atl atl}])
+
+        (when (not new?)
+          [:div
+           ;; Should have only either, never both
+           (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
+             [add-component-menu
+              (tr [:asset :add-component])
+              allowed-components
+              (e! cost-items-controller/->AddComponent)])
+           (when-let [allowed-materials (asset-type-library/allowed-material-types atl ctype)]
+             [add-component-menu
+              (tr [:asset :add-material])
+              allowed-materials
+              (e! cost-items-controller/->AddMaterial)])])
+
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
          [url/Link {:page :cost-item
                     :params {:id (:asset/oid cost-item-data)}}
           (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
-         [form/footer2]]]
-
-       (when (not new?)
-         (let [allowed-components (asset-type-library/allowed-component-types atl ctype)]
-           (when (seq allowed-components)
-             [add-component-menu allowed-components
-              (e! cost-items-controller/->AddComponent)])))])))
+         [form/footer2]]]])))
 
 (defn component-form
   [e! atl component-oid cost-item-data]
@@ -621,6 +661,60 @@
   (if (nil? (asset-model/find-component-path cost-item-data component-oid))
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
+
+
+(defn- material-form* [e! atl material-oid cost-item-data]
+  (r/with-let [initial-material-data
+               (last (asset-model/find-component-path cost-item-data
+                                                      material-oid))
+               new? (string? (:db/id initial-material-data))
+               material-type (asset-type-library/item-by-ident
+                              atl
+                              (:material/type initial-material-data))
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :material nil)
+                              #(cost-items-controller/->ResetMaterialForm initial-material-data))]
+    (let [material-path (asset-model/find-component-path cost-item-data material-oid)
+          material-data (last material-path)]
+      [:<>
+       (when (asset-model/material-oid? material-oid)
+         [typography/Heading2 material-oid])
+       [component-form-navigation atl material-path]
+
+       [form/form2
+        {:e! e!
+         :on-change-event cost-items-controller/->UpdateMaterialForm
+         :value material-data
+         :save-event cost-items-controller/->SaveMaterial
+         :cancel-event cancel-event
+         :disable-buttons? (= material-data initial-material-data)}
+
+        ;; Attributes for material
+        [form-paper
+         [:<>
+          (label material-type)
+          [attributes {:e! e!
+                       :attributes (some-> material-type :attribute/_parent)
+                       :inherits-location? true
+                       :material-oid material-oid
+                       :cost-item-data cost-item-data
+                       :common? false
+                       :material-type material-type}]]]
+
+        [:div {:class (<class common-styles/flex-row-space-between)
+               :style {:align-items :center}}
+         [url/Link {:page :cost-item
+                    :params {:id (:asset/oid cost-item-data)}}
+          (tr [:asset :back-to-cost-item] {:name (or (:common/name cost-item-data)
+                                                     (:asset/oid cost-item-data))})]
+         [form/footer2]]]])))
+
+(defn material-form
+  [e! atl material-oid cost-item-data]
+  (if (nil? (asset-model/find-component-path cost-item-data material-oid))
+    [CircularProgress]
+    [material-form* e! atl material-oid cost-item-data]))
+
 
 (defn- add-cost-item [app version]
   (when-not (asset-model/locked? version)
@@ -635,7 +729,7 @@
 
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items fgroup-link-fn fclass-link-fn list-features?]
+  [{:keys [_e! _app cost-items fgroup-link-fn fclass-link-fn list-features?]
     :or {list-features? true}}]
   (r/with-let [open (r/atom #{})
                toggle-open! #(swap! open cu/toggle %)]
@@ -1071,7 +1165,9 @@
   [e! {:keys [query params asset-type-library] :as app} {:keys [cost-item version relevant-roads] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
-                      (and (asset-model/component-oid? oid) oid))]
+                      (and (asset-model/component-oid? oid) oid))
+        material (or (get query :material)
+                     (and (asset-model/material-oid? oid) oid))]
     (if (= "new" oid)
       [new-cost-item-page e! app state]
 
@@ -1080,12 +1176,17 @@
         :app app
         :state state
         :left-panel-action [add-cost-item app version]}
-       (if component
-         ^{:key component}
-         [component-form e! asset-type-library component cost-item]
+       (cond material
+             ^{:key material}
+             [material-form e! asset-type-library material cost-item]
 
-         ^{:key oid}
-         [cost-item-form e! asset-type-library relevant-roads cost-item])])))
+             component
+             ^{:key component}
+             [component-form e! asset-type-library component cost-item]
+
+             :else
+             ^{:key oid}
+             [cost-item-form e! asset-type-library relevant-roads cost-item])])))
 
 (defn cost-item-page [e! app state]
   [wrap-atl-loader cost-item-page* e! app state])

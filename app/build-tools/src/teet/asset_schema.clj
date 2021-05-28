@@ -353,7 +353,7 @@
                       attr-name (get-in attrs-by-name [(:property item) :name])
                       ctype-fclass-or-material (or (every? ctypes-by-name (:ctype attr))
                                                    (get fclass-by-name (:ctype attr))
-                                                   (get material-by-name (:ctype attr)))
+                                                   (every? material-by-name (:ctype attr)))
                       all-exist? (and attr ctype-fclass-or-material
                                       (:name item)
                                       (exists? (:property item)))]

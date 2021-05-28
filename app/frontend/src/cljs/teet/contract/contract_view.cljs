@@ -10,7 +10,6 @@
             teet.contract.contract-spec
             [teet.localization :refer [tr]]
             [teet.ui.date-picker :as date-picker]
-            [teet.contract.contract-menu :as contract-menu]
             [teet.ui.select :as select]
             [teet.common.common-controller :as common-controller]
             [teet.ui.material-ui :refer [MenuList MenuItem
@@ -19,41 +18,12 @@
             [teet.contract.contract-model :as contract-model]
             [teet.ui.typography :as typography]
             [teet.ui.common :as common]
-            [clojure.string :as str]
-            [teet.environment :as environment]
-            [teet.common.responsivity-styles :as responsivity-styles]
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
             [teet.contract.contract-style :as contract-style]
             [teet.contract.contract-status :as contract-status]
-            [teet.ui.table :as table]))
-
-(defn contract-procurement-link
-  [{:thk.contract/keys [procurement-number]}]
-  [common/external-contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
-   (str/upper-case
-     (str (tr [:contracts :state-procurement-link]) " " procurement-number))])
-
-(defn contract-external-link
-  [{:thk.contract/keys [external-link procurement-number]}]
-  (when external-link
-    [common/external-contract-link {:href external-link}
-     (str/upper-case
-       (str (tr [:contracts :external-link]) " " procurement-number))]))
-
-(defn contract-thk-link
-  [{:thk.contract/keys [procurement-id]}]
-  [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
-   (str/upper-case
-     (str (tr [:contracts :thk-procurement-link]) " " procurement-id))])
-
-(defn contract-external-links
-  [contract]
-  [:div {:class (herb.core/join (<class common-styles/flex-row)
-                                (<class responsivity-styles/visible-desktop-only))}
-   [contract-procurement-link contract]
-   [contract-external-link contract]
-   [contract-thk-link contract]])
+            [teet.ui.table :as table]
+            [teet.contract.contract-common :as contract-common]))
 
 (defn target-table
   [targets]
@@ -121,16 +91,6 @@
    [form/footer2]])
 
 
-(defn contract-heading
-  [e! app contract]
-  [:div {:class (<class common-styles/margin 0 1 1 1)}
-   [:div {:class (<class common-styles/flex-row-space-between)}
-    [:div {:class (<class common-styles/flex-row-center)}
-     [contract-menu/contract-menu e! app contract]
-     [typography/TextBold {:class (<class common-styles/margin-left 0.5)}
-      (contract-model/contract-name contract)]]
-    [contract-external-links contract]]])
-
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
                         warranty-end-date cost] :as contract}]
@@ -167,7 +127,7 @@
 (defn contract-page
   [e! app {:thk.contract/keys [targets] :as contract}]
   [:div {:class (<class common-styles/flex-column-1)}
-   [contract-heading e! app contract]
+   [contract-common/contract-heading e! app contract]
    [:div {:class (<class contract-style/contract-page-container-style)}
     [:div {:class (<class common-styles/margin-bottom 1)}
      [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
@@ -189,10 +149,3 @@
        [target-table targets]
        [:span
         (tr [:contract :no-targets-for-contract])])]]])
-
-(defn partner-page
-  [e! app {:thk.contract/keys [targets] :as contract}]
-  [:div {:class (<class common-styles/flex-column-1)}
-   [contract-heading e! app contract]
-   [:div
-    [:div]]])
