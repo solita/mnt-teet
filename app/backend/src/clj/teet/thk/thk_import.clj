@@ -265,22 +265,24 @@
                                         :integration/id (integration-id/unused-random-small-uuid db)
                                         :meta/created-at (Date.)
                                         }]}]
+    (println "Generated TASK TX data " task-tx-data)
     task-tx-data))
 
-(defn tasks-tx-data [db [project-id rows]]
+(defn tasks-tx-data
+  "collect new tasks tx-s as [{task1 params} {task2 params} ...]
+   for all project's Activities of types: 4006 and 4009"
+  [db [project-id rows]]
   (let [attrs (get-project-attrs db project-id rows)
-        ;; will collect new tasks tx-s as [{task1 params} {task2 params} ...]
-        ;; for all project's Activities of types: 4006 and 4009
-        phases (:phases attrs)
-        tx-data {:new-tasks []}]
-    (println "PHASES count" (count phases))
-    (for [[phase-id activities] phases]
-      (map
-        ;; Only process 4006 and 4009 typefk activities here
-        #(comp
-           (println "Received activity" (:activity-db-id %))
-           (assoc tx-data :new-tasks (add-task-from-thk db % (:activity-db-id %))))
-        (filter #(= (:activity/name %) :activity.name/construction) activities)))
+        construction-activity-id (:activity-db-id (:construction-activity attrs))
+        _ (println "COUNT of ROWS " (count rows))
+        tx-data (reduce
+                     #(conj (:new-tasks %1)
+                        (add-task-from-thk db %2 construction-activity-id))
+                     {:new-tasks []}
+                     (filter #(or
+                                (= (:activity/name %) :activity.name/owners-supervision)
+                                (= (:activity/name %) :activity.name/road-safety-audit)) rows))]
+    (log/info "NEW TASKS: [" tx-data "]")
    (:new-tasks tx-data)))
 
 (defn teet-project? [[_ [p1 & _]]]
