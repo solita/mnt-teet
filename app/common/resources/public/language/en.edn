@@ -55,6 +55,7 @@
  :asset
  {:unlock-contract-boq-warning
   "The Cost Item list is in the Contract phase, are you sure that you want to change it, and are you aware that you need to change the budget and inform the management",
+  :add-material "Add material",
   :totals-table
   {:properties "Cost grouping",
    :project-total "Total {total} EUR",
@@ -92,6 +93,7 @@
   :manager {:link "Assets", :result-count "{count} features"},
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
+  :materials {:label "Materials"},
   :location
   {:hide-map "Hide map",
    :no-road-found-for-points "No road found for points",
@@ -110,6 +112,7 @@
    :fgroup "Asset Features",
    :header "Road Object Type Library (ROTL)",
    :common-ctype "Common properties",
+   :product "Products",
    :link "ROTL",
    :label "Label",
    :values "Values",
@@ -221,6 +224,8 @@
  :contract
  {:no-targets-for-contract
   "Contract integration failed and this contract doesn't have any valid targets. Contact administration for a bug report",
+  :partner-information-text
+  "Please select or add new companies, subcontractors or persons from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
   :company-search-placeholder "Enter company name or business id",
   :related-contracts "RELATED CONTRACTS",
@@ -742,6 +747,8 @@
   "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
   "Task status does not allow for files to be added",
+  :business-registry-code-in-use
+  "Business registry code is already in use.",
   :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",

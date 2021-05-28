@@ -362,7 +362,7 @@
                               ;; count the quantity field values
                               (or (ffirst
                                    (d/q '[:find (sum ?q)
-                                          :where [?item :common/quantity ?q]
+                                          :where [?item :component/quantity ?q]
                                           :in $ [?item ...]]
                                         db (map key items))) 0))]
                (merge item
@@ -391,6 +391,13 @@
     (if-let [parent-component (:component/_components component)]
       (recur parent-component)
       (cost-item-project db (get-in component [:asset/_components :db/id])))))
+
+(defn material-project
+  "Returns the THK project id for the material."
+  [db material-id]
+  (let [material (du/entity db material-id)]
+    (when-let [component-id (-> material :component/_materials :db/id)]
+      (component-project db component-id))))
 
 (defn item-type
   "Return item type, :asset or :component."
@@ -452,6 +459,29 @@
    feature-oid
    (inc (max-component-oid-number db feature-oid))))
 
+(defn next-material-oid
+  "Get next OID for a new material in component."
+  [db component-oid]
+  {:pre [(asset-model/component-oid? component-oid)]}
+  (asset-model/material-oid
+   component-oid
+   (inc
+    (reduce (fn [max-num [component-oid]]
+              (let [[_ _ _ _ n] (str/split component-oid #"\-")
+                    num (Long/parseLong n)]
+                (max max-num num)))
+            0
+            (d/q '[:find ?oid
+                   :where
+                   [_ :asset/oid ?oid]
+                   [(> ?oid ?start)]
+                   [(< ?oid ?end)]
+                   :in $ ?start ?end]
+                 db
+                 ;; Finds all material OIDs for this component
+                 (str component-oid "-")
+                 (str component-oid "."))))))
+
 (defn project-boq-version
   "Fetch the latest BOQ version entity for the given THK project."
   [db thk-project-id]
@@ -511,3 +541,19 @@
       (throw (ex-info "No version creation time found"
                       {:version-id version-id}))
       (d/as-of db c))))
+
+(defn leaf-component?
+  "Is the component a leaf component? A component is a leaf component if
+  the component type does not allow child components."
+  [db component-id]
+  ;; Does there exist a ?ctype such that
+  ;; - ?ctype is the ctype of component-id and
+  ;; - ?ctype is no other ctype's parent
+  (->> (d/q '[:find (some? ?ctype)
+              :where
+              [?cid :component/ctype ?ctype]
+              (not [_ :ctype/parent ?ctype])
+              :in $ ?cid]
+            db component-id)
+       ffirst
+       boolean))
