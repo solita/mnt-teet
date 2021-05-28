@@ -60,9 +60,8 @@
                                  [:contracts :contracts-list :results])))]])
 
 (defn contracts-list
-  [e! contracts open-all?]
+  [e! contracts]
   (r/with-let [list-expansion? (r/atom false)
-
                contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))
                toggle-list-expansion #(do
                                         (swap! list-expansion? not)
@@ -224,8 +223,7 @@
                change-shortcut #(swap! filtering-atom assoc :shortcut %)
                input-change (fn [key value]
                               (swap! filtering-atom assoc key value))
-               clear-filters #(reset! filtering-atom default-filtering-value)
-               open-all? true]
+               clear-filters #(reset! filtering-atom default-filtering-value)]
     [Grid {:container true}
      [Grid {:item true
             :xs 12}
@@ -241,7 +239,6 @@
         {:e! e!
          :query :contracts/list-contracts
          :args {:search-params @filtering-atom
-                :refresh (:contract-refresh route)
-                :open-all? open-all?}
+                :refresh (:contract-refresh route)}
          :simple-view [contracts-list e!]}
         250]]]]))
