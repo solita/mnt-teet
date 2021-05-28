@@ -23,6 +23,12 @@
     :thk.contract/start-of-work (dateu/dec-days (dateu/now) 5)
     :thk.contract/deadline (dateu/inc-days (dateu/now) 31)}
 
+   {:db/id "deadline-approaching-start-of-work-not-passed"
+    :thk.contract/procurement-id "deadline-approaching-start-of-work-not-passed"
+    :thk.contract/procurement-part-id "deadline-approaching-start-of-work-not-passed"
+    :thk.contract/start-of-work (dateu/inc-days (dateu/now) 5)
+    :thk.contract/deadline (dateu/inc-days (dateu/now) 29)}
+
    {:db/id "in-progress-contract2"
     :thk.contract/procurement-id "111"
     :thk.contract/procurement-part-id "222"
@@ -81,77 +87,95 @@
   (testing "Contract statuses"
     (apply tu/tx contract-txes)
     (testing "By default the contract status is :thk.contract.status/signed"
-      (let [contract (contract-db/get-contract
-                       (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["123" "12"]])]
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["123" "12"]]
+            contract (contract-db/get-contract (tu/db) contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/signed))))
 
     (testing "If contract start of work in the future the contract status is :thk.contract.status/signed"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["22" "33"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["22" "33"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/signed))))
 
-    (testing "If contract has no deadlines and start of work passed the contract status is :thk.contract.status/in-progress"
-      (let [contract (contract-db/get-contract
+    (testing "If the deadline is approaching (< 30 days until deadline) and start of work is not passed, status should be deadline approaching"
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["deadline-approaching-start-of-work-not-passed"
+                                                                            "deadline-approaching-start-of-work-not-passed"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["33" "44"]])]
+                       contract-eid)]
+        (is (= (:thk.contract/status contract)
+               :thk.contract.status/deadline-approaching))))
+
+    (testing "If contract has no deadlines and start of work passed the contract status is :thk.contract.status/in-progress"
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["33" "44"]]
+            contract (contract-db/get-contract
+                       (tu/db)
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/in-progress))))
 
     (testing "After start of work date and time until deadline is more than 30 days status is in-progress"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["123" "123"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["123" "123"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/in-progress))))
     (testing "After start of work date and time until extended deadline is more than 30 days status is in-progress"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["111" "222"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["111" "222"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/in-progress))))
     (testing "Time until deadline is less than 30 days the status is deadline-approaching"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["11" "22"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["11" "22"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/deadline-approaching))))
 
     (testing "Deadline is in the past so contract is in status deadline overdue"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["11111" "22222"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["11111" "22222"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/deadline-overdue))))
 
     (testing "Extended deadline is in the past so contract is in status deadline overdue"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["1111" "2222"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["1111" "2222"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/deadline-overdue))))
 
     (testing "Contract is in warranty when deadline has passed"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["2" "3"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["2" "3"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/warranty))))
 
     (testing "Contract is in warranty when extended deadline has passed"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["3" "4"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["3" "4"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/warranty))))
 
     (testing "Contract is completed when both deadlines and warranty end date has passed"
-      (let [contract (contract-db/get-contract
+      (let [contract-eid [:thk.contract/procurement-id+procurement-part-id ["4" "5"]]
+            contract (contract-db/get-contract
                        (tu/db)
-                       [:thk.contract/procurement-id+procurement-part-id ["4" "5"]])]
+                       contract-eid)]
         (is (= (:thk.contract/status contract)
                :thk.contract.status/completed))))
 

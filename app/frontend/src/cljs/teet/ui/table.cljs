@@ -95,10 +95,11 @@
 (defn- db-id-key [row]
   (str (:db/id row)))
 
-(defn listing-body [{:keys [rows on-row-click columns column-align get-column format-column key]
-                     :or {get-column get
-                          key db-id-key
-                          format-column default-format-column}}]
+(defn listing-body
+  [{:keys [rows on-row-click columns column-align get-column format-column key on-row-hover]
+    :or {get-column get
+         key db-id-key
+         format-column default-format-column}}]
   [TableBody {}
    (doall
     (for [row rows]
@@ -106,7 +107,9 @@
       [TableRow (merge
                  {:class (<class row-style)}
                  (when on-row-click
-                   {:on-click (r/partial on-row-click row)}))
+                   {:on-click (r/partial on-row-click row)})
+                 (when on-row-hover
+                   {:on-mouse-over (r/partial on-row-hover row)}))
        (doall
         (for [column columns]
           ^{:key (name column)}

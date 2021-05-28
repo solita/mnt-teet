@@ -126,6 +126,7 @@
   "lock_open"
   "loyalty"
   "markunread_mailbox"
+  "manage_accounts"
   "maximize"
   "minimize"
   "motorcycle"

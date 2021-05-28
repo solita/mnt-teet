@@ -130,8 +130,9 @@
 
 (defn partners-page-container
   []
-  {:padding "2rem"
-   :flex 1})
+  {:background-color theme-colors/white
+   :flex 1
+   :display :flex})
 
 (defn project-contract-container-style
   []
@@ -139,3 +140,9 @@
   {:margin-bottom "1rem"
    :padding-bottom "1rem"
    :border-bottom (str "1px solid " theme-colors/gray-lighter)})
+
+
+(defn contract-partners-panel-style
+  []
+  {:min-width "400px"
+   :border-right "1px solid black"})

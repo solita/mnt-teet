@@ -98,6 +98,7 @@
 (defrecord RPC [rpc-effect-params])
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
+(defrecord NavigateWithExistingAsDefault [page params query])
 (defrecord NavigateWithSameParams [page])
 (defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
 (defrecord ResponseError [err]) ; handle errors in HTTP response
@@ -214,6 +215,15 @@
            :query (if (nil? value)
                     (dissoc query param)
                     (assoc query param value))}))
+
+  NavigateWithExistingAsDefault
+  (process-event [{new-page :page new-params :params new-query :query} {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (or new-page page)
+           :params (or new-params params)
+           :query (or new-query query)}))
+
 
   ResponseError
   (process-event [{err :err} app]
@@ -535,9 +545,12 @@
                (apply update-fn page-state args))))
 
 (defn assoc-page-state
-  "Assoc value to current page state."
-  [{page :page :as app} path value]
-  (assoc-in app (into [:route page] path) value))
+  "Assoc value(s) to current page state."
+  [{page :page :as app} & paths-and-values]
+  (reduce (fn [app [path value]]
+            (assoc-in app (into [:route page] path) value))
+          app
+          (partition 2 paths-and-values)))
 
 (defn page-state
   "Get the state of the current page.
@@ -640,11 +653,11 @@
   t/Event
   (process-event [_ app]
     (t/fx app
-      {:tuck.effect/type :command!
-       :command command
-       :payload form-data
-       :success-message confirmation-message
-       :result-event (partial ->SaveFormResponse on-success-fx)})))
+          {:tuck.effect/type :command!
+           :command command
+           :payload form-data
+           :success-message confirmation-message
+           :result-event (partial ->SaveFormResponse on-success-fx)})))
 
 
 (defn ^:export test-command
