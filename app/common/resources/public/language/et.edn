@@ -742,6 +742,7 @@
   "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
   "Ülesande staatus ei luba selle alla faile üles laadida",
+  :business-registry-code-in-use nil,
   :file-too-large "Fail on liiga suur",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",

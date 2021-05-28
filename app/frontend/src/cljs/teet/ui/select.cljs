@@ -6,7 +6,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [tuck.core :as t]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-tree]]
             [teet.user.user-info :as user-info]
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
@@ -317,7 +317,7 @@
 
 (defn- user-select-popper []
   {:padding "0.3rem"
-   :overflow "scroll"
+   :overflow-y "scroll"
    :z-index 99})
 
 (defn- user-select-entry [highlight?]
@@ -330,8 +330,7 @@
 
 (defn- after-result-entry
   []
-  {:padding "0.5rem"
-   :background-color theme-colors/gray-lightest})
+  {:padding "0.5rem"})
 
 (defn- arrow-navigation
   "Arrow navigation key handler for select-search results"
@@ -483,7 +482,7 @@
 
                   :style {:z-index 9999} ; Must have high z-index to use in modals
                   }
-          [Paper {:style {:width (.-clientWidth current-input-ref) :height 300}
+          [Paper {:style {:width (.-clientWidth current-input-ref) :max-height 300}
                   :class ["user-select-popper" (<class user-select-popper)]}
            (if loading?
              [CircularProgress {:size 20}]
@@ -500,14 +499,17 @@
                                          (on-change result))}
                            (format-result result)])
                         results)
-                [:span.select-user-no-results {:style {:padding "0.5rem"}}
+                [:p.select-user-no-results {:style {:padding "0.5rem"}}
                  no-results])
-              (when-let [{:keys [title on-click]} after-results-action]
+              (when-let [{:keys [title on-click icon]} after-results-action]
                 [:<>
                  [Divider]
                  [:div {:class (<class after-result-entry)}
                   [buttons/link-button
-                   {:on-click on-click} title]]])])]])])))
+                   {:on-click on-click
+                    :style {:display :flex
+                            :align-items :center}}
+                   icon title]]])])]])])))
 
 (defn- multiselect-chip-style []
   ^{:pseudo {:focus {:border-color "#40a9ff"
@@ -730,3 +732,12 @@
                                                        :disabled (boolean disabled)
                                                        :on-change #(let [checked? (-> % .-target .-checked)]
                                                                      (on-change checked?))}])}])
+
+(defn country-select
+  [opts]
+  [:div
+   [form-select (merge
+                  opts
+                  {:format-item #(tr [:countries %])
+                   :items (-> (tr-tree [:countries])
+                              keys)})]])

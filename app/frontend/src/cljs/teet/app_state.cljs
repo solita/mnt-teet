@@ -6,7 +6,8 @@
                       :navigation {:open? false}
                       :map        {:road-buffer-meters (str road-model/default-road-buffer-meters)
                                    :layers [{:type :projects
-                                             :id (random-uuid)}]}}))
+                                             :id (random-uuid)}]}
+                      :forms {:new-partner {:company/country :ee}}}))
 
 (defonce user (r/cursor app [:user]))
 

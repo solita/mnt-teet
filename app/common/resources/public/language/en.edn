@@ -747,6 +747,8 @@
   "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
   "Task status does not allow for files to be added",
+  :business-registry-code-in-use
+  "Business registry code is already in use.",
   :file-too-large "File is too large",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",

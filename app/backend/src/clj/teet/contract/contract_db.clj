@@ -112,6 +112,19 @@
   [[contract status]]
   (assoc contract :thk.contract/status status))
 
+(defn get-contract-with-partners
+  [db contract-eid]
+  (-> (d/q '[:find (pull ?c [* {:company-contract/_contract [* {:company-contract/company [*]}]}]) ?status
+             :where
+             (contract-status ?c ?status ?now)
+             :in $ % ?c ?now]
+           db
+           contract-status-rules
+           contract-eid
+           (Date.))
+      first
+      contract-with-status))
+
 (defn get-contract
   [db contract-eid]
   (-> (d/q '[:find (pull ?c [*]) ?status

@@ -28,8 +28,7 @@
    :authorization {}}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
-        ;; TODO add partners info query to result
-        result (-> (contract-db/get-contract
+        result (-> (contract-db/get-contract-with-partners
                      db
                      contract-eid)
                  (assoc

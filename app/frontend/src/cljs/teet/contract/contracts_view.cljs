@@ -9,19 +9,18 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
-            [teet.common.common-styles :as common-styles]
             [clojure.string :as str]
             [teet.ui.url :as url]
             [teet.ui.common :as common]
             [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]
-            [teet.contract.contract-view :as contract-view]
+            [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
             [teet.ui.typography :as typography]
             [teet.ui.container :as container]))
 
 (defn contract-card
-  [e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
+  [_ {:thk.contract/keys [procurement-id external-link]
        contract-name :thk.contract/name :as contract}]
   (r/with-let [container-open? (r/atom false)]
     [container/collapsible-container {:on-toggle #(swap! container-open?
@@ -31,12 +30,12 @@
 
      [:<>
       [:span (pr-str contract)]
-      [contract-view/contract-procurement-link contract]
+      [contract-common/contract-procurement-link contract]
       (when external-link
-        [contract-view/contract-external-link contract])
+        [contract-common/contract-external-link contract])
       [common/external-contract-link {:href (str (environment/config-value :contract :thk-procurement-url) procurement-id)}
-        (str/upper-case
-          (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
+       (str/upper-case
+         (str (tr [:contracts :thk-procurement-link]) " " procurement-id))]
       [url/Link {:page :contract
                  :params {:contract-ids (contract-model/contract-url-id contract)}}
        (str "LINK TO THIS CONTRACT" (contract-model/contract-url-id contract))]]]))
@@ -50,13 +49,11 @@
                                   :on-click toggle-list-expansion}
    (if @list-expansion?
      (tr [:contracts :contracts-list :collapse-all])
-     (tr [:contracts :contracts-list :expand-all]))]
-  )
+     (tr [:contracts :contracts-list :expand-all]))])
 
 (defn contacts-list-header
-  [{:keys [contracts-count list-expansion? toggle-list-expansion]}]
+  [{:keys [contracts-count]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
-   [toggle-list-expansion-button list-expansion? toggle-list-expansion]
    [typography/SmallText (str contracts-count " "
                            (tr (if (= contracts-count 1)
                                  [:contracts :contracts-list :result]
@@ -150,8 +147,7 @@
                       :field-options {:items contract-model/contract-statuses
                                       :format-item #(tr [:contract %])
                                       :attribute :thk.contract/status
-                                      :show-empty-selection? true}}]
-   ])
+                                      :show-empty-selection? true}}]])
 
 (defmulti filter-input (fn [input-options filter-field-type]
                          filter-field-type))
@@ -213,10 +209,10 @@
                       :filters-visibility? @filters-visibility?
                       :toggle-filters-visibility toggle-filters-visibility}]
      [filter-inputs {:e! e!
-                   :filter-values @filtering-atom
-                   :input-change input-change
-                   :filters-visibility? @filters-visibility?
-                   :clear-filters clear-filters}]]))
+                     :filter-values @filtering-atom
+                     :input-change input-change
+                     :filters-visibility? @filters-visibility?
+                     :clear-filters clear-filters}]]))
 
 ;; Targeted from routes.edn will be located in route /contracts
 (defn contracts-listing-view
