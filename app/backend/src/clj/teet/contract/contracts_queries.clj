@@ -123,8 +123,9 @@
    :project-id nil
    :authorization {}}
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
-      (sort-by :meta/created-at)
-      reverse))
+    (sort-by :meta/created-at)
+    reverse
+    (mapv du/idents->keywords)))
 
 (defquery :contracts/project-related-contracts
   {:doc "Return a list of contracts related to the given project"
@@ -135,5 +136,4 @@
   (->> (contract-db/project-related-contracts db [:thk.project/id project-id])
        (sort-by
          (comp contract-model/contract-status-order :thk.contract/status))
-       vec
-    (mapv du/idents->keywords)))
+       vec))

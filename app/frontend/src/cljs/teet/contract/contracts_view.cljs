@@ -34,8 +34,6 @@
     (str (tr [:contracts :contracts-list :view]))]])
 
 (defn contract-card
-  ;[e! {:thk.contract/keys [procurement-id procurement-part-id procurement-number external-link]
-  ;     contract-name :contract-model/name :as contract}]
   [e! contract contract-expansion-atom]
   (r/with-let []
     [container/collapsible-container {:class (<class contract-style/contract-card-style)
@@ -49,7 +47,7 @@
                                                     update-in [(:db/id contract)] (fn [x] (not x)))
                                       :open? (get @contract-expansion-atom (:db/id contract))}
      ""
-     [:<>
+     [:div {:class (<class contract-style/contract-card-details-style)}
       [contract-view/contract-external-links contract]
       [contract-view/contract-information-row contract]]]))
 
@@ -68,7 +66,7 @@
 (defn contacts-list-header
   [{:keys [contracts-count list-expansion? toggle-list-expansion]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
-   [toggle-list-expansion-button list-expansion? toggle-list-expansion]
+   ;[toggle-list-expansion-button list-expansion? toggle-list-expansion]
    [typography/SmallText (str contracts-count " "
                            (tr (if (= contracts-count 1)
                                  [:contracts :contracts-list :result]
@@ -76,7 +74,7 @@
 
 (defn contracts-list
   [e! contracts]
-  (r/with-let [list-expansion? (r/atom true)
+  (r/with-let [list-expansion? (r/atom false)
                contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) @list-expansion?)) {} contracts))
                toggle-list-expansion #(do
                                         (swap! list-expansion? (fn [x] (not x)))

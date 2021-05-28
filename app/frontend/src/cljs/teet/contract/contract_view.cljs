@@ -49,7 +49,7 @@
   [:div {:class (herb.core/join (<class common-styles/flex-row)
                                 (<class responsivity-styles/visible-desktop-only))}
    [contract-procurement-link contract]
-   ;[contract-external-link contract]
+   [contract-external-link contract]
    [contract-thk-link contract]])
 
 (defn target-table

@@ -36,10 +36,23 @@
                :flex 1}}}
   {:display :flex
    :flex 1})
+
 (defn contract-card-header-component-status-style
   []
   {:height "1.75rem"
    :display :flex})
+
+(defn contract-card-details-style
+  []
+  ^{:combinators {[:descendant :pseudo :first-child] {:margin-bottom "1.5rem"
+                            :background-color :red}}}
+  {:margin-left "2.175rem"
+   :margin-top "1.75rem"
+   :display :grid
+   :grid-template-columns "repeat(1, 1fr)"
+   :grid-template-rows "repeat(2, auto)"
+   :gap "1.5rem"})
+
 (defn contracts-list-style
   []
   {:margin-top "3.857rem"})
