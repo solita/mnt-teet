@@ -339,7 +339,7 @@
                     :attribute/keys [mandatory?]
                     :asset-schema/keys [unit] :as attr} attrs
                    :let [type (:db/ident valueType)
-                         unit (if (= ident :common/quantity)
+                         unit (if (= ident :component/quantity)
                                 (:component/quantity-unit ctype)
                                 unit)]]
                ^{:key (str ident)}
