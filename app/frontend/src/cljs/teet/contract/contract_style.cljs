@@ -89,7 +89,7 @@
 
 (defn partners-page-container
   []
-  {:background-color :white
+  {:background-color theme-colors/white
    :flex 1
    :display :flex})
 
