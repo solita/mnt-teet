@@ -62,6 +62,13 @@
     [(contract-status ?c ?s ?now)
      [?c :thk.contract/start-of-work ?start-of-work]
      [(< ?now ?start-of-work)]
+     (or-join [?c ?now]
+              (and (contract-deadline ?c ?act-dl)
+                   [(teet.util.date/dec-days ?act-dl 30) ?deadline-soon]
+                   [(> ?act-dl ?now)]
+                   [(< ?now ?deadline-soon)])
+              (and [(missing? $ ?c :thk.contract/deadline)]
+                   [(missing? $ ?c :thk.contract/extended-deadline)]))
      [(ground :thk.contract.status/signed) ?s]]
     ;In progress - start of work given and that date has passed and deadline > 30
     [(contract-status ?c ?s ?now)
@@ -74,7 +81,7 @@
                 [(< ?now ?deadline-soon)])
               (and
                 [(missing? $ ?c :thk.contract/deadline)]
-                [(missing? $ ?c :thk.contract/actual-deadline)]))
+                [(missing? $ ?c :thk.contract/extended-deadline)]))
      [(ground :thk.contract.status/in-progress) ?s]]
     ;Deadline approaching - Days until deadline < 30 deadline is given
     [(contract-status ?c ?s ?now)
@@ -125,18 +132,25 @@
       first
       contract-with-status))
 
+(defn contract-query
+  [db contract-eid]
+  (d/q '[:find (pull ?c [*]) ?status
+         :where
+         (contract-status ?c ?status ?now)
+         :in $ % ?c ?now]
+       db
+       contract-status-rules
+       contract-eid
+       (Date.)))
+
 (defn get-contract
   [db contract-eid]
-  (-> (d/q '[:find (pull ?c [*]) ?status
-             :where
-             (contract-status ?c ?status ?now)
-             :in $ % ?c ?now]
-           db
-           contract-status-rules
-           contract-eid
-           (Date.))
-      first
-      contract-with-status))
+  (let [query-result (contract-query db contract-eid)
+        query-count (count query-result)]
+    (assert (= 1 query-count) (str "Contract status matches more than 1 rule, matched: " query-count))
+    (-> query-result
+        first
+        contract-with-status)))
 
 (defn- format-target-information
   [[target project activity]]
