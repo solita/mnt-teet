@@ -461,6 +461,8 @@
          [component-rows {:e! e!
                           :locked? locked?
                           :components (:component/components c)
+                          :children-label-fn children-label-fn
+                          :delete-fn delete-fn
                           :level (inc (or level 0))}]]))]))
 
 (defn- children-tree*
