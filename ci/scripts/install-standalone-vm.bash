@@ -59,7 +59,7 @@ EOF
  :auth {:jwt-secret "$JWT_SECRET"
         :basic-auth-password "$(ssm-get /teet/api/basic-auth-password)"}
  :env :dev
- :api-url "http://localhost:3000"
+ :api-url "https://$MYDNS:3443"
  :enabled-features #{:road-information-view
                      :meetings
                      :component-view
@@ -127,8 +127,6 @@ function control-datomic-bastion-ssh-access {
     # also set up revocation for it in exit trap (but it's fail-open..)
     local SG
     SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)    
-    local MYIP
-    MYIP=$(curl http://checkip.amazonaws.com)
     if [ "$1" = on ]; then
 	aws ec2 authorize-security-group-ingress \
 	    --group-id "$SG" \
@@ -266,7 +264,7 @@ function detect-instance-branch {
 }
 
 
-function install-caddy {
+function run-caddy-revproxy {
     patient-docker-pull caddy:2-alpine
     cat > Caddyfile <<EOF
 
@@ -277,7 +275,7 @@ ${MYDNS}:443 {
 }
 
 EOF
-    docker run --network docker_teet -p 0.0.0.0:3443:443 -v $PWD/Caddyfile:/etc/caddy/Caddyfile:ro -v /etc/letsencrypt:/etc/letsencrypt caddy:2-alpine
+    docker run -d --network docker_teet -p 0.0.0.0:3443:443 -v $PWD/Caddyfile:/etc/caddy/Caddyfile:ro -v /etc/letsencrypt:/etc/letsencrypt caddy:2-alpine
 }
 
 
@@ -290,7 +288,7 @@ function install-deps-and-app {
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools certbot npm
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools certbot npm bind9-dnsutils
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
@@ -337,17 +335,15 @@ function install-deps-and-app {
     unzip datomic-cli*.zip
     install --mode=755 datomic-cli/datomic* /usr/local/bin/ 
 
-    control-datomic-bastion-ssh-access on
     start-datomic-portforward    
     
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
-    control-datomic-bastion-ssh-access off
     
     update-dyndns a # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
     
-    install-caddy
+    run-caddy-revproxy
     setup-postgres
     
     start-teet-app # config generation, backend, frontend & postgrest
@@ -360,6 +356,10 @@ function install-deps-and-app {
 
 }
 
+function public-addr-of-instance {
+    aws ec2 describe-instances --instance-ids "$1" --output text|grep ASSOCIATION | grep compute.amazonaws.com | cut -f 3 | head -1
+}
+
 function run-in-ec2 {
     local SCRIPTPATH
     local SSHKEYID
@@ -367,6 +367,7 @@ function run-in-ec2 {
     local RUNINFOFILE
     local INSTANCEID
     local SLEEPSECS
+    local ADDR
     RUNINFOFILE="$(mktemp /tmp/runinfoXXXXX.json)"
     THISBRANCH="$(git rev-parse --abbrev-ref HEAD)"
     echo using branch "$THISBRANCH"
@@ -381,12 +382,27 @@ function run-in-ec2 {
 	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}}]"  \
         --launch-template LaunchTemplateName=standalone-teetapp-template | tee "$RUNINFOFILE"
     INSTANCEID="$(jq -r .Instances[0].InstanceId < "$RUNINFOFILE")"
+    echo "waiting for address assignment"
+    while sleep 10; do
+	ADDR="$(public-addr-of-instance "$INSTANCEID")"
+	if [ -z "$ADDR" ]; then
+	    continue
+	else
+	    break
+	fi	
+    done
+    echo vm ec2 dns is "$ADDR"
+    MYIP="$(dig "$ADDR" +short)"
+    control-datomic-bastion-ssh-access on
+        
     SLEEPSECS="$[60 * 60 * 8 - 300]"
     echo Will terminate instance "$INSTANCEID" on "$(date --iso=seconds -d "now + $SLEEPSECS seconds")"
     echo "(Toggle termination protection on the instance to prevent automatic termination)"
     sleep $[60 * 60 * 8 - 300] # 5 mins short of 8 hours, for 8 build codebuild time limit
-    aws ec2 terminate-instances --instance-ids "$INSTANCEID"
+    echo not running aws ec2 terminate-instances --instance-ids "$INSTANCEID"
+    control-datomic-bastion-ssh-access off
 }
+
 
 
 if [ $# -gt 0 ]; then
