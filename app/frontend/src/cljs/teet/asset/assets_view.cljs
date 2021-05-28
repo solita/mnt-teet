@@ -21,12 +21,16 @@
             [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.buttons :as buttons]
             [teet.map.openlayers.layer :as layer]
+            [herb.core :refer [<class]]
+            [teet.util.coerce :refer [->double]]
 
             [ol.Map]
             [ol.layer.Vector]
             [ol.source.Vector]
             [ol.Feature]
-            [ol.geom.Circle]))
+            [ol.geom.Circle]
+            [teet.ui.text-field :as text-field]
+            [teet.asset.asset-styles :as asset-styles]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -36,10 +40,18 @@
                                      :on-change #(e! (assets-controller/->UpdateSearchCriteria {attribute %}))}))])
 
 (defn radius-slider [{:keys [value on-change]}]
-  [Slider {:min 10 :max 2000
-           :step 10
-           :value value
-           :on-change (fn [_evt v] (on-change v))}])
+  [:div {:class (<class asset-styles/map-radius-overlay)}
+   [Slider {:min 10 :max 2000
+            :step 10
+            :value value
+            :on-change (fn [_evt v] (on-change v))}]
+   [text-field/TextField
+    {:hide-label? true
+     :value (or value "")
+     :on-change #(when-let [r (some-> % .-target .-value ->double)]
+                   (when (<= 10 r 2000)
+                     (on-change r)))
+     :end-icon (text-field/unit-end-icon "m")}]])
 
 (defmulti search-by-fields (fn [_e! _atl criteria] (:search-by criteria)))
 (defmulti search-by-map-layers (fn [_e! _atl criteria] (:search-by criteria)))
@@ -49,12 +61,12 @@
 
 (defmethod search-by-map-layers :default [_ _ _] {})
 
-(defmethod search-by-fields :current-location
-  [e! atl {location :location radius :radius :as filters}]
-  (js/console.log "search by current location")
-  [filter-component {:e! e! :filters filters :atl atl}
-   :radius "Radius"
-   [radius-slider {}]])
+(defn radius-display [e! {location :location radius :radius :as filters}]
+  [:div {:class (<class asset-styles/map-radius-overlay-container)}
+   [filter-component {:e! e! :filters filters}
+    :radius (tr [:asset :manager :radius])
+    [radius-slider {}]]])
+
 
 (defn- location-layer [location radius]
   (let [g (ol.geom.Circle. (into-array location) radius)]
@@ -182,19 +194,22 @@
 
               map-pane
               ^{:key (str "map" @map-key)}
-              [map-view/map-view e!
-               {:full-height? true
-                :layers
-                (merge
-                 (search-by-map-layers e! atl criteria)
-                 (when geojson
-                   {:asset-results
-                    (map-layers/geojson-data-layer
-                     "asset-results"
-                     (js/JSON.parse geojson)
-                     map-features/asset-line-and-icon
-                     {;:fit-on-load? true
-                      })}))}]]
+              [:<>
+               [map-view/map-view e!
+                {:full-height? true
+                 :layers
+                 (merge
+                  (search-by-map-layers e! atl criteria)
+                  (when geojson
+                    {:asset-results
+                     (map-layers/geojson-data-layer
+                      "asset-results"
+                      (js/JSON.parse geojson)
+                      map-features/asset-line-and-icon
+                      {;:fit-on-load? true
+                       })}))}]
+               (when (= :current-location (:search-by criteria))
+                 [radius-display e! criteria])]]
           [:<>
            [table-and-map-toggle show]
            (condp = @show

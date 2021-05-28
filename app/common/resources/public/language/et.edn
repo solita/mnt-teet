@@ -89,7 +89,8 @@
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
-  :manager {:link "Varad", :result-count "{count} nähtust"},
+  :manager
+  {:link "Varad", :result-count "{count} nähtust", :radius "Raadius"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :materials {:label "Materjalid"},
@@ -1377,7 +1378,7 @@
  :task-part
  {:reopen-successful "Ülesande osa on taasavatud",
   :reopen-part "Taasava ülesande osa",
-  :reopen "Ava",
+  :reopen "Avan",
   :reopen-part-confirm
   "Kas oled kindel, et soovid selle ülesande osa taasavada?",
   :submit-for-approval "Esitan ülevaatamiseks",
@@ -1389,7 +1390,7 @@
   "Kas oled kindel, et soovid selle ülesande ülevaatamiseks saata?",
   :approve-part-confirm
   "Kas oled kindel, et soovid selle ülesande osa vastu võtta?",
-  :accept "Kooskõlastatud",
+  :accept "Kooskõlastan",
   :reject-part-confirm
   "Kas oled kindel, et soovid selle ülesande osa tagasi lükata?"},
  :unit-info {:owners-opinions "Maade omanike arvamused"},

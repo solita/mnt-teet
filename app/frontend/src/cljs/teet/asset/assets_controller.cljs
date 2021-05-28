@@ -85,6 +85,7 @@
     (common-controller/update-page-state
      app [:criteria] merge
      {:search-by :current-location
+      :radius 10
       :ol-geolocation
       (doto (ol.Geolocation.
              #js {:projection "EPSG:3301"})
