@@ -19,7 +19,8 @@
             [cheshire.core :as cheshire]
             [teet.util.coerce :refer [->long]]
             [teet.util.collection :as cu]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.util.geo :as geo]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -203,29 +204,32 @@
 (defn- bbq
   "Return set of :db/id value sof entities whose location
   start-point or end-point is within the bounding box."
-  [db xmin ymin xmax ymax]
-  (let [entities-within-range
-        (comp
-         (take-while (fn [{[x _y] :v}]
-                       (<= x xmax)))
-         (filter (fn [{[_x y] :v}]
-                   (<= ymin y ymax)))
-         (map :e))
+  ([db xmin ymin xmax ymax]
+   (bbq db xmin ymin xmax ymax (constantly true)))
+  ([db xmin ymin xmax ymax point-filter-fn]
+   (let [entities-within-range
+         (comp
+          (take-while (fn [{[x _y] :v}]
+                        (<= x xmax)))
+          (filter (fn [{[_x y] :v}]
+                    (<= ymin y ymax)))
+          (filter point-filter-fn)
+          (map :e))
 
-        start-within
-        (into #{}
-              entities-within-range
-              (d/index-range db {:attrid :location/start-point
-                                 :start [xmin ymin]
-                                 :limit -1}))
+         start-within
+         (into #{}
+               entities-within-range
+               (d/index-range db {:attrid :location/start-point
+                                  :start [xmin ymin]
+                                  :limit -1}))
 
-        end-within
-        (into #{}
-              entities-within-range
-              (d/index-range db {:attrid :location/end-point
-                                 :start [xmin ymin]
-                                 :limit -1}))]
-    (set/union start-within end-within)))
+         end-within
+         (into #{}
+               entities-within-range
+               (d/index-range db {:attrid :location/end-point
+                                  :start [xmin ymin]
+                                  :limit -1}))]
+     (set/union start-within end-within))))
 
 (defn fclass=
   "Find entities belonging to a single fclass"
@@ -244,6 +248,11 @@
 
 (defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
   (bbq db xmin ymin xmax ymax))
+
+(defmethod search-by :current-location [db _ [x y radius]]
+  (bbq db (- x radius) (- y radius) (+ x radius) (+ y radius)
+       (fn [{point :v}]
+         (<= (geo/distance point [x y]) radius))))
 
 (defn- search-by-map [db criteria-map]
   (reduce-kv (fn [acc by val]
@@ -269,7 +278,8 @@
         (map first
              (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
                                        :location/road-nr :location/carriageway
-                                       :location/start-km :location/end-km])
+                                       :location/start-km :location/end-km
+                                       :location/start-point :location/end-point])
                        :in $ [?a ...]]
                      adb (take result-count-limit ids)))]
     {:more-results? more-results?
@@ -278,7 +288,17 @@
                         (dissoc :location/start-point :location/end-point)
                         (cu/update-in-if-exists [:location/start-km] asset-model/format-location-km)
                         (cu/update-in-if-exists [:location/end-km] asset-model/format-location-km))
-                   assets)}))
+                   assets)
+     :geojson (cheshire/encode
+               {:type "FeatureCollection"
+                :features
+                (for [{:location/keys [start-point end-point] :as a} assets
+                      :when (and start-point end-point)]
+                  {:type "Feature"
+                   :properties {"oid" (:asset/oid a)
+                                "fclass" (:db/ident (:asset/fclass a))}
+                   :geometry {:type "LineString"
+                              :coordinates [start-point end-point]}})})}))
 
 (defquery :assets/geojson
   {:doc "Return GeoJSON for assets found by search."

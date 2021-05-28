@@ -9,7 +9,8 @@
             [ol.style.Circle]
             [teet.theme.theme-colors :as theme-colors]
             [ol.extent :as ol-extent]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.log :as log]))
 
 
 (def ^:const map-pin-height 26)
@@ -400,3 +401,11 @@ an icon based on asset class."
                                               :width 3
                                               :lineCap "butt"})
                :zIndex 2})]))
+
+
+(defn current-location-radius-style
+  "Show circle radius around current location (point)"
+  [^ol.render.Feature feature _res]
+  (def *f feature)
+  (ol.style.Style.
+   #js {:stroke (ol.style.Stroke. #js {:color "blue"})}))

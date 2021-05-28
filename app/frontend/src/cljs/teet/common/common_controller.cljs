@@ -545,9 +545,12 @@
                (apply update-fn page-state args))))
 
 (defn assoc-page-state
-  "Assoc value to current page state."
-  [{page :page :as app} path value]
-  (assoc-in app (into [:route page] path) value))
+  "Assoc value(s) to current page state."
+  [{page :page :as app} & paths-and-values]
+  (reduce (fn [app [path value]]
+            (assoc-in app (into [:route page] path) value))
+          app
+          (partition 2 paths-and-values)))
 
 (defn page-state
   "Get the state of the current page.
