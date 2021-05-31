@@ -36,8 +36,8 @@
   [e! contract contract-expansion-atom]
   (r/with-let []
     [container/collapsible-container {:class (<class contract-style/contract-card-style)
-                                      :header-class (<class contract-style/contract-card-style-header)
-                                      :container-class (<class contract-style/contract-card-style-container)
+                                      :container-class (<class contract-style/contract-card-style-header)
+                                      :collapsible-class (<class contract-style/contract-card-style-container)
                                       :side-component (contract-card-header
                                                         (:thk.contract/status contract)
                                                         (contract-model/contract-name contract)
