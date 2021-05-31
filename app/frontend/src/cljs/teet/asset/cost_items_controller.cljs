@@ -649,14 +649,14 @@
      app [:closed-totals] cu/toggle ident))
 
   SetTotalsRoadFilter
-  (process-event [{road :road} app]
+  (process-event [{road :road} {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page (:page app)
-           :params (:params app)
+           :page page
+           :params params
            :query (if road
-                    {:road road}
-                    {})})))
+                    (assoc query :road road)
+                    (dissoc query :road))})))
 
 (extend-protocol t/Event
   SaveBOQVersion

@@ -1004,7 +1004,7 @@
                             :disabled @saving?
                             :end-icon [text-field/euro-end-icon]}]]))
 
-(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type} subtotal]
+(defn- table-section-header [e! query listing-opts closed-set {ident :db/ident :as header-type} subtotal]
   [table/listing-table-body-component listing-opts
    [container/collapsible-container-heading
     {:container-class [(<class common-styles/flex-row)
@@ -1014,7 +1014,7 @@
      :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
     [:<>
      [url/Link {:page :cost-items-totals
-                :query {:filter (str ident)}}
+                :query (merge query {:filter (str ident)})}
       (label header-type)]
      [:div {:style {:float :right :font-weight 700
                     :font-size "80%"}} subtotal]]]])
@@ -1035,7 +1035,7 @@
     :total-cost (format-euro value)
     (str value)))
 
-(defn- filter-breadcrumbs [atl filter-fg-or-fc]
+(defn- filter-breadcrumbs [atl query filter-fg-or-fc]
   (when-let [hierarchy (some->> filter-fg-or-fc
                                 (asset-type-library/type-hierarchy atl))]
     [breadcrumbs/breadcrumbs
@@ -1046,7 +1046,7 @@
       (for [h hierarchy
             :let [title (label h)]]
         {:link [url/Link {:page :cost-items-totals
-                          :query {:filter (str (:db/ident h))}}
+                          :query (merge query {:filter (str (:db/ident h))})}
                 title]
          :title title}))]))
 
@@ -1058,7 +1058,7 @@
      [page-fn e! app state]]))
 
 (defn- cost-items-totals-page*
-  [e! {atl :asset-type-library :as app}
+  [e! {query :query atl :asset-type-library :as app}
    {totals :cost-totals version :version
     closed-totals :closed-totals
     :or {closed-totals #{}}
@@ -1083,7 +1083,7 @@
                               (sort-by (comp label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            ::url/query {:filter (str (:db/ident %))}})]
+                            ::url/query (merge query {:filter (str (:db/ident %))})})]
       [cost-items-page-structure
        {:e! e!
         :app  app
@@ -1092,7 +1092,7 @@
                     :fgroup-link-fn filter-link-fn
                     :list-features? false}}
        [:div.cost-items-totals
-        [filter-breadcrumbs atl filter-fg-or-fc]
+        [filter-breadcrumbs atl query filter-fg-or-fc]
         [:div {:style {:max-width "25vw"}}
          [relevant-road-select
           {:e! e!
@@ -1115,7 +1115,7 @@
                       open? (not (closed-totals ident))]]
             ^{:key (str ident)}
             [:<>
-             [table-section-header e! listing-opts closed-totals fg
+             [table-section-header e! query listing-opts closed-totals fg
               (get-in totals [:fclass-and-fgroup-totals (:db/ident fg)])]
              (when open?
                [:<>
@@ -1126,7 +1126,7 @@
                              open? (not (closed-totals ident))]]
                    ^{:key (str ident)}
                    [:<>
-                    [table-section-header e! listing-opts closed-totals fc
+                    [table-section-header e! query listing-opts closed-totals fc
                      (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
                     (when open?
                       [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
