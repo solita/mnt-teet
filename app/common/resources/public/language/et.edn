@@ -273,7 +273,6 @@
     :ta/region "Regioon",
     :partner-name "Lepingupartneri nimi",
     :project-manager "TA projektijuht",
-    :procurement-type nil,
     :contract-status "Lepingu staatus",
     :contract-type "Lepingu liik",
     :contract-name "Hanke nimetus",
