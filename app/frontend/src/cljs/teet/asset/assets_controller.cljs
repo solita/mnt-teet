@@ -90,7 +90,8 @@
       :radius 10
       :ol-geolocation
       (doto (ol.Geolocation.
-             #js {:projection "EPSG:3301"})
+             #js {:projection "EPSG:3301"
+                  :trackingOptions #js {:enableHighAccuracy true}})
         (.on "change" (t/send-async! ->SetCurrentLocation))
         (.setTracking true))}))
 
