@@ -142,8 +142,8 @@
 
 (defn default-server-error-handler [err app]
   (snackbar-controller/open-snack-bar app (tr-or [:error (-> err ex-data :error)]
-                                                 [:error :server-error]
-                                                 "error")
+                                                 (or (-> err ex-data :error-message)
+                                                     [:error :server-error]))
                                       :error))
 
 (defmethod on-server-error :default [err app]
@@ -254,11 +254,16 @@
         response)
 
       (throw (ex-info "Request failure"
-                      {:error (or (some-> response
-                                          .-headers
-                                          (.get "X-TEET-Error")
-                                          keyword)
-                                  :unknown-server-error)})))))
+                      (merge
+                       {:error (or (some-> response
+                                           .-headers
+                                           (.get "X-TEET-Error")
+                                           keyword)
+                                   :unknown-server-error)}
+                       (when-let [msg (some-> response .-headers
+                                              (.get "X-TEET-Error-Message")
+                                              js/decodeURIComponent)]
+                         {:error-message msg})))))))
 
 (defn catch-response-error [e! error-event]
   (fn [err]
