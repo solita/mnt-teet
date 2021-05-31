@@ -48,8 +48,7 @@
      ""
      [:div {:class (<class contract-style/contract-card-details-style)}
       [contract-common/contract-external-links contract]
-      [contract-common/contract-information-row contract]
-      ]]))
+      [contract-common/contract-information-row contract]]]))
 
 (defn toggle-list-expansion-button
   [list-expansion? toggle-list-expansion]
@@ -65,7 +64,6 @@
 (defn contacts-list-header
   [{:keys [contracts-count]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
-   ;[toggle-list-expansion-button list-expansion? toggle-list-expansion]
    [typography/SmallText (str contracts-count " "
                            (tr (if (= contracts-count 1)
                                  [:contracts :contracts-list :result]
@@ -73,19 +71,9 @@
 
 (defn contracts-list
   [e! contracts]
-  (r/with-let [list-expansion? (r/atom false)
-               contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) @list-expansion?)) {} contracts))
-               toggle-list-expansion #(do
-                                        (swap! list-expansion? (fn [x] (not x)))
-                                        (swap! contract-expansion (reduce
-                                                                    (fn
-                                                                      [agg x]
-                                                                      (assoc agg (:db/id  x) @list-expansion?))
-                                                                    {} contracts)))]
+  (r/with-let [contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))]
     [:div {:class (<class contract-style/contracts-list-style)}
-     [contacts-list-header {:contracts-count (count contracts)
-                            :list-expansion? list-expansion?
-                            :toggle-list-expansion toggle-list-expansion}]
+     [contacts-list-header {:contracts-count (count contracts)}]
      (doall
        (for [contract contracts]
          ^{:key (str (:db/id contract))}
