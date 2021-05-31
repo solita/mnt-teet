@@ -439,8 +439,7 @@
                 (common-controller/feature-enabled? :vektorio)
                 (some? (:vektorio/project-id project)))
           [common/vektorio-link {:href (common-controller/query-url
-                                         :vektorio/instant-login (select-keys project [:db/id :vektorio/project-id]))
-                                 :target "_blank"}
+                                         :vektorio/instant-login (select-keys project [:db/id :vektorio/project-id]))}
            (tr [:project :bim-models])])
         [common/thk-link {:href thk-url
                           :target "_blank"}
