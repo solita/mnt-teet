@@ -11,9 +11,24 @@ function ensure-command-exists {
 ensure-command-exists psql
 ensure-command-exists mvn
 
-ARGS="-h localhost -U postgres"
+ARGS="-h localhost -U postgres -w"
 PSQL="psql $ARGS -c"
 PSQL_TEET="psql -h localhost -U teet -c"
+
+# removal of this was somewho included in the checksummed migrations but not its creation. also
+# didn't help to add its creation to repeatable migrations as they're run last (?).
+function remake-migration-prob-sproc {
+    $PSQL_TEET 'CREATE OR REPLACE FUNCTION teet.replace_entity_ids(idlist TEXT)
+RETURNS BOOLEAN
+AS $$
+DECLARE
+BEGIN
+  RETURN false;
+END;
+$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+'
+}
+
 
 echo "Dropping and recreating teet database."
 $PSQL "DROP DATABASE IF EXISTS teet;"
@@ -30,7 +45,9 @@ $PSQL "CREATE DATABASE teet TEMPLATE teet_template OWNER teet;" || {
 $PSQL "CREATE ROLE authenticator LOGIN;"
 
 echo "Running migrations"
+remake-migration-prob-sproc
 mvn flyway:baseline -Dflyway.baselineVersion=0
+remake-migration-prob-sproc
 mvn flyway:migrate
 
 echo "Adding all privileges in schema teet to teet_anon."
