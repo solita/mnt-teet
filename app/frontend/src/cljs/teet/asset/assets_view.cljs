@@ -30,7 +30,8 @@
             [ol.Feature]
             [ol.geom.Circle]
             [teet.ui.text-field :as text-field]
-            [teet.asset.asset-styles :as asset-styles]))
+            [teet.asset.asset-styles :as asset-styles]
+            [teet.common.common-styles :as common-styles]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -115,8 +116,17 @@
          [asset-ui/select-listitem-multiple {:attribute :common/status}]]
 
 
-        [buttons/button-primary {:on-click #(e! (assets-controller/->SearchByCurrentLocation))}
-         "LOCATION"]
+        [:div {:class [(<class common-styles/flex-row)
+                       (<class common-styles/margin 0.5 0)]}
+         [buttons/button-primary {:on-click #(e! (assets-controller/->SearchByCurrentLocation))
+                                  :style (merge {:border-radius 0
+                                                 :border (str "solid 2px " theme-colors/black-coral)}
+                                                (if (= :current-location (:search-by filters))
+                                                  {:background-color theme-colors/blue
+                                                   :color theme-colors/white}
+                                                  {:background-color theme-colors/white
+                                                   :color theme-colors/black-coral}))}
+          (tr [:asset :manager :search-nearby])]]
 
         (search-by-fields e! atl filters)])]))
 
@@ -160,6 +170,7 @@
                           {:color theme-colors/white
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
+
 
 (defn- assets-results [_ _ _ _ _] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
