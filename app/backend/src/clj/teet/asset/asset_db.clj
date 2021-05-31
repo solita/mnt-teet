@@ -44,6 +44,12 @@
      [?e :asset/fclass _]
      [(missing? $ ?e ?attr)]]
 
+    ;; - entity does not inherit location
+    [(location-attr-missing ?e ?attr)
+     [?e :component/ctype ?ctype]
+     [(missing? $ ?ctype :component/inherits-location?)]
+     [(missing? $ ?e ?attr)]]
+
     ;; - entity inherits location, check if parent is missing
     [(location-attr-missing ?e ?attr)
      [?e :component/ctype ?ctype]
