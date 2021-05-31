@@ -17,11 +17,7 @@
                                          Popper]]
             [teet.contract.contract-model :as contract-model]
             [teet.ui.typography :as typography]
-            [teet.ui.common :as common]
-            [teet.ui.format :as format]
-            [teet.util.euro :as euro]
             [teet.contract.contract-style :as contract-style]
-            [teet.contract.contract-status :as contract-status]
             [teet.ui.table :as table]
             [teet.contract.contract-common :as contract-common]))
 
@@ -90,40 +86,6 @@
                  :end-icon (text-field/euro-end-icon)}]]]
    [form/footer2]])
 
-
-(defn contract-information-row
-  [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
-                        warranty-end-date cost] :as contract}]
-  [common/basic-information-row
-   {:right-align-last? false}
-   [[(tr [:contract :status])
-     [contract-status/contract-status {:show-label? true}
-      (:thk.contract/status contract)]]
-    (when-let [region (:ta/region contract)]
-      [(tr [:fields :ta/region])
-       [typography/Paragraph (tr [:enum region])]])
-    (when type
-      [(tr [:contract :thk.contract/type])
-       [typography/Paragraph (tr [:enum type])]])
-    (when signed-at
-      [(tr [:fields :thk.contract/signed-at])
-       [typography/Paragraph (format/date signed-at)]])
-    (when start-of-work
-      [(tr [:fields :thk.contract/start-of-work])
-       [typography/Paragraph (format/date start-of-work)]])
-    (when deadline
-      [(tr [:fields :thk.contract/deadline])
-       [typography/Paragraph (format/date deadline)]])
-    (when extended-deadline
-      [(tr [:fields :thk.contract/extended-deadline])
-       [typography/Paragraph (format/date extended-deadline)]])
-    (when warranty-end-date
-      [(tr [:contract :thk.contract/warranty-end-date])
-       [typography/Paragraph (format/date warranty-end-date)]])
-    (when cost
-      [(tr [:fields :thk.contract/cost])
-       [typography/Paragraph (euro/format cost)]])]])
-
 (defn contract-page
   [e! app {:thk.contract/keys [targets] :as contract}]
   [:div {:class (<class common-styles/flex-column-1)}
@@ -141,7 +103,7 @@
 
                                :form-component [edit-contract-form e!]
                                :form-value (select-keys contract contract-model/contract-form-keys)}]]
-     [contract-information-row contract]]
+     [contract-common/contract-information-row contract]]
     [:div
      [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
       (tr [:contract :contract-related-entities])]
