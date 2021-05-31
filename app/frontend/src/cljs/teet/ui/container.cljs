@@ -9,12 +9,12 @@
   "The heading of collapsible container that shows open/closed state
   and controls the state."
   [{:keys [on-toggle open? side-component size
-           container-class header-class disabled?]
+           container-class disabled?]
     :or {on-toggle identity
          size :medium
          container-class (<class container-theme/container-control)}}
    heading]
-  [:div  {:class header-class}
+  [:div  {:class container-class}
    [:span (when disabled?
             {:style {:visibility :hidden}})
     [IconButton
@@ -34,10 +34,10 @@
      side-component)])
 
 (defn collapsible-container
-  [{:keys [open? container-attrs container-class header-class class ] :as opts} heading contents]
+  [{:keys [open? container-attrs container-class collapsible-class class ] :as opts} heading contents]
   [:div (merge {:class [class (<class container-theme/container)]}
           container-attrs)
-   [collapsible-container-heading opts heading header-class]
-   [Collapse {:class container-class
+   [collapsible-container-heading opts heading]
+   [Collapse {:class collapsible-class
               :in (boolean open?)}
     contents]])
