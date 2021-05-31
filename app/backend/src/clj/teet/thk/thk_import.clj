@@ -181,8 +181,14 @@
                            name :activity/name
                            task-id :activity/task-id
                            :as activity} activities
-                          ;; Only process activities here
-                          :when (and id name (nil? task-id) (not (= id "18957")))
+                          ;; Only process activities here except 2 with activity_typefk 4006 and 4009
+                          :when (and
+                                  id
+                                  name
+                                  (nil? task-id)
+                                  (not (or
+                                         (= name :activity.name/owners-supervision)
+                                         (= name :activity.name/road-safety-audit))))
                           :let [{act-thk-id :thk.activity/id
                                  act-teet-id :activity-db-id} activity
                                 {act-db-id :db/id
@@ -252,27 +258,55 @@
      :construction-activity-db-id (get-project-construction-activity-db-id db rows)}))
 
 
+(defn- get-task-type [db task-eid]
+  (ffirst (d/q '[:find (pull ?e [:task/type])
+                 :where
+                 [(missing? $ ?e :meta/deleted?)]
+                 :in $ ?e] db task-eid)))
+
+(defn- get-activity-taks-eids [db activity-eid]
+  (:activity/tasks
+    (ffirst (d/q '[:find (pull ?e [:activity/tasks])
+                   :in $ ?e] db activity-eid))))
+
+(defn- get-quality-assurance-task-db-id [db construction-activity-id]
+  (first (reduce
+           #(if (or
+                  (= (:db/ident (:task/type (get-task-type db (:db/id %2))))
+                    :task.type/owners-supervision)
+                  (= (:db/ident (:task/type (get-task-type db (:db/id %2))))
+                    :task.type/road-safety-audit))
+              (conj %1 (:db/id %2))
+              (identity %1))
+           []
+           (get-activity-taks-eids db construction-activity-id))))
+
 (defn add-task-from-thk
   "Returns TX data for new task with given params for given construction activity-id"
   [db thk-activity-task-data construction-activity-id ]
   (let [start-date (:activity/estimated-start-date thk-activity-task-data)
         end-date (:activity/estimated-end-date thk-activity-task-data)
-        id-placeholder (str "NEW-TASK-"
-                         (name :task.group/construction) "-"
-                         (name :task.type/owners-supervision))
+        ; check the existing Task db/id
+        existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id)
+        id-placeholder (if (some? existing-qa-task-eid)
+                         existing-qa-task-eid
+                         (str "NEW-TASK-"
+                           (name :task.group/construction) "-"
+                           (name :task.type/owners-supervision)))
         task-tx-data {:db/id construction-activity-id
-                      :activity/tasks [{:db/id id-placeholder
-                                        :task/group :task.group/construction-quality-assurance
-                                        :task/type :task.type/owners-supervision
-                                        :task/send-to-thk? true
-                                        :task/status :task.status/in-progress
-                                        :task/estimated-end-date end-date
-                                        :task/estimated-start-date start-date
-                                        :integration/id (integration-id/unused-random-small-uuid db)
-                                        :meta/created-at (Date.)
-                                        }]}]
+                      :activity/tasks [(merge {:db/id id-placeholder
+                                               :task/group :task.group/construction-quality-assurance
+                                               :task/type :task.type/owners-supervision
+                                               :task/send-to-thk? true
+                                               :task/status :task.status/in-progress
+                                               :task/estimated-end-date end-date
+                                               :task/estimated-start-date start-date
+                                               :meta/created-at (Date.)}
+                                         (when (nil? existing-qa-task-eid)
+                                               {:integration/id (integration-id/unused-random-small-uuid db)}))]}]
     (println "Generated TASK TX data " task-tx-data)
     task-tx-data))
+
 
 (defn tasks-tx-data
   "collect new tasks tx-s as [{task1 params} {task2 params} ...]
