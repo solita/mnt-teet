@@ -77,6 +77,7 @@
            :https-port 4443
            :listen-address (or (environment/config-value :listen-address)
                                "127.0.0.1")
-           :api {:shared-secret "secret1234567890secret1234567890"
+           :api {:shared-secret (or (environment/config-value :auth :jwt-secret)
+                                    "secret1234567890secret1234567890")
                  :role "teet_user"
                  :url "http://localhost:3000"}})))
