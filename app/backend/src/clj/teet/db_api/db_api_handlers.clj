@@ -51,7 +51,8 @@
             [teet.auth.jwt-token :as jwt-token]
             [clojure.string :as str]
             [teet.user.user-db :as user-db]
-            [ring.middleware.not-modified :as not-modified]))
+            [ring.middleware.not-modified :as not-modified]
+            [teet.util.url :as url]))
 
 (defn- jwt-token [req]
   (or
@@ -71,6 +72,11 @@
     (deref-delay (get m k)))
   (valAt [_ k default-value]
     (deref-delay (get m k default-value))))
+
+(defn- error-message-header [msg]
+  (when msg
+    {"X-TEET-Error-Message"
+     (url/js-style-url-encode msg)}))
 
 (defn- request [handler-fn]
   (not-modified/wrap-not-modified
@@ -104,7 +110,8 @@
          (let [exd (ex-data e)
                status (:status exd)
                error (or (:error exd)
-                         (:teet/error exd))]
+                         (:teet/error exd))
+               error-message (:teet/error-message exd)]
            (case error
              ;; Return JWT verification failures (likely expired token) as 401 (same as PostgREST)
              :jwt-verification-failed
@@ -119,7 +126,8 @@
                (merge {:status (or status 500)
                        :body "Internal server error, see log for details"}
                       (when (keyword? error)
-                        {:headers {"X-TEET-Error" (name error)}}))))))))))
+                        {:headers (merge {"X-TEET-Error" (name error)}
+                                         (error-message-header error-message))}))))))))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))
