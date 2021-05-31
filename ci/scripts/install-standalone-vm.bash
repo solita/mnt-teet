@@ -32,9 +32,8 @@ function patient-docker-pull {
 
 function start-teet-app {
     local DB_URI="postgres://authenticator@teetdb:5432/teet"
-
+    local JWT_SECRET="$(cat jwt.secret)"
     mkdir -p mnt-teet-private
-    JWT_SECRET=$(head -c 42 /dev/urandom | base64)
 
     patient-docker-pull postgrest/postgrest
     
@@ -315,6 +314,8 @@ function install-deps-and-app {
     echo -e "max_wal_senders = 0\nwal_level = minimal\nfsync = off\nfull_page_writes = off\n" | docker exec -i teetdb bash -c 'cat >> /var/lib/postgresql/data/postgresql.conf' # try to make loading faster
     docker restart teetdb    
 
+    gensecret jwt.secret
+    
     TEET_ENV=$(ssm-get /teet/env)
     DNS_SUFFIX=$(ssm-get /dev-testsetup/testvm-dns-suffix)
     BUILD_S3_BUCKET="s3://${TEET_ENV}-build"
