@@ -222,7 +222,7 @@
    opts
    [carriageway-for-road-select* opts selected-road-nr]])
 
-(defn- location-entry [e! locked? selected-road-nr]
+(defn- location-entry [e! locked? selected-road-nr single-point?]
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [Grid {:item true
@@ -262,40 +262,48 @@
       [form/field :location/start-offset-m
        [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
 
-     [Grid {:item true
-            :md 4
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/end-point
-       [input-textfield {}]]]
+     (when-not single-point?
+       [Grid {:item true
+              :md 4
+              :xs 12
+              :style {:padding "0.2rem"}}
+        [form/field :location/end-point
+         [input-textfield {}]]])
+
+     (when-not single-point?
+       [Grid {:item true
+              :md 4
+              :xs 12
+              :style {:padding "0.2rem"}}
+        [form/field :location/end-km
+         [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]])
+
+     (when-not single-point?
+       [Grid {:item true
+              :md 4
+              :xs 12
+              :style {:padding "0.2rem"}}
+        [form/field :location/end-offset-m
+         [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
      [Grid {:item true
-            :md 4
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/end-km
-       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
-
-     [Grid {:item true
-            :md 4
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/end-offset-m
-       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]]))
+            :md 12 :xs 12}
+      [form/field :location/single-point?
+       [select/checkbox {}]]]]))
 
 (defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
-    (let [_ (def *c (some-> common rotl))
-          common-attrs (some-> common rotl :attribute/_parent)
+    (let [common-attrs (some-> common rotl :attribute/_parent)
           common-attr-idents (into #{} (map :db/ident) common-attrs)
           attrs-groups (->> (concat common-attrs attributes)
                             (group-by (partial attribute-group common-attr-idents))
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
-                                                    label))))]
+                                                    label))))
+          map-open? (:location/map-open? cost-item-data)]
       [:<>
        ;; Show location group if not inherited from parent
        (when (not inherits-location?)
@@ -304,23 +312,19 @@
            :on-toggle (r/partial toggle-open! :location)}
           [:<>
            (tr [:asset :field-group :location])
-           [buttons/button-text {:style {:float :right}
-                                 :on-click (r/partial toggle-open! :map)}
-            (if (@open? :map)
+           [buttons/button-text
+            {:style {:float :right}
+             :on-click (e! cost-items-controller/->UpdateForm
+                           {:location/map-open? (not map-open?)})}
+            (if map-open?
               (tr [:asset :location :hide-map])
               (tr [:asset :location :show-map]))]]
           [Grid {:container true
                  :justify :flex-start
                  :alignItems :flex-end}
-           (when (@open? :map)
-             [Grid {:item true :xs 12 :md 12}
-              [form/field {:attribute [:location/start-point :location/end-point
-                                       :location/road-nr :location/carriageway
-                                       :location/start-km :location/end-km
-                                       :location/geojson]}
-
-               [cost-items-map-view/location-map {:e! e!}]]])
-           [location-entry e! locked? (:location/road-nr cost-item-data)]]])
+           [location-entry e! locked?
+            (:location/road-nr cost-item-data)
+            (:location/single-point? cost-item-data)]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -921,7 +925,7 @@
                    (get-in app [:params :project])]}]])
 
 (defn cost-items-page-structure
-  [{:keys [e! app state left-panel-action hierarchy]} main-content]
+  [{:keys [e! app state left-panel-action hierarchy right-panel]} main-content]
   (r/with-let [export-dialog-open? (r/atom false)
                open-export-dialog! #(reset! export-dialog-open? true)
                close-export-dialog! #(reset! export-dialog-open? false)]
@@ -930,7 +934,8 @@
        [export-boq-dialog e! app close-export-dialog!])
 
      (let [{:keys [asset-type-library]} app
-           {:keys [cost-items project version] :as page-state} state]
+           {:keys [cost-items project version] :as page-state} state
+           _ (println "have right panel? " (boolean right-panel))]
        [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
         [context/provide :locked? (asset-model/locked? version)
          [project-view/project-full-page-structure
@@ -956,7 +961,8 @@
            :main
            [:<>
             [boq-version-statusline e! page-state]
-            main-content]}]]])]))
+            main-content]
+           :right-panel right-panel}]]])]))
 
 (defn- format-properties [atl properties]
   (into [:<>]
@@ -1147,6 +1153,13 @@
 (defn cost-items-page [e! app state]
   [wrap-atl-loader cost-items-page* e! app state])
 
+(defn cost-item-map-panel [e! cost-item]
+  (when (:location/map-open? cost-item)
+    [cost-items-map-view/location-map
+     {:e! e!
+      :value (cost-items-controller/location-form-value cost-item)
+      :on-change (e! cost-items-controller/location-form-change)}]))
+
 (defn- new-cost-item-page*
   [e! {atl :asset-type-library :as app}
    {cost-item :cost-item
@@ -1155,7 +1168,8 @@
    {:e! e!
     :app app
     :state state
-    :left-panel-action [add-cost-item app version]}
+    :left-panel-action [add-cost-item app version]
+    :right-panel (cost-item-map-panel e! cost-item)}
    [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn new-cost-item-page [e! app state]
@@ -1175,7 +1189,8 @@
        {:e! e!
         :app app
         :state state
-        :left-panel-action [add-cost-item app version]}
+        :left-panel-action [add-cost-item app version]
+        :right-panel (cost-item-map-panel e! cost-item)}
        (cond material
              ^{:key material}
              [material-form e! asset-type-library material cost-item]

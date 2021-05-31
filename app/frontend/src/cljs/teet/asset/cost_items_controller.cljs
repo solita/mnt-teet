@@ -226,7 +226,7 @@
       form-update-data)
     form-update-data))
 
-(declare project-relevant-roads)
+(declare project-relevant-roads prepare-location)
 
 (extend-protocol t/Event
 
@@ -236,7 +236,7 @@
       (do
         (log/debug "Not saving, BOQ version is locked.")
         app)
-      (let [form-data (form-state app)
+      (let [form-data (prepare-location (form-state app))
             project-id (get-in app [:params :project])
             id (if (= "new" (get-in app [:params :id]))
                  (next-id! "costitem")
@@ -286,7 +286,7 @@
       (do
         (log/debug "Not saving, BOQ version is locked.")
         app)
-      (let [form-data (form-state app)
+      (let [form-data (prepare-location (form-state app))
             {parent-id :asset/oid}
             (-> (common-controller/page-state app :cost-item)
                 (asset-model/find-component-path (:asset/oid form-data))
@@ -752,3 +752,27 @@
                :query :asset/project-relevant-roads
                :args {:thk.project/id project-id}
                :result-event (partial ->FetchRelevantRoadsResponse project-id)})))))
+
+(defn- prepare-location
+  "Prepare location for saving."
+  [form-data]
+  (as-> form-data f
+    (if (:location/single-point? f)
+      (dissoc f
+              :location/end-point
+              :location/end-km
+              :location/end-offset-m)
+      f)
+    (dissoc f :location/map-open?)))
+
+(def location-form-keys [:location/start-point :location/end-point
+                         :location/road-nr :location/carriageway
+                         :location/start-km :location/end-km
+                         :location/geojson])
+(def location-form-value
+  (apply juxt location-form-keys))
+
+
+(defn location-form-change
+  [value]
+  (->UpdateForm (zipmap location-form-keys value)))
