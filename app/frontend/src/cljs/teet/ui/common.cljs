@@ -476,6 +476,33 @@
          [typography/SectionHeading label]
          [:div data]]))]))
 
+(defn- basic-information-column-row-style
+  []
+  {:border-top (str "1px solid " theme-colors/gray-lighter)})
+
+(defn basic-information-column-cell-style
+  []
+  ^{:pseudo {:last-of-type {:padding "0.5rem 0 0.5rem 0.5rem"
+                            :border-right 0}}}
+  {:display :table-cell
+   :max-width "0px"
+   :padding "0.5rem 0.5rem 0.5rem 0"
+   :border-right (str "1px solid " theme-colors/gray-lighter)})
+
+(defn basic-information-column
+  "Takes a list of maps with keys [:label :data :key] and displays given data in a table"
+  [rows]
+  [:table {:style {:border-collapse :collapse
+                   :width "100%"}}
+   [:tbody
+    (for [{:keys [label data] :as row} rows]
+      ^{:key (str (or (:key row) (:db/id row) (str label "+" data)))}
+      [:tr {:class (<class basic-information-column-row-style)}
+       [:td {:class (<class basic-information-column-cell-style)}
+        label]
+       [:td {:class (<class basic-information-column-cell-style)}
+        data]])]])
+
 (defn column-with-space-between [space-between & children]
   (let [cls (<class common-styles/padding-bottom space-between)]
     (into [:<>]
