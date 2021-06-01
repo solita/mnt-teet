@@ -264,39 +264,43 @@
                  [(missing? $ ?e :meta/deleted?)]
                  :in $ ?e] db task-eid)))
 
-(defn- get-activity-taks-eids [db activity-eid]
+(defn- get-activity-tasks-eids [db activity-eid]
   (:activity/tasks
     (ffirst (d/q '[:find (pull ?e [:activity/tasks])
                    :in $ ?e] db activity-eid))))
 
-(defn- get-quality-assurance-task-db-id [db construction-activity-id]
+(defn- get-quality-assurance-task-db-id [db construction-activity-id task-type]
   (first (reduce
-           #(if (or
-                  (= (:db/ident (:task/type (get-task-type db (:db/id %2))))
-                    :task.type/owners-supervision)
-                  (= (:db/ident (:task/type (get-task-type db (:db/id %2))))
-                    :task.type/road-safety-audit))
+           #(if
+              (= (:db/ident (:task/type (get-task-type db (:db/id %2))))
+                task-type)
               (conj %1 (:db/id %2))
               (identity %1))
            []
-           (get-activity-taks-eids db construction-activity-id))))
+           (get-activity-tasks-eids db construction-activity-id))))
+
+(defn- get-new-task-type [activity-data]
+  (let [activity-name (:activity/name activity-data)]
+    (case activity-name
+      :activity.name/owners-supervision :task.type/owners-supervision
+      :activity.name/road-safety-audit :task.type/road-safety-audit
+      (log/info "new task type unknown for activity " activity-name))))
 
 (defn add-task-from-thk
   "Returns TX data for new task with given params for given construction activity-id"
   [db thk-activity-task-data construction-activity-id ]
   (let [start-date (:activity/estimated-start-date thk-activity-task-data)
         end-date (:activity/estimated-end-date thk-activity-task-data)
+        task-type (get-new-task-type thk-activity-task-data)
         ; check the existing Task db/id
-        existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id)
+        existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id task-type)
         id-placeholder (if (some? existing-qa-task-eid)
                          existing-qa-task-eid
-                         (str "NEW-TASK-"
-                           (name :task.group/construction) "-"
-                           (name :task.type/owners-supervision)))
+                         (str "NEW-TASK-" (name :task.group/construction) "-" task-type))
         task-tx-data {:db/id construction-activity-id
                       :activity/tasks [(merge {:db/id id-placeholder
                                                :task/group :task.group/construction-quality-assurance
-                                               :task/type :task.type/owners-supervision
+                                               :task/type task-type
                                                :task/send-to-thk? true
                                                :task/status :task.status/in-progress
                                                :task/estimated-end-date end-date
@@ -304,7 +308,7 @@
                                                :meta/created-at (Date.)}
                                          (when (nil? existing-qa-task-eid)
                                                {:integration/id (integration-id/unused-random-small-uuid db)}))]}]
-    (println "Generated TASK TX data " task-tx-data)
+    (log/info "Generated TASK TX data " task-tx-data)
     task-tx-data))
 
 
