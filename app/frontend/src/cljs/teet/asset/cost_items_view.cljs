@@ -1154,11 +1154,11 @@
 (defn cost-items-page [e! app state]
   [wrap-atl-loader cost-items-page* e! app state])
 
-(defn cost-item-map-panel [e! cost-item]
-  (when (:location/map-open? cost-item)
+(defn cost-item-map-panel [e! form-state]
+  (when (:location/map-open? form-state)
     [cost-items-map-view/location-map
      {:e! e!
-      :value (cost-items-controller/location-form-value cost-item)
+      :value (cost-items-controller/location-form-value form-state)
       :on-change (e! cost-items-controller/location-form-change)}]))
 
 (defn- new-cost-item-page*
@@ -1170,7 +1170,7 @@
     :app app
     :state state
     :left-panel-action [add-cost-item app version]
-    :right-panel (cost-item-map-panel e! cost-item)}
+    :right-panel (cost-item-map-panel e! (cost-items-controller/form-state app))}
    [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn new-cost-item-page [e! app state]

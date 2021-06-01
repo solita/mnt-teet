@@ -140,7 +140,7 @@
        (map (partial children-by-key asset-or-component))
        (some identity)))
 
-(defn- form-state
+(defn form-state
   "Return the current form state."
   [app]
   (if-let [target-id (or (form-material-id app)
