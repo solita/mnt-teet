@@ -768,11 +768,12 @@
 (def location-form-keys [:location/start-point :location/end-point
                          :location/road-nr :location/carriageway
                          :location/start-km :location/end-km
-                         :location/geojson])
+                         :location/geojson :location/single-point?])
+
 (def location-form-value
-  (apply juxt location-form-keys))
+  #(select-keys % location-form-keys))
 
 
 (defn location-form-change
   [value]
-  (->UpdateForm (zipmap location-form-keys value)))
+  (->UpdateForm value))
