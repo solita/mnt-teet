@@ -265,9 +265,13 @@
                  :in $ ?e] db task-eid)))
 
 (defn- get-activity-tasks-eids [db activity-eid]
-  (:activity/tasks
-    (ffirst (d/q '[:find (pull ?e [:activity/tasks])
-                   :in $ ?e] db activity-eid))))
+  (println ">>>>>>> ACTIVITY-EID: " activity-eid)
+  (let [query-result
+        (d/q '[:find (pull ?e [:activity/tasks])
+               :in $ ?e] db activity-eid)]
+    (when
+      (some? query-result)
+      (:activity/tasks (ffirst query-result)))))
 
 (defn- get-quality-assurance-task-db-id [db construction-activity-id task-type]
   (first (reduce
@@ -312,21 +316,17 @@
 
 
 (defn tasks-tx-data
-  "collect new tasks tx-s as [{task1 params} {task2 params} ...]
-   for all project's Activities of types: 4006 and 4009"
+  "If there is Construction activity then collect new tasks tx-s as [{task1 params} {task2 params} ...]
+   for all others project's Activities of types: 4006 and 4009"
   [db [project-id rows]]
-  (let [attrs (get-project-attrs db project-id rows)
-        construction-activity-id (:construction-activity-db-id attrs)
-        _ (println "COUNT of ROWS " (count rows))
-        tx-data (reduce
-                  #(conj %1 (add-task-from-thk db %2 construction-activity-id))
-                  []
-                  (filter #(or
-                             (= (:activity/name %) :activity.name/owners-supervision)
-                             (= (:activity/name %) :activity.name/road-safety-audit)) rows))]
-    (println "NEW TASKS: [" tx-data "]")
+  (if-let [construction-activity-id (:construction-activity-db-id (get-project-attrs db project-id rows))]
     [{:db/id construction-activity-id
-      :activity/tasks tx-data}]))
+      :activity/tasks (reduce
+                        #(conj %1 (add-task-from-thk db %2 construction-activity-id))
+                        []
+                        (filter #(or
+                                   (= (:activity/name %) :activity.name/owners-supervision)
+                                   (= (:activity/name %) :activity.name/road-safety-audit)) rows))}]))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
