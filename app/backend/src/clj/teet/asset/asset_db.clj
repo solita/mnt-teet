@@ -224,10 +224,15 @@
 (defn project-assets-and-components
   "Find OIDs of all project assets and components."
   [db thk-project-id]
-  (mapv first
+  (into []
+        (mapcat (fn [[asset-oid]]
+                  (concat (list asset-oid)
+                          (filter
+                           #(not (asset-model/material-oid? %))
+                           (asset-component-oids db asset-oid)))))
         (d/q '[:find ?oid
                :where
-               (project ?e ?project)
+               [?e :asset/project ?project]
                [?e :asset/oid ?oid]
                :in $ % ?project]
              db rules thk-project-id)))
