@@ -400,15 +400,26 @@
       (do
         (log/debug "Not editing form, BOQ version is locked.")
         app)
-      (let [old-form (form-state app)
-            new-form (cu/deep-merge
-                      old-form
-                      (default-carriageway form-data
-                                           old-form
-                                           (project-relevant-roads (get-in app [:params :project]))))]
-        (process-location-change
-         (update-form app (constantly new-form))
-         old-form new-form))))
+      (if (= (list :location/single-point?) (keys form-data))
+        ;; Only changing single point on/off, don't refetch location
+        (update-form app (fn [form]
+                           (let [single? (:location/single-point? form-data)
+                                 remove-if-single #(if single? nil %)]
+                             (-> form
+                                 (assoc :location/single-point? single?)
+                                 (cu/update-in-if-exists [:location/end-point] remove-if-single)
+                                 (cu/update-in-if-exists [:location/end-km] remove-if-single)
+                                 (cu/update-in-if-exists [:location/end-offset-m] remove-if-single)))))
+        ;; Other form change, maybe refetch location
+        (let [old-form (form-state app)
+              new-form (cu/deep-merge
+                        old-form
+                        (default-carriageway form-data
+                                             old-form
+                                             (project-relevant-roads (get-in app [:params :project]))))]
+          (process-location-change
+           (update-form app (constantly new-form))
+           old-form new-form)))))
 
   ;; When road address was changed on the form, update geometry
   ;; and start/end points from the fetched response
