@@ -297,18 +297,17 @@
         id-placeholder (if (some? existing-qa-task-eid)
                          existing-qa-task-eid
                          (str "NEW-TASK-" (name :task.group/construction) "-" task-type))
-        task-tx-data {:db/id construction-activity-id
-                      :activity/tasks [(merge {:db/id id-placeholder
-                                               :task/group :task.group/construction-quality-assurance
-                                               :task/type task-type
-                                               :task/send-to-thk? true
-                                               :task/status :task.status/in-progress
-                                               :task/estimated-end-date end-date
-                                               :task/estimated-start-date start-date
-                                               :meta/created-at (Date.)}
-                                         (when (nil? existing-qa-task-eid)
-                                               {:integration/id (integration-id/unused-random-small-uuid db)}))]}]
-    (log/info "Generated TASK TX data " task-tx-data)
+        task-tx-data (merge {:db/id id-placeholder
+                                :task/group :task.group/construction-quality-assurance
+                                :task/type task-type
+                                :task/send-to-thk? true
+                                :task/status :task.status/in-progress
+                                :task/estimated-end-date end-date
+                                :task/estimated-start-date start-date
+                                :meta/created-at (Date.)}
+                          (when (nil? existing-qa-task-eid)
+                                {:integration/id (integration-id/unused-random-small-uuid db)}))]
+    (log/info "Generated one new TASK TX data " task-tx-data)
     task-tx-data))
 
 
@@ -320,14 +319,14 @@
         construction-activity-id (:construction-activity-db-id attrs)
         _ (println "COUNT of ROWS " (count rows))
         tx-data (reduce
-                     #(conj (:new-tasks %1)
-                        (add-task-from-thk db %2 construction-activity-id))
-                     {:new-tasks []}
-                     (filter #(or
-                                (= (:activity/name %) :activity.name/owners-supervision)
-                                (= (:activity/name %) :activity.name/road-safety-audit)) rows))]
-    (log/info "NEW TASKS: [" tx-data "]")
-    tx-data))
+                  #(conj %1 (add-task-from-thk db %2 construction-activity-id))
+                  []
+                  (filter #(or
+                             (= (:activity/name %) :activity.name/owners-supervision)
+                             (= (:activity/name %) :activity.name/road-safety-audit)) rows))]
+    (println "NEW TASKS: [" tx-data "]")
+    [{:db/id construction-activity-id
+      :activity/tasks tx-data}]))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
