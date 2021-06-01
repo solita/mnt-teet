@@ -181,7 +181,10 @@
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
   {:pre [(asset-model/asset-oid? asset-oid)]}
-  (mapv :v
+  (into []
+        (comp
+         (map :v)
+         (filter (complement asset-model/material-oid?)))
         (d/index-range db {:attrid :asset/oid
                            :start (str asset-oid "-")
                            :end (str asset-oid ".")})))
@@ -196,6 +199,13 @@
                        :in [$ ?project]}
               :args [db thk-project-id]})))
 
+(defn project-assets-and-components
+  "Return all OIDs of assets and their components for the given THK project."
+  [db thk-project-id]
+  (into []
+        (mapcat #(into [%] (asset-component-oids db %)))
+        (project-asset-oids db thk-project-id)))
+
 (defn project-assets-and-components-matching-road
   "Find OIDs of all project assets and components that match a given road.
   If component inherits location from parent, the parent component location is used."
@@ -203,11 +213,12 @@
   (mapv first
         (d/q '[:find ?oid
                :where
-               (project ?e ?project)
-               (location-attr ?e :location/road-nr ?road-nr)
                [?e :asset/oid ?oid]
-               :in $ % ?project ?road-nr]
-             db rules thk-project-id road-nr)))
+               (location-attr ?e :location/road-nr ?road-nr)
+               :in $ % [?oid ...] ?road-nr]
+             db rules
+             (project-assets-and-components db thk-project-id)
+             road-nr)))
 
 (defn project-assets-and-components-with-road
   "Find OIDs of all project assets and components that have a road defined."
@@ -221,21 +232,7 @@
                :in $ % ?project]
              db rules thk-project-id)))
 
-(defn project-assets-and-components
-  "Find OIDs of all project assets and components."
-  [db thk-project-id]
-  (into []
-        (mapcat (fn [[asset-oid]]
-                  (concat (list asset-oid)
-                          (filter
-                           #(not (asset-model/material-oid? %))
-                           (asset-component-oids db asset-oid)))))
-        (d/q '[:find ?oid
-               :where
-               [?e :asset/project ?project]
-               [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
+
 
 (defn project-assets-and-components-without-road
   "Find OIDs of all project assets and components where the road value is missing."
@@ -243,17 +240,11 @@
   (mapv first
         (d/q '[:find ?oid
                :where
-               (project ?e ?project)
-               (location-attr-missing ?e :location/road-nr)
                [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
-
-(defn project-asset-and-component-oids
-  "Return all OIDs of assets and their components for the given THK project."
-  [db thk-project-id]
-  (mapcat #(into [%] (asset-component-oids db %))
-          (project-asset-oids db thk-project-id)))
+               (location-attr-missing ?e :location/road-nr)
+               :in $ % [?oid ...]]
+             db rules
+             (project-assets-and-components db thk-project-id))))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.
@@ -347,7 +338,7 @@
   (let [items (cost-group-attrs-q
                db (if (some? oids)
                     oids
-                    (project-asset-and-component-oids db thk-project-id)))
+                    (project-assets-and-components db thk-project-id)))
         types (into #{} (map (comp :type val)) items)
         type-qty-unit (into {}
                             (d/q '[:find ?e ?u
