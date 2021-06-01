@@ -1170,7 +1170,7 @@
     :app app
     :state state
     :left-panel-action [add-cost-item app version]
-    :right-panel (cost-item-map-panel e! (cost-items-controller/form-state app))}
+    :right-panel (cost-item-map-panel e! cost-item)}
    [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn new-cost-item-page [e! app state]
@@ -1191,7 +1191,9 @@
         :app app
         :state state
         :left-panel-action [add-cost-item app version]
-        :right-panel (cost-item-map-panel e! cost-item)}
+        :right-panel (cost-item-map-panel e! (if component
+                                               (last (asset-model/find-component-path cost-item component))
+                                               cost-item))}
        (cond material
              ^{:key material}
              [material-form e! asset-type-library material cost-item]
