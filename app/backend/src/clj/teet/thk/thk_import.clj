@@ -273,11 +273,15 @@
       (some? query-result)
       (:activity/tasks (ffirst query-result)))))
 
-(defn- get-quality-assurance-task-db-id [db construction-activity-id task-type]
+(defn- get-quality-assurance-task-db-id
+  "Search for the existing task with the same type and start and end dates"
+  [db construction-activity-id task-type start-date end-date]
   (first (reduce
            #(if
-              (= (:db/ident (:task/type (get-task-type db (:db/id %2))))
-                task-type)
+              (and
+                (= (:db/ident (:task/type (get-task-type db (:db/id %2)))) task-type)
+                (= (:task/estimated-start-date (d/pull db '[*] (:db/id %2))) start-date)
+                (= (:task/estimated-end-date (d/pull db '[*] (:db/id %2))) end-date))
               (conj %1 (:db/id %2))
               (identity %1))
            []
@@ -297,10 +301,12 @@
         end-date (:activity/estimated-end-date thk-activity-task-data)
         task-type (get-new-task-type thk-activity-task-data)
         ; check the existing Task db/id
-        existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id task-type)
+        existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id task-type
+                               start-date end-date)
         id-placeholder (if (some? existing-qa-task-eid)
                          existing-qa-task-eid
-                         (str "NEW-TASK-" (name :task.group/construction) "-" task-type))
+                         (str "NEW-TASK-" (name :task.group/construction) "-" task-type
+                           "-" (integration-id/unused-random-small-uuid db)))
         task-tx-data (merge {:db/id id-placeholder
                                 :task/group :task.group/construction-quality-assurance
                                 :task/type task-type
@@ -311,7 +317,7 @@
                                 :meta/created-at (Date.)}
                           (when (nil? existing-qa-task-eid)
                                 {:integration/id (integration-id/unused-random-small-uuid db)}))]
-    (log/info "Generated one new TASK TX data " task-tx-data)
+    (println "Generated one new TASK TX data " task-tx-data)
     task-tx-data))
 
 
