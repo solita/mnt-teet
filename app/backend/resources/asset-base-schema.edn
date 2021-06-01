@@ -286,7 +286,7 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
            :db/cardinality :db.cardinality/many
            :db/doc "The feature groups this material belongs to."}
           {:db/ident :asset-schema.type/material :db/doc "Material type"}]]}
- 
+
  {:db/ident :migration/road-registry-oid
   :txes [[{:db/ident :asset/road-registry-oid
            :db/valueType :db.type/long
@@ -297,7 +297,7 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
  {:db/ident :migration/property-multiple-ctypes
   :txes [[{:db/ident :attribute/parent
            :db/cardinality :db.cardinality/many}]]}
- 
+
  {:db/ident :migration/component-materials
   :txes [[{:db/ident :component/materials
            :db/valueType :db.type/ref
@@ -307,4 +307,10 @@ For example N40-SLD-1 for the first asset in feature class whose OID prefix is S
           {:db/ident :material/type
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "The type of a material"}]]}]
+           :db/doc "The type of a material"}]]}
+
+ {:db/ident :migration/single-point-location
+  :txes [[{:db/ident :location/single-point?
+           :db/doc "If true, this location only has single point (start)."
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one}]]}]

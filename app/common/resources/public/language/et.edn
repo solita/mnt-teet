@@ -769,6 +769,7 @@
   :task/thk-type "THK tüüp",
   :task/type "Ülesanne",
   :task/actual-end-date "Lõppkuupäev",
+  :location/single-point? "Üksik punkt?",
   :meeting/title "Pealkiri",
   :estate-procedure/process-fees "Asjaajamistasud",
   :thk.project/activity-status "Olek",

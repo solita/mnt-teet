@@ -776,6 +776,7 @@
   :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
+  :location/single-point? "Single point?",
   :meeting/title "Title",
   :estate-procedure/process-fees "Processing fees",
   :thk.project/activity-status "Status",

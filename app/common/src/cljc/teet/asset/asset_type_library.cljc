@@ -122,13 +122,14 @@
        identity)))
 #?(:clj
    (defn coerce-tuple [tuple-type value]
-     (let [v (cond
-               (vector? value) value
-               (string? value) (str/split value #"\s*,\s*")
-               :else (throw (ex-info "Unsupported tuple value"
-                                     {:tuple-type tuple-type
-                                      :value value})))]
-       (mapv (coerce-fn tuple-type) v))))
+     (when (some? value)
+       (let [v (cond
+                 (vector? value) value
+                 (string? value) (str/split value #"\s*,\s*")
+                 :else (throw (ex-info "Unsupported tuple value"
+                                       {:tuple-type tuple-type
+                                        :value value})))]
+         (mapv (coerce-fn tuple-type) v)))))
 #?(:clj
    (defn form->db
      "Prepare data from asset form to be saved in the database"
