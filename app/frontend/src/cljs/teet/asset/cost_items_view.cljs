@@ -267,7 +267,8 @@
               :md 4
               :xs 12
               :style {:padding "0.2rem"}}
-        [form/field :location/end-point
+        [form/field {:attribute :location/end-point
+                     :required? true}
          [input-textfield {}]]])
 
      (when-not single-point?
