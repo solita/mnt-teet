@@ -203,7 +203,9 @@
                                                 :activity/name
                                                 :activity/status
                                                 :activity/procurement-nr
-                                                :activity/procurement-id}))
+                                                :activity/procurement-id
+                                                :activity/actual-end-date
+                                                :activity/actual-start-date}))
                        (if act-db-id
                          ;; Existing activity
                          {:db/id act-db-id
