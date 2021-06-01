@@ -767,14 +767,7 @@
 (defn- prepare-location
   "Prepare location for saving."
   [form-data]
-  (as-> form-data f
-    (if (:location/single-point? f)
-      (dissoc f
-              :location/end-point
-              :location/end-km
-              :location/end-offset-m)
-      f)
-    (dissoc f :location/map-open?)))
+  (dissoc form-data :location/map-open? :location/geojson))
 
 (def location-form-keys [:location/start-point :location/end-point
                          :location/road-nr :location/carriageway
