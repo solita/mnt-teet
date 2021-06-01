@@ -934,8 +934,7 @@
        [export-boq-dialog e! app close-export-dialog!])
 
      (let [{:keys [asset-type-library]} app
-           {:keys [cost-items project version] :as page-state} state
-           _ (println "have right panel? " (boolean right-panel))]
+           {:keys [cost-items project version] :as page-state} state]
        [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
         [context/provide :locked? (asset-model/locked? version)
          [project-view/project-full-page-structure
@@ -962,7 +961,8 @@
            [:<>
             [boq-version-statusline e! page-state]
             main-content]
-           :right-panel right-panel}]]])]))
+           :right-panel right-panel
+           :right-panel-padding 0}]]])]))
 
 (defn- format-properties [atl properties]
   (into [:<>]
