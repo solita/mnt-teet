@@ -280,7 +280,7 @@
              (throw (ex-info "Unreferred to input binding symbols"
                              {:unreferred-symbols unreferred-symbols}))))))
 
-     (def datomic-q d/q)
+     (defonce datomic-q d/q)
      (defn q
        "Wrapper to d/q that asserts some validity rules."
        [& args]
