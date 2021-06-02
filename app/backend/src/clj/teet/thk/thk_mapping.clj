@@ -68,8 +68,6 @@
    "4003" :activity.name/detailed-design ;; Pöhiprojekt
    "4004" :activity.name/land-acquisition ;; Maaost
    "4005" :activity.name/construction ;; Teostus
-   "4006" :activity.name/owners-supervision ;; OJV
-   "4009" :activity.name/road-safety-audit ;; Tee Ohutus Audit
    ;; 4010 ekspertiis
    ;; 4011 LOA proj
    "4012" :activity.name/pre-design ;; Eskiisproj
@@ -86,7 +84,7 @@
    "4102" :activity.status/in-progress  ;; Töös
    ;;  4103 Garantiiaeg
    "4104" :activity.status/completed ;; Lõpetatud
-   "4106" :activity.status/in-progress ;;Hankeplaanis
+   ;;  4106 Hankeplaanis
    ;; Unmapped status
    ;;:activity.status/other
    })

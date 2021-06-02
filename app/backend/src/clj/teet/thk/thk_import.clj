@@ -198,7 +198,7 @@
                                   (lookup db [:integration/id act-teet-id])
                                   ;; Lookup using THK id
                                   (lookup db [:thk.activity/id act-thk-id]))
-                                _ (log/info "Received activity " activity " with THK id " act-thk-id
+                                _ (log/info "Received activity with THK id " act-thk-id
                                             (if act-db-id
                                               (str "having TEET :db/id " act-db-id)
                                               "without TEET id => creating new activity")
@@ -269,7 +269,7 @@
       (some? query-result)
       (:activity/tasks (ffirst query-result)))))
 
-(defn- get-quality-assurance-task-db-id
+(defn- get-existing-task-db-id
   "Search for the existing task with the same type and start and end dates"
   [db construction-activity-id task-type start-date end-date]
   (first (reduce
@@ -297,11 +297,10 @@
         end-date (:activity/estimated-end-date thk-activity-task-data)
         thk-activity-status (:activity/status thk-activity-task-data)
         task-type (get-new-task-type thk-activity-task-data)
-        ; check the existing Task db/id
-        existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id task-type
+        existing-task-eid (get-existing-task-db-id db construction-activity-id task-type
                                start-date end-date)
-        id-placeholder (if (some? existing-qa-task-eid)
-                         existing-qa-task-eid
+        id-placeholder (if (some? existing-task-eid)
+                         existing-task-eid
                          (str "NEW-TASK-" (name :task.group/construction) "-" task-type
                            "-" (integration-id/unused-random-small-uuid db)))
         task-tx-data (merge
@@ -314,7 +313,7 @@
                         :task/estimated-end-date end-date
                         :task/estimated-start-date start-date
                         :meta/created-at (Date.)}
-                       (when (nil? existing-qa-task-eid)
+                       (when (nil? existing-task-eid)
                              {:integration/id (integration-id/unused-random-small-uuid db)})
                        {:task/status (if (= :activity.status/completed thk-activity-status)
                                        :task.status/completed
