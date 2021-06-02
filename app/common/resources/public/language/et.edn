@@ -427,7 +427,7 @@
   "Ümberkruntimiskava (krundijaotuskava)",
   :file.document-group/general "Üldosa, seletuskirjad ",
   :task.type/railroad "Raudtee",
-  :activity.name/owners-supervision "Ehitus",
+  :activity.name/owners-supervision "Omanike järelevalve",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
   :task.group/warranty "Garantii",
@@ -505,7 +505,7 @@
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/cost-list "Kululoend",
   :task.type/eia-pre-assessment "Keskkonnamõju eelhinnang",
-  :activity.name/road-safety-audit "Ehitus",
+  :activity.name/road-safety-audit "Teeohutuse audit",
   :task.type/owners-supervision "Omanikujärelevalve",
   :task.group/study "Uuringud",
   :thk.contract.type/construction-works "Ehitustööd",
