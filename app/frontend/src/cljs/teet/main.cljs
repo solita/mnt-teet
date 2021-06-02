@@ -40,6 +40,7 @@
             teet.account.account-view
             teet.asset.cost-groups-view
             teet.asset.cost-items-view
+            teet.asset.materials-and-products-view
             teet.contract.contracts-view
             teet.contract.contract-view
             teet.contract.contract-partners-view

@@ -182,6 +182,17 @@
                  :cost-totals true
                  :road (or (:road query-params) "all-cost-items")}}}
 
+ :materials-and-products
+ {:path "/projects/:project/materials-and-products"
+  :parent :project
+  :view teet.asset.materials-and-products-view/materials-and-products-page
+  :state {:query :asset/project-cost-items ;; TODO
+          :args {:thk.project/id project
+                 :cost-totals true
+                 :road (or (:road query-params) "all-cost-items") ;; TODO
+                 }}}
+
+
  :cost-item
  {:path "/projects/:project/cost-items/:id"
   :parent :cost-items
