@@ -1103,8 +1103,8 @@
         [:div {:style {:max-width "25vw"}}
          [relevant-road-select
           {:e! e!
-           :extra-opts ["all-roads" "no-road-reference"]
-           :extra-opts-label {"all-roads" (tr [:asset :totals-table :all-roads])
+           :extra-opts ["all-cost-items" "no-road-reference"]
+           :extra-opts-label {"all-cost-items" (tr [:asset :totals-table :all-cost-items])
                               "no-road-reference" (tr [:asset :totals-table :no-road-reference])}
            :value (get-in app [:query :road])
 
