@@ -9,6 +9,8 @@
   [x]
   (when (string? x)
     (-> x str/trim
+        ;; Removes the formatted number separator space whereas \s does not
+        (str/replace #"\h" "")
         (str/replace #"\s" "")
         (str/replace "," ".")
         (str/replace "−" "-"))))
