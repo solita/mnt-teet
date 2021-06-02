@@ -234,9 +234,6 @@
   (let [construction-activity (first (filter (comp #{:activity.name/construction} :activity/name) rows))
         construction-activity-integration-id (:activity-db-id construction-activity)
         construction-activity-ids (lookup db [:integration/id construction-activity-integration-id])]
-    (println "Construction activity " construction-activity)
-    (println "Construction activity :activity-integration-id" construction-activity-integration-id)
-    (println "Construction activity :db/id" (:db/id construction-activity-ids))
     (:db/id construction-activity-ids)))
 
 (defn- get-project-attrs [db project-id rows]
@@ -265,7 +262,6 @@
                  :in $ ?e] db task-eid)))
 
 (defn- get-activity-tasks-eids [db activity-eid]
-  (println ">>>>>>> ACTIVITY-EID: " activity-eid)
   (let [query-result
         (d/q '[:find (pull ?e [:activity/tasks])
                :in $ ?e] db activity-eid)]
@@ -299,6 +295,7 @@
   [db thk-activity-task-data construction-activity-id ]
   (let [start-date (:activity/estimated-start-date thk-activity-task-data)
         end-date (:activity/estimated-end-date thk-activity-task-data)
+        thk-activity-status (:activity/status thk-activity-task-data)
         task-type (get-new-task-type thk-activity-task-data)
         ; check the existing Task db/id
         existing-qa-task-eid (get-quality-assurance-task-db-id db construction-activity-id task-type
@@ -307,17 +304,21 @@
                          existing-qa-task-eid
                          (str "NEW-TASK-" (name :task.group/construction) "-" task-type
                            "-" (integration-id/unused-random-small-uuid db)))
-        task-tx-data (merge {:db/id id-placeholder
-                                :task/group :task.group/construction-quality-assurance
-                                :task/type task-type
-                                :task/send-to-thk? true
-                                :task/status :task.status/in-progress
-                                :task/estimated-end-date end-date
-                                :task/estimated-start-date start-date
-                                :meta/created-at (Date.)}
-                          (when (nil? existing-qa-task-eid)
-                                {:integration/id (integration-id/unused-random-small-uuid db)}))]
-    (println "Generated one new TASK TX data " task-tx-data)
+        task-tx-data (merge
+                       {:db/id id-placeholder
+                        :task/group (if (= :task.type/road-safety-audit task-type)
+                                      :task.group/construction-approval
+                                      :task.group/construction-quality-assurance)
+                        :task/type task-type
+                        :task/send-to-thk? true
+                        :task/estimated-end-date end-date
+                        :task/estimated-start-date start-date
+                        :meta/created-at (Date.)}
+                       (when (nil? existing-qa-task-eid)
+                             {:integration/id (integration-id/unused-random-small-uuid db)})
+                       {:task/status (if (= :activity.status/completed thk-activity-status)
+                                       :task.status/completed
+                                       :task.status/not-started)})]
     task-tx-data))
 
 
@@ -429,10 +430,8 @@
             (fn [prj]                                       ;; {"project-id" [{"rows"}..]}
               (when (teet-project? prj)
                     (let [tasks-tx-maps (tasks-tx-data db prj)]
-                      (println "FROM TRANSDUSER tasks-tx-maps:" tasks-tx-maps)
                       tasks-tx-maps))))
-          projects-csv)]
-    (println "TX-IMPORT-TASKS" tx-import-tasks)
+                          projects-csv)]
     tx-import-tasks))
 
 (defn- check-unique-activity-ids [projects]
