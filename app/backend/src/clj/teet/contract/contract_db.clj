@@ -119,6 +119,13 @@
   [[contract status]]
   (assoc contract :thk.contract/status status))
 
+(defn contract-with-status-and-manager
+  "Used after datomic query which returns [contract contract-status manager]"
+  [[contract status manager]]
+  (-> contract
+    (assoc :thk.contract/project-manager manager)
+    (assoc :thk.contract/status status)))
+
 (defn get-contract-with-partners
   [db contract-eid]
   (-> (d/q '[:find (pull ?c [* {:company-contract/_contract [* {:company-contract/company [*]}]}]) ?status
