@@ -180,7 +180,7 @@
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
                  :cost-totals true
-                 :road (or (:road query-params) "all-roads")}}}
+                 :road (or (:road query-params) "all-cost-items")}}}
 
  :cost-item
  {:path "/projects/:project/cost-items/:id"

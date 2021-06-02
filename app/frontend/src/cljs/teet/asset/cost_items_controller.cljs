@@ -226,7 +226,7 @@
       form-update-data)
     form-update-data))
 
-(declare project-relevant-roads)
+(declare project-relevant-roads prepare-location)
 
 (extend-protocol t/Event
 
@@ -236,7 +236,7 @@
       (do
         (log/debug "Not saving, BOQ version is locked.")
         app)
-      (let [form-data (form-state app)
+      (let [form-data (prepare-location (form-state app))
             project-id (get-in app [:params :project])
             id (if (= "new" (get-in app [:params :id]))
                  (next-id! "costitem")
@@ -286,7 +286,7 @@
       (do
         (log/debug "Not saving, BOQ version is locked.")
         app)
-      (let [form-data (form-state app)
+      (let [form-data (prepare-location (form-state app))
             {parent-id :asset/oid}
             (-> (common-controller/page-state app :cost-item)
                 (asset-model/find-component-path (:asset/oid form-data))
@@ -400,15 +400,26 @@
       (do
         (log/debug "Not editing form, BOQ version is locked.")
         app)
-      (let [old-form (form-state app)
-            new-form (cu/deep-merge
-                      old-form
-                      (default-carriageway form-data
-                                           old-form
-                                           (project-relevant-roads (get-in app [:params :project]))))]
-        (process-location-change
-         (update-form app (constantly new-form))
-         old-form new-form))))
+      (if (= (list :location/single-point?) (keys form-data))
+        ;; Only changing single point on/off, don't refetch location
+        (update-form app (fn [form]
+                           (let [single? (:location/single-point? form-data)
+                                 remove-if-single #(if single? nil %)]
+                             (-> form
+                                 (assoc :location/single-point? single?)
+                                 (cu/update-in-if-exists [:location/end-point] remove-if-single)
+                                 (cu/update-in-if-exists [:location/end-km] remove-if-single)
+                                 (cu/update-in-if-exists [:location/end-offset-m] remove-if-single)))))
+        ;; Other form change, maybe refetch location
+        (let [old-form (form-state app)
+              new-form (cu/deep-merge
+                        old-form
+                        (default-carriageway form-data
+                                             old-form
+                                             (project-relevant-roads (get-in app [:params :project]))))]
+          (process-location-change
+           (update-form app (constantly new-form))
+           old-form new-form)))))
 
   ;; When road address was changed on the form, update geometry
   ;; and start/end points from the fetched response
@@ -752,3 +763,21 @@
                :query :asset/project-relevant-roads
                :args {:thk.project/id project-id}
                :result-event (partial ->FetchRelevantRoadsResponse project-id)})))))
+
+(defn- prepare-location
+  "Prepare location for saving."
+  [form-data]
+  (dissoc form-data :location/map-open? :location/geojson))
+
+(def location-form-keys [:location/start-point :location/end-point
+                         :location/road-nr :location/carriageway
+                         :location/start-km :location/end-km
+                         :location/geojson :location/single-point?])
+
+(def location-form-value
+  #(select-keys % location-form-keys))
+
+
+(defn location-form-change
+  [value]
+  (->UpdateForm value))
