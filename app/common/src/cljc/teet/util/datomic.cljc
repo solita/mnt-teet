@@ -289,6 +289,8 @@
          (try
            (apply datomic-q args)
            (finally
-             (let [end (System/currentTimeMillis)]
-               (when (> (- end start) 1000)
-                 (log/debug "SLOW QUERY TAKING OVER 1s" (first args))))))))))
+             (let [end (System/currentTimeMillis)
+                   duration (- end start)]
+               (when (> duration 1000)
+                 (log/debug "SLOW DATOMIC QUERY TOOK " duration "msecs: "
+                            (first args))))))))))
