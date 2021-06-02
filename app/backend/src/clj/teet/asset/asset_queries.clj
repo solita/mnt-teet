@@ -201,6 +201,13 @@
                       :limit -1
                       :components [attr value]})))
 
+(defn- assets-only [db matching-entities]
+  (reduce disj
+          matching-entities
+          (map first (d/q '[:find ?e
+                            :where [(missing? $ ?e :asset/fclass)]
+                            :in $ [?e ...]] db matching-entities))))
+
 (defn- bbq
   "Return set of :db/id value sof entities whose location
   start-point or end-point is within the bounding box."
@@ -229,7 +236,9 @@
                (d/index-range db {:attrid :location/end-point
                                   :start [xmin ymin]
                                   :limit -1}))]
-     (set/union start-within end-within))))
+     (assets-only
+      db
+      (set/union start-within end-within)))))
 
 (defn fclass=
   "Find entities belonging to a single fclass"
@@ -244,7 +253,11 @@
               fclasses)))
 
 (defmethod search-by :common/status [db _ statuses]
-  (apply set/union (map #(e= db :common/status %) statuses)))
+  (assets-only
+   db
+   (into #{}
+         (mapcat #(e= db :common/status %))
+         statuses)))
 
 (defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
   (bbq db xmin ymin xmax ymax))
