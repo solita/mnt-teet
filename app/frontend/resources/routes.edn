@@ -176,7 +176,7 @@
  :cost-items-totals
  {:path "/projects/:project/cost-items-totals"
   :parent :project
-  :view teet.asset.cost-items-view/cost-items-totals-page
+  :view teet.asset.cost-groups-view/cost-items-totals-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
                  :cost-totals true

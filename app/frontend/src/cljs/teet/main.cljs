@@ -38,6 +38,7 @@
             teet.cooperation.cooperation-view
             teet.asset.asset-library-view
             teet.account.account-view
+            teet.asset.cost-groups-view
             teet.asset.cost-items-view
             teet.contract.contracts-view
             teet.contract.contract-view
