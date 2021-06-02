@@ -101,7 +101,7 @@
                             adb project-id
                             (when road
                               (cond
-                                (= road "all-roads")
+                                (= road "all-cost-items")
                                 (asset-db/project-assets-and-components adb project-id)
 
                                 (= road "no-road-reference")
