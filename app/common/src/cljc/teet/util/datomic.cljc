@@ -5,7 +5,8 @@
             #?(:clj [datomic.client.api :as d])
             [clojure.set :as set]
             [teet.util.collection :as cu]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.log :as log]))
 
 (s/def :db/ident keyword?)
 (s/def ::enum (s/or :keyword keyword?
@@ -284,4 +285,10 @@
        "Wrapper to d/q that asserts some validity rules."
        [& args]
        (assert-valid-query args)
-       (apply datomic-q args))))
+       (let [start (System/currentTimeMillis)]
+         (try
+           (apply datomic-q args)
+           (finally
+             (let [end (System/currentTimeMillis)]
+               (when (> (- end start) 1000)
+                 (log/debug "SLOW QUERY TAKING OVER 1s" (first args))))))))))
