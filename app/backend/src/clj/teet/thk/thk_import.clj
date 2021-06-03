@@ -273,13 +273,14 @@
   "Search for the existing task with the same type and start and end dates"
   [db construction-activity-id task-type start-date end-date]
   (first (reduce
-           #(if
-              (and
-                (= (:db/ident (:task/type (get-task-type db (:db/id %2)))) task-type)
-                (= (:task/estimated-start-date (d/pull db '[*] (:db/id %2))) start-date)
-                (= (:task/estimated-end-date (d/pull db '[*] (:db/id %2))) end-date))
-              (conj %1 (:db/id %2))
-              (identity %1))
+           (fn [acc task]
+             (if
+               (and
+                 (= (:db/ident (:task/type (get-task-type db (:db/id task)))) task-type)
+                 (= (:task/estimated-start-date (d/pull db '[*] (:db/id task))) start-date)
+                 (= (:task/estimated-end-date (d/pull db '[*] (:db/id task))) end-date))
+               (conj acc (:db/id task))
+               acc))
            []
            (get-activity-tasks-eids db construction-activity-id))))
 
