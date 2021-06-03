@@ -50,7 +50,7 @@
   width       width (m) of the resulting start/end geometry
   road-nr     the road number
   carriageway the carriageway on the road
-  meters      the meters on the road"
+  meters      the meters on the road from whole road start"
   [client point width road-nr carriageway meters]
   (when-let [ls (line-segment-for-point-on-road client point road-nr carriageway meters)]
     (let [ang (geo/angle ls)]
@@ -79,7 +79,7 @@
     (convert [_ ctx wfs-feature here _key]
       (let [road-nr (some-> wfs-feature :ms:tee_number ->long)
             carriageway (some-> wfs-feature :ms:soidutee_nr ->long)
-            meters (some-> wfs-feature :ms:teeosa_meeter ->long)
+            meters (some-> wfs-feature :ms:km ->bigdec road-model/km->m)
             point (some-> wfs-feature :geometry :coordinates)
             width (some-> wfs-feature (get width-field) ->double)]
         (if (and road-nr carriageway meters point width)
@@ -102,7 +102,7 @@
    ::location (from-point-to-perpendicular-line :ms:trpik)
    :location/road-nr (from-wfs :ms:tee_number ->long)
    :location/carriageway (from-wfs :ms:soidutee_nr ->long)
-   :location/start-km (from-wfs :ms:teeosa_meeter (comp bigdec road-model/m->km ->bigdec))
+   :location/start-km (from-wfs :ms:km ->bigdec)
 
    :common/status (from-wfs :ms:hinne_trhinne_xv
                             #(if (= % "0")
