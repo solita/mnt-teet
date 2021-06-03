@@ -50,20 +50,24 @@
       [contract-common/contract-external-links contract]
       [contract-common/contract-information-row contract]]]))
 
-(defn toggle-list-expansion-button
-  [list-expansion? toggle-list-expansion]
-  [buttons/link-button-with-icon {:class (<class contract-style/toggle-list-expansion-button-style)
-                                  :icon (if @list-expansion?
-                                          [icons/navigation-unfold-less]
-                                          [icons/navigation-unfold-more])
-                                  :on-click toggle-list-expansion}
-   (if @list-expansion?
-     (tr [:contracts :contracts-list :collapse-all])
-     (tr [:contracts :contracts-list :expand-all]))])
+(defn contract-list-expansion-buttons
+  [expand-list collapse-list]
+  [:div
+   [buttons/button-secondary {:size :small
+                              :class (<class contract-style/contract-list-expansion-button-style ".5rem")
+                              :on-click expand-list
+                              :start-icon (r/as-element [icons/navigation-unfold-more])}
+    (tr [:contracts :contracts-list :expand-all])]
+   [buttons/button-secondary {:size :small
+                              :class (<class contract-style/contract-list-expansion-button-style ".5rem")
+                              :on-click collapse-list
+                              :start-icon (r/as-element [icons/navigation-unfold-less])}
+    (tr [:contracts :contracts-list :collapse-all])]])
 
 (defn contacts-list-header
-  [{:keys [contracts-count]}]
+  [{:keys [contracts-count expand-list collapse-list]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
+   [contract-list-expansion-buttons expand-list collapse-list]
    [typography/SmallText (str contracts-count " "
                            (tr (if (= contracts-count 1)
                                  [:contracts :contracts-list :result]
@@ -71,13 +75,13 @@
 
 (defn contracts-list
   [e! contracts]
-  (r/with-let [contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))]
+  (r/with-let [contract-expansion-atom (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))]
     [:div {:class (<class contract-style/contracts-list-style)}
      [contacts-list-header {:contracts-count (count contracts)}]
      (doall
        (for [contract contracts]
          ^{:key (str (:db/id contract))}
-         [contract-card e! contract contract-expansion]))]))
+         [contract-card e! contract contract-expansion-atom]))]))
 
 (def filter-options
   [:my-contracts

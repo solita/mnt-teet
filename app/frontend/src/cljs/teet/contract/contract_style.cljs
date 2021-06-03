@@ -62,7 +62,14 @@
   {:display :flex
    :justify-content :space-between})
 
-(defn toggle-list-expansion-button-style
+(defn contract-list-second
+  [margin-right]
+  {:padding "0 1.18rem"
+   :box-sizing :border-box
+   :height "1.5rem"
+   :margin-right (if margin-right margin-right 0)})
+
+(defn contract-list-expansion-button-style
   []
   ^{:combinators
     {[:> :span] {:color theme-colors/primary
