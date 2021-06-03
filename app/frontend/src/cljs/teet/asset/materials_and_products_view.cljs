@@ -11,9 +11,8 @@
 
 (defn- materials-and-products-page*
   [e! {query :query atl :asset-type-library :as app}
-   {totals :cost-totals version :version
-    closed-totals :closed-totals
-    :or {closed-totals #{}}
+   {materials-and-products :materials-and-products
+    version :version
     :as state}]
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
@@ -37,14 +36,9 @@
        [:div.cost-items-totals
         [:div {:style {:max-width "25vw"}}
          [typography/Heading1 "Materials"]]
-        [:div {:style {:float :right}}
-         [:b
-          (tr [:asset :totals-table :project-total]
-              {:total (:total-cost totals)})]]
-
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
-         "TESTING"]]])))
+         (str materials-and-products)]]])))
 
 (defn materials-and-products-page [e! app state]
   [asset-ui/wrap-atl-loader materials-and-products-page* e! app state])

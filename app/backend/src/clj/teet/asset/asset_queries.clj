@@ -82,6 +82,7 @@
    :args {project-id :thk.project/id
           cost-item :cost-item
           cost-totals :cost-totals
+          materials-and-products :materials-and-products
           road :road}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
@@ -126,7 +127,10 @@
                             (asset-model/material-asset-oid cost-item)
 
                             :else
-                            cost-item))})))))
+                            cost-item))})
+       (when materials-and-products
+         {:materials-and-products
+          ["Foo" "Bar"]})))))
 
 (s/def :boq-export/version integer?)
 (s/def :boq-export/unit-prices? boolean?)

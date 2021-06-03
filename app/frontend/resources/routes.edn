@@ -186,11 +186,9 @@
  {:path "/projects/:project/materials-and-products"
   :parent :project
   :view teet.asset.materials-and-products-view/materials-and-products-page
-  :state {:query :asset/project-cost-items ;; TODO
+  :state {:query :asset/project-cost-items
           :args {:thk.project/id project
-                 :cost-totals true
-                 :road (or (:road query-params) "all-cost-items") ;; TODO
-                 }}}
+                 :materials-and-products true}}}
 
 
  :cost-item
