@@ -117,7 +117,8 @@
                         (dissoc criteria :radius :ol-geolocation :cleanup))}
 
             :road-address
-            {:road-address []}))))))
+            {:road-address []
+             :cleanup #(dissoc % :road-address :cleanup)}))))))
 
   SetCurrentLocation
   (process-event [{location :location} app]
