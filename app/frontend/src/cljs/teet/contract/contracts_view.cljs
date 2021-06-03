@@ -18,7 +18,8 @@
             [teet.contract.contract-style :as contract-style]
             [teet.ui.typography :as typography]
             [teet.ui.container :as container]
-            [teet.contract.contract-status :as contract-status]))
+            [teet.contract.contract-status :as contract-status]
+            [teet.common.common-styles :as common-styles]))
 
 (defn contract-card-header
   [contract-status contract-name contract-url-id]
@@ -220,9 +221,12 @@
                input-change (fn [key value]
                               (swap! filtering-atom assoc key value))
                clear-filters #(reset! filtering-atom default-filtering-value)]
-    [Grid {:container true}
+    [Grid {:style {:flex 1}
+           :class (<class common-styles/flex-1)
+           :container true}
      [Grid {:item true
-            :xs 12}
+            :xs 12
+            :style {:display :flex}}
       [:div {:class (<class contract-style/contract-page-container-style)}
        [:h1 (tr [:contracts :shortcuts (:shortcut @filtering-atom)])]
        [contract-search {:e! e!

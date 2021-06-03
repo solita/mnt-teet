@@ -12,8 +12,11 @@
 (defrecord HighlightResult [result]) ; higlight a result item
 
 ;; Set search area by current location
-(defrecord SearchByCurrentLocation [])
+(defrecord SearchBy [search-by])
 (defrecord SetCurrentLocation []) ; called when location changes
+
+(defrecord AddRoadAddress [address])
+(defrecord RemoveRoadAddress [address])
 
 ;; Build search criteria by key
 (defmulti search-criteria (fn [_out _criteria key] key))
@@ -41,6 +44,9 @@
     (assoc out :current-location [x y radius])
     out))
 
+(defmethod search-criteria :road-address [out {addr :road-address}]
+  (assoc out :road-address addr))
+
 (defn assets-query [criteria]
   (let [args (reduce (fn [out key]
                        (search-criteria out criteria key))
@@ -49,13 +55,17 @@
       {:query :assets/search
        :args args})))
 
+(defn- debounced-search [new-app]
+  (t/fx new-app
+        {:tuck.effect/type :debounce
+         :event ->Search
+         :timeout 500}))
+
 (extend-protocol t/Event
   UpdateSearchCriteria
   (process-event [{criteria :criteria} app]
-    (t/fx (common-controller/update-page-state app [:criteria] merge criteria)
-          {:tuck.effect/type :debounce
-           :event ->Search
-           :timeout 500}))
+    (debounced-search
+     (common-controller/update-page-state app [:criteria] merge criteria)))
 
   Search
   (process-event [_ app]
@@ -82,18 +92,33 @@
      [:search-in-progress?] false
      [:results] results))
 
-  SearchByCurrentLocation
-  (process-event [_ app]
+  SearchBy
+  (process-event [{search-by :search-by} app]
     (common-controller/update-page-state
-     app [:criteria] merge
-     {:search-by :current-location
-      :radius 10
-      :ol-geolocation
-      (doto (ol.Geolocation.
-             #js {:projection "EPSG:3301"
-                  :trackingOptions #js {:enableHighAccuracy true}})
-        (.on "change" (t/send-async! ->SetCurrentLocation))
-        (.setTracking true))}))
+     app [:criteria]
+     (fn [{cleanup :cleanup :as criteria}]
+       (let [criteria (if cleanup
+                        (cleanup criteria)
+                        criteria)]
+         (merge
+          criteria
+          {:search-by search-by}
+          (case search-by
+            :current-location
+            {:radius 10
+             :ol-geolocation
+             (doto (ol.Geolocation.
+                    #js {:projection "EPSG:3301"
+                         :trackingOptions #js {:enableHighAccuracy true}})
+               (.on "change" (t/send-async! ->SetCurrentLocation))
+               (.setTracking true))
+             :cleanup (fn [{g :ol-geolocation :as criteria}]
+                        (.setTracking g false)
+                        (dissoc criteria :radius :ol-geolocation :cleanup))}
+
+            :road-address
+            {:road-address []
+             :cleanup #(dissoc % :road-address :cleanup)}))))))
 
   SetCurrentLocation
   (process-event [{location :location} app]
@@ -106,4 +131,17 @@
   (process-event [{result :result} app]
     (common-controller/assoc-page-state
      app
-     [:results :highlight-oid] (:asset/oid result))))
+     [:results :highlight-oid] (:asset/oid result)))
+
+  AddRoadAddress
+  (process-event [{address :address} app]
+    (debounced-search
+     (common-controller/update-page-state
+      app [:criteria :road-address] conj address)))
+
+  RemoveRoadAddress
+  (process-event [{address :address} app]
+    (debounced-search
+     (common-controller/update-page-state
+      app [:criteria :road-address]
+      (fn [addrs] (filterv #(not= % address) addrs))))))

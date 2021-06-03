@@ -35,3 +35,15 @@
                  :in $ ?business-registry-code]
                db
                business-registry-code)))
+
+(defn is-company?
+  "Check if the given company-id is actually a company"
+  [db company-id]
+  (-> (d/q '[:find ?c
+             :where
+             [?c :company/business-registry-code _]
+             :in $ ?c]
+           db
+           company-id)
+      not-empty
+      boolean))
