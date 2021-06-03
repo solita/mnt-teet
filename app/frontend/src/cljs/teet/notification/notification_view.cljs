@@ -42,6 +42,7 @@
     :notification.type/task-part-review-accepted [icons/action-thumb-up]
     :notification.type/task-part-review-rejected [icons/action-thumb-down]
     :notification.type/task-assigned [icons/action-assignment-ind]
+    :notification.type/task-review-rejected [icons/action-thumb-down]
     :notification.type/activity-waiting-for-review [icons/action-assignment]
     :notification.type/comment-created [icons/communication-comment]
     :notification.type/comment-resolved [icons/action-check-circle-outline]

@@ -168,7 +168,7 @@
    :payload {task-id :task-id
              taskpart-id :taskpart-id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/review {:eid task-id
+   :authorization {:task/submit-results {:eid task-id
                                  :link :task/assignee}}
    :transact (into
                [{:db/id taskpart-id
@@ -287,6 +287,6 @@
      ;; Reject: mark as in-progress and notify assignee
      :reject (into
                [{:db/id task-id
-                 :task/status :task.status/in-progress}]
-               (not-reviewed-files-and-parts-tx db user task-id :file.status/returned :file.part.status/in-progress))
-     (review-notification-tx db user :assignee task-id :notification.type/task-review-rejected task-id))})
+                 :task/status :task.status/in-progress}
+                (review-notification-tx db user :assignee task-id :notification.type/task-review-rejected task-id)]
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/returned :file.part.status/in-progress)))})
