@@ -231,7 +231,7 @@
     :close-on-action? true}
    [button-type (merge button-params
                        {:size :small
-                        :onclick action})
+                        :onClick action})
     button-text]])
 
 (defn task-part-buttons [e! task task-part]
@@ -272,7 +272,7 @@
               :button-text (tr [:task-part :reject])}]]]
 
           :file.part.status/completed
-          [when-authorized :task/task-part-reopen task
+          [when-authorized :task/reopen-task-part task
            [task-part-review-button
             {:action (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))
              :title-text (tr [:task-part :reopen-part])
@@ -292,7 +292,7 @@
   (let [task-part-status (:db/ident (:file.part/status file-part))]
     [:<>
      (when (du/enum= task-part-status :file.part.status/waiting-for-review)
-       [when-authorized :task/task-part-review task
+       [when-authorized :task/review-task-part task
         [start-task-part-review e! (:db/id task) (:db/id file-part)]])
      [when-authorized :task/submit task
       [task-part-buttons e! task file-part]]]))

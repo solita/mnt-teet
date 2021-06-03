@@ -139,7 +139,7 @@
                 (review-notification-tx db user :manager task-id :notification.type/task-waiting-for-review task-id)]
                (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/waiting-for-review))})
 
-(defcommand :task/task-part-review
+(defcommand :task/review-task-part
   {:doc "Submit task part for review and approve/reject."
    :context {:keys [db user]}
    :payload {task-id :task-id
@@ -162,7 +162,7 @@
                 (review-notification-tx db user :assignee taskpart-id :notification.type/task-part-review-rejected task-id)]
                (taskpart-file-tx db user taskpart-id :file.status/returned)))})
 
-(defcommand :task/task-part-submit
+(defcommand :task/submit-task-part
   {:doc "Submit task part for review and approve/reject."
    :context {:keys [db user]}
    :payload {task-id :task-id
@@ -176,7 +176,7 @@
                 (review-notification-tx db user :manager taskpart-id :notification.type/task-part-waiting-for-review task-id)]
                (taskpart-file-tx db user taskpart-id :file.status/submitted))})
 
-(defcommand :task/task-part-reopen
+(defcommand :task/reopen-task-part
   {:doc "Reopen task part"
    :context {:keys [db user]}
    :payload {task-id :task-id
