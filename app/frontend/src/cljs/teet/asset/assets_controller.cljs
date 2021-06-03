@@ -10,6 +10,7 @@
 (defrecord SearchResults [results])
 
 (defrecord HighlightResult [result]) ; higlight a result item
+(defrecord ShowDetails [result]) ; show details for result
 
 ;; Set search area by current location
 (defrecord SearchBy [search-by])
@@ -148,4 +149,12 @@
     (debounced-search
      (common-controller/update-page-state
       app [:criteria :road-address]
-      (fn [addrs] (filterv #(not= % address) addrs))))))
+      (fn [addrs] (filterv #(not= % address) addrs)))))
+
+  ShowDetails
+  (process-event [{result :result} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (:page app)
+           :params (:params app)
+           :query {:details (:asset/oid result)}})))
