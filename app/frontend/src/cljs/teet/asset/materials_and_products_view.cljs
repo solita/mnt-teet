@@ -4,6 +4,7 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.asset.asset-ui :as asset-ui]
             [teet.asset.cost-items-controller :as cost-items-controller]
+            [teet.localization :refer [tr]]
             [teet.ui.table :as table]
             [teet.ui.url :as url]))
 

@@ -251,7 +251,7 @@
   [:div {:class (<class common-styles/padding 1 1)}
    [select/form-select
     {:on-change #(e! (common-controller/->Navigate % params nil))
-     :items [:cost-items :cost-items-totals]
+     :items [:cost-items :cost-items-totals :materials-and-products]
      :value page
      :format-item #(tr [:asset :page %])}]])
 
