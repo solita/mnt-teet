@@ -182,7 +182,7 @@
    :payload {task-id :task-id
              taskpart-id :taskpart-id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/review {:eid task-id
+   :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
    :transact (into
                [{:db/id taskpart-id
