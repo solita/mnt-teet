@@ -6,6 +6,7 @@
             [teet.asset.cost-items-controller :as cost-items-controller]
             [teet.localization :refer [tr]]
             [teet.ui.table :as table]
+            [teet.ui.typography :as typography]
             [teet.ui.url :as url]))
 
 (defn- materials-and-products-page*
@@ -16,8 +17,7 @@
     :as state}]
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
-          listing-opts {:columns asset-model/cost-totals-table-columns
-                        :column-align asset-model/cost-totals-table-align
+          listing-opts {:columns asset-model/materials-and-products-table-columns
                         :column-label-fn #(if (= % :common/status)
                                             (asset-ui/label (asset-type-library/item-by-ident atl %))
                                             (tr [:asset :totals-table %]))
@@ -35,16 +35,8 @@
                     :fgroup-link-fn filter-link-fn
                     :list-features? false}}
        [:div.cost-items-totals
-        #_[filter-breadcrumbs atl query filter-fg-or-fc]
         [:div {:style {:max-width "25vw"}}
-         [asset-ui/relevant-road-select
-          {:e! e!
-           :extra-opts ["all-cost-items" "no-road-reference"]
-           :extra-opts-label {"all-cost-items" (tr [:asset :totals-table :all-cost-items])
-                              "no-road-reference" (tr [:asset :totals-table :no-road-reference])}
-           :value (get-in app [:query :road])
-
-           :on-change (e! cost-items-controller/->SetTotalsRoadFilter)}]]
+         [typography/Heading1 "Materials"]]
         [:div {:style {:float :right}}
          [:b
           (tr [:asset :totals-table :project-total]
