@@ -43,12 +43,10 @@
                              "")))]))
        (into [:<>])))
 
-(defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
+(defn- format-material-table-column [{:keys [e! atl locked?]} column value row]
   (case column
     :material (->> value :db/ident (asset-type-library/item-by-ident atl) asset-ui/label)
-    :component (format-components atl value)#_(let [[ctype count] value]
-                 (str (->> ctype :db/ident (asset-type-library/item-by-ident atl) asset-ui/label)
-                      " (" count ")"))
+    :component (format-components atl value)
     :parameter (format-properties atl value)
     (str value)))
 
@@ -65,10 +63,10 @@
                         :column-label-fn #(if (= % :common/status)
                                             (asset-ui/label (asset-type-library/item-by-ident atl %))
                                             (tr [:asset :totals-table %]))
-                        :format-column (r/partial format-cost-table-column
+                        :format-column (r/partial format-material-table-column
                                                   {:e! e! :atl atl :locked? locked?})}
 
-          filter-link-fn #(url/cost-items-totals
+          filter-link-fn #(url/materials-and-products
                            {:project (get-in app [:params :project])
                             :url/query (merge query {:filter (str (:db/ident %))})})]
       [asset-ui/cost-items-page-structure

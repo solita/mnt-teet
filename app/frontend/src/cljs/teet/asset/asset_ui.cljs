@@ -247,7 +247,7 @@
      :simple-view [export-boq-form e! close-export-dialog!
                    (get-in app [:params :project])]}]])
 
-(defn- cost-items-navigation [e! {:keys [page params]}]
+(defn- cost-items-navigation-select [e! {:keys [page params]}]
   [:div {:class (<class common-styles/padding 1 1)}
    [select/form-select
     {:on-change #(e! (common-controller/->Navigate % params nil))
@@ -418,7 +418,7 @@
              :on-click open-export-dialog!}]
            :left-panel
            [:div {:style {:overflow-y :scroll}}
-            [cost-items-navigation e! app]
+            [cost-items-navigation-select e! app]
             left-panel-action
             [cost-item-hierarchy
              (merge hierarchy
