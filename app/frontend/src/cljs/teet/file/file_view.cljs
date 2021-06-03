@@ -125,7 +125,10 @@
                selected-part-id (r/atom nil)
                change-part #(reset! selected-part-id (:file.part/number %))]
               (let [selected-part (when @selected-part-id
-                                    (first (filter (comp #(= @selected-part-id %) :file.part/number) parts)))]
+                                    (if
+                                      (= 0 @selected-part-id)
+                                      {:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}
+                                      (first (filter (comp #(= @selected-part-id %) :file.part/number) parts))))]
                [:div
                 [:div {:class [(<class common-styles/flex-row)
                                (<class common-styles/margin-bottom 1)]}

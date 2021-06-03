@@ -128,7 +128,8 @@
              (notification-db/navigation-info db user notification-id)]
     (case (:db/ident type)
       (:notification.type/task-waiting-for-review
-       :notification.type/task-assigned)
+       :notification.type/task-assigned
+       :notification.type/task-review-rejected)
       (task-navigation-info db (:db/id target))
 
       (:notification.type/task-part-waiting-for-review

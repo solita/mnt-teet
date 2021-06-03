@@ -6,7 +6,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Checkbox]]
             [teet.ui.typography :as typography]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
@@ -16,7 +16,8 @@
             [teet.routes :as routes]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [clojure.string :as str]))
 
 
 (defn partner-listing
@@ -63,15 +64,29 @@
    [typography/Text3 {:class (<class common-styles/inline-block)}
     (:company/business-registry-code partner)]])
 
-(defn selected-company-confirmation
-  [e! company]
+(defn company-info-column
+  [{:company/keys [country name emails phone-numbers]}]
   [:div
-   [:span (pr-str company)]
-   [buttons/button-primary {}
-    "Confirm company"]])
+   [common/basic-information-column
+    [{:label [typography/TextBold (tr [:fields :company/country])]
+      :data (tr [:countries country])}
+     {:label [typography/TextBold (tr [:fields :company/name])]
+      :data name}
+     {:label [typography/TextBold (tr [:fields :company/emails])]
+      :data (str/join ", " emails)}
+     {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
+      :data (str/join ", " phone-numbers)}]]])
+
+(defn selected-company-information
+  [company]
+  [:div
+   [:div {:class (<class common-styles/margin-bottom 1.5)}
+    [common/info-box {:variant :success
+                      :title "Information found"
+                      :content [company-info-column company]}]]])
 
 (defn new-company-footer
-  [{:keys [cancel validate disabled?]}]
+  [e! form-value {:keys [cancel validate disabled?]}]
   [:div {:class (<class form/form-buttons)}
    [:div {:style {:margin-left :auto
                   :text-align :center}}
@@ -89,77 +104,79 @@
                                 :on-click validate}
         (tr [:buttons :save])])]]])
 
-(defn new-company-form
-  [e! contract form-value]
-  (r/with-let [on-change #(e! (contract-partners-controller/->UpdateNewCompanyForm %))]
-    (let [foreign-company? (not= :ee (:company/country form-value))]
-      [:div
-       [form/form2 {:e! e!
-                    :value form-value
-                    :save-event #(common-controller/->SaveFormWithConfirmation
-                                   :thk.contract/add-contract-partner
-                                   {:form-data form-value
-                                    :contract (select-keys contract [:db/id])}
-                                   (fn [response]
-                                     (fn [e!]
-                                       (e! (common-controller/->Refresh))
-                                       (e! (contract-partners-controller/->ClearNewCompanyForm))
-                                       (e! (common-controller/map->NavigateWithExistingAsDefault
-                                             {:query {:page :partner-info
-                                                      :partner (:company-contract-id response)}}))))
-                                   (tr [:contract :contract-partner-saved]))
-                    :cancel-event contract-partners-controller/->CancelAddNewCompany
-                    :on-change-event on-change
-                    :spec :contract-company/new-company}
-        [form/field :company/country
-         [select/country-select {:show-empty-selection? false}]]
-        [form/field :company/business-registry-code
+(defn new-company-form-fields
+  [form-value]
+  (let [foreign-company? (not= :ee (:company/country form-value))]
+    [:div
+     [form/field :company/country
+      [select/country-select {:show-empty-selection? false}]]
+     [form/field {:attribute :company/business-registry-code}
+      [TextField {}]]
+     (when foreign-company?
+       [:<>
+        [form/field :company/name
          [TextField {}]]
-        (when foreign-company?
-          [:<>
-           [form/field :company/name
-            [TextField {}]]
-           [form/field :company/emails
-            [TextField {}]]
-           [form/field :company/phone-numbers
-            [TextField {}]]])
-        [form/footer2 new-company-footer]]])))
-
+        [form/field :company/emails
+         [TextField {}]]
+        [form/field :company/phone-numbers
+         [TextField {}]]])]))
 
 (defn new-partner-form
-  [e! contract form-value]
+  [e! contract]
   (r/with-let [add-new-company? (r/atom false)
-               selected-company (r/atom nil)
                add-new-company #(reset! add-new-company? true)
-               select-company #(reset! selected-company %)]
-    [Grid {:container true}
-     [Grid {:item true
-            :xs 12
-            :md 6}
-      [:<>
-       [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
-        (tr [:contract :add-company])]
-       (cond
-         @add-new-company?
-         [new-company-form e! contract form-value]
-         (some? @selected-company)
-         [selected-company-confirmation e! @selected-company]
-         :else
-         [select/select-search
-          {:e! e!
-           :label (tr [:contract :company-search-label])
-           :placeholder (tr [:contract :company-search-placeholder])
-           :no-results (tr [:contract :no-companies-matching-search])
-           :query (fn [text]
-                    {:args {:search-term text
-                            :contract-eid (:db/id contract)}
-                     :query :company/search})
-           :on-change select-company
-
-           :format-result partner-search-result
-           :after-results-action {:title (tr [:contract :add-company-not-in-teet])
-                                  :on-click add-new-company
-                                  :icon [icons/content-add]}}])]]]))
+               select-company #(e! (contract-partners-controller/->SelectCompany %))
+               on-change #(e! (contract-partners-controller/->UpdateNewCompanyForm %))]
+    (let [form-value (:new-partner contract)
+          selected-company? (boolean (:db/id form-value))
+          partner-save-command (if selected-company?
+                                 :thk.contract/add-existing-company-as-partner
+                                 :thk.contract/add-new-contract-partner-company)]
+      [Grid {:container true}
+       [Grid {:item true
+              :xs 12
+              :md 6}
+        [form/form2 {:e! e!
+                     :value form-value
+                     :save-event #(common-controller/->SaveFormWithConfirmation
+                                    partner-save-command
+                                    {:form-data form-value
+                                     :contract (select-keys contract [:db/id])}
+                                    (fn [response]
+                                      (fn [e!]
+                                        (e! (common-controller/->Refresh))
+                                        (e! (contract-partners-controller/->ClearNewCompanyForm))
+                                        (e! (common-controller/map->NavigateWithExistingAsDefault
+                                              {:query {:page :partner-info
+                                                       :partner (:company-contract-id response)}}))))
+                                    (tr [:contract :contract-partner-saved]))
+                     :cancel-event contract-partners-controller/->CancelAddNewCompany
+                     :on-change-event on-change
+                     :spec :contract-company/new-company}
+         [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
+          (tr [:contract :add-company])]
+         (cond
+           @add-new-company?
+           [new-company-form-fields form-value]
+           selected-company?
+           [selected-company-information form-value]
+           :else
+           [:div
+            [select/select-search
+             {:e! e!
+              :label (tr [:contract :company-search-label])
+              :placeholder (tr [:contract :company-search-placeholder])
+              :no-results (tr [:contract :no-companies-matching-search])
+              :query (fn [text]
+                       {:args {:search-term text
+                               :contract-eid (:db/id contract)}
+                        :query :company/search})
+              :on-change select-company
+              :format-result partner-search-result
+              :after-results-action {:title (tr [:contract :add-company-not-in-teet])
+                                     :on-click add-new-company
+                                     :icon [icons/content-add]}}]])
+         [form/footer2 (r/partial new-company-footer e! form-value)]]]])))
 
 (defn partners-default-view
   []
@@ -174,7 +191,7 @@
   [:h1 (pr-str selected-partner)])
 
 (defn partners-page-router
-  [e! {:keys [query forms] :as app} contract]
+  [e! {:keys [query] :as app} contract]
   (let [selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
                               (filter
@@ -183,7 +200,7 @@
                               first)]
     (case (keyword (:page query))
       :add-partner
-      [new-partner-form e! contract (:new-partner forms)]
+      [new-partner-form e! contract]
       :partner-info
       [partner-info e! app selected-partner]
       [partners-default-view])))

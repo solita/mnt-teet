@@ -21,7 +21,9 @@
             [teet.ui.mentions :as mentions]
             [teet.ui.common :as common-ui]
             [teet.contract.contract-status :as contract-status]
-            [teet.contract.contract-common :as contract-common]))
+            [teet.contract.contract-common :as contract-common]
+            [teet.ui.table :as table]))
+
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -352,6 +354,37 @@
 ;type signed-at start-of-work deadline extended-deadline
 ;warranty-end-date cost
 
+
+(defn simple-table-demo
+  []
+  [table/simple-table
+   [["Foo" {}]
+    ["bar" {}]
+    ["baz" {}]
+    ["bax" {}]]
+   [[["Foo"]
+     ["bar"]
+     ["baz"]
+     ["bax"]]
+    [["Foo"]
+     ["bar"]
+     ["baz"]
+     ["bax"]]]])
+
+(defn basic-information-column-demo
+  []
+  [:div {:style {:display :flex
+                 :justify-content :center}}
+   [:div {:style {:flex 1
+                  :max-width "500px"}}
+    [common-ui/basic-information-column
+     [{:key "1"
+       :label [:strong "foo"]
+       :data [:span "wiuh"]}
+      {:key "2"
+       :label [:strong "bar"]
+       :data [:span "wiuh"]}]]]])
+
 (def demos
   [{:id :context-menu
     :heading "Context menu"
@@ -392,7 +425,13 @@
    {:id :contracts
     :heading "Contract components"
     :component [contract-demo]}
-   ])
+   {:id :simple-table
+    :heading "simple table"
+    :component [simple-table-demo]}
+
+   {:id :basic-information-column
+    :heading "basic info column demo"
+    :component [basic-information-column-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
