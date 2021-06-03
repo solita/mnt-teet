@@ -44,8 +44,12 @@
     (assoc out :current-location [x y radius])
     out))
 
-(defmethod search-criteria :road-address [out {addr :road-address}]
-  (assoc out :road-address addr))
+(defmethod search-criteria :road-address [out {addr :road-address
+                                               search-by :search-by}]
+  (if (and (= search-by :road-address)
+           (seq addr))
+    (assoc out :road-address addr)
+    out))
 
 (defn assets-query [criteria]
   (let [args (reduce (fn [out key]
