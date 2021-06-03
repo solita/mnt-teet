@@ -181,7 +181,8 @@
                            name :activity/name
                            task-id :activity/task-id
                            :as activity} activities
-                          ;; Only process activities here except 2 with activity_typefk 4006 and 4009
+                          ;; Only process activities here except two specials with activity_typefk 4006 and 4009,
+                          ;; which contain info about tasks created in THK and to be imported separately
                           :when (and
                                   id
                                   name
