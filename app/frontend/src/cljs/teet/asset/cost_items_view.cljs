@@ -641,7 +641,7 @@
                        :inherits-location? true
                        :material-oid material-oid
                        :cost-item-data cost-item-data
-                       :common? false
+                       :common :ctype/material
                        :material-type material-type}]]]
 
         [:div {:class (<class common-styles/flex-row-space-between)
