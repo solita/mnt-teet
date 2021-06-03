@@ -17,7 +17,7 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [cheshire.core :as cheshire]
-            [teet.util.coerce :refer [->long]]
+            [teet.util.coerce :refer [->long ->bigdec]]
             [teet.util.collection :as cu]
             [clojure.set :as set]
             [teet.util.geo :as geo]))
@@ -266,6 +266,37 @@
   (bbq db (- x radius) (- y radius) (+ x radius) (+ y radius)
        (fn [{point :v}]
          (<= (geo/distance point [x y]) radius))))
+
+(defn search-by-road-address [db {:location/keys [road-nr carriageway start-km end-km] :as addr}]
+  (into #{}
+        (map first)
+        (d/q {:query
+              (vec
+               (concat
+                '[:find ?e
+                  :where
+                  [?e :location/road-nr ?road-nr]
+                  [?e :location/carriageway ?carriageway]]
+                (when (or start-km end-km)
+                  '[[?e :location/start-km ?start]])
+                (when start-km
+                  '[[(>= ?start ?start-km)]])
+                (when end-km
+                  ;; If asset has no end km use the start km (single point)
+                  '[[(get-else $ ?e :location/end-km ?start) ?end]
+                    [(<= ?end ?end-km)]])
+                '[[?e :asset/fclass _]]
+                '[:in $ ?road-nr ?carriageway]
+                (when start-km '[?start-km])
+                (when end-km '[?end-km])))
+              :args (remove nil? [db road-nr carriageway
+                                  (some-> start-km ->bigdec)
+                                  (some-> end-km ->bigdec)])})))
+
+(defmethod search-by :road-address [db _ addrs]
+  (apply set/union
+         (map (partial search-by-road-address db)
+              addrs)))
 
 (defn- search-by-map [db criteria-map]
   (reduce-kv (fn [acc by val]
