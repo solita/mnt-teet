@@ -115,7 +115,7 @@
                                 where)
                        :in in}
                :args args})
-      (mapv contract-db/contract-with-status-and-manager)
+      (mapv contract-db/contract-with-status)
       (mapv contract-model/db-values->frontend))))
 
 (defquery :contracts/list-contracts
