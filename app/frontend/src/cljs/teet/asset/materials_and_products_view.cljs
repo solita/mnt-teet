@@ -16,12 +16,11 @@
   (case column
     :material (:material/type material)
     :common/status (:common/status material)
-    :parameter (-> material (dissoc :count :component/_materials :material/type))
-    :component [(-> material :component/_materials :component/ctype) (:count material)]
+    :parameter (-> material (dissoc :component/_materials :material/type))
+    :component (->> material :component/_materials (map (comp :db/ident :component/ctype)))
     :material-approval-status "TODO"))
 
 (defn- format-properties [atl properties]
-  (println "properties" properties)
   (into [:<>]
         (map (fn [[k v u]]
                [:div
@@ -32,10 +31,22 @@
         (asset-type-library/format-properties @localization/selected-language
                                               atl properties)))
 
+(defn- format-components [atl components]
+  (->> components
+       (group-by identity)
+       (map (fn [[ctype components]]
+              [:div (str (->> ctype (asset-type-library/item-by-ident atl)
+                              asset-ui/label)
+                         (let [num-components (count components)]
+                           (if (> num-components 1)
+                             (str " (" num-components ")")
+                             "")))]))
+       (into [:<>])))
+
 (defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
   (case column
     :material (->> value :db/ident (asset-type-library/item-by-ident atl) asset-ui/label)
-    :component (let [[ctype count] value]
+    :component (format-components atl value)#_(let [[ctype count] value]
                  (str (->> ctype :db/ident (asset-type-library/item-by-ident atl) asset-ui/label)
                       " (" count ")"))
     :parameter (format-properties atl value)
