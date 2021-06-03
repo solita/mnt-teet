@@ -4,7 +4,8 @@
             [teet.util.collection :as cu]
             [clojure.string :as str]
             [teet.contract.contract-db :as contract-db]
-            [teet.contract.contract-model :as contract-model])
+            [teet.contract.contract-model :as contract-model]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 (defmulti contract-search-clause (fn [[attribute _value] _user]
@@ -122,8 +123,9 @@
    :project-id nil
    :authorization {}}
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
-      (sort-by :meta/created-at)
-      reverse))
+    (sort-by :meta/created-at)
+    reverse
+    (mapv du/idents->keywords)))
 
 (defquery :contracts/project-related-contracts
   {:doc "Return a list of contracts related to the given project"

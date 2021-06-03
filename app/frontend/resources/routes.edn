@@ -180,7 +180,7 @@
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
                  :cost-totals true
-                 :road (or (:road query-params) "all-roads")}}}
+                 :road (or (:road query-params) "all-cost-items")}}}
 
  :cost-item
  {:path "/projects/:project/cost-items/:id"
@@ -228,7 +228,6 @@
  :contract
  {:path "/contracts/:contract-ids"                          ;; /contracts/{procurement-id}-{procurement-part-id}
   :view teet.contract.contract-view/contract-page
-  :extenal-links [teet.contract-contract-view/contract-links state]
   :crumb (teet.contract.contract-model/contract-url-id state)
   :title (teet.contract.contract-model/contract-name state)
   :parent :contracts
@@ -236,10 +235,9 @@
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}
 
- :partners
+ :contract-partners
  {:path "/contracts/:contract-ids/partners"
-  :view teet.contract.contract-view/partner-page
-  :extenal-links [teet.contract-contract-view/contract-links state]
+  :view teet.contract.contract-partners-view/partners-page
   :crumb (tr [:contract :partners-listing])
   :title (teet.contract.contract-model/contract-name state)
   :parent :contract

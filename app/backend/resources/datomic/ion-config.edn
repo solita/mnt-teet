@@ -20,6 +20,8 @@
          teet.task.task-tx/delete-task
          teet.asset.asset-tx/save-asset
          teet.asset.asset-tx/save-component
+         teet.asset.asset-tx/save-material
+         teet.asset.asset-tx/import-assets
          teet.asset.asset-tx/lock]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
@@ -76,7 +78,12 @@
             :description "Delete user email addresses from user information stored in Datomic"}
 
            :notify
-            {:fn teet.notification.notification-ion/notify
-             :description "Scheduled notifications"}}
+           {:fn teet.notification.notification-ion/notify
+            :description "Scheduled notifications"}
+
+           :asset-import
+           {:fn teet.asset.asset-road-registry-import/import-ion
+            :description "Import road registry WFS objects by type"}
+           }
 
  :app-name "teet-datomic"}

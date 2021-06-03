@@ -63,7 +63,8 @@
                               com.datomic/dev-local {:mvn/version "0.9.229"}}
                  :extra-paths ["dev-src" "test"]}
            :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
-                                     org.clojure/tools.namespace {:mvn/version "0.3.1"}}
+                                     org.clojure/tools.namespace {:mvn/version "0.3.1"}
+                                     com.datomic/dev-local {:mvn/version "0.9.229"}}
                         :extra-paths ["dev-src" "test"]}
 
            :rebl {:extra-deps {com.cognitect/rebl {:mvn/version "0.9.240"}

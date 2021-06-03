@@ -11,8 +11,8 @@
             [reagent.core :as r]
             [teet.ui.util :refer [mapc]]
             [teet.ui.icons :as icons]
-            [postgrest-ui.components.scroll-sensor :as scroll-sensor]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.ui.common :as common-ui]))
 
 (defn table-filter-style
   []
@@ -95,10 +95,11 @@
 (defn- db-id-key [row]
   (str (:db/id row)))
 
-(defn listing-body [{:keys [rows on-row-click columns column-align get-column format-column key]
-                     :or {get-column get
-                          key db-id-key
-                          format-column default-format-column}}]
+(defn listing-body
+  [{:keys [rows on-row-click columns column-align get-column format-column key on-row-hover]
+    :or {get-column get
+         key db-id-key
+         format-column default-format-column}}]
   [TableBody {}
    (doall
     (for [row rows]
@@ -106,7 +107,9 @@
       [TableRow (merge
                  {:class (<class row-style)}
                  (when on-row-click
-                   {:on-click (r/partial on-row-click row)}))
+                   {:on-click (r/partial on-row-click row)})
+                 (when on-row-hover
+                   {:on-mouse-over (r/partial on-row-hover row)}))
        (doall
         (for [column columns]
           ^{:key (name column)}
@@ -200,7 +203,8 @@
             (merge opts
                    {:rows (listing-items state data)})]]
           (when default-show-count
-            [scroll-sensor/scroll-sensor (r/partial show-more! state)])])})))
+            [common-ui/scroll-sensor
+             (r/partial show-more! state)])])})))
 
 (defn- filtered-data [get-column data filters]
   (filter (fn [row]
@@ -245,14 +249,14 @@
                              :filters filters
                              :data data)]])))
 
-(defn simple-table-row-style
+(defn- simple-table-row-style
   []
   ^{:pseudo {:first-of-type {:border-top :none}}}
   {:border-width "1px 0"
    :border-style :solid
    :border-color theme-colors/gray-lighter})
 
-(defn table-heading-cell-style
+(defn- table-heading-cell-style
   []
   ^{:pseudo {:first-of-type {:padding-right 0}}}
   {:white-space :nowrap
@@ -261,7 +265,7 @@
    :color theme-colors/gray
    :padding-right "0.5rem"})
 
-(defn simple-table-cell-style
+(defn- simple-table-cell-style
   []
   ^{:pseudo {:last-of-type {:padding-right 0}}}
   {:padding "0.5rem 0.5rem 0.5rem 0"})

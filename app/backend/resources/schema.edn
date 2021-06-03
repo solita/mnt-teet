@@ -2098,5 +2098,12 @@
           {:db/ident :task/completed-by
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Ref to user entity who completed the task"}]]}]
+           :db/doc "Ref to user entity who completed the task"}]]}
+
+ {:db/ident :migration/remove-uniqueness-from-part-id
+  :txes [[[:db/retract :thk.contract/procurement-part-id :db/unique :db.unique/identity]]]}
+
+ {:db/ident :migration/add-uniqueness-to-business-id
+  :txes [[{:db/ident :company/business-registry-code
+           :db/unique :db.unique/identity}]]}]
 

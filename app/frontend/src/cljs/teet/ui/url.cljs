@@ -97,23 +97,28 @@
                           component))
 
 (defn- link-component
-  [{:keys [page params query style class component target]
-    :or {component common/Link}}
+  [{:keys [page params query style
+           class component target
+           component-opts]
+    :or {component common/Link
+         component-opts {}}}
    content]
   (fn [{context-params :params}]
     (let [url-fn (route-url-fns page)]
       (when (nil? url-fn)
         (log/error "No such page:" page))
       [component
-       (merge {:href (url-fn (merge context-params params
-                                    (when query
-                                      {::query query})))}
-              (when class
-                {:class class})
-              (when target
-                {:target target})
-              (when style
-                {:style style}))
+       (merge
+         component-opts
+         {:href (url-fn (merge context-params params
+                               (when query
+                                 {::query query})))}
+         (when class
+           {:class class})
+         (when target
+           {:target target})
+         (when style
+           {:style style}))
        content])))
 
 (defn Link

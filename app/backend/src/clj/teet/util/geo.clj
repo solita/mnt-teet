@@ -89,14 +89,11 @@
                 :end p2)]
     [segment point]))
 
-(defn line-string-offset-point
-  "Return a point that is given offset meters to the side of the
-  `:start` or `:end` line segment. If the given offset is positive
-  the offset point is to the right side of the line, otherwise
-  the point is to the left side of the line."
-  [line-string offset start-or-end]
-  (let [[line-seq [px py]] (start-or-end-segment line-string start-or-end)
-        angle (angle line-seq)
+(defn offset-point
+  "Given a `point`, `angle` of the line the point is on and and `offset` in meters,
+  returns a point that is to the right or left side of the line from the point."
+  [point angle offset]
+  (let [[px py] point
         point-angle (+ angle
                        (if (pos? offset)
                          (- (/ Math/PI 2))
@@ -105,6 +102,16 @@
         x (+ px (* offset (Math/cos point-angle)))
         y (+ py (* offset (Math/sin point-angle)))]
     [x y]))
+
+(defn line-string-offset-point
+  "Return a point that is given offset meters to the side of the
+  `:start` or `:end` line segment. If the given offset is positive
+  the offset point is to the right side of the line, otherwise
+  the point is to the left side of the line."
+  [line-string offset start-or-end]
+  (let [[line-seq line-point] (start-or-end-segment line-string start-or-end)
+        angle (angle line-seq)]
+    (offset-point line-point angle offset)))
 
 (defn line-string-point-offset
   "Return offset how far the point is from linestring start or end point.

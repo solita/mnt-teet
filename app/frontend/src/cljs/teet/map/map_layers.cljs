@@ -14,7 +14,8 @@
             [ol.format.WFS]
             [ol.format.GeoJSON]
             [ol.loadingstrategy :as ol-loadingstrategy]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.common-controller :as common-controller]))
 
 
 (def ^:const default-projection "EPSG:3301")
@@ -175,7 +176,7 @@
                              :params #js {:LAYERS layer
                                           :FORMAT "image/png"}})})]
        (.set layer "teet-source" name)
-       [name (layer/->OpenLayersTaso layer)]))))
+       [name (layer/->OpenLayersTaso layer nil)]))))
 
 (def create-wfs-layer
   (memoize
@@ -213,7 +214,39 @@
                       {:background-color theme-colors/gray-dark
                        :single-line? false
                        :height 300}))
-       {name (layer/->OpenLayersTaso layer)}))))
+       {name (layer/->OpenLayersTaso layer nil)}))))
+
+(defn query-layer
+  "Layer for query that returns GeoJSON for area."
+  [e! query payload {:keys [style-fn min-resolution max-resolution] :as opts}]
+  (let [source (ol.source.Vector. #js {:projection "EPSG:3301"
+                                       :strategy ol-loadingstrategy/bbox
+                                       :format (ol.format.GeoJSON.
+                                                #js {:defaultDataProjection "EPSG:3301"})})
+        layer (ol.layer.Vector.
+               #js {:updateWhileInteracting false
+                    :source source})
+
+        loader (fn [extent _ _]
+                 (let [url (common-controller/query-url
+                            query (merge payload
+                                         {:bbox extent}))]
+                   (-> (common-controller/fetch* e! nil url)
+                       (.then #(.json %))
+                       (.then (fn [json]
+                                (let [features (-> source
+                                                   .getFormat
+                                                   (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
+                                  (doto source
+                                    (.addFeatures features)
+                                    .refresh)))))))]
+    (when min-resolution
+      (.setMinResolution layer min-resolution))
+    (when max-resolution
+      (.setMaxResolution layer max-resolution))
+    (.setLoader source loader)
+    (.setStyle layer style-fn)
+    (layer/->OpenLayersTaso layer nil)))
 
 
 (defmethod create-data-layer :teeregister
