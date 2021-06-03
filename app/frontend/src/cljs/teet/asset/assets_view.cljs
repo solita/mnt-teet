@@ -239,23 +239,25 @@
     [icons/maps-map]]])
 
 
-(defn- assets-results [_ _ _ _ _] ;; FIXME: bad name, it is shown always
+(defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
     (r/create-class
      {:component-did-update
       (fn [this
-           [_ _ _ _ old-query _]]
-        (let [[_ _ _ _ new-query _] (r/argv this)]
+           [_ old-opts]]
+        (let [[_ new-opts] (r/argv this)
+              old-query (:asset-query old-opts)
+              new-query (:asset-query new-opts)]
           (when (not= old-query new-query)
             (next-map-key!))))
 
       :reagent-render
-      (fn [e! atl criteria assets-query
-           {:keys [assets geojson more-results? result-count-limit
-                   highlight-oid]}]
-        (let [table-pane
+      (fn [{:keys [e! atl criteria assets-query results]}]
+        (let [{:keys [assets geojson more-results? result-count-limit
+                      highlight-oid]} results
+              table-pane
               [:div {:style {:background-color theme-colors/white
                              :padding "0.5rem"}}
                [typography/Heading1 (tr [:asset :manager :result-count]
@@ -269,6 +271,7 @@
                  :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
                                        (tr [:fields %]))
                  :on-row-hover (e! assets-controller/->HighlightResult)
+                 :on-row-click (e! assets-controller/->ShowDetails)
                  :format-column format-assets-column
                  :data assets
                  :key :asset/oid}]]
@@ -316,4 +319,6 @@
                              :defaultSize (if @filters-collapsed? 30 330)
                              :allowResize false}
         [asset-filters e! atl criteria filters-collapsed?]
-        [assets-results e! atl criteria query results]]])))
+        [assets-results {:e! e! :atl atl :criteria criteria
+                         :asset-query query
+                         :results results}]]])))
