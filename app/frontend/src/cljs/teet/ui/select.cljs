@@ -92,6 +92,52 @@
        [:span {:class (<class common-styles/input-error-text-style)}
         error-text])]))
 
+(defn form-select-grouped [{:keys [label name id items on-change value format-item label-element
+                           show-label? show-empty-selection? error error-text required empty-selection-label
+                           data-item? read-only? dark-theme?]
+                    :or {format-item :label
+                         show-label? true
+                         data-item? false
+                         dark-theme? false}}]
+  (let [option-idx (zipmap items (range))
+        change-value (fn [e]
+                       (let [val (-> e .-target .-value)
+                             _ (log/debug "Group change: " val)]
+                         (on-change val)))]
+    [:label {:for id
+             :class (<class common-styles/input-label-style read-only? dark-theme?)}
+     (when show-label?
+       (if label-element
+         [label-element label (when required [common/required-astrix])]
+         [typography/Text2Bold
+          label (when required
+                  [common/required-astrix])]))
+     [:div {:style {:position :relative}}
+      [:select
+       {:value (do (log/debug "Group value: " value) (or value ""))
+        :name name
+        :disabled read-only?
+        :class (<class primary-select-style error read-only?)
+        :required (boolean required)
+        :id (str "grouped-select" id)
+        :on-change (fn [e]
+                     (change-value e))}
+       (when show-empty-selection?
+         [:option {:value "" :label empty-selection-label}])
+       (doall
+         (map-indexed
+           (fn [k group]
+             [:optgroup {:label (:group-label group) :key k}
+             (map-indexed (fn [i item] [:option (merge {:value (:item-value item)
+                              :key (+ (* k 100) i)}
+                             (when data-item?
+                               {:data-item (str item)}))
+              (format-item item)]) (:group-items group))])
+           items))]]
+     (when (and error-text error)
+       [:span {:class (<class common-styles/input-error-text-style)}
+        error-text])]))
+
 ;; TODO this needs better styles and better dropdown menu
 
 (defonce enum-values (r/atom {}))

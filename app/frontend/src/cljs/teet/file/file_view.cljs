@@ -24,7 +24,7 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid LinearProgress IconButton CircularProgress
+            [teet.ui.material-ui :refer [Grid LinearProgress IconButton Collapse CircularProgress
                                          DialogActions DialogContentText CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
@@ -36,13 +36,16 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.ui.common :as common-ui]
-            [taoensso.timbre :as log]))
+            [teet.ui.container :as container]
+            [taoensso.timbre :as log]
+            [teet.ui.icons :as icons]
+            [teet.util.collection :as cu]))
 
 
 
 (defn file-identifying-info
   "Show file identifying info: document group, seq# and version."
-  [land-acquisition? {:file/keys [document-group sequence-number version]}]
+  [land-acquisition? {:file/keys [document-group group-name sequence-number version]}]
   [:strong.file-identifying-info {:data-version version
                                   :class (<class common-styles/margin-bottom 0.2)}
    (str/join " / "
@@ -57,7 +60,7 @@
                         (tr [:file :version] {:num version}))]))])
 
 (def ^:private sorters
-  {"meta/created-at" [(juxt :meta/created-at :file/name) >]
+  {"meta/created-at" [(juxt :file/group-code :meta/created-at :file/name) >]
    "file/name"       [(comp str/lower-case :file/name) <]
    "file/type"       [(comp file-model/filename->suffix :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
@@ -116,16 +119,39 @@
     (let [[sort-fn comparator] (sorters value)]
       (sort-by sort-fn comparator files))))
 
+(defn get-document-groups
+  "Returns the document groups for the file list"
+  [files]
+  (let [outs (mapv (fn [x]
+                     (-> x
+                         (assoc :file/group-code (get-in x [:file/document-group :filename/code]))
+                         (assoc :file/group-name (get-in x [:file/document-group :db/ident]))
+                         (dissoc :file/document-group))) files)]
+    outs))
+
+(defn- get-parts-and-groups
+  [files parts]
+  (let [all-parts (mapv (fn [x] {:item-name (gstr/format "%s #%02d" (:file.part/name x) (:file.part/number x))
+                                 :item-value (:file.part/number x)}) (into [] parts))
+        all-groups (distinct (mapv (fn [x] {:item-name (tr-enum (if (nil? (:file/group-name x)) :file.document-group/ungrouped (:file/group-name x)))
+                                            :item-value (if (nil? (:file/group-name x)) :file.document-group/ungrouped (:file/group-name x))}) (get-document-groups files)))]
+    [(when (some? all-parts) {:group-label "Parts" :group-items (concat [{:item-name (str (tr [:file-upload :general-part]) " #00")
+                                                                       :item-value 0}]
+                                                                            all-parts)})
+    (when (some? all-groups) {:group-label "Document groups" :group-items all-groups})]))
+
+(defn- str->int [s] (when (= s (str (js/parseInt s))) (js/parseInt s)))
+
 (defn file-search
   "Given original parts and files passes searched files and parts to component view"
   [files parts file-component]                       ;; if files/parts change
   (r/with-let [search-term (r/atom "")
                on-change #(let [val (-> % .-target .-value)]
                             (reset! search-term val))
-               selected-part-id (r/atom nil)
-               change-part #(reset! selected-part-id (:file.part/number %))]
-              (let [selected-part (when @selected-part-id
-                                    (first (filter (comp #(= @selected-part-id %) :file.part/number) parts)))]
+               selected-filter-id (r/atom "")
+               change-part #(reset! selected-filter-id %)]
+              (let [selected-part (when (number? (str->int @selected-filter-id)) @selected-filter-id)
+                    selected-group (when (string? @selected-filter-id) @selected-filter-id)]
                [:div
                 [:div {:class [(<class common-styles/flex-row)
                                (<class common-styles/margin-bottom 1)]}
@@ -136,13 +162,10 @@
                              :start-icon icons/action-search
                              :on-change on-change}]
                  [:div {:style {:flex 1}}
-                  [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
-                                                        :file.part/number 0}]
-                                                      parts)
-                                       :format-item (fn [{:file.part/keys [name number]}]
-                                                      (gstr/format "%s #%02d" name number))
+                  [select/form-select-grouped {:items (get-parts-and-groups files parts)
+                                       :format-item (fn [x] (:item-name x))
                                        :on-change change-part
-                                       :value selected-part
+                                       :value @selected-filter-id
                                        :empty-selection-label (tr [:file :all-parts])
                                        :show-empty-selection? true}]]]
                 (conj
@@ -317,11 +340,11 @@
         [typography/SmallText
          (if-let [modified-at (:meta/modified-at file)]
            (tr [:file :edit-info]
-               {:date (format/date-time modified-at)
+               {:date (format/date-time-with-seconds modified-at)
                 :author (user-model/user-name
                           (:meta/modifier file))})
            (tr [:file :upload-info]
-                 {:date (format/date-time (:meta/created-at file))
+                 {:date (format/date-time-with-seconds (:meta/created-at file))
                   :author (user-model/user-name
                             (:meta/creator file))}))]
         [:div {:class [(<class common-styles/flex-align-center)]}
@@ -356,15 +379,45 @@
             {:action #(delete-action file)
              :trashcan? true}])]])]))
 
+(defn document-group-heading
+  [group-key]
+  [:div {:class (<class common-styles/space-between-center)}
+   [:div {:class (<class common-styles/margin 1 1 1 0.5)} [icons/file-folder-outlined {:style {:color theme-colors/gray-dark}}]]
+   (tr-enum group-key)])
+
+(defn document-group-content
+  [e! opts file-group grouped-files]
+    (mapc
+      (r/partial file-row2 opts)
+      (filter #(= (:file/group-name %) file-group) grouped-files)))
+
 (defn file-list2
-  [{:keys [sort-by-value data-cy] :as opts} files]
+  [{:keys [e! sort-by-value data-cy] :as opts} files]
+  (r/with-let [closed? (r/atom #{})
+               toggle-open! #(swap! closed? cu/toggle %)]
   [:div (merge {:class (<class common-styles/margin-bottom 1.5)}
                (when data-cy
                  {:data-cy data-cy}))
-   (mapc (r/partial file-row2 opts)
-         (sorted-by
-           sort-by-value
-           files))])
+   (let
+     [grouped-files (get-document-groups files)]
+     (doall
+       (for [file-group (distinct (mapv #(:file/group-name %) grouped-files))]
+       ^{:key (str file-group)}
+       [:<>
+        (if
+          (some? file-group)
+                      [:div {:class (<class common/hierarchical-heading-container2 theme-colors/white theme-colors/black-coral @closed?)}
+                       [:div {:class (<class common-styles/space-between-center)} (document-group-heading file-group)
+                       [:div {:class [(<class common-styles/flex-row-end)]}
+                        [buttons/button-secondary
+                         {:size :small
+                          :on-click (r/partial toggle-open! file-group)}
+                         [(if (contains? @closed? file-group) icons/hardware-keyboard-arrow-down icons/hardware-keyboard-arrow-up)]]]]
+                       [Collapse {:in (not (contains? @closed? file-group))
+                                  :mount-on-enter true}
+                        [:div
+                         (document-group-content e! opts file-group grouped-files)]]]
+          (document-group-content e! opts file-group grouped-files))])))]))
 
 (defn file-list2-with-search
   [opts files]
