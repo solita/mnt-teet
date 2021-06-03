@@ -6,7 +6,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [tuck.core :as t]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-tree]]
             [teet.user.user-info :as user-info]
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
@@ -18,7 +18,8 @@
             [teet.util.collection :as cu]
             [teet.ui.icons :as icons]
             [teet.ui.buttons :as buttons]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.ui.chip :as chip]))
 
 (def select-bg-caret-down "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23005E87%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')")
 
@@ -317,7 +318,7 @@
 
 (defn- user-select-popper []
   {:padding "0.3rem"
-   :overflow "scroll"
+   :overflow-y "scroll"
    :z-index 99})
 
 (defn- user-select-entry [highlight?]
@@ -330,8 +331,7 @@
 
 (defn- after-result-entry
   []
-  {:padding "0.5rem"
-   :background-color theme-colors/gray-lightest})
+  {:padding "0.5rem"})
 
 (defn- arrow-navigation
   "Arrow navigation key handler for select-search results"
@@ -483,7 +483,7 @@
 
                   :style {:z-index 9999} ; Must have high z-index to use in modals
                   }
-          [Paper {:style {:width (.-clientWidth current-input-ref) :height 300}
+          [Paper {:style {:width (.-clientWidth current-input-ref) :max-height 300}
                   :class ["user-select-popper" (<class user-select-popper)]}
            (if loading?
              [CircularProgress {:size 20}]
@@ -500,44 +500,22 @@
                                          (on-change result))}
                            (format-result result)])
                         results)
-                [:span.select-user-no-results {:style {:padding "0.5rem"}}
+                [:p.select-user-no-results {:style {:padding "0.5rem"}}
                  no-results])
-              (when-let [{:keys [title on-click]} after-results-action]
+              (when-let [{:keys [title on-click icon]} after-results-action]
                 [:<>
                  [Divider]
                  [:div {:class (<class after-result-entry)}
                   [buttons/link-button
-                   {:on-click on-click} title]]])])]])])))
-
-(defn- multiselect-chip-style []
-  ^{:pseudo {:focus {:border-color "#40a9ff"
-                     :background-color "#e6f7ff"}}
-    :combinators {[:> :span] {:overflow "hidden"
-                              :white-space "nowrap"
-                              :text-overflow "ellipsis"}
-                  [:> :.material-icons] {:font-size "12px"
-                                         :cursor "pointer"
-                                         :padding "4px"}}}
-  {:display "flex"
-   :align-items "center"
-   :height "24px"
-   :margin "2px"
-   :line-height "22px"
-   :background-color "#fafafa"
-   :border "1px solid #e8e8e8"
-   :border-radius "2px"
-   :box-sizing "content-box"
-   :padding "0 4px 0 10px"
-   :outline "0"
-   :overflow "hidden"})
-
+                   {:on-click on-click
+                    :style {:display :flex
+                            :align-items :center}}
+                   icon title]]])])]])])))
 
 (defn- selected-item-chip [{:keys [format-result format-result-chip on-change value]
                             :or {format-result str}} item]
-  [:div {:class (<class multiselect-chip-style)}
-   [:span ((or format-result-chip format-result) item)]
-   [icons/navigation-close
-    {:on-click #(on-change (disj (or value #{}) item))}]])
+  [chip/selected-item-chip {:on-remove #(on-change (disj (or value #{}) item))}
+   ((or format-result-chip format-result) item)])
 
 (defn- multiselect-input-wrapper-style
   []
@@ -730,3 +708,12 @@
                                                        :disabled (boolean disabled)
                                                        :on-change #(let [checked? (-> % .-target .-checked)]
                                                                      (on-change checked?))}])}])
+
+(defn country-select
+  [opts]
+  [:div
+   [form-select (merge
+                  opts
+                  {:format-item #(tr [:countries %])
+                   :items (-> (tr-tree [:countries])
+                              keys)})]])

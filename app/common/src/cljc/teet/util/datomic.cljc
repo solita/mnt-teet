@@ -5,7 +5,8 @@
             #?(:clj [datomic.client.api :as d])
             [clojure.set :as set]
             [teet.util.collection :as cu]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.log :as log]))
 
 (s/def :db/ident keyword?)
 (s/def ::enum (s/or :keyword keyword?
@@ -279,9 +280,17 @@
              (throw (ex-info "Unreferred to input binding symbols"
                              {:unreferred-symbols unreferred-symbols}))))))
 
-     (def datomic-q d/q)
+     (defonce datomic-q d/q)
      (defn q
        "Wrapper to d/q that asserts some validity rules."
        [& args]
        (assert-valid-query args)
-       (apply datomic-q args))))
+       (let [start (System/currentTimeMillis)]
+         (try
+           (apply datomic-q args)
+           (finally
+             (let [end (System/currentTimeMillis)
+                   duration (- end start)]
+               (when (> duration 1000)
+                 (log/debug "SLOW DATOMIC QUERY TOOK " duration "msecs: "
+                            (first args))))))))))

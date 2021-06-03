@@ -244,3 +244,12 @@
   (teeregister-api/point-by-road (teeregister-api/create-client client)
                                  road-nr carriageway
                                  (-> start-km ->bigdec road-model/km->m)))
+
+(defquery :road/autocomplete
+  {:doc "Autocomplete road input by name or number (from Teeregister API)"
+   :config {client [:road-registry :api]}
+   :args {:keys [text]}
+   :project-id nil
+   :authorization {}}
+  (teeregister-api/road-search (teeregister-api/create-client client)
+                               text))

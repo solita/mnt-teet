@@ -9,7 +9,8 @@
             [ol.style.Circle]
             [teet.theme.theme-colors :as theme-colors]
             [ol.extent :as ol-extent]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.log :as log]))
 
 
 (def ^:const map-pin-height 26)
@@ -376,27 +377,46 @@
 (defn asset-line-and-icon
   "Show line between start->end points of asset location and
 an icon based on asset class."
-  [^ol.render.Feature feature _res]
+  [highlight-oid ^ol.render.Feature feature _res]
   (let [oid (some-> feature .getProperties (aget "oid"))
+        highlight? (= oid highlight-oid)
         cls (some-> oid asset-model/asset-oid->fclass-oid-prefix)
         center (-> feature .getGeometry .getExtent
                    ol-extent/getCenter ol.geom.Point.)]
-    #js [(ol.style.Style.
-          #js {:geometry center
-               :image (ol.style.Icon.
-                       #js {:anchor #js [0.5 0.5]
-                            :imgSize #js [36 20]
-                            :img (text->canvas
-                                  {:font "16px monospace"
-                                   :fill "black"
-                                   :w 36 :h 20
-                                   :x 3 :y 15
-                                   :text cls
-                                   :background-fill (asset-bg-color-by-hash cls)
-                                   :r 5})})})
+    (into-array
+     (remove
+      nil?
+      [(ol.style.Style.
+        #js {:geometry center
+             :image (ol.style.Icon.
+                     #js {:anchor #js [0.5 0.5]
+                          :imgSize #js [36 20]
+                          :img (text->canvas
+                                {:font "16px monospace"
+                                 :fill "black"
+                                 :w 36 :h 20
+                                 :x 3 :y 15
+                                 :text cls
+                                 :background-fill (asset-bg-color-by-hash cls)
+                                 :r 5})})})
 
+       (ol.style.Style.
+        #js {:stroke (ol.style.Stroke. #js {:color "red"
+                                            :width 3
+                                            :lineCap "butt"})
+             :zIndex 2})
+       (when highlight?
          (ol.style.Style.
-          #js {:stroke (ol.style.Stroke. #js {:color "red"
-                                              :width 3
-                                              :lineCap "butt"})
-               :zIndex 2})]))
+          #js {:geometry center
+               :image (ol.style.Circle.
+                       #js {:stroke (ol.style.Stroke. #js {:color "green"
+                                                           :width 3})
+                            :radius 15})}))]))))
+
+
+(defn current-location-radius-style
+  "Show circle radius around current location (point)"
+  [^ol.render.Feature feature _res]
+  (def *f feature)
+  (ol.style.Style.
+   #js {:stroke (ol.style.Stroke. #js {:color "blue"})}))

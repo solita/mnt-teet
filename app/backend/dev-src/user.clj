@@ -57,6 +57,12 @@
   (d/transact (environment/datomic-connection)
               {:tx-data (into [] maps)}))
 
+(defn atx
+  "Transact given maps to asset db"
+  [& maps]
+  (d/transact (asset-connection)
+              {:xt-data (into [] maps)}))
+
 (def mock-users tu/mock-users)
 
 (def manager-uid tu/manager-id)
@@ -442,3 +448,14 @@
       (println "\nImporting asset db")
       (import-cloud cloud-asset-db-name local-asset-db-name)
       (println "\nDone. Remember to change config.edn to use new databases."))))
+
+(def ^:dynamic *time-level* 0)
+(defmacro time-with-name [name expr]
+  `(binding [*time-level* (inc *time-level*)]
+     (let [n# ~name
+           start# (System/currentTimeMillis)]
+       (try
+         ~expr
+         (finally
+           (println "TIME" (apply str (repeat *time-level* "--")) n# ": "
+                    (- (System/currentTimeMillis) start#) "msecs"))))))
