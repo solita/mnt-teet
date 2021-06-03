@@ -189,6 +189,19 @@
                            :start (str asset-oid "-")
                            :end (str asset-oid ".")})))
 
+(defn- asset-material-oids
+  "Return all OIDs of components (at any level) contained in asset."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (into []
+        (comp
+         (map :v)
+         (filter asset-model/material-oid?))
+        (d/index-range db {:attrid :asset/oid
+                           :start (str asset-oid "-")
+                           :end (str asset-oid ".")})))
+
+
 (defn project-asset-oids
   "Return all OIDs of assets in the given THK project."
   [db thk-project-id]
@@ -245,6 +258,22 @@
                :in $ % [?oid ...]]
              db rules
              (project-assets-and-components db thk-project-id))))
+
+(defn project-material-oids
+  [db thk-project-id]
+  (into []
+        (mapcat #(asset-material-oids db %))
+        (project-asset-oids db thk-project-id)))
+
+(defn project-materials-and-products
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find (pull ?e [* {:component/_materials
+                                  [:db/id :asset/oid]}])
+               :where
+               [?e :asset/oid ?oid]
+               :in $ [?oid ...]]
+             db (project-material-oids db thk-project-id))))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.

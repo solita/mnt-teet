@@ -9,6 +9,28 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]))
 
+(def materials-and-products-table-columns
+  [:material :common/status :parameter :component :material-approval-status])
+
+(def ^:private column-mapping
+  {:material :material/type
+   :common/status :common/status
+   :parameter (constantly "TODO")
+   :component :component/_materials
+   :material-approval-status (constantly "TODO")})
+
+(defn- get-column [material c]
+  ((column-mapping c) material))
+
+(defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
+  (case column
+    :material (asset-ui/label (asset-type-library/item-by-ident atl (:db/ident value)))
+    :component (:asset/oid value)
+    :common/status (asset-ui/label (asset-type-library/item-by-ident
+                                    atl (:db/ident value)))
+    (str value)))
+
+
 (defn- materials-and-products-page*
   [e! {query :query atl :asset-type-library :as app}
    {materials-and-products :materials-and-products
@@ -17,10 +39,11 @@
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
           listing-opts {:columns asset-model/materials-and-products-table-columns
+                        :get-column get-column
                         :column-label-fn #(if (= % :common/status)
                                             (asset-ui/label (asset-type-library/item-by-ident atl %))
                                             (tr [:asset :totals-table %]))
-                        :format-column str #_(r/partial asset-ui/format-cost-table-column
+                        :format-column (r/partial format-cost-table-column
                                                   {:e! e! :atl atl :locked? locked?})}
 
           filter-link-fn #(url/cost-items-totals
@@ -38,7 +61,9 @@
          [typography/Heading1 "Materials"]]
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
-         (str materials-and-products)]]])))
+         [table/listing-body (assoc listing-opts
+                                    :rows materials-and-products
+                                    )]]]])))
 
 (defn materials-and-products-page [e! app state]
   [asset-ui/wrap-atl-loader materials-and-products-page* e! app state])
