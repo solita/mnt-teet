@@ -1,6 +1,6 @@
 (ns teet.asset.assets-view
   (:require [reagent.core :as r]
-            [teet.ui.query :as query]
+            [teet.ui.util :refer [mapc]]
             [teet.ui.typography :as typography]
             [teet.localization :refer [tr]]
             [teet.asset.asset-ui :as asset-ui]
@@ -31,7 +31,10 @@
             [ol.geom.Circle]
             [teet.ui.text-field :as text-field]
             [teet.asset.asset-styles :as asset-styles]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.select :as select]
+            [teet.ui.form :as form]
+            [teet.ui.chip :as chip]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -61,6 +64,65 @@
   [:span])
 
 (defmethod search-by-map-layers :default [_ _ _] {})
+
+(defn- road-address-chip [e! {:location/keys [road-nr carriageway start-km end-km] :as addr}]
+  [chip/selected-item-chip {:on-remove (e! assets-controller/->RemoveRoadAddress addr)}
+   [:span [:b road-nr]
+    (str " (" carriageway ") "
+         (when (or start-km end-km)
+           (str " " start-km "-" end-km "km")))]])
+
+(defmethod search-by-fields :road-address [e! atl criteria]
+  (r/with-let [show-form? (r/atom false)
+               form (r/atom {})
+               on-change-event (form/update-atom-event form merge)
+               add-road-address! #(let [{r :road :location/keys [start-km end-km]} @form]
+                                    (e! (assets-controller/->AddRoadAddress
+                                         (cu/without-nils
+                                          {:location/road-nr (:road-nr r)
+                                           :location/carriageway (:carriageway r)
+                                           :location/start-km start-km
+                                           :location/end-km end-km})))
+                                    (reset! show-form? false)
+                                    (reset! form {}))]
+    [:<>
+     [:div {:class (<class common-styles/flex-row)}
+      (mapc (r/partial road-address-chip e!) (:road-address criteria))]
+     (when-not @show-form?
+       [buttons/small-button-secondary {:on-click #(reset! show-form? true)}
+        (tr [:asset :manager :add-road-address])])
+     (when @show-form?
+       [:<>
+        [form/form
+         {:class ""
+          :e! e!
+          :value @form
+          :on-change-event on-change-event}
+
+         ^{:attribute :road}
+         [select/select-search {:label (tr [:asset :manager :add-road-address])
+                                :e! e!
+                                :query-threshold 1
+                                :query (fn [text]
+                                         {:query :road/autocomplete
+                                          :args {:text text}})
+                                :format-result #(str (:road-nr %) " "
+                                                     (:road-name %))}]
+
+         ^{:attribute :location/start-km :xs 6}
+         [text-field/TextField {:type :number
+                                :placeholder (:start-km (:road @form))
+                                :end-icon (text-field/unit-end-icon "km")}]
+
+         ^{:attribute :location/end-km :xs 6}
+         [text-field/TextField {:type :number
+                                :placeholder (:end-km (:road @form))
+                                :end-icon (text-field/unit-end-icon "km")}]]
+
+        [buttons/small-button-primary {:size :sm
+                                       :on-click add-road-address!
+                                       :disabled (nil? (:road @form))}
+         (tr [:asset :manager :select-road-address])]])]))
 
 (defn radius-display [e! {location :location radius :radius :as filters}]
   [:div {:class (<class asset-styles/map-radius-overlay-container)}
@@ -118,15 +180,20 @@
 
         [:div {:class [(<class common-styles/flex-row)
                        (<class common-styles/margin 0.5 0)]}
-         [buttons/button-primary {:on-click #(e! (assets-controller/->SearchByCurrentLocation))
-                                  :style (merge {:border-radius 0
-                                                 :border (str "solid 2px " theme-colors/black-coral)}
-                                                (if (= :current-location (:search-by filters))
-                                                  {:background-color theme-colors/blue
-                                                   :color theme-colors/white}
-                                                  {:background-color theme-colors/white
-                                                   :color theme-colors/black-coral}))}
-          (tr [:asset :manager :search-nearby])]]
+         (doall
+          (for [[search-by-kw label] [[:current-location (tr [:asset :manager :search-nearby])]
+                                      [:road-address (tr [:fields :location/road-address])]]]
+            ^{:key (name search-by-kw)}
+            [buttons/button-primary
+             {:on-click (e! assets-controller/->SearchBy search-by-kw)
+              :style (merge {:border-radius 0
+                             :border (str "solid 2px " theme-colors/black-coral)}
+                            (if (= search-by-kw (:search-by filters))
+                              {:background-color theme-colors/blue
+                               :color theme-colors/white}
+                              {:background-color theme-colors/white
+                               :color theme-colors/black-coral}))}
+             label]))]
 
         (search-by-fields e! atl filters)])]))
 
