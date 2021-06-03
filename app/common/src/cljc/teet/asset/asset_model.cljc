@@ -144,7 +144,7 @@
 
 
 (def materials-and-products-table-columns
-  [:material :common/status :parameter :component :material-approval-status])
+  [:material :parameter :component :material-approval-status])
 
 (def locked? "Key to check if version is locked"
   :boq-version/locked?)

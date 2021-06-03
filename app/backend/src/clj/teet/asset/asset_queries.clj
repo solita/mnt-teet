@@ -130,7 +130,7 @@
                             cost-item))})
        (when materials-and-products
          {:materials-and-products
-          (asset-db/project-materials-and-products adb project-id)})))))
+          (asset-db/project-materials-totals adb project-id atl)})))))
 
 (s/def :boq-export/version integer?)
 (s/def :boq-export/unit-prices? boolean?)

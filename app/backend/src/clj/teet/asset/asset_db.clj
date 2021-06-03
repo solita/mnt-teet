@@ -8,7 +8,8 @@
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-type-library :as asset-type-library]))
 
 (def rules
   "Helper rules for asset/component queries."
@@ -269,11 +270,33 @@
   [db thk-project-id]
   (mapv first
         (d/q '[:find (pull ?e [* {:component/_materials
-                                  [:db/id :asset/oid]}])
+                                  [:component/ctype]}])
                :where
                [?e :asset/oid ?oid]
                :in $ [?oid ...]]
              db (project-material-oids db thk-project-id))))
+
+(defn- material-cost-group-attributes [entity atl]
+  (->> entity
+      :material/type
+      :db/ident
+      (asset-type-library/item-by-ident atl)
+      :attribute/_parent
+      (filter :attribute/cost-grouping?)
+      (map :db/ident)))
+
+(defn- select-material-grouping-attributes [entity atl]
+  (select-keys entity
+               (conj (material-cost-group-attributes entity atl)
+                     :db/id :material/type :component/_materials)))
+
+(defn project-materials-totals
+  [db thk-project-id atl]
+  (->> (project-materials-and-products db thk-project-id)
+       (map #(select-material-grouping-attributes % atl))
+       (group-by #(dissoc % :db/id))
+       (map (fn [[group materials]]
+              (assoc group :count (count materials))))))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.

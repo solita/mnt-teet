@@ -4,7 +4,7 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.asset.asset-ui :as asset-ui]
             [teet.asset.cost-items-controller :as cost-items-controller]
-            [teet.localization :refer [tr]]
+            [teet.localization :as localization :refer [tr]]
             [teet.ui.table :as table]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]))
@@ -12,22 +12,33 @@
 (def materials-and-products-table-columns
   [:material :common/status :parameter :component :material-approval-status])
 
-(def ^:private column-mapping
-  {:material :material/type
-   :common/status :common/status
-   :parameter (constantly "TODO")
-   :component :component/_materials
-   :material-approval-status (constantly "TODO")})
+(defn- get-column [atl material column]
+  (case column
+    :material (:material/type material)
+    :common/status (:common/status material)
+    :parameter (-> material (dissoc :count :component/_materials :material/type))
+    :component [(-> material :component/_materials :component/ctype) (:count material)]
+    :material-approval-status "TODO"))
 
-(defn- get-column [material c]
-  ((column-mapping c) material))
+(defn- format-properties [atl properties]
+  (println "properties" properties)
+  (into [:<>]
+        (map (fn [[k v u]]
+               [:div
+                [typography/BoldGrayText k ": "]
+                v
+                (when u
+                  (str "\u00a0" u))]))
+        (asset-type-library/format-properties @localization/selected-language
+                                              atl properties)))
 
 (defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
   (case column
-    :material (asset-ui/label (asset-type-library/item-by-ident atl (:db/ident value)))
-    :component (:asset/oid value)
-    :common/status (asset-ui/label (asset-type-library/item-by-ident
-                                    atl (:db/ident value)))
+    :material (->> value :db/ident (asset-type-library/item-by-ident atl) asset-ui/label)
+    :component (let [[ctype count] value]
+                 (str (->> ctype :db/ident (asset-type-library/item-by-ident atl) asset-ui/label)
+                      " (" count ")"))
+    :parameter (format-properties atl value)
     (str value)))
 
 
@@ -39,7 +50,7 @@
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
           listing-opts {:columns asset-model/materials-and-products-table-columns
-                        :get-column get-column
+                        :get-column (r/partial get-column atl)
                         :column-label-fn #(if (= % :common/status)
                                             (asset-ui/label (asset-type-library/item-by-ident atl %))
                                             (tr [:asset :totals-table %]))
