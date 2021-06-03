@@ -43,6 +43,7 @@
             teet.contract.contract-view
             teet.contract.contract-partners-view
             teet.asset.assets-view
+            teet.ui.vektorio-redirect-view
 
             teet.ui.query
             [teet.ui.url :as url]
@@ -59,7 +60,7 @@
 
 (defn- main-view-content [e! nav-open? app]
   (if (get-in app [:config :api-url])               ;;config gets loaded when session is checked
-    (let [{:keys [page]} (page-and-title e! app)]
+    (let [{:keys [page]} (page-and-title e! app)]      
       [:<>
        [drag/drag-handler e!]
        [navigation-view/header e!
@@ -102,7 +103,8 @@
              {:url (:url app)
               :extra-panel (get-in app [:navigation :extra-panel])
               :extra-panel-open? (get-in app [:navigation :extra-panel-open?])}]
-            [login-view/login-page e! app]]
+              [login-view/login-page e! app]]
+           ;; else - show routing determined component surrounded by common containers
            [context/provide :user (:user app)
             [main-view-content e! nav-open? app]])
          (when-feature :data-frisk

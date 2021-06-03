@@ -60,6 +60,7 @@
 (defonce api-token (local-storage (atom nil) "api-token"))
 
 (defn- on-navigate [go-to-url-event route-name params query]
+  (log/debug "on-navigate: route name" route-name)
   (swap! app-state/app
          (fn [{:keys [before-unload-message navigation-prompt-open? url] :as app}]
            (if (and before-unload-message (not navigation-prompt-open?))
@@ -121,6 +122,7 @@
   ([page] (navigate! page nil nil))
   ([page params] (navigate! page params nil))
   ([page params query]
+   (log/debug "in navigate! fn")
    (if page
      (.setTimeout js/window
                   #(r/navigate! teet-router page params query) 0)
