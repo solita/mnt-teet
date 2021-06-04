@@ -54,12 +54,12 @@
   [expand-list collapse-list]
   [:div
    [buttons/button-secondary {:size :small
-                              :class (<class contract-style/contract-list-expansion-button-style ".5rem")
+                              :class (<class contract-style/contract-list-secondary-button ".5rem")
                               :on-click expand-list
                               :start-icon (r/as-element [icons/navigation-unfold-more])}
     (tr [:contracts :contracts-list :expand-all])]
    [buttons/button-secondary {:size :small
-                              :class (<class contract-style/contract-list-expansion-button-style ".5rem")
+                              :class (<class contract-style/contract-list-secondary-button ".5rem")
                               :on-click collapse-list
                               :start-icon (r/as-element [icons/navigation-unfold-less])}
     (tr [:contracts :contracts-list :collapse-all])]])
@@ -97,9 +97,7 @@
 (defn toggle-filters-visibility-button
   [filters-visibility? toggle-filters-visibility]
   [buttons/button-secondary {:size :small
-                             :style {:padding "0 1.18rem"
-                                     :box-sizing :border-box
-                                     :height "1.5rem"}
+                             :class (<class contract-style/contract-list-secondary-button 0)
                              :on-click toggle-filters-visibility
                              :start-icon (r/as-element [icons/content-filter-alt-outlined])}
    (if filters-visibility?
