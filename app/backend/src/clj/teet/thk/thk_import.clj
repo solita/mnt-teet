@@ -275,7 +275,8 @@
     (case activity-name
       :activity.name/owners-supervision :task.type/owners-supervision
       :activity.name/road-safety-audit :task.type/road-safety-audit
-      (log/info "new task type unknown for activity " activity-name))))
+      (throw (ex-info (str "new task type unknown for activity " activity-name)
+               {:activity-data activity-data})))))
 
 (defn add-task-from-thk
   "Returns TX data for new task with given params for given construction activity-id"
