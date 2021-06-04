@@ -165,19 +165,6 @@
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
 
-(defn asset-with-components
-  "Pull asset and all its components with all attributes."
-  [db asset-oid]
-  {:pre [(asset-model/asset-oid? asset-oid)]}
-  (map first
-       (d/q '[:find (pull ?e [*])
-              :where
-              [?e :asset/oid ?oid]
-              [(>= ?oid ?start)]
-              [(< ?oid ?end)]
-              :in $ ?start ?end]
-            db asset-oid (str asset-oid "."))))
-
 (defn- asset-component-oids
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]

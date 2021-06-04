@@ -383,4 +383,6 @@
    :args {oid :asset/oid}
    :project-id nil
    :authorization {}}
-  (asset-db/asset-with-components adb oid))
+  (transit/with-write-options
+    {java.math.BigDecimal str}
+    (d/pull adb '[*] [:asset/oid oid])))
