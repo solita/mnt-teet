@@ -8,7 +8,8 @@
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-type-library :as asset-type-library]))
 
 (def rules
   "Helper rules for asset/component queries."
@@ -42,6 +43,12 @@
     ;; - entity is asset, check if it is missing
     [(location-attr-missing ?e ?attr)
      [?e :asset/fclass _]
+     [(missing? $ ?e ?attr)]]
+
+    ;; - entity does not inherit location
+    [(location-attr-missing ?e ?attr)
+     [?e :component/ctype ?ctype]
+     [(missing? $ ?ctype :component/inherits-location?)]
      [(missing? $ ?e ?attr)]]
 
     ;; - entity inherits location, check if parent is missing
@@ -175,10 +182,26 @@
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
   {:pre [(asset-model/asset-oid? asset-oid)]}
-  (mapv :v
+  (into []
+        (comp
+         (map :v)
+         (filter (complement asset-model/material-oid?)))
         (d/index-range db {:attrid :asset/oid
                            :start (str asset-oid "-")
                            :end (str asset-oid ".")})))
+
+(defn- asset-material-oids
+  "Return all OIDs of components (at any level) contained in asset."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (into []
+        (comp
+         (map :v)
+         (filter asset-model/material-oid?))
+        (d/index-range db {:attrid :asset/oid
+                           :start (str asset-oid "-")
+                           :end (str asset-oid ".")})))
+
 
 (defn project-asset-oids
   "Return all OIDs of assets in the given THK project."
@@ -190,6 +213,13 @@
                        :in [$ ?project]}
               :args [db thk-project-id]})))
 
+(defn project-assets-and-components
+  "Return all OIDs of assets and their components for the given THK project."
+  [db thk-project-id]
+  (into []
+        (mapcat #(into [%] (asset-component-oids db %)))
+        (project-asset-oids db thk-project-id)))
+
 (defn project-assets-and-components-matching-road
   "Find OIDs of all project assets and components that match a given road.
   If component inherits location from parent, the parent component location is used."
@@ -197,11 +227,12 @@
   (mapv first
         (d/q '[:find ?oid
                :where
-               (project ?e ?project)
-               (location-attr ?e :location/road-nr ?road-nr)
                [?e :asset/oid ?oid]
-               :in $ % ?project ?road-nr]
-             db rules thk-project-id road-nr)))
+               (location-attr ?e :location/road-nr ?road-nr)
+               :in $ % [?oid ...] ?road-nr]
+             db rules
+             (project-assets-and-components db thk-project-id)
+             road-nr)))
 
 (defn project-assets-and-components-with-road
   "Find OIDs of all project assets and components that have a road defined."
@@ -215,16 +246,7 @@
                :in $ % ?project]
              db rules thk-project-id)))
 
-(defn project-assets-and-components
-  "Find OIDs of all project assets and components."
-  [db thk-project-id]
-  (mapv first
-        (d/q '[:find ?oid
-               :where
-               (project ?e ?project)
-               [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
+
 
 (defn project-assets-and-components-without-road
   "Find OIDs of all project assets and components where the road value is missing."
@@ -232,17 +254,49 @@
   (mapv first
         (d/q '[:find ?oid
                :where
-               (project ?e ?project)
-               (location-attr-missing ?e :location/road-nr)
                [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
+               (location-attr-missing ?e :location/road-nr)
+               :in $ % [?oid ...]]
+             db rules
+             (project-assets-and-components db thk-project-id))))
 
-(defn project-asset-and-component-oids
-  "Return all OIDs of assets and their components for the given THK project."
+(defn project-material-oids
   [db thk-project-id]
-  (mapcat #(into [%] (asset-component-oids db %))
-          (project-asset-oids db thk-project-id)))
+  (into []
+        (mapcat #(asset-material-oids db %))
+        (project-asset-oids db thk-project-id)))
+
+(defn project-materials-and-products
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find (pull ?e [* {:component/_materials
+                                  [:component/ctype]}])
+               :where
+               [?e :asset/oid ?oid]
+               :in $ [?oid ...]]
+             db (project-material-oids db thk-project-id))))
+
+(defn- material-cost-group-attributes [entity atl]
+  (->> entity
+      :material/type
+      :db/ident
+      (asset-type-library/item-by-ident atl)
+      :attribute/_parent
+      (filter :attribute/cost-grouping?)
+      (map :db/ident)))
+
+(defn- select-material-grouping-attributes [entity atl]
+  (select-keys entity
+               (conj (material-cost-group-attributes entity atl)
+                     :db/id :material/type :component/_materials)))
+
+(defn project-materials-totals
+  [db thk-project-id atl]
+  (->> (project-materials-and-products db thk-project-id)
+       (map #(select-material-grouping-attributes % atl))
+       (group-by #(dissoc % :db/id :component/_materials))
+       (map (fn [[group materials]]
+              (assoc group :component/_materials  (map :component/_materials materials))))))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.
@@ -336,7 +390,7 @@
   (let [items (cost-group-attrs-q
                db (if (some? oids)
                     oids
-                    (project-asset-and-component-oids db thk-project-id)))
+                    (project-assets-and-components db thk-project-id)))
         types (into #{} (map (comp :type val)) items)
         type-qty-unit (into {}
                             (d/q '[:find ?e ?u
@@ -362,7 +416,7 @@
                               ;; count the quantity field values
                               (or (ffirst
                                    (d/q '[:find (sum ?q)
-                                          :where [?item :common/quantity ?q]
+                                          :where [?item :component/quantity ?q]
                                           :in $ [?item ...]]
                                         db (map key items))) 0))]
                (merge item
@@ -391,6 +445,13 @@
     (if-let [parent-component (:component/_components component)]
       (recur parent-component)
       (cost-item-project db (get-in component [:asset/_components :db/id])))))
+
+(defn material-project
+  "Returns the THK project id for the material."
+  [db material-id]
+  (let [material (du/entity db material-id)]
+    (when-let [component-id (-> material :component/_materials :db/id)]
+      (component-project db component-id))))
 
 (defn item-type
   "Return item type, :asset or :component."
@@ -452,6 +513,29 @@
    feature-oid
    (inc (max-component-oid-number db feature-oid))))
 
+(defn next-material-oid
+  "Get next OID for a new material in component."
+  [db component-oid]
+  {:pre [(asset-model/component-oid? component-oid)]}
+  (asset-model/material-oid
+   component-oid
+   (inc
+    (reduce (fn [max-num [component-oid]]
+              (let [[_ _ _ _ n] (str/split component-oid #"\-")
+                    num (Long/parseLong n)]
+                (max max-num num)))
+            0
+            (d/q '[:find ?oid
+                   :where
+                   [_ :asset/oid ?oid]
+                   [(> ?oid ?start)]
+                   [(< ?oid ?end)]
+                   :in $ ?start ?end]
+                 db
+                 ;; Finds all material OIDs for this component
+                 (str component-oid "-")
+                 (str component-oid "."))))))
+
 (defn project-boq-version
   "Fetch the latest BOQ version entity for the given THK project."
   [db thk-project-id]
@@ -511,3 +595,19 @@
       (throw (ex-info "No version creation time found"
                       {:version-id version-id}))
       (d/as-of db c))))
+
+(defn leaf-component?
+  "Is the component a leaf component? A component is a leaf component if
+  the component type does not allow child components."
+  [db component-id]
+  ;; Does there exist a ?ctype such that
+  ;; - ?ctype is the ctype of component-id and
+  ;; - ?ctype is no other ctype's parent
+  (->> (d/q '[:find (some? ?ctype)
+              :where
+              [?cid :component/ctype ?ctype]
+              (not [_ :ctype/parent ?ctype])
+              :in $ ?cid]
+            db component-id)
+       ffirst
+       boolean))

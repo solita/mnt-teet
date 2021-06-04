@@ -14,6 +14,11 @@
 ;; State map has the following keys
 ;; :query    keyword naming the query to run
 ;; :args     arguments map for the query, can refer to params by symbol name
+;;
+;; NOTE! When adding a new namespace, you need to add a require also to teet.main,
+;; otherwise you'll get a compile error from the macroexpansion in teet.routes.
+;; You also might need to reset the build in figwheel. To inspect the active routes,
+;; try (.log js/console teet.routes/teet-router) in repl and inspect routes in the logged js object
 
 {:root
  {:path "/"
@@ -176,11 +181,20 @@
  :cost-items-totals
  {:path "/projects/:project/cost-items-totals"
   :parent :project
-  :view teet.asset.cost-items-view/cost-items-totals-page
+  :view teet.asset.cost-groups-view/cost-items-totals-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
                  :cost-totals true
-                 :road (or (:road query-params) "all-roads")}}}
+                 :road (or (:road query-params) "all-cost-items")}}}
+
+ :materials-and-products
+ {:path "/projects/:project/materials-and-products"
+  :parent :project
+  :view teet.asset.materials-and-products-view/materials-and-products-page
+  :state {:query :asset/project-cost-items
+          :args {:thk.project/id project
+                 :materials-and-products true}}}
+
 
  :cost-item
  {:path "/projects/:project/cost-items/:id"
@@ -228,7 +242,6 @@
  :contract
  {:path "/contracts/:contract-ids"                          ;; /contracts/{procurement-id}-{procurement-part-id}
   :view teet.contract.contract-view/contract-page
-  :extenal-links [teet.contract-contract-view/contract-links state]
   :crumb (teet.contract.contract-model/contract-url-id state)
   :title (teet.contract.contract-model/contract-name state)
   :parent :contracts
@@ -236,10 +249,9 @@
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}
 
- :partners
+ :contract-partners
  {:path "/contracts/:contract-ids/partners"
-  :view teet.contract.contract-view/partner-page
-  :extenal-links [teet.contract-contract-view/contract-links state]
+  :view teet.contract.contract-partners-view/partners-page
   :crumb (tr [:contract :partners-listing])
   :title (teet.contract.contract-model/contract-name state)
   :parent :contract
@@ -251,4 +263,10 @@
   :view teet.asset.assets-view/assets-page
   :crumb (tr [:asset :manager :link])
   :title (tr [:asset :manager :link])}
+
+ :vektorio-redirect
+ {:path "/vektorio-redirect/:project-eid/:vektorio-project-id"
+  :view teet.ui.vektorio-redirect-view/redirect-page
+  :title "Vektor.io redirect"
+  }
  }

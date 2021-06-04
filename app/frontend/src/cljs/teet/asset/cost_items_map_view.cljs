@@ -42,48 +42,49 @@
   (let [current-value (atom value)
         dragging? (atom false)]
     (fn [{:keys [e! value on-change]}]
-      ;;(project-map-view/create-project-map e! app project)
-      (let [geojson (last value)]
-        (reset! current-value value)
-        [project-map
-         {:e! e!
-          :on-click
-          (fn [{c :coordinate}]
-            (let [[start end :as v] @current-value]
-              (cond
-                ;; If no start point, set it
-                (nil? start) (on-change (assoc v 0 c))
+      (reset! current-value value)
+      [project-map
+       {:e! e!
+        :on-click
+        (fn [{c :coordinate}]
+          (let [{start :location/start-point
+                 end :location/end-point
+                 single? :location/single-point? :as v} @current-value]
+            (cond
+              ;; If no start point or location is single point, set it
+              (or single?
+                  (nil? start)) (on-change (assoc v :location/start-point c))
 
-                ;; If no end point, set it
-                (nil? end) (on-change (assoc v 1 c))
+              ;; If no end point, set it
+              (nil? end) (on-change (assoc v :location/end-point c))
 
-                ;; Otherwise do nothing
-                :else nil)))
+              ;; Otherwise do nothing
+              :else nil)))
 
-          :event-handlers
-          (drag/drag-feature
-           {:accept (comp :map/feature :geometry)
-            :on-drag drag/on-drag-set-coordinates
-            :on-drop
-            (fn [target to]
-              (when-let [p (some-> target :geometry :map/feature
-                                   .getProperties (aget "start/end"))]
-                (on-change
-                 (assoc @current-value
-                        (case p
-                          "start" 0
-                          "end" 1)
-                        to))))
-            :dragging? dragging?})
+        :event-handlers
+        (drag/drag-feature
+         {:accept (comp :map/feature :geometry)
+          :on-drag drag/on-drag-set-coordinates
+          :on-drop
+          (fn [target to]
+            (when-let [p (some-> target :geometry :map/feature
+                                 .getProperties (aget "start/end"))]
+              (on-change
+               (assoc @current-value
+                      (case p
+                        "start" :location/start-point
+                        "end" :location/end-point)
+                      to))))
+          :dragging? dragging?})
 
-          :layers
-          {:selected-road-geometry
-           (when-let [g geojson]
-             (map-layers/geojson-data-layer
-              "selected-road-geometry"
-              geojson
-              map-features/asset-road-line-style
-              {:fit-on-load? true
-               :fit-condition
-               (fn [_]
-                 (not @dragging?))}))}}]))))
+        :layers
+        {:selected-road-geometry
+         (when-let [geojson (:location/geojson value)]
+           (map-layers/geojson-data-layer
+            "selected-road-geometry"
+            geojson
+            map-features/asset-road-line-style
+            {:fit-on-load? true
+             :fit-condition
+             (fn [_]
+               (not @dragging?))}))}}])))

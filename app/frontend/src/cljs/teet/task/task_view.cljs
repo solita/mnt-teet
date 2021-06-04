@@ -231,7 +231,7 @@
     :close-on-action? true}
    [button-type (merge button-params
                        {:size :small
-                        :onclick action})
+                        :onClick action})
     button-text]])
 
 (defn task-part-buttons [e! task task-part]
@@ -243,7 +243,7 @@
        [:<>
         (case task-part-status
           :file.part.status/in-progress
-          [when-authorized :task/submit task
+           [when-authorized :task/submit task
            [task-part-review-button
             {:action (e! task-controller/->SubmitTaskPartResults (:db/id task) (:db/id task-part))
              :title-text (tr [:task-part :submit-results])
@@ -272,7 +272,7 @@
               :button-text (tr [:task-part :reject])}]]]
 
           :file.part.status/completed
-          [when-authorized :task/reopen-task task
+          [when-authorized :task/reopen-task-part task
            [task-part-review-button
             {:action (e! task-controller/->ReopenTaskPart (:db/id task) (:db/id task-part))
              :title-text (tr [:task-part :reopen-part])
@@ -288,11 +288,12 @@
     [:span]))
 
 (defn task-part-button-area
-  [e! task file-part assignee?]
+  [e! task file-part]
   (let [task-part-status (:db/ident (:file.part/status file-part))]
     [:<>
-     (when (and assignee? (du/enum= task-part-status :file.part.status/waiting-for-review))
-          [start-task-part-review e! (:db/id task) (:db/id file-part)])
+     (when (du/enum= task-part-status :file.part.status/waiting-for-review)
+       [when-authorized :task/review-task-part task
+        [start-task-part-review e! (:db/id task) (:db/id file-part)]])
      [when-authorized :task/submit task
       [task-part-buttons e! task file-part]]]))
 
@@ -321,7 +322,7 @@
 
 (defn file-section-view
   [{:keys [e! upload! sort-by-value allow-replacement-opts
-           land-acquisition?]} task file-part assignee? files]
+           land-acquisition?]} task file-part files]
   [:div
    {:class [(<class common-styles/margin 1 0 1.5 0)
             (<class common-styles/gray-light-border-bottom)]}
@@ -356,7 +357,7 @@
                             :sort-by-value sort-by-value
                             :download? true
                             :land-acquisition? land-acquisition?} files]
-      [task-part-button-area e! task file-part assignee?]]
+      [task-part-button-area e! task file-part]]
      [file-view/no-files])])
 
 (defn task-file-heading
@@ -381,7 +382,7 @@
         (tr [:buttons :upload])]]])])
 
 (defn- file-content-view
-  [e! upload! activity task assignee? files-form project-id files parts selected-part]
+  [e! upload! activity task files-form project-id files parts selected-part]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
     (let [allow-replacement-opts (when (task-model/can-submit? task)
@@ -416,7 +417,7 @@
                                   :allow-replacement-opts allow-replacement-opts
                                   :upload! upload!
                                   :land-acquisition? land-acquisition?}
-               task part assignee?
+               task part
                (filterv
                  (fn [file]
                    (= (:db/id part) (get-in file [:file/part :db/id])))
@@ -426,12 +427,12 @@
               [selected-part])))]])))
 
 (defn- task-file-view
-  [e! activity task assignee? upload! files-form project-id]
+  [e! activity task upload! files-form project-id]
   (let [parts (:file.part/_task task)
         files (:task/files task)]
     [:div
      [file-view/file-search files parts
-      [file-content-view e! upload! activity task assignee? files-form project-id]]
+      [file-content-view e! upload! activity task files-form project-id]]
      (when (task-model/can-submit? task)
        [when-authorized :task/create-part
         task
@@ -479,7 +480,7 @@
          close! linked-from]]])))
 
 (defn task-details
-  [e! new-document project-id activity {:task/keys [description files] :as task} assignee? files-form]
+  [e! new-document project-id activity {:task/keys [description files] :as task} files-form]
   (r/with-let [upload-controls (file-upload-controls e!)]
     ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
@@ -487,7 +488,7 @@
        [typography/Paragraph
         [rich-text-editor/display-markdown description]])
      [task-basic-info task]
-     [task-file-view e! activity task assignee? (:upload! upload-controls) files-form project-id]
+     [task-file-view e! activity task (:upload! upload-controls) files-form project-id]
      [task-file-upload {:e! e!
                         :task task
                         :activity activity
@@ -600,7 +601,7 @@
     [:span]))
 
 (defn- task-page-content
-  [e! app activity {status :task/status :as task} pm? assignee? files-form]
+  [e! app activity {status :task/status :as task} pm? files-form]
   [:div.task-page {:class (<class common-styles/margin-bottom 2)}
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
@@ -620,7 +621,7 @@
      common-controller/->Refresh}
     [task-details e! (:new-document app)
      (get-in app [:params :project])
-     activity task assignee? files-form]]])
+     activity task files-form]]])
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
@@ -647,8 +648,7 @@
                    :thk.project/lifecycles some?
                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
                                                (du/find-by-id task-id tasks)))
-        task (project-model/task-by-id project task-id)
-        assignee (task-model/task-assignee project task-id)]
+        task (project-model/task-by-id project task-id)]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
@@ -662,5 +662,4 @@
       task
       (= (:db/id user)
          (:db/id activity-manager))
-      (= (:db/id user) assignee)
       (:files-form project)]]))
