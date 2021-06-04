@@ -438,7 +438,8 @@
                                                                   (:asset/components %))
                                           ")")
                           :children-label-fn :asset/oid
-                          :children-fn :asset/components
+                          :children-fn #(or (not-empty (:asset/components %))
+                                            (not-empty (:component/components %)))
                           :delete-fn (e! cost-items-controller/->DeleteComponent))]])
 
 (defn- material-label [atl m]
@@ -582,7 +583,7 @@
 
         (when (not new?)
           [:div
-           ;; Should have only either, never both
+           [components-tree component-data {:e! e!}]
            (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
              [add-component-menu
               (tr [:asset :add-component])
