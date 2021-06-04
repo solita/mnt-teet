@@ -13,7 +13,7 @@ ensure-command-exists mvn
 
 ARGS="-h localhost -U postgres -w"
 PSQL="psql $ARGS -c"
-PSQL_TEET_DB_OWNER=teetmaster
+: ${PSQL_TEET_DB_OWNER:=teet} # can be teetmaster when using rds db backup
 PSQL_TEET="psql -h localhost -U $PSQL_TEET_DB_OWNER -c"
 PSQL_TEET_SUPERUSER="psql -h localhost -U postgres -c"
 # removal of this was somewho included in the checksummed migrations but not its creation. also
@@ -50,10 +50,13 @@ mvn flyway:baseline -Dflyway.baselineVersion=0
 mvn flyway:migrate || remake-migration-prob-sproc
 mvn flyway:migrate
 
-echo "Adding all privileges in schema teet to teet_anon."
-$PSQL_TEET_SUPERUSER "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA teet TO teet_anon;" teet
-
-echo "Adding all privileges in schema teet to teet_anon."
-$PSQL_TEET_SUPERUSER "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;" teet
+# "SECURITY DEFINER" (= running with rights of user who defined them) functions apparently needs 
+for user in teet_anon $PSQL_TEET_DB_OWNER; do
+  echo "Adding all privileges in schema teet to teet_anon."
+  $PSQL_TEET_SUPERUSER "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA teet TO $user;" teet
+  
+  echo "Adding all privileges in schema teet to teet_anon."
+  $PSQL_TEET_SUPERUSER "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO $user;" teet
+done
 
 echo "Done! Next, start your PostgREST server and import datasources by running 'clojure -A:import example-config.edn' in ../app/datasource-import/."
