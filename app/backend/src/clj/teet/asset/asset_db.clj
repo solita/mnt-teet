@@ -165,19 +165,6 @@
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
 
-(defn asset-with-components
-  "Pull asset and all its components with all attributes."
-  [db asset-oid]
-  {:pre [(asset-model/asset-oid? asset-oid)]}
-  (map first
-       (d/q '[:find (pull ?e [*])
-              :where
-              [?e :asset/oid ?oid]
-              [(>= ?oid ?start)]
-              [(< ?oid ?end)]
-              :in $ ?start ?end]
-            db asset-oid (str asset-oid "."))))
-
 (defn- asset-component-oids
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
@@ -233,20 +220,6 @@
              db rules
              (project-assets-and-components db thk-project-id)
              road-nr)))
-
-(defn project-assets-and-components-with-road
-  "Find OIDs of all project assets and components that have a road defined."
-  [db thk-project-id]
-  (mapv first
-        (d/q '[:find ?oid
-               :where
-               (project ?e ?project)
-               (location-attr ?e :location/road-nr _)
-               [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
-
-
 
 (defn project-assets-and-components-without-road
   "Find OIDs of all project assets and components where the road value is missing."

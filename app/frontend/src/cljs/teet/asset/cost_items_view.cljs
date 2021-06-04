@@ -168,14 +168,18 @@
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/road-nr
-       [asset-ui/relevant-road-select {:e! e!}]]]
+       (if locked?
+         [input-textfield {}]
+         [asset-ui/relevant-road-select {:e! e!}])]]
 
      [Grid {:item true
             :md 2
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/carriageway
-       [carriageway-for-road-select {:e! e!} selected-road-nr]]]
+       (if locked?
+         [input-textfield {}]
+         [carriageway-for-road-select {:e! e!} selected-road-nr])]]
 
      [Grid {:item true
             :md 4
@@ -225,12 +229,13 @@
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
-     [Grid {:item true
-            :md 12 :xs 12}
-      [form/field :location/single-point?
-       [select/checkbox {}]]]]))
+     (when-not locked?
+       [Grid {:item true
+              :md 12 :xs 12}
+        [form/field :location/single-point?
+         [select/checkbox {}]]])]))
 
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
+(defn attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})

@@ -376,3 +376,14 @@
                              "fclass" (:db/ident (:asset/fclass a))}
                 :geometry {:type "LineString"
                            :coordinates [start-point end-point]}})})}))
+
+(defquery :assets/details
+  {:doc "Fetch one asset for details view"
+   :context {adb :asset-db}
+   :args {oid :asset/oid}
+   :project-id nil
+   :authorization {}}
+  (asset-type-library/db->form
+   (asset-type-library/rotl-map
+    (asset-db/asset-type-library adb))
+   (d/pull adb '[*] [:asset/oid oid])))
