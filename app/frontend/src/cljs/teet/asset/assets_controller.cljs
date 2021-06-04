@@ -162,7 +162,6 @@
 
   BackToListing
   (process-event [_ app]
-    (println "back to list")
     (t/fx app
           {:tuck.effect/type :navigate
            :page (:page app)
