@@ -278,6 +278,12 @@
       (throw (ex-info (str "new task type unknown for activity " activity-name)
                {:activity-data activity-data})))))
 
+(defn- thk-task-group-supported-type [task-type]
+ (case task-type
+   :task.type/road-safety-audit :task.group/construction-approval
+   :task.type/owners-supervision :task.group/construction-quality-assurance
+   (throw (ex-info "THK Task type is not supported in import" {:task-type task-type}))))
+
 (defn add-task-from-thk
   "Returns TX data for new task with given params for given construction activity-id"
   [db thk-activity-task-data construction-activity-id ]
@@ -291,11 +297,10 @@
                          existing-task-eid
                          (str "NEW-TASK-" (name :task.group/construction) "-" task-type
                            "-" (integration-id/unused-random-small-uuid db)))
+        task-group (thk-task-group-supported-type task-type)
         task-tx-data (merge
                        {:db/id id-placeholder
-                        :task/group (if (= :task.type/road-safety-audit task-type)
-                                      :task.group/construction-approval
-                                      :task.group/construction-quality-assurance)
+                        :task/group task-group
                         :task/type task-type
                         :task/send-to-thk? true
                         :task/estimated-end-date end-date
