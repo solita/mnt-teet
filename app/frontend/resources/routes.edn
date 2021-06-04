@@ -176,11 +176,20 @@
  :cost-items-totals
  {:path "/projects/:project/cost-items-totals"
   :parent :project
-  :view teet.asset.cost-items-view/cost-items-totals-page
+  :view teet.asset.cost-groups-view/cost-items-totals-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
                  :cost-totals true
                  :road (or (:road query-params) "all-cost-items")}}}
+
+ :materials-and-products
+ {:path "/projects/:project/materials-and-products"
+  :parent :project
+  :view teet.asset.materials-and-products-view/materials-and-products-page
+  :state {:query :asset/project-cost-items
+          :args {:thk.project/id project
+                 :materials-and-products true}}}
+
 
  :cost-item
  {:path "/projects/:project/cost-items/:id"
