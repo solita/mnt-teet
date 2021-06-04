@@ -11,6 +11,7 @@
 
 (defrecord HighlightResult [result]) ; higlight a result item
 (defrecord ShowDetails [result]) ; show details for result
+(defrecord BackToListing []) ; go back from details to listing
 
 ;; Set search area by current location
 (defrecord SearchBy [search-by])
@@ -157,4 +158,13 @@
           {:tuck.effect/type :navigate
            :page (:page app)
            :params (:params app)
-           :query {:details (:asset/oid result)}})))
+           :query {:details (:asset/oid result)}}))
+
+  BackToListing
+  (process-event [_ app]
+    (println "back to list")
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (:page app)
+           :params (:params app)
+           :query (dissoc (:query app) :details)})))

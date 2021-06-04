@@ -245,6 +245,9 @@
 (defn- result-details-view* [e! rotl asset]
   (let [fclass (-> asset :asset/fclass :db/ident rotl)]
     [:div
+     [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
+      [icons/navigation-arrow-back]
+      (tr [:asset :manager :back-to-result-listing])]
      [form/form2
       {:e! e!
        :on-change-event :_ignore
