@@ -12,12 +12,11 @@
             [teet.contract.contract-status :as contract-status]
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
-            [clojure.edn :as edn]
             [teet.user.user-model :as user-model]))
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
-  (if (js/Number.isInteger (edn/read-string (subs procurement-number 0 1)))
+  (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
     [common/external-contract-link
      {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
      (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
