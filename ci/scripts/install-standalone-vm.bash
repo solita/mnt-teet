@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
-# script that installs teet app, postgresql db, datomic local, postgrest api on one vm
+# script that installs teet app, postgresql db, datomic local, postgrest api on one vm.
+#
+# usage:
+# run this from shell on your dev machine:
+# ci/scripts/install-standalone-vm.bash launchvm <ssh-key-name>
+# where ssh key name a key name from the registered ec2 key pairs in the aws env.
+# This will start the vm, detect what git branch you are on and try to check out that same branch at the remote vm.
+
+
+MACHINE_ID=b # pick one from a-e that doesn't conflict with someone else
 
 
 # exit on unhandled error status, error on undefined var references, consider pipelines failed when either side fails
@@ -342,7 +351,7 @@ function install-deps-and-app {
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
     
-    update-dyndns c # sets $MYDNS. tbd: select which dns name from the pool to assume
+    update-dyndns $MACHINE_ID # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
     
     run-caddy-revproxy
