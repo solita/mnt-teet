@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-06-03T10:45:33.865-00:00"}
+  :tx/schema-imported-at #inst "2021-06-04T08:27:54.030-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -1710,6 +1710,7 @@
   :db/ident :backfill/backfillelasticmodulus,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/backfill"],
+  :asset-schema/unit "m/day",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
@@ -2506,8 +2507,7 @@
   :db/id ":common/remark",
   :db/ident :common/remark,
   :attribute/cost-grouping? false}
- {:attribute/parent
-  [":ctype/component" ":ctype/feature" ":ctype/material"],
+ {:attribute/parent [":ctype/component" ":ctype/feature"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Seisund" "Status"],
@@ -2576,6 +2576,13 @@
   :db/ident :crushedstone/stonetype,
   :attribute/cost-grouping? true}
  {:attribute/parent [":fclass/culvert"],
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertdiam",
+  :db/ident :culvert/culvertdiam}
+ {:attribute/parent [":fclass/culvert"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Voolu suund" "Culvert flow direction"],
@@ -2609,6 +2616,12 @@
   :db/ident :culvert/culvertlandimprovementsystem,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/culvert"],
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertlength",
+  :db/ident :culvert/culvertlength}
+ {:attribute/parent [":fclass/culvert"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
@@ -2618,6 +2631,12 @@
   :db/id ":culvert/culvertlocation",
   :db/ident :culvert/culvertlocation,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/culvert"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertmaterial",
+  :db/ident :culvert/culvertmaterial}
  {:attribute/parent [":fclass/culvert"],
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -4591,12 +4610,12 @@
  {:db/id ":item/detectortypecamera",
   :db/ident :item/detectortypecamera,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Camera"],
+  :asset-schema/label ["Kaamera" "Camera"],
   :enum/attribute ":animaldetector/detectortype"}
  {:db/id ":item/detectortyperadar",
   :db/ident :item/detectortyperadar,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Radar"],
+  :asset-schema/label ["Radar" "Radar"],
   :enum/attribute ":animaldetector/detectortype"}
  {:db/id ":item/flexible_plug_expansion_joint",
   :db/ident :item/flexible_plug_expansion_joint,
@@ -4887,6 +4906,16 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C35" "C35"],
   :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodtimberconifer",
+  :db/ident :item/solidwoodtimberconifer,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Okaspuit" "Conifer"],
+  :enum/attribute ":solidwood/solidwoodtimber"}
+ {:db/id ":item/solidwoodtimberhardwood",
+  :db/ident :item/solidwoodtimberhardwood,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Lehtpuit" "Hardwood"],
+  :enum/attribute ":solidwood/solidwoodtimber"}
  {:db/id ":item/spanarch",
   :db/ident :item/spanarch,
   :asset-schema/type :asset-schema.type/enum,
@@ -5056,15 +5085,20 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["III" "III"],
   :enum/attribute ":trafficsign/trafficsignsizegroup"}
+ {:db/id ":item/weatherstationprobetypefog",
+  :db/ident :item/weatherstationprobetypefog,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Udu" "Fog"],
+  :enum/attribute ":weatherstationprobe/weatherstationprobetype"}
  {:db/id ":item/weatherstationprobetypehumidity",
   :db/ident :item/weatherstationprobetypehumidity,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Humidity"],
+  :asset-schema/label ["Niiskus" "Humidity"],
   :enum/attribute ":weatherstationprobe/weatherstationprobetype"}
  {:db/id ":item/weatherstationprobetypetemperature",
   :db/ident :item/weatherstationprobetypetemperature,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Temperature"],
+  :asset-schema/label ["Temperatuur" "Temperature"],
   :enum/attribute ":weatherstationprobe/weatherstationprobetype"}
  {:db/id ":item/workinprogress",
   :db/ident :item/workinprogress,
@@ -5256,6 +5290,20 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Kasvupinnas" "Topsoil"],
   :material/fgroups [":fgroup/immaterial" ":fgroup/carriageway"]}
+ {:db/id ":product/asphaltsteelgrid",
+  :db/ident :product/asphaltsteelgrid,
+  :asset-schema/type :asset-schema.type/material,
+  :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
+ {:db/id ":product/cobblestone",
+  :db/ident :product/cobblestone,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Munakivid" "Cobblestones"],
+  :material/fgroups [":fgroup/pavement" ":fgroup/drainage"]}
+ {:db/id ":product/culvert",
+  :db/ident :product/culvert,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Truup" "Culvert"],
+  :material/fgroups [":fgroup/drainage"]}
  {:db/id ":product/drainagepipe",
   :db/ident :product/drainagepipe,
   :asset-schema/type :asset-schema.type/material,
@@ -5269,6 +5317,23 @@
   [":fgroup/equipment"
    ":fgroup/trafficarrangement"
    ":fgroup/landscaping"]}
+ {:db/id ":product/erosioncontrolblanket",
+  :db/ident :product/erosioncontrolblanket,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label
+  ["Erosioonitõkkematt (kookosmatt)"
+   "Erosion control blankets (cocomat)"],
+  :material/fgroups [":fgroup/embankment" ":fgroup/drainage"]}
+ {:db/id ":product/gabion",
+  :db/ident :product/gabion,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Gabioon" "Gabioon"],
+  :material/fgroups [":fgroup/structures"]}
+ {:db/id ":product/geocell",
+  :db/ident :product/geocell,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Geokärg" "Geocell"],
+  :material/fgroups [":fgroup/embankment" ":fgroup/drainage"]}
  {:db/id ":product/geomembrane",
   :db/ident :product/geomembrane,
   :asset-schema/type :asset-schema.type/material,
@@ -5303,6 +5368,11 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Kaev" "Manhole"],
   :material/fgroups [":fgroup/drainage" ":fgroup/utilities"]}
+ {:db/id ":product/pavingstone",
+  :db/ident :product/pavingstone,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Tänavakivi" "Paving stone"],
+  :material/fgroups [":fgroup/pavement"]}
  {:db/id ":product/post",
   :db/ident :product/post,
   :asset-schema/type :asset-schema.type/material,
