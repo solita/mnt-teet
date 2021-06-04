@@ -221,20 +221,6 @@
              (project-assets-and-components db thk-project-id)
              road-nr)))
 
-(defn project-assets-and-components-with-road
-  "Find OIDs of all project assets and components that have a road defined."
-  [db thk-project-id]
-  (mapv first
-        (d/q '[:find ?oid
-               :where
-               (project ?e ?project)
-               (location-attr ?e :location/road-nr _)
-               [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
-
-
-
 (defn project-assets-and-components-without-road
   "Find OIDs of all project assets and components where the road value is missing."
   [db thk-project-id]
