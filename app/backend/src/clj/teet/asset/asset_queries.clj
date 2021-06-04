@@ -372,3 +372,11 @@
                              "fclass" (:db/ident (:asset/fclass a))}
                 :geometry {:type "LineString"
                            :coordinates [start-point end-point]}})})}))
+
+(defquery :assets/details
+  {:doc "Fetch one asset for details view"
+   :context {adb :asset-db}
+   :args {oid :asset/oid}
+   :project-id nil
+   :authorization {}}
+  (asset-db/asset-with-components adb oid))
