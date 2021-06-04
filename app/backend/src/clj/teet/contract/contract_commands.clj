@@ -62,9 +62,8 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre [(company-db/is-company? db (:db/id form-data))]}
-  ;;TODO add precheck for not adding duplicate company
-  ;;TODO retract other lead partner infos
+   :pre [(company-db/is-company? db (:db/id form-data))
+         (not (company-db/company-in-contract? db (:db/id form-data) (:db/id contract)))]}
   (let [company-id (:db/id form-data)
         contract-eid (:db/id contract)
         lead-partner? (:company-contract/lead-partner? form-data)

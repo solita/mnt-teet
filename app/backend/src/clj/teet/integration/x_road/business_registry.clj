@@ -1,7 +1,8 @@
 (ns teet.integration.x-road.business-registry
   "Query business registry for company details"
   (:require [teet.integration.x-road.core :as x-road]
-            [clojure.data.zip.xml :as z])
+            [clojure.data.zip.xml :as z]
+            [teet.log :as log])
   (:import (java.time.format DateTimeFormatter)))
 
 (defn detailandmed-request-xml [{business-id :business-id :as params}]
@@ -18,6 +19,23 @@
       [:prod:kandmed 0]
       [:prod:dandmed 0]
       [:prod:maarused 0]]])))
+
+(defn business-information-request-xml
+  "Different params used to find required company values for company creation"
+  [{business-id :business-id :as params}]
+  (x-road/request-xml
+    (x-road/request-envelope
+      params
+      [:prod:detailandmed_v1 {:xmlns:prod "http://arireg.x-road.eu/producer/"}
+       [:prod:keha
+        [:prod:ariregistri_kood business-id]
+        [:prod:yandmed 1]
+        [:prod:iandmed 1]
+        [:prod:kandmed 1]
+        [:prod:dandmed 1]
+        [:prod:maarused 1]
+        [:prod:ainult_kehtivad 1]
+        [:prod:staatused "R"]]])))
 
 (defn- ->num [node]
   (z/xml1-> node z/text #(Long/parseLong %)))
@@ -73,6 +91,30 @@
       {:addresses []
        :contact-methods []})))
 
+(defn parse-business-information-details
+  "Extract required company information from x-road response to create the company in TEET"
+  [zipped-xml]
+  (when-let [item (z/xml1-> zipped-xml :SOAP-ENV:Body :ns1:detailandmed_v1Response :ns1:keha :ns1:ettevotjad :ns1:item)]
+    (let [contact-methods (z/xml-> item :ns1:yldandmed :ns1:sidevahendid :ns1:item parse-contact-method)
+          company-name (z/xml1-> item :ns1:nimi z/text)
+          emails (->> contact-methods
+                      (filter
+                        #(and (= (:type %) :email)
+                              (:content %)))
+                      (mapv
+                        :content))
+          phone-numbers (->> contact-methods
+                             (filter
+                               #(and (#{:phone :phone2} (:type %))
+                                     (:content %)))
+                             (mapv
+                               :content))]
+      (if company-name
+        {:company/name company-name
+         :company/emails emails
+         :company/phone-numbers phone-numbers}
+        (log/warn "No company name found in the business registry response")))))
+
 (defn perform-detailandmed-request [url params]
   {:pre [(contains? params :business-id)]}
   (->> params
@@ -86,3 +128,18 @@
        (x-road/perform-request url)
        x-road/string->zipped-xml
        parse-business-details))
+
+(defn perform-business-information-request
+  [url params]
+  {:pre [(contains? params :business-id)]}
+  (->> params
+       (merge {:client {:subsystem-code "teeregister"
+                        :member-code "70001490"}
+               :service {:member-code "70000310"
+                         :subsystem-code "arireg"
+                         :service-code "detailandmed_v1"
+                         :version "v1"}})
+       business-information-request-xml
+       (x-road/perform-request url)
+       x-road/string->zipped-xml
+       parse-business-information-details))
