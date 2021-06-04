@@ -151,7 +151,7 @@
 
 (defn valid-estonian-business-registry-id?
   [value]
-  (boolean (re-matches #"^\d{8}$" value)))
+  (boolean (and value (re-matches #"^\d{8}$" value))))
 
 (defn validate-estonian-business-registry-id
   [value]
