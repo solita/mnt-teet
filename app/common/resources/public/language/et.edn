@@ -67,8 +67,8 @@
    :material "Materjal",
    :quantity "Kogus",
    :no-road-reference "Ilma tee aadressita",
-   :material-approval-status nil,
-   :parameter nil},
+   :material-approval-status "Materjali heakskiit",
+   :parameter "Parameeter"},
   :add-cost-item "Lisan vara",
   :export-boq "Kululoendi eksport",
   :validate
@@ -89,7 +89,10 @@
   :unlock-tender-boq-warning
   "Kululoend on hetkel hankes, kas oled kindel , et soovid seda muuta? Hanke kululoendi muutmisel tuleb teavitada pakkujaid ning vajadusel muuta pakkumuste esitamise tähtaega.",
   :cost-item-saved "Vara salvestatud",
-  :page {:cost-items "Varad", :cost-items-totals "Summad"},
+  :page
+  {:cost-items "Varad",
+   :cost-items-totals "Summad",
+   :materials-and-products nil},
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
@@ -99,7 +102,8 @@
    :result-count "{count} nähtust",
    :radius "Raadius",
    :add-road-address "Lisage tee aadress",
-   :select-road-address "Valige"},
+   :select-road-address "Valige",
+   :back-to-result-listing "Tagasi tulemuste loendi juurde"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :materials {:label "Materjalid"},
@@ -146,6 +150,7 @@
   :delete "Kustutan",
   :save "Salvestan",
   :close "Sulgen",
+  :search "Otsing",
   :preview "Eelvaade",
   :undo "Taastan",
   :back "Tagasi",
@@ -238,6 +243,7 @@
   "Sisesta ettevõtte nimi või äriregistri kood",
   :related-contracts "SEOTUD LEPINGUD",
   :thk.contract/type "Tüüp",
+  :no-company-found-title nil,
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
@@ -255,6 +261,7 @@
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
+  :xroad-exception-content nil,
   :partners-listing "Partnerite loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
@@ -262,6 +269,9 @@
   :company-search-label "Ettevõtte otsing",
   :contracts-listing "Lepingute loetelu",
   :edit-contract "Lepingu info",
+  :no-company-found-content nil,
+  :xroad-exception-title nil,
+  :search-companies-business-registry nil,
   :thk.contract.status/in-progress "Töös"},
  :contracts
  {:contracts-list
