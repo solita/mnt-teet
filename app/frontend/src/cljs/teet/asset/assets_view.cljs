@@ -250,7 +250,7 @@
       (tr [:asset :manager :back-to-result-listing])]
      [form/form2
       {:e! e!
-       :on-change-event :_ignore
+       :on-change-event :_ignore ; the form cannot be changed, so we can ignore
        :value asset
        :disable-buttons? true}
       [cost-items-view/attributes* {:e! e!
