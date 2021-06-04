@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-06-04T07:35:21.122-00:00"}
+  :tx/schema-imported-at #inst "2021-06-04T08:27:54.030-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -1710,6 +1710,7 @@
   :db/ident :backfill/backfillelasticmodulus,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/backfill"],
+  :asset-schema/unit "m/day",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
@@ -2575,6 +2576,13 @@
   :db/ident :crushedstone/stonetype,
   :attribute/cost-grouping? true}
  {:attribute/parent [":fclass/culvert"],
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertdiam",
+  :db/ident :culvert/culvertdiam}
+ {:attribute/parent [":fclass/culvert"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Voolu suund" "Culvert flow direction"],
@@ -2608,6 +2616,12 @@
   :db/ident :culvert/culvertlandimprovementsystem,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/culvert"],
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertlength",
+  :db/ident :culvert/culvertlength}
+ {:attribute/parent [":fclass/culvert"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
@@ -2617,6 +2631,12 @@
   :db/id ":culvert/culvertlocation",
   :db/ident :culvert/culvertlocation,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/culvert"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertmaterial",
+  :db/ident :culvert/culvertmaterial}
  {:attribute/parent [":fclass/culvert"],
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -3181,16 +3201,6 @@
   :db/ident :markings/markingtype,
   :attribute/cost-grouping? false,
   :asset-schema/description [nil "line type"]}
- {:attribute/parent [":ctype/material"],
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label
-  ["Materjali heakskiidu seisund" "Material approval status"],
-  :attribute/mandatory? true,
-  :db/cardinality :db.cardinality/one,
-  :db/id ":material/materialstatus",
-  :db/ident :material/materialstatus,
-  :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/membrane"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -4686,26 +4696,6 @@
   :asset-schema/label
   ["Kummimatt deformatsioonivuuk" "mat expansion joint"],
   :enum/attribute ":expansionjoint/expansionjointtype"}
- {:db/id ":item/materialstatusapproved",
-  :db/ident :item/materialstatusapproved,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Heakskiidetud" "Approved"],
-  :enum/attribute ":material/materialstatus"}
- {:db/id ":item/materialstatusinreview",
-  :db/ident :item/materialstatusinreview,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Läbivaatusel" "In review"],
-  :enum/attribute ":material/materialstatus"}
- {:db/id ":item/materialstatusnotsubmitted",
-  :db/ident :item/materialstatusnotsubmitted,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Esitamata" "Not submitted"],
-  :enum/attribute ":material/materialstatus"}
- {:db/id ":item/materialstatusrejected",
-  :db/ident :item/materialstatusrejected,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Tagasi lükatud" "Rejected"],
-  :enum/attribute ":material/materialstatus"}
  {:db/id ":item/modular_expansion_joint",
   :db/ident :item/modular_expansion_joint,
   :asset-schema/type :asset-schema.type/enum,
@@ -5300,6 +5290,10 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Kasvupinnas" "Topsoil"],
   :material/fgroups [":fgroup/immaterial" ":fgroup/carriageway"]}
+ {:db/id ":product/asphaltsteelgrid",
+  :db/ident :product/asphaltsteelgrid,
+  :asset-schema/type :asset-schema.type/material,
+  :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
  {:db/id ":product/cobblestone",
   :db/ident :product/cobblestone,
   :asset-schema/type :asset-schema.type/material,
@@ -5388,10 +5382,6 @@
    ":fgroup/lighting"
    ":fgroup/landscaping"
    ":fgroup/utilities"]}
- {:db/id ":product/steelasphaltgrid",
-  :db/ident :product/steelasphaltgrid,
-  :asset-schema/type :asset-schema.type/material,
-  :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
  {:db/id ":product/utilitycable",
   :db/ident :product/utilitycable,
   :asset-schema/type :asset-schema.type/material,
