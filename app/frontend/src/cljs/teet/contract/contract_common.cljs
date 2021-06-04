@@ -12,7 +12,7 @@
             [teet.contract.contract-status :as contract-status]
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn]
             [teet.user.user-model :as user-model]))
 
 (defn contract-procurement-link
