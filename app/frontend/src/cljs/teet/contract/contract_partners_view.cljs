@@ -17,8 +17,8 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.ui.common :as common]
-            [clojure.string :as str]))
-
+            [clojure.string :as str]
+            [teet.ui.validation :as validation]))
 
 (defn partner-listing
   [e! {:keys [params query] :as app} contract-partners]
@@ -87,48 +87,77 @@
 
 (defn new-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
-  [:div {:class (<class form/form-buttons)}
-   [:div {:style {:margin-left :auto
-                  :text-align :center}}
-    [:div {:class (<class common-styles/margin-bottom 1)}
-     (when cancel
-       [buttons/button-secondary {:style {:margin-right "1rem"}
-                                  :disabled disabled?
-                                  :class "cancel"
-                                  :on-click cancel}
-        (tr [:buttons :cancel])])
-     (when validate
-       [buttons/button-primary {:disabled disabled?
-                                :type :submit
-                                :class "submit"
-                                :on-click validate}
-        (tr [:buttons :save])])]]])
+  (let [search-disabled? (or (not
+                               (validation/valid-estonian-business-registry-id?
+                                 (:company/business-registry-code form-value)))
+                             (:search-in-progress? form-value))
+        estonian-company? (= (:company/country form-value) :ee)
+        search-success? (:search-success? form-value)]
+    [:div {:class (<class form/form-buttons)}
+     [:div {:style {:margin-left :auto
+                    :text-align :center}}
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (when cancel
+         [buttons/button-secondary {:style {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])
+       (if (and estonian-company? (not search-success?))
+         [buttons/button-primary {:disabled search-disabled?
+                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry
+                                                (:company/business-registry-code form-value))}
+          (tr [:buttons :search])]
+         (when validate
+           [buttons/button-primary {:disabled disabled?
+                                    :type :submit
+                                    :class "submit"
+                                    :on-click validate}
+            (tr [:buttons :save])]))]]]))
 
 (defn new-company-form-fields
   [form-value]
-  (let [foreign-company? (not= :ee (:company/country form-value))]
+  (let [foreign-company? (not= :ee (:company/country form-value))
+        business-search-failed? (:no-results? form-value)
+        exception-in-xroad? (:exception-in-xroad? form-value)]
     [:div
      [form/field :company/country
-      [select/country-select {:show-empty-selection? false}]]
-     [form/field {:attribute :company/business-registry-code}
-      [TextField {}]]
-     (when foreign-company?
+      [select/country-select {:show-empty-selection? true}]]
+     (if foreign-company?                                   ;; Only foreign countries get to input values by hand
        [:<>
+        [form/field {:attribute :company/business-registry-code}
+         [TextField {}]]
         [form/field :company/name
          [TextField {}]]
         [form/field :company/emails
          [TextField {}]]
         [form/field :company/phone-numbers
-         [TextField {}]]])]))
+         [TextField {}]]]
+       [:<>
+        [form/field {:attribute :company/business-registry-code
+                     :validate validation/validate-estonian-business-registry-id}
+         [TextField {}]]
+        (cond
+          business-search-failed?
+          [common/info-box {:variant :error
+                            :title (tr [:contract :no-company-found-title])
+                            :content [:span (tr [:contract :no-company-found-content])]}]
+          exception-in-xroad?
+          [common/info-box {:variant :error
+                            :title (tr [:contract :xroad-exception-title])
+                            :content [:span (tr [:contract :xroad-exception-content])]}]
+          :else
+          [common/info-box {:variant :info
+                            :content [:span (tr [:contract :search-companies-business-registry])]}])])]))
 
 (defn new-partner-form
-  [e! contract]
+  [e! contract form-value]
   (r/with-let [add-new-company? (r/atom false)
                add-new-company #(reset! add-new-company? true)
                select-company #(e! (contract-partners-controller/->SelectCompany %))
                on-change #(e! (contract-partners-controller/->UpdateNewCompanyForm %))]
-    (let [form-value (:new-partner contract)
-          selected-company? (boolean (:db/id form-value))
+    (let [selected-company? (boolean (:db/id form-value))
+          found-from-business-registry? (:search-success? form-value)
           partner-save-command (if selected-company?
                                  :thk.contract/add-existing-company-as-partner
                                  :thk.contract/add-new-contract-partner-company)]
@@ -156,10 +185,10 @@
          [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
           (tr [:contract :add-company])]
          (cond
+           (or selected-company? found-from-business-registry?)
+           [selected-company-information form-value]
            @add-new-company?
            [new-company-form-fields form-value]
-           selected-company?
-           [selected-company-information form-value]
            :else
            [:div
             [select/select-search
@@ -176,22 +205,33 @@
               :after-results-action {:title (tr [:contract :add-company-not-in-teet])
                                      :on-click add-new-company
                                      :icon [icons/content-add]}}]])
+         #_[form/field :contract-company/lead-partner?
+          [select/checkbox]]
          [form/footer2 (r/partial new-company-footer e! form-value)]]]])))
 
 (defn partners-default-view
-  []
+  [params]
   [:div {:class (<class common-styles/flex-1-align-center-justify-center)}
    [:div {:style {:text-align :center}}
-    [icons/action-manage-accounts-outlined {:font-size :large}]
-    [typography/Heading2 (tr [:contract :partner-information])]
-    [typography/Text (tr [:contract :partner-information-text])]]])
+    [icons/action-manage-accounts-outlined {:style {:font-size "3rem"}
+                                            :class (<class common-styles/margin-bottom 1)}]
+    [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
+     (tr [:contract :partner-information])]
+    [typography/Text {:class (<class common-styles/margin-bottom 2)}
+     (tr [:contract :partner-information-text])]
+    [buttons/button-primary
+     {:start-icon (r/as-element [icons/content-add])
+      :href (routes/url-for {:page :contract-partners
+                             :params params
+                             :query {:page :add-partner}})}
+     (tr [:contract :add-company])]]])
 
 (defn partner-info
   [e! app selected-partner]
   [:h1 (pr-str selected-partner)])
 
 (defn partners-page-router
-  [e! {:keys [query] :as app} contract]
+  [e! {:keys [query params] :as app} contract]
   (let [selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
                               (filter
@@ -200,10 +240,10 @@
                               first)]
     (case (keyword (:page query))
       :add-partner
-      [new-partner-form e! contract]
+      [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
-      [partners-default-view])))
+      [partners-default-view params])))
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
 (defn partners-page
