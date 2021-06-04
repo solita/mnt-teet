@@ -35,7 +35,10 @@
             [teet.ui.select :as select]
             [teet.ui.form :as form]
             [teet.ui.chip :as chip]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+
+            ;; FIXME: refactor edit/view UI away from cost items view
+            [teet.asset.cost-items-view :as cost-items-view]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -239,15 +242,26 @@
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
 
-(defn- result-details-view* [e! asset]
-  [:div
-   (pr-str asset)])
+(defn- result-details-view* [e! rotl asset]
+  (let [fclass (-> asset :asset/fclass :db/ident rotl)]
+    [:div
+     [form/form2
+      {:e! e!
+       :on-change-event :_ignore
+       :value asset
+       :disable-buttons? true}
+      [cost-items-view/attributes* {:e! e!
+                                    :attributes (:attribute/_parent fclass)
+                                    :cost-item-data asset
+                                    :common :ctype/feature
+                                    :inherits-location? false}
+       rotl true]]]))
 
-(defn- result-details-view [e! oid]
+(defn- result-details-view [e! oid rotl]
   [query/query {:e! e!
                 :query :assets/details
                 :args {:asset/oid oid}
-                :simple-view [result-details-view* e!]}])
+                :simple-view [result-details-view* e! rotl]}])
 
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
@@ -269,7 +283,8 @@
                       highlight-oid]} results
               table-pane
               (if details
-                [result-details-view e! details]
+                [context/consume :rotl
+                 [result-details-view e! details]]
                 [:div {:style {:background-color theme-colors/white
                                :padding "0.5rem"}}
                  [typography/Heading1 (tr [:asset :manager :result-count]
@@ -331,7 +346,8 @@
                              :defaultSize (if @filters-collapsed? 30 330)
                              :allowResize false}
         [asset-filters e! atl criteria filters-collapsed?]
-        [assets-results {:e! e! :atl atl :criteria criteria
-                         :asset-query query
-                         :results results
-                         :details (get-in app [:query :details])}]]])))
+        [context/provide :rotl (asset-type-library/rotl-map atl)
+         [assets-results {:e! e! :atl atl :criteria criteria
+                          :asset-query query
+                          :results results
+                          :details (get-in app [:query :details])}]]]])))
