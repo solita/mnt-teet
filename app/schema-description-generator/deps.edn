@@ -1,0 +1,3 @@
+{:deps  {com.datomic/client-cloud {:mvn/version "0.8.102"}}
+ :paths ["src"]
+ :aliases {:generate {:main-opts ["-m" "generate-schema"]}}}
