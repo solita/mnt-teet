@@ -67,8 +67,8 @@
    :material "Materjal",
    :quantity "Kogus",
    :no-road-reference "Ilma tee aadressita",
-   :material-approval-status nil,
-   :parameter nil},
+   :material-approval-status "Materjali heakskiit",
+   :parameter "Parameeter"},
   :add-cost-item "Lisan vara",
   :export-boq "Kululoendi eksport",
   :validate
@@ -146,6 +146,7 @@
   :delete "Kustutan",
   :save "Salvestan",
   :close "Sulgen",
+  :search "Otsing",
   :preview "Eelvaade",
   :undo "Taastan",
   :back "Tagasi",
@@ -238,6 +239,7 @@
   "Sisesta ettevõtte nimi või äriregistri kood",
   :related-contracts "SEOTUD LEPINGUD",
   :thk.contract/type "Tüüp",
+  :no-company-found-title nil,
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
@@ -255,6 +257,7 @@
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
+  :xroad-exception-content nil,
   :partners-listing "Partnerite loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
@@ -262,6 +265,9 @@
   :company-search-label "Ettevõtte otsing",
   :contracts-listing "Lepingute loetelu",
   :edit-contract "Lepingu info",
+  :no-company-found-content nil,
+  :xroad-exception-title nil,
+  :search-companies-business-registry nil,
   :thk.contract.status/in-progress "Töös"},
  :contracts
  {:contracts-list
