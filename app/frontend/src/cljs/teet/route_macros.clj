@@ -60,6 +60,7 @@
     `(defn ~fn-name [~'e! {page# :page
                            params# :params
                            :as ~'app}]
+       
        (let [~'params (:params ~'app)
              ~'query-params (:query ~'app)
              ~'tr teet.localization/tr
@@ -72,6 +73,7 @@
                         ~@(breadcrumb-bindings defs route-name)
                         title# ~title
                         ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
+                    (log/debug "defining route for title " title#)
                     (set! (.-title js/document) (or title# "TEET"))
                     (if-not (or (nil? ~permission) (authorized? @teet.app-state/user ~permission))
                       {:page [:div "No such page"]}
@@ -92,11 +94,15 @@
                                    :state-path [:route ~route-name]
                                    :refresh ~'refresh}]
 
-                                ;; Otherwise just call view with e! and app
-                                `[~view ~'e! ~'app])}))])
+                                ;; Otherwise just call view with e!, app
+                                ;; and page state
+                                `[~view ~'e! ~'app
+                                  (get-in ~'app [:route ~route-name])])}))])
               defs)
 
-           [:div "Unrecognized page: " (str page#)])))))
+           (let [err# (str "main-page: Unrecongnized page:" page#)]
+             (log/debug err#)
+             [:div err#]))))))
 
 (def param-name-with-pattern #":([^(]+)(\(.+\))?")
 (defn split-path [path]
