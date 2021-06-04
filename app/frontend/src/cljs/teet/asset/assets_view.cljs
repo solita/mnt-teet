@@ -34,7 +34,8 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.select :as select]
             [teet.ui.form :as form]
-            [teet.ui.chip :as chip]))
+            [teet.ui.chip :as chip]
+            [teet.ui.query :as query]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -238,6 +239,15 @@
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
 
+(defn- result-details-view* [e! asset]
+  [:div
+   (pr-str asset)])
+
+(defn- result-details-view [e! oid]
+  [query/query {:e! e!
+                :query :assets/details
+                :args {:asset/oid oid}
+                :simple-view [result-details-view* e!]}])
 
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
@@ -254,27 +264,29 @@
             (next-map-key!))))
 
       :reagent-render
-      (fn [{:keys [e! atl criteria assets-query results]}]
+      (fn [{:keys [e! atl criteria assets-query results details]}]
         (let [{:keys [assets geojson more-results? result-count-limit
                       highlight-oid]} results
               table-pane
-              [:div {:style {:background-color theme-colors/white
-                             :padding "0.5rem"}}
-               [typography/Heading1 (tr [:asset :manager :result-count]
-                                        {:count (if more-results?
-                                                  (str result-count-limit "+")
-                                                  (count assets))})]
-               [table/listing-table
-                {:default-show-count 100
-                 :columns asset-model/assets-listing-columns
-                 :get-column asset-model/assets-listing-get-column
-                 :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
-                                       (tr [:fields %]))
-                 :on-row-hover (e! assets-controller/->HighlightResult)
-                 :on-row-click (e! assets-controller/->ShowDetails)
-                 :format-column format-assets-column
-                 :data assets
-                 :key :asset/oid}]]
+              (if details
+                [result-details-view e! details]
+                [:div {:style {:background-color theme-colors/white
+                               :padding "0.5rem"}}
+                 [typography/Heading1 (tr [:asset :manager :result-count]
+                                          {:count (if more-results?
+                                                    (str result-count-limit "+")
+                                                    (count assets))})]
+                 [table/listing-table
+                  {:default-show-count 100
+                   :columns asset-model/assets-listing-columns
+                   :get-column asset-model/assets-listing-get-column
+                   :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                                         (tr [:fields %]))
+                   :on-row-hover (e! assets-controller/->HighlightResult)
+                   :on-row-click (e! assets-controller/->ShowDetails)
+                   :format-column format-assets-column
+                   :data assets
+                   :key :asset/oid}]])
 
               map-pane
               ^{:key (str "map" @map-key)}
@@ -309,7 +321,7 @@
                :on-drag-finished next-map-key!}
               table-pane map-pane])]))})))
 
-(defn assets-page [e! {atl :asset-type-library :as _app}
+(defn assets-page [e! {atl :asset-type-library :as app}
                    {:keys [criteria query results]}]
   (r/with-let [filters-collapsed? (r/atom false)]
     (if-not atl
@@ -321,4 +333,5 @@
         [asset-filters e! atl criteria filters-collapsed?]
         [assets-results {:e! e! :atl atl :criteria criteria
                          :asset-query query
-                         :results results}]]])))
+                         :results results
+                         :details (get-in app [:query :details])}]]])))
