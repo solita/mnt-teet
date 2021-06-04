@@ -257,35 +257,18 @@
                            (project-db/project-has-owner? db [:thk.project/id project-id]))
      :construction-activity-db-id (get-project-construction-activity-db-id db rows)}))
 
-
-(defn- get-task-type [db task-eid]
-  (ffirst (d/q '[:find (pull ?e [:task/type])
-                 :where
-                 [(missing? $ ?e :meta/deleted?)]
-                 :in $ ?e] db task-eid)))
-
-(defn- get-activity-tasks-eids [db activity-eid]
-  (let [query-result
-        (d/q '[:find (pull ?e [:activity/tasks])
-               :in $ ?e] db activity-eid)]
-    (when
-      (some? query-result)
-      (:activity/tasks (ffirst query-result)))))
-
 (defn- get-existing-task-db-id
   "Search for the existing task with the same type and start and end dates"
   [db construction-activity-id task-type start-date end-date]
-  (first (reduce
-           (fn [acc task]
-             (if
-               (and
-                 (= (:db/ident (:task/type (get-task-type db (:db/id task)))) task-type)
-                 (= (:task/estimated-start-date (d/pull db '[*] (:db/id task))) start-date)
-                 (= (:task/estimated-end-date (d/pull db '[*] (:db/id task))) end-date))
-               (conj acc (:db/id task))
-               acc))
-           []
-           (get-activity-tasks-eids db construction-activity-id))))
+  (ffirst (d/q '[:find ?t
+                 :where
+                 [?a :activity/tasks ?t]
+                 [(missing? $ ?t :meta/deleted?)]
+                 [?t :task/estimated-end-date ?end-date]
+                 [?t :task/estimated-start-date ?start-date]
+                 [?t :task/type ?task-type]
+                 :in $ ?a ?end-date ?start-date ?task-type]
+            db construction-activity-id end-date start-date task-type)))
 
 (defn- get-new-task-type [activity-data]
   (let [activity-name (:activity/name activity-data)]
