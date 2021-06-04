@@ -680,3 +680,20 @@
     (fn [_]
       [:span {:ref #(when %
                       (.observe observer %))}])))
+
+(defn error-boundary [_child]
+  (let [error (r/atom nil)]
+    (r/create-class
+     {:component-did-catch (fn [_ err info]
+                             (reset! error {:error err
+                                            :error-info info
+                                            :details-open? false}))
+      :reagent-render
+      (fn [child]
+        (if-let [err @error]
+          [:div
+           [:b "ERROR: " (:error err)]
+           [:a {:on-click (swap! error :details-open? not)} "details"]
+           [Collapse {:in (:details-open? err)}
+            [:div (pr-str (:error-info err))]]]
+          child))})))

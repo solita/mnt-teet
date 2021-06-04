@@ -30,6 +30,8 @@
                                         :timezone :jvm-default}
                        :output-fn output})
 
+(def merge-config! timbre/merge-config!)
+
 ;;
 ;; Ion appender
 ;;

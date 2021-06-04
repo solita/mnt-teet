@@ -10,6 +10,8 @@
 (defrecord SearchResults [results])
 
 (defrecord HighlightResult [result]) ; higlight a result item
+(defrecord ShowDetails [result]) ; show details for result
+(defrecord BackToListing []) ; go back from details to listing
 
 ;; Set search area by current location
 (defrecord SearchBy [search-by])
@@ -44,8 +46,12 @@
     (assoc out :current-location [x y radius])
     out))
 
-(defmethod search-criteria :road-address [out {addr :road-address}]
-  (assoc out :road-address addr))
+(defmethod search-criteria :road-address [out {addr :road-address
+                                               search-by :search-by}]
+  (if (and (= search-by :road-address)
+           (seq addr))
+    (assoc out :road-address addr)
+    out))
 
 (defn assets-query [criteria]
   (let [args (reduce (fn [out key]
@@ -144,4 +150,20 @@
     (debounced-search
      (common-controller/update-page-state
       app [:criteria :road-address]
-      (fn [addrs] (filterv #(not= % address) addrs))))))
+      (fn [addrs] (filterv #(not= % address) addrs)))))
+
+  ShowDetails
+  (process-event [{result :result} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (:page app)
+           :params (:params app)
+           :query {:details (:asset/oid result)}}))
+
+  BackToListing
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (:page app)
+           :params (:params app)
+           :query (dissoc (:query app) :details)})))

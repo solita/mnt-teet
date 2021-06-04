@@ -8,7 +8,8 @@
             [clojure.string :as str]
             [clojure.walk :as walk]
             [datomic.dev-local :as dl]
-            [cognitect.aws.client.api :as aws])
+            [cognitect.aws.client.api :as aws]
+            [teet.log :as log])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -459,3 +460,7 @@
          (finally
            (println "TIME" (apply str (repeat *time-level* "--")) n# ": "
                     (- (System/currentTimeMillis) start#) "msecs"))))))
+
+
+(defn log-level! [level]
+  (log/merge-config! {:level level}))

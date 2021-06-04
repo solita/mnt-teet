@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-05-27T13:23:06.982-00:00"}
+  :tx/schema-imported-at #inst "2021-06-04T08:27:54.030-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -408,6 +408,9 @@
   :asset-schema/label
   ["Liikluskorraldusvahendi koht (märk, foor, vms)"
    "Traffic signage location (sign, signal, etc)"],
+  :asset-schema/description
+  ["Liikluskorraldusvahendi koht võib olla punkt (üks post) või lineaarnähtus (portaal, konsool). "
+   "Road signage location may be point (single post) or linear (cantilever, portal) feature."],
   :fclass/fgroup ":fgroup/trafficarrangement",
   :fclass/oid-prefix "LAK"}
  {:db/id ":fclass/soilsteelcomp",
@@ -1707,6 +1710,7 @@
   :db/ident :backfill/backfillelasticmodulus,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/backfill"],
+  :asset-schema/unit "m/day",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
@@ -1895,6 +1899,14 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":bearing/bearingverticalload",
   :db/ident :bearing/bearingverticalload,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":material/bitumen"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":bitumen/bitumentype",
+  :db/ident :bitumen/bitumentype,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/boundbasecourse"],
   :asset-schema/unit "MPa",
@@ -2534,6 +2546,16 @@
   :attribute/cost-grouping? true,
   :asset-schema/description
   ["Betooni tugevusklass vastavalt Eurokoodeksile" ""]}
+ {:attribute/parent [":material/concrete"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Keskkonnaklass" "Environmental class"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":concrete/concreteenvironmentalclass",
+  :db/ident :concrete/concreteenvironmentalclass,
+  :attribute/cost-grouping? true,
+  :asset-schema/description ["Vastavalt Eurokoodeksile" ""]}
  {:attribute/parent [":material/crushedstone"],
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
@@ -2553,6 +2575,13 @@
   :db/id ":crushedstone/stonetype",
   :db/ident :crushedstone/stonetype,
   :attribute/cost-grouping? true}
+ {:attribute/parent [":fclass/culvert"],
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertdiam",
+  :db/ident :culvert/culvertdiam}
  {:attribute/parent [":fclass/culvert"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2587,6 +2616,12 @@
   :db/ident :culvert/culvertlandimprovementsystem,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/culvert"],
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertlength",
+  :db/ident :culvert/culvertlength}
+ {:attribute/parent [":fclass/culvert"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
@@ -2596,6 +2631,12 @@
   :db/id ":culvert/culvertlocation",
   :db/ident :culvert/culvertlocation,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/culvert"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvert/culvertmaterial",
+  :db/ident :culvert/culvertmaterial}
  {:attribute/parent [":fclass/culvert"],
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -3559,6 +3600,16 @@
   :db/id ":pumpingstation/pumpingstationremark",
   :db/ident :pumpingstation/pumpingstationremark,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":material/rebarsteel"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Sarrusterase tugevusklass" "Rebar steel strength class"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":rebarsteel/rebarsteelclass",
+  :db/ident :rebarsteel/rebarsteelclass,
+  :attribute/cost-grouping? true}
  {:attribute/parent [":fclass/retainingwall"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -4435,6 +4486,97 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["C55" "C55"],
   :enum/attribute ":concrete/concreteclass"}
+ {:db/id ":item/concreteenvironmentalclassx0",
+  :db/ident :item/concreteenvironmentalclassx0,
+  :db/doc "Korrosioonioht puudub",
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["X0" "X0"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxa1",
+  :db/ident :item/concreteenvironmentalclassxa1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XA1" "XA1"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxa2",
+  :db/ident :item/concreteenvironmentalclassxa2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XA2" "XA2"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxa3",
+  :db/ident :item/concreteenvironmentalclassxa3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XA3" "XA3"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxc1",
+  :db/ident :item/concreteenvironmentalclassxc1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XC1" "XC1"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxc2",
+  :db/ident :item/concreteenvironmentalclassxc2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XC2" "XC2"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxc3",
+  :db/ident :item/concreteenvironmentalclassxc3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XC3" "XC3"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxc4",
+  :db/ident :item/concreteenvironmentalclassxc4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XC4" "XC4"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxd1",
+  :db/ident :item/concreteenvironmentalclassxd1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XD1" "XD1"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxd2",
+  :db/ident :item/concreteenvironmentalclassxd2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XD2" "XD2"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxd3",
+  :db/ident :item/concreteenvironmentalclassxd3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XD3" "XD3"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxf1_kk1",
+  :db/ident :item/concreteenvironmentalclassxf1_kk1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XF1, KK1" "XF1, KK1"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxf2_kk2",
+  :db/ident :item/concreteenvironmentalclassxf2_kk2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XF2, KK2" "XF2, KK2"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxf3_kk3",
+  :db/ident :item/concreteenvironmentalclassxf3_kk3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XF3, KK3" "XF3, KK3"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxf4_kk4",
+  :db/ident :item/concreteenvironmentalclassxf4_kk4,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XF4, KK4" "XF4, KK4"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxs1",
+  :db/ident :item/concreteenvironmentalclassxs1,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XS1" "XS1"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxs2",
+  :db/ident :item/concreteenvironmentalclassxs2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XS2" "XS2"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
+ {:db/id ":item/concreteenvironmentalclassxs3",
+  :db/ident :item/concreteenvironmentalclassxs3,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["XS3" "XS3"],
+  :enum/attribute ":concrete/concreteenvironmentalclass"}
  {:db/id ":item/created",
   :db/ident :item/created,
   :asset-schema/type :asset-schema.type/enum,
@@ -4468,12 +4610,12 @@
  {:db/id ":item/detectortypecamera",
   :db/ident :item/detectortypecamera,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Camera"],
+  :asset-schema/label ["Kaamera" "Camera"],
   :enum/attribute ":animaldetector/detectortype"}
  {:db/id ":item/detectortyperadar",
   :db/ident :item/detectortyperadar,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Radar"],
+  :asset-schema/label ["Radar" "Radar"],
   :enum/attribute ":animaldetector/detectortype"}
  {:db/id ":item/flexible_plug_expansion_joint",
   :db/ident :item/flexible_plug_expansion_joint,
@@ -4482,6 +4624,26 @@
   ["Elastse täitega deformatsioonivuuk"
    "flexible plug expansion joint"],
   :enum/attribute ":expansionjoint/expansionjointtype"}
+ {:db/id ":item/gluelamstrengthgl24h",
+  :db/ident :item/gluelamstrengthgl24h,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["GL24h" "GL24h"],
+  :enum/attribute ":gluelam/gluelamstrength"}
+ {:db/id ":item/gluelamstrengthgl28h",
+  :db/ident :item/gluelamstrengthgl28h,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["GL28h" "GL28h"],
+  :enum/attribute ":gluelam/gluelamstrength"}
+ {:db/id ":item/gluelamstrengthgl32h",
+  :db/ident :item/gluelamstrengthgl32h,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["GL32h" "GL32h"],
+  :enum/attribute ":gluelam/gluelamstrength"}
+ {:db/id ":item/gluelamstrengthgl36h",
+  :db/ident :item/gluelamstrengthgl36h,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["GL36h" "GL36h"],
+  :enum/attribute ":gluelam/gluelamstrength"}
  {:db/id ":item/ingeousrouck",
   :db/ident :item/ingeousrouck,
   :asset-schema/type :asset-schema.type/enum,
@@ -4560,6 +4722,47 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Planeeritud" "Planned"],
   :enum/attribute ":common/status"}
+ {:db/id ":item/plywoodtypeclt",
+  :db/ident :item/plywoodtypeclt,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ristkihtpuit" "CLT"],
+  :enum/attribute ":plywood/plywoodtype"}
+ {:db/id ":item/plywoodtypepuitlaastplaat",
+  :db/ident :item/plywoodtypepuitlaastplaat,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Puitlaastplaat" "Puitlaastplaat"],
+  :enum/attribute ":plywood/plywoodtype"}
+ {:db/id ":item/plywoodtypevineer",
+  :db/ident :item/plywoodtypevineer,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Vineer" "Vineer"],
+  :enum/attribute ":plywood/plywoodtype"}
+ {:db/id ":item/rebarsteelclassa400",
+  :db/ident :item/rebarsteelclassa400,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["A400" "A400"],
+  :enum/attribute ":rebarsteel/rebarsteelclass"}
+ {:db/id ":item/rebarsteelclassa500",
+  :db/ident :item/rebarsteelclassa500,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label
+  ["500A, 500B, 500C, A500, A500HW" "500A, 500B, 500C, A500, A500HW"],
+  :enum/attribute ":rebarsteel/rebarsteelclass"}
+ {:db/id ":item/rebarsteelclassa700",
+  :db/ident :item/rebarsteelclassa700,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["A700HW" "A700HW"],
+  :enum/attribute ":rebarsteel/rebarsteelclass"}
+ {:db/id ":item/rebarsteelclasss235jrg2",
+  :db/ident :item/rebarsteelclasss235jrg2,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["S235JRG2" "S235JRG2"],
+  :enum/attribute ":rebarsteel/rebarsteelclass"}
+ {:db/id ":item/rebarsteelclasss355jo",
+  :db/ident :item/rebarsteelclasss355jo,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["S355JO" "S355JO"],
+  :enum/attribute ":rebarsteel/rebarsteelclass"}
  {:db/id ":item/removed",
   :db/ident :item/removed,
   :asset-schema/type :asset-schema.type/enum,
@@ -4673,6 +4876,46 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["6 - suunaviit" "6 - wayfinding"],
   :enum/attribute ":trafficsign/trafficsigngroup"}
+ {:db/id ":item/solidwoodstrengthc16",
+  :db/ident :item/solidwoodstrengthc16,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C16" "C16"],
+  :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodstrengthc18",
+  :db/ident :item/solidwoodstrengthc18,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C18" "C18"],
+  :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodstrengthc22",
+  :db/ident :item/solidwoodstrengthc22,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C22" "C22"],
+  :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodstrengthc24",
+  :db/ident :item/solidwoodstrengthc24,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C24" "C24"],
+  :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodstrengthc30",
+  :db/ident :item/solidwoodstrengthc30,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C30" "C30"],
+  :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodstrengthc35",
+  :db/ident :item/solidwoodstrengthc35,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["C35" "C35"],
+  :enum/attribute ":solidwood/solidwoodstrength"}
+ {:db/id ":item/solidwoodtimberconifer",
+  :db/ident :item/solidwoodtimberconifer,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Okaspuit" "Conifer"],
+  :enum/attribute ":solidwood/solidwoodtimber"}
+ {:db/id ":item/solidwoodtimberhardwood",
+  :db/ident :item/solidwoodtimberhardwood,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Lehtpuit" "Hardwood"],
+  :enum/attribute ":solidwood/solidwoodtimber"}
  {:db/id ":item/spanarch",
   :db/ident :item/spanarch,
   :asset-schema/type :asset-schema.type/enum,
@@ -4842,15 +5085,20 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["III" "III"],
   :enum/attribute ":trafficsign/trafficsignsizegroup"}
+ {:db/id ":item/weatherstationprobetypefog",
+  :db/ident :item/weatherstationprobetypefog,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Udu" "Fog"],
+  :enum/attribute ":weatherstationprobe/weatherstationprobetype"}
  {:db/id ":item/weatherstationprobetypehumidity",
   :db/ident :item/weatherstationprobetypehumidity,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Humidity"],
+  :asset-schema/label ["Niiskus" "Humidity"],
   :enum/attribute ":weatherstationprobe/weatherstationprobetype"}
  {:db/id ":item/weatherstationprobetypetemperature",
   :db/ident :item/weatherstationprobetypetemperature,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["" "Temperature"],
+  :asset-schema/label ["Temperatuur" "Temperature"],
   :enum/attribute ":weatherstationprobe/weatherstationprobetype"}
  {:db/id ":item/workinprogress",
   :db/ident :item/workinprogress,
@@ -5042,6 +5290,20 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Kasvupinnas" "Topsoil"],
   :material/fgroups [":fgroup/immaterial" ":fgroup/carriageway"]}
+ {:db/id ":product/asphaltsteelgrid",
+  :db/ident :product/asphaltsteelgrid,
+  :asset-schema/type :asset-schema.type/material,
+  :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
+ {:db/id ":product/cobblestone",
+  :db/ident :product/cobblestone,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Munakivid" "Cobblestones"],
+  :material/fgroups [":fgroup/pavement" ":fgroup/drainage"]}
+ {:db/id ":product/culvert",
+  :db/ident :product/culvert,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Truup" "Culvert"],
+  :material/fgroups [":fgroup/drainage"]}
  {:db/id ":product/drainagepipe",
   :db/ident :product/drainagepipe,
   :asset-schema/type :asset-schema.type/material,
@@ -5055,6 +5317,23 @@
   [":fgroup/equipment"
    ":fgroup/trafficarrangement"
    ":fgroup/landscaping"]}
+ {:db/id ":product/erosioncontrolblanket",
+  :db/ident :product/erosioncontrolblanket,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label
+  ["Erosioonitõkkematt (kookosmatt)"
+   "Erosion control blankets (cocomat)"],
+  :material/fgroups [":fgroup/embankment" ":fgroup/drainage"]}
+ {:db/id ":product/gabion",
+  :db/ident :product/gabion,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Gabioon" "Gabioon"],
+  :material/fgroups [":fgroup/structures"]}
+ {:db/id ":product/geocell",
+  :db/ident :product/geocell,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Geokärg" "Geocell"],
+  :material/fgroups [":fgroup/embankment" ":fgroup/drainage"]}
  {:db/id ":product/geomembrane",
   :db/ident :product/geomembrane,
   :asset-schema/type :asset-schema.type/material,
@@ -5064,7 +5343,11 @@
   :db/ident :product/geotextile,
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Geotekstiil" "Geotextile"],
-  :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
+  :material/fgroups
+  [":fgroup/carriageway"
+   ":fgroup/pavement"
+   ":fgroup/embankment"
+   ":fgroup/drainage"]}
  {:db/id ":product/gravel",
   :db/ident :product/gravel,
   :asset-schema/type :asset-schema.type/material,
@@ -5085,6 +5368,11 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Kaev" "Manhole"],
   :material/fgroups [":fgroup/drainage" ":fgroup/utilities"]}
+ {:db/id ":product/pavingstone",
+  :db/ident :product/pavingstone,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Tänavakivi" "Paving stone"],
+  :material/fgroups [":fgroup/pavement"]}
  {:db/id ":product/post",
   :db/ident :product/post,
   :asset-schema/type :asset-schema.type/material,
