@@ -13,6 +13,7 @@
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
             [clojure.edn :as edn]))
+            [teet.user.user-model :as user-model]))
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
@@ -53,7 +54,7 @@
 
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
-                        warranty-end-date cost] :as contract}]
+                        warranty-end-date cost targets] :as contract}]
   [common/basic-information-row
    {:right-align-last? false
     :font-size "0.875rem"}
@@ -81,6 +82,13 @@
     (when warranty-end-date
       [(tr [:contract :thk.contract/warranty-end-date])
        [typography/Paragraph (format/date warranty-end-date)]])
+    (when (not-empty (filterv some?
+                       (distinct (mapv #(user-model/user-name (:activity/manager %))
+                                   targets))))
+      [(tr [:contracts :filters :inputs :project-manager])
+       [typography/Paragraph (str/join ", " (filter some?
+                                              (distinct (mapv #(user-model/user-name (:activity/manager %))
+                                                          targets))))]])
     (when cost
       [(tr [:fields :thk.contract/cost])
        [typography/Paragraph (euro/format cost)]])]])

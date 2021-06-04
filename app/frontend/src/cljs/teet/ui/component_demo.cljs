@@ -21,7 +21,9 @@
             [teet.ui.mentions :as mentions]
             [teet.ui.common :as common-ui]
             [teet.contract.contract-status :as contract-status]
+            [teet.contract.contract-common :as contract-common]
             [teet.ui.table :as table]))
+
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -304,22 +306,53 @@
 (defn contract-demo
   []
   [:div
-   [:h1 "Statuses"]
-   [:div {:style {:display :flex
-                  :align-items :center}}
-    [contract-status/contract-status {} :thk.contract.status/signed]
-    [contract-status/contract-status {} :thk.contract.status/completed]
-    [contract-status/contract-status {} :thk.contract.status/in-progress]
-    [contract-status/contract-status {} :thk.contract.status/deadline-approaching]
-    [contract-status/contract-status {} :thk.contract.status/deadline-overdue]
-    [contract-status/contract-status {} :thk.contract.status/warranty]]
-   [:div
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/signed]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/completed]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/in-progress]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-approaching]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-overdue]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/warranty]]])
+   [:h4 {:style {:margin-top "8px"}} "Status"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-bottom "8px"}} "Status without label, default size"]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [contract-status/contract-status {} :thk.contract.status/signed]
+     [contract-status/contract-status {} :thk.contract.status/completed]
+     [contract-status/contract-status {} :thk.contract.status/in-progress]
+     [contract-status/contract-status {} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {} :thk.contract.status/warranty]]]
+   [:div {:style {:margin-top "16px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-top "16px" :margin-bottom "8px"}} "Status with label. default size"]
+    [:div
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/signed]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/completed]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/in-progress]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/warranty]]]
+   [:div {:style {:margin-top "16px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-top "16px" :margin-bottom "8px"}} "Status without label. Size 15px"]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [contract-status/contract-status {:size 15} :thk.contract.status/signed]
+     [contract-status/contract-status {:size 15} :thk.contract.status/completed]
+     [contract-status/contract-status {:size 15} :thk.contract.status/in-progress]
+     [contract-status/contract-status {:size 15} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {:size 15} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {:size 15} :thk.contract.status/warranty]]]
+   [:h4 {:style {:margin-top "24px"}} "External links"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [contract-common/contract-external-links {:thk.contract/procurement-id 1234
+                                              :thk.contract/procurement-number 1234
+                                              :thk.contract/external-link "www.test.test"}]]
+   [:h4 {:style {:margin-top "24px"}} "Information row"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [contract-common/contract-information-row {:thk.contract/type :thk.contract.type/construction-works
+                                               :thk.contract/signed-at #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/start-of-work #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/deadline #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/extended-deadline #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/warranty-end-date #inst "2048-05-08T00:00:00.000-00:00"
+                                               :thk.contract/cost "34324"
+                                               :thk.contract/status :thk.contract.status/warranty}]]])
+;type signed-at start-of-work deadline extended-deadline
+;warranty-end-date cost
 
 
 (defn simple-table-demo

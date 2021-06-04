@@ -19,7 +19,8 @@
             [teet.ui.typography :as typography]
             [teet.contract.contract-style :as contract-style]
             [teet.ui.table :as table]
-            [teet.contract.contract-common :as contract-common]))
+            [teet.contract.contract-common :as contract-common]
+            [clojure.string :as str]))
 
 (defn target-table
   [targets]

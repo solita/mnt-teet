@@ -27,7 +27,7 @@
 
 ;; Register routes that need asset type library to be in app state
 ;; and launch event to fetch it when navigating.
-(doseq [r [:cost-item :cost-items :cost-items-totals :asset-type-library :assets]]
+(doseq [r [:cost-item :cost-items :cost-items-totals :materials-and-products :asset-type-library :assets]]
   (defmethod routes/on-navigate-event r [_] (->MaybeFetchAssetTypeLibrary)))
 
 
