@@ -15,7 +15,7 @@ function gensecret {
     name="$1"
     touch "$name.secret"
     chmod 600 "$name.secret"
-    head -c 20 /dev/urandom | base64 > "$name.secret"
+    head -c 42 /dev/urandom | base64 > "$name.secret"
 }
 
 function patient-docker-pull {
@@ -175,15 +175,15 @@ function setup-postgres {
     
     SOURCE_DB_NAME=$AWS_SSM_DB_URI; SOURCE_DB_NAME=${AWS_SSM_DB_URI#*//}; SOURCE_DB_NAME=${SOURCE_DB_NAME#*/}
     SOURCE_DB_HOST=$AWS_SSM_DB_URI; SOURCE_DB_HOST=${AWS_SSM_DB_URI#*//}; SOURCE_DB_HOST=${SOURCE_DB_HOST%/*};
+    cd mnt-teet/db
+    bash devdb_create_template.sh
+    env PSQL_TEET_DB_OWNER=teetmaster bash devdb_clean.sh
+    cd ../..
+    
     createuser -h localhost -U postgres teetmaster
-    createdb -h localhost -U postgres "$SOURCE_DB_NAME" -O teetmaster
-    psql -c "CREATE ROLE teeregister" -h localhost -U postgres
-    psql -c "CREATE ROLE teet_user" -h localhost -U postgres
-    psql -c "CREATE ROLE teet_backend" -h localhost -U postgres
-    psql -c "CREATE ROLE rdsadmin" -h localhost -U postgres
-    psql -c "CREATE ROLE teet WITH LOGIN SUPERUSER" -h localhost -U postgres
-    psql -c "CREATE ROLE authenticator LOGIN" -h localhost -U postgres
-    PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" | pg_restore -d "$SOURCE_DB_NAME" -h localhost -U postgres
+    PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" > t.dump
+    du -h t.dump
+    pg_restore -c -d teet -h localhost -U postgres < t.dump
     psql -c "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;" -h localhost -U postgres teet
 }
 
@@ -205,6 +205,7 @@ function update-dyndns {
     local url="$(printf ${format} "${dnsbasename}.${dnssuffix}" "${myv4addr}")"
     curl  "${url}"
     MYDNS="${dnsbasename}.${dnssuffix}"
+    MYDNSSUFFIX="$dnssuffix"
 }
 
 
@@ -269,7 +270,7 @@ function run-caddy-revproxy {
 
 ${MYDNS}:443 {
   reverse_proxy teetapi:3000
-  tls /etc/letsencrypt/live/$MYDNS/fullchain.pem /etc/letsencrypt/live/$MYDNS/privkey.pem
+  tls /etc/letsencrypt/live/a.${MYDNSSUFFIX}/fullchain.pem /etc/letsencrypt/live/a.${MYDNSSUFFIX}/privkey.pem
 
 }
 
@@ -314,7 +315,7 @@ function install-deps-and-app {
     echo -e "max_wal_senders = 0\nwal_level = minimal\nfsync = off\nfull_page_writes = off\n" | docker exec -i teetdb bash -c 'cat >> /var/lib/postgresql/data/postgresql.conf' # try to make loading faster
     docker restart teetdb    
 
-    gensecret jwt.secret
+    gensecret jwt
     
     TEET_ENV=$(ssm-get /teet/env)
     DNS_SUFFIX=$(ssm-get /dev-testsetup/testvm-dns-suffix)
@@ -341,7 +342,7 @@ function install-deps-and-app {
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
     
-    update-dyndns a # sets $MYDNS. tbd: select which dns name from the pool to assume
+    update-dyndns c # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
     
     run-caddy-revproxy
