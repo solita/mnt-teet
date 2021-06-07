@@ -115,7 +115,7 @@
   t/Event
   (process-event [_ app]
     ;; Update the refresh indicator value so query component will force a refetch
-    (refresh-page app)))
+    (refresh-page (dissoc app :task-review-started?))))
 
 (def refresh-fx
   "Tuck effect that refreshes the current page state from database."
