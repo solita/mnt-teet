@@ -1,0 +1,8 @@
+{:server-type :cloud
+ :region "eu-central-1"
+ :system "<system-name>"
+ :endpoint "http://entry.<system-name>.eu-central-1.datomic.net:8182"
+ :db-name "<db-name>"
+ :aws-profile "<profile name in your awscli config>"
+ :proxy-port 8666 ;; 8666 used by our datomic-repl script
+}
