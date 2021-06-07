@@ -39,13 +39,15 @@ sleep 600
 # polling 20 times 5 seconds each for .log file
 aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME"
 
-first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-6 /dev/stdout | head -1)
-if [ "$first_line_bytes" = "SUCCESS{" ]; then
+first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-256 /dev/stdout | head -1)
+if [ "${first_line_bytes: 0: 7}" = "SUCCESS" ]; then
   echo "Restore successfully completed."
   exit 0
 else
-  echo "Restore failed "$first_line_bytes
-  bash ./notify.bash "Backup-Restore build failed. Restore from $BACKUP_FILE_NAME failed with: $first_line_bytes" ":blob-fail:"
+  # Cut the FAILURE prefix and { suffix
+  msg=$(echo $first_line_bytes | cut -d'{' -f 1)
+  err="${msg: 7: 249}"
+  bash ./notify.bash "Backup-Restore build from $BACKUP_FILE_NAME failed.\n $err" ":blob-fail:"
   exit 1
 fi
 
