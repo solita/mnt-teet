@@ -340,7 +340,7 @@
    [:h4 {:style {:margin-top "24px"}} "External links"]
    [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
     [contract-common/contract-external-links {:thk.contract/procurement-id 1234
-                                              :thk.contract/procurement-number 1234
+                                              :thk.contract/procurement-number "12341234"
                                               :thk.contract/external-link "www.test.test"}]]
    [:h4 {:style {:margin-top "24px"}} "Information row"]
    [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
@@ -363,7 +363,7 @@
       [contracts-view/search-shortcuts {:value @shortcut-atom
                                         :options shortcuts
                                         :change-shortcut change-shortcut}])]
-   [:h4 {:style {:margin-top "24px"}} "Filters (this component is contract list specific and changes are needed to be more generic"]
+   [:h4 {:style {:margin-top "24px"}} "Filters (this component is contract list specific. Changes are required, if it will be reused)"]
    [:div
     (r/with-let [filter-fields [[:road-number {:type :search-field}]
                                 [:project-name {:type :search-field}]
