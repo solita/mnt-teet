@@ -12,6 +12,7 @@ Backend app hosts the index page and SPA application JS.
 - Start a repl
 - Call `teet.main/restart`
 
+See `mnt-teet/docs/dev-env/` for detailed instructions.
 
 # Testing
 
