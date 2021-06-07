@@ -22,6 +22,7 @@
             [teet.ui.common :as common-ui]
             [teet.contract.contract-status :as contract-status]
             [teet.contract.contract-common :as contract-common]
+            [teet.contract.contracts-view :as contracts-view]
             [teet.ui.table :as table]))
 
 
@@ -304,7 +305,7 @@
                                      :icon [icons/notification-bluetooth-audio]}]}]])
 
 (defn contract-demo
-  []
+  [e!]
   [:div
    [:h4 {:style {:margin-top "8px"}} "Status"]
    [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
@@ -350,9 +351,27 @@
                                                :thk.contract/extended-deadline #inst "2021-05-04T00:00:00.000-00:00"
                                                :thk.contract/warranty-end-date #inst "2048-05-08T00:00:00.000-00:00"
                                                :thk.contract/cost "34324"
-                                               :thk.contract/status :thk.contract.status/warranty}]]])
-;type signed-at start-of-work deadline extended-deadline
-;warranty-end-date cost
+                                               :thk.contract/status :thk.contract.status/warranty}]]
+   [:h4 {:style {:margin-top "24px"}} "Quick Filters"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    (r/with-let [shortcut-atom (r/atom :my-contracts)
+                 change-shortcut (fn [new-value]
+                                   (reset! shortcut-atom new-value))
+                 shortcuts [:my-contracts
+                            :all-contracts
+                            :unassigned]]
+      [contracts-view/search-shortcuts {:value @shortcut-atom
+                                        :options shortcuts
+                                        :change-shortcut change-shortcut}])]
+   [:h4 {:style {:margin-top "24px"}} "Filters (this component is contract list specific and changes are needed to be more generic"]
+   [:div
+    (r/with-let [filter-fields [[:road-number {:type :search-field}]
+                                [:project-name {:type :search-field}]
+                                [:contract-name {:type :search-field}]
+                                [:procurement-number {:type :search-field}]]]
+      [contracts-view/filter-inputs {:e! e!
+                                     :filter-input-fields filter-fields
+                                     :filters-visibility? true}])]])
 
 
 (defn simple-table-demo
@@ -428,7 +447,6 @@
    {:id :simple-table
     :heading "simple table"
     :component [simple-table-demo]}
-
    {:id :basic-information-column
     :heading "basic info column demo"
     :component [basic-information-column-demo]}])
