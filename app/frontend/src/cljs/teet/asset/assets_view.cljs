@@ -38,7 +38,8 @@
             [teet.ui.query :as query]
 
             ;; FIXME: refactor edit/view UI away from cost items view
-            [teet.asset.cost-items-view :as cost-items-view]))
+            [teet.asset.cost-items-view :as cost-items-view]
+            [teet.ui.url :as url]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -242,29 +243,57 @@
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
 
-(defn- result-details-view* [e! rotl asset]
-  (let [fclass (-> asset :asset/fclass :db/ident rotl)]
+(defn- result-details-view* [e! rotl oid asset]
+  (let [component? (asset-model/component-oid? oid)
+        item (if component?
+               (-> asset (asset-model/find-component-path oid) last)
+               asset)
+        fclass (-> asset :asset/fclass rotl)
+        ctype (when component?
+                (-> item :component/ctype rotl))
+        attributes (if component?
+                     (-> ctype :attribute/_parent)
+                     (-> fclass :attribute/_parent))]
     [:div
      [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
       [icons/navigation-arrow-back]
       (tr [:asset :manager :back-to-result-listing])]
+     (when component?
+       [url/Link {:page :assets
+                  :query {:details (asset-model/component-asset-oid oid)}}
+        (tr [:asset :back-to-cost-item] {:name (asset-ui/tr* fclass)})])
      [form/form2
       {:e! e!
        :on-change-event :_ignore ; the form cannot be changed, so we can ignore
-       :value asset
+       :value item
        :disable-buttons? true}
       [cost-items-view/attributes* {:e! e!
-                                    :attributes (:attribute/_parent fclass)
+                                    :attributes attributes
+                                    :component-oid (when component? oid)
                                     :cost-item-data asset
-                                    :common :ctype/feature
-                                    :inherits-location? false}
-       rotl true]]]))
+                                    :common (if component?
+                                              :ctype/component
+                                              :ctype/feature)
+                                    :inherits-location? (if component?
+                                                          (:component/inherits-location? ctype)
+                                                          false)}
+       rotl true]]
+     [context/provide :locked? true
+      [cost-items-view/components-tree asset
+       {:e! e!
+        :link-fn (fn [oid]
+                   {:page :assets
+                    :query {:details oid}})}]]]))
 
 (defn- result-details-view [e! oid rotl]
-  [query/query {:e! e!
-                :query :assets/details
-                :args {:asset/oid oid}
-                :simple-view [result-details-view* e! rotl]}])
+  (let [asset-oid (if (asset-model/component-oid? oid)
+                    (asset-model/component-asset-oid oid)
+                    oid)]
+    ^{:key oid}
+    [query/query {:e! e!
+                  :query :assets/details
+                  :args {:asset/oid asset-oid}
+                  :simple-view [result-details-view* e! rotl oid]}]))
 
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
@@ -285,26 +314,27 @@
         (let [{:keys [assets geojson more-results? result-count-limit
                       highlight-oid]} results
               table-pane
-              (if details
-                [context/consume :rotl
-                 [result-details-view e! details]]
-                [:div {:style {:background-color theme-colors/white
-                               :padding "0.5rem"}}
-                 [typography/Heading1 (tr [:asset :manager :result-count]
-                                          {:count (if more-results?
-                                                    (str result-count-limit "+")
-                                                    (count assets))})]
-                 [table/listing-table
-                  {:default-show-count 100
-                   :columns asset-model/assets-listing-columns
-                   :get-column asset-model/assets-listing-get-column
-                   :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
-                                         (tr [:fields %]))
-                   :on-row-hover (e! assets-controller/->HighlightResult)
-                   :on-row-click (e! assets-controller/->ShowDetails)
-                   :format-column format-assets-column
-                   :data assets
-                   :key :asset/oid}]])
+              [:div {:style {:background-color theme-colors/white
+                             :padding "0.5rem"}}
+               (if details
+                 [context/consume :rotl
+                  [result-details-view e! details]]
+                 [:<>
+                  [typography/Heading1 (tr [:asset :manager :result-count]
+                                           {:count (if more-results?
+                                                     (str result-count-limit "+")
+                                                     (count assets))})]
+                  [table/listing-table
+                   {:default-show-count 100
+                    :columns asset-model/assets-listing-columns
+                    :get-column asset-model/assets-listing-get-column
+                    :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                                          (tr [:fields %]))
+                    :on-row-hover (e! assets-controller/->HighlightResult)
+                    :on-row-click (e! assets-controller/->ShowDetails)
+                    :format-column format-assets-column
+                    :data assets
+                    :key :asset/oid}]])]
 
               map-pane
               ^{:key (str "map" @map-key)}
