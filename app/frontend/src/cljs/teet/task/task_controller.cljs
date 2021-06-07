@@ -136,7 +136,7 @@
            :command :task/start-review
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->Refresh}))
+           :result-event common-controller/->RefreshReview}))
 
   StartTaskPartReview
   (process-event [{task-id :task-id
