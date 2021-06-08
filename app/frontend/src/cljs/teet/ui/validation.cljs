@@ -157,7 +157,7 @@
   [value]
   (when (and (not (empty-value? value))
              (not (valid-estonian-business-registry-id? value)))
-    (tr [:common-texts :invalid-business-id])))
+    (tr [:validation :invalid-business-id])))
 
 (defn validate-rules
   "Returns all validation errors for a field as a sequence. If the sequence is empty,
