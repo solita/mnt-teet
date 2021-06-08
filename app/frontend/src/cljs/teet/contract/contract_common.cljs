@@ -58,7 +58,7 @@
    {:right-align-last? false
     :font-size "0.875rem"}
    [[(tr [:contract :status])
-     [contract-status/contract-status {:show-label? true :size 15}
+     [contract-status/contract-status {:show-label? true :size 17}
       (:thk.contract/status contract)]]
     (when-let [region (:ta/region contract)]
       [(tr [:fields :ta/region])
