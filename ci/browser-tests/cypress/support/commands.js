@@ -19,7 +19,7 @@ Cypress.Commands.add("dummyLogin", (name) => {
     })
 
     // Redirects to map page
-    cy.location("hash").should("eq", "#/projects/map")
+    cy.location("hash", {timeout: 30000}).should("eq", "#/projects/map")
 
 })
 
