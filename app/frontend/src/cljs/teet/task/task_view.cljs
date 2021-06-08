@@ -35,8 +35,7 @@
             [goog.string :as gstr]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.ui.rich-text-editor :as rich-text-editor]
-            [taoensso.timbre :as log]))
+            [teet.ui.rich-text-editor :as rich-text-editor]))
 
 
 (defn- task-groups-for-activity [activity-name task-groups]
