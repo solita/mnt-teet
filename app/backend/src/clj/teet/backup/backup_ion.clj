@@ -15,7 +15,8 @@
             [clojure.java.io :as io]
             [teet.log :as log]
             [clojure.string :as str]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [clojure.set :as set])
   (:import (java.time.format DateTimeFormatter)))
 
 (defn- current-iso-date []
@@ -251,7 +252,7 @@
   (let [->id #(let [s (str %)]
                 (or (old->new s) s))
         {card-many-datoms true
-         card-one-datoms false} (group-by (comp boolean cardinality-many-attrs
+         card-one-datoms false} (group-by (comp boolean @cardinality-many-attrs
                                                 second)
                                           tx-data)]
     (concat
@@ -289,6 +290,18 @@
                      v)]]
        [(if add? :db/add :db/retract) e a v]))))
 
+(defn- add-cardinality-many-attrs!
+  "Record :db/ident values of any new attributes created in tx-data"
+  [set-atom tx-data]
+  (let [card-many (into #{}
+                        (keep (fn [tx]
+                                (and (map? tx)
+                                     (= :db.cardinality/many (:db.cardinality tx))
+                                     (:db/ident tx))))
+                        tx-data)]
+    (when (seq card-many)
+      (swap! set-atom set/union card-many))))
+
 (defn- restore-tx-file*
   "Restore a backup by running the transactions in from the reader
   to the database pointed to by `conn`. It is assumed that
@@ -298,13 +311,15 @@
   [conn rdr]
   ;; Read first form which is the mapping containing info about the backup
   (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)
-        cardinality-many-attrs (into #{}
-                                     (map first)
-                                     (d/q '[:find ?ident
-                                            :where
-                                            [?a :db/cardinality :db.cardinality/many]
-                                            [?a :db/ident ?ident]]
-                                          (d/db conn)))
+
+        ;; Initial set of card many attributes, tx processing will add any new ones here
+        cardinality-many-attrs (atom (into #{}
+                                           (map first)
+                                           (d/q '[:find ?ident
+                                                  :where
+                                                  [?a :db/cardinality :db.cardinality/many]
+                                                  [?a :db/ident ?ident]]
+                                                (d/db conn))))
         progress! (progress-fn "transactions restored")]
     (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
     (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
@@ -320,11 +335,12 @@
                             (prepare-restore-tx (:data tx)
                                                 old->new
                                                 ref-attrs
-                                                cardinality-many-attrs))
+                                                @cardinality-many-attrs))
               {tempids :tempids}
               (d/transact
                conn
                {:tx-data tx-data})]
+          (add-cardinality-many-attrs! cardinality-many-attrs tx-data)
           (progress!)
           ;; Update old->new mapping with entity ids created in this tx
           (recur (merge old->new tempids)
