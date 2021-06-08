@@ -82,6 +82,7 @@
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
          [table/listing-body (assoc listing-opts
+                                    :key (comp str #(get-column atl % :parameter))
                                     :rows materials-and-products
                                     )]]]])))
 

@@ -243,7 +243,11 @@
   [db thk-project-id]
   (mapv first
         (d/q '[:find (pull ?e [* {:component/_materials
-                                  [:component/ctype]}])
+                                  [{:component/ctype
+                                    [:db/ident
+                                     {:ctype/parent
+                                      [:db/ident
+                                       {:fclass/fgroup [:db/ident]}]}]}]}])
                :where
                [?e :asset/oid ?oid]
                :in $ [?oid ...]]
@@ -258,10 +262,19 @@
       (filter :attribute/cost-grouping?)
       (map :db/ident)))
 
+(defn- assoc-fclass-and-fgroup [material]
+  (let [fclass-map (-> material :component/_materials :component/ctype :ctype/parent)
+        fclass (:db/ident fclass-map)
+        fgroup (-> fclass-map :fclass/fgroup :db/ident)]
+    (assoc material
+           :fclass fclass
+           :fgroup fgroup)))
+
 (defn- select-material-grouping-attributes [entity atl]
-  (select-keys entity
-               (conj (material-cost-group-attributes entity atl)
-                     :db/id :material/type :component/_materials)))
+  (-> entity
+      (select-keys (conj (material-cost-group-attributes entity atl)
+                         :db/id :material/type :component/_materials))
+      assoc-fclass-and-fgroup))
 
 (defn project-materials-totals
   [db thk-project-id atl]
