@@ -68,7 +68,7 @@
 
           filter-link-fn #(url/materials-and-products
                            {:project (get-in app [:params :project])
-                            :url/query (merge query {:filter (str (:db/ident %))})})]
+                            ::url/query (merge query {:filter (str (:db/ident %))})})]
       [asset-ui/cost-items-page-structure
        {:e! e!
         :app  app

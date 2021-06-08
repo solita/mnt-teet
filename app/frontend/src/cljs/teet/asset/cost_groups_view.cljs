@@ -130,7 +130,7 @@
                               (sort-by (comp asset-ui/label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            :url/query (merge query {:filter (str (:db/ident %))})})]
+                            ::url/query (merge query {:filter (str (:db/ident %))})})]
       [asset-ui/cost-items-page-structure
        {:e! e!
         :app  app

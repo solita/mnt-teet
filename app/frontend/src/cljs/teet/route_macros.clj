@@ -60,7 +60,7 @@
     `(defn ~fn-name [~'e! {page# :page
                            params# :params
                            :as ~'app}]
-       
+
        (let [~'params (:params ~'app)
              ~'query-params (:query ~'app)
              ~'tr teet.localization/tr
