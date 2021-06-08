@@ -108,13 +108,15 @@
                     (Date.)]
                    (map second)
                    arglist)]
-    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [*]}]) ?calculated-status]
+    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [* {:activity/manager [:user/given-name :user/family-name]}]}])
+                               ?calculated-status]
                        :where (into '[[?c :thk.contract/procurement-id _]
                                       (contract-status ?c ?calculated-status ?now)]
-                                    where)
+                                where)
                        :in in}
                :args args})
-         (mapv contract-db/contract-with-status))))
+      (mapv contract-db/contract-with-status)
+      (mapv contract-model/db-values->frontend))))
 
 (defquery :contracts/list-contracts
   {:doc "Return a list of contracts matching given search params"

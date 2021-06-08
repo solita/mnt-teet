@@ -16,7 +16,8 @@
             [teet.project.project-db :as project-db]
             [teet.integration.integration-id :as integration-id]
             [teet.meta.meta-model :as meta-model])
-  (:import (org.apache.commons.io.input BOMInputStream)))
+  (:import (org.apache.commons.io.input BOMInputStream))
+  (:import (java.util Date)))
 
 (def excluded-project-types #{"TUGI"})
 
@@ -180,8 +181,15 @@
                            name :activity/name
                            task-id :activity/task-id
                            :as activity} activities
-                          ;; Only process activities here
-                          :when (and id name (nil? task-id))
+                          ;; Only process activities here except two specials with activity_typefk 4006 and 4009,
+                          ;; which contain info about tasks created in THK and to be imported separately
+                          :when (and
+                                  id
+                                  name
+                                  (nil? task-id)
+                                  (not (or
+                                         (= name :activity.name/owners-supervision)
+                                         (= name :activity.name/road-safety-audit))))
                           :let [{act-thk-id :thk.activity/id
                                  act-teet-id :activity-db-id} activity
                                 {act-db-id :db/id
@@ -223,6 +231,101 @@
                                                     activity
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
+
+(defn get-project-construction-activity-db-id
+  [db rows]
+  (let [construction-activity (first (filter (comp #{:activity.name/construction} :activity/name) rows))
+        construction-activity-integration-id (:activity-db-id construction-activity)
+        construction-activity-ids (lookup db [:integration/id construction-activity-integration-id])]
+    (:db/id construction-activity-ids)))
+
+(defn- get-project-attrs [db project-id rows]
+  (let [phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
+        phase-est-ends (keep :thk.lifecycle/estimated-end-date rows)
+        thk-project (lookup db [:thk.project/id project-id])]
+    {:prj (first rows)
+     :phases (group-by :thk.lifecycle/id rows)
+
+     :project-est-start (first (sort phase-est-starts))
+     :project-est-end (last (sort phase-est-ends))
+
+     :proj-integration-id (:integration/id thk-project)
+     :proj-db-id (:db/id thk-project)
+
+     :project-exists? (some? (:db/id thk-project))
+     :project-has-owner? (and (some? (:db/id thk-project))
+                           (project-db/project-has-owner? db [:thk.project/id project-id]))
+     :construction-activity-db-id (get-project-construction-activity-db-id db rows)}))
+
+(defn- get-existing-task-db-id
+  "Search for the existing task with the same type and start and end dates"
+  [db construction-activity-id task-type start-date end-date]
+  (ffirst (d/q '[:find ?t
+                 :where
+                 [?a :activity/tasks ?t]
+                 [(missing? $ ?t :meta/deleted?)]
+                 [?t :task/estimated-end-date ?end-date]
+                 [?t :task/estimated-start-date ?start-date]
+                 [?t :task/type ?task-type]
+                 :in $ ?a ?end-date ?start-date ?task-type]
+            db construction-activity-id end-date start-date task-type)))
+
+(defn- get-new-task-type [activity-data]
+  (let [activity-name (:activity/name activity-data)]
+    (case activity-name
+      :activity.name/owners-supervision :task.type/owners-supervision
+      :activity.name/road-safety-audit :task.type/road-safety-audit
+      (throw (ex-info (str "new task type unknown for activity " activity-name)
+               {:activity-data activity-data})))))
+
+(defn- thk-task-group-supported-type [task-type]
+ (case task-type
+   :task.type/road-safety-audit :task.group/construction-approval
+   :task.type/owners-supervision :task.group/construction-quality-assurance
+   (throw (ex-info "THK Task type is not supported in import" {:task-type task-type}))))
+
+(defn add-task-from-thk
+  "Returns TX data for new task with given params for given construction activity-id"
+  [db thk-activity-task-data construction-activity-id ]
+  (let [start-date (:activity/estimated-start-date thk-activity-task-data)
+        end-date (:activity/estimated-end-date thk-activity-task-data)
+        thk-activity-status (:activity/status thk-activity-task-data)
+        task-type (get-new-task-type thk-activity-task-data)
+        existing-task-eid (get-existing-task-db-id db construction-activity-id task-type
+                               start-date end-date)
+        id-placeholder (if (some? existing-task-eid)
+                         existing-task-eid
+                         (str "NEW-TASK-" (name :task.group/construction) "-" task-type
+                           "-" (integration-id/unused-random-small-uuid db)))
+        task-group (thk-task-group-supported-type task-type)
+        task-tx-data (merge
+                       {:db/id id-placeholder
+                        :task/group task-group
+                        :task/type task-type
+                        :task/send-to-thk? true
+                        :task/estimated-end-date end-date
+                        :task/estimated-start-date start-date
+                        :meta/created-at (Date.)}
+                       (when (nil? existing-task-eid)
+                             {:integration/id (integration-id/unused-random-small-uuid db)})
+                       {:task/status (if (= :activity.status/completed thk-activity-status)
+                                       :task.status/completed
+                                       :task.status/not-started)})]
+    task-tx-data))
+
+
+(defn tasks-tx-data
+  "If there is Construction activity then collect new tasks tx-s as [{task1 params} {task2 params} ...]
+   for all others project's Activities of types: 4006 and 4009"
+  [db [project-id rows]]
+  (if-let [construction-activity-id (:construction-activity-db-id (get-project-attrs db project-id rows))]
+    [{:db/id construction-activity-id
+      :activity/tasks (reduce
+                        #(conj %1 (add-task-from-thk db %2 construction-activity-id))
+                        []
+                        (filter #(or
+                                   (= (:activity/name %) :activity.name/owners-supervision)
+                                   (= (:activity/name %) :activity.name/road-safety-audit)) rows))}]))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
@@ -312,6 +415,17 @@
                project-tx-maps))))
         projects-csv))
 
+(defn- thk-import-tasks-tx [db url projects-csv]
+  (let [tx-import-tasks (into [{:db/id "datomic.tx"
+                :integration/source-uri url}]
+          (mapcat
+            (fn [prj]                                       ;; {"project-id" [{"rows"}..]}
+              (when (teet-project? prj)
+                    (let [tasks-tx-maps (tasks-tx-data db prj)]
+                      tasks-tx-maps))))
+                          projects-csv)]
+    tx-import-tasks))
+
 (defn- check-unique-activity-ids [projects]
   (into {}
         (keep (fn [project]
@@ -356,3 +470,8 @@
     (let [db (d/db connection)]
       (d/transact connection
                   {:tx-data (thk-import-projects-tx db url projects)}))))
+
+(defn import-thk-tasks! [connection url projects]
+  (let [db (d/db connection)]
+    (d/transact connection
+      {:tx-data (thk-import-tasks-tx db url projects)})))
