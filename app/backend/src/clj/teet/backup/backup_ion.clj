@@ -249,6 +249,7 @@
 
   Looks up entity ids and reference values from the old->new mapping."
   [tx-data old->new ref-attrs cardinality-many-attrs]
+  (println "CARD MANY ATTRS: " (pr-str cardinality-many-attrs))
   (let [->id #(let [s (str %)]
                 (or (old->new s) s))
         {card-many-datoms true
@@ -283,7 +284,8 @@
 
      ;; Output add or retract clauses for any many cardinality values
      (for [[e a v add?] card-many-datoms
-           :let [ref? (ref-attrs a)
+           :let [_ (binding [*out* debug-out] (println "CARD MANY " a ", add? " add?))
+                 ref? (ref-attrs a)
                  e (->id e)
                  v (if ref?
                      (->id v)
@@ -295,12 +297,14 @@
   [set-atom tx-data]
   (let [card-many (into #{}
                         (keep (fn [tx]
-                                (and (map? tx)
-                                     (= :db.cardinality/many (:db.cardinality tx))
-                                     (:db/ident tx))))
+                                (when (and (map? tx)
+                                           (= :db.cardinality/many (:db/cardinality tx)))
+                                  (:db/ident tx))))
                         tx-data)]
     (when (seq card-many)
       (swap! set-atom set/union card-many))))
+
+(def debug-out (io/writer "debug-test.edn"))
 
 (defn- restore-tx-file*
   "Restore a backup by running the transactions in from the reader
@@ -336,6 +340,7 @@
                                                 old->new
                                                 ref-attrs
                                                 @cardinality-many-attrs))
+              _ (binding [*out* debug-out] (prn tx-data))
               {tempids :tempids}
               (d/transact
                conn
