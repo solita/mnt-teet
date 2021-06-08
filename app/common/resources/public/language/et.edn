@@ -63,6 +63,7 @@
    :type "Tüüp",
    :all-cost-items "Kõik kuluread",
    :component "Komponent",
+   :all-materials "Kõik materjalid",
    :all-components "Kõik komponendid",
    :material "Materjal",
    :quantity "Kogus",
