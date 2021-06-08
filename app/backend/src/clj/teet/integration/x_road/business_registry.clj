@@ -115,15 +115,18 @@
          :company/phone-numbers phone-numbers}
         (log/warn "No company name found in the business registry response")))))
 
+(def business-registry-params
+  {:client {:subsystem-code "teeregister"
+            :member-code "70001490"}
+   :service {:member-code "70000310"
+             :subsystem-code "arireg"
+             :service-code "detailandmed_v1"
+             :version "v1"}})
+
 (defn perform-detailandmed-request [url params]
   {:pre [(contains? params :business-id)]}
   (->> params
-       (merge {:client {:subsystem-code "teeregister"
-                        :member-code "70001490"}
-               :service {:member-code "70000310"
-                         :subsystem-code "arireg"
-                         :service-code "detailandmed_v1"
-                         :version "v1"}})
+       (merge business-registry-params)
        detailandmed-request-xml
        (x-road/perform-request url)
        x-road/string->zipped-xml
@@ -133,12 +136,7 @@
   [url params]
   {:pre [(contains? params :business-id)]}
   (->> params
-       (merge {:client {:subsystem-code "teeregister"
-                        :member-code "70001490"}
-               :service {:member-code "70000310"
-                         :subsystem-code "arireg"
-                         :service-code "detailandmed_v1"
-                         :version "v1"}})
+       (merge business-registry-params)
        business-information-request-xml
        (x-road/perform-request url)
        x-road/string->zipped-xml
