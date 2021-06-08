@@ -252,7 +252,7 @@
   (let [->id #(let [s (str %)]
                 (or (old->new s) s))
         {card-many-datoms true
-         card-one-datoms false} (group-by (comp boolean @cardinality-many-attrs
+         card-one-datoms false} (group-by (comp boolean cardinality-many-attrs
                                                 second)
                                           tx-data)]
     (concat
