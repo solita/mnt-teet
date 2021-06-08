@@ -247,17 +247,47 @@
   Returns sequence of new datoms for the restore tx.
 
   Looks up entity ids and reference values from the old->new mapping."
-  [tx-data old->new ref-attrs]
+  [tx-data old->new ref-attrs cardinality-many-attrs]
   (let [->id #(let [s (str %)]
-                (or (old->new s) s))]
-    (for [[e a v add?] tx-data
-          :let [ref? (ref-attrs a)
-                e (->id e)
-                v (if ref?
-                    (->id v)
-                    v)]]
-      [(if add? :db/add :db/retract) e a v])))
+                (or (old->new s) s))
+        {card-many-datoms true
+         card-one-datoms false} (group-by (comp boolean cardinality-many-attrs
+                                                second)
+                                          tx-data)]
+    (concat
+     ;; Output map tx for all cardinality one values, filtering out retractions
+     ;; that have an assertion for the same attribute
+     (mapcat (fn [[e datoms]]
+               (let [e (->id e)
 
+                     ;; Group by assertions and retractions
+                     {asserted true
+                      retracted false}
+                     (group-by #(nth % 3) datoms)
+
+                     asserted-map (when (seq asserted)
+                                    (into {:db/id e}
+                                          (map (fn [[_ a v _]]
+                                                 [a (if (ref-attrs a)
+                                                      (->id v) v)]))
+                                          asserted))]
+                 (into (if asserted-map
+                         [asserted-map]
+                         [])
+                       (for [[_ a v _] retracted
+                             :when (not (contains? asserted-map a))]
+                         [:db/retract e a (if (ref-attrs a)
+                                            (->id v) v)]))))
+             (group-by first card-one-datoms))
+
+     ;; Output add or retract clauses for any many cardinality values
+     (for [[e a v add?] card-many-datoms
+           :let [ref? (ref-attrs a)
+                 e (->id e)
+                 v (if ref?
+                     (->id v)
+                     v)]]
+       [(if add? :db/add :db/retract) e a v]))))
 
 (defn- restore-tx-file*
   "Restore a backup by running the transactions in from the reader
@@ -267,7 +297,15 @@
   Returns the old->new id mapping."
   [conn rdr]
   ;; Read first form which is the mapping containing info about the backup
-  (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)]
+  (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)
+        cardinality-many-attrs (into #{}
+                                     (map first)
+                                     (d/q '[:find ?ident
+                                            :where
+                                            [?a :db/cardinality :db.cardinality/many]
+                                            [?a :db/ident ?ident]]
+                                          (d/db conn)))
+        progress! (progress-fn "transactions restored")]
     (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
     (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
     (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")
@@ -281,12 +319,13 @@
                                     {:db/id "datomic.tx"})]
                             (prepare-restore-tx (:data tx)
                                                 old->new
-                                                ref-attrs))
+                                                ref-attrs
+                                                cardinality-many-attrs))
               {tempids :tempids}
               (d/transact
                conn
                {:tx-data tx-data})]
-
+          (progress!)
           ;; Update old->new mapping with entity ids created in this tx
           (recur (merge old->new tempids)
                  (rest txs)))
@@ -470,3 +509,16 @@
     (d/transact db-connection {:tx-data retract-tx})
     (log/info "Removed email address from" (count retract-tx) "users")
     "{\"success\": true}"))
+
+(defn- debug-restore [new-db-name edn-file-path]
+  (let [client (environment/datomic-client)]
+    (d/create-database client {:db-name new-db-name})
+    (restore-tx-file* (d/connect client {:db-name new-db-name})
+                      (java.io.PushbackReader. (io/reader edn-file-path)))))
+
+(comment
+  (do
+    (debug-restore
+    "ttest8"
+    "/Users/tatuta/temp/transactions.edn")
+    :ok))
