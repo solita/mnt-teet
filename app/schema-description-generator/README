@@ -1,0 +1,1 @@
+copy example-config.edn to config.edn and fill in values, then run with clojure -A:generate.
