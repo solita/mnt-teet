@@ -62,6 +62,9 @@
 (defn exported-to-thk? [activity]
   (not (activity-types-not-sent-to-thk (du/enum->kw (:activity/name activity)))))
 
+(defn in-progress? [activity]
+  (du/enum= (-> activity :activity/status :db/ident) :activity.status/in-progress))
+
 (defn active? [activity]
   (-> activity :activity/status :db/ident activity-in-progress-statuses))
 
