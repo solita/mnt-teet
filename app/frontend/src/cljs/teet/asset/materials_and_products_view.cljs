@@ -87,9 +87,13 @@
                         :format-column (r/partial format-material-table-column
                                                   {:e! e! :atl atl :locked? locked?})}
 
+          [filter-fg-or-fc filtered-materials-and-products]
+          (cost-items-controller/filtered-materials-and-products app atl
+                                                                 materials-and-products)
+
           filter-link-fn #(url/materials-and-products
                            {:project (get-in app [:params :project])
-                            :url/query (merge query {:filter (str (:db/ident %))})})]
+                            ::url/query (merge query {:filter (str (:db/ident %))})})]
       [asset-ui/cost-items-page-structure
        {:e! e!
         :app  app
@@ -98,12 +102,20 @@
                     :fgroup-link-fn filter-link-fn
                     :list-features? false}}
        [:div.cost-items-totals
+        [asset-ui/filter-breadcrumbs {:atl atl
+                                      :root-label (tr [:asset :totals-table :all-materials])
+                                      :query query
+                                      :filter-kw filter-fg-or-fc
+                                      :page :materials-and-products}]
         [:div {:style {:max-width "25vw"}}
          [typography/Heading1 "Materials"]]
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
          (doall
-          (for [[fg fgroup-rows] (group-by :fgroup materials-and-products)
+          (for [[fg fgroup-rows] (->> filtered-materials-and-products
+                                      (group-by (comp first :ui/group))
+                                      ;; sort by translated fgroup label
+                                      (sort-by (comp asset-ui/label first)))
                 :let [ident (:db/ident fg)
                       open? (not (closed-sections ident))]]
             ^{:key (str ident)}
@@ -112,7 +124,8 @@
              (when open?
                [:<>
                 (doall
-                 (for [[fc fclass-rows] (group-by :fclass fgroup-rows)
+                 (for [[fc fclass-rows] (group-by (comp second :ui/group)
+                                                  fgroup-rows)
                        :let [ident (:db/ident fc)
                              open? (not (closed-sections ident))]]
                    ^{:key (str ident)}

@@ -13,6 +13,7 @@
             [teet.localization :refer [tr tr-enum] :as localization]
             [teet.project.project-view :as project-view]
             [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.container :as container]
@@ -433,3 +434,18 @@
             main-content]
            :right-panel right-panel
            :right-panel-padding 0}]]])]))
+
+(defn filter-breadcrumbs [{:keys [root-label atl query filter-kw page]}]
+  (when-let [hierarchy (some->> filter-kw
+                                (asset-type-library/type-hierarchy atl))]
+    [breadcrumbs/breadcrumbs
+     (into
+      [{:link [url/Link {:page page :query {:filter nil}}
+               root-label]
+        :title root-label}]
+      (for [h hierarchy
+            :let [title (label h)]]
+        {:link [url/Link {:page page
+                          :query (merge query {:filter (str (:db/ident h))})}
+                title]
+         :title title}))]))

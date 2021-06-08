@@ -14,17 +14,19 @@
             [teet.ui.panels :as panels]
             [teet.ui.common :as common-ui]))
 
-(defn table-filter-style
+(defn- table-filter-style
   []
   {:background-color theme-colors/gray-lighter
    :border 0})
 
-(defn row-style
-  []
-  ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
-             :focus {:outline (str "2px solid " theme-colors/blue-light)}}}
-  {:transition "background-color 0.2s ease-in-out"
-   :cursor :pointer})
+(defn- row-style
+  [clickable?]
+  (if clickable?
+    ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
+               :focus {:outline (str "2px solid " theme-colors/blue-light)}}}
+    {:transition "background-color 0.2s ease-in-out"
+     :cursor :pointer}
+    {}))
 
 (defprotocol ListingTableState
   (current-sort-column [this] "Return column and direction of sort")
@@ -105,7 +107,7 @@
     (for [row rows]
       ^{:key (key row)}
       [TableRow (merge
-                 {:class (<class row-style)}
+                 {:class (<class row-style (boolean on-row-click))}
                  (when on-row-click
                    {:on-click (r/partial on-row-click row)})
                  (when on-row-hover
