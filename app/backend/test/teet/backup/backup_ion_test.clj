@@ -23,6 +23,21 @@
 (defn- remove-db-ids [tree]
   (remove-keys tree :db/id))
 
+(defn- cardinality-many-to-sets [db form]
+  (let [card-many-attrs (into #{}
+                              (map first)
+                              (d/q '[:find ?ident
+                                     :where
+                                     [?e :db/cardinality :db.cardinality/many]
+                                     [?e :db/ident ?ident]]
+                                   db))]
+    (walk/prewalk (fn [x]
+                    (if (and (map-entry? x)
+                             (card-many-attrs (first x)))
+                      [(first x) (set (second x))]
+                      x))
+                  form)))
+
 (defn get-project []
   (d/pull (tu/db)
           '[*
@@ -158,9 +173,12 @@
     ;; Return function to verify it after restore
     (fn []
       (testing "Restored project matches old"
-        (let [restored-project (get-project)]
-          (is (= (remove-db-ids restored-project)
-                 (remove-db-ids @project))
+        (let [restored-project (get-project)
+              db (tu/db)
+              prepare-for-compare (fn [x]
+                                    (cardinality-many-to-sets db (remove-db-ids x)))]
+          (is (= (prepare-for-compare restored-project)
+                 (prepare-for-compare @project))
               "Project is the same (expect :db/id attrs)")
           (is (integer? (:db/id restored-project)))
           (is (integer? (:db/id @project))))))))

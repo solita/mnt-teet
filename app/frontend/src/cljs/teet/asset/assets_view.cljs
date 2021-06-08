@@ -34,7 +34,12 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.select :as select]
             [teet.ui.form :as form]
-            [teet.ui.chip :as chip]))
+            [teet.ui.chip :as chip]
+            [teet.ui.query :as query]
+
+            ;; FIXME: refactor edit/view UI away from cost items view
+            [teet.asset.cost-items-view :as cost-items-view]
+            [teet.ui.url :as url]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -238,40 +243,98 @@
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
 
+(defn- result-details-view* [e! rotl oid asset]
+  (let [component? (asset-model/component-oid? oid)
+        item (if component?
+               (-> asset (asset-model/find-component-path oid) last)
+               asset)
+        fclass (-> asset :asset/fclass rotl)
+        ctype (when component?
+                (-> item :component/ctype rotl))
+        attributes (if component?
+                     (-> ctype :attribute/_parent)
+                     (-> fclass :attribute/_parent))]
+    [:div
+     [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
+      [icons/navigation-arrow-back]
+      (tr [:asset :manager :back-to-result-listing])]
+     (when component?
+       [url/Link {:page :assets
+                  :query {:details (asset-model/component-asset-oid oid)}}
+        (tr [:asset :back-to-cost-item] {:name (asset-ui/tr* fclass)})])
+     [form/form2
+      {:e! e!
+       :on-change-event :_ignore ; the form cannot be changed, so we can ignore
+       :value item
+       :disable-buttons? true}
+      [cost-items-view/attributes* {:e! e!
+                                    :attributes attributes
+                                    :component-oid (when component? oid)
+                                    :cost-item-data asset
+                                    :common (if component?
+                                              :ctype/component
+                                              :ctype/feature)
+                                    :inherits-location? (if component?
+                                                          (:component/inherits-location? ctype)
+                                                          false)}
+       rotl true]]
+     [context/provide :locked? true
+      [cost-items-view/components-tree asset
+       {:e! e!
+        :link-fn (fn [oid]
+                   {:page :assets
+                    :query {:details oid}})}]]]))
 
-(defn- assets-results [_ _ _ _ _] ;; FIXME: bad name, it is shown always
+(defn- result-details-view [e! oid rotl]
+  (let [asset-oid (if (asset-model/component-oid? oid)
+                    (asset-model/component-asset-oid oid)
+                    oid)]
+    ^{:key oid}
+    [query/query {:e! e!
+                  :query :assets/details
+                  :args {:asset/oid asset-oid}
+                  :simple-view [result-details-view* e! rotl oid]}]))
+
+(defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
     (r/create-class
      {:component-did-update
       (fn [this
-           [_ _ _ _ old-query _]]
-        (let [[_ _ _ _ new-query _] (r/argv this)]
+           [_ old-opts]]
+        (let [[_ new-opts] (r/argv this)
+              old-query (:asset-query old-opts)
+              new-query (:asset-query new-opts)]
           (when (not= old-query new-query)
             (next-map-key!))))
 
       :reagent-render
-      (fn [e! atl criteria assets-query
-           {:keys [assets geojson more-results? result-count-limit
-                   highlight-oid]}]
-        (let [table-pane
+      (fn [{:keys [e! atl criteria assets-query results details]}]
+        (let [{:keys [assets geojson more-results? result-count-limit
+                      highlight-oid]} results
+              table-pane
               [:div {:style {:background-color theme-colors/white
                              :padding "0.5rem"}}
-               [typography/Heading1 (tr [:asset :manager :result-count]
-                                        {:count (if more-results?
-                                                  (str result-count-limit "+")
-                                                  (count assets))})]
-               [table/listing-table
-                {:default-show-count 100
-                 :columns asset-model/assets-listing-columns
-                 :get-column asset-model/assets-listing-get-column
-                 :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
-                                       (tr [:fields %]))
-                 :on-row-hover (e! assets-controller/->HighlightResult)
-                 :format-column format-assets-column
-                 :data assets
-                 :key :asset/oid}]]
+               (if details
+                 [context/consume :rotl
+                  [result-details-view e! details]]
+                 [:<>
+                  [typography/Heading1 (tr [:asset :manager :result-count]
+                                           {:count (if more-results?
+                                                     (str result-count-limit "+")
+                                                     (count assets))})]
+                  [table/listing-table
+                   {:default-show-count 100
+                    :columns asset-model/assets-listing-columns
+                    :get-column asset-model/assets-listing-get-column
+                    :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                                          (tr [:fields %]))
+                    :on-row-hover (e! assets-controller/->HighlightResult)
+                    :on-row-click (e! assets-controller/->ShowDetails)
+                    :format-column format-assets-column
+                    :data assets
+                    :key :asset/oid}]])]
 
               map-pane
               ^{:key (str "map" @map-key)}
@@ -306,7 +369,7 @@
                :on-drag-finished next-map-key!}
               table-pane map-pane])]))})))
 
-(defn assets-page [e! {atl :asset-type-library :as _app}
+(defn assets-page [e! {atl :asset-type-library :as app}
                    {:keys [criteria query results]}]
   (r/with-let [filters-collapsed? (r/atom false)]
     (if-not atl
@@ -316,4 +379,8 @@
                              :defaultSize (if @filters-collapsed? 30 330)
                              :allowResize false}
         [asset-filters e! atl criteria filters-collapsed?]
-        [assets-results e! atl criteria query results]]])))
+        [context/provide :rotl (asset-type-library/rotl-map atl)
+         [assets-results {:e! e! :atl atl :criteria criteria
+                          :asset-query query
+                          :results results
+                          :details (get-in app [:query :details])}]]]])))

@@ -164,41 +164,14 @@
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [Grid {:item true
-            :md 10
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/road-nr
-       [asset-ui/relevant-road-select {:e! e!}]]]
-
+            :md 4}]
      [Grid {:item true
-            :md 2
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/carriageway
-       [carriageway-for-road-select {:e! e!} selected-road-nr]]]
-
-     [Grid {:item true
-            :md 4
+            :md (if single-point? 8 4)
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field {:attribute :location/start-point
                    :required? true}
        [input-textfield {}]]]
-
-     [Grid {:item true
-            :md 4
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field {:attribute :location/start-km
-                   :required? true}
-       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
-
-     [Grid {:item true
-            :md 4
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/start-offset-m
-       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
 
      (when-not single-point?
        [Grid {:item true
@@ -209,9 +182,43 @@
                      :required? true}
          [input-textfield {}]]])
 
+     [Grid {:item true
+            :md 3
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/road-nr
+       (if locked?
+         [input-textfield {}]
+         [asset-ui/relevant-road-select {:e! e!}])]]
+
+     [Grid {:item true
+            :md 1
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/carriageway
+       (if locked?
+         [input-textfield {}]
+         [carriageway-for-road-select {:e! e!} selected-road-nr])]]
+
+     [Grid {:item true
+            :md (if single-point? 4 2)
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field {:attribute :location/start-km
+                   :required? true}
+       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
+
+     [Grid {:item true
+            :md (if single-point? 4 2)
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field :location/start-offset-m
+       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
+
+
      (when-not single-point?
        [Grid {:item true
-              :md 4
+              :md 2
               :xs 12
               :style {:padding "0.2rem"}}
         [form/field :location/end-km
@@ -219,18 +226,19 @@
 
      (when-not single-point?
        [Grid {:item true
-              :md 4
+              :md 2
               :xs 12
               :style {:padding "0.2rem"}}
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
-     [Grid {:item true
-            :md 12 :xs 12}
-      [form/field :location/single-point?
-       [select/checkbox {}]]]]))
+     (when-not locked?
+       [Grid {:item true
+              :md 12 :xs 12}
+        [form/field :location/single-point?
+         [select/checkbox {}]]])]))
 
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
+(defn attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
                             common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
@@ -374,7 +382,8 @@
                     {:margin-left "-0.9rem"}))}])))])
 
 (defn- component-rows [{:keys [e! level components locked?
-                               delete-fn children-label-fn]}]
+                               delete-fn children-label-fn
+                               link-fn]}]
   (when (seq components)
     [:<>
      (doall
@@ -385,8 +394,10 @@
           [:div {:class (<class common-styles/flex-table-column-style
                                 40 :flex-start 1 nil)}
            [component-tree-level-indent level]
-           [url/Link {:page :cost-item
-                      :params {:id (:asset/oid c)}}
+           [url/Link (if link-fn
+                       (link-fn (:asset/oid c))
+                       {:page :cost-item
+                        :params {:id (:asset/oid c)}})
             (children-label-fn c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 35 :flex-start 0 nil)}
@@ -406,23 +417,27 @@
                           :components (:component/components c)
                           :children-label-fn children-label-fn
                           :delete-fn delete-fn
-                          :level (inc (or level 0))}]]))]))
+                          :level (inc (or level 0))
+                          :link-fn link-fn}]]))]))
 
 (defn- children-tree*
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! parent label-fn children-fn children-label-fn delete-fn]} locked?]
+  [{:keys [e! parent label-fn children-fn children-label-fn delete-fn
+           link-fn]} locked?]
   [:<>
    [typography/Heading3 (label-fn parent)]
    [component-rows {:e! e!
                     :locked? locked?
                     :components (children-fn parent)
                     :children-label-fn children-label-fn
-                    :delete-fn delete-fn}]])
+                    :delete-fn delete-fn
+                    :link-fn link-fn}]])
 
-(defn- components-tree
+(defn components-tree
   "Relevant options:
    - label-fn takes the asset, produces
-   - delete-fn when called with db/id deletes the said entity"
+   - delete-fn when called with db/id deletes the said entity
+   - link-fn  fn from OID to link description map (including :page and :params)"
   [asset {:keys [e!] :as opts}]
   [context/consume :locked?
    [children-tree* (assoc opts
@@ -433,7 +448,8 @@
                                                                   (:asset/components %))
                                           ")")
                           :children-label-fn :asset/oid
-                          :children-fn :asset/components
+                          :children-fn #(or (not-empty (:asset/components %))
+                                            (not-empty (:component/components %)))
                           :delete-fn (e! cost-items-controller/->DeleteComponent))]])
 
 (defn- material-label [atl m]
@@ -577,7 +593,7 @@
 
         (when (not new?)
           [:div
-           ;; Should have only either, never both
+           [components-tree component-data {:e! e!}]
            (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
              [add-component-menu
               (tr [:asset :add-component])

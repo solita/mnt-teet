@@ -16,8 +16,11 @@
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
-  [common/external-contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
-   (str (tr [:contracts :state-procurement-link]) " " procurement-number)])
+  (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
+    [common/external-contract-link
+     {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
+     (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
+    [:span (str (tr [:contracts :state-procurement-link]) " " procurement-number)]))
 
 (defn contract-external-link
   [{:thk.contract/keys [external-link procurement-number]}]
@@ -55,7 +58,7 @@
    {:right-align-last? false
     :font-size "0.875rem"}
    [[(tr [:contract :status])
-     [contract-status/contract-status {:show-label? true :size 15}
+     [contract-status/contract-status {:show-label? true :size 17}
       (:thk.contract/status contract)]]
     (when-let [region (:ta/region contract)]
       [(tr [:fields :ta/region])

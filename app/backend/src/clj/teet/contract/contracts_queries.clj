@@ -68,9 +68,12 @@
    :in {'?search-user value}})
 
 (defmethod contract-search-clause :partner-name
-  [[_ {value :db/id}] _]
-  {:where '[[(missing? $ ?c :thk.contract/procurement-id)]] ;; TODO ADD ACTUAL QUERY WHEN WE HAVE PARTNERS
-   :in {}})
+  [[_ value] _]
+  {:where '[[?cc :company-contract/contract ?c]
+            [?cc :company-contract/company ?company]
+            [?company :company/name ?c-name]
+            [(teet.util.string/contains-words? ?c-name ?search-partner)]]
+   :in {'?search-partner value}})
 
 (defmethod contract-search-clause :ta/region
   [[_ value] _]
