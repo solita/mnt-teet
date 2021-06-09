@@ -52,33 +52,41 @@
       [contract-common/contract-information-row contract]]]))
 
 (defn contract-list-expansion-buttons
-  [expand-list collapse-list]
+  [expand-contracts collapse-contracts]
   [:div
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
-                              :on-click expand-list
+                              :on-click expand-contracts
                               :start-icon (r/as-element [icons/navigation-unfold-more])}
     (tr [:contracts :contracts-list :expand-all])]
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
-                              :on-click collapse-list
+                              :on-click collapse-contracts
                               :start-icon (r/as-element [icons/navigation-unfold-less])}
     (tr [:contracts :contracts-list :collapse-all])]])
 
 (defn contacts-list-header
-  [{:keys [contracts-count expand-list collapse-list]}]
+  [{:keys [contracts-count expand-contracts collapse-contracts]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
-   [contract-list-expansion-buttons expand-list collapse-list]
+   [contract-list-expansion-buttons expand-contracts collapse-contracts]
    [typography/SmallText (str contracts-count " "
                            (tr (if (= contracts-count 1)
                                  [:contracts :contracts-list :result]
                                  [:contracts :contracts-list :results])))]])
 
+(defn contract-expansion-map
+  [contracts open?]
+  (reduce (fn [agg x] (assoc agg (:db/id x) open?)) {} contracts))
+
 (defn contracts-list
   [e! contracts]
-  (r/with-let [contract-expansion-atom (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))]
+  (r/with-let [contract-expansion-atom (r/atom (contract-expansion-map contracts false))
+               expand-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts true))
+               collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))]
     [:div {:class (<class contract-style/contracts-list-style)}
-     [contacts-list-header {:contracts-count (count contracts)}]
+     [contacts-list-header {:contracts-count (count contracts)
+                            :expand-contracts expand-contracts
+                            :collapse-contracts collapse-contracts}]
      (doall
        (for [contract contracts]
          ^{:key (str (:db/id contract))}
