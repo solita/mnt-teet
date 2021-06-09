@@ -83,11 +83,13 @@
                on-change-event (form/update-atom-event form merge)
                add-road-address! #(let [{r :road :location/keys [start-km end-km]} @form]
                                     (e! (assets-controller/->AddRoadAddress
-                                         (cu/without-nils
-                                          {:location/road-nr (:road-nr r)
-                                           :location/carriageway (:carriageway r)
-                                           :location/start-km start-km
-                                           :location/end-km end-km})))
+                                         (merge {:location/start-km (:start-km r)
+                                                 :location/end-km (:end-km r)}
+                                                (cu/without-nils
+                                                 {:location/road-nr (:road-nr r)
+                                                  :location/carriageway (:carriageway r)
+                                                  :location/start-km start-km
+                                                  :location/end-km end-km}))))
                                     (reset! show-form? false)
                                     (reset! form {}))]
     [:<>
