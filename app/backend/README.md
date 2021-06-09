@@ -59,24 +59,6 @@ data locally on disk. It is now used for CI tests as well.
 - Download tools https://cognitect.com/dev-tools
 - Create file `~/.datomic/dev-local.edn` with content `{:storage-dir "/Some/Directory"}`
 
-
-
-## Connecting to Datomic locally
-
-- Set `AWS_PROFILE` to your TEET profile
-- Download [datomic-socks-proxy script](https://docs.datomic.com/cloud/files/datomic-socks-proxy)
-  and add it to your path or invoke it by absolute path.
-- Run `datomic-socks-proxy teet-dev-datomic`
-- Ensure you have
-  [mnt-teet-private](https://github.com/solita/mnt-teet-private)
-  repository checked out as a sibling directory to the TEET project.
-- Load and switch to `teet.environment`.
-- Eval `(load-local-config!)`.
-- Eval only when setting up `(user/create-db "yourname-dev")`.
-- Eval `(datomic-connection) => {:db-name "yourname-dev", :database-id "foo", ...}`
-- import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-local-file <path>)
-- When creating your dev datomic db for the first time, run (make-mock-users!) and give permissions to some users with eg (give-manager-permission [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]) (this makes Danny D. Manager admin)
-
 ## Importing cloud database for local development
 
 The local database is initially quite empty. Follow these steps to import the database from cloud
