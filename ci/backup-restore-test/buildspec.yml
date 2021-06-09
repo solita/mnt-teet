@@ -19,6 +19,6 @@ phases:
   build:
     commands:
       - cd ./ci/backup-restore-test
-      - sh ./backup.bash
-      - sh ./restore.bash
-      - sh ./dbswitch.bash
+      - bash backup.bash
+      - bash restore.bash
+      - bash dbswitch.bash
