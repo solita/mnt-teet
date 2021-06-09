@@ -26,8 +26,7 @@
       (if first-partner?
         (-> app
             (assoc-in [:forms :new-partner] {:company/country :ee})
-            (assoc-in [:forms :new-partner :company-contract/lead-partner?] true)
-            (assoc-in [:forms :new-partner :lead-partner-locked?] true))
+            (assoc-in [:forms :new-partner :company-contract/lead-partner?] true))
         (assoc-in app [:forms :new-partner] {:company/country :ee}))))
 
   CancelAddNewCompany

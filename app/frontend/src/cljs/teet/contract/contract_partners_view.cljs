@@ -173,7 +173,7 @@
 (defn new-partner-form
   [e! _ _]
   (e! (contract-partners-controller/->InitializeNewCompanyForm))
-  (fn [e! contract {:keys [lead-partner-locked? search-success?] :as form-value}]
+  (fn [e! contract {:keys [search-success?] :as form-value}]
     (r/with-let [add-new-company? (r/atom false)
                  add-new-company #(reset! add-new-company? true)
                  select-company #(e! (contract-partners-controller/->SelectCompany %))
@@ -228,7 +228,7 @@
                                        :icon [icons/content-add]}}]])
            (when (or selected-company? search-success? @add-new-company?)
              [form/field {:attribute :company-contract/lead-partner?}
-              [select/checkbox {:disabled lead-partner-locked?}]])
+              [select/checkbox {}]])
            [form/footer2 (r/partial new-company-footer e! form-value)]]]]))))
 
 (defn partners-default-view
