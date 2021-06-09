@@ -40,7 +40,9 @@ sleep 600
 aws s3api wait object-exists --bucket $S3_BUCKET --key "$BACKUP_LOG_NAME"
 
 first_line_bytes=$(aws s3api get-object --bucket $S3_BUCKET --key $BACKUP_LOG_NAME --range bytes=0-256 /dev/stdout | head -1)
-if [ "${first_line_bytes: 0: 7}" = "SUCCESS" ]; then
+status=${first_line_bytes: 0: 7}
+echo $status
+if [ $status = "SUCCESS" ]; then
   echo "Restore successfully completed."
   exit 0
 else
