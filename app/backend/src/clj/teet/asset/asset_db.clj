@@ -265,9 +265,11 @@
   (let [ctype (-> material :component/_materials :component/ctype)
         fclass (asset-type-library/fclass-for-ctype atl ctype)
         fgroup (asset-type-library/fgroup-for-fclass atl fclass)]
-        (assoc material
-           :fclass (select-keys fclass [:db/id :db/ident :asset-schema/label])
-           :fgroup (select-keys fgroup [:db/id :db/ident :asset-schema/label]))))
+    (update material
+            :component/_materials
+            assoc
+            :fclass (select-keys fclass [:db/id :db/ident :asset-schema/label])
+            :fgroup (select-keys fgroup [:db/id :db/ident :asset-schema/label]))))
 
 (defn- select-material-grouping-attributes [entity atl]
   (-> entity
@@ -281,7 +283,8 @@
        (map #(select-material-grouping-attributes % atl))
        (group-by #(dissoc % :db/id :component/_materials))
        (map (fn [[group materials]]
-              (assoc group :component/_materials  (map :component/_materials materials))))))
+              (assoc group :component/_materials  (map :component/_materials materials))))
+       spy))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.

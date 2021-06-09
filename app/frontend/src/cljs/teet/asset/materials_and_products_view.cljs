@@ -111,30 +111,9 @@
          [typography/Heading1 "Materials"]]
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
-         (doall
-          (for [[fg fgroup-rows] (->> filtered-materials-and-products
-                                      (group-by (comp first :ui/group))
-                                      ;; sort by translated fgroup label
-                                      (sort-by (comp asset-ui/label first)))
-                :let [ident (:db/ident fg)
-                      open? (not (closed-sections ident))]]
-            ^{:key (str ident)}
-            [:<>
-             [table-section-header e! query listing-opts closed-sections fg nil]
-             (when open?
-               [:<>
-                (doall
-                 (for [[fc fclass-rows] (group-by (comp second :ui/group)
-                                                  fgroup-rows)
-                       :let [ident (:db/ident fc)
-                             open? (not (closed-sections ident))]]
-                   ^{:key (str ident)}
-                   [:<>
-                    [table-section-header e! query listing-opts closed-sections fc nil]
-                    (when open?
-                      [table/listing-body (assoc listing-opts
-                                                 :key (comp str #(get-column atl % :parameter))
-                                                 :rows fclass-rows)])]))])]))]]])))
+         [table/listing-body (assoc listing-opts
+                                    :key (comp str #(get-column atl % :parameter))
+                                    :rows filtered-materials-and-products)]]]])))
 
 (defn materials-and-products-page [e! app state]
   [asset-ui/wrap-atl-loader materials-and-products-page* e! app state])

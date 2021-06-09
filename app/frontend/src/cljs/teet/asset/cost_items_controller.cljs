@@ -735,6 +735,24 @@
             (filter filter-pred))
            cost-group-totals)]))
 
+(defn material-used-in-fgroup-fclass-or-ctype? [fgroup-or-fclass material]
+  (->> material
+       :component/_materials
+       (map (comp (partial map :db/ident)
+                  (juxt :fgroup :fclass :component/ctype)))
+       (some (partial some (partial = fgroup-or-fclass)))))
+
+(defn remove-nonmatching-components [fgroup-or-fclass material]
+  (if (nil? fgroup-or-fclass)
+    material
+    (update material
+           :component/_materials
+           #(filter (fn [component]
+                      (->> ((juxt :fgroup :fclass :component/ctype) component)
+                           (map :db/ident)
+                           (some (partial = fgroup-or-fclass))))
+                    %))))
+
 (defn filtered-materials-and-products
   "Returns a structure similar to `filtered-cost-group-totals`. Here the
   `:ui/group` path is built manually using the material's `:fgroup` and `:fclass`
@@ -743,20 +761,14 @@
   (let [kw (some-> app (get-in [:query :filter])
                    cljs.reader/read-string)
         filter-pred (if kw
-                      #(some (fn [{t :db/ident}] (= t kw))
-                             (:ui/group %))
+                      (partial material-used-in-fgroup-fclass-or-ctype? kw)
                       identity)]
 
     [(some->> kw (asset-type-library/item-by-ident atl))
      (into []
            (comp
-            (map (fn [m]
-                    (assoc m :ui/group
-                           (mapv #(some->> % (asset-type-library/item-by-ident atl))
-                                 ;; Manually build the :ui/group type hierarchy
-                                 [(-> m :fgroup :db/ident)
-                                  (-> m :fclass :db/ident)]))))
-            (filter filter-pred))
+            (filter filter-pred)
+            (map (partial remove-nonmatching-components kw)))
            materials-and-products)]))
 
 (def relevant-road-cache
