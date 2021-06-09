@@ -77,6 +77,69 @@ data locally on disk. It is now used for CI tests as well.
 - import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-local-file <path>)
 - When creating your dev datomic db for the first time, run (make-mock-users!) and give permissions to some users with eg (give-manager-permission [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]) (this makes Danny D. Manager admin)
 
+## Importing cloud database for local development
+
+The local database is initially quite empty. Follow these steps to import the database from cloud
+test environment for local development use.
+
+### Download and install Datomic CLI Tools
+
+- Download [Datomic CLI Tools](https://docs.datomic.com/cloud/operation/cli-tools.html)
+- Unzip datomic-cli.zip to installation folder of choice
+- `cd datomic-cli`
+- See `datomic-cli/README`
+- Make each of the scripts executable: `chmod +x datomic*`
+- Optional: add `datomic-cli` to PATH for convenience
+
+### Open SSH tunnel to Datomic compute group in AWS
+
+ - In terminal, run `datomic client access teet-datomic`
+ - Answer yes to prompt "Are you sure you want to continue connecting (yes/no/[fingerprint])?"
+ - You should see something like: "Authentication succeeded (publickey)."
+
+### Run import function in backend REPL
+
+- Run function `(user/import-current-cloud-dbs)` 
+- You should see a prompt like this:
+```
+Importing databases from cloud:
+CLOUD:  teet20210609  => LOCAL:  teet20210609
+CLOUD:  teetasset20210609  => LOCAL:  asset20210609  
+Press enter to continue or abort evaluation.
+```
+- Input anything into the REPL to continue
+- If you get a connection error on the first try, just try again
+- The import should take a few minutes
+```
+Importing TEET db
+Importing...............................................
+Importing asset db
+Importing.................................................
+Done. Remember to change config.edn to use new databases.
+```
+
+### Take new databases to use 
+
+- Edit `mnt-teet-private/config.edn`
+- Copy the database names from the above REPL output, for example:
+```
+:db-name "teet20210609"
+:asset-db-name "asset20210609" 
+```
+- Restart REPL
+- In REPL: `(teet.main/restart)`
+- Check that you can see projects in the [Project list](http://localhost:4000/#/projects/list)
+
+### Update geographic data in Postgres
+
+The projects under project listing do not yet appear on the 
+[Project map](http://localhost:4000/#/projects/map). 
+Here is how to update Postgres geographic data to match projects in Datomic:
+- In REPL, run function `(teet.thk.thk-integration-ion/update-all-project-entity-info)`
+- NOTE: at the time of writing there is a bug in this functionality. Only one project-geometry 
+  is inserted, when there should be many. There is a workaround for this in branch 
+  `update-project-geometries-workaround`.
+
 ## Troubleshooting
 
 - If you a build error about fetching datomic.ion dep like "Error building classpath. Could not find artifact com.datomic:ion:jar:0.9.35 in central (https://repo1.maven.org/maven2/)" it means, contrary to the message, that it's failing to get it from the Datomic s3 bucket source, check your AWS creds (eg awscli and Java AWS sdk have incompatibilities in parsing ~/.aws configs)
