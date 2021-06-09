@@ -7,7 +7,6 @@
             [teet.asset.cost-items-controller :as cost-items-controller]
             [teet.common.common-styles :as common-styles]
             [teet.localization :as localization :refer [tr]]
-            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.container :as container]
             [teet.ui.table :as table]
             [teet.ui.text-field :as text-field]
@@ -88,22 +87,6 @@
      [:div {:style {:float :right :font-weight 700
                     :font-size "80%"}} subtotal]]]])
 
-(defn- filter-breadcrumbs [atl query filter-fg-or-fc]
-  (when-let [hierarchy (some->> filter-fg-or-fc
-                                (asset-type-library/type-hierarchy atl))]
-    [breadcrumbs/breadcrumbs
-     (into
-      [{:link [url/Link {:page :cost-items-totals :query {:filter nil}}
-               (tr [:asset :totals-table :all-components])]
-        :title (tr [:asset :totals-table :all-components])}]
-      (for [h hierarchy
-            :let [title (asset-ui/label h)]]
-        {:link [url/Link {:page :cost-items-totals
-                          :query (merge query {:filter (str (:db/ident h))})}
-                title]
-         :title title}))]))
-
-
 (defn- cost-items-totals-page*
   [e! {query :query atl :asset-type-library :as app}
    {totals :cost-totals version :version
@@ -130,7 +113,7 @@
                               (sort-by (comp asset-ui/label first)))
           filter-link-fn #(url/cost-items-totals
                            {:project (get-in app [:params :project])
-                            :url/query (merge query {:filter (str (:db/ident %))})})]
+                            ::url/query (merge query {:filter (str (:db/ident %))})})]
       [asset-ui/cost-items-page-structure
        {:e! e!
         :app  app
@@ -139,7 +122,11 @@
                     :fgroup-link-fn filter-link-fn
                     :list-features? false}}
        [:div.cost-items-totals
-        [filter-breadcrumbs atl query filter-fg-or-fc]
+        [asset-ui/filter-breadcrumbs {:atl atl
+                                      :root-label (tr [:asset :totals-table :all-components])
+                                      :query query
+                                      :filter-kw filter-fg-or-fc
+                                      :page :cost-items-totals}]
         [:div {:style {:max-width "25vw"}}
          [asset-ui/relevant-road-select
           {:e! e!

@@ -64,6 +64,7 @@
    :type "Type",
    :all-cost-items "All cost items",
    :component "Component",
+   :all-materials "All materials",
    :all-components "All components",
    :material "Material",
    :quantity "Quantity",
@@ -243,6 +244,7 @@
   "Please select or add new companies, subcontractors or persons from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
   :company-search-placeholder "Enter company name or business id",
+  :partner-saved "Contract partner added",
   :related-contracts "RELATED CONTRACTS",
   :thk.contract/type "Type",
   :no-company-found-title "Company not found",
@@ -270,10 +272,11 @@
   :thk.contract.status/completed "Completed",
   :company-search-label "Company search",
   :contracts-listing "Contract listing",
+  :lead-partner "Lead partner",
   :edit-contract "Contract information",
   :no-company-found-content
   "No company matching the business registry code was found.",
-  :xroad-exception-title "Xroad query failed contact",
+  :xroad-exception-title "X-Road query failed",
   :search-companies-business-registry
   "Search for partner information from Estonian business registry",
   :thk.contract.status/in-progress "In progress"},
@@ -869,7 +872,7 @@
   :ta/region "Region",
   :land-owner-opinion/authority-position "Authorities position",
   :location/end-offset-m "End offset",
-  :thk.contract/cost "Capital amount",
+  :thk.contract/cost "Cost",
   :cooperation.opinion/status "Opinion of Competent Authority",
   :activity/status "Status",
   :cooperation.contact/id-code "Business reg / personal ID code",
@@ -894,6 +897,7 @@
   :project/participant "Participant",
   :land-acquisition/price-per-sqm "Price/m²",
   :activity/estimated-start-date "Estimated start date",
+  :company-contract/lead-partner? "Lead partner",
   :estate-procedure/motivation-bonus "Motivation fee",
   :task/modified "Modified",
   :cooperation.application/type "Application type",
@@ -1479,7 +1483,9 @@
    :placeholder "Type name..."},
   :role "Role",
   :unregistered "User"},
- :validation {:invalid-email "Invalid email address"},
+ :validation
+ {:invalid-business-id "Invalid business registry id",
+  :invalid-email "Invalid email address"},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",

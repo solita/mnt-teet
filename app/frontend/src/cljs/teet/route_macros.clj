@@ -60,7 +60,7 @@
     `(defn ~fn-name [~'e! {page# :page
                            params# :params
                            :as ~'app}]
-       
+
        (let [~'params (:params ~'app)
              ~'query-params (:query ~'app)
              ~'tr teet.localization/tr
@@ -137,7 +137,7 @@
              ;; other for parameter count
              `(def ~fn-name
                 (fn route#
-                  ([{:keys [~@param-syms] query# :teet.ui.url/query}]
+                  ([{:keys [~@param-syms] query# :teet.ui.url/query :as params-map#}]
                    (str (route# ~@param-syms)
                         (when query#
                           (str "?" (teet.ui.url/format-params query#)))))

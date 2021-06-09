@@ -302,6 +302,41 @@
     (when (seq card-many)
       (swap! set-atom set/union card-many))))
 
+(def retry-timeout-ms 60000)
+(def retry-wait-ms 2000)
+(def retryable-anomaly-categories #{:cognitect.anomalies/unavailable
+                                    :cognitect.anomalies/interrupted
+                                    :cognitect.anomalies/busy})
+(defn- with-retry
+  ([func]
+   (with-retry (+ (System/currentTimeMillis)
+                  retry-timeout-ms)
+     func))
+  ([give-up-at func]
+   (loop []
+     (let [[res e]
+           (try
+             [(func) nil]
+             (catch Exception e
+               [nil e]))]
+       (if (nil? e)
+         res
+         (cond
+           (> (System/currentTimeMillis) give-up-at)
+           (throw (ex-info "Giving up after retry timed out"
+                           {:exception e}))
+
+           (some-> e ex-data
+                   :cognitect.anomalies/category
+                   retryable-anomaly-categories)
+           (do
+             (Thread/sleep retry-wait-ms)
+             (recur))
+
+           :else
+           (throw (ex-info "Unretryable exception thrown"
+                           {:exception e}))))))))
+
 (defn- restore-tx-file*
   "Restore a backup by running the transactions in from the reader
   to the database pointed to by `conn`. It is assumed that
@@ -337,9 +372,10 @@
                                                 ref-attrs
                                                 @cardinality-many-attrs))
               {tempids :tempids}
-              (d/transact
-               conn
-               {:tx-data tx-data})]
+              (with-retry
+                #(d/transact
+                  conn
+                  {:tx-data tx-data}))]
           (add-cardinality-many-attrs! cardinality-many-attrs tx-data)
           (progress!)
           ;; Update old->new mapping with entity ids created in this tx
