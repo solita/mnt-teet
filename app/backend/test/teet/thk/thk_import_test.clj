@@ -108,46 +108,46 @@
         (testing "All non-excluded projects are found by id after import"
           ;; Also note that 66666, a TUGI project, is not present
           (is (=
-               #{"11111" "22222" "33333" "44444" "55555" "77777" "790"}
-               (into #{}
-                     (map first)
-                     (d/q '[:find ?id
-                            :where [_ :thk.project/id ?id]]
-                          db)))))
+                #{"11111" "22222" "33333" "44444" "55555" "77777" "790"}
+                (into #{}
+                  (map first)
+                  (d/q '[:find ?id
+                         :where [_ :thk.project/id ?id]]
+                    db)))))
 
         (testing "All lifecycles and activities have integration"
           (is (every? #(contains? % :integration/id)
-                      (map first
-                           (d/q '[:find (pull ?e [:integration/id])
-                                  :where (or [?e :thk.lifecycle/id _]
-                                             [?e :thk.activity/id _])]
-                                db)))))
+                (map first
+                  (d/q '[:find (pull ?e [:integration/id])
+                         :where (or [?e :thk.lifecycle/id _]
+                                  [?e :thk.activity/id _])]
+                    db)))))
 
         (testing "Project 1 is owned by existing Danny"
           (let [{owner :thk.project/owner :as _p1}
                 (d/pull db '[{:thk.project/owner [*]}]
-                        [:thk.project/id "11111"])]
+                  [:thk.project/id "11111"])]
             (is (= {:user/person-id "EE12345678900"
                     :user/given-name "Danny D."
                     :user/family-name "Manager"}
-                   (select-keys owner [:user/person-id
-                                       :user/given-name
-                                       :user/family-name])))))
+                  (select-keys owner [:user/person-id
+                                      :user/given-name
+                                      :user/family-name])))))
         (testing "Project 5 has newly created owner"
           (let [{owner :thk.project/owner :as _p5}
                 (d/pull db '[* {:thk.project/owner [*]}]
-                        [:thk.project/id "55555"])]
+                  [:thk.project/id "55555"])]
             (is (= {:user/person-id "EE66666666666"}
-                   (select-keys owner [:user/person-id])))
+                  (select-keys owner [:user/person-id])))
             (is (= #{:db/id :user/person-id}
-                   (set (keys owner))))))))
+                  (set (keys owner))))))))
 
     (testing "Imported contracts information is correct"
       (let [db (tu/db)]
         (testing "Amount of contracts found is correct"
           (is (= 3 (count (d/q '[:find (pull ?c [*])
                                  :where [?c :thk.contract/procurement-id _]]
-                               db)))))
+                            db)))))
         (testing "One of the contracts has a part name and the contract target exists"
           (is (= 1 (count (d/q '[:find ?c
                                  :where
@@ -155,7 +155,20 @@
                                  [?c :thk.contract/procurement-part-id _]
                                  [?c :thk.contract/targets ?t]
                                  [?t :thk.activity/id "5455"]]
-                               db))))))))
+                            db)))))))
+    (testing "New contracts have no modified-at values"
+      (let [db (tu/db)]
+        (is (= 3 (count (d/q '[:find (pull ?c [*])
+                               :where [?c :thk.contract/procurement-id _]
+                               [(missing? $ ?c :meta/modified-at)]]
+                          db))))))
+    (import-contracts-csv! (.getBytes (slurp "test/teet/thk/thk-test-update-contracts.csv")))
+    (testing "Updated contracts have updated values and modified-at"
+      (let [db (tu/db)]
+        (is (= 1 (count (d/q '[:find (pull ?c [*])
+                               :where [?c :thk.contract/procurement-number "Changed"]
+                               [?c :meta/modified-at _]]
+                          db)))))))
 
   ;; Create tasks for p1 activity that is sent to THK
   (let [act-id (ffirst
