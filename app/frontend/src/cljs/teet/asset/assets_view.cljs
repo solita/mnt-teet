@@ -91,7 +91,7 @@
                                     (reset! show-form? false)
                                     (reset! form {}))]
     [:<>
-     [:div {:class (<class common-styles/flex-row)}
+     [:div {:class (<class common-styles/flex-row-wrap)}
       (mapc (r/partial road-address-chip e!) (:road-address criteria))]
      (when-not @show-form?
        [buttons/small-button-secondary {:on-click #(reset! show-form? true)}
