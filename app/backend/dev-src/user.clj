@@ -425,7 +425,8 @@
             (.get c java.util.Calendar/DATE))))
 
 (defn import-current-cloud-dbs
-  "Import current teet and asset databases from dev"
+  "Import current teet and asset databases from dev.
+  See backend/README.md for usage instructions."
   []
   (let [c (aws/client {:api :ssm})
         {cloud-teet-db-name "/teet/datomic/db-name"
