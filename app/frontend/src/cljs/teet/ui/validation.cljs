@@ -149,6 +149,16 @@
   (when (not data)
     (tr [:common-texts :required-field])))
 
+(defn valid-estonian-business-registry-id?
+  [value]
+  (boolean (and value (re-matches #"^\d{8}$" value))))
+
+(defn validate-estonian-business-registry-id
+  [value]
+  (when (and (not (empty-value? value))
+             (not (valid-estonian-business-registry-id? value)))
+    (tr [:common-texts :invalid-business-id])))
+
 (defn validate-rules
   "Returns all validation errors for a field as a sequence. If the sequence is empty,
   validation passed without errors."

@@ -18,7 +18,8 @@
             [teet.contract.contract-style :as contract-style]
             [teet.ui.typography :as typography]
             [teet.ui.container :as container]
-            [teet.contract.contract-status :as contract-status]))
+            [teet.contract.contract-status :as contract-status]
+            [teet.common.common-styles :as common-styles]))
 
 (defn contract-card-header
   [contract-status contract-name contract-url-id]
@@ -104,23 +105,32 @@
      (tr [:contracts :filters :hide-filters])
      (tr [:contracts :filters :show-filters]))])
 
+
 (defn search-shortcuts
-  [{:keys [value options change-shortcut filters-visibility? toggle-filters-visibility]}]
-  [:div {:class (<class contract-style/search-shortcuts-style)}
-  (into [:div {:class (<class contract-style/search-shortcut-items-style)}]
-        (mapv
-          (fn [option]
-            (let [selected? (= option value)]
-              [:<>
-               (if selected?
-                 [:span {:class (<class contract-style/search-shortcut-item-style selected?)
-                         :on-click #(change-shortcut option)}
-                  (tr [:contracts :shortcuts option])]
-                 [:span
-                  [buttons/link-button {:class (<class contract-style/search-shortcut-item-style selected?)
-                                        :on-click #(change-shortcut option)}
-                   (tr [:contracts :shortcuts option])]])]))
-          options))
+  [{:keys [value options change-shortcut]}]
+  [:<>
+   (into [:div {:class (<class contract-style/search-shortcut-items-style)}]
+     (mapv
+       (fn [option]
+         (let [selected? (= option value)]
+           [:<>
+            (if selected?
+              [:span {:class (<class contract-style/search-shortcut-item-style selected?)
+                      :on-click #(change-shortcut option)}
+               (tr [:contracts :shortcuts option])]
+              [:span
+               [buttons/link-button {:class (<class contract-style/search-shortcut-item-style selected?)
+                                     :on-click #(change-shortcut option)}
+                (tr [:contracts :shortcuts option])]])]))
+       options))])
+
+(defn filters-header
+  [{:keys [shortcut-value options change-shortcut filters-visibility?
+           toggle-filters-visibility]}]
+  [:div {:class (<class contract-style/filters-header-style)}
+   [search-shortcuts {:value shortcut-value
+                      :change-shortcut change-shortcut
+                      :options options}]
    [toggle-filters-visibility-button filters-visibility? toggle-filters-visibility]])
 
 (def filter-fields
@@ -169,7 +179,7 @@
   [select/select-user input-options])
 
 (defn filter-inputs
-  [{:keys [e! filter-values input-change filters-visibility? clear-filters]}]
+  [{:keys [e! filter-input-fields filter-values input-change filters-visibility? clear-filters]}]
   [:div {:style {:display (if filters-visibility? :block :none)}}
    [:div {:class (<class contract-style/filter-inputs-style)}
     (into [:<>]
@@ -187,7 +197,7 @@
                                                               %))}
                                         field-options)]
             (filter-input general-input-options field-type)))
-        filter-fields))]
+        filter-input-fields))]
    [buttons/link-button-with-icon {:class (<class contract-style/clear-filters-button-style)
                                    :on-click clear-filters
                                    :icon [icons/content-clear]}
@@ -201,12 +211,13 @@
      [:div {:class (<class contract-style/search-header-style)}
       [:div {:class (<class contract-style/quick-filters-header-style)}
        (tr [:contracts :quick-filters])]]
-     [search-shortcuts {:value (:shortcut @filtering-atom)
+     [filters-header {:shortcut-value (:shortcut @filtering-atom)
                       :options filter-options
                       :change-shortcut change-shortcut
                       :filters-visibility? @filters-visibility?
                       :toggle-filters-visibility toggle-filters-visibility}]
      [filter-inputs {:e! e!
+                     :filter-input-fields filter-fields
                      :filter-values @filtering-atom
                      :input-change input-change
                      :filters-visibility? @filters-visibility?
@@ -222,9 +233,12 @@
                input-change (fn [key value]
                               (swap! filtering-atom assoc key value))
                clear-filters #(reset! filtering-atom default-filtering-value)]
-    [Grid {:container true}
+    [Grid {:style {:flex 1}
+           :class (<class common-styles/flex-1)
+           :container true}
      [Grid {:item true
-            :xs 12}
+            :xs 12
+            :style {:display :flex}}
       [:div {:class (<class contract-style/contract-page-container-style)}
        [:h1 (tr [:contracts :shortcuts (:shortcut @filtering-atom)])]
        [contract-search {:e! e!

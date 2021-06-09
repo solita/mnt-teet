@@ -17,7 +17,7 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [cheshire.core :as cheshire]
-            [teet.util.coerce :refer [->long]]
+            [teet.util.coerce :refer [->long ->bigdec]]
             [teet.util.collection :as cu]
             [clojure.set :as set]
             [teet.util.geo :as geo]))
@@ -82,6 +82,7 @@
    :args {project-id :thk.project/id
           cost-item :cost-item
           cost-totals :cost-totals
+          materials-and-products :materials-and-products
           road :road}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
@@ -126,7 +127,10 @@
                             (asset-model/material-asset-oid cost-item)
 
                             :else
-                            cost-item))})))))
+                            cost-item))})
+       (when materials-and-products
+         {:materials-and-products
+          (asset-db/project-materials-totals adb project-id atl)})))))
 
 (s/def :boq-export/version integer?)
 (s/def :boq-export/unit-prices? boolean?)
@@ -267,6 +271,37 @@
        (fn [{point :v}]
          (<= (geo/distance point [x y]) radius))))
 
+(defn search-by-road-address [db {:location/keys [road-nr carriageway start-km end-km] :as addr}]
+  (into #{}
+        (map first)
+        (d/q {:query
+              (vec
+               (concat
+                '[:find ?e
+                  :where
+                  [?e :location/road-nr ?road-nr]
+                  [?e :location/carriageway ?carriageway]]
+                (when (or start-km end-km)
+                  '[[?e :location/start-km ?start]])
+                (when start-km
+                  '[[(>= ?start ?start-km)]])
+                (when end-km
+                  ;; If asset has no end km use the start km (single point)
+                  '[[(get-else $ ?e :location/end-km ?start) ?end]
+                    [(<= ?end ?end-km)]])
+                '[[?e :asset/fclass _]]
+                '[:in $ ?road-nr ?carriageway]
+                (when start-km '[?start-km])
+                (when end-km '[?end-km])))
+              :args (remove nil? [db road-nr carriageway
+                                  (some-> start-km ->bigdec)
+                                  (some-> end-km ->bigdec)])})))
+
+(defmethod search-by :road-address [db _ addrs]
+  (apply set/union
+         (map (partial search-by-road-address db)
+              addrs)))
+
 (defn- search-by-map [db criteria-map]
   (reduce-kv (fn [acc by val]
                (let [result (search-by db by val)]
@@ -341,3 +376,14 @@
                              "fclass" (:db/ident (:asset/fclass a))}
                 :geometry {:type "LineString"
                            :coordinates [start-point end-point]}})})}))
+
+(defquery :assets/details
+  {:doc "Fetch one asset for details view"
+   :context {adb :asset-db}
+   :args {oid :asset/oid}
+   :project-id nil
+   :authorization {}}
+  (asset-type-library/db->form
+   (asset-type-library/rotl-map
+    (asset-db/asset-type-library adb))
+   (d/pull adb '[*] [:asset/oid oid])))

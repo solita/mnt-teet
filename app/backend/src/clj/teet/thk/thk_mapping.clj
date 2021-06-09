@@ -68,6 +68,8 @@
    "4003" :activity.name/detailed-design ;; Pöhiprojekt
    "4004" :activity.name/land-acquisition ;; Maaost
    "4005" :activity.name/construction ;; Teostus
+   "4006" :activity.name/owners-supervision ;; OJV
+   "4009" :activity.name/road-safety-audit ;; Tee Ohutus Audit
    ;; 4010 ekspertiis
    ;; 4011 LOA proj
    "4012" :activity.name/pre-design ;; Eskiisproj

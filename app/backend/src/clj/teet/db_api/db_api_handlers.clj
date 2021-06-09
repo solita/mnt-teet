@@ -11,6 +11,7 @@
             teet.contract.contracts-queries
             teet.contract.contract-queries
             teet.contract.contract-commands
+            teet.company.company-queries
             teet.file.file-commands
             teet.file.file-queries
             teet.comment.comment-commands

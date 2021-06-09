@@ -85,7 +85,7 @@
    :color theme-colors/text-medium-emphasis
    :margin-top "1.56rem"})
 
-(defn search-shortcuts-style
+(defn filters-header-style
   []
   {:margin-top "1rem"
    :display :flex

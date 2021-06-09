@@ -72,7 +72,7 @@
                    taskpart-id :taskpart-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :task/task-part-submit
+           :command :task/submit-task-part
            :payload {:taskpart-id (common-controller/->long taskpart-id)
                      :task-id (common-controller/->long task-id)}
            :success-message (tr [:task :submit-results-success])
@@ -84,7 +84,7 @@
                    result :result} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :task/task-part-review
+           :command :task/review-task-part
            :payload {:taskpart-id (common-controller/->long taskpart-id)
                      :task-id (common-controller/->long task-id)
                      :result result}
@@ -95,7 +95,7 @@
                    taskpart-id :taskpart-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :task/task-part-reopen
+           :command :task/reopen-task-part
            :payload {:taskpart-id (common-controller/->long taskpart-id)
                      :task-id (common-controller/->long task-id)}
            :success-message (tr [:task-part :reopen-successful])
@@ -131,27 +131,30 @@
 
   StartReview
   (process-event [_ {params :params :as app}]
-    (t/fx app
+    (t/fx (assoc app :task-review-started? true)
           {:tuck.effect/type :command!
            :command :task/start-review
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->Refresh}))
+           :result-event common-controller/->RefreshReview}))
 
   StartTaskPartReview
   (process-event [{task-id :task-id
                    taskpart-id :taskpart-id} app]
-       (t/fx app
-          {:tuck.effect/type :command!
-           :command :task/start-task-part-review
-           :payload {:taskpart-id (common-controller/->long taskpart-id)
-                     :task-id (common-controller/->long task-id)}
-           :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->Refresh}))
+       (if
+         (get app :task-review-started?)
+         app
+         (t/fx app
+               {:tuck.effect/type :command!
+                :command :task/start-task-part-review
+                :payload {:taskpart-id (common-controller/->long taskpart-id)
+                          :task-id (common-controller/->long task-id)}
+                :success-message (tr [:task :start-review-success])
+                :result-event common-controller/->Refresh})))
 
   Review
   (process-event [{result :result} {params :params :as app}]
-    (t/fx app
+    (t/fx (dissoc app :task-review-started?)
           {:tuck.effect/type :command!
            :command :task/review
            :payload {:task-id (common-controller/->long (:task params))
@@ -171,18 +174,18 @@
   (process-event [{entity :entity} {:keys [params page query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (assoc query :edit entity)}))
+           :page page
+           :params params
+           :query (assoc query :edit entity)}))
 
   DeleteTask
   (process-event [{task-id :task-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :task/delete
-           :success-message  (tr [:notifications :task-deleted])
-           :payload          {:db/id (common-controller/->long task-id)}
-           :result-event     ->DeleteTaskResult}))
+           :command :task/delete
+           :success-message (tr [:notifications :task-deleted])
+           :payload {:db/id (common-controller/->long task-id)}
+           :result-event ->DeleteTaskResult}))
 
   DeleteTaskResult
   (process-event [_response {:keys [page params query] :as app}]
@@ -190,8 +193,8 @@
               (dissoc :edit-task-data)
               (update :stepper dissoc :dialog))
           {:tuck.effect/type :navigate
-           :page             :activity
-           :params           (select-keys params [:project :activity])}))
+           :page :activity
+           :params (select-keys params [:project :activity])}))
 
   OpenAddDocumentDialog
   (process-event [_ app]

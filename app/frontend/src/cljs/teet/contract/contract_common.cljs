@@ -11,12 +11,16 @@
             [teet.common.responsivity-styles :as responsivity-styles]
             [teet.contract.contract-status :as contract-status]
             [teet.ui.format :as format]
-            [teet.util.euro :as euro]))
+            [teet.util.euro :as euro]
+            [teet.user.user-model :as user-model]))
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
-  [common/external-contract-link {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
-   (str (tr [:contracts :state-procurement-link]) " " procurement-number)])
+  (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
+    [common/external-contract-link
+     {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
+     (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
+    [:span (str (tr [:contracts :state-procurement-link]) " " procurement-number)]))
 
 (defn contract-external-link
   [{:thk.contract/keys [external-link procurement-number]}]
@@ -49,12 +53,12 @@
 
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
-                        warranty-end-date cost] :as contract}]
+                        warranty-end-date cost targets] :as contract}]
   [common/basic-information-row
    {:right-align-last? false
     :font-size "0.875rem"}
    [[(tr [:contract :status])
-     [contract-status/contract-status {:show-label? true :size 15}
+     [contract-status/contract-status {:show-label? true :size 17}
       (:thk.contract/status contract)]]
     (when-let [region (:ta/region contract)]
       [(tr [:fields :ta/region])
@@ -77,6 +81,13 @@
     (when warranty-end-date
       [(tr [:contract :thk.contract/warranty-end-date])
        [typography/Paragraph (format/date warranty-end-date)]])
+    (when (not-empty (filterv some?
+                       (distinct (mapv #(user-model/user-name (:activity/manager %))
+                                   targets))))
+      [(tr [:contracts :filters :inputs :project-manager])
+       [typography/Paragraph (str/join ", " (filter some?
+                                              (distinct (mapv #(user-model/user-name (:activity/manager %))
+                                                          targets))))]])
     (when cost
       [(tr [:fields :thk.contract/cost])
        [typography/Paragraph (euro/format cost)]])]])

@@ -35,3 +35,26 @@
                  :in $ ?business-registry-code]
                db
                business-registry-code)))
+
+(defn company-in-contract?
+  [db contract-eid company-eid]
+  (-> (d/q '[:find ?company-contract
+             :where
+             [?company-contract :company-contract/company ?company]
+             [?company-contract :company-contract/contract ?contract]
+             :in $ ?contract ?company]
+           db contract-eid company-eid)
+      not-empty
+      boolean))
+
+(defn is-company?
+  "Check if the given company-id is actually a company"
+  [db company-id]
+  (-> (d/q '[:find ?c
+             :where
+             [?c :company/business-registry-code _]
+             :in $ ?c]
+           db
+           company-id)
+      not-empty
+      boolean))

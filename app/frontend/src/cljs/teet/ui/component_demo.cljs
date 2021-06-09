@@ -20,7 +20,11 @@
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.mentions :as mentions]
             [teet.ui.common :as common-ui]
-            [teet.contract.contract-status :as contract-status]))
+            [teet.contract.contract-status :as contract-status]
+            [teet.contract.contract-common :as contract-common]
+            [teet.contract.contracts-view :as contracts-view]
+            [teet.ui.table :as table]))
+
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -301,24 +305,104 @@
                                      :icon [icons/notification-bluetooth-audio]}]}]])
 
 (defn contract-demo
-  []
+  [e!]
   [:div
-   [:h1 "Statuses"]
-   [:div {:style {:display :flex
-                  :align-items :center}}
-    [contract-status/contract-status {} :thk.contract.status/signed]
-    [contract-status/contract-status {} :thk.contract.status/completed]
-    [contract-status/contract-status {} :thk.contract.status/in-progress]
-    [contract-status/contract-status {} :thk.contract.status/deadline-approaching]
-    [contract-status/contract-status {} :thk.contract.status/deadline-overdue]
-    [contract-status/contract-status {} :thk.contract.status/warranty]]
+   [:h4 {:style {:margin-top "8px"}} "Status"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-bottom "8px"}} "Status without label, default size"]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [contract-status/contract-status {} :thk.contract.status/signed]
+     [contract-status/contract-status {} :thk.contract.status/completed]
+     [contract-status/contract-status {} :thk.contract.status/in-progress]
+     [contract-status/contract-status {} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {} :thk.contract.status/warranty]]]
+   [:div {:style {:margin-top "16px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-top "16px" :margin-bottom "8px"}} "Status with label. default size"]
+    [:div
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/signed]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/completed]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/in-progress]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/warranty]]]
+   [:div {:style {:margin-top "16px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-top "16px" :margin-bottom "8px"}} "Status without label. Size 15px"]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [contract-status/contract-status {:size 15} :thk.contract.status/signed]
+     [contract-status/contract-status {:size 15} :thk.contract.status/completed]
+     [contract-status/contract-status {:size 15} :thk.contract.status/in-progress]
+     [contract-status/contract-status {:size 15} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {:size 15} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {:size 15} :thk.contract.status/warranty]]]
+   [:h4 {:style {:margin-top "24px"}} "External links"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [contract-common/contract-external-links {:thk.contract/procurement-id 1234
+                                              :thk.contract/procurement-number "12341234"
+                                              :thk.contract/external-link "www.test.test"}]]
+   [:h4 {:style {:margin-top "24px"}} "Information row"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [contract-common/contract-information-row {:thk.contract/type :thk.contract.type/construction-works
+                                               :thk.contract/signed-at #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/start-of-work #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/deadline #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/extended-deadline #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/warranty-end-date #inst "2048-05-08T00:00:00.000-00:00"
+                                               :thk.contract/cost "34324"
+                                               :thk.contract/status :thk.contract.status/warranty}]]
+   [:h4 {:style {:margin-top "24px"}} "Quick Filters"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    (r/with-let [shortcut-atom (r/atom :my-contracts)
+                 change-shortcut (fn [new-value]
+                                   (reset! shortcut-atom new-value))
+                 shortcuts [:my-contracts
+                            :all-contracts
+                            :unassigned]]
+      [contracts-view/search-shortcuts {:value @shortcut-atom
+                                        :options shortcuts
+                                        :change-shortcut change-shortcut}])]
+   [:h4 {:style {:margin-top "24px"}} "Filters (this component is contract list specific. Changes are required, if it will be reused)"]
    [:div
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/signed]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/completed]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/in-progress]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-approaching]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-overdue]
-    [contract-status/contract-status {:show-label? true} :thk.contract.status/warranty]]])
+    (r/with-let [filter-fields [[:road-number {:type :search-field}]
+                                [:project-name {:type :search-field}]
+                                [:contract-name {:type :search-field}]
+                                [:procurement-number {:type :search-field}]]]
+      [contracts-view/filter-inputs {:e! e!
+                                     :filter-input-fields filter-fields
+                                     :filters-visibility? true}])]])
+
+
+(defn simple-table-demo
+  []
+  [table/simple-table
+   [["Foo" {}]
+    ["bar" {}]
+    ["baz" {}]
+    ["bax" {}]]
+   [[["Foo"]
+     ["bar"]
+     ["baz"]
+     ["bax"]]
+    [["Foo"]
+     ["bar"]
+     ["baz"]
+     ["bax"]]]])
+
+(defn basic-information-column-demo
+  []
+  [:div {:style {:display :flex
+                 :justify-content :center}}
+   [:div {:style {:flex 1
+                  :max-width "500px"}}
+    [common-ui/basic-information-column
+     [{:key "1"
+       :label [:strong "foo"]
+       :data [:span "wiuh"]}
+      {:key "2"
+       :label [:strong "bar"]
+       :data [:span "wiuh"]}]]]])
 
 (def demos
   [{:id :context-menu
@@ -360,7 +444,12 @@
    {:id :contracts
     :heading "Contract components"
     :component [contract-demo]}
-   ])
+   {:id :simple-table
+    :heading "simple table"
+    :component [simple-table-demo]}
+   {:id :basic-information-column
+    :heading "basic info column demo"
+    :component [basic-information-column-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
