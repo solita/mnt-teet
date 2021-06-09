@@ -380,9 +380,7 @@
                                        :thk.contract/procurement-number
                                        :thk.contract/procurement-part-id
                                        :thk.contract/type])
-           (if contract-db-id
-             {:meta/modified-at (Date.)}
-             (meta-model/system-created)))]
+           (meta-model/system-created))]
         (log/warn "No targets found for contract with ids: " contract-ids "Contract row details: " contract-info)))))
 
 (defn final-contract?

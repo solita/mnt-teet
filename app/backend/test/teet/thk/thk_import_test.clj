@@ -156,18 +156,14 @@
                                  [?c :thk.contract/targets ?t]
                                  [?t :thk.activity/id "5455"]]
                             db)))))))
-    (testing "New contracts have no modified-at values"
-      (let [db (tu/db)]
-        (is (= 3 (count (d/q '[:find (pull ?c [*])
-                               :where [?c :thk.contract/procurement-id _]
-                               [(missing? $ ?c :meta/modified-at)]]
-                          db))))))
+
     (import-contracts-csv! (.getBytes (slurp "test/teet/thk/thk-test-update-contracts.csv")))
-    (testing "Updated contracts have updated values and modified-at"
+
+    (testing "Updated contracts have updated values and missing modified-at"
       (let [db (tu/db)]
         (is (= 1 (count (d/q '[:find (pull ?c [*])
                                :where [?c :thk.contract/procurement-number "Changed"]
-                               [?c :meta/modified-at _]]
+                               [(missing? $ ?c :meta/modified-at)]]
                           db)))))))
 
   ;; Create tasks for p1 activity that is sent to THK
