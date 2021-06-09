@@ -60,7 +60,7 @@
     `(defn ~fn-name [~'e! {page# :page
                            params# :params
                            :as ~'app}]
-       
+
        (let [~'params (:params ~'app)
              ~'query-params (:query ~'app)
              ~'tr teet.localization/tr
@@ -122,6 +122,8 @@
     `(do
        ~@(for [[route-name {path :path}] defs
                :let [params (param-names path)
+                     allowed-keys (set (conj params
+                                             :teet.ui.url/query))
                      param-syms (map (comp symbol name) params)
                      fn-name (symbol (name route-name))]]
            (if (= 1 (count params))
@@ -129,15 +131,27 @@
              `(def ~fn-name
                 (fn route# [~@param-syms]
                   (if (map? ~(first param-syms))
-                    (str (route# (~(first params) ~(first param-syms)))
-                         (when-let [query# (:teet.ui.url/query ~(first param-syms))]
-                           (str "?" (teet.ui.url/format-params query#))))
+                    (do (assert (every? ~allowed-keys (keys ~(first param-syms)))
+                                (str ~(name fn-name)
+                                     ": Only allowed keys are "
+                                     ~allowed-keys
+                                     ", called with "
+                                     ~(first param-syms)))
+                        (str (route# (~(first params) ~(first param-syms)))
+                             (when-let [query# (:teet.ui.url/query ~(first param-syms))]
+                               (str "?" (teet.ui.url/format-params query#)))))
                     (str "#" ~@(split-path path)))))
              ;; more than 1 parameter, support 1 arity for map and
              ;; other for parameter count
              `(def ~fn-name
                 (fn route#
-                  ([{:keys [~@param-syms] query# :teet.ui.url/query}]
+                  ([{:keys [~@param-syms] query# :teet.ui.url/query :as params-map#}]
+                   (assert (every? ~allowed-keys (keys params-map#))
+                           (str ~(name fn-name)
+                                ": Only allowed keys are "
+                                ~allowed-keys
+                                ", called with "
+                                params-map#))
                    (str (route# ~@param-syms)
                         (when query#
                           (str "?" (teet.ui.url/format-params query#)))))
