@@ -71,11 +71,15 @@
            :db (:db-after import-tx-result))))
 
 (defn- upsert-tasks [{:keys [bucket file-key project-rows connection] :as ctx}]
-  (let [import-tx-result (thk-import/import-thk-tasks! connection
-                           (str "s3://" bucket "/" file-key)
-                           project-rows)]
-    (assoc ctx
-      :db (:db-after import-tx-result))))
+  (if (environment/feature-enabled? :contracts)             ;; Added because these tasks are related to contracts
+    (let [import-tx-result (thk-import/import-thk-tasks! connection
+                                                         (str "s3://" bucket "/" file-key)
+                                                         project-rows)]
+      (assoc ctx
+        :db (:db-after import-tx-result)))
+    (do
+      (log/info "Skipping upserting of tasks because feature flag contracts is not enabled")
+      ctx)))
 
 (defn- upsert-contracts [{:keys [bucket file-key contract-rows connection] :as ctx}]
   (if (environment/feature-enabled? :contracts)
