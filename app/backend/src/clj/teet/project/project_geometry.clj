@@ -2,53 +2,60 @@
   "Code for working with project geometries stored in PostgreSQL.
   Provides functions for calling the PostgREST API."
   (:require [org.httpkit.client :as http]
-            [teet.auth.jwt-token :as jwt-token]
-            [clojure.string :as str]
             [cheshire.core :as cheshire]
             [teet.road.road-query :as road-query]
             [teet.util.geo :as geo]
-            [teet.integration.integration-id :as integration-id]))
+            [teet.integration.integration-id :as integration-id]
+            [jeesql.core :refer [defqueries]]
+            [teet.integration.postgresql :refer [with-connection with-transaction]]
+            [teet.log :as log]))
 
-(defn- valid-api-info? [{:keys [api-url api-secret]}]
-  (and (not (str/blank? api-url))
-       (not (str/blank? api-secret))))
+(declare store-entity-info! delete-stale-projects!)
+(defqueries "teet/project/project_geometry.sql")
 
 (defn update-project-geometries!
   "Update project geometries in PostgreSQL.
-  Calls store_entity_info in PostgREST API."
-  [{:keys [api-url api-secret wfs-url] :as api} projects]
-  {:pre [(valid-api-info? api)]}
+  Calls store_entity_info in stored procedure.
+  If `:delete-stale-projects?` is true, deletes any projects' geometries
+  not in `projects`. This should only be set when updating geometries
+  for all projects."
+  [{:keys [wfs-url delete-stale-projects?]
+    :or {delete-stale-projects? false}} projects]
+  (log/info "Updating project geometries for " (count projects) " projects."
+            (when delete-stale-projects?
+              " Deleting other stale projects."))
   (let [road-part-cache (atom {})
-        request-body (for [{id :integration/id
-                            :thk.project/keys [project-name name road-nr carriageway
-                                               start-m end-m
-                                               custom-start-m custom-end-m]}
-                           projects
-                           :when (and id
-                                      (integer? (or custom-start-m start-m))
-                                      (integer? (or custom-end-m end-m))
-                                      (integer? road-nr)
-                                      (integer? carriageway))
-                           :let [geometry (road-query/fetch-road-geometry {:wfs-url wfs-url
-                                                                           :cache-atom road-part-cache}
-                                                                          road-nr carriageway
-                                                                          (or custom-start-m start-m)
-                                                                          (or custom-end-m end-m))]]
-                       {:id (str (integration-id/uuid->number id))
-                        :type "project"
-                        :tooltip (or project-name name)
-                        :geometry_wkt (geo/line-string-to-wkt geometry)})]
-    (when (not-empty request-body)
-      (let [response @(http/post
-                       (str api-url "/rpc/store_entity_info")
-                       {:headers {"Content-Type" "application/json"
-                                  "Authorization"
-                                  (str "Bearer "
-                                       (jwt-token/create-backend-token api-secret))}
-                        :body (cheshire/encode request-body)})]
-        (when-not (= 200 (:status response))
-          (throw (ex-info "Update project geometries failed"
-                          {:expected-response-status 200
-                           :actual-response-status (:status response)
-                           :response response})))))
-    projects))
+        project-ids (into #{}
+                          (map (comp integration-id/uuid->number
+                                     :integration/id))
+                          projects)
+        project-geometry-updates
+        (doall ; force WFS fetched so we don't do them while holding tx open
+         (for [{id :integration/id
+                :thk.project/keys [project-name name road-nr carriageway
+                                   start-m end-m
+                                   custom-start-m custom-end-m]}
+               projects
+               :when (and id
+                          (integer? (or custom-start-m start-m))
+                          (integer? (or custom-end-m end-m))
+                          (integer? road-nr)
+                          (integer? carriageway))
+               :let [geometry (road-query/fetch-road-geometry
+                               {:wfs-url wfs-url
+                                :cache-atom road-part-cache}
+                               road-nr carriageway
+                               (or custom-start-m start-m)
+                               (or custom-end-m end-m))]]
+           {:id (str (integration-id/uuid->number id))
+            :type "project"
+            :tooltip (or project-name name)
+            :geometry (geo/line-string-to-wkt geometry)}))]
+    (with-connection db
+      (with-transaction db
+        (when delete-stale-projects?
+          (delete-stale-projects! db {:project-ids project-ids}))
+        (doseq [upd project-geometry-updates]
+          (store-entity-info! db upd))))
+
+     projects))
