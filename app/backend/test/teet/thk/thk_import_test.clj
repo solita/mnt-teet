@@ -399,12 +399,15 @@
           (d/q '[:find ?tasks
                  :where [?e :activity/tasks ?tasks]
                  :in $ ?e] (tu/db) activity-id)
-          task-with-actual-start-date (ffirst (d/q '[:find (pull ?tasks [:task/actual-start-date])
+          task-with-actual-start-date (ffirst (d/q '[:find (pull ?tasks [*])
                                                      :where [?e :activity/tasks ?tasks]
                                                      [?tasks :task/actual-start-date _]
                                                      :in $ ?e] (tu/db) activity-id))
-          expected-actual-start-date (date/->start-of-date 2022 9 20)]
+          expected-actual-start-date (date/->start-of-date 2022 9 20)
+          expected-thk-activity-id "18913"]
       (println "New Construction Activity tasks: " (ffirst new-construction-activity-tasks))
       (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported")
       (testing (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date)))
-        "Actual start date has been imported"))))
+        "Actual start date has been imported")
+      (testing (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))
+        "THK Activity ID has been imported"))))

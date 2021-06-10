@@ -300,6 +300,7 @@
                          (str "NEW-TASK-" (name :task.group/construction) "-" task-type
                            "-" (integration-id/unused-random-small-uuid db)))
         task-group (thk-task-group-supported-type task-type)
+        thk-activity-id (:thk.activity/id  thk-activity-task-data)
         task-tx-data (merge
                        {:db/id id-placeholder
                         :task/group task-group
@@ -307,6 +308,7 @@
                         :task/send-to-thk? true
                         :task/estimated-end-date end-date
                         :task/estimated-start-date start-date
+                        :thk.activity/id thk-activity-id
                         :meta/created-at (Date.)}
                        (when (some? actual-end-date)
                              {:task/actual-end-date actual-end-date})
