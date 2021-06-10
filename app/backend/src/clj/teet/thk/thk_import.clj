@@ -289,6 +289,8 @@
   [db thk-activity-task-data construction-activity-id ]
   (let [start-date (:activity/estimated-start-date thk-activity-task-data)
         end-date (:activity/estimated-end-date thk-activity-task-data)
+        actual-start-date (:activity/actual-start-date thk-activity-task-data)
+        actual-end-date (:activity/actual-end-date thk-activity-task-data)
         thk-activity-status (:activity/status thk-activity-task-data)
         task-type (get-new-task-type thk-activity-task-data)
         existing-task-eid (get-existing-task-db-id db construction-activity-id task-type
@@ -306,6 +308,10 @@
                         :task/estimated-end-date end-date
                         :task/estimated-start-date start-date
                         :meta/created-at (Date.)}
+                       (when (some? actual-end-date)
+                             {:task/actual-end-date actual-end-date})
+                       (when (some? actual-start-date)
+                             {:task/actual-start-date actual-start-date})
                        (when (nil? existing-task-eid)
                              {:integration/id (integration-id/unused-random-small-uuid db)})
                        {:task/status (if (= :activity.status/completed thk-activity-status)

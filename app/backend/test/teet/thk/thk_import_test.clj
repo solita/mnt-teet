@@ -10,7 +10,9 @@
             [teet.thk.thk-mapping :as thk-mapping]
             [clojure.java.io :as io]
             [teet.meta.meta-model :as meta-model]
-            [teet.integration.integration-id :as integration-id]))
+            [teet.integration.integration-id :as integration-id]
+            [teet.util.date :as date]))
+
 
 (use-fixtures :each
   tu/with-global-data
@@ -396,6 +398,13 @@
     (let [new-construction-activity-tasks
           (d/q '[:find ?tasks
                  :where [?e :activity/tasks ?tasks]
-                 :in $ ?e] (tu/db) activity-id)]
-      (println "New Construction Activity tasks: " new-construction-activity-tasks)
-      (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported"))))
+                 :in $ ?e] (tu/db) activity-id)
+          task-with-actual-start-date (ffirst (d/q '[:find (pull ?tasks [:task/actual-start-date])
+                                                     :where [?e :activity/tasks ?tasks]
+                                                     [?tasks :task/actual-start-date _]
+                                                     :in $ ?e] (tu/db) activity-id))
+          expected-actual-start-date (date/->start-of-date 2022 9 20)]
+      (println "New Construction Activity tasks: " (ffirst new-construction-activity-tasks))
+      (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported")
+      (testing (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date)))
+        "Actual start date has been imported"))))
