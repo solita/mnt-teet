@@ -74,17 +74,17 @@
         contract-eid (:db/id contract)
         lead-partner? (:company-contract/lead-partner? form-data)
         new-company-contract-id (UUID/randomUUID)
-        tempids (:temids (tx [(list 'teet.contract.contract-tx/update-contract-partner
-                                    contract-eid
-                                    lead-partner?
-                                    company-id
-                                    [(merge {:db/id "new-company-contract"
-                                             :teet/id new-company-contract-id
-                                             :company-contract/company company-id
-                                             :company-contract/contract contract-eid}
-                                            (meta-model/creation-meta user)
-                                            (when lead-partner?
-                                              {:company-contract/lead-partner? true}))])]))]
+        tempids (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
+                                     contract-eid
+                                     lead-partner?
+                                     company-id
+                                     [(merge {:db/id "new-company-contract"
+                                              :teet/id new-company-contract-id
+                                              :company-contract/company company-id
+                                              :company-contract/contract contract-eid}
+                                             (meta-model/creation-meta user)
+                                             (when lead-partner?
+                                               {:company-contract/lead-partner? true}))])]))]
     (merge tempids
            {:company-contract-id new-company-contract-id})))
 
