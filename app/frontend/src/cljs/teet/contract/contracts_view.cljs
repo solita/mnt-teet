@@ -34,22 +34,20 @@
     (str (tr [:contracts :contracts-list :view]))]])
 
 (defn contract-card
-  [e! contract contract-expansion-atom]
-  (r/with-let []
-    [container/collapsible-container {:class (<class contract-style/contract-card-style)
-                                      :container-class (<class contract-style/contract-card-style-header)
-                                      :collapsible-class (<class contract-style/contract-card-style-container)
-                                      :side-component (contract-card-header
-                                                        (:thk.contract/status contract)
-                                                        (contract-model/contract-name contract)
-                                                        (contract-model/contract-url-id contract))
-                                      :on-toggle #(swap! contract-expansion-atom
-                                                    update-in [(:db/id contract)] (fn [x] (not x)))
-                                      :open? (get @contract-expansion-atom (:db/id contract))}
-     ""
-     [:div {:class (<class contract-style/contract-card-details-style)}
-      [contract-common/contract-external-links contract]
-      [contract-common/contract-information-row contract]]]))
+  [contract toggle-card open?]
+  [container/collapsible-container {:class (<class contract-style/contract-card-style)
+                                    :container-class (<class contract-style/contract-card-style-header)
+                                    :collapsible-class (<class contract-style/contract-card-style-container)
+                                    :side-component (contract-card-header
+                                                      (:thk.contract/status contract)
+                                                      (contract-model/contract-name contract)
+                                                      (contract-model/contract-url-id contract))
+                                    :on-toggle toggle-card
+                                    :open? open?}
+   ""
+   [:div {:class (<class contract-style/contract-card-details-style)}
+    [contract-common/contract-external-links contract]
+    [contract-common/contract-information-row contract]]])
 
 (defn contract-list-expansion-buttons
   [expand-contracts collapse-contracts]
@@ -79,18 +77,21 @@
   (reduce (fn [agg x] (assoc agg (:db/id x) open?)) {} contracts))
 
 (defn contracts-list
-  [e! contracts]
+  [contracts]
   (r/with-let [contract-expansion-atom (r/atom (contract-expansion-map contracts false))
                expand-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts true))
-               collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))]
+               collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))
+               toggle-card (fn [contract-id]
+                             (swap! contract-expansion-atom update contract-id #(not %)))]
     [:div {:class (<class contract-style/contracts-list-style)}
      [contacts-list-header {:contracts-count (count contracts)
                             :expand-contracts expand-contracts
                             :collapse-contracts collapse-contracts}]
      (doall
-       (for [contract contracts]
+       (for [contract contracts
+             :let [open? (get @contract-expansion-atom (:db/id contract))]]
          ^{:key (str (:db/id contract))}
-         [contract-card e! contract contract-expansion-atom]))]))
+         [contract-card contract #(toggle-card (:db/id contract)) open?]))]))
 
 (def filter-options
   [:my-contracts
@@ -260,5 +261,5 @@
          :query :contracts/list-contracts
          :args {:search-params @filtering-atom
                 :refresh (:contract-refresh route)}
-         :simple-view [contracts-list e!]}
+         :simple-view [contracts-list]}
         250]]]]))
