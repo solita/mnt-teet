@@ -378,7 +378,6 @@
                         [?a :activity/name :activity.name/construction]
                         :in $ ?p]
                    (tu/db) [:thk.project/id "790"]))]
-    (println "Construction activity-id for 790 project/id is " activity-id)
     (tu/store-data! :construction-activity-id activity-id)
 
     ; Set integration/id for the Construction Activity so, it can be found during importing tasks
@@ -389,12 +388,12 @@
     (let [no-tasks (d/q '[:find ?tasks
                           :where [?e :activity/tasks ?tasks]
                           :in $ ?e] (tu/db) activity-id)]
-      (testing (is (= 0 (count no-tasks))) "No new tasks created after projects import" ))
+      (testing "No new tasks created after projects import" (is (= 0 (count no-tasks))) ))
 
     ; Import new tasks
     (import-tasks-csv!)
 
-    ; Verify new task count
+    ; Verify new tasks count and content
     (let [new-construction-activity-tasks
           (d/q '[:find ?tasks
                  :where [?e :activity/tasks ?tasks]
@@ -405,9 +404,9 @@
                                                      :in $ ?e] (tu/db) activity-id))
           expected-actual-start-date (date/->start-of-date 2022 9 20)
           expected-thk-activity-id "18913"]
-      (println "New Construction Activity tasks: " (ffirst new-construction-activity-tasks))
-      (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported")
-      (testing (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date)))
-        "Actual start date has been imported")
-      (testing (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))
-        "THK Activity ID has been imported"))))
+      (testing "After tasks import 3 new tasks imported"
+        (is (= 3 (count new-construction-activity-tasks))))
+      (testing "Actual start date has been imported"
+        (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date))))
+      (testing "THK Activity ID has been imported"
+        (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))))))
