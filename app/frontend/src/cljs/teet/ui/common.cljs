@@ -489,6 +489,11 @@
    :padding "0.5rem 0.5rem 0.5rem 0"
    :border-right (str "1px solid " theme-colors/gray-lighter)})
 
+(defn info-box-icon-container-style
+  []
+  {:margin-right "0.25rem"
+   :display :flex})
+
 (defn basic-information-column
   "Takes a list of maps with keys [:label :data :key] and displays given data in a table"
   [rows]
@@ -524,8 +529,13 @@
                    {:data-cy cy}))
      [:div {:class [(<class common-styles/flex-align-center)
                     (<class common-styles/margin-bottom 0.5)]}
-      icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]
-     content]))
+      [:div {:class (<class info-box-icon-container-style)}
+       icon]
+      (if title
+        [typography/Heading3 title]
+        content)]
+     (when (and title content)
+       content)]))
 
 (defn popper-tooltip-content [{:keys [variant title body icon]
                         :or {variant :info}}]
@@ -680,6 +690,19 @@
     (fn [_]
       [:span {:ref #(when %
                       (.observe observer %))}])))
+
+(defn tag-style
+  [bg-color]
+  {:color theme-colors/white
+   :display :inline-block
+   :background-color bg-color
+   :padding "1px 5px"
+   :border-radius "2px"})
+
+(defn primary-tag
+  [text]
+  [:div {:class (<class tag-style theme-colors/primary)}
+   [typography/Text3Bold text]])
 
 (defn error-boundary [_child]
   (let [error (r/atom nil)]

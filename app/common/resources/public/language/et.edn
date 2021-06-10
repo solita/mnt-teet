@@ -63,6 +63,7 @@
    :type "Tüüp",
    :all-cost-items "Kõik kuluread",
    :component "Komponent",
+   :all-materials "Kõik materjalid",
    :all-components "Kõik komponendid",
    :material "Materjal",
    :quantity "Kogus",
@@ -241,6 +242,7 @@
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
+  :partner-saved nil,
   :related-contracts "SEOTUD LEPINGUD",
   :thk.contract/type "Tüüp",
   :no-company-found-title nil,
@@ -268,6 +270,7 @@
   :thk.contract.status/completed "Valmis",
   :company-search-label "Ettevõtte otsing",
   :contracts-listing "Lepingute loetelu",
+  :lead-partner nil,
   :edit-contract "Lepingu info",
   :no-company-found-content nil,
   :xroad-exception-title nil,
@@ -859,7 +862,7 @@
   :ta/region "Piirkond",
   :land-owner-opinion/authority-position "Pädeva asutuse seisukoht",
   :location/end-offset-m "Lõpp kaugus teljest",
-  :thk.contract/cost "Kapitali suurus",
+  :thk.contract/cost "Maksumus",
   :cooperation.opinion/status "Ametlik seisukoht",
   :activity/status "Olek",
   :cooperation.contact/id-code "Reg. nr / isikukood",
@@ -885,6 +888,7 @@
   :project/participant "Osaleja",
   :land-acquisition/price-per-sqm "Hind/m²",
   :activity/estimated-start-date "Eeldatav alguskuupäev",
+  :company-contract/lead-partner? nil,
   :estate-procedure/motivation-bonus "Motivatsiooni tasu",
   :task/modified "Muudetud",
   :cooperation.application/type "Taotluse liik",
@@ -1458,7 +1462,7 @@
   "Kas oled kindel, et soovid selle ülesande osa taasavada?",
   :submit-for-approval "Esitan ülevaatamiseks",
   :reject-part "Saada tagasi",
-  :submit-results "Submit results",
+  :submit-results "Esitan tulemused",
   :reject "Saadan tagasi",
   :approve-part "Võta vastu",
   :submit-results-confirm
@@ -1477,7 +1481,8 @@
    :placeholder "Sisestan nime..."},
   :role "Roll",
   :unregistered "Kasutaja"},
- :validation {:invalid-email "Vale emaili aadress"},
+ :validation
+ {:invalid-business-id nil, :invalid-email "Vale emaili aadress"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",

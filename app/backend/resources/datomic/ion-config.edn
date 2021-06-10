@@ -12,6 +12,7 @@
          teet.cooperation.cooperation-tx/delete-application
          teet.cooperation.cooperation-tx/edit-application
          teet.cooperation.cooperation-tx/save-3rd-party
+         teet.contract.contract-tx/update-lead-partner
          teet.util.string/contains-words?
          teet.user.user-tx/set-global-role
          teet.user.user-tx/ensure-unique-email

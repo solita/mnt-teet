@@ -735,6 +735,29 @@
             (filter filter-pred))
            cost-group-totals)]))
 
+(defn filtered-materials-and-products
+  "Returns a structure similar to `filtered-cost-group-totals`. Here the
+  `:ui/group` path is built manually using the material's `:fgroup` and `:fclass`
+  values."
+  [app atl materials-and-products]
+  (let [kw (some-> app (get-in [:query :filter])
+                   cljs.reader/read-string)
+        filter-pred (if kw
+                      #(some (fn [{t :db/ident}] (= t kw))
+                             (:ui/group %))
+                      identity)]
+
+    [(some->> kw (asset-type-library/item-by-ident atl))
+     (into []
+           (comp
+            (map (fn [m]
+                    (assoc m :ui/group
+                           (mapv #(some->> % (asset-type-library/item-by-ident atl))
+                                 ;; Manually build the :ui/group type hierarchy
+                                 [(-> m :fgroup :db/ident)
+                                  (-> m :fclass :db/ident)]))))
+            (filter filter-pred))
+           materials-and-products)]))
 
 (def relevant-road-cache
   "Atom to cache relevant roads by project."

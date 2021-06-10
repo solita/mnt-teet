@@ -732,6 +732,7 @@
   "camera_roll"
   "center_focus_strong"
   "center_focus_weak"
+  "circle"
   "collections"
   "collections_bookmark"
   "color_lens"

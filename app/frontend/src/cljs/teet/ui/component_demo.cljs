@@ -4,6 +4,7 @@
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [herb.core :refer [<class]]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
@@ -22,7 +23,9 @@
             [teet.ui.common :as common-ui]
             [teet.contract.contract-status :as contract-status]
             [teet.contract.contract-common :as contract-common]
-            [teet.ui.table :as table]))
+            [teet.contract.contracts-view :as contracts-view]
+            [teet.ui.table :as table]
+            [teet.common.common-styles :as common-styles]))
 
 
 (defrecord TestFileUpload [files])
@@ -304,7 +307,7 @@
                                      :icon [icons/notification-bluetooth-audio]}]}]])
 
 (defn contract-demo
-  []
+  [e!]
   [:div
    [:h4 {:style {:margin-top "8px"}} "Status"]
    [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
@@ -339,7 +342,7 @@
    [:h4 {:style {:margin-top "24px"}} "External links"]
    [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
     [contract-common/contract-external-links {:thk.contract/procurement-id 1234
-                                              :thk.contract/procurement-number 1234
+                                              :thk.contract/procurement-number "12341234"
                                               :thk.contract/external-link "www.test.test"}]]
    [:h4 {:style {:margin-top "24px"}} "Information row"]
    [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
@@ -350,9 +353,27 @@
                                                :thk.contract/extended-deadline #inst "2021-05-04T00:00:00.000-00:00"
                                                :thk.contract/warranty-end-date #inst "2048-05-08T00:00:00.000-00:00"
                                                :thk.contract/cost "34324"
-                                               :thk.contract/status :thk.contract.status/warranty}]]])
-;type signed-at start-of-work deadline extended-deadline
-;warranty-end-date cost
+                                               :thk.contract/status :thk.contract.status/warranty}]]
+   [:h4 {:style {:margin-top "24px"}} "Quick Filters"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    (r/with-let [shortcut-atom (r/atom :my-contracts)
+                 change-shortcut (fn [new-value]
+                                   (reset! shortcut-atom new-value))
+                 shortcuts [:my-contracts
+                            :all-contracts
+                            :unassigned]]
+      [contracts-view/search-shortcuts {:value @shortcut-atom
+                                        :options shortcuts
+                                        :change-shortcut change-shortcut}])]
+   [:h4 {:style {:margin-top "24px"}} "Filters (this component is contract list specific. Changes are required, if it will be reused)"]
+   [:div
+    (r/with-let [filter-fields [[:road-number {:type :search-field}]
+                                [:project-name {:type :search-field}]
+                                [:contract-name {:type :search-field}]
+                                [:procurement-number {:type :search-field}]]]
+      [contracts-view/filter-inputs {:e! e!
+                                     :filter-input-fields filter-fields
+                                     :filters-visibility? true}])]])
 
 
 (defn simple-table-demo
@@ -384,6 +405,14 @@
       {:key "2"
        :label [:strong "bar"]
        :data [:span "wiuh"]}]]]])
+
+(defn basic-ui-component-demo
+  []
+  [:div
+   [:div {:class (<class common-styles/margin-bottom 2)}
+    [:h1 {:class (<class common-styles/margin-bottom 1)}
+     "Primary tag component: "]
+    [common-ui/primary-tag "Primary tag"]]])
 
 (def demos
   [{:id :context-menu
@@ -428,10 +457,13 @@
    {:id :simple-table
     :heading "simple table"
     :component [simple-table-demo]}
-
    {:id :basic-information-column
     :heading "basic info column demo"
-    :component [basic-information-column-demo]}])
+    :component [basic-information-column-demo]}
+
+   {:id :common-basic-ui-components
+    :heading "basic UI components demo"
+    :component [basic-ui-component-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]

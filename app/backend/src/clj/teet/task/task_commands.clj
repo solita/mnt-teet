@@ -3,6 +3,7 @@
             [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
             [teet.activity.activity-db :as activity-db]
+            [teet.activity.activity-model :as activity-model]
             [teet.meta.meta-model :as meta-model]
             teet.task.task-spec
             [teet.util.collection :as uc]
@@ -184,6 +185,7 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
+   :pre [(task-model/part-completed? (d/pull db [:file.part/status] taskpart-id))]
    :transact (into
                [{:db/id taskpart-id
                  :file.part/status :file.part.status/in-progress}]
@@ -199,6 +201,9 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
+   :pre [(and
+           (activity-model/in-progress? (d/pull db [:activity/status] (task-db/activity-for-task-id db task-id)))
+           (task-model/completed? (d/pull db [:task/status] task-id)))]
    :transact (into
                [{:db/id task-id
                  :task/status :task.status/in-progress}]

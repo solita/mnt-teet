@@ -508,7 +508,9 @@
           (tr [:task :reject-review])]
          [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
           (tr [:task :accept-review])]]])
-     (when (task-model/completed? task)
+     (when (and
+             (activity-model/in-progress? activity)
+             (task-model/completed? task))
        [when-authorized :task/reopen-task task
         [:div.task-reopen-button {:style {:display :flex :justify-content :space-between}}
          [buttons/button-with-confirm
