@@ -31,26 +31,32 @@
          (company-db/business-registry-code-unique?
            db
            (company-model/company-business-registry-id-with-country-code form-data))]}
-  ;; TODO retract lead partner info if new info arrives
-  (let [form-data (-> (select-keys form-data [:company/country :company/emails :company/phone-numbers
-                                              :company/business-registry-code :company/name])
-                      (assoc :company/business-registry-code
-                             (company-model/company-business-registry-id-with-country-code form-data)))
+  (let [company-fields (-> (select-keys form-data [:company/country :company/emails :company/phone-numbers
+                                                   :company/business-registry-code :company/name])
+                           (assoc :company/business-registry-code
+                                  (company-model/company-business-registry-id-with-country-code form-data)))
         contract-eid (:db/id contract)
-        #_#_lead-partner? (:company-contract/lead-partner? form-data)
+        lead-partner? (:company-contract/lead-partner? form-data)
         new-company-contract-id (UUID/randomUUID)
+        new-company-id "new-company"
         tempids
-        (:tempids (tx [(merge
-                         {:db/id "new-company"
-                          :teet/id (UUID/randomUUID)}
-                         form-data
-                         (meta-model/creation-meta user))]
-                      [(merge
-                         {:db/id "new-company-contract"
-                          :company-contract/company "new-company"
-                          :company-contract/contract contract-eid
-                          :teet/id new-company-contract-id}
-                         (meta-model/creation-meta user))]))]
+        (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
+                             contract-eid
+                             lead-partner?
+                             new-company-id
+                             [(merge
+                                {:db/id new-company-id
+                                 :teet/id (UUID/randomUUID)}
+                                company-fields
+                                (meta-model/creation-meta user))
+                              (merge
+                                {:db/id "new-company-contract"
+                                 :company-contract/company new-company-id
+                                 :company-contract/contract contract-eid
+                                 :teet/id new-company-contract-id}
+                                (when lead-partner?
+                                  {:company-contract/lead-partner? true})
+                                (meta-model/creation-meta user))])]))]
      (merge tempids
             {:company-contract-id new-company-contract-id})))
 
@@ -68,13 +74,17 @@
         contract-eid (:db/id contract)
         lead-partner? (:company-contract/lead-partner? form-data)
         new-company-contract-id (UUID/randomUUID)
-        tempids (:temids (tx [(merge {:db/id "new-company-contract"
-                                      :teet/id new-company-contract-id
-                                      :company-contract/company company-id
-                                      :company-contract/contract contract-eid}
-                                     (meta-model/creation-meta user)
-                                     (when lead-partner?
-                                       {:company-contract/lead-partner? true}))]))]
+        tempids (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
+                                     contract-eid
+                                     lead-partner?
+                                     company-id
+                                     [(merge {:db/id "new-company-contract"
+                                              :teet/id new-company-contract-id
+                                              :company-contract/company company-id
+                                              :company-contract/contract contract-eid}
+                                             (meta-model/creation-meta user)
+                                             (when lead-partner?
+                                               {:company-contract/lead-partner? true}))])]))]
     (merge tempids
            {:company-contract-id new-company-contract-id})))
 

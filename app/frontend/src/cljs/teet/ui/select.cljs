@@ -715,5 +715,6 @@
    [form-select (merge
                   opts
                   {:format-item #(tr [:countries %])
-                   :items (-> (tr-tree [:countries])
-                              keys)})]])
+                   :items (->> (tr-tree [:countries])
+                               keys
+                               (sort-by #(tr [:countries %])))})]])

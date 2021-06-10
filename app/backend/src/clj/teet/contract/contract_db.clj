@@ -202,3 +202,16 @@
             project-eid
             (Date.))
        (mapv contract-with-status)))
+
+(defn contract-lead-partner-entities
+  "Fetch contracts lead partner company id and contract-company id"
+  [db contract-id]
+  (->> (d/q '[:find ?company ?cc
+              :where
+              [?cc :company-contract/contract ?contract]
+              [?cc :company-contract/lead-partner? true]
+              [?cc :company-contract/company ?company]
+              :in $ ?contract]
+            db contract-id)
+       first))
+
