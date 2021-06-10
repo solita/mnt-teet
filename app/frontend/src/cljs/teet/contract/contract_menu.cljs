@@ -22,7 +22,7 @@
           :hotkey "1"}]]
     (if (common-controller/feature-enabled? :contract-partners)
       (conj menu-items {:name :contract-partners
-                        :label [:contract :partner-information]
+                        :label [:contract :partners :title]
                         :navigate {:page :contract-partners}
                         :href-fn #(str "#/contracts/" % "/partners")
                         :hotkey "2"})

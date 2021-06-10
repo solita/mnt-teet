@@ -218,7 +218,7 @@
   :select-all "Valin kõik",
   :hotkey "klahv {key}",
   :total "Kokku",
-  :contract-menu "Lepingud",
+  :contract-menu "Lepingu menüü",
   :language "Keel",
   :filter-shortcuts "Filtri otseteed",
   :unassigned "Määramata",
@@ -238,14 +238,15 @@
  :contract
  {:no-targets-for-contract
   "Lepingu integreerimine ei õnnestunud ja sellel lepingul pole kehtivaid eesmärke.\nVeateate saamiseks pöörduge administratsiooni poole",
-  :partner-information-text nil,
+  :partner-information-text
+  "Valige või lisage vasakust menüüst uus ettevõtte, alltöövõtja või isik.",
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
-  :partner-saved nil,
+  :partner-saved "Lepingu partner on lisatud",
   :related-contracts "SEOTUD LEPINGUD",
   :thk.contract/type "Tüüp",
-  :no-company-found-title nil,
+  :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
@@ -253,6 +254,7 @@
   :add-company-not-in-teet "Lisa uus ettevõtte",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
+  :partners {:title nil},
   :add-company "Lisa ettevõtte",
   :status "Staatus",
   :table-heading
@@ -263,18 +265,21 @@
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
-  :xroad-exception-content nil,
+  :xroad-exception-content
+  "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :partners-listing "Partnerite loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Valmis",
   :company-search-label "Ettevõtte otsing",
   :contracts-listing "Lepingute loetelu",
-  :lead-partner nil,
+  :lead-partner "Juhtpartner",
   :edit-contract "Lepingu info",
-  :no-company-found-content nil,
-  :xroad-exception-title nil,
-  :search-companies-business-registry nil,
+  :no-company-found-content
+  "Äriregistri koodile vastavat ettevõtet ei leitud.",
+  :xroad-exception-title "X-tee päring nurjus",
+  :search-companies-business-registry
+  "Ettevõtte informatsiooni otsing  äriregistrist",
   :thk.contract.status/in-progress "Töös"},
  :contracts
  {:contracts-list
@@ -499,7 +504,7 @@
   :task.status/canceled "Tühistatud",
   :land-owner-opinion.type/design-conditions-draft
   "Projekteerimistingimuste eelnõu",
-  :file.status/returned "Tagasi saadetud",
+  :file.status/returned "Tagasi lükatud",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
   :task.type/funding-plan "Rahastustaotlus",
@@ -646,7 +651,7 @@
   :estate-procedure.type/property-rights "Kasutusõiguse seadmine",
   :document.sub-category/drawing "Joonis",
   :ta.region/south "Lõuna",
-  :file.status/submitted "Salvestatud",
+  :file.status/submitted "Esitatud",
   :task.type/traffic-study "Liiklusuuring",
   :task.status/accepted "Aktsepteeritud",
   :cooperation.application.response-type/other "Muu",
@@ -1482,7 +1487,8 @@
   :role "Roll",
   :unregistered "Kasutaja"},
  :validation
- {:invalid-business-id nil, :invalid-email "Vale emaili aadress"},
+ {:invalid-business-id "Vale äriregistri kood",
+  :invalid-email "Vale emaili aadress"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",

@@ -220,7 +220,7 @@
   :select-all "Select all",
   :hotkey "key {key}",
   :total "Total",
-  :contract-menu "Contracts",
+  :contract-menu "Contract menu",
   :language "Language",
   :filter-shortcuts "Filter shortcuts",
   :unassigned "Unassigned",
@@ -241,7 +241,7 @@
  {:no-targets-for-contract
   "Contract integration failed and this contract doesn't have any valid targets. Contact administration for a bug report",
   :partner-information-text
-  "Please select or add new companies, subcontractors or persons from the left menu.",
+  "Please select or add new company, subcontractor or person from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
   :company-search-placeholder "Enter company name or business id",
   :partner-saved "Contract partner added",
@@ -255,6 +255,7 @@
   :add-company-not-in-teet "Add a company not in TEET",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
+  :partners {:title "Companies & persons"},
   :add-company "Add company",
   :status "Status",
   :table-heading
@@ -1471,7 +1472,7 @@
   :submit-results-confirm
   "Are you sure you wish to submit this task part for review?",
   :approve-part-confirm "Are you sure you wish approve the task part?",
-  :accept "Agreed",
+  :accept "Agree",
   :reject-part-confirm
   "Are you sure you wish to send back the task part?"},
  :unit-info {:owners-opinions "Land owners opinions"},
