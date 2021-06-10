@@ -144,7 +144,8 @@
                            db))]
     (log/info "Update entity info for all" (count projects) "projects.")
     (project-geometry/update-project-geometries!
-     (select-keys ctx [:api-url :api-secret :wfs-url])
+     (merge {:delete-stale-projects? true}
+            (select-keys ctx [:wfs-url]))
      projects)
     ctx))
 
