@@ -140,44 +140,43 @@
                                                                             all-parts)})
     (when (some? all-groups) {:group-label "Document groups" :group-items all-groups})]))
 
-(defn- str->int [s] (when (= s (str (js/parseInt s))) (js/parseInt s)))
+(defn str->int [s] (when (= s (str (js/parseInt s))) (js/parseInt s)))
 
 (defn file-search
   "Given original parts and files passes searched files and parts to component view"
-  [files parts file-component]                       ;; if files/parts change
+  [files parts file-component]
   (r/with-let [search-term (r/atom "")
                on-change #(let [val (-> % .-target .-value)]
                             (reset! search-term val))
                selected-filter-id (r/atom "")
                change-part #(reset! selected-filter-id %)]
-              (let [selected-part (when (number? (str->int @selected-filter-id)) @selected-filter-id)
-                    selected-group (when (string? @selected-filter-id) @selected-filter-id)]
-               [:div
-                [:div {:class [(<class common-styles/flex-row)
-                               (<class common-styles/margin-bottom 1)]}
-                 [TextField {:value @search-term
-                             :style {:margin-right "1rem"
-                                     :flex 1}
-                             :placeholder (tr [:file :filter-file-listing])
-                             :start-icon icons/action-search
-                             :on-change on-change}]
-                 [:div {:style {:flex 1}}
-                  [select/form-select-grouped {:items (get-parts-and-groups files parts)
-                                       :format-item (fn [x] (:item-name x))
-                                       :on-change change-part
-                                       :value @selected-filter-id
-                                       :empty-selection-label (tr [:file :all-parts])
-                                       :show-empty-selection? true}]]]
-                (conj
-                  file-component
-                  (filterv
-                    (fn [{:file/keys [name] :as file}]
-                      (and
-                        (str/includes? (str/lower-case name) (str/lower-case @search-term))
-                        file))
-                    files)
-                  parts
-                  selected-part)])))
+    (let [selected-part (if (empty? @selected-filter-id) nil @selected-filter-id)]
+      [:div
+       [:div {:class [(<class common-styles/flex-row)
+                      (<class common-styles/margin-bottom 1)]}
+        [TextField {:value @search-term
+                    :style {:margin-right "1rem"
+                            :flex 1}
+                    :placeholder (tr [:file :filter-file-listing])
+                    :start-icon icons/action-search
+                    :on-change on-change}]
+        [:div {:style {:flex 1}}
+         [select/form-select-grouped {:items (get-parts-and-groups files parts)
+                                      :format-item (fn [x] (:item-name x))
+                                      :on-change change-part
+                                      :value @selected-filter-id
+                                      :empty-selection-label (tr [:file :all-parts])
+                                      :show-empty-selection? true}]]]
+       (conj
+         file-component
+         (filterv
+           (fn [{:file/keys [name] :as file}]
+             (and
+               (str/includes? (str/lower-case name) (str/lower-case @search-term))
+               file))
+           files)
+         parts
+         selected-part)])))
 
 (defn file-comments-text
   [{:comment/keys [counts] :as file}]
