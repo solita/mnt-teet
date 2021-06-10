@@ -735,22 +735,30 @@
             (filter filter-pred))
            cost-group-totals)]))
 
-(defn material-used-in-fgroup-fclass-or-ctype? [fgroup-or-fclass material]
+(defn material-used-in-fgroup-fclass-or-ctype?
+  "Is the material used for the given feature group, feature class or
+  component type? It is used if there is a component in the project that
+  - is of the given component type or
+  - the component belongs to the given feature class or feature group"
+  [fgroup-fclass-or-ctype material]
   (->> material
        :component/_materials
        (map (comp (partial map :db/ident)
                   (juxt :fgroup :fclass :component/ctype)))
-       (some (partial some (partial = fgroup-or-fclass)))))
+       (some (partial some (partial = fgroup-fclass-or-ctype)))))
 
-(defn remove-nonmatching-components [fgroup-or-fclass material]
-  (if (nil? fgroup-or-fclass)
+(defn remove-nonmatching-components
+  "Removes components that don't belong to the given feature group,
+  feature class or component type"
+  [fgroup-fclass-or-ctype material]
+  (if (nil? fgroup-fclass-or-ctype)
     material
     (update material
            :component/_materials
            #(filter (fn [component]
                       (->> ((juxt :fgroup :fclass :component/ctype) component)
                            (map :db/ident)
-                           (some (partial = fgroup-or-fclass))))
+                           (some (partial = fgroup-fclass-or-ctype))))
                     %))))
 
 (defn filtered-materials-and-products
