@@ -98,6 +98,7 @@
 (defrecord RPC [rpc-effect-params])
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
+(defrecord NavigateWithExistingAsDefault [page params query])
 (defrecord NavigateWithSameParams [page])
 (defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
 (defrecord ResponseError [err]) ; handle errors in HTTP response
@@ -115,6 +116,12 @@
   (process-event [_ app]
     ;; Update the refresh indicator value so query component will force a refetch
     (refresh-page app)))
+
+(defrecord RefreshReview []
+  t/Event
+  (process-event [_ app]
+    ;; Update the refresh indicator value so query component will force a refetch
+    (refresh-page (dissoc app :task-review-started?))))
 
 (def refresh-fx
   "Tuck effect that refreshes the current page state from database."
@@ -141,8 +148,8 @@
 
 (defn default-server-error-handler [err app]
   (snackbar-controller/open-snack-bar app (tr-or [:error (-> err ex-data :error)]
-                                                 [:error :server-error]
-                                                 "error")
+                                                 (or (-> err ex-data :error-message)
+                                                     [:error :server-error]))
                                       :error))
 
 (defmethod on-server-error :default [err app]
@@ -215,6 +222,15 @@
                     (dissoc query param)
                     (assoc query param value))}))
 
+  NavigateWithExistingAsDefault
+  (process-event [{new-page :page new-params :params new-query :query} {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page (or new-page page)
+           :params (or new-params params)
+           :query (or new-query query)}))
+
+
   ResponseError
   (process-event [{err :err} app]
     (on-server-error err app))
@@ -244,11 +260,16 @@
         response)
 
       (throw (ex-info "Request failure"
-                      {:error (or (some-> response
-                                          .-headers
-                                          (.get "X-TEET-Error")
-                                          keyword)
-                                  :unknown-server-error)})))))
+                      (merge
+                       {:error (or (some-> response
+                                           .-headers
+                                           (.get "X-TEET-Error")
+                                           keyword)
+                                   :unknown-server-error)}
+                       (when-let [msg (some-> response .-headers
+                                              (.get "X-TEET-Error-Message")
+                                              js/decodeURIComponent)]
+                         {:error-message msg})))))))
 
 (defn catch-response-error [e! error-event]
   (fn [err]
@@ -311,7 +332,7 @@
 
 (def ^:private default-fetch-timeout-ms 30000)
 
-(defn- fetch*
+(defn fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns a Promise yielding a response data or app-state map."
   [e! error-event & [url authless-arg-map-js fetch-timeout-ms]]
@@ -535,9 +556,12 @@
                (apply update-fn page-state args))))
 
 (defn assoc-page-state
-  "Assoc value to current page state."
-  [{page :page :as app} path value]
-  (assoc-in app (into [:route page] path) value))
+  "Assoc value(s) to current page state."
+  [{page :page :as app} & paths-and-values]
+  (reduce (fn [app [path value]]
+            (assoc-in app (into [:route page] path) value))
+          app
+          (partition 2 paths-and-values)))
 
 (defn page-state
   "Get the state of the current page.
@@ -640,11 +664,11 @@
   t/Event
   (process-event [_ app]
     (t/fx app
-      {:tuck.effect/type :command!
-       :command command
-       :payload form-data
-       :success-message confirmation-message
-       :result-event (partial ->SaveFormResponse on-success-fx)})))
+          {:tuck.effect/type :command!
+           :command command
+           :payload form-data
+           :success-message confirmation-message
+           :result-event (partial ->SaveFormResponse on-success-fx)})))
 
 
 (defn ^:export test-command

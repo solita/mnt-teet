@@ -14,7 +14,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [clojure.string :as cstr]))
 
 (defn notification-badge-style
   []
@@ -37,7 +38,11 @@
 (defn- notification-icon [type]
   (case (:db/ident type)
     :notification.type/task-waiting-for-review [icons/action-assignment]
+    :notification.type/task-part-waiting-for-review [icons/action-assignment]
+    :notification.type/task-part-review-accepted [icons/action-thumb-up]
+    :notification.type/task-part-review-rejected [icons/action-thumb-down]
     :notification.type/task-assigned [icons/action-assignment-ind]
+    :notification.type/task-review-rejected [icons/action-thumb-down]
     :notification.type/activity-waiting-for-review [icons/action-assignment]
     :notification.type/comment-created [icons/communication-comment]
     :notification.type/comment-resolved [icons/action-check-circle-outline]
@@ -65,6 +70,14 @@
 
 (defn- mark-all-read-link-style []
   {:float :right})
+
+(defn- is-task-part-notification?
+  "Checks if the notification type is task-part as these require additional part name in the message"
+  [notification-type]
+  (or
+    (du/enum= notification-type :notification.type/task-part-waiting-for-review)
+    (du/enum= notification-type :notification.type/task-part-review-accepted)
+    (du/enum= notification-type :notification.type/task-part-review-rejected)))
 
 (defn- grouped-notifications
   "Return notifications grouped by project with groups sorted by latest timestamp."
@@ -119,6 +132,7 @@
              (doall
                (for [{:notification/keys [type status]
                       :meta/keys [created-at]
+                      task-part-name :notification/target
                       id :db/id} notifications]
                  ^{:key id}
                  [MenuItem {:class (<class notification-style (du/enum= status :notification.status/acknowledged))
@@ -139,7 +153,12 @@
                    (notification-icon type)]
                   [ListItemText {:disable-typography true}
                    [:div
-                    (tr-enum type)]
+                    (if (is-task-part-notification? type)
+                      (tr [:enum (:db/ident type)] {:task-part-name (str "#" (:file.part/number task-part-name)
+                                                                         (if (cstr/blank? (:file.part/name task-part-name))
+                                                                           ""
+                                                                           (str " \"" (:file.part/name task-part-name) "\"")))})
+                      (tr-enum type))]
                    [:div
                     [typography/SmallGrayText
                      (format/date-time created-at)]]]]))])

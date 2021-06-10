@@ -104,4 +104,46 @@ describe("Task files", function() {
         cy.get(".file-identifying-info[data-version=2]").should("exist")
     })
 
+    it("Test if task part can be reviewed", function() {
+        cy.dummyLogin("Danny")
+        cy.visit(this.taskURL)
+
+        // Add file part
+        cy.get("[data-cy=task-add-file-part]", {timeout:2000}).click()
+        cy.get("input[id=task-part-name]").type("Test-Part-1")
+        cy.get("button[type=submit]", {timeout:1000}).click()
+
+        cy.get("[id^=tp-upload-", {timeout:1000}).click()
+        cy.uploadFile({inputSelector: "input[id=files-field]",
+            fixturePath: "text_file.jpg",
+            mimeType: "image/jpeg",
+            fileName: "testpicture.jpeg"})
+
+        cy.get("button[type=submit]").click()
+
+        cy.get("[data-file-description=testpicture]", {timeout: 30000}).should("exist")
+
+        // Add Danny as responsible person
+        cy.get("[id=edit-task-button").click()
+        cy.get("[id=select-user]").type("Danny")
+        cy.get("[class=select-user-list", {timeout:3000}).first().click()
+        cy.get("button[type=submit]").click()
+
+        cy.get("[id^=submit-button-", {timeout: 5000}).click({force:true})
+        cy.get("button[id=confirmation-confirm]").click()
+
+        cy.get("[id^=accept-button-", {timeout: 5000}).click()
+        cy.get("button[id=confirmation-confirm]").click()
+
+        cy.get("[id^=reopen-button-", {timeout: 3000}).click()
+        cy.get("button[id=confirmation-confirm]").click()
+
+        cy.get("[id^=submit-button-", {timeout: 3000}).click()
+        cy.get("button[id=confirmation-confirm]").click()
+
+        cy.get("[id^=reject-button-", {timeout: 3000}).click()
+        cy.get("button[id=confirmation-confirm]").click()
+
+    })
+
 })

@@ -50,6 +50,21 @@
      (d/sync conn (get-in import-contract-result [:db-after :t]))
      import-contract-result)))
 
+(defn import-tasks-csv!
+  ([] (import-tasks-csv! (.getBytes (slurp "test/teet/thk/thk-test-data.csv"))))
+  ([csv-data]
+   (let [conn (tu/connection)
+         projects
+         (thk-import/parse-thk-export-csv
+           {:input (java.io.ByteArrayInputStream.
+                     csv-data)
+            :column-mapping thk-mapping/thk->teet-project
+            :group-by-fn #(get % :thk.project/id)})
+         import-tasks-result (thk-import/import-thk-tasks! conn "test://test-csv" projects)]
+     (tu/store-data! :projects-csv projects)
+     (d/sync conn (get-in import-tasks-result [:db-after :t]))
+     import-tasks-result)))
+
 (defn ->csv-data [csv]
   (:file (thk-integration-ion/csv->file {:csv csv})))
 
@@ -86,14 +101,14 @@
   (testing "THK -> TEET import"
     (import-projects-csv!)
     (import-contracts-csv!)
-    (is (= 7 (count (tu/get-data :projects-csv))))
+    (is (= 8 (count (tu/get-data :projects-csv))))
 
     (testing "Imported projects information is correct"
       (let [db (tu/db)]
         (testing "All non-excluded projects are found by id after import"
           ;; Also note that 66666, a TUGI project, is not present
           (is (=
-               #{"11111" "22222" "33333" "44444" "55555" "77777"}
+               #{"11111" "22222" "33333" "44444" "55555" "77777" "790"}
                (into #{}
                      (map first)
                      (d/q '[:find ?id
@@ -256,7 +271,7 @@
           activity-ids (into #{}
                              (map #(get % "activity_id")
                                   rows))]
-      (is (= #{"" "6000" "5488" "6594" "5455"} activity-ids)
+      (is (= #{"" "6000" "5488" "6594" "5455" "896" "897"} activity-ids)
           "rows have all allowed THK activity ids and empty")
       (is (not (activity-ids "15906"))
           "THK activity 15906 is not present, as it's type is land acquisition, one of the types not sent to THK")))
@@ -349,3 +364,38 @@
                          (tu/get-data :export-rows))]
       (println "activity teet del stamp: " row)
       (is (some? activity_teetdelstamp) "Activity deletion stamp is present"))))
+
+(deftest add-tasks-from-thk-activities
+  (import-projects-csv!)
+  ; Store the Construction activity-id of project 790
+  (let [activity-id (ffirst
+                 (d/q '[:find ?a
+                        :where
+                        [?p :thk.project/lifecycles ?l]
+                        [?l :thk.lifecycle/activities ?a]
+                        [?a :activity/name :activity.name/construction]
+                        :in $ ?p]
+                   (tu/db) [:thk.project/id "790"]))]
+    (println "Construction activity-id for 790 project/id is " activity-id)
+    (tu/store-data! :construction-activity-id activity-id)
+
+    ; Set integration/id for the Construction Activity so, it can be found during importing tasks
+    (tu/tx {:db/id (-> :construction-activity-id tu/get-data tu/entity :db/id)
+            :integration/id #uuid "00000000-0000-0000-2D60-CC14A81144C6"})
+
+    ; Check no tasks belongs to Construction Activity of 790 project before tasks import
+    (let [no-tasks (d/q '[:find ?tasks
+                          :where [?e :activity/tasks ?tasks]
+                          :in $ ?e] (tu/db) activity-id)]
+      (testing (is (= 0 (count no-tasks))) "No new tasks created after projects import" ))
+
+    ; Import new tasks
+    (import-tasks-csv!)
+
+    ; Verify new task count
+    (let [new-construction-activity-tasks
+          (d/q '[:find ?tasks
+                 :where [?e :activity/tasks ?tasks]
+                 :in $ ?e] (tu/db) activity-id)]
+      (println "New Construction Activity tasks: " new-construction-activity-tasks)
+      (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported"))))

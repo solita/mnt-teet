@@ -3,6 +3,7 @@
             [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
             [teet.activity.activity-db :as activity-db]
+            [teet.activity.activity-model :as activity-model]
             [teet.meta.meta-model :as meta-model]
             teet.task.task-spec
             [teet.util.collection :as uc]
@@ -12,8 +13,7 @@
             [clojure.spec.alpha :as s]
             [teet.task.task-db :as task-db]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.environment :as environment]))
+            [teet.db-api.db-api-large-text :as db-api-large-text]))
 
 (defn allow-delete?
   "Check extra access for deleting task that has been sent to THK"
@@ -63,6 +63,36 @@
        :project project})
     {}))
 
+(defn review-notification-tx
+  [db from role target type task-id]
+  (if-let [to (case role
+                :assignee (task-db/get-task-assignee-by-id db task-id)
+                :manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id)))]
+    (notification-db/notification-tx
+      db
+      {:from from
+       :to to
+       :target target
+       :type type
+       :project (project-db/task-project-id db task-id)})
+    {}))
+
+(defn taskpart-file-tx
+  [db user taskpart-id status]
+  (for [{id :db/id} (task-db/task-part-file-listing db user taskpart-id)]
+    {:db/id id
+     :file/status status}))
+
+(defn not-reviewed-files-and-parts-tx
+  "Updates the task part and file status under this task that have not been separately reviewed/completed."
+  [db user task-id file-status part-status]
+  (concat (for [{id :db/id} (task-db/not-reviewed-task-files db user task-id)]
+            {:db/id id
+             :file/status file-status})
+          (for [pid (task-db/not-reviewed-file-parts db task-id)]
+            {:db/id (first pid)
+             :file.part/status part-status})))
+
 (defcommand :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
@@ -104,17 +134,80 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/submit-results {:eid task-id
                                          :link :task/assignee}} ;; TODO add pre check to check that the task being submitted contains files
-   :transact [{:db/id task-id
-               :task/status :task.status/waiting-for-review}
-              (if-let [manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id))]
-                (notification-db/notification-tx
-                  db
-                  {:from user
-                   :to manager
-                   :target task-id
-                   :type :notification.type/task-waiting-for-review
-                   :project (project-db/task-project-id db task-id)})
-                {})]})
+   :transact (into
+               [{:db/id task-id
+                 :task/status :task.status/waiting-for-review}
+                (review-notification-tx db user :manager task-id :notification.type/task-waiting-for-review task-id)]
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/waiting-for-review))})
+
+(defcommand :task/review-task-part
+  {:doc "Submit task part for review and approve/reject."
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             taskpart-id :taskpart-id
+             result :result}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/review {:eid task-id
+                                 :link :task/assignee}}
+   :transact
+   (case result
+     :accept (into
+               [(merge {:db/id taskpart-id
+                        :file.part/status :file.part.status/completed}
+                       (task-db/task-part-completion-attributes user))
+                (review-notification-tx db user :assignee taskpart-id :notification.type/task-part-review-accepted task-id)]
+               (taskpart-file-tx db user taskpart-id :file.status/final))
+     :reject (into
+               [{:db/id taskpart-id
+                 :file.part/status :file.part.status/in-progress}
+                (review-notification-tx db user :assignee taskpart-id :notification.type/task-part-review-rejected task-id)]
+               (taskpart-file-tx db user taskpart-id :file.status/returned)))})
+
+(defcommand :task/submit-task-part
+  {:doc "Submit task part for review and approve/reject."
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             taskpart-id :taskpart-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/submit-results {:eid task-id
+                                 :link :task/assignee}}
+   :transact (into
+               [{:db/id taskpart-id
+                 :file.part/status :file.part.status/waiting-for-review}
+                (review-notification-tx db user :manager taskpart-id :notification.type/task-part-waiting-for-review task-id)]
+               (taskpart-file-tx db user taskpart-id :file.status/submitted))})
+
+(defcommand :task/reopen-task-part
+  {:doc "Reopen task part"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             taskpart-id :taskpart-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/reopen {:eid task-id
+                                 :link :task/assignee}}
+   :pre [(task-model/part-completed? (d/pull db [:file.part/status] taskpart-id))]
+   :transact (into
+               [{:db/id taskpart-id
+                 :file.part/status :file.part.status/in-progress}]
+               (concat
+                 [[:db/retract taskpart-id :file.part/completed-at]
+                  [:db/retract taskpart-id :file.part/completed-by]]
+                 (taskpart-file-tx db user taskpart-id :file.status/draft)))})
+
+(defcommand :task/reopen-task
+  {:doc "Reopen task"
+   :context {:keys [db user]}
+   :payload {task-id :task-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/reopen {:eid task-id
+                                 :link :task/assignee}}
+   :pre [(and
+           (activity-model/in-progress? (d/pull db [:activity/status] (task-db/activity-for-task-id db task-id)))
+           (task-model/completed? (d/pull db [:task/status] task-id)))]
+   :transact (into
+               [{:db/id task-id
+                 :task/status :task.status/in-progress}]
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/draft :file.part.status/in-progress))})
 
 (defcommand :task/create-part
   {:doc "Create a new 'part' aka folder for files to be put in"
@@ -125,7 +218,7 @@
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}
    :transact [(list 'teet.file.file-tx/create-task-file-part
-                    task-id part-name)]})
+                    user task-id part-name)]})
 
 (defcommand :task/edit-part
   {:doc "Edit the name of an existing part"
@@ -158,8 +251,22 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
    :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))]
-   :transact [{:db/id task-id
-               :task/status :task.status/reviewing}]})
+   :transact (into
+               [{:db/id task-id
+                 :task/status :task.status/reviewing}]
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/reviewing))})
+
+(defcommand :task/start-task-part-review
+  {:doc "Start review for task part."
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             task-part-id :taskpart-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/review {:id task-id}}
+   :pre [(task-model/part-waiting-for-review? (d/pull db [:file.part/status] task-part-id))]
+   :transact (into
+               [{:db/id task-part-id
+                 :file.part/status :file.part.status/reviewing}])})
 
 (s/def ::task-id integer?)
 (s/def ::result #{:accept :reject})
@@ -179,20 +286,12 @@
      :accept (into
                [{:db/id task-id
                  :task/status :task.status/completed}]
-
                ;; Mark all latest versions as final
-               (for [{id :db/id} (task-db/task-file-listing db user task-id)]
-                 {:db/id id
-                  :file/status :file.status/final}))
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/final :file.part.status/completed))
 
      ;; Reject: mark as in-progress and notify assignee
-     :reject [{:db/id task-id
-               :task/status :task.status/in-progress}
-              (notification-db/notification-tx
-                db
-                {:from user
-                 :to (get-in (du/entity db task-id)
-                             [:task/assignee :db/id])
-                 :type :notification.type/task-review-rejected
-                 :target task-id
-                 :project (project-db/task-project-id db task-id)})])})
+     :reject (into
+               [{:db/id task-id
+                 :task/status :task.status/in-progress}
+                (review-notification-tx db user :assignee task-id :notification.type/task-review-rejected task-id)]
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/returned :file.part.status/in-progress)))})

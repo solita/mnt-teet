@@ -6,7 +6,8 @@
             [teet.util.datomic :as du]
             [datomic.ion :as ion]
             [teet.meta.meta-model :as meta-model]
-            [teet.task.task-db :as task-db]))
+            [teet.task.task-db :as task-db]
+            [taoensso.timbre :as log]))
 
 (defn ensure-unique-metadata
   "Check that metadata will remain unique after transacting the given
@@ -27,13 +28,14 @@
 (defn upload-file-to-task
   "Upload file to task. Takes tx data and resolves the part.
   Creates new file part if needed."
-  [db task-file-tx]
+  [db user task-file-tx]
   (ensure-unique-metadata
    db (:db/id task-file-tx)
    (if-let [part (get-in task-file-tx [:task/files 0 :file/part])]
      ;; Contains a part reference, get or create the part
      (let [task-id (:db/id task-file-tx)
            part-number (:file.part/number part)
+           part-status (:file.part/status part)
            part-id (when (and part-number (not= 0 part-number))
                      (ffirst
                       (d/q '[:find ?part
@@ -50,11 +52,16 @@
          [(assoc-in task-file-tx [:task/files 0 :file/part]
                     (if part-id
                       ;; Existing part, just refer to it
-                      {:db/id part-id}
+                      (merge
+                       {:db/id part-id}
+                       (when (du/enum= part-status :file.part.status/not-started)
+                         {:file.part/status :file.part.status/in-progress}))
                       ;; New part, create it
                       (merge {:file.part/name ""}
                              (cu/without-nils (select-keys part [:file.part/name :file.part/number]))
+                             (meta-model/creation-meta user)
                              {:db/id "new-part"
+                              :file.part/status :file.part.status/in-progress
                               :file.part/task task-id})))]))
 
      ;; No part, return tx data as is
@@ -62,11 +69,14 @@
 
 (defn create-task-file-part
   "Create a new file part for the given task."
-  [db task-id part-name]
-  [{:db/id "new-part"
-    :file.part/task task-id
-    :file.part/name (or part-name "")
-    :file.part/number (file-db/next-task-part-number db task-id)}])
+  [db user task-id part-name]
+  [(merge
+     (meta-model/creation-meta user)
+     {:db/id "new-part"
+      :file.part/task task-id
+      :file.part/name (or part-name "")
+      :file.part/number (file-db/next-task-part-number db task-id)
+      :file.part/status :file.part.status/not-started})])
 
 (defn remove-task-file-part
   "Mark a task file part as deleted if it doesn't have any files"

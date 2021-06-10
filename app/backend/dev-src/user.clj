@@ -8,7 +8,8 @@
             [clojure.string :as str]
             [clojure.walk :as walk]
             [datomic.dev-local :as dl]
-            [cognitect.aws.client.api :as aws])
+            [cognitect.aws.client.api :as aws]
+            [teet.log :as log])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -56,6 +57,12 @@
   [& maps]
   (d/transact (environment/datomic-connection)
               {:tx-data (into [] maps)}))
+
+(defn atx
+  "Transact given maps to asset db"
+  [& maps]
+  (d/transact (asset-connection)
+              {:xt-data (into [] maps)}))
 
 (def mock-users tu/mock-users)
 
@@ -418,7 +425,8 @@
             (.get c java.util.Calendar/DATE))))
 
 (defn import-current-cloud-dbs
-  "Import current teet and asset databases from dev"
+  "Import current teet and asset databases from dev.
+  See backend/README.md for usage instructions."
   []
   (let [c (aws/client {:api :ssm})
         {cloud-teet-db-name "/teet/datomic/db-name"
@@ -442,3 +450,18 @@
       (println "\nImporting asset db")
       (import-cloud cloud-asset-db-name local-asset-db-name)
       (println "\nDone. Remember to change config.edn to use new databases."))))
+
+(def ^:dynamic *time-level* 0)
+(defmacro time-with-name [name expr]
+  `(binding [*time-level* (inc *time-level*)]
+     (let [n# ~name
+           start# (System/currentTimeMillis)]
+       (try
+         ~expr
+         (finally
+           (println "TIME" (apply str (repeat *time-level* "--")) n# ": "
+                    (- (System/currentTimeMillis) start#) "msecs"))))))
+
+
+(defn log-level! [level]
+  (log/merge-config! {:level level}))

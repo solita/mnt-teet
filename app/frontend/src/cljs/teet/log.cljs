@@ -12,11 +12,13 @@
 (defrecord LogFrontendError [error]
   t/Event
   (process-event [{:keys [error]} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command :logging/log-error
-           :payload error
-           :result-event ->NoOp})))
+    (if (= "localhost" js/window.location.hostname)
+      app
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :logging/log-error
+             :payload error
+             :result-event ->NoOp}))))
 
 (defn- ->error [event]
   {:message (.-message event)

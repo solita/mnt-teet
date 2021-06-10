@@ -34,9 +34,10 @@
      side-component)])
 
 (defn collapsible-container
-  [{:keys [open? container-attrs] :as opts} heading contents]
-  [:div (merge {:class (<class container-theme/container)}
-               container-attrs)
+  [{:keys [open? container-attrs container-class collapsible-class class ] :as opts} heading contents]
+  [:div (merge {:class [class (<class container-theme/container)]}
+          container-attrs)
    [collapsible-container-heading opts heading]
-   [Collapse {:in (boolean open?)}
+   [Collapse {:class collapsible-class
+              :in (boolean open?)}
     contents]])

@@ -4,7 +4,8 @@
             [teet.util.collection :as cu]
             [clojure.string :as str]
             [teet.contract.contract-db :as contract-db]
-            [teet.contract.contract-model :as contract-model])
+            [teet.contract.contract-model :as contract-model]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 (defmulti contract-search-clause (fn [[attribute _value] _user]
@@ -47,18 +48,32 @@
             [(teet.util.string/contains-words? ?contract-name ?contract-name-search-value)]]
    :in {'?contract-name-search-value (str/lower-case value)}})
 
-(defmethod contract-search-clause :procurement-id
+(defmethod contract-search-clause :contract-number
   [[_ value] _]
-  {:where '[[?c :thk.contract/procurement-id ?proc-id]
-            [(get-else $ ?c :thk.contract/procurement-part-id ?proc-id) ?procurement-id]
-            [(teet.util.string/contains-words? ?procurement-id ?procurement-id-search-value)]]
-   :in {'?procurement-id-search-value value}})
+  {:where '[[?c :thk.contract/number ?thk-contract-number]
+            [(teet.util.string/contains-words? ?thk-contract-number ?contract-number-search-value)]]
+   :in {'?contract-number-search-value value}})
 
 (defmethod contract-search-clause :procurement-number
   [[_ value] _]
   {:where '[[?c :thk.contract/procurement-number ?proc-number]
             [(teet.util.string/contains-words? ?proc-number ?proc-number-search-value)]]
    :in {'?proc-number-search-value value}})
+
+(defmethod contract-search-clause :project-manager
+  [[_ {value :db/id}] _]
+  {:where '[(contract-target-activity ?c ?activity)
+            [?activity :activity/manager ?ac-manager]
+            [(= ?ac-manager ?search-user)]]
+   :in {'?search-user value}})
+
+(defmethod contract-search-clause :partner-name
+  [[_ value] _]
+  {:where '[[?cc :company-contract/contract ?c]
+            [?cc :company-contract/company ?company]
+            [?company :company/name ?c-name]
+            [(teet.util.string/contains-words? ?c-name ?search-partner)]]
+   :in {'?search-partner value}})
 
 (defmethod contract-search-clause :ta/region
   [[_ value] _]
@@ -96,13 +111,15 @@
                     (Date.)]
                    (map second)
                    arglist)]
-    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [*]}]) ?calculated-status]
+    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [* {:activity/manager [:user/given-name :user/family-name]}]}])
+                               ?calculated-status]
                        :where (into '[[?c :thk.contract/procurement-id _]
                                       (contract-status ?c ?calculated-status ?now)]
-                                    where)
+                                where)
                        :in in}
                :args args})
-         (mapv contract-db/contract-with-status))))
+      (mapv contract-db/contract-with-status)
+      (mapv contract-model/db-values->frontend))))
 
 (defquery :contracts/list-contracts
   {:doc "Return a list of contracts matching given search params"
@@ -111,8 +128,9 @@
    :project-id nil
    :authorization {}}
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
-      (sort-by :meta/created-at)
-      reverse))
+    (sort-by :meta/created-at)
+    reverse
+    (mapv du/idents->keywords)))
 
 (defquery :contracts/project-related-contracts
   {:doc "Return a list of contracts related to the given project"

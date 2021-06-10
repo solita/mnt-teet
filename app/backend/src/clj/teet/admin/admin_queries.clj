@@ -194,7 +194,7 @@
   (boolean
    (environment/when-feature :admin-inspector true)))
 
-(def user-info [:user/person-id :user/given-name :user/family-name])
+(def user-info [:db/id :user/person-id :user/given-name :user/family-name])
 
 (def user-info-attrs
   #{:meta/creator
@@ -202,6 +202,7 @@
     :notification/target
     :task/assignee
     :activity/manager
+    :file.part/completed-by
     :file-seen/user
     :meeting/organizer
     :meeting.agenda/responsible

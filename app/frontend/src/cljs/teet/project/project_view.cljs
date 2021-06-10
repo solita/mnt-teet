@@ -54,7 +54,7 @@
 
 (defn contract-info
   [{:thk.contract/keys [status] :as contract}]
-  [:div {:class (<class contract-style/project-contract-container)}
+  [:div {:class (<class contract-style/project-contract-container-style)}
    [:div {:class (<class common-styles/margin-bottom 1)}
     [url/Link {:page :contract
                :params {:contract-ids (contract-model/contract-url-id contract)}}
@@ -708,7 +708,8 @@
   If left-side content is not specified, the project navigator is used.
   The :project-navigator map options can be used to override default parameters."
   [{:keys [e! app project main left-panel right-panel project-navigator
-           export-menu-items]}]
+           export-menu-items right-panel-padding]
+    :or {right-panel-padding "1rem 1.5rem"}}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
      project
@@ -746,6 +747,6 @@
                   :style {:display :flex
                           :flex 1
                           :overflow-y :auto
-                          :padding "1rem 1.5rem"
+                          :padding right-panel-padding
                           :background-color theme-colors/gray-lightest}}
             right-panel])]]]]]))

@@ -43,6 +43,23 @@
               :activity (str activity)
               :task (str task-id)}}))
 
+(defn task-part-navigation-info [db task-part-id]
+  (let [[project activity task-id]
+        (first
+          (d/q '[:find ?project-id ?activity ?task
+                 :where
+                 [?project :thk.project/id ?project-id]
+                 [?project :thk.project/lifecycles ?lifecycle]
+                 [?lifecycle :thk.lifecycle/activities ?activity]
+                 [?activity :activity/tasks ?task]
+                 [?task-part :file.part/task ?task]
+                 :in $ ?task-part]
+               db task-part-id))]
+    {:page :activity-task
+     :params {:project (str project)
+              :activity (str activity)
+              :task (str task-id)}}))
+
 (defn activity-navigation-info [db activity-id]
   (let [proj-id (project-db/activity-project-id db activity-id)
         proj (project-db/project-by-id db proj-id)]
@@ -111,8 +128,14 @@
              (notification-db/navigation-info db user notification-id)]
     (case (:db/ident type)
       (:notification.type/task-waiting-for-review
-       :notification.type/task-assigned)
+       :notification.type/task-assigned
+       :notification.type/task-review-rejected)
       (task-navigation-info db (:db/id target))
+
+      (:notification.type/task-part-waiting-for-review
+       :notification.type/task-part-review-rejected
+       :notification.type/task-part-review-accepted)
+      (task-part-navigation-info db (:db/id target))
 
       (:notification.type/activity-waiting-for-review
        :notification.type/activity-accepted

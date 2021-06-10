@@ -1,15 +1,17 @@
 (ns teet.util.coerce
   (:require [clojure.string :as str]))
 
-(defn- normalize-number-chars
+(defn normalize-number-chars
   "Normalize formatted number to parseable.
   Replaces comma with point and different minus character
-  with the regular one.
-
+  with the regular one, removes spaces (from e.g. 1 500,00).
   If `x` is blank or not a string, returns nil."
   [x]
   (when (string? x)
     (-> x str/trim
+        ;; Removes the formatted number separator space whereas \s does not
+        (str/replace #"\h" "")
+        (str/replace #"\s" "")
         (str/replace "," ".")
         (str/replace "−" "-"))))
 
@@ -49,3 +51,8 @@
   in cljs returns JS number"
   (partial to-number #?(:clj #(Long/parseLong %)
                         :cljs #(js/parseInt %)) long))
+
+(def ->double
+  "Coerce x to double."
+  (partial to-number #?(:clj #(Double/parseDouble %)
+                        :cljs #(js/parseFloat %)) double))

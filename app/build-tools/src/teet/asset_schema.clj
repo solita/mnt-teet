@@ -32,8 +32,9 @@
               (update row
                       (first k)
                       (fn [names-string]
-                        (->> (str/split names-string #"\s*,\s*")
-                             (mapv parse-name))))
+                        (when-not (str/blank? names-string)
+                          (->> (str/split names-string #"\s*,\s*")
+                               (mapv parse-name)))))
               (update row k parse-name)))
           % name-keys)
         rows))
@@ -101,7 +102,7 @@
             :description-et :description-en
             :agreed?
             :comment]
-           #{:name :ctype}))
+           #{:name [:ctype]}))
 
 (def read-list-items
   (partial read-sheet
@@ -161,11 +162,14 @@
 
 (defn- attribute-name
   "Builds the attribute name from its `:name` and `:ctype`.
+  If the attribute belongs to multiple ctypes, it is put into :common ns.
    `(attribute-name {:name :barrier :ctype :barrierworkingwidth}) => :barrier/barrierworkingwidth`"
   ;; TODO: Why is datatype needed here?
   [{n :name :keys [ctype datatype] :as _attr}]
   (when (and n ctype datatype)
-    (keyword (name ctype) (name n))))
+    (keyword (if (> (count ctype) 1)
+               "common"
+               (name (first ctype))) (name n))))
 
 (defn- extremum-value-ref
   [value attribute unnamespaced->namespaced]
@@ -235,6 +239,14 @@
                    (not duplicates?))))
        (mapcat val)))
 
+(def common-ctypes
+  [{:name :ctype/component
+    :comment "Attributes common to components"}
+   {:name :ctype/feature
+    :comment "Attributes common to features"}
+   {:name :ctype/material
+    :comment "Attributes common to materials"}])
+
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
     (let [workbook (sheet/load-workbook in)
@@ -245,8 +257,7 @@
           fclass (read-feature-classes workbook)
           fclass-by-name (map-by-name fclass)
 
-          ctype (into [{:name :ctype/common
-                        :comment "Attributes common to all assets and components"}]
+          ctype (into common-ctypes
                       (read-ctypes workbook))
           ctypes-by-name (map-by-name ctype)
 
@@ -322,14 +333,14 @@
                                   "datetime" :db.type/instant
                                   nil)]
                 :when (and valueType
-                           (exists? (:ctype p)))]
+                           (every? exists? (:ctype p)))]
             (without-empty
              (merge
               (common-attrs :asset-schema.type/attribute p)
               {:db/cardinality :db.cardinality/one ; PENDING: can be many?
                :db/valueType valueType
                :asset-schema/unit (:unit p)
-               :attribute/parent (str (:ctype p))
+               :attribute/parent (mapv str (:ctype p))
                :attribute/cost-grouping? (:cost-grouping? p)
                :attribute/mandatory? (:mandatory? p)}
               (min-and-max-values p unnamespaced->namespaced))))))
@@ -340,9 +351,9 @@
           (for [item list-items
                 :let [attr (attrs-by-name (:property item))
                       attr-name (get-in attrs-by-name [(:property item) :name])
-                      ctype-fclass-or-material (or (get ctypes-by-name (:ctype attr))
+                      ctype-fclass-or-material (or (every? ctypes-by-name (:ctype attr))
                                                    (get fclass-by-name (:ctype attr))
-                                                   (get material-by-name (:ctype attr)))
+                                                   (every? material-by-name (:ctype attr)))
                       all-exist? (and attr ctype-fclass-or-material
                                       (:name item)
                                       (exists? (:property item)))]

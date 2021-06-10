@@ -66,6 +66,7 @@
 ;; Component colors
 
 (def card-background-extra-light "#F9F9F9")
+(def card-box-shadow "0px 2px 4px rgba(93, 96, 113, 0.36)")
 (def page-background-dark "#E1E2E5")
 (def border-dark "#D2D3D8")
 

@@ -18,56 +18,6 @@
                           (seq (dissoc % :db/id :db/ident)))
                     rotl)))
 
-(defn fgroup-for-fclass
-  "Find fgroup which fclass belongs to."
-  [atl fclass]
-  (some (fn [fg]
-          (when (some #(du/enum= fclass %)
-                      (:fclass/_fgroup fg))
-            fg))
-        (:fgroups atl)))
-
-(defn fclass-for-ctype
-  "Find fclass which ctype belongs to."
-  [atl ctype]
-  (some (fn [fg]
-          (some (fn [fc]
-                  (when (some #(du/enum= ctype %)
-                              (:ctype/_parent fc))
-                    fc))
-                (:fclass/_fgroup fg)))
-        (:fgroups atl)))
-
-(defn type-hierarchy
-  "Find each hierarchy parent of given fclass or ctype."
-  [atl node]
-  (vec
-   (drop 1                              ; drop 1st :fgroups level
-         (cu/find-path #(concat (:fgroups %)
-                                (:fclass/_fgroup %)
-                                (:ctype/_parent %))
-                       #(du/enum= node %)
-                       atl))))
-
-(defn- has-type? [type x]
-  (and (map? x)
-       (= type (get-in x [:asset-schema/type :db/ident]))))
-
-(def fgroup? (partial has-type? :asset-schema.type/fgroup))
-(def fclass? (partial has-type? :asset-schema.type/fclass))
-(def ctype? (partial has-type? :asset-schema.type/ctype))
-(def material? (partial has-type? :asset-schema.type/material))
-
-(defn allowed-component-types
-  "Return all ctypes that are allowed for the given fclass or ctype."
-  [atl fclass-or-ctype]
-  (let [ident (if (keyword? fclass-or-ctype)
-                fclass-or-ctype
-                (:db/ident fclass-or-ctype))]
-    (:ctype/_parent (cu/find-matching #(and (or (fclass? %) (ctype? %))
-                                            (= (:db/ident %) ident))
-                                      atl))))
-
 (defn- item-by-ident*
   [atl ident]
   (cu/find-matching #(and (map? %)
@@ -82,6 +32,90 @@
   ;; of the process (either page in browser or deployment in ions)
   (memoize item-by-ident*))
 
+(defn- has-type? [type x]
+  (and (map? x)
+       (= type (get-in x [:asset-schema/type :db/ident]))))
+
+(def fgroup? (partial has-type? :asset-schema.type/fgroup))
+(def fclass? (partial has-type? :asset-schema.type/fclass))
+(def ctype? (partial has-type? :asset-schema.type/ctype))
+(def material? (partial has-type? :asset-schema.type/material))
+
+(defn fgroup-for-fclass
+  "Find fgroup which fclass belongs to."
+  [atl fclass]
+  (some (fn [fg]
+          (when (some #(du/enum= fclass %)
+                      (:fclass/_fgroup fg))
+            fg))
+        (:fgroups atl)))
+
+(defn fclass-for-ctype
+  "Find fclass which ctype belongs to."
+  [atl ctype]
+  (if (:ctype/parent ctype)
+    (loop [parent (item-by-ident atl (-> ctype :ctype/parent :db/ident))]
+      (if (or (nil? parent)
+              (fclass? parent))
+        parent
+        (recur (item-by-ident atl (-> parent :ctype/parent :db/ident)))))
+    ;; TODO the old implementation doesn't work for ctypes that are
+    ;; children of other ctypes
+    (some (fn [fg]
+            (some (fn [fc]
+                    (when (some #(du/enum= ctype %)
+                                (:ctype/_parent fc))
+                      fc))
+                  (:fclass/_fgroup fg)))
+          (:fgroups atl))))
+
+(defn type-hierarchy
+  "Find each hierarchy parent of given fclass or ctype."
+  [atl node]
+  (vec
+   (drop 1                              ; drop 1st :fgroups level
+         (cu/find-path #(concat (:fgroups %)
+                                (:fclass/_fgroup %)
+                                (:ctype/_parent %))
+                       #(du/enum= node %)
+                       atl))))
+
+(defn leaf-ctype?
+  "Is `ctype`
+   - a component type
+   - that has no child component types"
+  [ctype]
+  (and (ctype? ctype)
+       (empty? (:ctype/_parent ctype))))
+
+(defn allowed-component-types
+  "Return all ctypes that are allowed for the given fclass or ctype."
+  [atl fclass-or-ctype]
+  (let [ident (if (keyword? fclass-or-ctype)
+                fclass-or-ctype
+                (:db/ident fclass-or-ctype))]
+    (:ctype/_parent (cu/find-matching #(and (or (fclass? %) (ctype? %))
+                                            (= (:db/ident %) ident))
+                                      atl))))
+
+(defn allowed-material-types
+  "Return all materials and products that are allowed for the given fclass or ctype"
+  [atl fclass-or-ctype]
+  (let [hierarchy (type-hierarchy atl fclass-or-ctype)
+        node (last hierarchy)
+        fgroup (-> hierarchy first :db/ident)]
+    (if (leaf-ctype? node)
+      (->> atl
+           :materials
+           ;; Is the fgroup in material's :material/fgroups?
+           (filter (fn [material]
+                     (->> material
+                          :material/fgroups
+                          (map :db/ident)
+                          set
+                          fgroup))))
+      [])))
+
 #?(:clj
    (defn coerce-fn [value-type]
      (case value-type
@@ -95,13 +129,14 @@
        identity)))
 #?(:clj
    (defn coerce-tuple [tuple-type value]
-     (let [v (cond
-               (vector? value) value
-               (string? value) (str/split value #"\s*,\s*")
-               :else (throw (ex-info "Unsupported tuple value"
-                                     {:tuple-type tuple-type
-                                      :value value})))]
-       (mapv (coerce-fn tuple-type) v))))
+     (when (some? value)
+       (let [v (cond
+                 (vector? value) value
+                 (string? value) (str/split value #"\s*,\s*")
+                 :else (throw (ex-info "Unsupported tuple value"
+                                       {:tuple-type tuple-type
+                                        :value value})))]
+         (mapv (coerce-fn tuple-type) v)))))
 #?(:clj
    (defn form->db
      "Prepare data from asset form to be saved in the database"

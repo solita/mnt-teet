@@ -15,7 +15,8 @@
             [clojure.java.io :as io]
             [teet.log :as log]
             [clojure.string :as str]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [clojure.set :as set])
   (:import (java.time.format DateTimeFormatter)))
 
 (defn- current-iso-date []
@@ -247,17 +248,94 @@
   Returns sequence of new datoms for the restore tx.
 
   Looks up entity ids and reference values from the old->new mapping."
-  [tx-data old->new ref-attrs]
+  [tx-data old->new ref-attrs cardinality-many-attrs]
   (let [->id #(let [s (str %)]
-                (or (old->new s) s))]
-    (for [[e a v add?] tx-data
-          :let [ref? (ref-attrs a)
-                e (->id e)
-                v (if ref?
-                    (->id v)
-                    v)]]
-      [(if add? :db/add :db/retract) e a v])))
+                (or (old->new s) s))
+        {card-many-datoms true
+         card-one-datoms false} (group-by (comp boolean cardinality-many-attrs
+                                                second)
+                                          tx-data)]
+    (concat
+     ;; Output map tx for all cardinality one values, filtering out retractions
+     ;; that have an assertion for the same attribute
+     (mapcat (fn [[e datoms]]
+               (let [e (->id e)
 
+                     ;; Group by assertions and retractions
+                     {asserted true
+                      retracted false}
+                     (group-by #(nth % 3) datoms)
+
+                     asserted-map (when (seq asserted)
+                                    (into {:db/id e}
+                                          (map (fn [[_ a v _]]
+                                                 [a (if (ref-attrs a)
+                                                      (->id v) v)]))
+                                          asserted))]
+                 (into (if asserted-map
+                         [asserted-map]
+                         [])
+                       (for [[_ a v _] retracted
+                             :when (not (contains? asserted-map a))]
+                         [:db/retract e a (if (ref-attrs a)
+                                            (->id v) v)]))))
+             (group-by first card-one-datoms))
+
+     ;; Output add or retract clauses for any many cardinality values
+     (for [[e a v add?] card-many-datoms
+           :let [ref? (ref-attrs a)
+                 e (->id e)
+                 v (if ref?
+                     (->id v)
+                     v)]]
+       [(if add? :db/add :db/retract) e a v]))))
+
+(defn- add-cardinality-many-attrs!
+  "Record :db/ident values of any new attributes created in tx-data"
+  [set-atom tx-data]
+  (let [card-many (into #{}
+                        (keep (fn [tx]
+                                (when (and (map? tx)
+                                           (= :db.cardinality/many (:db/cardinality tx)))
+                                  (:db/ident tx))))
+                        tx-data)]
+    (when (seq card-many)
+      (swap! set-atom set/union card-many))))
+
+(def retry-timeout-ms 60000)
+(def retry-wait-ms 2000)
+(def retryable-anomaly-categories #{:cognitect.anomalies/unavailable
+                                    :cognitect.anomalies/interrupted
+                                    :cognitect.anomalies/busy})
+(defn- with-retry
+  ([func]
+   (with-retry (+ (System/currentTimeMillis)
+                  retry-timeout-ms)
+     func))
+  ([give-up-at func]
+   (loop []
+     (let [[res e]
+           (try
+             [(func) nil]
+             (catch Exception e
+               [nil e]))]
+       (if (nil? e)
+         res
+         (cond
+           (> (System/currentTimeMillis) give-up-at)
+           (throw (ex-info "Giving up after retry timed out"
+                           {:exception e}))
+
+           (some-> e ex-data
+                   :cognitect.anomalies/category
+                   retryable-anomaly-categories)
+           (do
+             (Thread/sleep retry-wait-ms)
+             (recur))
+
+           :else
+           (throw (ex-info "Unretryable exception thrown"
+                           {:exception e}))))))))
 
 (defn- restore-tx-file*
   "Restore a backup by running the transactions in from the reader
@@ -267,7 +345,17 @@
   Returns the old->new id mapping."
   [conn rdr]
   ;; Read first form which is the mapping containing info about the backup
-  (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)]
+  (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)
+
+        ;; Initial set of card many attributes, tx processing will add any new ones here
+        cardinality-many-attrs (atom (into #{}
+                                           (map first)
+                                           (d/q '[:find ?ident
+                                                  :where
+                                                  [?a :db/cardinality :db.cardinality/many]
+                                                  [?a :db/ident ?ident]]
+                                                (d/db conn))))
+        progress! (progress-fn "transactions restored")]
     (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
     (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
     (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")
@@ -281,12 +369,15 @@
                                     {:db/id "datomic.tx"})]
                             (prepare-restore-tx (:data tx)
                                                 old->new
-                                                ref-attrs))
+                                                ref-attrs
+                                                @cardinality-many-attrs))
               {tempids :tempids}
-              (d/transact
-               conn
-               {:tx-data tx-data})]
-
+              (with-retry
+                #(d/transact
+                  conn
+                  {:tx-data tx-data}))]
+          (add-cardinality-many-attrs! cardinality-many-attrs tx-data)
+          (progress!)
           ;; Update old->new mapping with entity ids created in this tx
           (recur (merge old->new tempids)
                  (rest txs)))
@@ -470,3 +561,16 @@
     (d/transact db-connection {:tx-data retract-tx})
     (log/info "Removed email address from" (count retract-tx) "users")
     "{\"success\": true}"))
+
+(defn- debug-restore [new-db-name edn-file-path]
+  (let [client (environment/datomic-client)]
+    (d/create-database client {:db-name new-db-name})
+    (restore-tx-file* (d/connect client {:db-name new-db-name})
+                      (java.io.PushbackReader. (io/reader edn-file-path)))))
+
+(comment
+  (do
+    (debug-restore
+    "ttest8"
+    "/Users/tatuta/temp/transactions.edn")
+    :ok))
