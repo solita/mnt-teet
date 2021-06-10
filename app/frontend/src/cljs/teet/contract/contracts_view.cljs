@@ -34,51 +34,64 @@
     (str (tr [:contracts :contracts-list :view]))]])
 
 (defn contract-card
-  [e! contract contract-expansion-atom]
-  (r/with-let []
-    [container/collapsible-container {:class (<class contract-style/contract-card-style)
-                                      :container-class (<class contract-style/contract-card-style-header)
-                                      :collapsible-class (<class contract-style/contract-card-style-container)
-                                      :side-component (contract-card-header
-                                                        (:thk.contract/status contract)
-                                                        (contract-model/contract-name contract)
-                                                        (contract-model/contract-url-id contract))
-                                      :on-toggle #(swap! contract-expansion-atom
-                                                    update-in [(:db/id contract)] (fn [x] (not x)))
-                                      :open? (get @contract-expansion-atom (:db/id contract))}
-     ""
-     [:div {:class (<class contract-style/contract-card-details-style)}
-      [contract-common/contract-external-links contract]
-      [contract-common/contract-information-row contract]]]))
+  [contract toggle-card open?]
+  [container/collapsible-container {:class (<class contract-style/contract-card-style)
+                                    :container-class (<class contract-style/contract-card-style-header)
+                                    :collapsible-class (<class contract-style/contract-card-style-container)
+                                    :side-component (contract-card-header
+                                                      (:thk.contract/status contract)
+                                                      (contract-model/contract-name contract)
+                                                      (contract-model/contract-url-id contract))
+                                    :on-toggle toggle-card
+                                    :open? open?}
+   ""
+   [:div {:class (<class contract-style/contract-card-details-style)}
+    [contract-common/contract-external-links contract]
+    [contract-common/contract-information-row contract]]])
 
-(defn toggle-list-expansion-button
-  [list-expansion? toggle-list-expansion]
-  [buttons/link-button-with-icon {:class (<class contract-style/toggle-list-expansion-button-style)
-                                  :icon (if @list-expansion?
-                                          [icons/navigation-unfold-less]
-                                          [icons/navigation-unfold-more])
-                                  :on-click toggle-list-expansion}
-   (if @list-expansion?
-     (tr [:contracts :contracts-list :collapse-all])
-     (tr [:contracts :contracts-list :expand-all]))])
+(defn contract-list-expansion-buttons
+  [expand-contracts collapse-contracts]
+  [:div
+   [buttons/button-secondary {:size :small
+                              :class (<class contract-style/contract-list-secondary-button ".5rem")
+                              :on-click expand-contracts
+                              :start-icon (r/as-element [icons/navigation-unfold-more])}
+    (tr [:contracts :contracts-list :expand-all])]
+   [buttons/button-secondary {:size :small
+                              :class (<class contract-style/contract-list-secondary-button ".5rem")
+                              :on-click collapse-contracts
+                              :start-icon (r/as-element [icons/navigation-unfold-less])}
+    (tr [:contracts :contracts-list :collapse-all])]])
 
 (defn contacts-list-header
-  [{:keys [contracts-count]}]
+  [{:keys [contracts-count expand-contracts collapse-contracts]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
+   [contract-list-expansion-buttons expand-contracts collapse-contracts]
    [typography/SmallText (str contracts-count " "
                            (tr (if (= contracts-count 1)
                                  [:contracts :contracts-list :result]
                                  [:contracts :contracts-list :results])))]])
 
+(defn contract-expansion-map
+  [contracts open?]
+  (reduce (fn [expansion-map contract] (assoc expansion-map (:db/id contract) open?)) {} contracts))
+
 (defn contracts-list
-  [e! contracts]
-  (r/with-let [contract-expansion (r/atom (reduce (fn [agg x] (assoc agg (:db/id  x) false)) {} contracts))]
+  [contracts]
+  (r/with-let [contract-expansion-atom (r/atom (contract-expansion-map contracts false))
+               expand-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts true))
+               collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))
+               toggle-card (fn [contract-id]
+                             (swap! contract-expansion-atom update contract-id #(not %)))]
     [:div {:class (<class contract-style/contracts-list-style)}
-     [contacts-list-header {:contracts-count (count contracts)}]
+     [contacts-list-header {:contracts-count (count contracts)
+                            :expand-contracts expand-contracts
+                            :collapse-contracts collapse-contracts}]
      (doall
-       (for [contract contracts]
+       (for [contract contracts
+             :let [open? (get @contract-expansion-atom (:db/id contract))]]
          ^{:key (str (:db/id contract))}
-         [contract-card e! contract contract-expansion]))]))
+         [contract-card contract #(toggle-card (:db/id contract)) open?]))]))
 
 (def filter-options
   [:my-contracts
@@ -94,9 +107,7 @@
 (defn toggle-filters-visibility-button
   [filters-visibility? toggle-filters-visibility]
   [buttons/button-secondary {:size :small
-                             :style {:padding "0 1.18rem"
-                                     :box-sizing :border-box
-                                     :height "1.5rem"}
+                             :class (<class contract-style/contract-list-secondary-button 0)
                              :on-click toggle-filters-visibility
                              :start-icon (r/as-element [icons/content-filter-alt-outlined])}
    (if filters-visibility?
@@ -250,5 +261,5 @@
          :query :contracts/list-contracts
          :args {:search-params @filtering-atom
                 :refresh (:contract-refresh route)}
-         :simple-view [contracts-list e!]}
+         :simple-view [contracts-list]}
         250]]]]))

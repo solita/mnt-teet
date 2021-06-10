@@ -60,17 +60,15 @@
 (defn contracts-list-header-style
   []
   {:display :flex
-   :justify-content :space-between})
+   :justify-content :space-between
+   :margin-bottom "2.1rem"})
 
-(defn toggle-list-expansion-button-style
-  []
-  ^{:combinators
-    {[:> :span] {:color theme-colors/primary
-                 :margin-left "0.25rem"}}}
-  {:font-size "0.875rem"
-   :flex-direction :row-reverse
-   :color theme-colors/text-medium-emphasis
-   :text-decoration :none})
+(defn contract-list-secondary-button
+  [margin-right]
+  {:padding "0 1rem"
+   :box-sizing :border-box
+   :height "1.5rem"
+   :margin-right (if margin-right margin-right 0)})
 
 (defn contract-search-container-style
   []
