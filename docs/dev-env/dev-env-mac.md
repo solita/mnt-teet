@@ -53,7 +53,9 @@ aws_secret_access_key = secret-key
 - Connect and start PostgREST by running `dev2.sh` in ./app/api/
 - Navigate to app/datasource-import and run `clojure -A:import example-config.edn` (it takes a while to complete).
   The process should successfully import different land registry, etc. data.
-  
+- Optional: import database from cloud 
+  - Instructions in `mnt-teet/backend/README.md`
+
 ## Start TEET
 - Run REPL from ./app/backend: `clj -A:dev`
 - Run the following commands from REPL:
