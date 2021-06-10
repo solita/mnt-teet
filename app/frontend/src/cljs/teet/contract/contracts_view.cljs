@@ -74,7 +74,7 @@
 
 (defn contract-expansion-map
   [contracts open?]
-  (reduce (fn [agg x] (assoc agg (:db/id x) open?)) {} contracts))
+  (reduce (fn [expansion-map contract] (assoc expansion-map (:db/id contract) open?)) {} contracts))
 
 (defn contracts-list
   [contracts]
