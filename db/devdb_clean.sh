@@ -16,6 +16,7 @@ PSQL="psql $ARGS -c"
 : ${PSQL_TEET_DB_OWNER:=teet} # can be teetmaster when using rds db backup
 PSQL_TEET="psql -h localhost -U $PSQL_TEET_DB_OWNER -c"
 PSQL_TEET_SUPERUSER="psql -h localhost -U postgres -c"
+createuser $PSQL_TEET_DB_OWNER || true # ok if exists
 # removal of this was somewho included in the checksummed migrations but not its creation. also
 # didn't help to add its creation to repeatable migrations as they're run last (?).
 function remake-migration-prob-sproc {
