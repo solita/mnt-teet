@@ -65,10 +65,14 @@
                      z-index
                      opacity
                      min-resolution max-resolution
-                     (if post?
-                       {:url (str endpoint "/rpc/" rpc-name)
-                        :payload parameters}
-                       (url (str endpoint "/rpc/" rpc-name) parameters))
+                     (or
+                      ;; Direct URL given in map
+                      (and (map? endpoint)
+                           (:url endpoint))
+                      (if post?
+                        {:url (str endpoint "/rpc/" rpc-name)
+                         :payload parameters}
+                        (url (str endpoint "/rpc/" rpc-name) parameters)))
                      content-type
                      style-fn
                      (fn [layer]

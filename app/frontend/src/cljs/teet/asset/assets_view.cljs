@@ -40,7 +40,9 @@
             ;; FIXME: refactor edit/view UI away from cost items view
             [teet.asset.cost-items-view :as cost-items-view]
             [teet.asset.materials-and-products-view :as materials-and-products-view]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.common.common-controller :as common-controller]
+            [teet.road.road-model :as road-model]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -157,6 +159,25 @@
   (when (and location radius)
     {:search-by-current-location
      (location-layer location radius)}))
+
+(defmethod search-by-map-layers :road-address
+  [_ _ {:keys [road-address]}]
+  (when (seq road-address)
+    {:search-by-road-address
+     (map-layers/geojson-layer
+      (common-controller/query-url
+       :road/address-geometry-geojson
+       {:road-address (vec (keep (fn [{:location/keys [road-nr carriageway start-km end-km]}]
+                                   (when (and road-nr carriageway start-km end-km)
+                                     (zipmap [:road-nr :carriageway :start-m :end-m]
+                                             [road-nr carriageway
+                                              (road-model/km->m start-km)
+                                              (road-model/km->m end-km)])))
+                                 road-address))})
+      "search-by-road-address"
+      nil
+      (partial map-features/road-line-style 3 "orange")
+      {:fit-on-load? true})}))
 
 (defn- asset-filters [e! atl filters collapsed?]
   (let [opts {:e! e! :atl atl :filters filters}]
