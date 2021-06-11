@@ -409,4 +409,18 @@
       (testing "Actual start date has been imported"
         (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date))))
       (testing "THK Activity ID has been imported"
-        (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))))))
+        (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))))
+
+    (testing "Exporting has new tasks "
+      (export-csv)
+      (let [rows (tu/get-data :export-rows)
+            csv (tu/get-data :export-csv)
+            activity-ids (into #{}
+                           (map #(get % "activity_id")
+                             rows))
+            activity-typefks (into #{}
+                              (map #(get % "activity_typefk") rows))]
+        (is (= #{"18913" "4717" "4718" "6000" "5488" "6594" "5455" "896" "897"} activity-ids)
+          "rows have all allowed THK activity ids")
+        (is (= #{"4003" "4005" "4006" "4009"} activity-typefks)
+          "THK activity type fk field imported for all tasks")))))
