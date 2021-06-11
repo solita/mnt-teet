@@ -362,32 +362,35 @@
   (let [{:thk.contract/keys [procurement-id procurement-part-id]
          :as contract-info}
         (first rows)]
-    (if-not (contract-exists? db contract-ids)                                              ;; check the contract-ids if they exist already
-      (let [targets (->> rows
-                         (mapv
-                           (fn [target]
-                             (if-let [target-id (or (:activity/task-id target) (:activity-db-id target))]
-                               (:db/id (lookup db [:integration/id target-id]))
-                               (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)])))))
-                         (filterv some?))
-            regions (->> rows
-                        (map :ta/region)
-                        set)
-            region-tx (when (= (count regions) 1)           ;; Only TX region when targets only have 1 region
-                        {:ta/region (first regions)})]
-        (if (not-empty targets)
-          [(merge {:db/id (str procurement-id "-" procurement-part-id "-new-contract")
-                   :thk.contract/targets targets}
-                  region-tx
-                  (select-keys contract-info [:thk.contract/procurement-id
-                                              :thk.contract/name
-                                              :thk.contract/part-name
-                                              :thk.contract/procurement-number
-                                              :thk.contract/procurement-part-id
-                                              :thk.contract/type])
-                  (meta-model/system-created))]
-          (log/warn "No targets found for contract with ids: " contract-ids "Contract row details: " contract-info)))
-      (log/info "Contract with ids: " contract-ids " already exists nothing is done"))))
+    ;; check the contract-ids if they exist already
+    (let [targets (->> rows
+                    (mapv
+                      (fn [target]
+                        (if-let [target-id (or (:activity/task-id target) (:activity-db-id target))]
+                          (:db/id (lookup db [:integration/id target-id]))
+                          (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)])))))
+                    (filterv some?))
+          regions (->> rows
+                    (map :ta/region)
+                    set)
+          region-tx (when (= (count regions) 1)             ;; Only TX region when targets only have 1 region
+                          {:ta/region (first regions)})
+          contract-db-id (contract-exists? db contract-ids)]
+      (if (not-empty targets)
+        [(merge {:db/id (if-not contract-db-id
+                          (str procurement-id "-" procurement-part-id "-new-contract")
+                          contract-db-id)
+                 :thk.contract/targets targets}
+           region-tx
+           (select-keys contract-info [:thk.contract/procurement-id
+                                       :thk.contract/name
+                                       :thk.contract/part-name
+                                       :thk.contract/procurement-number
+                                       :thk.contract/procurement-part-id
+                                       :thk.contract/type])
+           (when-not contract-db-id
+                     (meta-model/system-created)))]
+        (log/warn "No targets found for contract with ids: " contract-ids "Contract row details: " contract-info)))))
 
 (defn final-contract?
   [[procurement-id [info & _]]]
