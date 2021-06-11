@@ -12,17 +12,23 @@
             [teet.contract.contract-status :as contract-status]
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [reagent.core :as r]))
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
-  (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
-    [common/external-contract-link
-     {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
-     (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
-    [:span (str (tr [:contracts :state-procurement-link]) " " procurement-number)]))
+  (r/with-let [procurement-display-text (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
+    (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
+      [common/external-contract-link
+       {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
+       procurement-display-text]
+      [typography/SmallText {:style {:display :flex
+                                     :align-items :center
+                                     :margin-right "1rem"}}
+       procurement-display-text])))
 
 (defn contract-external-link
+  [{:thk.contract/keys [external-link procurement-number]}]
   [{:thk.contract/keys [external-link procurement-number]}]
   (when external-link
     [common/external-contract-link {:href external-link}
@@ -47,7 +53,8 @@
    [:div {:class (<class common-styles/flex-row-space-between)}
     [:div {:class (<class common-styles/flex-row-center)}
      [contract-menu/contract-menu e! app contract]
-     [typography/TextBold {:class (<class common-styles/margin-left 0.5)}
+     [typography/TextBold {:style {:text-transform :uppercase}
+                           :class (<class common-styles/margin-left 0.5)}
       (contract-model/contract-name contract)]]
     [contract-external-links contract]]])
 
