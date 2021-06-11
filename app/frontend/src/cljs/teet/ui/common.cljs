@@ -691,6 +691,19 @@
       [:span {:ref #(when %
                       (.observe observer %))}])))
 
+(defn tag-style
+  [bg-color]
+  {:color theme-colors/white
+   :display :inline-block
+   :background-color bg-color
+   :padding "1px 5px"
+   :border-radius "2px"})
+
+(defn primary-tag
+  [text]
+  [:div {:class (<class tag-style theme-colors/primary)}
+   [typography/Text3Bold text]])
+
 (defn error-boundary [_child]
   (let [error (r/atom nil)]
     (r/create-class

@@ -197,7 +197,9 @@
            (let [u (:asset-schema/unit k)]
              [(label k)
               (case (get-in k [:db/valueType :db/ident])
-                :db.type/ref (some-> v :db/ident id->def label)
+                :db.type/ref (if (keyword? v)
+                               (some-> v id->def label)
+                               (some-> v :db/ident id->def label))
                 (str v))
               u]))
          (sort-by (comp label key) attr->val))))

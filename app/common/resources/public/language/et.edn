@@ -499,7 +499,7 @@
   :task.status/canceled "Tühistatud",
   :land-owner-opinion.type/design-conditions-draft
   "Projekteerimistingimuste eelnõu",
-  :file.status/returned "Tagasi saadetud",
+  :file.status/returned "Tagasi lükatud",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
   :task.type/funding-plan "Rahastustaotlus",
@@ -646,7 +646,7 @@
   :estate-procedure.type/property-rights "Kasutusõiguse seadmine",
   :document.sub-category/drawing "Joonis",
   :ta.region/south "Lõuna",
-  :file.status/submitted "Salvestatud",
+  :file.status/submitted "Esitatud",
   :task.type/traffic-study "Liiklusuuring",
   :task.status/accepted "Aktsepteeritud",
   :cooperation.application.response-type/other "Muu",

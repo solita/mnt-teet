@@ -23,7 +23,7 @@
     :component (->> material :component/_materials (map (comp :db/ident :component/ctype)))
     :material-approval-status "TODO"))
 
-(defn- format-properties [atl properties]
+(defn format-properties [atl properties]
   (into [:<>]
         (map (fn [[k v u]]
                [:div
@@ -53,39 +53,21 @@
     :parameter (format-properties atl value)
     (str value)))
 
-(defn- table-section-header [e! query listing-opts closed-set {ident :db/ident :as header-type} subtotal]
-  [table/listing-table-body-component listing-opts
-   [container/collapsible-container-heading
-    {:container-class [(<class common-styles/flex-row)
-                       (when (= "fclass" (namespace ident))
-                         (<class common-styles/indent-rem 1))]
-     :open? (not (closed-set ident))
-     :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
-    [:<>
-     [url/Link {:page :materials-and-products
-                :query (merge query {:filter (str ident)})}
-      (asset-ui/label header-type)]
-     (when subtotal
-       [:div {:style {:float :right :font-weight 700
-                      :font-size "80%"}} subtotal])]]])
-
-
 (defn- materials-and-products-page*
   [e! {query :query atl :asset-type-library :as app}
    {materials-and-products :materials-and-products
     version :version
-    closed-sections :closed-sections
-    :or {closed-sections #{}}
     :as state}]
   (r/with-let [listing-state (table/listing-table-state)]
     (let [locked? (asset-model/locked? version)
+          format-column (r/partial format-material-table-column
+                                   {:e! e! :atl atl :locked? locked?})
           listing-opts {:columns asset-model/materials-and-products-table-columns
                         :get-column (r/partial get-column atl)
                         :column-label-fn #(if (= % :common/status)
                                             (asset-ui/label (asset-type-library/item-by-ident atl %))
                                             (tr [:asset :totals-table %]))
-                        :format-column (r/partial format-material-table-column
-                                                  {:e! e! :atl atl :locked? locked?})}
+                        :format-column format-column}
 
           [filter-fg-or-fc filtered-materials-and-products]
           (cost-items-controller/filtered-materials-and-products app atl
@@ -111,30 +93,10 @@
          [typography/Heading1 "Materials"]]
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
-         (doall
-          (for [[fg fgroup-rows] (->> filtered-materials-and-products
-                                      (group-by (comp first :ui/group))
-                                      ;; sort by translated fgroup label
-                                      (sort-by (comp asset-ui/label first)))
-                :let [ident (:db/ident fg)
-                      open? (not (closed-sections ident))]]
-            ^{:key (str ident)}
-            [:<>
-             [table-section-header e! query listing-opts closed-sections fg nil]
-             (when open?
-               [:<>
-                (doall
-                 (for [[fc fclass-rows] (group-by (comp second :ui/group)
-                                                  fgroup-rows)
-                       :let [ident (:db/ident fc)
-                             open? (not (closed-sections ident))]]
-                   ^{:key (str ident)}
-                   [:<>
-                    [table-section-header e! query listing-opts closed-sections fc nil]
-                    (when open?
-                      [table/listing-body (assoc listing-opts
-                                                 :key (comp str #(get-column atl % :parameter))
-                                                 :rows fclass-rows)])]))])]))]]])))
+         [table/listing-body (assoc listing-opts
+                                    :key (comp str #(get-column atl % :parameter))
+                                    :rows (sort-by #(format-column :material % nil)
+                                                   filtered-materials-and-products))]]]])))
 
 (defn materials-and-products-page [e! app state]
   [asset-ui/wrap-atl-loader materials-and-products-page* e! app state])
