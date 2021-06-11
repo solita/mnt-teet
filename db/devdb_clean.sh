@@ -16,7 +16,6 @@ PSQL="psql $ARGS -c"
 : ${PSQL_TEET_DB_OWNER:=teet} # can be teetmaster when using rds db backup
 PSQL_TEET="psql -h localhost -U $PSQL_TEET_DB_OWNER -c"
 PSQL_TEET_SUPERUSER="psql -h localhost -U postgres -c"
-createuser $PSQL_TEET_DB_OWNER || true # ok if exists
 # removal of this was somewho included in the checksummed migrations but not its creation. also
 # didn't help to add its creation to repeatable migrations as they're run last (?).
 function remake-migration-prob-sproc {
@@ -39,7 +38,7 @@ $PSQL "DROP ROLE IF EXISTS teet_anon;"
 $PSQL "DROP ROLE IF EXISTS teet_user;"
 $PSQL "DROP ROLE IF EXISTS teet_backend;"
 $PSQL "DROP ROLE IF EXISTS teet;"
-$PSQL "CREATE ROLE teet WITH LOGIN SUPERUSER;"
+$PSQL "CREATE ROLE $PSQL_TEET_DB_OWNER WITH LOGIN SUPERUSER;"
 $PSQL "CREATE DATABASE teet TEMPLATE teet_template OWNER $PSQL_TEET_DB_OWNER;" || {
     echo if the above failed with error about missing template, you need to run devdb_create_template.sh script first.
     exit 1
