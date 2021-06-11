@@ -23,7 +23,7 @@
     :component (->> material :component/_materials (map (comp :db/ident :component/ctype)))
     :material-approval-status "TODO"))
 
-(defn- format-properties [atl properties]
+(defn format-properties [atl properties]
   (into [:<>]
         (map (fn [[k v u]]
                [:div

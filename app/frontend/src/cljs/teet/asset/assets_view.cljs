@@ -39,6 +39,7 @@
 
             ;; FIXME: refactor edit/view UI away from cost items view
             [teet.asset.cost-items-view :as cost-items-view]
+            [teet.asset.materials-and-products-view :as materials-and-products-view]
             [teet.ui.url :as url]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
@@ -246,22 +247,16 @@
     [icons/maps-map]]])
 
 (defn- result-details-view* [e! atl rotl oid asset]
-  (let [material? (asset-model/material-oid? oid)
-        component? (asset-model/component-oid? oid)
-        item (if (or component? material?)
+  (let [component? (asset-model/component-oid? oid)
+        item (if component?
                (-> asset (asset-model/find-component-path oid) last)
                asset)
         fclass (-> asset :asset/fclass rotl)
-        mtype (when material?
-                (-> item :material/type rotl))
         ctype (when component?
                 (-> item :component/ctype rotl))
         attributes (cond
                      component?
                      (-> ctype :attribute/_parent)
-
-                     material?
-                     (-> mtype :attribute/_parent)
 
                      :else
                      (-> fclass :attribute/_parent))
@@ -285,21 +280,23 @@
                                     :component-oid (when component? oid)
                                     :cost-item-data asset
                                     :common (cond
-                                              material? :ctype/material
                                               component? :ctype/component
                                               :else :ctype/feature)
                                     :inherits-location?
                                     (cond
-                                      material? true
                                       component? (:component/inherits-location? ctype)
                                       :else false)}
        rotl true]]
-     (when component?
-       [context/provide :locked? true
-        [cost-items-view/materials-list item
-         {:e! e!
-          :atl atl
-          :link-fn details-link-fn}]])
+     (when-let [materials (and component? (:component/materials item))]
+       [:<>
+        [:h3 (tr [:asset :materials :label])]
+        (doall
+         (for [m materials
+               :let [mtype (-> m :material/type rotl)]]
+           ^{:key (str (:db/id m))}
+           [:div
+            [asset-ui/label mtype]
+            [materials-and-products-view/format-properties atl m]]))])
      [context/provide :locked? true
       [cost-items-view/components-tree asset
        {:e! e!
