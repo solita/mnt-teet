@@ -10,7 +10,9 @@
             [teet.thk.thk-mapping :as thk-mapping]
             [clojure.java.io :as io]
             [teet.meta.meta-model :as meta-model]
-            [teet.integration.integration-id :as integration-id]))
+            [teet.integration.integration-id :as integration-id]
+            [teet.util.date :as date]))
+
 
 (use-fixtures :each
   tu/with-global-data
@@ -376,7 +378,6 @@
                         [?a :activity/name :activity.name/construction]
                         :in $ ?p]
                    (tu/db) [:thk.project/id "790"]))]
-    (println "Construction activity-id for 790 project/id is " activity-id)
     (tu/store-data! :construction-activity-id activity-id)
 
     ; Set integration/id for the Construction Activity so, it can be found during importing tasks
@@ -387,15 +388,39 @@
     (let [no-tasks (d/q '[:find ?tasks
                           :where [?e :activity/tasks ?tasks]
                           :in $ ?e] (tu/db) activity-id)]
-      (testing (is (= 0 (count no-tasks))) "No new tasks created after projects import" ))
+      (testing "No new tasks created after projects import" (is (= 0 (count no-tasks))) ))
 
     ; Import new tasks
     (import-tasks-csv!)
 
-    ; Verify new task count
+    ; Verify new tasks count and content
     (let [new-construction-activity-tasks
           (d/q '[:find ?tasks
                  :where [?e :activity/tasks ?tasks]
-                 :in $ ?e] (tu/db) activity-id)]
-      (println "New Construction Activity tasks: " new-construction-activity-tasks)
-      (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported"))))
+                 :in $ ?e] (tu/db) activity-id)
+          task-with-actual-start-date (ffirst (d/q '[:find (pull ?tasks [*])
+                                                     :where [?e :activity/tasks ?tasks]
+                                                     [?tasks :task/actual-start-date _]
+                                                     :in $ ?e] (tu/db) activity-id))
+          expected-actual-start-date (date/->start-of-date 2022 9 20)
+          expected-thk-activity-id "18913"]
+      (testing "After tasks import 3 new tasks imported"
+        (is (= 3 (count new-construction-activity-tasks))))
+      (testing "Actual start date has been imported"
+        (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date))))
+      (testing "THK Activity ID has been imported"
+        (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))))
+
+    (testing "Exporting has new tasks "
+      (export-csv)
+      (let [rows (tu/get-data :export-rows)
+            csv (tu/get-data :export-csv)
+            activity-ids (into #{}
+                           (map #(get % "activity_id")
+                             rows))
+            activity-typefks (into #{}
+                              (map #(get % "activity_typefk") rows))]
+        (is (= #{"18913" "4717" "4718" "6000" "5488" "6594" "5455" "896" "897"} activity-ids)
+          "rows have all allowed THK activity ids")
+        (is (= #{"4003" "4005" "4006" "4009"} activity-typefks)
+          "THK activity type fk field imported for all tasks")))))
