@@ -38,7 +38,9 @@ $PSQL "DROP ROLE IF EXISTS teet_anon;"
 $PSQL "DROP ROLE IF EXISTS teet_user;"
 $PSQL "DROP ROLE IF EXISTS teet_backend;"
 $PSQL "DROP ROLE IF EXISTS teet;"
-$PSQL "CREATE ROLE $PSQL_TEET_DB_OWNER WITH LOGIN SUPERUSER;"
+if [ $PSQL_TEET_DB_OWNER != teet ]; then
+    $PSQL "CREATE ROLE $PSQL_TEET_DB_OWNER WITH LOGIN SUPERUSER;"
+fi
 $PSQL "CREATE DATABASE teet TEMPLATE teet_template OWNER $PSQL_TEET_DB_OWNER;" || {
     echo if the above failed with error about missing template, you need to run devdb_create_template.sh script first.
     exit 1
