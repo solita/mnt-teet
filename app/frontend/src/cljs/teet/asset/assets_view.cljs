@@ -245,17 +245,28 @@
                            :background-color theme-colors/blue}))}
     [icons/maps-map]]])
 
-(defn- result-details-view* [e! rotl oid asset]
-  (let [component? (asset-model/component-oid? oid)
-        item (if component?
+(defn- result-details-view* [e! atl rotl oid asset]
+  (let [material? (asset-model/material-oid? oid)
+        component? (asset-model/component-oid? oid)
+        item (if (or component? material?)
                (-> asset (asset-model/find-component-path oid) last)
                asset)
         fclass (-> asset :asset/fclass rotl)
+        mtype (when material?
+                (-> item :material/type rotl))
         ctype (when component?
                 (-> item :component/ctype rotl))
-        attributes (if component?
+        attributes (cond
+                     component?
                      (-> ctype :attribute/_parent)
-                     (-> fclass :attribute/_parent))]
+
+                     material?
+                     (-> mtype :attribute/_parent)
+
+                     :else
+                     (-> fclass :attribute/_parent))
+        details-link-fn (fn [oid]
+                          {:page :assets :query {:details oid}})]
     [:div
      [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
       [icons/navigation-arrow-back]
@@ -273,21 +284,28 @@
                                     :attributes attributes
                                     :component-oid (when component? oid)
                                     :cost-item-data asset
-                                    :common (if component?
-                                              :ctype/component
-                                              :ctype/feature)
-                                    :inherits-location? (if component?
-                                                          (:component/inherits-location? ctype)
-                                                          false)}
+                                    :common (cond
+                                              material? :ctype/material
+                                              component? :ctype/component
+                                              :else :ctype/feature)
+                                    :inherits-location?
+                                    (cond
+                                      material? true
+                                      component? (:component/inherits-location? ctype)
+                                      :else false)}
        rotl true]]
+     (when component?
+       [context/provide :locked? true
+        [cost-items-view/materials-list item
+         {:e! e!
+          :atl atl
+          :link-fn details-link-fn}]])
      [context/provide :locked? true
       [cost-items-view/components-tree asset
        {:e! e!
-        :link-fn (fn [oid]
-                   {:page :assets
-                    :query {:details oid}})}]]]))
+        :link-fn details-link-fn}]]]))
 
-(defn- result-details-view [e! oid rotl]
+(defn- result-details-view [e! oid atl rotl]
   (let [asset-oid (if (asset-model/component-oid? oid)
                     (asset-model/component-asset-oid oid)
                     oid)]
@@ -295,7 +313,7 @@
     [query/query {:e! e!
                   :query :assets/details
                   :args {:asset/oid asset-oid}
-                  :simple-view [result-details-view* e! rotl oid]}]))
+                  :simple-view [result-details-view* e! atl rotl oid]}]))
 
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
@@ -320,7 +338,7 @@
                              :padding "0.5rem"}}
                (if details
                  [context/consume :rotl
-                  [result-details-view e! details]]
+                  [result-details-view e! details atl]]
                  [:<>
                   [typography/Heading1 (tr [:asset :manager :result-count]
                                            {:count (if more-results?
