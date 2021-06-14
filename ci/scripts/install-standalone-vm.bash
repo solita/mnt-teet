@@ -263,20 +263,12 @@ function get-certs {
 
 }
 
-function detect-instance-branch {
+function read-instance-tag {
     local myid
     myid="$(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
-    TEET_BRANCH="$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=teet-branch" | jq -r ".Tags[0].Value")"
+    TEET_BRANCH="$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=$1" | jq -r ".Tags[0].Value")"
 
 }
-
-function detect-machine-id {
-    local myid
-    myid="$(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
-    MACHINE_ID="$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=teet-machine-id" | jq -r ".Tags[0].Value")"
-
-}
-
 
 function run-caddy-revproxy {
     patient-docker-pull caddy:2-alpine
@@ -309,7 +301,7 @@ function install-deps-and-app {
     ./linux-install-1.10.3.822.sh
     clojure -e true > /dev/null
 
-    detect-instance-branch # will set TEET_BRANCH read from instance tags
+    TEET_BRANCH=$(read-instance-tag teet-branch)
     echo checking out "$TEET_GIT_URL" branch "$TEET_BRANCH"
     git clone -b "$TEET_BRANCH" "$TEET_GIT_URL"
     
@@ -356,7 +348,7 @@ function install-deps-and-app {
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
     
-    detect-machine-id # read from tags
+    MACHINE_ID=$(read-instance-tag teet-machine-id)
     update-dyndns $MACHINE_ID # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
     
