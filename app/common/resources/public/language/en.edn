@@ -220,7 +220,7 @@
   :select-all "Select all",
   :hotkey "key {key}",
   :total "Total",
-  :contract-menu "Contracts",
+  :contract-menu "Contract menu",
   :language "Language",
   :filter-shortcuts "Filter shortcuts",
   :unassigned "Unassigned",
@@ -241,7 +241,7 @@
  {:no-targets-for-contract
   "Contract integration failed and this contract doesn't have any valid targets. Contact administration for a bug report",
   :partner-information-text
-  "Please select or add new companies, subcontractors or persons from the left menu.",
+  "Please select or add new company, subcontractor or person from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
   :company-search-placeholder "Enter company name or business id",
   :partner-saved "Contract partner added",
@@ -255,6 +255,7 @@
   :add-company-not-in-teet "Add a company not in TEET",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
+  :partners {:title "Companies & persons"},
   :add-company "Add company",
   :status "Status",
   :table-heading
@@ -552,6 +553,8 @@
   :activity.status/expired "Expired",
   :land-owner-opinion.type/construction "Construction",
   :notification.type/task-waiting-for-review "Task waiting for review",
+  :company-contract-employee.role/company-project-manager
+  "Company project manager",
   :task.type/acceptances "Acceptances",
   :document.sub-category/terms-of-reference "Terms of Reference",
   :document.sub-category/report "Report",
@@ -637,6 +640,7 @@
   :task.type/calculation "Calculation",
   :land-acquisition.status/in-progress "In progress ",
   :activity.name/warranty "Warranty",
+  :company-contract-employee.role/supervisor "Supervisor",
   :task.type/construction-general-part "General part",
   :cooperation.opinion.status/partially-rejected
   "Partly taken into account",
@@ -688,6 +692,7 @@
   :notification.type/task-review-rejected "Task review rejected",
   :cooperation.response.status/no-response "No response",
   :land-acquisition.status/completed "Completed",
+  :company-contract-employee.role/team-member "Team member",
   :task.status/in-preparation "In preparation",
   :thk.contract.status/signed "Signed",
   :document.category/as-built-doc "Construction documentation",
@@ -728,6 +733,8 @@
   :notification.type/comment-unresolved "Comment unresolved",
   :task.type/construction-other-facilities "Other facilities",
   :task.type/general-part "General part",
+  :company-contract-employee.role/company-representative
+  "Company representative",
   :cooperation.application.response-type/opinion "Opinion",
   :activity.status/completed "Completed",
   :activity.name/preliminary-design "Preliminary design",
@@ -1471,7 +1478,7 @@
   :submit-results-confirm
   "Are you sure you wish to submit this task part for review?",
   :approve-part-confirm "Are you sure you wish approve the task part?",
-  :accept "Agreed",
+  :accept "Agree",
   :reject-part-confirm
   "Are you sure you wish to send back the task part?"},
  :unit-info {:owners-opinions "Land owners opinions"},
