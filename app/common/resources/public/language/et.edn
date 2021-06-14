@@ -93,7 +93,7 @@
   :page
   {:cost-items "Varad",
    :cost-items-totals "Summad",
-   :materials-and-products nil},
+   :materials-and-products "Materjalid ja tooted"},
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
@@ -102,8 +102,8 @@
    :search-nearby "Läheduses",
    :result-count "{count} nähtust",
    :radius "Raadius",
-   :add-road-address "Lisage tee aadress",
-   :select-road-address "Valige",
+   :add-road-address "Lisan tee aadressi",
+   :select-road-address "Valin",
    :back-to-result-listing "Tagasi tulemuste loendi juurde"},
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
@@ -145,7 +145,7 @@
  :buttons
  {:confirm "Kinnitan",
   :duplicate "Kopeerin",
-  :open "Laiendan",
+  :open "Avan",
   :continue "Jätkan",
   :edit "Muudan",
   :delete "Kustutan",
@@ -218,7 +218,7 @@
   :select-all "Valin kõik",
   :hotkey "klahv {key}",
   :total "Kokku",
-  :contract-menu "Lepingud",
+  :contract-menu "Lepingu menüü",
   :language "Keel",
   :filter-shortcuts "Filtri otseteed",
   :unassigned "Määramata",
@@ -238,14 +238,15 @@
  :contract
  {:no-targets-for-contract
   "Lepingu integreerimine ei õnnestunud ja sellel lepingul pole kehtivaid eesmärke.\nVeateate saamiseks pöörduge administratsiooni poole",
-  :partner-information-text nil,
+  :partner-information-text
+  "Valige või lisage vasakust menüüst uus ettevõtte, alltöövõtja või isik.",
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
-  :partner-saved nil,
+  :partner-saved "Lepingu partner on lisatud",
   :related-contracts "SEOTUD LEPINGUD",
   :thk.contract/type "Tüüp",
-  :no-company-found-title nil,
+  :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
@@ -253,6 +254,7 @@
   :add-company-not-in-teet "Lisa uus ettevõtte",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
+  :partners {:title nil},
   :add-company "Lisa ettevõtte",
   :status "Staatus",
   :table-heading
@@ -263,23 +265,26 @@
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
-  :xroad-exception-content nil,
+  :xroad-exception-content
+  "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :partners-listing "Partnerite loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Valmis",
   :company-search-label "Ettevõtte otsing",
   :contracts-listing "Lepingute loetelu",
-  :lead-partner nil,
+  :lead-partner "Juhtpartner",
   :edit-contract "Lepingu info",
-  :no-company-found-content nil,
-  :xroad-exception-title nil,
-  :search-companies-business-registry nil,
+  :no-company-found-content
+  "Äriregistri koodile vastavat ettevõtet ei leitud.",
+  :xroad-exception-title "X-tee päring nurjus",
+  :search-companies-business-registry
+  "Ettevõtte informatsiooni otsing  äriregistrist",
   :thk.contract.status/in-progress "Töös"},
  :contracts
  {:contracts-list
-  {:collapse-all "Ahenda kõik",
-   :expand-all "Laeinda kõik",
+  {:collapse-all "Sulgen kõik",
+   :expand-all "Avan kõik",
    :result "Tulemus",
    :results "tulemust",
    :view "Vaata"},
@@ -548,6 +553,7 @@
   :land-owner-opinion.type/construction "Ehitus",
   :notification.type/task-waiting-for-review
   "Ülesanne ootab ülevaatamist",
+  :company-contract-employee.role/company-project-manager nil,
   :task.type/acceptances "Kooskõlastused",
   :document.sub-category/terms-of-reference "Lähteülesanne",
   :document.sub-category/report "Aruanne",
@@ -632,6 +638,7 @@
   :task.type/calculation "Konstruktsiooni arvutused",
   :land-acquisition.status/in-progress "Töös",
   :activity.name/warranty "Garantii",
+  :company-contract-employee.role/supervisor nil,
   :task.type/construction-general-part "Ülddokumendid",
   :cooperation.opinion.status/partially-rejected
   "Võtta arvesse osaliselt",
@@ -682,6 +689,7 @@
   "Ülesande ülevaatamine tagasi lükatud",
   :cooperation.response.status/no-response "Vastust ei ole",
   :land-acquisition.status/completed "Lõpetatud",
+  :company-contract-employee.role/team-member nil,
   :task.status/in-preparation "Ettevalmistamisel",
   :thk.contract.status/signed "Allkirjastatud",
   :document.category/as-built-doc "Täitedokumentatsioon",
@@ -721,6 +729,7 @@
   :notification.type/comment-unresolved "Lahendamata",
   :task.type/construction-other-facilities "Muud rajatised",
   :task.type/general-part "Ülddokumendid",
+  :company-contract-employee.role/company-representative nil,
   :cooperation.application.response-type/opinion "Arvamus",
   :activity.status/completed "Valmis",
   :activity.name/preliminary-design "Eelprojekt",
@@ -1482,7 +1491,8 @@
   :role "Roll",
   :unregistered "Kasutaja"},
  :validation
- {:invalid-business-id nil, :invalid-email "Vale emaili aadress"},
+ {:invalid-business-id "Vale äriregistri kood",
+  :invalid-email "Vale emaili aadress"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
