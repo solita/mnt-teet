@@ -273,6 +273,9 @@ function read-instance-tag {
 function run-caddy-revproxy {
     patient-docker-pull caddy:2-alpine
     cat > Caddyfile <<EOF
+{
+  default_sni ${MYDNS}
+}
 
 ${MYDNS}:443 {
   reverse_proxy teetapi:3000
@@ -391,7 +394,7 @@ function run-in-ec2 {
 	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}},{Key=teet-machine-id,Value=${MACHINE_ID}}]"  \
         --launch-template LaunchTemplateName=standalone-teetapp-template | tee "$RUNINFOFILE"
     INSTANCEID="$(jq -r .Instances[0].InstanceId < "$RUNINFOFILE")"
-    echo "waiting for address assignment"
+    echo "waiting for address assignment"    
     while sleep 10; do
 	ADDR="$(public-addr-of-instance "$INSTANCEID")"
 	if [ -z "$ADDR" ]; then
