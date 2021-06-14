@@ -95,6 +95,36 @@
                       :title "Information found"
                       :content [company-info-column company]}]]])
 
+(defn edit-company-footer
+  [e! form-value {:keys [cancel validate disabled?]}]
+  (let [search-disabled? (or (not
+                               (validation/valid-estonian-business-registry-id?
+                                 (:company/business-registry-code form-value)))
+                           (:search-in-progress? form-value))
+        estonian-company? (= (:company/country form-value) :ee)
+        search-success? (:search-success? form-value)]
+    [:div {:class (<class form/form-buttons)}
+     [:div {:style {:margin-left :auto
+                    :text-align :center}}
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (when cancel
+         [buttons/button-secondary {:style {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])
+       (if (and estonian-company? (not search-success?))
+         [buttons/button-primary {:disabled search-disabled?
+                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry
+                                              (:company/business-registry-code form-value))}
+          (tr [:buttons :search])]
+         (when validate
+           [buttons/button-primary {:disabled disabled?
+                                    :type :submit
+                                    :class "submit"
+                                    :on-click validate}
+            (tr [:buttons :save])]))]]]))
+
 (defn new-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
   (let [search-disabled? (or (not
@@ -158,6 +188,12 @@
      [common/info-box {:variant :info
                        :content [:span (tr [:contract :search-companies-business-registry])]}])])
 
+(defn edit-company-form-fields
+  [form-value]
+  ; @TODO Fix!
+  (println "edit-company-form-fields")
+  [foreign-fields])
+
 (defn new-company-form-fields
   [form-value]
   (let [foreign-company? (not= :ee (:company/country form-value))
@@ -166,9 +202,26 @@
     [:div
      [form/field :company/country
       [select/country-select {:show-empty-selection? true}]]
-     (if foreign-company?
+     (if true
        [foreign-fields]
        [estonian-form-section business-search-failed? exception-in-xroad?])]))
+
+(defn edit-partner-form
+  [e! app selected-company]
+  (fn [e! contract {:keys [search-success?] :as form-value}]
+    (r/with-let [on-change #(e! (contract-partners-controller/->UpdateNewCompanyForm %))]
+      [Grid {:container true}
+       [Grid {:item true
+              :xs 12
+              :md 6}
+        [form/form2 {:e! e!
+                     :value form-value}
+
+         [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
+          (tr [:contract :edit-company])]
+         (edit-company-form-fields form-value)
+         [form/footer2 (r/partial edit-company-footer e! form-value)]]]]
+      )))
 
 (defn new-partner-form
   [e! _ _]
@@ -249,15 +302,20 @@
      (tr [:contract :add-company])]]])
 
 (defn partner-info-header
-  [partner-name lead-partner? on-partner-edit]
+  [partner-name params]
   [:<>
    [:h1 partner-name]
-   [buttons/button-secondary (tr [:buttons :edit])]])
+   [buttons/button-secondary
+    {:edit-icon (r/as-element [icons/image-edit])
+     :href (routes/url-for {:page :contract-partners
+                            :params params
+                            :query {:page :edit-partner}})}
+    (tr [:buttons :edit])]])
 
 (defn partner-info
-  [e! app selected-partner]
+  [e! {:keys [params] :as app} selected-partner]
   [:<>
-   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])]
+   [partner-info-header (get-in selected-partner [:company-contract/company :company/name]) params]
    [:p (pr-str selected-partner)]])
 
 (defn partners-page-router
@@ -273,6 +331,8 @@
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
+      :edit-partner
+      [edit-partner-form e! app selected-partner]
       [partners-default-view params])))
 
 ;; navigated to through routes.edn from route /contracts/*****/partners

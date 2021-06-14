@@ -5,8 +5,10 @@
             [teet.log :as log]))
 
 (defrecord UpdateNewCompanyForm [form-data])
+(defrecord UpdateEditCompanyForm [form-data])
 (defrecord CancelAddNewCompany [])
 (defrecord InitializeNewCompanyForm [])
+(defrecord InitializeEditCompanyForm [])
 (defrecord SearchBusinessRegistry [business-id])
 (defrecord SearchBusinessRegistryError [error])
 (defrecord SelectCompany [company])
@@ -16,6 +18,11 @@
   UpdateNewCompanyForm
   (process-event [{form-data :form-data} app]
     (update-in app [:forms :new-partner] merge form-data))
+
+  UpdateEditCompanyForm
+  (process-event [{form-data :form-data} app]
+    ; @TODO: implement
+    (println "UpdateEditCompanyForm" form-data))
 
   InitializeNewCompanyForm
   (process-event [{} app]
@@ -28,6 +35,11 @@
             (assoc-in [:forms :new-partner] {:company/country :ee})
             (assoc-in [:forms :new-partner :company-contract/lead-partner?] true))
         (assoc-in app [:forms :new-partner] {:company/country :ee}))))
+
+  InitializeEditCompanyForm
+  (process-event [{} app]
+    ; @TODO: implement
+    (println "Edit Company Form initialized"))
 
   CancelAddNewCompany
   (process-event [{} app]
