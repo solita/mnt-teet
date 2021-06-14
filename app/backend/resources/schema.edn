@@ -2105,5 +2105,19 @@
 
  {:db/ident :migration/add-uniqueness-to-business-id
   :txes [[{:db/ident :company/business-registry-code
-           :db/unique :db.unique/identity}]]}]
+           :db/unique :db.unique/identity}]]}
+
+ ;; TEET-1671 Import owners supervision and audit tasks and contracts from thk-teet csv to teet
+ {:db/ident :migration/import-owner-supervision-and-audit-tasks
+  :txes [[{:db/ident :task.type/owners-supervision,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-quality-assurance,
+           :thk/task-type :thk.task-type/owners-supervision,
+           :filename/code "OJ"}
+
+          {:db/ident :task.type/road-safety-audit,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-approval,
+           :thk/task-type :thk.task-type/road-safety-audit,
+           :filename/code "LA"}]]}]
 

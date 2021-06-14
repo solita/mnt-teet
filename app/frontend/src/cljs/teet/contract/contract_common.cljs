@@ -18,7 +18,8 @@
   [{:thk.contract/keys [procurement-number]}]
   (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
     [common/external-contract-link
-     {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
+     {:href (str (environment/config-value :contract :state-procurement-url)
+              procurement-number "/general-info")}
      (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
     [:span (str (tr [:contracts :state-procurement-link]) " " procurement-number)]))
 

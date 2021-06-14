@@ -20,7 +20,7 @@ Version numbering for TEET is `43.yy.mm.N` where
 `N` is a sequence number (always starts at 1 for a new year/month pair).
 
 So the first version of january 2020 would be `43.20.01.1`.
-Versions are made into branches named `v<version>`.
+Versions are made into branches named `release-v<version>`.
 
 ## Feature flags
 

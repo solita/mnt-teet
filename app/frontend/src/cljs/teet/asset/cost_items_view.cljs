@@ -455,7 +455,7 @@
 (defn- material-label [atl m]
   (->> m :material/type (asset-type-library/item-by-ident atl) tr*))
 
-(defn- materials-list
+(defn materials-list
   [component {:keys [e! atl] :as opts}]
   [context/consume :locked?
    [children-tree* (assoc opts

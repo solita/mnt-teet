@@ -4,6 +4,7 @@
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [herb.core :refer [<class]]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
@@ -23,7 +24,8 @@
             [teet.contract.contract-status :as contract-status]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contracts-view :as contracts-view]
-            [teet.ui.table :as table]))
+            [teet.ui.table :as table]
+            [teet.common.common-styles :as common-styles]))
 
 
 (defrecord TestFileUpload [files])
@@ -404,6 +406,14 @@
        :label [:strong "bar"]
        :data [:span "wiuh"]}]]]])
 
+(defn basic-ui-component-demo
+  []
+  [:div
+   [:div {:class (<class common-styles/margin-bottom 2)}
+    [:h1 {:class (<class common-styles/margin-bottom 1)}
+     "Primary tag component: "]
+    [common-ui/primary-tag "Primary tag"]]])
+
 (def demos
   [{:id :context-menu
     :heading "Context menu"
@@ -449,7 +459,11 @@
     :component [simple-table-demo]}
    {:id :basic-information-column
     :heading "basic info column demo"
-    :component [basic-information-column-demo]}])
+    :component [basic-information-column-demo]}
+
+   {:id :common-basic-ui-components
+    :heading "basic UI components demo"
+    :component [basic-ui-component-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]

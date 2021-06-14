@@ -383,7 +383,15 @@
    :args {oid :asset/oid}
    :project-id nil
    :authorization {}}
-  (asset-type-library/db->form
-   (asset-type-library/rotl-map
-    (asset-db/asset-type-library adb))
-   (d/pull adb '[*] [:asset/oid oid])))
+  (let [oid (cond
+              (asset-model/material-oid? oid)
+              (asset-model/material-asset-oid oid)
+
+              (asset-model/component-oid? oid)
+              (asset-model/component-asset-oid oid)
+
+              :else oid)]
+    (asset-type-library/db->form
+     (asset-type-library/rotl-map
+      (asset-db/asset-type-library adb))
+     (d/pull adb '[*] [:asset/oid oid]))))

@@ -56,7 +56,8 @@
   ctx)
 
 (defn- delete-backup-file [{file :file :as ctx}]
-  (.delete (io/file file))
+  (when (some? file)
+        (.delete (io/file file)))
   (dissoc ctx :file))
 
 (def ^{:private true
