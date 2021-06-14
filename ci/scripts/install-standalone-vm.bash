@@ -9,7 +9,7 @@
 # This will start the vm, detect what git branch you are on and try to check out that same branch at the remote vm.
 
 
-MACHINE_ID=b # pick one from a-e that doesn't conflict with someone else
+: ${MACHINE_ID:=a} # pick one from a-e that doesn't conflict with someone else
 
 
 # exit on unhandled error status, error on undefined var references, consider pipelines failed when either side fails
@@ -189,10 +189,9 @@ function setup-postgres {
     env PSQL_TEET_DB_OWNER=teetmaster bash devdb_clean.sh
     cd ../..
     
-    createuser -h localhost -U postgres teetmaster
     PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" > t.dump
     du -h t.dump
-    pg_restore -c -d teet -h localhost -U postgres < t.dump
+    pg_restore -c -d teet -h localhost -U postgres < t.dump || true # sadly no way to tell between drop errors and actual restore errors
     psql -c "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;" -h localhost -U postgres teet
 }
 
