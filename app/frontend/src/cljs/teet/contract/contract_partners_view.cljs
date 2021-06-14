@@ -226,9 +226,17 @@
                              :query {:page :add-partner}})}
      (tr [:contract :add-company])]]])
 
+(defn partner-info-header
+  [partner-name lead-partner? on-partner-edit]
+  [:<>
+   [:h1 partner-name]
+   [buttons/button-secondary (tr [:buttons :edit])]])
+
 (defn partner-info
   [e! app selected-partner]
-  [:h1 (pr-str selected-partner)])
+  [:<>
+   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])]
+   [:p (pr-str selected-partner)]])
 
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
