@@ -265,9 +265,11 @@
   (let [ctype (-> material :component/_materials :component/ctype)
         fclass (asset-type-library/fclass-for-ctype atl ctype)
         fgroup (asset-type-library/fgroup-for-fclass atl fclass)]
-        (assoc material
-           :fclass (select-keys fclass [:db/id :db/ident :asset-schema/label])
-           :fgroup (select-keys fgroup [:db/id :db/ident :asset-schema/label]))))
+    (update material
+            :component/_materials
+            assoc
+            :fclass (select-keys fclass [:db/id :db/ident :asset-schema/label])
+            :fgroup (select-keys fgroup [:db/id :db/ident :asset-schema/label]))))
 
 (defn- select-material-grouping-attributes [entity atl]
   (-> entity

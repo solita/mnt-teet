@@ -10,7 +10,9 @@
             [teet.thk.thk-mapping :as thk-mapping]
             [clojure.java.io :as io]
             [teet.meta.meta-model :as meta-model]
-            [teet.integration.integration-id :as integration-id]))
+            [teet.integration.integration-id :as integration-id]
+            [teet.util.date :as date]))
+
 
 (use-fixtures :each
   tu/with-global-data
@@ -108,46 +110,46 @@
         (testing "All non-excluded projects are found by id after import"
           ;; Also note that 66666, a TUGI project, is not present
           (is (=
-               #{"11111" "22222" "33333" "44444" "55555" "77777" "790"}
-               (into #{}
-                     (map first)
-                     (d/q '[:find ?id
-                            :where [_ :thk.project/id ?id]]
-                          db)))))
+                #{"11111" "22222" "33333" "44444" "55555" "77777" "790"}
+                (into #{}
+                  (map first)
+                  (d/q '[:find ?id
+                         :where [_ :thk.project/id ?id]]
+                    db)))))
 
         (testing "All lifecycles and activities have integration"
           (is (every? #(contains? % :integration/id)
-                      (map first
-                           (d/q '[:find (pull ?e [:integration/id])
-                                  :where (or [?e :thk.lifecycle/id _]
-                                             [?e :thk.activity/id _])]
-                                db)))))
+                (map first
+                  (d/q '[:find (pull ?e [:integration/id])
+                         :where (or [?e :thk.lifecycle/id _]
+                                  [?e :thk.activity/id _])]
+                    db)))))
 
         (testing "Project 1 is owned by existing Danny"
           (let [{owner :thk.project/owner :as _p1}
                 (d/pull db '[{:thk.project/owner [*]}]
-                        [:thk.project/id "11111"])]
+                  [:thk.project/id "11111"])]
             (is (= {:user/person-id "EE12345678900"
                     :user/given-name "Danny D."
                     :user/family-name "Manager"}
-                   (select-keys owner [:user/person-id
-                                       :user/given-name
-                                       :user/family-name])))))
+                  (select-keys owner [:user/person-id
+                                      :user/given-name
+                                      :user/family-name])))))
         (testing "Project 5 has newly created owner"
           (let [{owner :thk.project/owner :as _p5}
                 (d/pull db '[* {:thk.project/owner [*]}]
-                        [:thk.project/id "55555"])]
+                  [:thk.project/id "55555"])]
             (is (= {:user/person-id "EE66666666666"}
-                   (select-keys owner [:user/person-id])))
+                  (select-keys owner [:user/person-id])))
             (is (= #{:db/id :user/person-id}
-                   (set (keys owner))))))))
+                  (set (keys owner))))))))
 
     (testing "Imported contracts information is correct"
       (let [db (tu/db)]
         (testing "Amount of contracts found is correct"
           (is (= 3 (count (d/q '[:find (pull ?c [*])
                                  :where [?c :thk.contract/procurement-id _]]
-                               db)))))
+                            db)))))
         (testing "One of the contracts has a part name and the contract target exists"
           (is (= 1 (count (d/q '[:find ?c
                                  :where
@@ -155,7 +157,16 @@
                                  [?c :thk.contract/procurement-part-id _]
                                  [?c :thk.contract/targets ?t]
                                  [?t :thk.activity/id "5455"]]
-                               db))))))))
+                            db)))))))
+
+    (import-contracts-csv! (.getBytes (slurp "test/teet/thk/thk-test-update-contracts.csv")))
+
+    (testing "Updated contracts have updated values and missing modified-at"
+      (let [db (tu/db)]
+        (is (= 1 (count (d/q '[:find (pull ?c [*])
+                               :where [?c :thk.contract/procurement-number "Changed"]
+                               [(missing? $ ?c :meta/modified-at)]]
+                          db)))))))
 
   ;; Create tasks for p1 activity that is sent to THK
   (let [act-id (ffirst
@@ -376,7 +387,6 @@
                         [?a :activity/name :activity.name/construction]
                         :in $ ?p]
                    (tu/db) [:thk.project/id "790"]))]
-    (println "Construction activity-id for 790 project/id is " activity-id)
     (tu/store-data! :construction-activity-id activity-id)
 
     ; Set integration/id for the Construction Activity so, it can be found during importing tasks
@@ -387,15 +397,39 @@
     (let [no-tasks (d/q '[:find ?tasks
                           :where [?e :activity/tasks ?tasks]
                           :in $ ?e] (tu/db) activity-id)]
-      (testing (is (= 0 (count no-tasks))) "No new tasks created after projects import" ))
+      (testing "No new tasks created after projects import" (is (= 0 (count no-tasks))) ))
 
     ; Import new tasks
     (import-tasks-csv!)
 
-    ; Verify new task count
+    ; Verify new tasks count and content
     (let [new-construction-activity-tasks
           (d/q '[:find ?tasks
                  :where [?e :activity/tasks ?tasks]
-                 :in $ ?e] (tu/db) activity-id)]
-      (println "New Construction Activity tasks: " new-construction-activity-tasks)
-      (testing (is (= 3 (count new-construction-activity-tasks))) "After tasks import 3 new tasks imported"))))
+                 :in $ ?e] (tu/db) activity-id)
+          task-with-actual-start-date (ffirst (d/q '[:find (pull ?tasks [*])
+                                                     :where [?e :activity/tasks ?tasks]
+                                                     [?tasks :task/actual-start-date _]
+                                                     :in $ ?e] (tu/db) activity-id))
+          expected-actual-start-date (date/->start-of-date 2022 9 20)
+          expected-thk-activity-id "18913"]
+      (testing "After tasks import 3 new tasks imported"
+        (is (= 3 (count new-construction-activity-tasks))))
+      (testing "Actual start date has been imported"
+        (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date))))
+      (testing "THK Activity ID has been imported"
+        (is (= expected-thk-activity-id (:thk.activity/id task-with-actual-start-date)))))
+
+    (testing "Exporting has new tasks "
+      (export-csv)
+      (let [rows (tu/get-data :export-rows)
+            csv (tu/get-data :export-csv)
+            activity-ids (into #{}
+                           (map #(get % "activity_id")
+                             rows))
+            activity-typefks (into #{}
+                              (map #(get % "activity_typefk") rows))]
+        (is (= #{"18913" "4717" "4718" "6000" "5488" "6594" "5455" "896" "897"} activity-ids)
+          "rows have all allowed THK activity ids")
+        (is (= #{"4003" "4005" "4006" "4009"} activity-typefks)
+          "THK activity type fk field imported for all tasks")))))

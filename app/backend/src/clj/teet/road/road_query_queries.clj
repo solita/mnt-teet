@@ -48,6 +48,26 @@
   (road-query/fetch-road-geometry (tr-config)
                                   road carriageway start-m end-m))
 
+(defquery :road/address-geometry-geojson
+  {:doc "Fetch road geometries for addresses as GeoJSON"
+   :context _
+   :args {addr :road-address}
+   :project-id nil
+   :authorization {}}
+  (let [c (tr-config)]
+    ^{:format :raw}
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (cheshire/encode
+            {:type "FeatureCollection"
+             :features
+             (for [{:keys [road-nr carriageway start-m end-m]} addr
+                   :let [g (road-query/fetch-road-geometry
+                            c road-nr carriageway start-m end-m)]]
+               {:type "Feature"
+                :geometry {:type "LineString"
+                           :coordinates g}})})}))
+
 (defquery :road/geometry-with-road-info
   {:doc "Fetch road geometry for road address, along with information about the road."
    :context _
