@@ -19,7 +19,6 @@ TEET_GIT_URL=https://github.com/solita/mnt-teet.git
 export AWS_REGION=eu-central-1
 export AWS_DEFAULT_REGION=$AWS_REGION
 
-# used just for postgres password now
 function gensecret {
     name="$1"
     touch "$name.secret"
@@ -271,6 +270,13 @@ function detect-instance-branch {
 
 }
 
+function detect-machine-id {
+    local myid
+    myid="$(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
+    MACHINE_ID="$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=teet-machine-id" | jq -r ".Tags[0].Value")"
+
+}
+
 
 function run-caddy-revproxy {
     patient-docker-pull caddy:2-alpine
@@ -350,6 +356,7 @@ function install-deps-and-app {
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
     
+    detect-machine-id # read from tags
     update-dyndns $MACHINE_ID # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
     
@@ -389,7 +396,7 @@ function run-in-ec2 {
     fi
     aws ec2 run-instances --count 1 --instance-type t3.xlarge --key-name "${SSHKEYID}" \
         --user-data "file://${SCRIPTPATH}" \
-	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}}]"  \
+	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}},{Key=teet-machine-id,Value=${MACHINE_ID}}]"  \
         --launch-template LaunchTemplateName=standalone-teetapp-template | tee "$RUNINFOFILE"
     INSTANCEID="$(jq -r .Instances[0].InstanceId < "$RUNINFOFILE")"
     echo "waiting for address assignment"
@@ -407,7 +414,9 @@ function run-in-ec2 {
         
     SLEEPSECS="$[60 * 60 * 8 - 300]"
     echo Will terminate instance "$INSTANCEID" on "$(date --iso=seconds -d "now + $SLEEPSECS seconds")"
-    echo "(Toggle termination protection on the instance to prevent automatic termination)"
+    echo "Toggle termination protection on the instance to prevent automatic termination"
+    echo "To terminate early, run: aws ec2 terminate-instances --instance-ids $INSTANCEID"
+    
     sleep $[60 * 60 * 8 - 300] # 5 mins short of 8 hours, for 8 build codebuild time limit
     echo not running aws ec2 terminate-instances --instance-ids "$INSTANCEID"
     control-datomic-bastion-ssh-access off
@@ -420,20 +429,13 @@ if [ $# -gt 0 ]; then
 	echo unknown arg "$1"
 	exit 1
     fi
-    
+    shift
     # assume we're running in codebuild or dev workstation
-    if [ $# = 2 ]; then
-	run-in-ec2 "$2" # keypair name arg
-    else
-	run-in-ec2
-    fi
+    run-in-ec2 "$@" # keypair name passed as arg
     
 else
-    # assume we're running as the cloud-init script (aka user-data script, aka scripts-user script) inside the vm
-    # - log files on instance for troubleshooting: look for likes like this in /var/log/syslog:
-    # May 24 11:56:36 ip-xxx cloud-init[1271]: /var/lib/cloud/instance/scripts/part-001: line 319: <some bash error message>
-    # [...]
-    # May 24 11:56:36 ip-xxx cloud-init[1271]: 2021-05-24 11:56:36,942 - cc_scripts_user.py[WARNING]: Failed to run module scripts-user (scripts in /var/lib/cloud/instance/scripts)
+    # we're running as the cloud-init script (aka user-data script) inside the vm
+    # - output will appear as cloud-init messages in /var/log/syslog
     echo starting teet app install
     set -x
     install-deps-and-app
