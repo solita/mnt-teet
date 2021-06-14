@@ -29,7 +29,6 @@
 
 (defn contract-external-link
   [{:thk.contract/keys [external-link procurement-number]}]
-  [{:thk.contract/keys [external-link procurement-number]}]
   (when external-link
     [common/external-contract-link {:href external-link}
      (str (tr [:contracts :external-link]) " " procurement-number)]))
