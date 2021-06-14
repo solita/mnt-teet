@@ -220,6 +220,20 @@
   :title "Admin view"
   :crumb (tr [:admin :title])}
 
+ :admin-users
+ {:path "/admin/users"
+  :parent :admin
+  :view teet.admin.admin-view/admin-users-page
+  :title (tr [:admin :title-users])
+  :crumb (tr [:admin :title-users])}
+
+ :admin-indexes
+ {:path "/admin/indexes/:id"
+  :parent :admin
+  :view teet.admin.admin-view/admin-indexes-page
+  :title (tr [:admin :title-indexes])
+  :crumb (tr [:admin :title-indexes])}
+
  :admin-inspector
  {:path "/admin/inspect/:id"
   :view teet.admin.admin-view/inspector-page

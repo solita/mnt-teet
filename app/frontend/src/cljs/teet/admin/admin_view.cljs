@@ -21,7 +21,8 @@
             [teet.ui.common :as common-ui]
             [teet.ui.context :as context]
             [teet.user.user-model :as user-model]
-            [teet.util.date :as date]))
+            [teet.util.date :as date]
+            [teet.admin.indexes-view :as indexes-view]))
 
 (defn user-save-form-button
   [invalid-attributes {:keys [validate]}]
@@ -328,6 +329,19 @@
                    :label (tr [:fields field])
                    :on-change #(on-change field (-> % .-target .-value))}]))])
 
+(defn- admin-heading-menu
+  []
+  [:div {:class (<class common-styles/top-info-spacing)}
+   [common-ui/context-menu {:label "Admin menu"
+                            :icon [icons/navigation-menu]
+                            :items [{:label "Users"
+                                     :link {:href "../#/admin/users"}
+                                     :icon [icons/action-verified-user]}
+                                    {:label "Indexes"
+                                     :link {:href "../#/admin/indexes"}
+                                     :icon [icons/action-list]}
+                                    ]}]])
+
 (defn user-search-filters
   [e! filtering-atom]
   (r/with-let [change-group #(swap! filtering-atom assoc :user-group %)
@@ -336,15 +350,24 @@
     [:div {:style {:min-width "300px"
                    :background-color theme-colors/gray-dark
                    :color theme-colors/white}}
-     [:div {:style {:padding "1rem"}}
+      [:div {:style {:padding "1rem"}}
       [search-shortcuts (:user-group @filtering-atom) change-group]
       [search-inputs e! @filtering-atom input-change]]]))
 
-(defn admin-page [e! {admin :admin
-                      route :route}]
+
+(defn admin-indexes-page
+  [e! {{id :id} :params :as _app}]
+  [:div
+   [admin-heading-menu]
+   [indexes-view/indexes-page e! id]])
+
+(defn admin-users-page
+  [e! admin route]
   (r/with-let [filtering-atom (r/atom {:user-group nil})]
     (let [user-form (:create-user admin)]
-      [:div {:style {:padding "1.875rem 1.5rem"
+      [:div
+       [admin-heading-menu]
+       [:div {:style {:padding "1.875rem 1.5rem"
                      :display :flex
                      :height "calc(100vh - 220px)"
                      :flex-direction :column
@@ -374,7 +397,13 @@
            :args {:payload @filtering-atom
                   :refresh (:admin-refresh route)}
            :simple-view [user-list e! admin]}
-          500]]]])))
+          500]]]]]))
+  )
+
+(defn admin-page [e! {admin :admin
+                      route :route}]
+    [admin-heading-menu]
+  )
 
 (defn- inspector-value [db link? value]
   (if link?
