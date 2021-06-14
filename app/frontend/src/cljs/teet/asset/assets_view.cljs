@@ -338,7 +338,7 @@
   (let [icon-button-classes
         #js {:root (str (<class common-styles/rounded-border) " "
                         (<class common-styles/padding 0.2))}]
-    [typography/Heading1
+    [typography/Heading3 {:style {:margin "0.5rem"}}
      (tr [:asset :manager :result-count]
          {:count result-count})
      [:div {:style {:float :right
@@ -406,7 +406,7 @@
                (when-not (@show :table)
                  [:div {:style {:position :absolute
                                 :z-index 9999
-                                :background-color (theme-colors/primary-alpha 0.2)
+                                :background-color (theme-colors/white-alpha 0.8)
                                 :margin "1rem"}}
                   [result-indicator {:show @show :set-show! set-show!
                                      :result-count result-count}]])

@@ -16,6 +16,7 @@
 (def blue-lightest (lighten blue-lighter 10))
 (def orange "#FF8000")
 
+
 ;; Grayscale
 (def gray-dark "#34394C")
 (def gray "#5D6071")
@@ -23,6 +24,9 @@
 (def gray-lighter "#DBDFE2")
 (def gray-lightest "#F2F3F3")
 (def white "#FFFFFF")
+
+(defn white-alpha [alpha]
+  (str "rgba(255,255,255," alpha ")"))
 
 (def black-coral-1 "#D2D3D8")                               ;;not sure how these should be used, straight from the design
 (def black-coral "#5D6071")
@@ -77,3 +81,7 @@
 (def text-disabled "#9799A4")
 
 (def text-medium-emphasis "#4D4f5D")
+
+(defn print-colors []
+  (doseq [[k v] (ns-publics 'teet.theme.theme-colors)]
+    (println k " => " @v)))
