@@ -605,3 +605,14 @@
    :max-height (str "calc(100vh - " theme-spacing/appbar-height " - "
                     (str/join " - " element-heights-above-content)
                     ")")})
+
+(defn rounded-border
+  ([]
+   (rounded-border "50%"))
+  ([border-radius]
+   (rounded-border border-radius theme-colors/black-coral))
+  ([border-radius color]
+   (rounded-border border-radius color "1px"))
+  ([border-radius color border-width]
+   {:border (str "solid " border-width " " color)
+    :border-radius border-radius}))
