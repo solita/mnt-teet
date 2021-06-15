@@ -345,8 +345,10 @@
     (str result-count-limit "+")
     (count assets)))
 
-(defn results-map [{:keys [e! atl criteria results]}]
+(defn results-map [{:keys [e! atl criteria results map-key]
+                    :or {map-key "results-map"}}]
   (let [{:keys [geojson highlight-oid]} results]
+    ^{:key map-key}
     [map-view/map-view e!
      {:full-height? true
       :layers
@@ -376,7 +378,7 @@
       :key :asset/oid}]))
 
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
-  (let [show (r/atom #{:map :table})
+  (let [show (r/atom #{:map})
         set-show! #(reset! show %)
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
@@ -403,7 +405,7 @@
                  [:<>
                   [result-indicator {:show @show :set-show! set-show!
                                      :result-count result-count}]
-                  [results-table {:e! e! :atl atl :results results} ]])]
+                  [results-table {:e! e! :atl atl :results results}]])]
 
               map-pane
               [:<>
@@ -414,9 +416,9 @@
                                 :margin "1rem"}}
                   [result-indicator {:show @show :set-show! set-show!
                                      :result-count result-count}]])
-               ^{:key (str "map" @map-key)}
                [results-map {:e! e! :atl atl :criteria criteria
-                             :results results}]
+                             :results results
+                             :map-key (str "map" @map-key)}]
                (when (= :current-location (:search-by criteria))
                  [radius-display e! criteria])]]
           [:<>
