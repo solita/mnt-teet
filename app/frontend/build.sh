@@ -3,7 +3,12 @@ set -eu
 
 clojure -A:prod
 
-branch="$CODEBUILD_SOURCE_VERSION"
+if [ -z "$CODEBUILD_SOURCE_VERSION" ]; then
+    branch=$(git rev-parse --abbrev-ref HEAD)
+else
+    branch="$CODEBUILD_SOURCE_VERSION"
+fi
+
 #`git branch | grep "*" | cut -f2 -d' '`
 
 githash=`git rev-parse HEAD`
