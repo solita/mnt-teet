@@ -6,6 +6,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.ui.icons :as icons]
+            [teet.ui.build-info :as build-info]
             [teet.localization :refer [tr]]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
@@ -21,10 +22,8 @@
     [navigation-logo/logo-shield {:height 120 :width 260}]]])
 
 (defn- dummy-login? []
-  (let [host js/window.location.hostname]
-    (or (= host "localhost")
-        (string/ends-with? host ".solitacloud.fi")
-        (re-matches #"[a-z]\..*" host))))
+  (= :dev
+     (build-info/detect-env js/window.location.hostname)))
 
 (defn login-page-heading-style
   []
