@@ -604,11 +604,15 @@
               (tr [:asset :add-component])
               allowed-components
               (e! cost-items-controller/->AddComponent)])
-           (when-let [allowed-materials (asset-type-library/allowed-material-types atl ctype)]
-             [add-component-menu
-              (tr [:asset :add-material])
-              allowed-materials
-              (e! cost-items-controller/->AddMaterial)])])
+           (let [added-materials (into #{} (map :material/type) (:component/materials component-data))
+                 allowed-materials
+                 (remove (comp added-materials :db/ident)
+                         (asset-type-library/allowed-material-types atl ctype))]
+             (when (seq allowed-materials)
+               [add-component-menu
+                (tr [:asset :add-material])
+                allowed-materials
+                (e! cost-items-controller/->AddMaterial)]))])
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
