@@ -263,9 +263,37 @@
                   :margin "2rem 0"}}
     [select/form-select {:value "et"
                          :label "Language"
+                         :on-change #()
                          :show-empty-selection? true
                          :id "language-select"
                          :name "Language"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error-tooltip"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :error-tooltip? true
                          :items
                          [{:value "et" :label "bar"}
                           {:value "en" :label "baz"}]}]]
