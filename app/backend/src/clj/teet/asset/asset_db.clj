@@ -285,6 +285,43 @@
        (map (fn [[group materials]]
               (assoc group :component/_materials  (map :component/_materials materials))))))
 
+(defn- component-cost-group-attrs-q
+  "Return all cost group attrs for components."
+  [db oids]
+  (d/q '[:find ?a ?type-ident ?attr-ident ?val ?value-type-ident
+         :keys id type attr val val-type
+         :where
+         [?a :asset/oid ?oid]
+         [?a :component/ctype ?type]
+         [?a ?attr ?val]
+         (or [?attr :attribute/cost-grouping? true]
+             [?attr :db/ident :common/status]
+             [?attr :db/ident :location/road-nr])
+         [?attr :db/ident ?attr-ident]
+         [?type :db/ident ?type-ident]
+         [?attr :db/valueType ?value-type]
+         [?value-type :db/ident ?value-type-ident]
+         :in $ [?oid ...]]
+       db oids))
+
+(defn- component-material-cost-group-attrs-q
+  "Return all material cost group attrs for a components."
+  [db component-ids]
+  (d/q '[:find ?c ?type-ident ?attr-ident ?val ?value-type-ident
+         :keys id type attr val val-type
+         :where
+         [?c :component/materials ?m]
+         [?a :component/ctype ?type]
+         [?m ?attr ?val]
+         [?attr :attribute/cost-grouping? true]
+         [?attr :db/ident ?attr-ident]
+         [?type :db/ident ?type-ident]
+         [?attr :db/valueType ?value-type]
+         [?value-type :db/ident ?value-type-ident]
+
+         :in $ [?c ...]]
+       db component-ids))
+
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.
   Returns map where key is item id and value is map of the values.
@@ -292,31 +329,21 @@
 
   List of OID codes (`oids`) determines what assets/components to return."
   [db oids]
-  (let [entity-attr-vals
-        (d/q '[:find ?a ?type-ident ?attr-ident ?val ?value-type-ident
-               :keys id type attr val val-type
-               :where
-               [?a :asset/oid ?oid]
-               (or
-                [?a :asset/fclass ?type]
-                [?a :component/ctype ?type])
-               [?a ?attr ?val]
-               (or [?attr :attribute/cost-grouping? true]
-                   [?attr :db/ident :common/status]
-                   [?attr :db/ident :location/road-nr])
-               [?attr :db/ident ?attr-ident]
-               [?type :db/ident ?type-ident]
-               [?attr :db/valueType ?value-type]
-               [?value-type :db/ident ?value-type-ident]
-               :in $ [?oid ...]]
-             db oids)
+  (let [;; Fetch cost group attr vals for components
+        component-attr-vals (component-cost-group-attrs-q db oids)
+        ;; Fetch material cost group fields for any components
+        material-attr-vals (component-material-cost-group-attrs-q
+                            db (map :id component-attr-vals))
+        ;; Combine lists so all material cost group attributes
+        ;; appear in the same group as the components own attributes
+        attr-vals (concat component-attr-vals material-attr-vals)
 
         ;; Fetch all list item ref ids
         list-item-ids (into #{}
                          (keep (fn [{:keys [val-type val]}]
                                  (when (= val-type :db.type/ref)
                                    val)))
-                         entity-attr-vals)
+                         attr-vals)
 
         ;; Fetch map from db id => map of id and ident
         list-item-vals (into {}
@@ -344,7 +371,7 @@
                         (list-item-vals val)
                         val)}))
       {}
-      entity-attr-vals))))
+      attr-vals))))
 
 (defn project-cost-group-prices
   "Return all cost group prices for project."
