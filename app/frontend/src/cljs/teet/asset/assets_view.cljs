@@ -381,9 +381,7 @@
   (let [show (r/atom #{:map})
         set-show! #(reset! show %)
         map-key (r/atom 1)
-        next-map-key! #(do
-                         (println "next map key!")
-                         (swap! map-key inc))]
+        next-map-key! #(swap! map-key inc)]
     (r/create-class
      {:component-did-update
       (fn [this
