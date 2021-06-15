@@ -456,7 +456,7 @@
           [:div {:style {:position :fixed :bottom "1rem" :left "50%"}}
            [buttons/button-primary {:style {:left "-50%"}
                                     :on-click (r/partial set-mode! :map)}
-            (str "View results (" (result-count-label results) ")")]])]
+            (tr [:asset :manager :view-results] {:count (result-count-label results)})]])]
        [:<>
         [:div {:style {:position :fixed
                        :left "0px" :top (common-styles/content-start)
