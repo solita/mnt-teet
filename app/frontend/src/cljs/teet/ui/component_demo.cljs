@@ -98,6 +98,14 @@
                     :placeholder "Placeholder"
                     :error true
                     :error-text "Form field is required"
+                    :variant :filled}]
+        [TextField {:label "Tekstiä"
+                    :on-change on-change
+                    :value @val
+                    :placeholder "Placeholder"
+                    :error true
+                    :error-text "Form field is required"
+                    :error-tooltip? true
                     :variant :filled}]]
        [Divider]])))
 
