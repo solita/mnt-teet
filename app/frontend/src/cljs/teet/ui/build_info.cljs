@@ -28,6 +28,9 @@
     (str/includes? hostname "dev-teet")
     :dev
 
+    (= hostname "localhost")
+    :dev
+
     (re-matches #"[a-z]\..*" hostname)
     :dev
 
