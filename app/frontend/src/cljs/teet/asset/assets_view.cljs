@@ -376,7 +376,7 @@
       :key :asset/oid}]))
 
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
-  (let [show (r/atom #{:map :table})
+  (let [show (r/atom #{:map})
         set-show! #(reset! show %)
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
