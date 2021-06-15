@@ -404,7 +404,7 @@ function run-in-ec2 {
 	fi	
     done
     echo vm ec2 dns is "$ADDR"
-    MYIP="$(host "$ADDR" | sed -n "s/.*has address //p")"
+    MYIP="$(python3 -c "import socket; print(socket.gethostbyname(\"$ADDR\"))")"
     control-datomic-bastion-ssh-access on
         
     SLEEPSECS="$[60 * 60 * 8 - 300]"
