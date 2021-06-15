@@ -297,7 +297,7 @@ function install-deps-and-app {
     cd /var/tmp/teetinstall
 
     apt-get update
-    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools certbot npm bind9-dnsutils
+    apt-get -y install docker.io git openjdk-11-jdk coreutils python3-pip python3-venv rlwrap postgresql-client-{12,common} maven unzip wget jq awscli net-tools certbot npm
 
     curl -O https://download.clojure.org/install/linux-install-1.10.3.822.sh
     chmod +x linux-install-1.10.3.822.sh
@@ -404,7 +404,7 @@ function run-in-ec2 {
 	fi	
     done
     echo vm ec2 dns is "$ADDR"
-    MYIP="$(dig "$ADDR" +short)"
+    MYIP="$(host "$ADDR" | sed -n "s/.*has address //p")"
     control-datomic-bastion-ssh-access on
         
     SLEEPSECS="$[60 * 60 * 8 - 300]"
