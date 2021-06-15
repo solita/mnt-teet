@@ -1,6 +1,7 @@
 {:deps {http-kit {:mvn/version "2.5.3"}
         ;; Need clj-http for vektorio file uploads
         clj-http/clj-http {:mvn/version "3.12.0"}
+        ring/ring-jetty-adapter {:mvn/version "1.9.3"}
         compojure {:mvn/version "1.6.1"}
         hiccup {:mvn/version "1.0.5"}
         com.taoensso/timbre {:mvn/version "4.10.0"}
@@ -60,8 +61,7 @@
            :dev {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                  :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
-                              com.datomic/dev-local {:mvn/version "0.9.232"}
-                              ring/ring-jetty-adapter {:mvn/version "1.9.3"}}
+                              com.datomic/dev-local {:mvn/version "0.9.232"}}
                  :extra-paths ["dev-src" "test"]}
            :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                                      org.clojure/tools.namespace {:mvn/version "0.3.1"}
