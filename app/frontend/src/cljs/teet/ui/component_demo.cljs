@@ -25,7 +25,8 @@
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contracts-view :as contracts-view]
             [teet.ui.table :as table]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.date-picker :as date-picker]))
 
 
 (defrecord TestFileUpload [files])
@@ -268,6 +269,25 @@
 
                                         {:value "bar" :label "Bar"}]}]]])
 
+(defn datepicker-demo []
+  [:section
+   [:div {:style {:display "flex"
+                  :justify-content "space-evenly"}}
+    [date-picker/date-input {:label "Date"
+                             :placeholder "Placeholder"
+                             :on-change #()}]
+    [date-picker/date-input {:label "Date with error label"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"}]
+    [date-picker/date-input {:label "Date with error tooltip"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"
+                             :error-tooltip? true}]]])
+
 (defn- labeled-data-demo []
   [:div
    [ui-common/labeled-data {:label "Label" :data "Some textual data"}]])
@@ -442,6 +462,9 @@
    {:id :select
     :heading "Select"
     :component [select-demo]}
+   {:id :datepicker
+    :heading "Datepicker"
+    :component [datepicker-demo]}
    {:id :labeled-data
     :heading "Labeled data"
     :component [labeled-data-demo]}
