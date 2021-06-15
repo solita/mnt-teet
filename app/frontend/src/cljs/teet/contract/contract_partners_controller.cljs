@@ -22,7 +22,8 @@
   UpdateEditCompanyForm
   (process-event [{form-data :form-data} app]
     ; @TODO: implement
-    (println "UpdateEditCompanyForm" form-data))
+    (println "UpdateEditCompanyForm" form-data)
+    (update-in app [:forms :new-partner] merge form-data))
 
   InitializeNewCompanyForm
   (process-event [{} app]
@@ -39,7 +40,8 @@
   InitializeEditCompanyForm
   (process-event [{} app]
     ; @TODO: implement
-    (println "Edit Company Form initialized"))
+    (println "Edit Company Form initialized")
+    (assoc-in app [:forms :new-partner] {:company/country :ee}))
 
   CancelAddNewCompany
   (process-event [{} app]

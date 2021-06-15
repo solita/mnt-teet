@@ -192,7 +192,13 @@
   [form-value]
   ; @TODO Fix!
   (println "edit-company-form-fields")
-  [foreign-fields])
+  (let [foreign-company? (not= :ee (:company/country form-value))
+        business-search-failed? (:no-results? form-value)
+        exception-in-xroad? (:exception-in-xroad? form-value)]
+    [:div
+     [form/field :company/country
+      [select/country-select {:show-empty-selection? true}]]
+     [foreign-fields]]))
 
 (defn new-company-form-fields
   [form-value]
@@ -202,12 +208,13 @@
     [:div
      [form/field :company/country
       [select/country-select {:show-empty-selection? true}]]
-     (if true
+     (if foreign-company?
        [foreign-fields]
        [estonian-form-section business-search-failed? exception-in-xroad?])]))
 
 (defn edit-partner-form
   [e! app selected-company]
+  (e! (contract-partners-controller/->InitializeEditCompanyForm))
   (fn [e! contract {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateNewCompanyForm %))]
       [Grid {:container true}
