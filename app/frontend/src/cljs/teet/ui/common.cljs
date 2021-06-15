@@ -451,7 +451,7 @@
 
 (defn info-row-item-style
   [right-align-last? font-size]
-  (with-meta (merge {:margin-right "1rem"
+  (with-meta (merge {:margin-right "1.5rem"
                      :margin-bottom "1rem"}
                (when (some? font-size)
                  {:font-size font-size}))
