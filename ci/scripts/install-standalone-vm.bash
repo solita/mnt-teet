@@ -304,7 +304,7 @@ function install-deps-and-app {
     ./linux-install-1.10.3.822.sh
     clojure -e true > /dev/null
 
-    TEET_BRANCH=$(read-instance-tag teet-branch)
+    read-instance-tag teet-branch
     echo checking out "$TEET_GIT_URL" branch "$TEET_BRANCH"
     git clone -b "$TEET_BRANCH" "$TEET_GIT_URL"
     
