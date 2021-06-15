@@ -381,7 +381,12 @@ function run-in-ec2 {
     local SLEEPSECS
     local ADDR
     RUNINFOFILE="$(mktemp /tmp/runinfoXXXXX.json)"
-    THISBRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    if [ ! -z "$CODEBUILD_SOURCE_VERSION" ]; then
+	THISBRANCH="$CODEBUILD_SOURCE_VERSION"
+    else
+	THISBRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    fi
+    
     echo using branch "$THISBRANCH"
     SCRIPTPATH="$(realpath "$0")"
     if [ $# -gt 0 ]; then
