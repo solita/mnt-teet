@@ -2,5 +2,6 @@
  "ignoreTestFiles": ["**/land_section.spec.js", "**/task.ci.spec.js", "**/task.spec.js"],
  "viewportWidth": 1280,
  "viewportHeight": 800,
- "retries": 5
+ "retries": 5,
+ "defaultCommandTimeout": 10000
 }
