@@ -333,8 +333,33 @@
                   :args {:asset/oid asset-oid}
                   :simple-view [result-details-view* e! atl rotl oid]}]))
 
+(defn- result-indicator
+  [{:keys [set-show! show result-count]}]
+  (let [icon-button-classes
+        #js {:root (str (<class common-styles/rounded-border) " "
+                        (<class common-styles/padding 0.2))}]
+    [typography/Heading3 {:style {:margin "0.5rem"}}
+     (tr [:asset :manager :result-count]
+         {:count result-count})
+     [:div {:style {:float :right
+                    :padding-left "1rem"
+                    :margin-right "0.5rem"}}
+      [IconButton {:on-click #(set-show! (condp = show
+                                           #{:table} #{:table :map}
+                                           #{:map} #{:table :map}
+                                           #{:table :map} #{:table}))
+                   :classes icon-button-classes}
+       (if (show :map)
+         [icons/navigation-arrow-forward-ios]
+         [icons/navigation-arrow-back-ios {:style {:padding-left "0.25rem"}}])]
+      (when (show :table)
+        [IconButton {:on-click #(set-show! #{:map})
+                     :classes icon-button-classes}
+         [icons/navigation-close]])]]))
+
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
-  (let [show (r/atom #{:map})
+  (let [show (r/atom #{:map :table})
+        set-show! #(reset! show %)
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
     (r/create-class
@@ -351,6 +376,10 @@
       (fn [{:keys [e! atl criteria assets-query results details]}]
         (let [{:keys [assets geojson more-results? result-count-limit
                       highlight-oid]} results
+
+              result-count (if more-results?
+                             (str result-count-limit "+")
+                             (count assets))
               table-pane
               [:div {:style {:background-color theme-colors/white
                              :padding "0.5rem"}}
@@ -358,10 +387,8 @@
                  [context/consume :rotl
                   [result-details-view e! details atl]]
                  [:<>
-                  [typography/Heading1 (tr [:asset :manager :result-count]
-                                           {:count (if more-results?
-                                                     (str result-count-limit "+")
-                                                     (count assets))})]
+                  [result-indicator {:show @show :set-show! set-show!
+                                     :result-count result-count}]
                   [table/listing-table
                    {:default-show-count 100
                     :columns asset-model/assets-listing-columns
@@ -375,8 +402,15 @@
                     :key :asset/oid}]])]
 
               map-pane
-              ^{:key (str "map" @map-key)}
               [:<>
+               (when-not (@show :table)
+                 [:div {:style {:position :absolute
+                                :z-index 9999
+                                :background-color (theme-colors/white-alpha 0.8)
+                                :margin "1rem"}}
+                  [result-indicator {:show @show :set-show! set-show!
+                                     :result-count result-count}]])
+               ^{:key (str "map" @map-key)}
                [map-view/map-view e!
                 {:full-height? true
                  :layers
@@ -388,12 +422,11 @@
                       "asset-results"
                       (js/JSON.parse geojson)
                       (partial map-features/asset-line-and-icon highlight-oid)
-                      {;:fit-on-load? true
-                       })}))}]
+                      {})}))}]
                (when (= :current-location (:search-by criteria))
                  [radius-display e! criteria])]]
           [:<>
-           [table-and-map-toggle show]
+           ;;[table-and-map-toggle show]
            (condp = @show
              #{:map}
              ^{:key "map-only"}
@@ -405,7 +438,8 @@
              [vertical-split-pane
               {:defaultSize 400 :primary "second"
                :on-drag-finished next-map-key!}
-              table-pane map-pane])]))})))
+              table-pane
+              map-pane])]))})))
 
 (defn assets-page [e! {atl :asset-type-library :as app}
                    {:keys [criteria query results]}]
