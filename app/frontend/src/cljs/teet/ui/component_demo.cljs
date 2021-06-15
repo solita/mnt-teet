@@ -25,7 +25,8 @@
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contracts-view :as contracts-view]
             [teet.ui.table :as table]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.date-picker :as date-picker]))
 
 
 (defrecord TestFileUpload [files])
@@ -97,6 +98,14 @@
                     :placeholder "Placeholder"
                     :error true
                     :error-text "Form field is required"
+                    :variant :filled}]
+        [TextField {:label "Tekstiä"
+                    :on-change on-change
+                    :value @val
+                    :placeholder "Placeholder"
+                    :error true
+                    :error-text "Form field is required"
+                    :error-tooltip? true
                     :variant :filled}]]
        [Divider]])))
 
@@ -254,9 +263,37 @@
                   :margin "2rem 0"}}
     [select/form-select {:value "et"
                          :label "Language"
+                         :on-change #()
                          :show-empty-selection? true
                          :id "language-select"
                          :name "Language"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error-tooltip"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :error-tooltip? true
                          :items
                          [{:value "et" :label "bar"}
                           {:value "en" :label "baz"}]}]]
@@ -267,6 +304,25 @@
                                 :items [{:value "foo" :label "Foo"}
 
                                         {:value "bar" :label "Bar"}]}]]])
+
+(defn datepicker-demo []
+  [:section
+   [:div {:style {:display "flex"
+                  :justify-content "space-evenly"}}
+    [date-picker/date-input {:label "Date"
+                             :placeholder "Placeholder"
+                             :on-change #()}]
+    [date-picker/date-input {:label "Date with error label"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"}]
+    [date-picker/date-input {:label "Date with error tooltip"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"
+                             :error-tooltip? true}]]])
 
 (defn- labeled-data-demo []
   [:div
@@ -442,6 +498,9 @@
    {:id :select
     :heading "Select"
     :component [select-demo]}
+   {:id :datepicker
+    :heading "Datepicker"
+    :component [datepicker-demo]}
    {:id :labeled-data
     :heading "Labeled data"
     :component [labeled-data-demo]}

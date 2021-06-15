@@ -48,8 +48,8 @@
            {:cursor :default})))
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
-                           show-label? show-empty-selection? error error-text required empty-selection-label
-                           data-item? read-only? dark-theme?]
+                           show-label? show-empty-selection? error error-text error-tooltip?
+                           required empty-selection-label data-item? read-only? dark-theme?]
                         :or {format-item :label
                              show-label? true
                              data-item? false
@@ -59,39 +59,52 @@
                        (let [val (-> e .-target .-value)]
                          (if (= val "")
                            (on-change nil)
-                           (on-change (nth items (int val))))))]
-    [:label {:for id
-             :class (<class common-styles/input-label-style read-only? dark-theme?)}
-     (when show-label?
-       (if label-element
-         [label-element label (when required [common/required-astrix])]
-         [typography/Text2Bold
-          label (when required
-                        [common/required-astrix])]))
-     [:div {:style {:position :relative}}
-      [:select
-       {:value (or (option-idx value) "")
-        :name name
-        :disabled read-only?
-        :class (<class primary-select-style error read-only?)
-        :required (boolean required)
-        :id (str "links-type-select" id)
-        :on-change (fn [e]
-                     (change-value e))}
-       (when show-empty-selection?
-         [:option {:value "" :label empty-selection-label}])
-       (doall
-        (map-indexed
-         (fn [i item]
-           [:option (merge {:value i
-                            :key i}
-                           (when data-item?
-                             {:data-item (str item)}))
-            (format-item item)])
-         items))]]
-     (when (and error-text error)
-       [:span {:class (<class common-styles/input-error-text-style)}
-        error-text])]))
+                           (on-change (nth items (int val))))))
+        error? (and error error-text)]
+    [common/popper-tooltip (when error-tooltip?
+                             ;; Show error as tooltip instead of label.
+                             {:title error-text
+                              :variant :error
+                              ;; Always add the tootip and wrapper elements, but hide them when
+                              ;; there is no error. This way the input does not lose focus when the
+                              ;; tooltip is added/removed.
+                              :hidden? (not error?)
+                              ;; We don't want the tooltip wrapper to participate in sequential
+                              ;; keyboard navigation. Otherwise we would need to hit tab twice to
+                              ;; reach the input element in the wrapper.
+                              :tabIndex -1})
+     [:label {:for id
+              :class (<class common-styles/input-label-style read-only? dark-theme?)}
+      (when show-label?
+        (if label-element
+          [label-element label (when required [common/required-astrix])]
+          [typography/Text2Bold
+           label (when required
+                   [common/required-astrix])]))
+      [:div {:style {:position :relative}}
+       [:select
+        {:value (or (option-idx value) "")
+         :name name
+         :disabled read-only?
+         :class (<class primary-select-style error read-only?)
+         :required (boolean required)
+         :id (str "links-type-select" id)
+         :on-change (fn [e]
+                      (change-value e))}
+        (when show-empty-selection?
+          [:option {:value "" :label empty-selection-label}])
+        (doall
+          (map-indexed
+            (fn [i item]
+              [:option (merge {:value i
+                               :key i}
+                              (when data-item?
+                                {:data-item (str item)}))
+               (format-item item)])
+            items))]]
+      (when (and error? (not error-tooltip?))
+        [:span {:class (<class common-styles/input-error-text-style)}
+         error-text])]]))
 
 ;; TODO this needs better styles and better dropdown menu
 

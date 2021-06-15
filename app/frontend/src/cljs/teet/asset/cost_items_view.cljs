@@ -317,13 +317,17 @@
                        :label (label attr)
                        :show-empty-selection? true
                        :items (mapv :db/ident (:enum/_attribute attr))
-                       :format-item (comp label rotl)}])
+                       :format-item (comp label rotl)
+                       ;; Show error message as tooltip instead of adding a span, so that input
+                       ;; elements in the grid will stay aligned.
+                       :error-tooltip? true}])
 
                    (= type :db.type/instant)
                    (if locked?
                      [display-input {:label (label attr)
                                      :format fmt/date}]
-                     [date-picker/date-input {:label (label attr)}])
+                     [date-picker/date-input {:label (label attr)
+                                              :error-tooltip? true}])
 
                    ;; Text field
                    :else
@@ -334,7 +338,8 @@
                       {:label (label attr)
                        :read-only? locked?
                        :end-icon (when unit
-                                   (text-field/unit-end-icon unit))}]))]]))]]))])))
+                                   (text-field/unit-end-icon unit))
+                       :error-tooltip? true}]))]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
