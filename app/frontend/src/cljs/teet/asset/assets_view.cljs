@@ -493,20 +493,20 @@
 (defn- desktop-view [e! {atl :asset-type-library :as app}
                      {:keys [criteria query results]}]
   (r/with-let [filters-collapsed? (r/atom false)]
-    (if-not atl
-      [CircularProgress]
-      [vertical-split-pane {:minSize 50
-                            :defaultSize (if @filters-collapsed? 30 330)
-                            :allowResize false}
-       [asset-filters-container e! atl criteria filters-collapsed?]
-       [context/provide :rotl (asset-type-library/rotl-map atl)
-        [assets-results {:e! e! :atl atl :criteria criteria
-                         :asset-query query
-                         :results results
-                         :details (get-in app [:query :details])}]]])))
+    [vertical-split-pane {:minSize 50
+                          :defaultSize (if @filters-collapsed? 30 330)
+                          :allowResize false}
+     [asset-filters-container e! atl criteria filters-collapsed?]
+     [context/provide :rotl (asset-type-library/rotl-map atl)
+      [assets-results {:e! e! :atl atl :criteria criteria
+                       :asset-query query
+                       :results results
+                       :details (get-in app [:query :details])}]]]))
 
 (defn assets-page [e! {atl :asset-type-library :as app} state]
-  [context/provide :rotl (asset-type-library/rotl-map atl)
-   (if (responsivity-styles/mobile?)
-     [mobile-view e! app state]
-     [desktop-view e! app state])])
+  (if-not atl
+    [CircularProgress]
+    [context/provide :rotl (asset-type-library/rotl-map atl)
+     (if (responsivity-styles/mobile?)
+       [mobile-view e! app state]
+       [desktop-view e! app state])]))
