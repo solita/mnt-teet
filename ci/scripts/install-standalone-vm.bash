@@ -284,7 +284,7 @@ ${MYDNS}:443 {
 }
 
 EOF
-    docker run -d --network docker_teet -p 0.0.0.0:3443:443 -v $PWD/Caddyfile:/etc/caddy/Caddyfile:ro -v /etc/letsencrypt:/etc/letsencrypt caddy:2-alpine
+    docker run -d --network docker_teet -p 0.0.0.0:3443:443 -v $PWD/Caddyfile:/etc/caddy/Caddyfile:ro -v /etc/letsencrypt:/etc/letsencrypt:ro caddy:2-alpine
 }
 
 
