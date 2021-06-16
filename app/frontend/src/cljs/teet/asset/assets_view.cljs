@@ -37,10 +37,14 @@
             [teet.ui.chip :as chip]
             [teet.ui.query :as query]
 
+            [teet.common.responsivity-styles :as responsivity-styles]
+
             ;; FIXME: refactor edit/view UI away from cost items view
             [teet.asset.cost-items-view :as cost-items-view]
             [teet.asset.materials-and-products-view :as materials-and-products-view]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.common.common-controller :as common-controller]
+            [teet.road.road-model :as road-model]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -158,52 +162,75 @@
     {:search-by-current-location
      (location-layer location radius)}))
 
-(defn- asset-filters [e! atl filters collapsed?]
+(defmethod search-by-map-layers :road-address
+  [_ _ {:keys [road-address]}]
+  (when (seq road-address)
+    {:search-by-road-address
+     (map-layers/geojson-layer
+      (common-controller/query-url
+       :road/address-geometry-geojson
+       {:road-address (vec (keep (fn [{:location/keys [road-nr carriageway start-km end-km]}]
+                                   (when (and road-nr carriageway start-km end-km)
+                                     (zipmap [:road-nr :carriageway :start-m :end-m]
+                                             [road-nr carriageway
+                                              (road-model/km->m start-km)
+                                              (road-model/km->m end-km)])))
+                                 road-address))})
+      "search-by-road-address"
+      nil
+      (partial map-features/road-line-style 3 "orange")
+      {:fit-on-load? true})}))
+
+(defn- asset-filters [e! atl filters]
   (let [opts {:e! e! :atl atl :filters filters}]
-    [:div {:style {:padding "1rem"
-                   :background-color theme-colors/white
-                   :height "100%"}}
-     (if @collapsed?
-       [:<>
-        [icons/navigation-arrow-right {:on-click #(reset! collapsed? false)
-                                       :style {:position :relative
-                                               :left "-15px"}}]
-        [:a {:on-click #(reset! collapsed? false)
-             :style {:display :inline-block
-                     :transform "rotate(-90deg) translate(-30px,-30px)"
-                     :cursor :pointer}}
-         (tr [:search :quick-search])]]
+    [:<>
+     [filter-component opts :fclass (tr [:asset :type-library :fclass])
+      [asset-ui/select-fgroup-and-fclass-multiple {}]]
 
-       [:<>
-        [icons/navigation-arrow-left {:on-click #(reset! collapsed? true)
-                                      :style {:float :right}}]
-        [typography/BoldGrayText (tr [:search :quick-search])]
-
-        [filter-component opts :fclass (tr [:asset :type-library :fclass])
-         [asset-ui/select-fgroup-and-fclass-multiple {}]]
-
-        [filter-component opts :common/status [asset-ui/label-for :common/status]
-         [asset-ui/select-listitem-multiple {:attribute :common/status}]]
+     [filter-component opts :common/status [asset-ui/label-for :common/status]
+      [asset-ui/select-listitem-multiple {:attribute :common/status}]]
 
 
-        [:div {:class [(<class common-styles/flex-row)
-                       (<class common-styles/margin 0.5 0)]}
-         (doall
-          (for [[search-by-kw label] [[:current-location (tr [:asset :manager :search-nearby])]
-                                      [:road-address (tr [:fields :location/road-address])]]]
-            ^{:key (name search-by-kw)}
-            [buttons/button-primary
-             {:on-click (e! assets-controller/->SearchBy search-by-kw)
-              :style (merge {:border-radius 0
-                             :border (str "solid 2px " theme-colors/black-coral)}
-                            (if (= search-by-kw (:search-by filters))
-                              {:background-color theme-colors/blue
-                               :color theme-colors/white}
-                              {:background-color theme-colors/white
-                               :color theme-colors/black-coral}))}
-             label]))]
+     [:div {:class [(<class common-styles/flex-row)
+                    (<class common-styles/margin 0.5 0)]}
+      (doall
+       (for [[search-by-kw label] [[:current-location (tr [:asset :manager :search-nearby])]
+                                   [:road-address (tr [:fields :location/road-address])]]]
+         ^{:key (name search-by-kw)}
+         [buttons/button-primary
+          {:on-click (e! assets-controller/->SearchBy search-by-kw)
+           :style (merge {:border-radius 0
+                          :border (str "solid 2px " theme-colors/black-coral)}
+                         (if (= search-by-kw (:search-by filters))
+                           {:background-color theme-colors/blue
+                            :color theme-colors/white}
+                           {:background-color theme-colors/white
+                            :color theme-colors/black-coral}))}
+          label]))]
 
-        (search-by-fields e! atl filters)])]))
+     (search-by-fields e! atl filters)]))
+
+(defn asset-filters-container [e! atl filters collapsed?]
+  [:div {:style {:padding "1rem"
+                 :background-color theme-colors/white
+                 :height "100%"}}
+   (if @collapsed?
+     [:<>
+      [icons/navigation-arrow-right {:on-click #(reset! collapsed? false)
+                                     :style {:position :relative
+                                             :left "-15px"}}]
+      [:a {:on-click #(reset! collapsed? false)
+           :style {:display :inline-block
+                   :transform "rotate(-90deg) translate(-30px,-30px)"
+                   :cursor :pointer}}
+       (tr [:search :quick-search])]]
+
+     [:<>
+      [icons/navigation-arrow-left {:on-click #(reset! collapsed? true)
+                                    :style {:float :right}}]
+      [typography/BoldGrayText (tr [:search :quick-search])]
+
+      [asset-filters e! atl filters]])])
 
 (defn- format-assets-column [column value _row]
   (case column
@@ -222,29 +249,6 @@
     [asset-ui/label-for (:db/ident value)]
 
     (str value)))
-
-(defn- table-and-map-toggle [show]
-  [:div {:style {:position :fixed
-                 :right "0px"
-                 :padding "10px"
-                 :top theme-spacing/appbar-height
-                 :z-index 9999}}
-   [IconButton {:on-click #(swap! show cu/toggle :table)
-                :style (merge
-                        {:border-radius "25px 0px 0px 25px"
-                         :background-color theme-colors/blue-lighter}
-                        (when (@show :table)
-                          {:color theme-colors/white
-                           :background-color theme-colors/blue}))}
-    [icons/communication-list-alt]]
-   [IconButton {:on-click #(swap! show cu/toggle :map)
-                :style (merge
-                        {:border-radius "0px 25px 25px 0px"
-                         :background-color theme-colors/blue-lighter}
-                        (when (@show :map)
-                          {:color theme-colors/white
-                           :background-color theme-colors/blue}))}
-    [icons/maps-map]]])
 
 (defn- result-details-view* [e! atl rotl oid asset]
   (let [component? (asset-model/component-oid? oid)
@@ -312,8 +316,70 @@
                   :args {:asset/oid asset-oid}
                   :simple-view [result-details-view* e! atl rotl oid]}]))
 
+(defn- result-indicator
+  [{:keys [set-show! show result-count]}]
+  (let [icon-button-classes
+        #js {:root (str (<class common-styles/rounded-border) " "
+                        (<class common-styles/padding 0.2))}]
+    [typography/Heading3 {:style {:margin "0.5rem"}}
+     (tr [:asset :manager :result-count]
+         {:count result-count})
+     [:div {:style {:float :right
+                    :padding-left "1rem"
+                    :margin-right "0.5rem"}}
+      [IconButton {:on-click #(set-show! (condp = show
+                                           #{:table} #{:table :map}
+                                           #{:map} #{:table :map}
+                                           #{:table :map} #{:table}))
+                   :classes icon-button-classes}
+       (if (show :map)
+         [icons/navigation-arrow-forward-ios]
+         [icons/navigation-arrow-back-ios {:style {:padding-left "0.25rem"}}])]
+      (when (show :table)
+        [IconButton {:on-click #(set-show! #{:map})
+                     :classes icon-button-classes}
+         [icons/navigation-close]])]]))
+
+(defn- result-count-label [{:keys [assets more-results? result-count-limit]}]
+  (if more-results?
+    (str result-count-limit "+")
+    (count assets)))
+
+(defn results-map [{:keys [e! atl criteria results map-key]
+                    :or {map-key "results-map"}}]
+  (let [{:keys [geojson highlight-oid]} results]
+    ^{:key map-key}
+    [map-view/map-view e!
+     {:full-height? true
+      :layers
+      (merge
+       (search-by-map-layers e! atl criteria)
+       (when geojson
+         {:asset-results
+          (map-layers/geojson-data-layer
+           "asset-results"
+           (js/JSON.parse geojson)
+           (partial map-features/asset-line-and-icon highlight-oid)
+           {})}))}]))
+
+
+(defn- results-table [{:keys [e! atl results]}]
+  (let [{:keys [assets]} results]
+    [table/listing-table
+     {:default-show-count 100
+      :columns asset-model/assets-listing-columns
+      :get-column asset-model/assets-listing-get-column
+      :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                            (tr [:fields %]))
+      :on-row-hover (e! assets-controller/->HighlightResult)
+      :on-row-click (e! assets-controller/->ShowDetails)
+      :format-column format-assets-column
+      :data assets
+      :key :asset/oid}]))
+
 (defn- assets-results [_] ;; FIXME: bad name, it is shown always
   (let [show (r/atom #{:map})
+        set-show! #(reset! show %)
         map-key (r/atom 1)
         next-map-key! #(swap! map-key inc)]
     (r/create-class
@@ -328,8 +394,8 @@
 
       :reagent-render
       (fn [{:keys [e! atl criteria assets-query results details]}]
-        (let [{:keys [assets geojson more-results? result-count-limit
-                      highlight-oid]} results
+        (let [{:keys [assets geojson highlight-oid]} results
+              result-count (result-count-label results)
               table-pane
               [:div {:style {:background-color theme-colors/white
                              :padding "0.5rem"}}
@@ -337,42 +403,26 @@
                  [context/consume :rotl
                   [result-details-view e! details atl]]
                  [:<>
-                  [typography/Heading1 (tr [:asset :manager :result-count]
-                                           {:count (if more-results?
-                                                     (str result-count-limit "+")
-                                                     (count assets))})]
-                  [table/listing-table
-                   {:default-show-count 100
-                    :columns asset-model/assets-listing-columns
-                    :get-column asset-model/assets-listing-get-column
-                    :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
-                                          (tr [:fields %]))
-                    :on-row-hover (e! assets-controller/->HighlightResult)
-                    :on-row-click (e! assets-controller/->ShowDetails)
-                    :format-column format-assets-column
-                    :data assets
-                    :key :asset/oid}]])]
+                  [result-indicator {:show @show :set-show! set-show!
+                                     :result-count result-count}]
+                  [results-table {:e! e! :atl atl :results results}]])]
 
               map-pane
-              ^{:key (str "map" @map-key)}
               [:<>
-               [map-view/map-view e!
-                {:full-height? true
-                 :layers
-                 (merge
-                  (search-by-map-layers e! atl criteria)
-                  (when geojson
-                    {:asset-results
-                     (map-layers/geojson-data-layer
-                      "asset-results"
-                      (js/JSON.parse geojson)
-                      (partial map-features/asset-line-and-icon highlight-oid)
-                      {;:fit-on-load? true
-                       })}))}]
+               (when-not (@show :table)
+                 [:div {:style {:position :absolute
+                                :z-index 9999
+                                :background-color (theme-colors/white-alpha 0.8)
+                                :margin "1rem"}}
+                  [result-indicator {:show @show :set-show! set-show!
+                                     :result-count result-count}]])
+               [results-map {:e! e! :atl atl :criteria criteria
+                             :results results
+                             :map-key (str "map" @map-key)}]
                (when (= :current-location (:search-by criteria))
                  [radius-display e! criteria])]]
           [:<>
-           [table-and-map-toggle show]
+           ;;[table-and-map-toggle show]
            (condp = @show
              #{:map}
              ^{:key "map-only"}
@@ -384,20 +434,81 @@
              [vertical-split-pane
               {:defaultSize 400 :primary "second"
                :on-drag-finished next-map-key!}
-              table-pane map-pane])]))})))
+              table-pane
+              map-pane])]))})))
 
-(defn assets-page [e! {atl :asset-type-library :as app}
-                   {:keys [criteria query results]}]
+(defn- mobile-view [e! {atl :asset-type-library :as app}
+                    {:keys [criteria query results]}]
+  (r/with-let [mode (r/atom :filters)
+               set-mode! #(reset! mode %)
+               toggle-result-mode! (fn []
+                                     (swap! mode
+                                            #(if (= % :map)
+                                               :table
+                                               :map)))]
+    [:<>
+     (if (= @mode :filters)
+       [:div
+        (tr [:search :quick-search])
+        [:div {:style {:float :right}}
+         [IconButton {:on-click (r/partial set-mode! :map)}
+          [icons/navigation-close]]]
+        [asset-filters e! atl criteria]
+        (when results
+          [:div {:style {:position :fixed :bottom "1rem" :left "50%"}}
+           [buttons/button-primary {:style {:left "-50%"}
+                                    :on-click (r/partial set-mode! :map)}
+            (tr [:asset :manager :view-results] {:count (result-count-label results)})]])]
+       [:<>
+        [:div {:style {:position :fixed
+                       :left "0px" :top (common-styles/content-start)
+                       :width "100vw"
+                       :height "50px"
+                       :background-color theme-colors/gray-lighter
+                       :display :flex
+                       :flex-direction :row
+                       :align-items :center
+                       :justify-content :space-between}}
+         (tr [:asset :manager :result-count]
+             {:count (result-count-label results)})
+         [:div
+          [IconButton {:on-click toggle-result-mode!
+                       :color (if (= @mode :map)
+                                "primary"
+                                "secondary")}
+           [icons/maps-map]]
+          [IconButton {:on-click (r/partial set-mode! :filters)}
+           [icons/action-search]]]]
+        [:div {:style {:position :fixed
+                       :top (common-styles/content-start "50px")
+                       :height (common-styles/content-height "50px")
+                       :overflow-y :scroll}}
+         (if (= @mode :map)
+           [results-map {:e! e! :atl atl :criteria criteria
+                         :results results}]
+           (if-let [details (get-in app [:query :details])]
+             [context/consume :rotl
+              [result-details-view e! details atl]]
+             [results-table {:e! e! :atl atl :results results}]))]])]))
+
+
+(defn- desktop-view [e! {atl :asset-type-library :as app}
+                     {:keys [criteria query results]}]
   (r/with-let [filters-collapsed? (r/atom false)]
-    (if-not atl
-      [CircularProgress]
-      [context/provide :rotl (asset-type-library/rotl-map atl)
-       [vertical-split-pane {:minSize 50
-                             :defaultSize (if @filters-collapsed? 30 330)
-                             :allowResize false}
-        [asset-filters e! atl criteria filters-collapsed?]
-        [context/provide :rotl (asset-type-library/rotl-map atl)
-         [assets-results {:e! e! :atl atl :criteria criteria
-                          :asset-query query
-                          :results results
-                          :details (get-in app [:query :details])}]]]])))
+    [vertical-split-pane {:minSize 50
+                          :defaultSize (if @filters-collapsed? 30 330)
+                          :allowResize false}
+     [asset-filters-container e! atl criteria filters-collapsed?]
+     [context/provide :rotl (asset-type-library/rotl-map atl)
+      [assets-results {:e! e! :atl atl :criteria criteria
+                       :asset-query query
+                       :results results
+                       :details (get-in app [:query :details])}]]]))
+
+(defn assets-page [e! {atl :asset-type-library :as app} state]
+  (if-not atl
+    [CircularProgress]
+    [context/provide :rotl (asset-type-library/rotl-map atl)
+     (if (responsivity-styles/mobile?)
+       [mobile-view e! app state]
+       [desktop-view e! app state])]))

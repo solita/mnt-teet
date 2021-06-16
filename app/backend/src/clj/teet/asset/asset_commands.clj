@@ -15,9 +15,7 @@
 
 (defcommand :asset/save-cost-item
   {:doc "Create/update an asset cost item"
-   :context {:keys [user db]
-             adb :asset-db
-             aconn :asset-conn}
+   :context {adb :asset-db}
    :payload {project-id :project-id asset :asset}
    :config {owner-code [:asset :default-owner-code]}
    :project-id [:thk.project/id project-id]
@@ -44,8 +42,7 @@
 
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."
-   :context {:keys [user db]
-             adb :asset-db}
+   :context {adb :asset-db}
    :payload {project-id :project-id component-id :db/id}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/delete-cost-items {}}
@@ -58,8 +55,7 @@
 
 (defcommand :asset/save-component
   {:doc "Save component for an asset or component."
-   :context {:keys [user db]
-             adb :asset-db}
+   :context {adb :asset-db}
    :payload {:keys [project-id parent-id component]}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
@@ -83,8 +79,7 @@
 
 (defcommand :asset/save-material
   {:doc "Save material for a leaf component."
-   :context {:keys [user db]
-             adb :asset-db}
+   :context {adb :asset-db}
    :payload {:keys [project-id parent-id material]}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
@@ -108,8 +103,7 @@
 
 (defcommand :asset/delete-material
   {:doc "Delete a material in an existing component."
-   :context {:keys [user db]
-             adb :asset-db}
+   :context {adb :asset-db}
    :payload {project-id :project-id material-id :db/id}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/delete-cost-items {}}
@@ -131,7 +125,7 @@
 
 (defcommand :asset/save-cost-group-price
   {:doc "Save cost group price"
-   :context {:keys [user db] adb :asset-db}
+   :context {adb :asset-db}
    :payload {:keys [project-id cost-group price]}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
@@ -172,7 +166,7 @@
 
 (defcommand :asset/lock-version
   {:doc "Lock a version of BOQ"
-   :context {:keys [user db] adb :asset-db}
+   :context {adb :asset-db}
    :payload lock-version
    :project-id [:thk.project/id (:boq-version/project lock-version)]
    :authorization {:cost-items/locking-unlocking-and-versioning {}}
@@ -184,7 +178,7 @@
 
 (defcommand :asset/unlock-for-edits
   {:doc "Unlock version for edits"
-   :context {:keys [user db] adb :asset-db}
+   :context {adb :asset-db}
    :payload {project-id :boq-version/project}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/locking-unlocking-and-versioning {}}

@@ -117,10 +117,7 @@ Done. Remember to change config.edn to use new databases.
 The projects under project listing do not yet appear on the 
 [Project map](http://localhost:4000/#/projects/map). 
 Here is how to update Postgres geographic data to match projects in Datomic:
-- In REPL, run function `(teet.thk.thk-integration-ion/update-all-project-entity-info)`
-- NOTE: at the time of writing there is a bug in this functionality. Only one project-geometry 
-  is inserted, when there should be many. There is a workaround for this in branch 
-  `update-project-geometries-workaround`.
+- In REPL, run function `(user/update-project-geometries!)`
 
 ## Troubleshooting
 
