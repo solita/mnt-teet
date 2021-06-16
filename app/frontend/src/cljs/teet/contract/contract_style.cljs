@@ -143,4 +143,4 @@
 (defn contract-partners-panel-style
   []
   {:min-width "400px"
-   :border-right "1px solid black"})
+   :border-right (str "1px solid " theme-colors/border-dark)})

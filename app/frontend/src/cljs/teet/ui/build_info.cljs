@@ -28,12 +28,18 @@
     (str/includes? hostname "dev-teet")
     :dev
 
+    (= hostname "localhost")
+    :dev
+
+    (re-matches #"[a-z]\..*" hostname)
+    :dev
+
     (str/includes? hostname "teet-test")
     :test
 
     (str/includes? hostname "teet-prelive")
     :prelive
-
+    
     :default
     nil))
 

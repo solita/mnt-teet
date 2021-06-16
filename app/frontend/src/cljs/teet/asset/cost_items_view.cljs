@@ -317,13 +317,17 @@
                        :label (label attr)
                        :show-empty-selection? true
                        :items (mapv :db/ident (:enum/_attribute attr))
-                       :format-item (comp label rotl)}])
+                       :format-item (comp label rotl)
+                       ;; Show error message as tooltip instead of adding a span, so that input
+                       ;; elements in the grid will stay aligned.
+                       :error-tooltip? true}])
 
                    (= type :db.type/instant)
                    (if locked?
                      [display-input {:label (label attr)
                                      :format fmt/date}]
-                     [date-picker/date-input {:label (label attr)}])
+                     [date-picker/date-input {:label (label attr)
+                                              :error-tooltip? true}])
 
                    ;; Text field
                    :else
@@ -334,7 +338,8 @@
                       {:label (label attr)
                        :read-only? locked?
                        :end-icon (when unit
-                                   (text-field/unit-end-icon unit))}]))]]))]]))])))
+                                   (text-field/unit-end-icon unit))
+                       :error-tooltip? true}]))]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
@@ -592,18 +597,32 @@
           [materials-list component-data {:e! e! :atl atl}])
 
         (when (not new?)
-          [:div
-           [components-tree component-data {:e! e!}]
-           (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
-             [add-component-menu
-              (tr [:asset :add-component])
-              allowed-components
-              (e! cost-items-controller/->AddComponent)])
-           (when-let [allowed-materials (asset-type-library/allowed-material-types atl ctype)]
-             [add-component-menu
-              (tr [:asset :add-material])
-              allowed-materials
-              (e! cost-items-controller/->AddMaterial)])])
+          ;; The component can either have
+          ;; - subcomponents or
+          ;; - materials
+          ;; That is, only leaf components can have materials
+          (let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))
+                can-have-subcomponents? (boolean allowed-components)]
+            [:div
+             (when can-have-subcomponents?
+               [components-tree component-data {:e! e!}])
+             (when can-have-subcomponents?
+               [add-component-menu
+                (tr [:asset :add-component])
+                allowed-components
+                (e! cost-items-controller/->AddComponent)])
+             ;; A leaf component can only have a single material of
+             ;; each allowed material type. For example, only one
+             ;; material of type Asphalt is allowed.
+             (let [added-materials (into #{} (map :material/type) (:component/materials component-data))
+                   allowed-materials
+                   (remove (comp added-materials :db/ident)
+                           (asset-type-library/allowed-material-types atl ctype))]
+               (when (seq allowed-materials)
+                 [add-component-menu
+                  (tr [:asset :add-material])
+                  allowed-materials
+                  (e! cost-items-controller/->AddMaterial)]))]))
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}

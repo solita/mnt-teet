@@ -16,6 +16,7 @@
 (def blue-lightest (lighten blue-lighter 10))
 (def orange "#FF8000")
 
+
 ;; Grayscale
 (def gray-dark "#34394C")
 (def gray "#5D6071")
@@ -23,6 +24,9 @@
 (def gray-lighter "#DBDFE2")
 (def gray-lightest "#F2F3F3")
 (def white "#FFFFFF")
+
+(defn white-alpha [alpha]
+  (str "rgba(255,255,255," alpha ")"))
 
 (def black-coral-1 "#D2D3D8")                               ;;not sure how these should be used, straight from the design
 (def black-coral "#5D6071")
@@ -60,15 +64,16 @@
                     "0 0 0 3px " blue-light)})
 
 (def focus-style
-  {:outline (str "2px solid " blue-light)
-   :outline-offset "3px"})
+  {:border (str "1px solid " blue-light)})
 
 ;; Component colors
 
 (def card-background-extra-light "#F9F9F9")
 (def card-box-shadow "0px 2px 4px rgba(93, 96, 113, 0.36)")
 (def page-background-dark "#E1E2E5")
-(def border-dark "#D2D3D8")
+(def border-dark black-coral-1)
+
+(def chip-border-color "#9799A4")
 
 (def background-color-light "#F0F0F2")
 
@@ -77,3 +82,7 @@
 (def text-disabled "#9799A4")
 
 (def text-medium-emphasis "#4D4f5D")
+
+(defn print-colors []
+  (doseq [[k v] (ns-publics 'teet.theme.theme-colors)]
+    (println k " => " @v)))

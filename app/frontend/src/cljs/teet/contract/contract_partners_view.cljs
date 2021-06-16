@@ -6,7 +6,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
-            [teet.ui.material-ui :refer [Grid Checkbox]]
+            [teet.ui.material-ui :refer [Grid Checkbox Divider]]
             [teet.ui.typography :as typography]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
@@ -18,7 +18,9 @@
             [teet.ui.select :as select]
             [teet.ui.common :as common]
             [clojure.string :as str]
-            [teet.ui.validation :as validation]))
+            [teet.ui.validation :as validation]
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.user.user-model :as user-model]))
 
 
 (defn partner-listing
@@ -55,13 +57,15 @@
     {:class (<class common-styles/margin-bottom 2)}
     (tr [:contract :partner-information])]
 
-   [buttons/small-button-secondary
-    {:class (<class common-styles/margin-bottom 2)
-     :start-icon (r/as-element [icons/content-add])
-     :href (routes/url-for {:page :contract-partners
-                            :params params
-                            :query {:page :add-partner}})}
-    (tr [:contract :add-company])]
+   [authorization-check/when-authorized
+    :thk.contract/add-new-contract-partner-company contract
+    [buttons/small-button-secondary
+     {:class (<class common-styles/margin-bottom 2)
+      :start-icon (r/as-element [icons/content-add])
+      :href (routes/url-for {:page :contract-partners
+                             :params params
+                             :query {:page :add-partner}})}
+     (tr [:contract :add-company])]]
 
    [partner-listing app (:company-contract/_contract contract)]])
 
@@ -92,7 +96,7 @@
   [:div
    [:div {:class (<class common-styles/margin-bottom 1.5)}
     [common/info-box {:variant :success
-                      :title "Information found"
+                      :title (tr [:contract :information-found])
                       :content [company-info-column company]}]]])
 
 (defn new-company-footer
@@ -232,7 +236,7 @@
            [form/footer2 (r/partial new-company-footer e! form-value)]]]]))))
 
 (defn partners-default-view
-  [params]
+  [params contract]
   [:div {:class (<class common-styles/flex-1-align-center-justify-center)}
    [:div {:style {:text-align :center}}
     [icons/action-manage-accounts-outlined {:style {:font-size "3rem"}
@@ -241,16 +245,140 @@
      (tr [:contract :partner-information])]
     [typography/Text {:class (<class common-styles/margin-bottom 2)}
      (tr [:contract :partner-information-text])]
-    [buttons/button-primary
-     {:start-icon (r/as-element [icons/content-add])
-      :href (routes/url-for {:page :contract-partners
-                             :params params
-                             :query {:page :add-partner}})}
-     (tr [:contract :add-company])]]])
+    [authorization-check/when-authorized
+     :thk.contract/add-new-contract-partner-company contract
+     [buttons/button-primary
+      {:start-icon (r/as-element [icons/content-add])
+       :href (routes/url-for {:page :contract-partners
+                              :params params
+                              :query {:page :add-partner}})}
+      (tr [:contract :add-company])]]]])
+
+(defn personnel-section
+  [e! {:keys [params query] :as app} selected-partner]
+  [:div {:style {:display :flex
+                 :justify-content :space-between
+                 :align-items :center}}
+   [typography/Heading2 (tr [:contract :persons])]
+   [authorization-check/when-authorized
+    :thk.contract/add-contract-employee selected-partner
+    [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                               :href (routes/url-for {:page :contract-partners
+                                                      :params params
+                                                      :query (merge
+                                                               query
+                                                               {:page :add-personnel})})}
+     (tr [:contract :add-person])]]])
+
+(defn user-info-column
+  [{:user/keys [person-id email phone-number] :as user}]
+  [:div
+   [common/basic-information-column
+    [{:label [typography/TextBold (tr [:common :name])]
+      :data (user-model/user-name user)}
+     {:label [typography/TextBold (tr [:fields :user/person-id])]
+      :data person-id}
+     {:label [typography/TextBold (tr [:fields :user/email])]
+      :data email}
+     {:label [typography/TextBold (tr [:fields :user/phone-number])]
+      :data phone-number}]]])
+
+(defn selected-user-information
+  [user]
+  [:div {:class (<class common-styles/margin-bottom 1.5)}
+   [common/info-box {:variant :success
+                     :title (tr [:contract :information-found])
+                     :content [user-info-column user]}]])
+
+(defn contract-personnel-form-footer
+  [form-value {:keys [cancel validate disabled?]}]
+  (let [save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
+    [:div {:class (<class form/form-buttons)}
+     [:div {:style {:margin-left :auto
+                    :text-align :center}}
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (when cancel
+         [buttons/button-secondary {:style {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])
+       (when validate
+         [buttons/button-primary {:disabled (or save-disabled? disabled?)
+                                  :type :submit
+                                  :class "submit"
+                                  :on-click validate}
+          (tr [:buttons :save])])]]]))
+
+(defn add-personnel-form
+  [e! {:keys [query] :as app} selected-partner]
+  (r/with-let [form-atom (r/atom {})]
+    (let [selected-user (:company-contract-employee/user @form-atom)
+          user-selected? (boolean
+                           selected-user)]
+      [Grid {:container true}
+       [Grid {:item true
+              :xs 12
+              :md 6}
+        [form/form2 {:e! e!
+                     :autocomplete-off? true
+                     :value @form-atom
+                     :on-change-event (form/update-atom-event form-atom (fn [old new]
+                                                                          (if (= {:company-contract-employee/role #{}} new)
+                                                                            (dissoc old :company-contract-employee/role)
+                                                                            (merge old new))))
+                     :spec :thk.contract/add-contract-employee
+                     :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
+                                      {:query (merge query
+                                                     {:page :partner-info})})
+                     :save-event #(common-controller/->SaveFormWithConfirmation
+                                    :thk.contract/add-contract-employee
+                                    {:form-value @form-atom
+                                     :company-contract-eid (:db/id selected-partner)}
+                                    (fn [_response]
+                                      (fn [e!]
+                                        (e! (common-controller/->Refresh))
+                                        (e! (common-controller/map->NavigateWithExistingAsDefault
+                                              {:query (merge
+                                                        query
+                                                        {:page :partner-info})}))))
+                                    (tr [:contract :employee-added]))}
+         [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
+          (tr [:contract :add-person])]
+         (if selected-user
+           [selected-user-information selected-user]
+           [form/field :company-contract-employee/user
+            [select/select-search
+             {:e! e!
+              :query (fn [text]
+                       {:args {:search text
+                               :company-contract-id (:db/id selected-partner)}
+                        :query :contract/possible-partner-employees})
+              :format-result select/user-search-select-result}]])
+         (when user-selected?
+           [form/field {:attribute :company-contract-employee/role}
+            [select/select-user-roles-for-contract
+             {:e! e!
+              :error-text (tr [:contract :role-required])
+              :placeholder (tr [:contract :select-user-roles])
+              :no-results (tr [:contract :no-matching-roles])
+              :show-empty-selection? true
+              :clear-value [nil nil]}]])
+         [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
+
+(defn partner-info-header
+  [partner-name lead-partner? on-partner-edit]
+  [:<>
+   [:h1 partner-name]
+   [buttons/button-secondary (tr [:buttons :edit])]])
 
 (defn partner-info
   [e! app selected-partner]
-  [:h1 (pr-str selected-partner)])
+  [:div
+   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])]
+   [:p (pr-str selected-partner)]
+   [Divider {:class (<class common-styles/margin 1 0)}]
+   [personnel-section e! app selected-partner]])
 
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
@@ -265,11 +393,15 @@
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
-      [partners-default-view params])))
+      :add-personnel
+      [authorization-check/when-authorized
+       :thk.contract/add-contract-employee selected-partner
+       [add-personnel-form e! app selected-partner]]
+      [partners-default-view params contract])))
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
 (defn partners-page
-  [e! app {:thk.contract/keys [targets] :as contract}]
+  [e! {:keys [user] :as app} {:thk.contract/keys [targets] :as contract}]
   [:div {:class (<class common-styles/flex-column-1)}
    [contract-common/contract-heading e! app contract]
    [:div {:class (<class contract-style/partners-page-container)}

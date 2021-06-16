@@ -4,7 +4,8 @@
             [teet.contract.contract-model :as contract-model]
             [teet.util.datomic :as du]
             [teet.company.company-db :as company-db]
-            [teet.company.company-model :as company-model])
+            [teet.company.company-model :as company-model]
+            [teet.contract.contract-db :as contract-db])
   (:import (java.util UUID)))
 
 
@@ -87,4 +88,25 @@
                                                {:company-contract/lead-partner? true}))])]))]
     (merge tempids
            {:company-contract-id new-company-contract-id})))
+
+(defcommand :thk.contract/add-contract-employee
+  {:doc "Add an existing user as a member in a given contract-company"
+   :payload {form-value :form-value
+             company-contract-eid :company-contract-eid}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [(not
+           (contract-db/is-company-contract-employee?
+             db company-contract-eid
+             (get-in form-value [:company-contract-employee/user :db/id])))]
+   :transact [(merge
+                {:db/id "new-company-contract-employee"
+                 :company-contract-employee/user (:company-contract-employee/user form-value)
+                 :company-contract-employee/role (mapv
+                                                   :db/id
+                                                   (:company-contract-employee/role form-value))}
+                (meta-model/creation-meta user))
+              {:db/id company-contract-eid
+               :company-contract/employees "new-company-contract-employee"}]})
 

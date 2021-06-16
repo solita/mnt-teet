@@ -4,18 +4,24 @@
             [clojure.string :as str]
             [clojure.spec.alpha :as s]))
 
+(def user-query-rules
+  '[[(user-by-name ?u ?search)
+     [?u :user/id _]
+     [?u :user/given-name ?given]
+     [(missing? $ ?u :user/deactivated?)]
+     [?u :user/family-name ?family]
+     [(str ?given " " ?family) ?full-name]
+     [(.toLowerCase ?full-name) ?full-name-lower]
+     [(.contains ^String ?full-name-lower ?search)]]])
+
 (defn- find-user-by-name [db name]
-  (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
+  (d/q '[:find (pull ?u [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
          :where
-         [?e :user/id _]
-         [?e :user/given-name ?given]
-         [(missing? $ ?e :user/deactivated?)]
-         [?e :user/family-name ?family]
-         [(str ?given " " ?family) ?full-name]
-         [(.toLowerCase ?full-name) ?full-name-lower]
-         [(.contains ^String ?full-name-lower ?name)]
-         :in $ ?name]
-       db (str/lower-case name)))
+         (user-by-name ?u ?name)
+         :in $ % ?name]
+       db
+       user-query-rules
+       (str/lower-case name)))
 
 (defn- find-all-users [db]
   (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])

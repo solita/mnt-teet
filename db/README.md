@@ -15,6 +15,14 @@ Most non-GIS data is in Datomic.
 
 * Run `devdb_clean.sh`
 
+## Running migrations for existing database
+When new migrations are pushed to version control, you can run them without recreating your dev 
+database:
+
+```
+mvn flyway:migrate
+```
+
 ## GIS data dump
 
 * This is loaded from a private S3 bucket. If you don't have AWS SDK creds set up yet: clone a dev sdk user in the IAM AWS console & set up your AWS CLI creds so that you can sucessfully run es `aws s3 ls  s3://teet-dev-files`
