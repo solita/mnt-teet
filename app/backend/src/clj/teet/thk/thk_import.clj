@@ -316,8 +316,9 @@
                        (when (nil? existing-task-eid)
                              {:integration/id (integration-id/unused-random-small-uuid db)
                               :meta/created-at (Date.)})
-                       {:task/status (if (= :activity.status/completed thk-activity-status)
-                                       :task.status/completed
+                       {:task/status (case thk-activity-status
+                                       :activity.status/in-progress :task.status/in-progress
+                                       :activity.status/completed :task.status/completed
                                        :task.status/not-started)})]
     task-tx-data))
 
