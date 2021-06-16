@@ -9,3 +9,8 @@
 (s/def :contract-company/new-company (s/keys :req [:company/country
                                                    :company/business-registry-code
                                                    :company/name]))
+
+(s/def :thk.contract/add-contract-employee
+  (s/keys :req [:company-contract-employee/role
+                :company-contract-employee/user]))
+

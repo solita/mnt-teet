@@ -1,7 +1,8 @@
 (ns teet.contract.contract-db
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du])
+            [teet.util.datomic :as du]
+            [teet.user.user-queries :as user-queries])
   (:import (java.util Date)))
 
 (def contract-query-rules
@@ -215,3 +216,27 @@
             db contract-id)
        first))
 
+(defn is-company-contract-employee?
+  "Given user id and company-contract check if the user is an employee"
+  [db company-contract-eid user-eid]
+  (->> (d/q '[:find ?cce
+              :in $ ?cc ?user
+              :where
+              [?cc :company-contract/employees ?cce]
+              [?cce :company-contract-employee/user ?user]]
+            db company-contract-eid user-eid)
+       ffirst
+       boolean))
+
+(defn available-company-contract-employees
+  [db company-contract-eid search]
+  (->> (d/q '[:find (pull ?u [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
+              :where
+              (user-by-name ?u ?search)
+              (not-join [?u ?company-contract]
+                        [?company-contract :company-contract/employees ?cce]
+                        [?cce :company-contract-employee/user ?u])
+              :in $ % ?search ?company-contract]
+            db user-queries/user-query-rules
+            search company-contract-eid)
+       (mapv first)))

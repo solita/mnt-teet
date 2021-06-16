@@ -57,7 +57,7 @@
 
 (defquery :asset/project-relevant-roads
   {:doc "Query project's relevant roads"
-   :context {:keys [db user] adb :asset-db}
+   :context {:keys [db]}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
@@ -78,7 +78,7 @@
 
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
-   :context {:keys [db user] adb :asset-db}
+   :context {:keys [db] adb :asset-db}
    :args {project-id :thk.project/id
           cost-item :cost-item
           cost-totals :cost-totals
@@ -140,7 +140,7 @@
   {:doc "Export Bill of Quantities Excel for the project"
    :spec (s/keys :req [:thk.project/id :boq-export/unit-prices? :boq-export/language]
                  :opt [:boq-export/version])
-   :context {:keys [db user] adb :asset-db}
+   :context {:keys [db] adb :asset-db}
    :args {project-id :thk.project/id
           :boq-export/keys [version unit-prices? language]}
    :project-id [:thk.project/id project-id]
@@ -184,7 +184,7 @@
 (defquery :asset/version-history
   {:doc "Query version history for BOQ"
    :spec (s/keys :req [:thk.project/id])
-   :context {:keys [db user] adb :asset-db}
+   :context {adb :asset-db}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
@@ -271,7 +271,7 @@
        (fn [{point :v}]
          (<= (geo/distance point [x y]) radius))))
 
-(defn search-by-road-address [db {:location/keys [road-nr carriageway start-km end-km] :as addr}]
+(defn search-by-road-address [db {:location/keys [road-nr carriageway start-km end-km]}]
   (into #{}
         (map first)
         (d/q {:query
@@ -316,7 +316,7 @@
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
    :args search-criteria
-   :context {:keys [db user] adb :asset-db}
+   :context {adb :asset-db}
    :project-id nil
    :authorization {}}
   (let [ids (take (inc result-count-limit)
@@ -352,7 +352,7 @@
   {:doc "Return GeoJSON for assets found by search."
    :spec (s/keys :opt-un [:assets-search/fclass])
    :args criteria
-   :context {:keys [db user] adb :asset-db}
+   :context {adb :asset-db}
    :project-id nil
    :authorization {}}
   (let [criteria (update criteria :bbox #(mapv bigdec %))

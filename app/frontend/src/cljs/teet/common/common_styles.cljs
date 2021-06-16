@@ -1,6 +1,7 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.common.responsivity-styles :as responsivity-styles]
             [herb.core :refer [defglobal]]
             [garden.color :refer [darken]]
             [garden.stylesheet :refer [at-media]]
@@ -586,7 +587,7 @@
 (defn input-label-style
   [disabled? dark-theme?]
   (merge ^{:combinators {[:> :p] {:margin-bottom "0.25rem"}}}
-    {:display :block
+         {:display :block
           :color (if dark-theme?
                    theme-colors/white
                    theme-colors/black-coral)}
@@ -595,6 +596,26 @@
 
 (defn indent-rem [rems]
   {:padding-left (str rems "rem")})
+
+
+(defn content-start [& element-heights-above-content]
+  (let [appbar-height (if (responsivity-styles/mobile?)
+                        theme-spacing/appbar-height-mobile
+                        theme-spacing/appbar-height)]
+    (if (seq element-heights-above-content)
+      (str "calc(" appbar-height " + "
+           (str/join " + " element-heights-above-content)
+           ")")
+      appbar-height)))
+
+(defn content-height [& element-heights-above-content]
+  (let [appbar-height (if (responsivity-styles/mobile?)
+                        theme-spacing/appbar-height-mobile
+                        theme-spacing/appbar-height)]
+    (str "calc(100vh - " appbar-height
+         (when (seq element-heights-above-content)
+           (str " - " (str/join " - " element-heights-above-content)))
+         ")")))
 
 (defn content-scroll-max-height
   "Return style for scrollable content with max-height, calculates
@@ -605,3 +626,14 @@
    :max-height (str "calc(100vh - " theme-spacing/appbar-height " - "
                     (str/join " - " element-heights-above-content)
                     ")")})
+
+(defn rounded-border
+  ([]
+   (rounded-border "50%"))
+  ([border-radius]
+   (rounded-border border-radius theme-colors/black-coral))
+  ([border-radius color]
+   (rounded-border border-radius color "1px"))
+  ([border-radius color border-width]
+   {:border (str "solid " border-width " " color)
+    :border-radius border-radius}))

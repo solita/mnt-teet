@@ -1,12 +1,14 @@
-{:linters
+{:hooks {:analyze-call {teet.db-api.core/defcommand hooks.db-api/defcommand
+                        teet.db-api.core/defquery hooks.db-api/defquery}}
+ :linters
  {:unresolved-var {:exclude [teet.log]}
   :unused-namespace {:exclude [teet.log
                                taoensso.timbre
                                "@material-ui.*"]}
   :unresolved-symbol
   {:level :warning
-   :exclude [(teet.db-api.core/defcommand)
-             (teet.db-api.core/defquery)
+   :exclude [;(teet.db-api.core/defcommand)
+             ;(teet.db-api.core/defquery)
              (teet.db-api.core/defrequest*)
              (teet.integration.integration-context/defstep)]}}
  :lint-as {teet.ui.material-ui-macros/define-mui-components clojure.core/declare

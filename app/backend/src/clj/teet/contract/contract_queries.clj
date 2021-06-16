@@ -36,3 +36,12 @@
                    (contract-db/contract-target-information db contract-eid))
                  contract-model/db-values->frontend)]
     result))
+
+(defquery :contract/possible-partner-employees
+  {:doc "Return only the users who are not added to the contract-company already"
+   :context {db :db user :user}
+   :args {company-contract-id :company-contract-id
+          search :search}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}}
+  (contract-db/available-company-contract-employees db company-contract-id search))
