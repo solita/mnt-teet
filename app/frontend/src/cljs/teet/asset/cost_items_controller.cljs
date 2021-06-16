@@ -27,7 +27,7 @@
 
 ;; Register routes that need asset type library to be in app state
 ;; and launch event to fetch it when navigating.
-(doseq [r [:cost-item :cost-items :cost-items-totals :asset-type-library :assets]]
+(doseq [r [:cost-item :cost-items :cost-items-totals :materials-and-products :asset-type-library :assets]]
   (defmethod routes/on-navigate-event r [_] (->MaybeFetchAssetTypeLibrary)))
 
 
@@ -735,6 +735,49 @@
             (filter filter-pred))
            cost-group-totals)]))
 
+(defn material-used-in-fgroup-fclass-or-ctype?
+  "Is the material used for the given feature group, feature class or
+  component type? It is used if there is a component in the project that
+  - is of the given component type or
+  - the component belongs to the given feature class or feature group"
+  [fgroup-fclass-or-ctype material]
+  (->> material
+       :component/_materials
+       (map (comp (partial map :db/ident)
+                  (juxt :fgroup :fclass :component/ctype)))
+       (some (partial some (partial = fgroup-fclass-or-ctype)))))
+
+(defn remove-nonmatching-components
+  "Removes components that don't belong to the given feature group,
+  feature class or component type"
+  [fgroup-fclass-or-ctype material]
+  (if (nil? fgroup-fclass-or-ctype)
+    material
+    (update material
+           :component/_materials
+           #(filter (fn [component]
+                      (->> ((juxt :fgroup :fclass :component/ctype) component)
+                           (map :db/ident)
+                           (some (partial = fgroup-fclass-or-ctype))))
+                    %))))
+
+(defn filtered-materials-and-products
+  "Returns a structure similar to `filtered-cost-group-totals`. Here the
+  `:ui/group` path is built manually using the material's `:fgroup` and `:fclass`
+  values."
+  [app atl materials-and-products]
+  (let [kw (some-> app (get-in [:query :filter])
+                   cljs.reader/read-string)
+        filter-pred (if kw
+                      (partial material-used-in-fgroup-fclass-or-ctype? kw)
+                      identity)]
+
+    [(some->> kw (asset-type-library/item-by-ident atl))
+     (into []
+           (comp
+            (filter filter-pred)
+            (map (partial remove-nonmatching-components kw)))
+           materials-and-products)]))
 
 (def relevant-road-cache
   "Atom to cache relevant roads by project."

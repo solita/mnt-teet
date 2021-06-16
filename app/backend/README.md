@@ -12,6 +12,7 @@ Backend app hosts the index page and SPA application JS.
 - Start a repl
 - Call `teet.main/restart`
 
+See `mnt-teet/docs/dev-env/` for detailed instructions.
 
 # Testing
 
@@ -58,23 +59,65 @@ data locally on disk. It is now used for CI tests as well.
 - Download tools https://cognitect.com/dev-tools
 - Create file `~/.datomic/dev-local.edn` with content `{:storage-dir "/Some/Directory"}`
 
+## Importing cloud database for local development
 
+The local database is initially quite empty. Follow these steps to import the database from cloud
+test environment for local development use.
 
-## Connecting to Datomic locally
+### Download and install Datomic CLI Tools
 
-- Set `AWS_PROFILE` to your TEET profile
-- Download [datomic-socks-proxy script](https://docs.datomic.com/cloud/files/datomic-socks-proxy)
-  and add it to your path or invoke it by absolute path.
-- Run `datomic-socks-proxy teet-dev-datomic`
-- Ensure you have
-  [mnt-teet-private](https://github.com/solita/mnt-teet-private)
-  repository checked out as a sibling directory to the TEET project.
-- Load and switch to `teet.environment`.
-- Eval `(load-local-config!)`.
-- Eval only when setting up `(user/create-db "yourname-dev")`.
-- Eval `(datomic-connection) => {:db-name "yourname-dev", :database-id "foo", ...}`
-- import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-local-file <path>)
-- When creating your dev datomic db for the first time, run (make-mock-users!) and give permissions to some users with eg (give-manager-permission [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]) (this makes Danny D. Manager admin)
+- Download [Datomic CLI Tools](https://docs.datomic.com/cloud/operation/cli-tools.html)
+- Unzip datomic-cli.zip to installation folder of choice
+- `cd datomic-cli`
+- See `datomic-cli/README`
+- Make each of the scripts executable: `chmod +x datomic*`
+- Optional: add `datomic-cli` to PATH for convenience
+
+### Open SSH tunnel to Datomic compute group in AWS
+
+ - In terminal, run `datomic client access teet-datomic`
+ - Answer yes to prompt "Are you sure you want to continue connecting (yes/no/[fingerprint])?"
+ - You should see something like: "Authentication succeeded (publickey)."
+
+### Run import function in backend REPL
+
+- Run function `(user/import-current-cloud-dbs)` 
+- You should see a prompt like this:
+```
+Importing databases from cloud:
+CLOUD:  teet20210609  => LOCAL:  teet20210609
+CLOUD:  teetasset20210609  => LOCAL:  asset20210609  
+Press enter to continue or abort evaluation.
+```
+- Input anything into the REPL to continue
+- If you get a connection error on the first try, just try again
+- The import should take a few minutes
+```
+Importing TEET db
+Importing...............................................
+Importing asset db
+Importing.................................................
+Done. Remember to change config.edn to use new databases.
+```
+
+### Take new databases to use 
+
+- Edit `mnt-teet-private/config.edn`
+- Copy the database names from the above REPL output, for example:
+```
+:db-name "teet20210609"
+:asset-db-name "asset20210609" 
+```
+- Restart REPL
+- In REPL: `(teet.main/restart)`
+- Check that you can see projects in the [Project list](http://localhost:4000/#/projects/list)
+
+### Update geographic data in Postgres
+
+The projects under project listing do not yet appear on the 
+[Project map](http://localhost:4000/#/projects/map). 
+Here is how to update Postgres geographic data to match projects in Datomic:
+- In REPL, run function `(user/update-project-geometries!)`
 
 ## Troubleshooting
 

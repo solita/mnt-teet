@@ -208,7 +208,7 @@
             [:file/part :db/id]))
 
   (testing "Submitting task part for review"
-    (tu/local-command :task/task-part-submit
+    (tu/local-command :task/submit-task-part
                       {:taskpart-id (tu/get-data :original-part-id)
                        :task-id (tu/get-data :task-id)})
 
@@ -224,7 +224,7 @@
         "File part is now in review"))
 
   (testing "Setting task part as completed"
-    (tu/local-command :task/task-part-review
+    (tu/local-command :task/review-task-part
                       {:taskpart-id (tu/get-data :original-part-id)
                        :task-id (tu/get-data :task-id)
                        :result :accept})
@@ -233,7 +233,7 @@
         "File part is now completed"))
 
   (testing "Re-opening task part"
-    (tu/local-command :task/task-part-reopen
+    (tu/local-command :task/reopen-task-part
                       {:taskpart-id (tu/get-data :original-part-id)
                        :task-id (tu/get-data :task-id)})
 

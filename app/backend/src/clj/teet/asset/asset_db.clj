@@ -8,7 +8,8 @@
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-type-library :as asset-type-library]))
 
 (def rules
   "Helper rules for asset/component queries."
@@ -164,19 +165,6 @@
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
 
-(defn asset-with-components
-  "Pull asset and all its components with all attributes."
-  [db asset-oid]
-  {:pre [(asset-model/asset-oid? asset-oid)]}
-  (map first
-       (d/q '[:find (pull ?e [*])
-              :where
-              [?e :asset/oid ?oid]
-              [(>= ?oid ?start)]
-              [(< ?oid ?end)]
-              :in $ ?start ?end]
-            db asset-oid (str asset-oid "."))))
-
 (defn- asset-component-oids
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
@@ -188,6 +176,19 @@
         (d/index-range db {:attrid :asset/oid
                            :start (str asset-oid "-")
                            :end (str asset-oid ".")})))
+
+(defn- asset-material-oids
+  "Return all OIDs of components (at any level) contained in asset."
+  [db asset-oid]
+  {:pre [(asset-model/asset-oid? asset-oid)]}
+  (into []
+        (comp
+         (map :v)
+         (filter asset-model/material-oid?))
+        (d/index-range db {:attrid :asset/oid
+                           :start (str asset-oid "-")
+                           :end (str asset-oid ".")})))
+
 
 (defn project-asset-oids
   "Return all OIDs of assets in the given THK project."
@@ -220,20 +221,6 @@
              (project-assets-and-components db thk-project-id)
              road-nr)))
 
-(defn project-assets-and-components-with-road
-  "Find OIDs of all project assets and components that have a road defined."
-  [db thk-project-id]
-  (mapv first
-        (d/q '[:find ?oid
-               :where
-               (project ?e ?project)
-               (location-attr ?e :location/road-nr _)
-               [?e :asset/oid ?oid]
-               :in $ % ?project]
-             db rules thk-project-id)))
-
-
-
 (defn project-assets-and-components-without-road
   "Find OIDs of all project assets and components where the road value is missing."
   [db thk-project-id]
@@ -245,6 +232,58 @@
                :in $ % [?oid ...]]
              db rules
              (project-assets-and-components db thk-project-id))))
+
+(defn project-material-oids
+  [db thk-project-id]
+  (into []
+        (mapcat #(asset-material-oids db %))
+        (project-asset-oids db thk-project-id)))
+
+(defn project-materials-and-products
+  [db thk-project-id]
+  (mapv first
+        (d/q '[:find (pull ?e [* {:component/_materials
+                                  [{:component/ctype
+                                    [:db/id
+                                     :db/ident
+                                     :ctype/parent]}]}])
+               :where
+               [?e :asset/oid ?oid]
+               :in $ [?oid ...]]
+             db (project-material-oids db thk-project-id))))
+
+(defn- material-cost-group-attributes [entity atl]
+  (->> entity
+      :material/type
+      :db/ident
+      (asset-type-library/item-by-ident atl)
+      :attribute/_parent
+      (filter :attribute/cost-grouping?)
+      (map :db/ident)))
+
+(defn- assoc-fclass-and-fgroup [material atl]
+  (let [ctype (-> material :component/_materials :component/ctype)
+        fclass (asset-type-library/fclass-for-ctype atl ctype)
+        fgroup (asset-type-library/fgroup-for-fclass atl fclass)]
+    (update material
+            :component/_materials
+            assoc
+            :fclass (select-keys fclass [:db/id :db/ident :asset-schema/label])
+            :fgroup (select-keys fgroup [:db/id :db/ident :asset-schema/label]))))
+
+(defn- select-material-grouping-attributes [entity atl]
+  (-> entity
+      (select-keys (conj (material-cost-group-attributes entity atl)
+                         :db/id :material/type :component/_materials))
+      (assoc-fclass-and-fgroup atl)))
+
+(defn project-materials-totals
+  [db thk-project-id atl]
+  (->> (project-materials-and-products db thk-project-id)
+       (map #(select-material-grouping-attributes % atl))
+       (group-by #(dissoc % :db/id :component/_materials))
+       (map (fn [[group materials]]
+              (assoc group :component/_materials  (map :component/_materials materials))))))
 
 (defn- cost-group-attrs-q
   "Return all items in project with type, status and cost grouping attributes.

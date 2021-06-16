@@ -38,11 +38,14 @@
 
 (defn input-button-style
   []
+  ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}}}
   {:max-height "42px"
    :position :absolute
    :top "50%"
-   :right 0
-   :transform "translateY(-50%)"})
+   :right "2px"
+   :transform "translateY(-50%)"
+   :padding "1px"
+   :background-color theme-colors/white})
 
 (defn end-icon-style
   []

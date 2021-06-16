@@ -408,20 +408,28 @@
                on-key-down (partial arrow-navigation state on-change)]
     (let [{:keys [loading? results open? input highlight]} @state
           current-input-ref (or (:input-ref opts) @input-ref)
-          load! #(let [result-fn-or-query-map (query %)]
-                   (if (fn? result-fn-or-query-map)
-                     (let [results (result-fn-or-query-map)]
-                       (swap! state merge {:loading? false
-                                           :open? true
-                                           :results results
-                                           :highlight (first results)}))
-                     (e! (->CompleteSearch result-fn-or-query-map
-                                           (fn [results]
-                                             (swap! state assoc
-                                                    :loading? false
-                                                    :open? true
-                                                    :results results
-                                                    :highlight (first results)))))))]
+          load! (fn [text]
+                  (let [result-fn-or-query-map (query text)]
+                    (if (fn? result-fn-or-query-map)
+                      (let [results (result-fn-or-query-map)]
+                        (swap! state merge {:loading? false
+                                            :open? true
+                                            :results results
+                                            :highlight (first results)}))
+                      (e! (->CompleteSearch
+                           result-fn-or-query-map
+                           (fn [results]
+                             (swap! state
+                                    (fn [state]
+                                      (if-not (= text (:input state))
+                                        (do
+                                          (log/debug "Stale result for:" text)
+                                          state)
+                                        (assoc state
+                                               :loading? false
+                                               :open? true
+                                               :results results
+                                               :highlight (first results)))))))))))]
       [:<>
        [input-element
         (merge {:ref set-ref!
@@ -715,5 +723,6 @@
    [form-select (merge
                   opts
                   {:format-item #(tr [:countries %])
-                   :items (-> (tr-tree [:countries])
-                              keys)})]])
+                   :items (->> (tr-tree [:countries])
+                               keys
+                               (sort-by #(tr [:countries %])))})]])

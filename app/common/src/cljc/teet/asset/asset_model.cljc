@@ -143,6 +143,9 @@
    :total-cost "right"})
 
 
+(def materials-and-products-table-columns
+  [:material :parameter :component :material-approval-status])
+
 (def locked? "Key to check if version is locked"
   :boq-version/locked?)
 

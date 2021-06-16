@@ -9,42 +9,21 @@
 
 (defn status-container-style
   [size]
+  ^{:combinators
+    {[:> :span] {:font-size (str size "px")}}}
   {:width (str size "px")
    :height (str size "px")
    :display :flex
    :justify-content :center
    :align-items :center})
 
-(defn signed-icon-style
-  []
-  {:width "100%"
-   :height "100%"
-   :border-radius "100%"
-   :background-color theme-colors/gray-light})
-
-(defn in-progress-icon-style
-  []
-  {:width "100%"
-   :height "100%"
-   :border-radius "100%"
-   :border "3px solid"
-   :border-color theme-colors/success})
-
-(defn signed-status-icon
-  []
-  [:div {:class (<class signed-icon-style)}])
-
-(defn in-progress-status-icon
-  []
-  [:div {:class (<class in-progress-icon-style)}])
-
 (defn contract-status->variant-icon
   [contract-status]
   (case contract-status
     :thk.contract.status/signed
-    [:info [signed-status-icon]]
+    [:info [icons/image-circle {:style {:color theme-colors/gray-light}}]]
     :thk.contract.status/in-progress
-    [:info [in-progress-status-icon]]
+    [:info [icons/image-circle-outlined {:style {:color theme-colors/success}}]]
     :thk.contract.status/deadline-approaching
     [:warning [icons/action-report-problem-outlined {:style {:color theme-colors/warning}}]]
     :thk.contract.status/deadline-overdue

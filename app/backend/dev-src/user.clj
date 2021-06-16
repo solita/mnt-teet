@@ -8,7 +8,9 @@
             [clojure.string :as str]
             [clojure.walk :as walk]
             [datomic.dev-local :as dl]
-            [cognitect.aws.client.api :as aws])
+            [cognitect.aws.client.api :as aws]
+            [teet.log :as log]
+            [teet.project.project-geometry :as project-geometry])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -424,7 +426,8 @@
             (.get c java.util.Calendar/DATE))))
 
 (defn import-current-cloud-dbs
-  "Import current teet and asset databases from dev"
+  "Import current teet and asset databases from dev.
+  See backend/README.md for usage instructions."
   []
   (let [c (aws/client {:api :ssm})
         {cloud-teet-db-name "/teet/datomic/db-name"
@@ -449,6 +452,22 @@
       (import-cloud cloud-asset-db-name local-asset-db-name)
       (println "\nDone. Remember to change config.edn to use new databases."))))
 
+(defn update-project-geometries! []
+  (project-geometry/update-project-geometries!
+   (merge {:delete-stale-projects? true}
+          (environment/config-map {:wfs-url [:road-registry :wfs-url]}))
+   (map first
+        (d/q '[:find (pull ?e [:db/id :integration/id
+                               :thk.project/project-name :thk.project/name
+                               :thk.project/road-nr
+                               :thk.project/carriageway
+                               :thk.project/start-m :thk.project/end-m
+                               :thk.project/custom-start-m :thk.project/custom-end-m])
+               :in $
+               :where [?e :thk.project/road-nr _]]
+             (db))))
+  :ok)
+
 (def ^:dynamic *time-level* 0)
 (defmacro time-with-name [name expr]
   `(binding [*time-level* (inc *time-level*)]
@@ -459,3 +478,7 @@
          (finally
            (println "TIME" (apply str (repeat *time-level* "--")) n# ": "
                     (- (System/currentTimeMillis) start#) "msecs"))))))
+
+
+(defn log-level! [level]
+  (log/merge-config! {:level level}))

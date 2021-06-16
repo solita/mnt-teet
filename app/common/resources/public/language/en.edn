@@ -63,9 +63,14 @@
    :total-cost "Total (€)",
    :type "Type",
    :all-cost-items "All cost items",
+   :component "Component",
+   :all-materials "All materials",
    :all-components "All components",
+   :material "Material",
    :quantity "Quantity",
-   :no-road-reference "No road reference"},
+   :no-road-reference "No road reference",
+   :material-approval-status "Material approval status",
+   :parameter "Parameter"},
   :add-cost-item "Add cost item",
   :export-boq "Export BOQ",
   :validate
@@ -85,7 +90,10 @@
   :unlock-tender-boq-warning
   "The Cost Item list is in the procurement, are you sure that you want to change it, and are you aware that you need to change the date of the procurement and inform the tenders.",
   :cost-item-saved "Cost item saved",
-  :page {:cost-items "Assets", :cost-items-totals "Totals"},
+  :page
+  {:cost-items "Assets",
+   :cost-items-totals "Totals",
+   :materials-and-products "Materials and products"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
   :export-boq-filename "THK-{project}-BOQ-{version}.xlsx",
@@ -96,7 +104,9 @@
    :result-count "{count} features",
    :radius "Radius",
    :add-road-address "Add road address",
-   :select-road-address "Select"},
+   :select-road-address "Select",
+   :back-to-result-listing "Back to result listing",
+   :view-results "View results ({count})"},
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
   :materials {:label "Materials"},
@@ -144,6 +154,7 @@
   :delete "Delete",
   :save "Save",
   :close "Close",
+  :search "Search",
   :preview "Preview",
   :undo "Undo",
   :back "Back",
@@ -210,7 +221,7 @@
   :select-all "Select all",
   :hotkey "key {key}",
   :total "Total",
-  :contract-menu "Contracts",
+  :contract-menu "Contract menu",
   :language "Language",
   :filter-shortcuts "Filter shortcuts",
   :unassigned "Unassigned",
@@ -231,18 +242,22 @@
  {:no-targets-for-contract
   "Contract integration failed and this contract doesn't have any valid targets. Contact administration for a bug report",
   :partner-information-text
-  "Please select or add new companies, subcontractors or persons from the left menu.",
+  "Please select or add new company, subcontractor or person from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
   :company-search-placeholder "Enter company name or business id",
+  :partner-saved "Contract partner added",
   :related-contracts "RELATED CONTRACTS",
   :thk.contract/type "Type",
+  :no-company-found-title "Company not found",
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
+  :person-name "Person name",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",
   :add-company-not-in-teet "Add a company not in TEET",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
+  :partners {:title "Companies & persons"},
   :add-company "Add company",
   :status "Status",
   :table-heading
@@ -252,13 +267,21 @@
    :task "Task"},
   :contract-related-entities "Contract related entities",
   :no-companies-matching-search "No companies found matching search",
+  :xroad-exception-content
+  "Try again in a few minutes or contact system administrator if the issue persists",
   :partners-listing "Partners listing",
   :thk.contract.status/signed "Signed",
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",
   :company-search-label "Company search",
   :contracts-listing "Contract listing",
+  :lead-partner "Lead partner",
   :edit-contract "Contract information",
+  :no-company-found-content
+  "No company matching the business registry code was found.",
+  :xroad-exception-title "X-Road query failed",
+  :search-companies-business-registry
+  "Search for partner information from Estonian business registry",
   :thk.contract.status/in-progress "In progress"},
  :contracts
  {:contracts-list
@@ -532,6 +555,8 @@
   :activity.status/expired "Expired",
   :land-owner-opinion.type/construction "Construction",
   :notification.type/task-waiting-for-review "Task waiting for review",
+  :company-contract-employee.role/company-project-manager
+  "Company project manager",
   :task.type/acceptances "Acceptances",
   :document.sub-category/terms-of-reference "Terms of Reference",
   :document.sub-category/report "Report",
@@ -617,6 +642,7 @@
   :task.type/calculation "Calculation",
   :land-acquisition.status/in-progress "In progress ",
   :activity.name/warranty "Warranty",
+  :company-contract-employee.role/supervisor "Supervisor",
   :task.type/construction-general-part "General part",
   :cooperation.opinion.status/partially-rejected
   "Partly taken into account",
@@ -668,6 +694,7 @@
   :notification.type/task-review-rejected "Task review rejected",
   :cooperation.response.status/no-response "No response",
   :land-acquisition.status/completed "Completed",
+  :company-contract-employee.role/team-member "Team member",
   :task.status/in-preparation "In preparation",
   :thk.contract.status/signed "Signed",
   :document.category/as-built-doc "Construction documentation",
@@ -708,6 +735,8 @@
   :notification.type/comment-unresolved "Comment unresolved",
   :task.type/construction-other-facilities "Other facilities",
   :task.type/general-part "General part",
+  :company-contract-employee.role/company-representative
+  "Company representative",
   :cooperation.application.response-type/opinion "Opinion",
   :activity.status/completed "Completed",
   :activity.name/preliminary-design "Preliminary design",
@@ -852,7 +881,7 @@
   :ta/region "Region",
   :land-owner-opinion/authority-position "Authorities position",
   :location/end-offset-m "End offset",
-  :thk.contract/cost "Capital amount",
+  :thk.contract/cost "Cost",
   :cooperation.opinion/status "Opinion of Competent Authority",
   :activity/status "Status",
   :cooperation.contact/id-code "Business reg / personal ID code",
@@ -877,6 +906,7 @@
   :project/participant "Participant",
   :land-acquisition/price-per-sqm "Price/m²",
   :activity/estimated-start-date "Estimated start date",
+  :company-contract/lead-partner? "Lead partner",
   :estate-procedure/motivation-bonus "Motivation fee",
   :task/modified "Modified",
   :cooperation.application/type "Application type",
@@ -1450,7 +1480,7 @@
   :submit-results-confirm
   "Are you sure you wish to submit this task part for review?",
   :approve-part-confirm "Are you sure you wish approve the task part?",
-  :accept "Agreed",
+  :accept "Agree",
   :reject-part-confirm
   "Are you sure you wish to send back the task part?"},
  :unit-info {:owners-opinions "Land owners opinions"},
@@ -1462,7 +1492,9 @@
    :placeholder "Type name..."},
   :role "Role",
   :unregistered "User"},
- :validation {:invalid-email "Invalid email address"},
+ :validation
+ {:invalid-business-id "Invalid business registry id",
+  :invalid-email "Invalid email address"},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",

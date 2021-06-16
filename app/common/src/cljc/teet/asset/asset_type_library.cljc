@@ -18,6 +18,29 @@
                           (seq (dissoc % :db/id :db/ident)))
                     rotl)))
 
+(defn- item-by-ident*
+  [atl ident]
+  (cu/find-matching #(and (map? %)
+                          (contains? % :asset-schema/type)
+                          (= ident (:db/ident %)))
+                    atl))
+
+(def item-by-ident
+  "Find any type of ATL item based on ident."
+  ;; NOTE: we can memoize this without fear of unbounded growth
+  ;; as asset type library will never change during the lifetime
+  ;; of the process (either page in browser or deployment in ions)
+  (memoize item-by-ident*))
+
+(defn- has-type? [type x]
+  (and (map? x)
+       (= type (get-in x [:asset-schema/type :db/ident]))))
+
+(def fgroup? (partial has-type? :asset-schema.type/fgroup))
+(def fclass? (partial has-type? :asset-schema.type/fclass))
+(def ctype? (partial has-type? :asset-schema.type/ctype))
+(def material? (partial has-type? :asset-schema.type/material))
+
 (defn fgroup-for-fclass
   "Find fgroup which fclass belongs to."
   [atl fclass]
@@ -30,13 +53,21 @@
 (defn fclass-for-ctype
   "Find fclass which ctype belongs to."
   [atl ctype]
-  (some (fn [fg]
-          (some (fn [fc]
-                  (when (some #(du/enum= ctype %)
-                              (:ctype/_parent fc))
-                    fc))
-                (:fclass/_fgroup fg)))
-        (:fgroups atl)))
+  (if (:ctype/parent ctype)
+    (loop [parent (item-by-ident atl (-> ctype :ctype/parent :db/ident))]
+      (if (or (nil? parent)
+              (fclass? parent))
+        parent
+        (recur (item-by-ident atl (-> parent :ctype/parent :db/ident)))))
+    ;; TODO the old implementation doesn't work for ctypes that are
+    ;; children of other ctypes
+    (some (fn [fg]
+            (some (fn [fc]
+                    (when (some #(du/enum= ctype %)
+                                (:ctype/_parent fc))
+                      fc))
+                  (:fclass/_fgroup fg)))
+          (:fgroups atl))))
 
 (defn type-hierarchy
   "Find each hierarchy parent of given fclass or ctype."
@@ -48,16 +79,6 @@
                                 (:ctype/_parent %))
                        #(du/enum= node %)
                        atl))))
-
-(defn- has-type? [type x]
-  (and (map? x)
-       (= type (get-in x [:asset-schema/type :db/ident]))))
-
-(def fgroup? (partial has-type? :asset-schema.type/fgroup))
-(def fclass? (partial has-type? :asset-schema.type/fclass))
-(def ctype? (partial has-type? :asset-schema.type/ctype))
-(def material? (partial has-type? :asset-schema.type/material))
-
 
 (defn leaf-ctype?
   "Is `ctype`
@@ -94,20 +115,6 @@
                           set
                           fgroup))))
       [])))
-
-(defn- item-by-ident*
-  [atl ident]
-  (cu/find-matching #(and (map? %)
-                          (contains? % :asset-schema/type)
-                          (= ident (:db/ident %)))
-                    atl))
-
-(def item-by-ident
-  "Find any type of ATL item based on ident."
-  ;; NOTE: we can memoize this without fear of unbounded growth
-  ;; as asset type library will never change during the lifetime
-  ;; of the process (either page in browser or deployment in ions)
-  (memoize item-by-ident*))
 
 #?(:clj
    (defn coerce-fn [value-type]
@@ -190,7 +197,9 @@
            (let [u (:asset-schema/unit k)]
              [(label k)
               (case (get-in k [:db/valueType :db/ident])
-                :db.type/ref (some-> v :db/ident id->def label)
+                :db.type/ref (if (keyword? v)
+                               (some-> v id->def label)
+                               (some-> v :db/ident id->def label))
                 (str v))
               u]))
          (sort-by (comp label key) attr->val))))

@@ -3,6 +3,7 @@
             [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
             [teet.activity.activity-db :as activity-db]
+            [teet.activity.activity-model :as activity-model]
             [teet.meta.meta-model :as meta-model]
             teet.task.task-spec
             [teet.util.collection :as uc]
@@ -139,7 +140,7 @@
                 (review-notification-tx db user :manager task-id :notification.type/task-waiting-for-review task-id)]
                (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/waiting-for-review))})
 
-(defcommand :task/task-part-review
+(defcommand :task/review-task-part
   {:doc "Submit task part for review and approve/reject."
    :context {:keys [db user]}
    :payload {task-id :task-id
@@ -162,13 +163,13 @@
                 (review-notification-tx db user :assignee taskpart-id :notification.type/task-part-review-rejected task-id)]
                (taskpart-file-tx db user taskpart-id :file.status/returned)))})
 
-(defcommand :task/task-part-submit
+(defcommand :task/submit-task-part
   {:doc "Submit task part for review and approve/reject."
    :context {:keys [db user]}
    :payload {task-id :task-id
              taskpart-id :taskpart-id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/review {:eid task-id
+   :authorization {:task/submit-results {:eid task-id
                                  :link :task/assignee}}
    :transact (into
                [{:db/id taskpart-id
@@ -176,14 +177,15 @@
                 (review-notification-tx db user :manager taskpart-id :notification.type/task-part-waiting-for-review task-id)]
                (taskpart-file-tx db user taskpart-id :file.status/submitted))})
 
-(defcommand :task/task-part-reopen
+(defcommand :task/reopen-task-part
   {:doc "Reopen task part"
    :context {:keys [db user]}
    :payload {task-id :task-id
              taskpart-id :taskpart-id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/review {:eid task-id
+   :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
+   :pre [(task-model/part-completed? (d/pull db [:file.part/status] taskpart-id))]
    :transact (into
                [{:db/id taskpart-id
                  :file.part/status :file.part.status/in-progress}]
@@ -199,6 +201,9 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
+   :pre [(and
+           (activity-model/in-progress? (d/pull db [:activity/status] (task-db/activity-for-task-id db task-id)))
+           (task-model/completed? (d/pull db [:task/status] task-id)))]
    :transact (into
                [{:db/id task-id
                  :task/status :task.status/in-progress}]
@@ -287,6 +292,6 @@
      ;; Reject: mark as in-progress and notify assignee
      :reject (into
                [{:db/id task-id
-                 :task/status :task.status/in-progress}]
-               (not-reviewed-files-and-parts-tx db user task-id :file.status/returned :file.part.status/in-progress))
-     (review-notification-tx db user :assignee task-id :notification.type/task-review-rejected task-id))})
+                 :task/status :task.status/in-progress}
+                (review-notification-tx db user :assignee task-id :notification.type/task-review-rejected task-id)]
+               (not-reviewed-files-and-parts-tx db user task-id :file.status/returned :file.part.status/in-progress)))})

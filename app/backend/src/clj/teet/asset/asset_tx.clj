@@ -8,6 +8,20 @@
             [teet.meta.meta-model :as meta-model]
             [clojure.walk :as walk]))
 
+(def ^:const bigdec-scale
+  "All asset db decimal values use the same 6 decimal place scale."
+  6)
+
+(defn set-bigdec-scale
+  "Walk tx-data and set all bigdec scale."
+  [tx-data]
+  (walk/prewalk
+   (fn [x]
+     (if (decimal? x)
+       (.setScale x bigdec-scale)
+       x))
+   tx-data))
+
 (defn save-asset
   "Create or update asset. Creates new OID based on the fclass."
   [db owner-code {id :db/id :asset/keys [fclass] :as asset}]
@@ -72,7 +86,6 @@
   "Import assets of the given type from road registry.
   Creates new OIDs for asset/components if they don't exist yet."
   [db owner-code fclass assets]
-
   (let [{:fclass/keys [oid-prefix oid-sequence-number]}
         (d/pull db '[:fclass/oid-prefix :fclass/oid-sequence-number] fclass)
 
