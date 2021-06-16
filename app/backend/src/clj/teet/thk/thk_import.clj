@@ -385,12 +385,12 @@
           contract-db-id (contract-exists? db contract-ids)]
       ;; for the existing contracts we skip targets update
       (if (some? contract-db-id)
-        (merge
-          {:db/id contract-db-id}
-          region-tx
-          (select-keys contract-info [:thk.contract/name
-                                      :thk.contract/part-name
-                                      :thk.contract/procurement-number]))
+        [(merge
+           {:db/id contract-db-id}
+           region-tx
+           (select-keys contract-info [:thk.contract/name
+                                       :thk.contract/part-name
+                                       :thk.contract/procurement-number]))]
         (if (not-empty targets)
           [(merge
              {:db/id (str procurement-id "-" procurement-part-id "-new-contract")
@@ -475,9 +475,10 @@
         projects))
 
 (defn import-thk-contracts! [connection url contracts]
-  (let [db (d/db connection)]
-    (d/transact connection
-                {:tx-data (thk-import-contracts-tx db url contracts)})))
+  (let [db (d/db connection)
+        tx-data {:tx-data (thk-import-contracts-tx db url contracts)}]
+    (println "TX-DATA:" tx-data)
+    (d/transact connection tx-data)))
 
 (defn import-thk-projects! [connection url projects]
   (let [duplicate-activity-id-projects
