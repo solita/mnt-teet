@@ -430,6 +430,7 @@
                               ;; count the quantity field values
                               (or (ffirst
                                    (d/q '[:find (sum ?q)
+                                          :with ?item
                                           :where [?item :component/quantity ?q]
                                           :in $ [?item ...]]
                                         db (map key items))) 0))]
