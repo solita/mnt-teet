@@ -279,18 +279,19 @@
        :on-change-event :_ignore ; the form cannot be changed, so we can ignore
        :value item
        :disable-buttons? true}
-      [cost-items-view/attributes* {:e! e!
-                                    :attributes attributes
-                                    :component-oid (when component? oid)
-                                    :cost-item-data asset
-                                    :common (cond
-                                              component? :ctype/component
-                                              :else :ctype/feature)
-                                    :inherits-location?
-                                    (cond
-                                      component? (:component/inherits-location? ctype)
-                                      :else false)}
-       rotl true]]
+      [:span {:style {:overflow-wrap :break-word}}
+       [cost-items-view/attributes* {:e! e!
+                                     :attributes attributes
+                                     :component-oid (when component? oid)
+                                     :cost-item-data asset
+                                     :common (cond
+                                               component? :ctype/component
+                                               :else :ctype/feature)
+                                     :inherits-location?
+                                     (cond
+                                       component? (:component/inherits-location? ctype)
+                                       :else false)}
+        rotl true]]]
      (when-let [materials (and component? (:component/materials item))]
        [:<>
         [:h3 (tr [:asset :materials :label])]
