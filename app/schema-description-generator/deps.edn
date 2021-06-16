@@ -1,3 +1,5 @@
-{:deps  {com.datomic/client-cloud {:mvn/version "0.8.102"}}
+{:deps  {com.datomic/client-cloud {:mvn/version "0.8.102"}
+         org.clojure/data.csv {:mvn/version "0.1.4"}}
  :paths ["src"]
  :aliases {:generate {:main-opts ["-m" "generate-schema"]}}}
+
