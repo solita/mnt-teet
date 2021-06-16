@@ -424,7 +424,7 @@
               [:<>
                (when-not (@show :table)
                  [:div {:style {:position :absolute
-                                :z-index 9999
+                                :z-index 5
                                 :background-color (theme-colors/white-alpha 0.8)
                                 :margin "1rem"}}
                   [result-indicator {:show @show :set-show! set-show!
