@@ -37,8 +37,6 @@
             [teet.util.datomic :as du]
             [teet.ui.common :as common-ui]
             [teet.ui.container :as container]
-            [taoensso.timbre :as log]
-            [teet.ui.icons :as icons]
             [teet.util.collection :as cu]))
 
 
