@@ -367,11 +367,11 @@
                  (<class common-styles/margin-bottom 1)]}
 
    [:div {:class [(<class common-styles/margin-right 0.5)
-                  (<class common-styles/flex-align-end)]}
+                  (<class common-styles/flex-align-center)]}
     [typography/Heading2 {:style {:margin-right "0.5rem"
                                   :display :inline-block}}
      (tr [:common :files])]
-    [:div {:class (<class common-styles/flex-1-align-center-justify-center)}
+    [:div {:class (<class common-styles/margin-left 1)}
      [file-view/file-sorter sort-by-atom items]]]
    (when (task-model/can-submit? task)
      [when-authorized :file/upload

@@ -286,6 +286,7 @@
   "No company matching the business registry code was found.",
   :xroad-exception-title "X-Road query failed",
   :role-required "Employee needs to have a role",
+  :employee-added "Employee added",
   :add-person "Add person",
   :search-companies-business-registry
   "Search for partner information from Estonian business registry",
