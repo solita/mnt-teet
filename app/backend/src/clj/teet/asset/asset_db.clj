@@ -311,7 +311,7 @@
          :keys id type attr val val-type
          :where
          [?c :component/materials ?m]
-         [?a :component/ctype ?type]
+         [?c :component/ctype ?type]
          [?m ?attr ?val]
          [?attr :attribute/cost-grouping? true]
          [?attr :db/ident ?attr-ident]
