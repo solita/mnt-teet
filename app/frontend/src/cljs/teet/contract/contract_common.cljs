@@ -20,7 +20,7 @@
   (r/with-let [procurement-display-text (str (tr [:contracts :state-procurement-link]) " " procurement-number)]
     (if (js/Number.isInteger (js/parseInt (subs procurement-number 0 1)))
       [common/external-contract-link
-       {:href (str (environment/config-value :contract :state-procurement-url) procurement-number "/general-info")}
+       {:href (str (environment/config-value :contract :state-procurement-url) procurement-number)}
        procurement-display-text]
       [typography/SmallText {:style {:display :flex
                                      :align-items :center
