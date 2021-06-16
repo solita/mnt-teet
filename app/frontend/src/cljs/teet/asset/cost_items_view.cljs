@@ -597,22 +597,32 @@
           [materials-list component-data {:e! e! :atl atl}])
 
         (when (not new?)
-          [:div
-           [components-tree component-data {:e! e!}]
-           (when-let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))]
-             [add-component-menu
-              (tr [:asset :add-component])
-              allowed-components
-              (e! cost-items-controller/->AddComponent)])
-           (let [added-materials (into #{} (map :material/type) (:component/materials component-data))
-                 allowed-materials
-                 (remove (comp added-materials :db/ident)
-                         (asset-type-library/allowed-material-types atl ctype))]
-             (when (seq allowed-materials)
+          ;; The component can either have
+          ;; - subcomponents or
+          ;; - materials
+          ;; That is, only leaf components can have materials
+          (let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))
+                can-have-subcomponents? (boolean allowed-components)]
+            [:div
+             (when can-have-subcomponents?
+               [components-tree component-data {:e! e!}])
+             (when can-have-subcomponents?
                [add-component-menu
-                (tr [:asset :add-material])
-                allowed-materials
-                (e! cost-items-controller/->AddMaterial)]))])
+                (tr [:asset :add-component])
+                allowed-components
+                (e! cost-items-controller/->AddComponent)])
+             ;; A leaf component can only have a single material of
+             ;; each allowed material type. For example, only one
+             ;; material of type Asphalt is allowed.
+             (let [added-materials (into #{} (map :material/type) (:component/materials component-data))
+                   allowed-materials
+                   (remove (comp added-materials :db/ident)
+                           (asset-type-library/allowed-material-types atl ctype))]
+               (when (seq allowed-materials)
+                 [add-component-menu
+                  (tr [:asset :add-material])
+                  allowed-materials
+                  (e! cost-items-controller/->AddMaterial)]))]))
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
