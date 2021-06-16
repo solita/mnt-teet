@@ -587,7 +587,7 @@
 (defn input-label-style
   [disabled? dark-theme?]
   (merge ^{:combinators {[:> :p] {:margin-bottom "0.25rem"}}}
-    {:display :block
+         {:display :block
           :color (if dark-theme?
                    theme-colors/white
                    theme-colors/black-coral)}
