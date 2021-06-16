@@ -371,7 +371,8 @@
     [typography/Heading2 {:style {:margin-right "0.5rem"
                                   :display :inline-block}}
      (tr [:common :files])]
-    [file-view/file-sorter sort-by-atom items]]
+    [:div {:class (<class common-styles/flex-1-align-center-justify-center)}
+     [file-view/file-sorter sort-by-atom items]]]
    (when (task-model/can-submit? task)
      [when-authorized :file/upload
       task
@@ -381,28 +382,8 @@
                                 :data-cy "task-file-upload"}
         (tr [:buttons :upload])]]])])
 
-(def valid-document-groups
-  #{:file.document-group/annexes
-    :file.document-group/specifications
-    :file.document-group/drawings-and-plans
-    :file.document-group/reports
-    :file.document-group/models
-    :file.document-group/general
-    :file.document-group/ungrouped})
-
-(defn get-files-by-document-group
-  "Filters out the files based on the document group"
-  [document-group files]
-  (if (= document-group :file.document-group/ungrouped)
-    (filterv (fn [f]
-               (nil? (get-in f [:file/document-group :db/ident])))
-             files)
-    (filterv (fn [f]
-               (= document-group (get-in f [:file/document-group :db/ident])))
-             files)))
-
 (defn- file-content-view
-  [e! upload! activity task files-form project-id files parts selected-part]
+  [e! upload! activity task files-form project-id files parts selected-part is-filtered?]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
     (let [allow-replacement-opts (when (task-model/can-submit? task)
@@ -411,22 +392,12 @@
                                     :project-id project-id
                                     :replace-form files-form})
           land-acquisition? (du/enum= :activity.name/land-acquisition
-                                      (:activity/name activity))
-          group-filter (if
-                         (valid-document-groups (keyword (str "file.document-group/" selected-part)))
-                         (keyword (str "file.document-group/" selected-part))
-                         nil)
-          active-part (filterv (fn [p] (= (file-view/str->int selected-part) (get p :file.part/number))) (into [] parts))
-          _ (taoensso.timbre/debug "Filter: " group-filter selected-part active-part)]
+                                      (:activity/name activity))]
       [:<>
        [task-file-heading task upload! {:sort-by-atom sort-by-atom
                                         :items items-for-sort-select}]
-       (when (or (nil? selected-part) (zero? (file-view/str->int selected-part))) ;; if some other part is selected hide this
-         (let [general-files (remove #(contains? % :file/part)
-                                     (if group-filter
-                                       (get-files-by-document-group group-filter files)
-                                       files))
-               _ (taoensso.timbre/debug "Filter2 on")]
+       (when (or (nil? selected-part) (zero? (:file.part/number selected-part))) ;; if some other part is selected hide this
+         (let [general-files (remove #(contains? % :file/part) files)]
            [:div {:style
                   {:border-bottom (str "solid " theme-colors/gray-light " 1px")
                    :margin-bottom "1.5em"
@@ -439,24 +410,26 @@
                                   :data-cy "task-file-list"}
             general-files]]))
        [:div
-        (when (not (zero? (file-view/str->int selected-part)))
+        (when (not (zero? (:file.part/number selected-part)))
           (mapc
             (fn [part]
-              [file-section-view {:e! e!
-                                  :sort-by-value @sort-by-atom
-                                  :allow-replacement-opts allow-replacement-opts
-                                  :upload! upload!
-                                  :land-acquisition? land-acquisition?}
-               task part
-               (filterv
-                 (fn [file]
-                   (= (:db/id part) (get-in file [:file/part :db/id])))
-                 (if group-filter
-                   (get-files-by-document-group group-filter files)
-                   files))])
-            (if (= 0 (count active-part))
+              (let [task-files (filterv
+                                 (fn [file]
+                                   (= (:db/id part) (get-in file [:file/part :db/id])))
+                                 files)
+                    show-files (if is-filtered?
+                                     (if (seq task-files) true false)
+                                     true)]
+                (when show-files
+                  [file-section-view {:e! e!
+                                      :sort-by-value @sort-by-atom
+                                      :allow-replacement-opts allow-replacement-opts
+                                      :upload! upload!
+                                      :land-acquisition? land-acquisition?}
+                   task part task-files])))
+            (if (nil? selected-part)
               parts
-              active-part)))]])))
+              [selected-part])))]])))
 
 (defn- task-file-view
   [e! activity task upload! files-form project-id]

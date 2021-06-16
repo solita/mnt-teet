@@ -60,7 +60,8 @@
                         (tr [:file :version] {:num version}))]))])
 
 (def ^:private sorters
-  {"meta/created-at" [(juxt :file/group-code :meta/created-at :file/name) >]
+  {"file/default"    [(juxt :file/name :file/sequence-number) <]
+   "meta/created-at" [(juxt :meta/created-at :file/name) >]
    "file/name"       [(comp str/lower-case :file/name) <]
    "file/type"       [(comp file-model/filename->suffix :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
@@ -68,7 +69,8 @@
 (defn sort-items
   []
   (mapv #(assoc % :label (tr (conj [:file :sort-by (-> % :value keyword)])))
-        [{:value "meta/created-at"}
+        [{:value "file/default"}
+         {:value "meta/created-at"}
          {:value "file/name"}
          {:value "file/type"}
          {:value "file/status"}]))
@@ -129,54 +131,84 @@
                          (dissoc :file/document-group))) files)]
     outs))
 
-(defn- get-parts-and-groups
-  [files parts]
-  (let [all-parts (mapv (fn [x] {:item-name (gstr/format "%s #%02d" (:file.part/name x) (:file.part/number x))
-                                 :item-value (:file.part/number x)}) (into [] parts))
-        all-groups (distinct (mapv (fn [x] {:item-name (tr-enum (if (nil? (:file/group-name x)) :file.document-group/ungrouped (:file/group-name x)))
-                                            :item-value (if (nil? (:file/group-name x)) :file.document-group/ungrouped (:file/group-name x))}) (get-document-groups files)))]
-    [(when (some? all-parts) {:group-label "Parts" :group-items (concat [{:item-name (str (tr [:file-upload :general-part]) " #00")
-                                                                       :item-value 0}]
-                                                                            all-parts)})
-    (when (some? all-groups) {:group-label "Document groups" :group-items all-groups})]))
-
-(defn str->int [s] (when (= s (str (js/parseInt s))) (js/parseInt s)))
+(defn sort-document-groups
+  "Sort document group vector by 'ungrouped' first and the rest alphabetically"
+  [doc-group first-el]
+  (mapv (fn [x] (:key x))
+        (sort-by
+          (juxt #(not= first-el (:key %)) :name)
+          (mapv (fn [x] {:name (tr-enum x) :key x}) doc-group))))
 
 (defn file-search
   "Given original parts and files passes searched files and parts to component view"
-  [files parts file-component]
+  [files parts file-component]                       ;; if files/parts change
   (r/with-let [search-term (r/atom "")
                on-change #(let [val (-> % .-target .-value)]
                             (reset! search-term val))
-               selected-filter-id (r/atom "")
-               change-part #(reset! selected-filter-id %)]
-    (let [selected-part (if (empty? @selected-filter-id) nil @selected-filter-id)]
-      [:div
-       [:div {:class [(<class common-styles/flex-row)
-                      (<class common-styles/margin-bottom 1)]}
-        [TextField {:value @search-term
-                    :style {:margin-right "1rem"
-                            :flex 1}
-                    :placeholder (tr [:file :filter-file-listing])
-                    :start-icon icons/action-search
-                    :on-change on-change}]
-        [:div {:style {:flex 1}}
-         [select/form-select-grouped {:items (get-parts-and-groups files parts)
-                                      :format-item (fn [x] (:item-name x))
-                                      :on-change change-part
-                                      :value @selected-filter-id
-                                      :empty-selection-label (tr [:file :all-parts])
-                                      :show-empty-selection? true}]]]
-       (conj
-         file-component
-         (filterv
-           (fn [{:file/keys [name] :as file}]
-             (and
-               (str/includes? (str/lower-case name) (str/lower-case @search-term))
-               file))
-           files)
-         parts
-         selected-part)])))
+               selected-part-id (r/atom nil)
+               change-part #(reset! selected-part-id (:file.part/number %))
+               selected-group (r/atom nil)
+               change-group #(reset! selected-group %)]
+              (let [selected-part (when @selected-part-id
+                                    (if
+                                      (= 0 @selected-part-id)
+                                      {:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}
+                                      (first (filter (comp #(= @selected-part-id %) :file.part/number) parts))))
+                    part-count (count parts)
+                    group-count (count (distinct (mapv #(:file/group-name %) (get-document-groups files))))]
+               [:div
+                [:div {:class [(<class common-styles/flex-row)
+                               (<class common-styles/margin-bottom 1)]}
+                 [TextField {:value @search-term
+                             :style {:margin-right "1rem"
+                                     :flex 1}
+                             :placeholder (tr [:file :filter-file-listing])
+                             :start-icon icons/action-search
+                             :on-change on-change}]
+                 [:div {:style {:flex 1}}
+                  [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
+                                                        :file.part/number 0}]
+                                                      parts)
+                                       :format-item (fn [{:file.part/keys [name number]}]
+                                                      (gstr/format "%s #%02d" name number))
+                                       :on-change change-part
+                                       :read-only? (= 0 part-count) ;; Disable in case there are no parts
+                                       :value selected-part
+                                       :empty-selection-label (tr [:file :all-parts])
+                                       :show-empty-selection? true}]]
+                 [:div {:style {:flex 1} :class (<class common-styles/margin-left 1)}
+                  [select/form-select {:items (let [doc-groups (sort
+                                                                 (distinct
+                                                                   (mapv #(if
+                                                                            (nil? (:file/group-name %))
+                                                                            :file.document-group/ungrouped
+                                                                            (:file/group-name %))
+                                                                         (get-document-groups files))))
+                                                    sorted-groups (mapv (fn [x] {:document.group/name (tr [:enum x]) :document.group/key x})
+                                                                        (sort-document-groups doc-groups :file.document-group/ungrouped))]
+                                                sorted-groups)
+                                       :format-item (fn [{:document.group/keys [name]}]
+                                                      (gstr/format "%s" name))
+                                       :on-change change-group
+                                       :value @selected-group
+                                       :read-only? (> 2 group-count) ;; Disable if group count is 1 or 0 (including the ungrouped)
+                                       :empty-selection-label (tr [:file :all-groups])
+                                       :show-empty-selection? true}]]]
+                (conj
+                  file-component
+                  (filterv
+                    (fn [{:file/keys [name group-name] :as file}]
+                      (and
+                          (str/includes? (str/lower-case name) (str/lower-case @search-term))
+                        (if (not (nil? @selected-group))
+                          (and
+                            (= (if (nil? group-name) :file.document-group/ungrouped group-name) (:document.group/key @selected-group))
+                            file)
+                          file)))
+                    (get-document-groups files))
+                  parts
+                  selected-part
+                  (not (nil? @selected-group)))])))
 
 (defn file-comments-text
   [{:comment/keys [counts] :as file}]
@@ -385,7 +417,7 @@
    (tr-enum group-key)])
 
 (defn document-group-content
-  [e! opts file-group grouped-files]
+  [opts file-group grouped-files]
     (mapc
       (r/partial file-row2 opts)
       (filter #(= (:file/group-name %) file-group) grouped-files)))
@@ -397,14 +429,11 @@
   [:div (merge {:class (<class common-styles/margin-bottom 1.5)}
                (when data-cy
                  {:data-cy data-cy}))
-   (let
-     [grouped-files (get-document-groups files)]
-     (doall
-       (for [file-group (distinct (mapv #(:file/group-name %) grouped-files))]
+   (doall
+       (for [file-group (sort-document-groups (distinct (mapv #(if (nil? (:file/group-name %)) :ungrouped-files (:file/group-name %)) files)) :ungrouped-files)]
        ^{:key (str file-group)}
        [:<>
-        (if
-          (some? file-group)
+
                       [:div {:class (<class common/hierarchical-heading-container2 theme-colors/white theme-colors/black-coral @closed?)}
                        [:div {:class (<class common-styles/space-between-center)} (document-group-heading file-group)
                        [:div {:class [(<class common-styles/flex-row-end)]}
@@ -415,8 +444,9 @@
                        [Collapse {:in (not (contains? @closed? file-group))
                                   :mount-on-enter true}
                         [:div
-                         (document-group-content e! opts file-group grouped-files)]]]
-          (document-group-content e! opts file-group grouped-files))])))]))
+                         (document-group-content opts
+                                                 (if (= file-group :ungrouped-files) nil file-group)
+                                                 (sorted-by sort-by-value files))]]]]))]))
 
 (defn file-list2-with-search
   [opts files]
@@ -434,8 +464,9 @@
 
 (defn- file-icon-style []
   {:display :inline-block
-   :margin-right "0.5rem"
+   :margin-right "1rem"
    :position :relative
+   :color theme-colors/primary
    :top "6px"})
 
 (defn file-icon [{class :class
@@ -462,7 +493,8 @@
         (filename-metadata/name->description-and-extension name)]
     [:div.file-list-entry {:class (<class file-list-entry-style)}
      [:div {:class (<class common-styles/flex-row)}
-      [file-icon (assoc f :class "file-list-icon")]
+      [:div {:class (<class common-styles/margin-right 0.5)}
+       [icons/action-description-outlined {:class (<class file-icon-style)}]]
       [:div {:class (<class common-styles/min-width-0)}
        [:div {:class (<class common-styles/flex-align-center)}
         [:div.file-list-name {:class (<class file-style/file-name-truncated)
@@ -474,8 +506,7 @@
                       :class "file-list-name"}
             description])]
         [typography/SmallGrayText (if extension
-                                    (str/upper-case extension)
-                                    "")]]
+                                    (str/upper-case extension) "")]]
        [:div
         [:span.file-list-number
          number]
@@ -485,20 +516,38 @@
           [typography/Text2 {:class (<class common-styles/inline-block)}
            " / " (tr-enum status)])]]]]))
 
-(defn- file-list [parts files current-file-id]
+(defn- task-basic-info
+  [{:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
+  [:div.task-basic-info {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
+   [:div.task-basic-info-end-date
+    [typography/BoldGrayText (tr [:common :deadline])]
+    [:span.task-basic-info-value (format/date estimated-end-date)]]
+   (when actual-end-date
+     [:div.task-basic-info-end-date
+      [typography/BoldGrayText (tr [:fields :task/actual-end-date])]
+      [:span.task-basic-info-value (format/date actual-end-date)]])
+   [:div.task-basic-info-assignee
+    [typography/BoldGrayText (tr [:fields :task/assignee])]
+    [:span.task-basic-info-value (user-model/user-name assignee)]]
+   [:div.task-basic-info-status
+    (tr-enum status)]])
+
+(defn- file-list [task parts files current-file-id]
   (let [parts (sort-by :file.part/number
                        (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
                                parts))]
     [:div.file-list {:style {:flex 1
-                             :padding "1rem 0 1rem 1rem"
+                             :padding "1rem 1rem 1rem 1rem"
                              :border-right (str "2px solid " theme-colors/black-coral-1)}}
+     [typography/Heading1 (tr-enum (:task/type task))]
+     [task-basic-info task]
      (mapc
-      (fn [{part-id :db/id :file.part/keys [name number]}]
-        (let [files (filter (fn [{part :file/part}]
+      (fn [{part-id :db/id :file.part/keys [name number status]}]
+        (let [files (get-document-groups (filter (fn [{part :file/part}]
                               (or (and (nil? part)
                                        (zero? number))
                                   (= part-id (:db/id part))))
-                            files)]
+                            files))]
           (when (seq files)
             [:<>
              [:div {:style {:padding "1rem 0"}
@@ -507,11 +556,22 @@
                name
                [typography/GrayText {:style {:padding-left "0.25rem"}}
                 (gstr/format "#%02d" number)]]]
-             [:div
-              (mapc (fn [{id :db/id :as f}]
-                      (let [active? (= current-file-id id)]
-                        [file-listing-entry f active?]))
-                    files)]])))
+             (when (> number 0)
+               [:div {:class (<class common-styles/margin-bottom 1)} (tr-enum (:db/ident status))])
+             (mapc (fn [group-name]
+                     (let [group-files (filter #(=
+                                                  (if (= group-name :ungrouped-files) nil group-name)
+                                                  (:file/group-name %))
+                                               files)]
+                       [:div
+                        [:div {:class (<class common-styles/flex-align-center)}
+                         [:div {:class (<class common-styles/margin 1 0.5 0.5 0)} [icons/file-folder-outlined {:style {:color theme-colors/gray-light}}]]
+                         (tr-enum group-name)]
+                        (mapc (fn [{id :db/id :as f}]
+                                (let [active? (= current-file-id id)]
+                                  [file-listing-entry f active?]))
+                              group-files)]))
+                   (sort (distinct (mapv #(if (nil? (:file/group-name %)) :ungrouped-files (:file/group-name %)) files))))])))
       parts)]))
 
 (defn preview-style []
@@ -804,7 +864,7 @@
                  [Grid {:container true :spacing 0}
                   [Grid {:item true :xs 4
                          :class (<class common-styles/flex-column-1)}
-                   [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
+                   [file-list task (:file.part/_task task) (:task/files task) (:db/id file)]]
                   [Grid {:item true :xs 8
                          :class (<class common-styles/padding 2 2 2 1.75)}
                    [:<>
