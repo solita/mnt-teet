@@ -345,6 +345,10 @@
     (str result-count-limit "+")
     (count assets)))
 
+(defmethod common-controller/map-item-selected "asset-results" [{f :map/feature}]
+  (when-let [oid (some-> f .getProperties (aget "oid"))]
+    (assets-controller/->ShowDetails {:asset/oid oid})))
+
 (defn results-map [{:keys [e! atl criteria results map-key]
                     :or {map-key "results-map"}}]
   (let [{:keys [geojson highlight-oid]} results]
@@ -388,7 +392,15 @@
            [_ old-opts]]
         (let [[_ new-opts] (r/argv this)
               old-query (:asset-query old-opts)
-              new-query (:asset-query new-opts)]
+              new-query (:asset-query new-opts)
+              new-details (:details new-opts)]
+
+          ;; Details present, but not showing table... enable it
+          (when (and new-details
+                     (not (@show :table)))
+            (swap! show conj :table))
+
+          ;; Query changed, remount map
           (when (not= old-query new-query)
             (next-map-key!))))
 
