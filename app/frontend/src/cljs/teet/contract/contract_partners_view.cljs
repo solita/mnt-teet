@@ -354,10 +354,7 @@
                        {:args {:search text
                                :company-contract-id (:db/id selected-partner)}
                         :query :contract/possible-partner-employees})
-              :format-result select/user-search-select-result
-              :after-results-action {:title (tr [:contract :add-person-not-in-teet])
-                                     :on-click #(println "This is placeholder")
-                                     :icon [icons/content-add]}}]])
+              :format-result select/user-search-select-result}]])
          (when user-selected?
            [form/field {:attribute :company-contract-employee/role}
             [select/select-user-roles-for-contract
