@@ -51,7 +51,8 @@
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
                            show-label? show-empty-selection? error error-text error-tooltip?
-                           required empty-selection-label data-item? read-only? dark-theme?]
+                           required empty-selection-label data-item? read-only? dark-theme?
+                           on-focus on-blur]
                         :or {format-item :label
                              show-label? true
                              data-item? false
@@ -63,50 +64,59 @@
                            (on-change nil)
                            (on-change (nth items (int val))))))
         error? (and error error-text)]
-    [common/popper-tooltip (when error-tooltip?
-                             ;; Show error as tooltip instead of label.
-                             {:title error-text
-                              :variant :error
-                              ;; Always add the tootip and wrapper elements, but hide them when
-                              ;; there is no error. This way the input does not lose focus when the
-                              ;; tooltip is added/removed.
-                              :hidden? (not error?)
-                              ;; We don't want the tooltip wrapper to participate in sequential
-                              ;; keyboard navigation. Otherwise we would need to hit tab twice to
-                              ;; reach the input element in the wrapper.
-                              :tabIndex -1})
-     [:label {:for id
-              :class (<class common-styles/input-label-style read-only? dark-theme?)}
-      (when show-label?
-        (if label-element
-          [label-element label (when required [common/required-astrix])]
-          [typography/Text2Bold
-           label (when required
-                   [common/required-astrix])]))
-      [:div {:style {:position :relative}}
-       [:select
-        {:value (or (option-idx value) "")
-         :name name
-         :disabled read-only?
-         :class (<class primary-select-style error read-only?)
-         :required (boolean required)
-         :id (str "links-type-select" id)
-         :on-change (fn [e]
-                      (change-value e))}
-        (when show-empty-selection?
-          [:option {:value "" :label empty-selection-label}])
-        (doall
-          (map-indexed
-            (fn [i item]
-              [:option (merge {:value i
-                               :key i}
-                              (when data-item?
-                                {:data-item (str item)}))
-               (format-item item)])
-            items))]]
-      (when (and error? (not error-tooltip?))
-        [:span {:class (<class common-styles/input-error-text-style)}
-         error-text])]]))
+    (r/with-let [focus? (r/atom false)
+                 on-focus (juxt (or on-focus identity)
+                                #(reset! focus? true))
+                 on-blur (juxt (or on-blur identity)
+                               #(reset! focus? false))]
+      [common/popper-tooltip (when error-tooltip?
+                               ;; Show error as tooltip instead of label.
+                               {:title error-text
+                                :variant :error
+                                ;; Always add the tootip and wrapper elements, but hide them when
+                                ;; there is no error. This way the input does not lose focus when the
+                                ;; tooltip is added/removed.
+                                :hidden? (not error?)
+                                ;; We don't want the tooltip wrapper to participate in sequential
+                                ;; keyboard navigation. Otherwise we would need to hit tab twice to
+                                ;; reach the input element in the wrapper.
+                                :tabIndex -1
+                                ;; If the input is focused, show the popup even if not hovering.
+                                :force-open? @focus?})
+       [:label {:for id
+                :class (<class common-styles/input-label-style read-only? dark-theme?)}
+        (when show-label?
+          (if label-element
+            [label-element label (when required [common/required-astrix])]
+            [typography/Text2Bold
+             label (when required
+                     [common/required-astrix])]))
+        [:div {:style {:position :relative}}
+         [:select
+          {:value (or (option-idx value) "")
+           :on-focus on-focus
+           :on-blur on-blur
+           :name name
+           :disabled read-only?
+           :class (<class primary-select-style error read-only?)
+           :required (boolean required)
+           :id (str "links-type-select" id)
+           :on-change (fn [e]
+                        (change-value e))}
+          (when show-empty-selection?
+            [:option {:value "" :label empty-selection-label}])
+          (doall
+            (map-indexed
+              (fn [i item]
+                [:option (merge {:value i
+                                 :key i}
+                                (when data-item?
+                                  {:data-item (str item)}))
+                 (format-item item)])
+              items))]]
+        (when (and error? (not error-tooltip?))
+          [:span {:class (<class common-styles/input-error-text-style)}
+           error-text])]])))
 
 ;; TODO this needs better styles and better dropdown menu
 
