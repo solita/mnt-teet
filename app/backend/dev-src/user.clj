@@ -334,6 +334,22 @@
            (for [id contracts]
              [:db/retractEntity id]))))
 
+(defn delete-all-imported-thk-tasks!
+  "Special tasks imported from activities 4006 and 4009"
+  []
+  (let [db (db)
+        entity-ids #(into #{} (map first)
+                      (q % db))
+        tasks (entity-ids '[:find ?e
+                                :where (or [?e :task/type :task.type/owners-supervision]
+                                         [?e :task/type :task.type/road-safety-audit])])]
+    (println "Deleting THK task entities: " (count tasks) " tasks, "
+      "Press enter to continue!")
+    (read-line)
+    (apply tx
+      (for [id tasks]
+        [:db/retractEntity id]))))
+
 
 (defn keep-connection-alive
   "Starts a thread where a single datomic query is ran every minute to keep datomic proxy open."
