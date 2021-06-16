@@ -433,7 +433,7 @@
            delete-cancel-button-text ;; label form cancel delete button
            delete-disabled-error-text ;; if specified, show delete as disabled with this text as tooltip
            delete-link? ;; if added, delete will be shown as link below other footer buttons
-           ]}
+           autocomplete-off?]}
    & children]
   (r/with-let [invalid-attributes (r/atom #{})
                update-attribute-fn (update-attribute-fn e! on-change-event)
@@ -479,7 +479,9 @@
                            :display :flex
                            :flex-direction :column}}
                   (when id
-                    {:id id}))
+                    {:id id})
+                  (when autocomplete-off?
+                    {:auto-complete "off"}))
      (context/provide
        :form (-> ctx
                  (assoc :required-fields (missing-attributes spec {}))

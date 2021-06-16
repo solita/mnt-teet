@@ -486,6 +486,7 @@
                             :border-right 0}}}
   {:display :table-cell
    :max-width "0px"
+   :word-break :break-word
    :padding "0.5rem 0.5rem 0.5rem 0"
    :border-right (str "1px solid " theme-colors/gray-lighter)})
 

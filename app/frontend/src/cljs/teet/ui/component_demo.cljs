@@ -4,6 +4,7 @@
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [teet.localization :refer [tr tr-enum]]
             [herb.core :refer [<class]]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
@@ -26,7 +27,8 @@
             [teet.contract.contracts-view :as contracts-view]
             [teet.ui.table :as table]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.date-picker :as date-picker]))
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.form :as form]))
 
 
 (defrecord TestFileUpload [files])
@@ -470,6 +472,21 @@
      "Primary tag component: "]
     [common-ui/primary-tag "Primary tag"]]])
 
+
+(defn multiselect-demo
+  [e!]
+  (r/with-let [form-atom (r/atom {})]
+    [form/form2 {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom merge)
+                 :save-event #(println %)}
+     [form/field :test-value
+      [select/select-user-roles-for-contract {:e! e!
+                                              :placeholder "placeholder"
+                                              :no-results "no matches"
+                                              :show-empty-selection? true
+                                              :clear-value [nil nil]}]]]))
+
 (def demos
   [{:id :context-menu
     :heading "Context menu"
@@ -522,7 +539,11 @@
 
    {:id :common-basic-ui-components
     :heading "basic UI components demo"
-    :component [basic-ui-component-demo]}])
+    :component [basic-ui-component-demo]}
+
+   {:id :multi-select-demo
+    :heading "DEMO for multiselect and user roles"
+    :component [multiselect-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
@@ -531,7 +552,7 @@
                           (map keyword)
                           (str/split show #","))
                     (constantly true))]
-    [:<>
+    [:div {:style {:padding "0 3rem"}}
      (for [{:keys [id heading component]} demos
            :when (show-demo? id)]
        ^{:key (str id)}
