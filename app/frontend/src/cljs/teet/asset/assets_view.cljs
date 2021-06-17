@@ -497,8 +497,11 @@
                        :height (common-styles/content-height "50px")
                        :overflow-y :scroll}}
          (if (= @mode :map)
-           [results-map {:e! e! :atl atl :criteria criteria
-                         :results results}]
+           [:<>
+            [results-map {:e! e! :atl atl :criteria criteria
+                          :results results}]
+             (when (= :current-location (:search-by criteria))
+                 [radius-display e! criteria])]
            (if-let [details (get-in app [:query :details])]
              [context/consume :rotl
               [result-details-view e! details atl]]
