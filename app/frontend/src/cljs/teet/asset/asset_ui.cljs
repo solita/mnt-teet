@@ -364,12 +364,17 @@
 
        (when chg
          [common/popper-tooltip
-          {:title (tr [:common :last-modified])
-           :variant :info
-           :body [:<>
-                  (fmt/date-time timestamp)
-                  [:br]
-                  (user-model/user-name user)]}
+          {
+           :variant :no-icon
+           :multi [{:title (tr-enum (:boq-version/type version))
+                    :body (str " v." (:boq-version/number version))}
+                   {:title (tr [:fields :boq-version/explanation])
+                    :body (:boq-version/explanation version)}
+                   {:title (tr [:common :last-modified])
+                    :body [:<>
+                           (fmt/date-time timestamp)
+                           [:br]
+                           (user-model/user-name user)]}]}
           [icons/alert-error-outline]])
 
        ;; Save or unlock button

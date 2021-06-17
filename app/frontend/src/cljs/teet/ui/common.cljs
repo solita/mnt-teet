@@ -538,23 +538,31 @@
      (when (and title content)
        content)]))
 
-(defn popper-tooltip-content [{:keys [variant title body icon]
-                        :or {variant :info}}]
+(defn popper-tooltip-content [{:keys [variant title body icon multi]
+                               :or {variant :info}}]
   (let [icon (or icon
                  (case variant
                    :success [icons/action-check-circle-outline]
                    :warning [icons/alert-warning-outlined]
                    :error [icons/alert-error-outline]
+                   :no-icon nil
                    [fi/info]))]
     [:div {:class (<class common-styles/popper-tooltip variant)}
      [:div {:style {:display :flex
                     :justify-content :center
                     :align-items :center}}
-      [:div {:style {:margin-right "0.5rem"}}
-       icon]
-      [:div
-       [typography/TextBold title]
-       [typography/Text body]]]]))
+      (when icon
+        [:div {:style {:margin-right "0.5rem"}}
+        icon])
+      (if multi
+        [:div
+         (doall (for [{:keys [title body]} multi]
+                  [:div
+                   [typography/TextBold title]
+                   [typography/Text body]]))]
+        [:div
+         [typography/TextBold title]
+         [typography/Text body]])]]))
 
 (defn popper-tooltip-container-style
   []
@@ -569,8 +577,12 @@
   If `hidden?` is true, render the tooltip wrapper without content, to avoid problems when
   adding/removing the wrapper dynamically.
   Option `tabIndex` can be used stop the popup wrapper participating in sequential keyboard
-  navigation (default: 0)."
-  [{:keys [title body variant icon class hidden? tabIndex] :as msg
+  navigation (default: 0).
+
+  `:multi option allows adding multiple maps containing keys `:variant`, `:title`,
+  `:body` and `:icon` instead of having those as main level keys.
+"
+  [{:keys [title body variant icon class hidden? tabIndex multi] :as msg
     :or {variant :error tabIndex 0}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
@@ -596,10 +608,14 @@
                 :anchor-el @anchor-el
                 :placement "bottom-start"}
         (when-not hidden?
-          [popper-tooltip-content {:variant variant
-                                   :title title
-                                   :body body
-                                   :icon icon}])]])))
+          [popper-tooltip-content (if multi
+                                    {:variant variant
+                                     :icon icon
+                                     :multi multi}
+                                    {:variant variant
+                                     :title title
+                                     :body body
+                                     :icon icon})])]])))
 
 
 (defn portal
