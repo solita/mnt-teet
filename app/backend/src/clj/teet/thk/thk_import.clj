@@ -478,7 +478,6 @@
 (defn import-thk-contracts! [connection url contracts]
   (let [db (d/db connection)
         tx-data {:tx-data (thk-import-contracts-tx db url contracts)}]
-    (println "TX-DATA:" tx-data)
     (d/transact connection tx-data)))
 
 (defn import-thk-projects! [connection url projects]
