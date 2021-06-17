@@ -438,9 +438,9 @@
     (tr [:buttons :edit])]])
 
 (defn partner-info
-  [e! app selected-partner]
+  [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])]
+   [partner-info-header (get-in selected-partner [:company-contract/company :company/name]) params]
    [:p (pr-str selected-partner)]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
@@ -458,6 +458,8 @@
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
+      :edit-partner
+      [edit-partner-form e! app selected-partner]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
