@@ -41,7 +41,14 @@
          notifications-count (count tx-list)]
      (if (empty? tx-list)
        (log/info "No transaction info generated, automatic notifications skipped")
-       (d/transact conn {:tx-data tx-list}))
+       (d/transact
+        conn
+        {:tx-data
+         (into [{:db/id "datomic.tx"
+                 :integration/source-uri
+                 (str "teet.notification.notification-ion/notify "
+                      "lambda invocation, days param: " days)}]
+               tx-list)}))
      (str "{\"success\": true, \"notifications\": " notifications-count " }")))
   (;; read days from env config
    [event]
