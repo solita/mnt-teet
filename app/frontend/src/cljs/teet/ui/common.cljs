@@ -486,6 +486,7 @@
                             :border-right 0}}}
   {:display :table-cell
    :max-width "0px"
+   :word-break :break-word
    :padding "0.5rem 0.5rem 0.5rem 0"
    :border-right (str "1px solid " theme-colors/gray-lighter)})
 
@@ -564,9 +565,13 @@
   error message is displayed.
 
   If msg is nil, the component is returned as is.
-  Otherwise msg must be a map containing :title and :body  for the error message."
-  [{:keys [title body variant icon class] :as msg
-    :or {variant :error}} component]
+  Otherwise msg must be a map containing :title and :body  for the error message.
+  If `hidden?` is true, render the tooltip wrapper without content, to avoid problems when
+  adding/removing the wrapper dynamically.
+  Option `tabIndex` can be used stop the popup wrapper participating in sequential keyboard
+  navigation (default: 0)."
+  [{:keys [title body variant icon class hidden? tabIndex] :as msg
+    :or {variant :error tabIndex 0}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
                set-anchor-el! #(reset! anchor-el %)
@@ -583,17 +588,18 @@
              :on-focus enter!
              :on-blur leave!
              :ref set-anchor-el!
-             :tabIndex 0
+             :tabIndex tabIndex
              :class container-class}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
                 :open @hover?
                 :anchor-el @anchor-el
                 :placement "bottom-start"}
-        [popper-tooltip-content {:variant variant
-                                 :title title
-                                 :body body
-                                 :icon icon}]]])))
+        (when-not hidden?
+          [popper-tooltip-content {:variant variant
+                                   :title title
+                                   :body body
+                                   :icon icon}])]])))
 
 
 (defn portal

@@ -4,6 +4,7 @@
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [teet.localization :refer [tr tr-enum]]
             [herb.core :refer [<class]]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
@@ -25,7 +26,9 @@
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contracts-view :as contracts-view]
             [teet.ui.table :as table]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.form :as form]))
 
 
 (defrecord TestFileUpload [files])
@@ -97,6 +100,14 @@
                     :placeholder "Placeholder"
                     :error true
                     :error-text "Form field is required"
+                    :variant :filled}]
+        [TextField {:label "Tekstiä"
+                    :on-change on-change
+                    :value @val
+                    :placeholder "Placeholder"
+                    :error true
+                    :error-text "Form field is required"
+                    :error-tooltip? true
                     :variant :filled}]]
        [Divider]])))
 
@@ -254,9 +265,37 @@
                   :margin "2rem 0"}}
     [select/form-select {:value "et"
                          :label "Language"
+                         :on-change #()
                          :show-empty-selection? true
                          :id "language-select"
                          :name "Language"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error-tooltip"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :error-tooltip? true
                          :items
                          [{:value "et" :label "bar"}
                           {:value "en" :label "baz"}]}]]
@@ -267,6 +306,25 @@
                                 :items [{:value "foo" :label "Foo"}
 
                                         {:value "bar" :label "Bar"}]}]]])
+
+(defn datepicker-demo []
+  [:section
+   [:div {:style {:display "flex"
+                  :justify-content "space-evenly"}}
+    [date-picker/date-input {:label "Date"
+                             :placeholder "Placeholder"
+                             :on-change #()}]
+    [date-picker/date-input {:label "Date with error label"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"}]
+    [date-picker/date-input {:label "Date with error tooltip"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"
+                             :error-tooltip? true}]]])
 
 (defn- labeled-data-demo []
   [:div
@@ -414,6 +472,21 @@
      "Primary tag component: "]
     [common-ui/primary-tag "Primary tag"]]])
 
+
+(defn multiselect-demo
+  [e!]
+  (r/with-let [form-atom (r/atom {})]
+    [form/form2 {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom merge)
+                 :save-event #(println %)}
+     [form/field :test-value
+      [select/select-user-roles-for-contract {:e! e!
+                                              :placeholder "placeholder"
+                                              :no-results "no matches"
+                                              :show-empty-selection? true
+                                              :clear-value [nil nil]}]]]))
+
 (def demos
   [{:id :context-menu
     :heading "Context menu"
@@ -442,6 +515,9 @@
    {:id :select
     :heading "Select"
     :component [select-demo]}
+   {:id :datepicker
+    :heading "Datepicker"
+    :component [datepicker-demo]}
    {:id :labeled-data
     :heading "Labeled data"
     :component [labeled-data-demo]}
@@ -463,7 +539,11 @@
 
    {:id :common-basic-ui-components
     :heading "basic UI components demo"
-    :component [basic-ui-component-demo]}])
+    :component [basic-ui-component-demo]}
+
+   {:id :multi-select-demo
+    :heading "DEMO for multiselect and user roles"
+    :component [multiselect-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
@@ -472,7 +552,7 @@
                           (map keyword)
                           (str/split show #","))
                     (constantly true))]
-    [:<>
+    [:div {:style {:padding "0 3rem"}}
      (for [{:keys [id heading component]} demos
            :when (show-demo? id)]
        ^{:key (str id)}

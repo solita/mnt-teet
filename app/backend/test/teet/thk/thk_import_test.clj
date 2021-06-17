@@ -411,10 +411,16 @@
                                                      :where [?e :activity/tasks ?tasks]
                                                      [?tasks :task/actual-start-date _]
                                                      :in $ ?e] (tu/db) activity-id))
+          tasks-in-progress (d/q '[:find ?tasks
+                                      :where [?e :activity/tasks ?tasks]
+                                      [?tasks :task/status :task.status/in-progress]
+                                      :in $ ?e] (tu/db) activity-id)
           expected-actual-start-date (date/->start-of-date 2022 9 20)
           expected-thk-activity-id "18913"]
       (testing "After tasks import 3 new tasks imported"
         (is (= 3 (count new-construction-activity-tasks))))
+      (testing "One task in-progress has been imported"
+        (is (= 1 (count tasks-in-progress))))
       (testing "Actual start date has been imported"
         (is (= expected-actual-start-date (:task/actual-start-date task-with-actual-start-date))))
       (testing "THK Activity ID has been imported"

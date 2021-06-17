@@ -59,10 +59,21 @@
 (defn save-material
   "Create or update component.
   Creates new OID for new components based on parent asset."
-  [db parent-oid {id :db/id :as material}]
+  [db parent-oid {id :db/id
+                  type :material/type
+                  :as material}]
   (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
     (throw (ex-info "Not a leaf component OID"
                     {:parent-oid parent-oid})))
+  (when (seq (d/q '[:find ?m
+                    :where
+                    [?c :component/materials ?m]
+                    [?m :material/type ?t]
+                    :in $ ?c ?t]
+                  db [:asset/oid parent-oid] type))
+    (throw (ex-info "Material of the same type already exists for component"
+                    {:parent-oid parent-oid
+                     :type type})))
   ;; TODO: spec
   (when (not (:material/type material))
     (throw (ex-info "No material type"
