@@ -285,6 +285,7 @@
   :no-company-found-content
   "No company matching the business registry code was found.",
   :xroad-exception-title "X-Road query failed",
+  :edit-company "Edit company",
   :role-required "Employee needs to have a role",
   :employee-added "Employee added",
   :add-person "Add person",
@@ -953,7 +954,7 @@
   "Respondents connection to the land",
   :thk.contract/warranty-period "Warranty period",
   :land-acquisition/pos-number "POS#",
-  :company/country "Country of registeration",
+  :company/country "Country of registration",
   :meeting.agenda/responsible "Responsible person",
   :document/sub-category "Document subtype",
   :location/road-address "Road address",

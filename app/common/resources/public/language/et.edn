@@ -285,6 +285,7 @@
   :no-company-found-content
   "Äriregistri koodile vastavat ettevõtet ei leitud.",
   :xroad-exception-title "X-tee päring nurjus",
+  :edit-company "Ettevõtte informatsiooni muutmine",
   :role-required nil,
   :employee-added nil,
   :add-person nil,
