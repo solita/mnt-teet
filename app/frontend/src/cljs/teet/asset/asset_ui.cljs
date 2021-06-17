@@ -340,14 +340,17 @@
      [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
       (tr [:asset :confirm-unlock-for-edits])]]]])
 
-(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+(defn- boq-version-statusline [e! {:keys [latest-change version version-history]}]
   (r/with-let [dialog (r/atom nil)
                set-dialog! #(reset! dialog %)]
     (let [{:keys [user timestamp] :as chg} latest-change
           locked? (asset-model/locked? version)
           action (if locked?
                    :asset/unlock-for-edits
-                   :asset/lock-version)]
+                   :asset/lock-version)
+          last-locked-version (if locked?
+                                version
+                                (first version-history))]
       [:div {:class (<class common-styles/flex-row)
              :style {:background-color theme-colors/gray-lightest
                      :width "100%"}}
@@ -366,10 +369,10 @@
          [common/popper-tooltip
           {
            :variant :no-icon
-           :multi [{:title (tr-enum (:boq-version/type version))
-                    :body (str " v." (:boq-version/number version))}
+           :multi [{:title (tr-enum (:boq-version/type last-locked-version))
+                    :body (str " v." (:boq-version/number last-locked-version))}
                    {:title (tr [:fields :boq-version/explanation])
-                    :body (:boq-version/explanation version)}
+                    :body (:boq-version/explanation last-locked-version)}
                    {:title (tr [:common :last-modified])
                     :body [:<>
                            (fmt/date-time timestamp)
