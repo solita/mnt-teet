@@ -171,7 +171,9 @@
   {:margin-top "2.5rem"})
 
 (defn project-view-selection-item []
-  {:min-width "250px"})
+  ^{:pseudo {:hover {:text-decoration :none}}}
+  {:min-width "250px"
+   :color theme-colors/gray-dark})
 
 (defn project-view-selection-item-label []
   {:width "200px"})

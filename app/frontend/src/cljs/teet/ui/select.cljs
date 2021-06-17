@@ -6,19 +6,22 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [tuck.core :as t]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-tree tr-enum]]
             [teet.user.user-info :as user-info]
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
-                                         Popper CircularProgress Paper Link Divider]]
+                                         Popper CircularProgress Paper Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util :refer [mapc]]
             ["react"]
             [teet.util.collection :as cu]
             [teet.ui.icons :as icons]
             [teet.ui.buttons :as buttons]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.ui.chip :as chip]
+            [teet.util.string :as string]
+            [teet.user.user-model :as user-model]))
 
 (def select-bg-caret-down "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23005E87%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')")
 
@@ -47,8 +50,8 @@
            {:cursor :default})))
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
-                           show-label? show-empty-selection? error error-text required empty-selection-label
-                           data-item? read-only? dark-theme?]
+                           show-label? show-empty-selection? error error-text error-tooltip?
+                           required empty-selection-label data-item? read-only? dark-theme?]
                         :or {format-item :label
                              show-label? true
                              data-item? false
@@ -58,39 +61,52 @@
                        (let [val (-> e .-target .-value)]
                          (if (= val "")
                            (on-change nil)
-                           (on-change (nth items (int val))))))]
-    [:label {:for id
-             :class (<class common-styles/input-label-style read-only? dark-theme?)}
-     (when show-label?
-       (if label-element
-         [label-element label (when required [common/required-astrix])]
-         [typography/Text2Bold
-          label (when required
-                        [common/required-astrix])]))
-     [:div {:style {:position :relative}}
-      [:select
-       {:value (or (option-idx value) "")
-        :name name
-        :disabled read-only?
-        :class (<class primary-select-style error read-only?)
-        :required (boolean required)
-        :id (str "links-type-select" id)
-        :on-change (fn [e]
-                     (change-value e))}
-       (when show-empty-selection?
-         [:option {:value "" :label empty-selection-label}])
-       (doall
-        (map-indexed
-         (fn [i item]
-           [:option (merge {:value i
-                            :key i}
-                           (when data-item?
-                             {:data-item (str item)}))
-            (format-item item)])
-         items))]]
-     (when (and error-text error)
-       [:span {:class (<class common-styles/input-error-text-style)}
-        error-text])]))
+                           (on-change (nth items (int val))))))
+        error? (and error error-text)]
+    [common/popper-tooltip (when error-tooltip?
+                             ;; Show error as tooltip instead of label.
+                             {:title error-text
+                              :variant :error
+                              ;; Always add the tootip and wrapper elements, but hide them when
+                              ;; there is no error. This way the input does not lose focus when the
+                              ;; tooltip is added/removed.
+                              :hidden? (not error?)
+                              ;; We don't want the tooltip wrapper to participate in sequential
+                              ;; keyboard navigation. Otherwise we would need to hit tab twice to
+                              ;; reach the input element in the wrapper.
+                              :tabIndex -1})
+     [:label {:for id
+              :class (<class common-styles/input-label-style read-only? dark-theme?)}
+      (when show-label?
+        (if label-element
+          [label-element label (when required [common/required-astrix])]
+          [typography/Text2Bold
+           label (when required
+                   [common/required-astrix])]))
+      [:div {:style {:position :relative}}
+       [:select
+        {:value (or (option-idx value) "")
+         :name name
+         :disabled read-only?
+         :class (<class primary-select-style error read-only?)
+         :required (boolean required)
+         :id (str "links-type-select" id)
+         :on-change (fn [e]
+                      (change-value e))}
+        (when show-empty-selection?
+          [:option {:value "" :label empty-selection-label}])
+        (doall
+          (map-indexed
+            (fn [i item]
+              [:option (merge {:value i
+                               :key i}
+                              (when data-item?
+                                {:data-item (str item)}))
+               (format-item item)])
+            items))]]
+      (when (and error? (not error-tooltip?))
+        [:span {:class (<class common-styles/input-error-text-style)}
+         error-text])]]))
 
 ;; TODO this needs better styles and better dropdown menu
 
@@ -139,6 +155,18 @@
    :background-position "right .7em top 50%"
    :background-size "0.65rem auto"
    :margin-bottom "2px"})
+
+(defn checkbox [{:keys [value on-change label label-placement disabled size] :or {label-placement :end
+                                                                                  disabled false
+                                                                                  size :medium}}]
+  [FormControlLabel {:label label
+                     :label-placement label-placement
+                     :disabled (boolean disabled)
+                     :control (r/as-element [Checkbox {:checked (boolean value)
+                                                       :size size
+                                                       :disabled (boolean disabled)
+                                                       :on-change #(let [checked? (-> % .-target .-checked)]
+                                                                     (on-change checked?))}])}])
 
 (defn select-with-action
   [{:keys [label id name value items format-item on-change
@@ -317,21 +345,20 @@
 
 (defn- user-select-popper []
   {:padding "0.3rem"
-   :overflow "scroll"
+   :overflow-y "scroll"
    :z-index 99})
 
 (defn- user-select-entry [highlight?]
-  ^{:pseudo {:hover {:background-color theme-colors/gray-lighter}}}
+  ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}}}
   {:padding "0.5rem"
    :cursor :pointer
    :background-color (if highlight?
-                       theme-colors/gray-lighter
+                       theme-colors/gray-lightest
                        theme-colors/white)})
 
 (defn- after-result-entry
   []
-  {:padding "0.5rem"
-   :background-color theme-colors/gray-lightest})
+  {:padding "0.5rem"})
 
 (defn- arrow-navigation
   "Arrow navigation key handler for select-search results"
@@ -388,10 +415,17 @@
   [{:keys [e! value on-change label required error
            format-result
            show-label? after-results-action
-           query placeholder no-results]
+           query placeholder no-results clear-value
+           start-icon input-button-icon input-element
+           query-threshold]
     :or {show-label? true
+         query-threshold 2
          placeholder (tr [:user :autocomplete :placeholder])
-         no-results (tr [:user :autocomplete :no-options])}}]
+         no-results (tr [:user :autocomplete :no-options])
+         start-icon icons/action-search
+         input-button-icon icons/content-clear
+         input-element TextField}
+    :as opts}]
   (r/with-let [state (r/atom {:loading? false
                               :results nil
                               :open? false
@@ -399,70 +433,92 @@
                input-ref (atom nil)
                set-ref! #(reset! input-ref %)
                on-key-down (partial arrow-navigation state on-change)]
-    (let [{:keys [loading? results open? input highlight]} @state]
+    (let [{:keys [loading? results open? input highlight]} @state
+          current-input-ref (or (:input-ref opts) @input-ref)
+          load! (fn [text]
+                  (let [result-fn-or-query-map (query text)]
+                    (if (fn? result-fn-or-query-map)
+                      (let [results (result-fn-or-query-map)]
+                        (swap! state merge {:loading? false
+                                            :open? true
+                                            :results results
+                                            :highlight (first results)}))
+                      (e! (->CompleteSearch
+                           result-fn-or-query-map
+                           (fn [results]
+                             (swap! state
+                                    (fn [state]
+                                      (if-not (= text (:input state))
+                                        (do
+                                          (log/debug "Stale result for:" text)
+                                          state)
+                                        (assoc state
+                                               :loading? false
+                                               :open? true
+                                               :results results
+                                               :highlight (first results)))))))))))]
       [:<>
-       [TextField {:ref set-ref!
-                   :label label
-                   :show-label? show-label?
-                   :required required
-                   :error error
-                   :start-icon icons/action-search
-                   :placeholder placeholder
-                   :on-key-down on-key-down
-                   :on-blur #(js/setTimeout
-                               ;; Delay closing because we might be blurring
-                               ;; because user clicked one of the options
-                               (fn [] (swap! state assoc :open? false))
-                               200)
-                   :value (if value
-                            (format-result value)
-                            input)
-                   :on-focus #(when (and (seq results) (>= (count input) 2))
-                                (swap! state assoc :open? true))
-                   :on-change (fn [e]
-                                (let [t (-> e .-target .-value)
-                                      loading? (>= (count t) 2)]
-                                  (when value
-                                    (on-change nil))
+       [input-element
+        (merge {:ref set-ref!
+                :label label
+                :hide-label? (not show-label?)
+                :required required
+                :error error
+                :placeholder placeholder
+                :on-key-down on-key-down
+                :on-blur #(js/setTimeout
+                           ;; Delay closing because we might be blurring
+                           ;; because user clicked one of the options
+                           (fn [] (swap! state assoc :open? false))
+                           200)
+                :value (if value
+                         (format-result value)
+                         input)
+                :on-focus #(if (and (empty? results)
+                                    (zero? query-threshold))
+                             ;; If query threshold is zero, search immediately
+                             ;; even if user hasn't typed anything
+                             (load! input)
 
-                                  (swap! state
-                                         #(assoc %
-                                            :input t
-                                            :open? loading?
-                                            :loading? loading?))
+                             (when (and (seq results)
+                                        (>= (count input) query-threshold))
+                               (swap! state assoc :open? true)))
+                :on-change (fn [e]
+                             (let [t (-> e .-target .-value)
+                                   loading? (>= (count t) query-threshold)]
+                               (when value
+                                 (on-change nil))
 
-                                  (when loading?
-                                    (let [result-fn-or-query-map (query t)]
-                                      (if (fn? result-fn-or-query-map)
-                                        (let [results (result-fn-or-query-map)]
-                                          (swap! state merge {:loading? false
-                                                              :open? true
-                                                              :results results
-                                                              :highlight (first results)}))
-                                        (e! (->CompleteSearch result-fn-or-query-map
-                                                              (fn [results]
-                                                                (swap! state assoc
-                                                                       :loading? false
-                                                                       :open? true
-                                                                       :results results
-                                                                       :highlight (first results))))))))))
-                   :input-button-click #(do
-                                          (on-change nil)
-                                          (swap! state assoc :input "")
-                                          (r/after-render
-                                            (fn []
-                                              (.focus @input-ref))))
-                   :input-button-icon icons/content-clear}]
+                               (swap! state
+                                      #(assoc %
+                                              :input t
+                                              :open? loading?
+                                              :loading? loading?))
+
+                               (when loading?
+                                 (load! t))))
+                :input-button-click #(do
+                                       (on-change clear-value)
+                                       (swap! state assoc :input "")
+                                       (r/after-render
+                                        (fn []
+                                          (.focus @input-ref))))}
+               (when start-icon
+                 {:start-icon icons/action-search})
+               (when input-button-icon
+                 {:input-button-icon input-button-icon})
+               (when-let [ic (:input-class opts)]
+                 {:class ic}))]
        (when open?
          [Popper {:open true
-                  :anchorEl @input-ref
+                  :anchorEl current-input-ref
                   :placement "bottom"
                   :modifiers #js {:hide #js {:enabled false}
                                   :preventOverflow #js {:enabled false}}
 
                   :style {:z-index 9999} ; Must have high z-index to use in modals
                   }
-          [Paper {:style {:width (.-clientWidth @input-ref) :height 300}
+          [Paper {:style {:width (.-clientWidth current-input-ref) :max-height 300}
                   :class ["user-select-popper" (<class user-select-popper)]}
            (if loading?
              [CircularProgress {:size 20}]
@@ -479,14 +535,98 @@
                                          (on-change result))}
                            (format-result result)])
                         results)
-                [:span.select-user-no-results {:style {:padding "0.5rem"}}
+                [:p.select-user-no-results {:style {:padding "0.5rem"}}
                  no-results])
-              (when-let [{:keys [title on-click]} after-results-action]
+              (when-let [{:keys [title on-click icon]} after-results-action]
                 [:<>
                  [Divider]
                  [:div {:class (<class after-result-entry)}
                   [buttons/link-button
-                   {:on-click on-click} title]]])])]])])))
+                   {:on-click on-click
+                    :style {:display :flex
+                            :align-items :center}}
+                   icon title]]])])]])])))
+
+(defn- selected-item-chip [{:keys [format-result format-result-chip on-change value]
+                            :or {format-result str}} item]
+  [chip/selected-item-chip {:on-remove #(on-change (disj (or value #{}) item))}
+   ((or format-result-chip format-result) item)])
+
+(defn- multiselect-input-wrapper-style
+  [error?]
+  ^{:pseudo {:focus-within theme-colors/focus-style}
+    :combinators {[:> :input] {:font-size "14px"
+                               :height "30px"
+                               :display "inline-block"
+                               :box-sizing "border-box"
+                               :min-width "100px"
+                               :flex-grow 1
+                               :border 0
+                               :margin 0
+                               :outline 0}}}
+  {:width "100%"
+   :border (str "1px solid " (if error?
+                               theme-colors/error
+                               theme-colors/black-coral-1))
+   :background-color theme-colors/white
+   :border-radius "4px"
+   :padding "5px"
+   :display "flex"
+   :flex-wrap "wrap"})
+
+(defn search-result-with-checkbox
+  [{:keys [value format-result] :as opts} item]
+  [:div
+   [Checkbox {:checked ((or value #{}) item)
+              :size "small"
+              :style {:padding "0"
+                      :margin "0 1rem 0 0"}
+              :on-change :ignore}]
+   (format-result item)])
+
+(defn select-search-multiple
+  "Multiple select with select-search. Contains a list of chips for results.
+  Value is a set of selected items."
+  [{:keys [on-change checkbox? value label required id style
+           read-only? dark-theme? label-element hide-label? error error-text] :as opts}]
+  (r/with-let [input-ref (r/atom nil)
+               set-input-ref! #(reset! input-ref %)]
+    [:label {:for id
+             :class (<class common-styles/input-label-style read-only? dark-theme?)
+             :style style}
+     (when-not hide-label?
+       (if label-element
+         [label-element label (when required [common/required-astrix])]
+         [typography/Text2Bold
+          label (when required
+                  [common/required-astrix])]))
+     [:div.select-search-multiple {:class (<class multiselect-input-wrapper-style error)
+                                   :ref set-input-ref!}
+      (mapc (r/partial selected-item-chip opts) value)
+      ^{:key (str (count value))}                           ; remount search to clear it's text search after every change
+      [select-search
+       (merge (dissoc opts :hide-label? :dark-theme? :label-element :checkbox? :required)
+              {:input-element :input
+               :input-ref @input-ref
+               :show-label? false
+               :value nil
+               :on-change #(on-change (conj (or value #{}) %))}
+              (when checkbox?
+                {:format-result (partial search-result-with-checkbox opts)
+                 :on-change #(on-change (cu/toggle value %))}))]]
+     (when (and error error-text)
+       [:span {:class (<class common-styles/input-error-text-style)}
+        error-text])]))
+
+
+(defn user-search-select-result
+  [user]
+  [:div
+   [typography/Text {:class (herb/join (<class common-styles/margin-right 0.25)
+                                       (<class common-styles/inline-block))}
+    (user-model/user-name user)]
+   [typography/Text3 {:class (<class common-styles/inline-block)}
+    (:user/person-id user)]])
 
 (defn select-user
   "Select user"
@@ -501,6 +641,7 @@
     (let [{:keys [loading? users open? input highlight]} @state]
       [:<>
        [TextField {:ref #(reset! input-ref %)
+                   :id "select-user"
                    :label label
                    :show-label? show-label?
                    :required required
@@ -626,12 +767,33 @@
                              :value value
                              :control (r/as-element [Radio {:value value}])}]))]]))
 
-(defn checkbox [{:keys [value on-change label label-placement disabled] :or {label-placement :end
-                                                                             disabled false}}]
-  [FormControlLabel {:label label
-                     :label-placement label-placement
-                     :disabled (boolean disabled)
-                     :control (r/as-element [Checkbox {:checked (boolean value)
-                                                       :disabled (boolean disabled)
-                                                       :on-change #(let [checked? (-> % .-target .-checked)]
-                                                                     (on-change checked?))}])}])
+(defn country-select
+  [opts]
+  [:div
+   [form-select (merge
+                  opts
+                  {:format-item #(tr [:countries %])
+                   :items (->> (tr-tree [:countries])
+                               keys
+                               (sort-by #(tr [:countries %])))})]])
+
+(defn select-user-roles-for-contract
+  [{:keys [e!] :as _opts}]
+  (when-not (contains? @enum-values :company-contract-employee/role)
+    (e! (query-enums-for-attribute! :company-contract-employee/role)))
+  (fn [opts]
+    (let [values (@enum-values :company-contract-employee/role)]
+      [:div
+       [select-search-multiple
+        (merge {:query-threshold 0
+                :format-result tr-enum
+                :checkbox? true
+                :format-result-chip tr-enum
+                :query (fn [text]
+                         #(vec
+                            (for [value values
+                                  :when (string/contains-words?
+                                          (tr-enum value)
+                                          text)]
+                              value)))}
+               opts)]])))

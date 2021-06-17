@@ -10,6 +10,8 @@ env:
 
   parameter-store:
     AWS_ACCOUNT_ID: "/teet/aws-account-id"
+    DOCKER_USER: "/teet/docker/user"
+    DOCKER_ACCESS_TOKEN: "/teet/docker/token"
 
 phases:
   install:
@@ -17,11 +19,13 @@ phases:
       java: openjdk8
   pre_build:
     commands:
-      - $(aws ecr get-login --no-include-email --region eu-central-1)
+      - echo $DOCKER_ACCESS_TOKEN > ~/token.txt
+      - cat ~/token.txt | docker login --username $DOCKER_USER --password-stdin
   build:
     commands:
       - cd $WD && bash build.sh
       - docker tag mnt-teet/teet-api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
+      - $(aws ecr get-login --no-include-email --region eu-central-1)
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
   post_build:
    commands:

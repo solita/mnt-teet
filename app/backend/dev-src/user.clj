@@ -6,7 +6,11 @@
             [teet.test.utils :as tu]
             [teet.thk.thk-integration-ion :as thk-integration]
             [clojure.string :as str]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [datomic.dev-local :as dl]
+            [cognitect.aws.client.api :as aws]
+            [teet.log :as log]
+            [teet.project.project-geometry :as project-geometry])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -55,6 +59,12 @@
   (d/transact (environment/datomic-connection)
               {:tx-data (into [] maps)}))
 
+(defn atx
+  "Transact given maps to asset db"
+  [& maps]
+  (d/transact (asset-connection)
+              {:xt-data (into [] maps)}))
+
 (def mock-users tu/mock-users)
 
 (def manager-uid tu/manager-id)
@@ -86,6 +96,13 @@
   (tx {:db/id            user-eid
        :user/permissions [{:db/id                 "new-permission"
                            :permission/role       :external-consultant
+                           :permission/valid-from (Date.)}]}))
+
+(defn give-internal-consultant-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :internal-consultant
                            :permission/valid-from (Date.)}]}))
 
 (defn remove-permission [user-uuid permission-eid]
@@ -140,7 +157,11 @@
 
 (defn make-mock-users!
   []
-  (apply tx mock-users))
+  (apply tx mock-users)
+  (give-manager-permission [:user/id manager-uid])
+  (give-admin-permission [:user/id boss-uid])
+  (give-external-consultant-permission [:user/id external-consultant-id])
+  (give-internal-consultant-permission [:user/id internal-consultant-id]))
 
 (defn delete-db
   [db-name]
@@ -381,3 +402,83 @@
             (println
              (remove-permission (:user/id user)
                                 (:db/id perm)))))))))
+
+
+(def cloud-client {:server-type :ion
+                   :region "eu-central-1"
+                   :system "teet-datomic"
+                   :endpoint "http://entry.teet-datomic.eu-central-1.datomic.net:8182/"
+                   :proxy-port 8182})
+
+(def local-client {:server-type :dev-local
+                   :system "teet"})
+
+
+(defn import-cloud [cloud-db-name local-db-name]
+  (dl/import-cloud {:source (assoc cloud-client :db-name cloud-db-name)
+                    :dest (assoc local-client :db-name local-db-name)}))
+
+(defn- today-db-name [prefix]
+  (let [c (java.util.Calendar/getInstance)]
+    (format "%s%d%02d%02d" prefix
+            (.get c java.util.Calendar/YEAR)
+            (inc (.get c java.util.Calendar/MONTH))
+            (.get c java.util.Calendar/DATE))))
+
+(defn import-current-cloud-dbs
+  "Import current teet and asset databases from dev.
+  See backend/README.md for usage instructions."
+  []
+  (let [c (aws/client {:api :ssm})
+        {cloud-teet-db-name "/teet/datomic/db-name"
+         cloud-asset-db-name "/teet/datomic/asset-db-name"}
+        (into {}
+              (map (juxt :Name :Value))
+              (:Parameters (aws/invoke c {:op :GetParameters
+                                          :request {:Names ["/teet/datomic/db-name"
+                                                            "/teet/datomic/asset-db-name"]}})))
+
+        local-teet-db-name (today-db-name "teet")
+        local-asset-db-name (today-db-name "asset")]
+    (println "Importing databases from cloud:\n"
+             "CLOUD: " cloud-teet-db-name " => LOCAL: " local-teet-db-name "\n"
+             "CLOUD: " cloud-asset-db-name " => LOCAL: " local-asset-db-name "\n"
+             "Press enter to continue or abort evaluation.")
+
+    (when (read-line)
+      (println "Importing TEET db")
+      (import-cloud cloud-teet-db-name local-teet-db-name)
+      (println "\nImporting asset db")
+      (import-cloud cloud-asset-db-name local-asset-db-name)
+      (println "\nDone. Remember to change config.edn to use new databases."))))
+
+(defn update-project-geometries! []
+  (project-geometry/update-project-geometries!
+   (merge {:delete-stale-projects? true}
+          (environment/config-map {:wfs-url [:road-registry :wfs-url]}))
+   (map first
+        (d/q '[:find (pull ?e [:db/id :integration/id
+                               :thk.project/project-name :thk.project/name
+                               :thk.project/road-nr
+                               :thk.project/carriageway
+                               :thk.project/start-m :thk.project/end-m
+                               :thk.project/custom-start-m :thk.project/custom-end-m])
+               :in $
+               :where [?e :thk.project/road-nr _]]
+             (db))))
+  :ok)
+
+(def ^:dynamic *time-level* 0)
+(defmacro time-with-name [name expr]
+  `(binding [*time-level* (inc *time-level*)]
+     (let [n# ~name
+           start# (System/currentTimeMillis)]
+       (try
+         ~expr
+         (finally
+           (println "TIME" (apply str (repeat *time-level* "--")) n# ": "
+                    (- (System/currentTimeMillis) start#) "msecs"))))))
+
+
+(defn log-level! [level]
+  (log/merge-config! {:level level}))

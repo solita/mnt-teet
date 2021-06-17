@@ -15,7 +15,8 @@
             [teet.localization :refer [tr]]
             [teet.ui.project-context :as project-context]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.ui.url :as url]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -73,7 +74,7 @@
     :hotkey "8"
     :feature-flag :cost-items
     :authorization :cost-items/cost-items
-    :match-pages #{:cost-item :cost-items :cost-items-totals}}
+    :match-pages #{:cost-item :cost-items :cost-items-totals :materials-and-products}}
    {:name :cooperation
     :label [:project :tabs :cooperation]
     :navigate {:page :cooperation}
@@ -127,7 +128,7 @@
          [:span (tr label)]]
         [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
 
-(defn project-menu [_e! _app project _dark-theme?]
+(defn project-menu [_e! _app _project _dark-theme?]
   (let [open? (r/atom false)
         anchor-el (atom nil)
         toggle-open! #(do
@@ -136,7 +137,7 @@
         set-anchor! #(reset! anchor-el %)]
     (common/component
      (hotkeys/hotkey "Q" toggle-open!)
-     (fn [e! {:keys [params query] :as app} project dark-theme?]
+     (fn [e! app project dark-theme?]
        (let [{tab-name :name
               tab-label :label} (active-tab app)]
          [:div {:class (<class project-style/project-tab-container dark-theme?)}

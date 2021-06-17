@@ -15,7 +15,12 @@
             [teet.user.user-db :as user-db]
             [teet.util.euro :as euro]
             [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [cheshire.core :as cheshire]
+            [teet.util.coerce :refer [->long ->bigdec]]
+            [teet.util.collection :as cu]
+            [clojure.set :as set]
+            [teet.util.geo :as geo]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -52,7 +57,7 @@
 
 (defquery :asset/project-relevant-roads
   {:doc "Query project's relevant roads"
-   :context {:keys [db user] adb :asset-db}
+   :context {:keys [db]}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
@@ -73,10 +78,11 @@
 
 (defquery :asset/project-cost-items
   {:doc "Query project cost items"
-   :context {:keys [db user] adb :asset-db}
+   :context {:keys [db] adb :asset-db}
    :args {project-id :thk.project/id
           cost-item :cost-item
           cost-totals :cost-totals
+          materials-and-products :materials-and-products
           road :road}
    :project-id [:thk.project/id project-id]
    ;; fixme: cost items authz
@@ -95,7 +101,15 @@
          (let [cost-groups (asset-db/project-cost-groups-totals
                             adb project-id
                             (when road
-                              (asset-db/project-assets-and-components-matching-road adb project-id road)))]
+                              (cond
+                                (= road "all-cost-items")
+                                (asset-db/project-assets-and-components adb project-id)
+
+                                (= road "no-road-reference")
+                                (asset-db/project-assets-and-components-without-road adb project-id)
+                                :else
+                                (asset-db/project-assets-and-components-matching-road
+                                 adb project-id (->long road)))))]
            {:cost-totals
             {:cost-groups cost-groups
              :fclass-and-fgroup-totals (fclass-and-fgroup-totals atl cost-groups)
@@ -106,9 +120,17 @@
                       ;; Always pull the full asset even when focusing on a
                       ;; specific subcomponent.
                       ;; PENDING: what if there are thousands?
-                      (if (asset-model/component-oid? cost-item)
-                        (asset-model/component-asset-oid cost-item)
-                        cost-item))})))))
+                      (cond (asset-model/component-oid? cost-item)
+                            (asset-model/component-asset-oid cost-item)
+
+                            (asset-model/material-oid? cost-item)
+                            (asset-model/material-asset-oid cost-item)
+
+                            :else
+                            cost-item))})
+       (when materials-and-products
+         {:materials-and-products
+          (asset-db/project-materials-totals adb project-id atl)})))))
 
 (s/def :boq-export/version integer?)
 (s/def :boq-export/unit-prices? boolean?)
@@ -118,7 +140,7 @@
   {:doc "Export Bill of Quantities Excel for the project"
    :spec (s/keys :req [:thk.project/id :boq-export/unit-prices? :boq-export/language]
                  :opt [:boq-export/version])
-   :context {:keys [db user] adb :asset-db}
+   :context {:keys [db] adb :asset-db}
    :args {project-id :thk.project/id
           :boq-export/keys [version unit-prices? language]}
    :project-id [:thk.project/id project-id]
@@ -162,8 +184,214 @@
 (defquery :asset/version-history
   {:doc "Query version history for BOQ"
    :spec (s/keys :req [:thk.project/id])
-   :context {:keys [db user] adb :asset-db}
+   :context {adb :asset-db}
    :args {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/read-info {}}}
   (asset-db/project-boq-version-history adb project-id))
+
+
+(s/def :assets-search/fclass (s/coll-of keyword?))
+
+(def ^:private result-count-limit 1000)
+
+(defn- e=
+  "return set of :db/id values of entities that have
+  the exact value for attribute"
+  [db attr value]
+  (into #{}
+        (map :e)
+        (d/datoms db {:index :avet
+                      :limit -1
+                      :components [attr value]})))
+
+(defn- assets-only [db matching-entities]
+  (reduce disj
+          matching-entities
+          (map first (d/q '[:find ?e
+                            :where [(missing? $ ?e :asset/fclass)]
+                            :in $ [?e ...]] db matching-entities))))
+
+(defn- bbq
+  "Return set of :db/id value sof entities whose location
+  start-point or end-point is within the bounding box."
+  ([db xmin ymin xmax ymax]
+   (bbq db xmin ymin xmax ymax (constantly true)))
+  ([db xmin ymin xmax ymax point-filter-fn]
+   (let [entities-within-range
+         (comp
+          (take-while (fn [{[x _y] :v}]
+                        (<= x xmax)))
+          (filter (fn [{[_x y] :v}]
+                    (<= ymin y ymax)))
+          (filter point-filter-fn)
+          (map :e))
+
+         start-within
+         (into #{}
+               entities-within-range
+               (d/index-range db {:attrid :location/start-point
+                                  :start [xmin ymin]
+                                  :limit -1}))
+
+         end-within
+         (into #{}
+               entities-within-range
+               (d/index-range db {:attrid :location/end-point
+                                  :start [xmin ymin]
+                                  :limit -1}))]
+     (assets-only
+      db
+      (set/union start-within end-within)))))
+
+(defn fclass=
+  "Find entities belonging to a single fclass"
+  [db fclass]
+  (e= db :asset/fclass fclass))
+
+(defmulti search-by (fn [_db key _value] key))
+
+(defmethod search-by :fclass [db _ fclasses]
+  (apply set/union
+         (map #(fclass= db %)
+              fclasses)))
+
+(defmethod search-by :common/status [db _ statuses]
+  (assets-only
+   db
+   (into #{}
+         (mapcat #(e= db :common/status %))
+         statuses)))
+
+(defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
+  (bbq db xmin ymin xmax ymax))
+
+(defmethod search-by :current-location [db _ [x y radius]]
+  (bbq db (- x radius) (- y radius) (+ x radius) (+ y radius)
+       (fn [{point :v}]
+         (<= (geo/distance point [x y]) radius))))
+
+(defn search-by-road-address [db {:location/keys [road-nr carriageway start-km end-km]}]
+  (into #{}
+        (map first)
+        (d/q {:query
+              (vec
+               (concat
+                '[:find ?e
+                  :where
+                  [?e :location/road-nr ?road-nr]
+                  [?e :location/carriageway ?carriageway]]
+                (when (or start-km end-km)
+                  '[[?e :location/start-km ?start]])
+                (when start-km
+                  '[[(>= ?start ?start-km)]])
+                (when end-km
+                  ;; If asset has no end km use the start km (single point)
+                  '[[(get-else $ ?e :location/end-km ?start) ?end]
+                    [(<= ?end ?end-km)]])
+                '[[?e :asset/fclass _]]
+                '[:in $ ?road-nr ?carriageway]
+                (when start-km '[?start-km])
+                (when end-km '[?end-km])))
+              :args (remove nil? [db road-nr carriageway
+                                  (some-> start-km ->bigdec)
+                                  (some-> end-km ->bigdec)])})))
+
+(defmethod search-by :road-address [db _ addrs]
+  (apply set/union
+         (map (partial search-by-road-address db)
+              addrs)))
+
+(defn- search-by-map [db criteria-map]
+  (reduce-kv (fn [acc by val]
+               (let [result (search-by db by val)]
+                 (if (nil? acc)
+                   result
+                   (set/intersection acc result))))
+             nil
+             criteria-map))
+
+
+(defquery :assets/search
+  {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
+   :spec (s/keys :opt-un [:assets-search/fclass])
+   :args search-criteria
+   :context {adb :asset-db}
+   :project-id nil
+   :authorization {}}
+  (let [ids (take (inc result-count-limit)
+                  (search-by-map adb search-criteria))
+        more-results? (> (count ids) result-count-limit)
+        assets
+        (map first
+             (d/qseq '[:find (pull ?a [:asset/fclass :common/status :asset/oid
+                                       :location/road-nr :location/carriageway
+                                       :location/start-km :location/end-km
+                                       :location/start-point :location/end-point])
+                       :in $ [?a ...]]
+                     adb (take result-count-limit ids)))]
+    {:more-results? more-results?
+     :result-count-limit result-count-limit
+     :assets (mapv #(-> %
+                        (dissoc :location/start-point :location/end-point)
+                        (cu/update-in-if-exists [:location/start-km] asset-model/format-location-km)
+                        (cu/update-in-if-exists [:location/end-km] asset-model/format-location-km))
+                   assets)
+     :geojson (cheshire/encode
+               {:type "FeatureCollection"
+                :features
+                (for [{:location/keys [start-point end-point] :as a} assets
+                      :when (and start-point end-point)]
+                  {:type "Feature"
+                   :properties {"oid" (:asset/oid a)
+                                "fclass" (:db/ident (:asset/fclass a))}
+                   :geometry {:type "LineString"
+                              :coordinates [start-point end-point]}})})}))
+
+(defquery :assets/geojson
+  {:doc "Return GeoJSON for assets found by search."
+   :spec (s/keys :opt-un [:assets-search/fclass])
+   :args criteria
+   :context {adb :asset-db}
+   :project-id nil
+   :authorization {}}
+  (let [criteria (update criteria :bbox #(mapv bigdec %))
+        assets
+        (map first
+             (d/qseq '[:find (pull ?a [:asset/fclass :asset/oid
+                                       :location/start-point :location/end-point])
+                       :in $ [?a ...]]
+                     adb
+                     (search-by-map adb criteria)))]
+    ^{:format :raw}
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (cheshire/encode
+            {:type "FeatureCollection"
+             :features
+             (for [{:location/keys [start-point end-point] :as a} assets
+                   :when (and start-point end-point)]
+               {:type "Feature"
+                :properties {"oid" (:asset/oid a)
+                             "fclass" (:db/ident (:asset/fclass a))}
+                :geometry {:type "LineString"
+                           :coordinates [start-point end-point]}})})}))
+
+(defquery :assets/details
+  {:doc "Fetch one asset for details view"
+   :context {adb :asset-db}
+   :args {oid :asset/oid}
+   :project-id nil
+   :authorization {}}
+  (let [oid (cond
+              (asset-model/material-oid? oid)
+              (asset-model/material-asset-oid oid)
+
+              (asset-model/component-oid? oid)
+              (asset-model/component-asset-oid oid)
+
+              :else oid)]
+    (asset-type-library/db->form
+     (asset-type-library/rotl-map
+      (asset-db/asset-type-library adb))
+     (d/pull adb '[*] [:asset/oid oid]))))

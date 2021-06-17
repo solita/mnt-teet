@@ -5,7 +5,8 @@
             [teet.log :as log]
             [datomic.client.api :as d]
             [cognitect.aws.client.api :as aws]
-            [teet.util.collection :as cu])
+            [teet.util.collection :as cu]
+            [teet.util.cache :as cache])
   (:import (java.time ZoneId)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -137,8 +138,14 @@
    :notify {:application-expire-days (->ssm [:notify :application-expire-days] 45 #(Integer/parseInt %))}
    :vektorio {:api-key (->ssm [:vektorio :api-key] nil)
               :config (->ssm [:vektorio :config] {} (comp #(update % :file-extensions suffix-list)
-                                                          read-string))}
-   :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}})
+                                                      read-string))}
+   :asset {:default-owner-code (->ssm [:asset :default-owner-code] "N40")}
+   :contract {:state-procurement-url (->ssm [:contract :state-procurement-url] nil)
+              :thk-procurement-url (->ssm [:contract :thk-procurement-url] nil)}
+
+   :postgresql {:uri (->ssm [:migrate :db-uri] nil)
+                :user "authenticator"
+                :password (->ssm [:api :authenticator-password] nil)}})
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config
@@ -345,3 +352,31 @@
   []
   {:api-url (config-value :api-url)
    :api-secret (config-value :auth :jwt-secret)})
+
+(def pg-connection-pool
+  (cache/cached
+    #(let [{:keys [uri user password]} (config-value :postgresql)
+           hikari-config
+           (doto (com.zaxxer.hikari.HikariConfig.)
+             (.setJdbcUrl uri)
+             (.setUsername user)
+             (.setPassword password)
+             (.addDataSourceProperty "cachePrepStmts" "true")
+             (.addDataSourceProperty "prepStmtCacheSize" "250")
+             (.addDataSourceProperty "prepStmtCacheSqlLimit" "2048"))]
+       (com.zaxxer.hikari.HikariDataSource. hikari-config))))
+
+ (defn get-pg-connection
+   "Get connection to PostgreSQL, you must `.close` it to return it to
+   the pool. Use [[call-with-pg-connection]] for autoclosed connection."
+   []
+   (let [conn (.getConnection (pg-connection-pool))]
+     (with-open [^java.sql.Statement stmt (.createStatement conn)]
+       (.execute stmt "SET SESSION ROLE teet_backend"))
+     conn))
+
+ (defn call-with-pg-connection [func]
+   (with-open [conn (get-pg-connection)]
+     (with-open [^java.sql.Statement stmt (.createStatement conn)]
+       (.execute stmt "SET SESSION ROLE teet_backend"))
+     (func {:connection conn})))

@@ -109,12 +109,24 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
+   (when-feature :contracts
+     [view-link {:open? open?
+                 :current-page page
+                 :link {:page :contracts}
+                 :icon icons/action-description-outlined
+                 :name (tr [:contract :contracts-listing])}])
    (when-feature :asset-db
      [view-link {:open? open?
                  :current-page page
                  :link {:page :asset-type-library}
                  :icon icons/editor-schema
                  :name (tr [:asset :type-library :link])}])
+   (when-feature :assetmanager
+     [view-link {:open? open?
+                 :current-page page
+                 :link {:page :assets}
+                 :icon icons/asset-manager
+                 :name (tr [:asset :manager :link])}])
    (when-feature :road-information-view
      [view-link {:open? open?
                  :current-page page

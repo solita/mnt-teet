@@ -57,6 +57,7 @@
 
 (def ^:private asset-pattern #"^...-\w{3}-\d{6}$")
 (def ^:private component-pattern #"^...-\w{3}-\d{6}-\d{5}$")
+(def ^:private material-pattern #"^...-\w{3}-\d{6}-\d{5}-\d{3}$")
 
 (defn asset-oid?
   "Check if given OID refers to asset."
@@ -70,6 +71,18 @@
   (and (string? oid)
        (boolean (re-matches component-pattern oid))))
 
+(defn material-oid?
+  "Check if given OID refers to a material."
+  [oid]
+  (and (string? oid)
+       (boolean (re-matches material-pattern oid))))
+
+(defn asset-oid->fclass-oid-prefix
+  "Extract the asset fclass OID prefix from an asset OID instance."
+  [oid]
+  {:pre [(asset-oid? oid)]}
+  (subs oid 4 7))
+
 (defn asset-oid
   "Format asset OID for feature class prefix and seq number."
   [owner-code fclass-oid-prefix sequence-number]
@@ -82,6 +95,13 @@
   {:post [(component-oid? %)]}
   (format "%s-%05d" asset-oid sequence-number))
 
+(defn material-oid
+  "Format component OID for asset OID and seq number."
+  [component-oid sequence-number]
+  {:pre [(component-oid? component-oid)]
+   :post [(material-oid? %)]}
+  (format "%s-%03d" component-oid sequence-number))
+
 (defn component-asset-oid
   "Given component OID, return the OID of the parent asset."
   [component-oid]
@@ -91,8 +111,17 @@
       butlast
       (->> (str/join "-"))))
 
+(defn material-asset-oid
+  "Given material OID, return the OID of the parent asset."
+  [material-oid]
+  {:pre [(material-oid? material-oid)]}
+  (->> (str/split material-oid #"-")
+       (drop-last 2)
+       (str/join "-")))
+
 (defn find-component-path
-  "Return vector containing all parents of component from asset to the component.
+  "Return vector containing all parents of component or material from asset to
+  the component or material.
   For example:
   [a c1 c2 c3]
   where a is the asset, that has component c1
@@ -100,7 +129,8 @@
   and c2 has child component c3 (the component we want)"
   [asset component-oid]
   (cu/find-path #(concat (:asset/components %)
-                         (:component/components %))
+                         (:component/components %)
+                         (:component/materials %))
                 #(= component-oid (:asset/oid %))
                 asset))
 
@@ -113,5 +143,31 @@
    :total-cost "right"})
 
 
+(def materials-and-products-table-columns
+  [:material :parameter :component :material-approval-status])
+
 (def locked? "Key to check if version is locked"
   :boq-version/locked?)
+
+
+(def assets-listing-columns
+  "Columns to show in asset manager search results listing"
+  [:asset/oid :asset/fclass :location/road-address :common/status])
+
+(defmulti assets-listing-get-column (fn [_row column] column))
+
+(defmethod assets-listing-get-column :default [row column] (get row column))
+
+(defmethod assets-listing-get-column :location/road-address [row _]
+  (select-keys row [:location/road-nr :location/carriageway :location/start-km :location/end-km]))
+
+#?(:clj
+   (def ^:private location-km-format
+     (doto (java.text.NumberFormat/getNumberInstance)
+       (.setMinimumFractionDigits 6)
+       (.setMaximumFractionDigits 6))))
+
+#?(:clj (defn format-location-km [v]
+          (if-not v
+            ""
+            (.format location-km-format v))))

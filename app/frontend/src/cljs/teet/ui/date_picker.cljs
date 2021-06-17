@@ -221,7 +221,7 @@
 (defn date-input*
   "Combined text field and date picker component"
   [{:keys [label error value on-change selectable? required placeholder
-            read-only? end start min-date max-date error-text]}]
+            read-only? end start min-date max-date error-text error-tooltip?]}]
   (let [[txt set-txt!] (react/useState "")
         [open? set-open?] (react/useState false)
         [ref set-ref!] (react/useState nil)
@@ -253,6 +253,7 @@
                         :placeholder placeholder
                         :error error
                         :error-text error-text
+                        :error-tooltip? error-tooltip?
                         :required required
                         :variant "outlined"
                         :full-width true

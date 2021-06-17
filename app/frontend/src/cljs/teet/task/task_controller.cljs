@@ -38,6 +38,7 @@
 (defrecord SubmitResults []) ; submit task for review
 (defrecord StartReview []) ; change status to in review
 (defrecord Review [result]) ; review results
+(defrecord ReopenTask []) ; change status to in review
 
 ;; Add multiple tasks
 (defrecord OpenAddTasksDialog [activity-id])
@@ -49,6 +50,11 @@
 (defrecord SavePartForm [close-event task-id form-data])
 (defrecord DeleteFilePart [close-event part-id])
 
+(defrecord SubmitTaskPartResults [task-id taskpart-id]) ; submit task part for review
+(defrecord ReviewTaskPart [task-id taskpart-id result])
+(defrecord ReopenTaskPart [task-id taskpart-id])
+(defrecord StartTaskPartReview [task-id taskpart-id])
+
 (defrecord ExportFiles [task-id])
 
 (extend-protocol t/Event
@@ -59,6 +65,40 @@
            :command :task/submit
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :submit-results-success])
+           :result-event common-controller/->Refresh}))
+
+  SubmitTaskPartResults
+  (process-event [{task-id :task-id
+                   taskpart-id :taskpart-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/submit-task-part
+           :payload {:taskpart-id (common-controller/->long taskpart-id)
+                     :task-id (common-controller/->long task-id)}
+           :success-message (tr [:task :submit-results-success])
+           :result-event common-controller/->Refresh}))
+
+  ReviewTaskPart
+  (process-event [{task-id :task-id
+                   taskpart-id :taskpart-id
+                   result :result} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/review-task-part
+           :payload {:taskpart-id (common-controller/->long taskpart-id)
+                     :task-id (common-controller/->long task-id)
+                     :result result}
+           :result-event common-controller/->Refresh}))
+
+  ReopenTaskPart
+  (process-event [{task-id :task-id
+                   taskpart-id :taskpart-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/reopen-task-part
+           :payload {:taskpart-id (common-controller/->long taskpart-id)
+                     :task-id (common-controller/->long task-id)}
+           :success-message (tr [:task-part :reopen-successful])
            :result-event common-controller/->Refresh}))
 
   SavePartForm
@@ -91,38 +131,61 @@
 
   StartReview
   (process-event [_ {params :params :as app}]
-    (t/fx app
+    (t/fx (assoc app :task-review-started? true)
           {:tuck.effect/type :command!
            :command :task/start-review
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->Refresh}))
+           :result-event common-controller/->RefreshReview}))
+
+  StartTaskPartReview
+  (process-event [{task-id :task-id
+                   taskpart-id :taskpart-id} app]
+       (if
+         (get app :task-review-started?)
+         app
+         (t/fx app
+               {:tuck.effect/type :command!
+                :command :task/start-task-part-review
+                :payload {:taskpart-id (common-controller/->long taskpart-id)
+                          :task-id (common-controller/->long task-id)}
+                :success-message (tr [:task :start-review-success])
+                :result-event common-controller/->Refresh})))
 
   Review
   (process-event [{result :result} {params :params :as app}]
-    (t/fx app
+    (t/fx (dissoc app :task-review-started?)
           {:tuck.effect/type :command!
            :command :task/review
            :payload {:task-id (common-controller/->long (:task params))
                      :result result}
            :result-event common-controller/->Refresh}))
 
+  ReopenTask
+  (process-event [_ {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/reopen-task
+           :payload {:task-id (common-controller/->long (:task params))}
+           :success-message (tr [:task :reopen-success])
+           :result-event common-controller/->Refresh}))
+
   OpenEditModal
   (process-event [{entity :entity} {:keys [params page query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (assoc query :edit entity)}))
+           :page page
+           :params params
+           :query (assoc query :edit entity)}))
 
   DeleteTask
   (process-event [{task-id :task-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :task/delete
-           :success-message  (tr [:notifications :task-deleted])
-           :payload          {:db/id (common-controller/->long task-id)}
-           :result-event     ->DeleteTaskResult}))
+           :command :task/delete
+           :success-message (tr [:notifications :task-deleted])
+           :payload {:db/id (common-controller/->long task-id)}
+           :result-event ->DeleteTaskResult}))
 
   DeleteTaskResult
   (process-event [_response {:keys [page params query] :as app}]
@@ -130,8 +193,8 @@
               (dissoc :edit-task-data)
               (update :stepper dissoc :dialog))
           {:tuck.effect/type :navigate
-           :page             :activity
-           :params           (select-keys params [:project :activity])}))
+           :page :activity
+           :params (select-keys params [:project :activity])}))
 
   OpenAddDocumentDialog
   (process-event [_ app]

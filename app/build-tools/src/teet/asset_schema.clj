@@ -26,7 +26,16 @@
 (defn- update-name-columns [name-keys rows]
   (mapv #(reduce
           (fn [row k]
-            (update row k parse-name))
+            ;; k can be either keyword or a vector containing a single keyword
+            ;; If k is a vec, the column contains multiple comma separated names
+            (if (vector? k)
+              (update row
+                      (first k)
+                      (fn [names-string]
+                        (when-not (str/blank? names-string)
+                          (->> (str/split names-string #"\s*,\s*")
+                               (mapv parse-name)))))
+              (update row k parse-name)))
           % name-keys)
         rows))
 
@@ -93,7 +102,7 @@
             :description-et :description-en
             :agreed?
             :comment]
-           #{:name :ctype}))
+           #{:name [:ctype]}))
 
 (def read-list-items
   (partial read-sheet
@@ -103,6 +112,15 @@
             :agreed?
             :comment]
            #{:name :property}))
+
+(def read-material
+  (partial read-sheet
+           "material"
+           [:name
+            :fgroups
+            :label-et
+            :label-en]
+           #{:name [:fgroups]}))
 
 (defn- without-empty [m]
   (into {}
@@ -144,11 +162,14 @@
 
 (defn- attribute-name
   "Builds the attribute name from its `:name` and `:ctype`.
+  If the attribute belongs to multiple ctypes, it is put into :common ns.
    `(attribute-name {:name :barrier :ctype :barrierworkingwidth}) => :barrier/barrierworkingwidth`"
   ;; TODO: Why is datatype needed here?
   [{n :name :keys [ctype datatype] :as _attr}]
   (when (and n ctype datatype)
-    (keyword (name ctype) (name n))))
+    (keyword (if (> (count ctype) 1)
+               "common"
+               (name (first ctype))) (name n))))
 
 (defn- extremum-value-ref
   [value attribute unnamespaced->namespaced]
@@ -218,20 +239,33 @@
                    (not duplicates?))))
        (mapcat val)))
 
+(def common-ctypes
+  [{:name :ctype/component
+    :comment "Attributes common to components"}
+   {:name :ctype/feature
+    :comment "Attributes common to features"}
+   {:name :ctype/material
+    :comment "Attributes common to materials"}])
+
 (defn generate-asset-schema [sheet-file]
   (with-open [in (io/input-stream sheet-file)]
     (let [workbook (sheet/load-workbook in)
-          fgroup (read-feature-groups workbook)
-          fclass (read-feature-classes workbook)
 
+          fgroup (read-feature-groups workbook)
+          fgroup-by-name (map-by-name fgroup)
+
+          fclass (read-feature-classes workbook)
           fclass-by-name (map-by-name fclass)
 
-          ctype (into [{:name :ctype/common
-                        :comment "Attributes common to all assets and components"}]
+          ctype (into common-ctypes
                       (read-ctypes workbook))
           ctypes-by-name (map-by-name ctype)
+
           pset (read-pset workbook)
           list-items (read-list-items workbook)
+
+          materials (read-material workbook)
+          material-by-name (map-by-name materials)
 
           unnamespaced->namespaced (unnamespaced-attr->namespaced-attr pset)
 
@@ -244,7 +278,7 @@
                 pset)
           exists? (into #{}
                         (map :name)
-                        (concat fgroup fclass ctype pset list-items))]
+                        (concat fgroup fclass ctype materials pset list-items))]
       (vec
        (concat
         ;; Include schema import date
@@ -299,14 +333,14 @@
                                   "datetime" :db.type/instant
                                   nil)]
                 :when (and valueType
-                           (exists? (:ctype p)))]
+                           (every? exists? (:ctype p)))]
             (without-empty
              (merge
               (common-attrs :asset-schema.type/attribute p)
               {:db/cardinality :db.cardinality/one ; PENDING: can be many?
                :db/valueType valueType
                :asset-schema/unit (:unit p)
-               :attribute/parent (str (:ctype p))
+               :attribute/parent (mapv str (:ctype p))
                :attribute/cost-grouping? (:cost-grouping? p)
                :attribute/mandatory? (:mandatory? p)}
               (min-and-max-values p unnamespaced->namespaced))))))
@@ -317,15 +351,34 @@
           (for [item list-items
                 :let [attr (attrs-by-name (:property item))
                       attr-name (get-in attrs-by-name [(:property item) :name])
-                      ctype-or-fclass (or (get ctypes-by-name (:ctype attr))
-                                          (get fclass-by-name (:ctype attr)))
-                      all-exist? (and attr ctype-or-fclass
+                      ctype-fclass-or-material (or (every? ctypes-by-name (:ctype attr))
+                                                   (get fclass-by-name (:ctype attr))
+                                                   (every? material-by-name (:ctype attr)))
+                      all-exist? (and attr ctype-fclass-or-material
                                       (:name item)
                                       (exists? (:property item)))]
                 :when all-exist?]
             (merge
              (common-attrs :asset-schema.type/enum item)
-             {:enum/attribute (str attr-name)})))))))))
+             {:enum/attribute (str attr-name)}))))
+
+        ;; Output materials
+        (sorted
+         (without-duplicates
+          (for [material materials
+                           ;; Do the given fgroups exist?
+                :when (and (every? (fn [[name fgroup]]
+                                     (if (get fgroup-by-name fgroup)
+                                       true
+                                       ;; Invalid fgroup, report and skip
+                                       (println (str "Material " name " has invalid fgroup " fgroup ", skipping"))))
+                                   (map (juxt (constantly (:name material))
+                                              identity)
+                                        (:fgroups material)))
+                           (:name material))]
+            (merge
+             (common-attrs :asset-schema.type/material material)
+             {:material/fgroups (mapv str (:fgroups material))})))))))))
 
 (defn -main [& [sheet-path]]
   (let [sheet-file (some-> sheet-path io/file)]

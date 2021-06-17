@@ -21,8 +21,12 @@ Figwheel is used to automatically hot reload code
 - run npm install (not needed if packages.json unchanged) - npx must be installed too or startup will fail later
 - Run `dev.sh` or start a REPL with `dev` profile from your favorite text editor
 - Open [http://localhost:4000](http://localhost:4000)
-  ([http://localhost:9500](http://localhost:9500) doesn't work because
-  fake authentication from local backend is needed)
+  - [http://localhost:9500](http://localhost:9500 doesn't work because fake authentication from 
+    local backend is needed)
+  - You should see a login screen with a password field and four test users
+  - Copy password from `mnt-teet-private/config.edn` -> `basic-auth-password` and enter it to the 
+    password field
+  - Click one of the test users to log in
 - To see unit test status, open
   [http://localhost:9500/figwheel-extra-main/auto-testing](http://localhost:9500/figwheel-extra-main/auto-testing)
 

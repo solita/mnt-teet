@@ -27,7 +27,7 @@
 
 ;; Register routes that need asset type library to be in app state
 ;; and launch event to fetch it when navigating.
-(doseq [r [:cost-item :cost-items :cost-items-totals :asset-type-library]]
+(doseq [r [:cost-item :cost-items :cost-items-totals :materials-and-products :asset-type-library :assets]]
   (defmethod routes/on-navigate-event r [_] (->MaybeFetchAssetTypeLibrary)))
 
 
@@ -43,12 +43,10 @@
   (str prefix (swap! next-id inc)))
 
 (def ^:private road-address
-  #(cu/map-vals
-    (fn [x]
-      (when-not (str/blank? x)
-        (common-controller/->long x)))
-    (select-keys % [:location/road-nr :location/carriageway
-                    :location/start-m :location/end-m])))
+  #(into {}
+         (select-keys % [:location/road-nr :location/carriageway
+                         :location/start-km :location/start-offset-m
+                         :location/end-km :location/end-offset-m])))
 
 (defn- point [v]
   (if (vector? v)
@@ -76,6 +74,12 @@
 (defrecord DeleteComponent [id])
 (defrecord SaveComponent [component-id])
 (defrecord SaveComponentResponse [response])
+(defrecord DeleteMaterial [id])
+(defrecord SaveMaterial [material-id])
+(defrecord SaveMaterialResponse [response])
+(defrecord AddMaterial [type])
+(defrecord UpdateMaterialForm [form-data])
+(defrecord ResetMaterialForm [form-data])
 
 (defrecord UpdateForm [form-data])
 
@@ -85,10 +89,14 @@
 ;; Response when fetching road address based on geopoints
 (defrecord FetchRoadResponse [start-end-points response])
 
+;; initialize map (when opening map and editing existing asset)
+(defrecord InitMap [])
+
 (defrecord AddComponent [type])
 
-(defrecord SaveCostGroupPrice [cost-group price])
-(defrecord SaveCostGroupPriceResponse [response])
+(defrecord SaveCostGroupPrice [finish-saving! cost-group price])
+(defrecord SaveCostGroupPriceResponse [finish-saving! response])
+(defrecord SaveCostGroupPriceError [finish-saving! error])
 
 ;; Locking and versioning
 (defrecord SaveBOQVersion [callback form-data])
@@ -111,15 +119,38 @@
      (and (asset-model/component-oid? id)
           id))))
 
+(defn- form-material-id [app]
+  (let [id (get-in app [:params :id])]
+    (or
+     ;; component query parameter specifies new component to add
+     (get-in app [:query :material])
+     ;; or existing material
+     (when (asset-model/material-oid? id)
+       id))))
+
+(defn- children-by-key [asset-or-component k]
+  (when-let [children (not-empty (k asset-or-component))]
+    [k children]))
+
+(defn- children
+  "Find children of the asset or component, returning [<chilren-key> <children>],
+   eg. [:component/materials <materials>]"
+  [asset-or-component]
+  (->> [:asset/components :component/components :component/materials]
+       (map (partial children-by-key asset-or-component))
+       (some identity)))
+
 (defn- form-state
   "Return the current form state."
   [app]
-  (if-let [component-id (form-component-id app)]
+  (if-let [target-id (or (form-material-id app)
+                         (form-component-id app))]
     ;; Get some nested component by id
     (let [by-id (fn by-id [{oid :asset/oid :as c}]
-                  (if (= component-id oid)
+                  (if (= target-id oid)
                     c
-                    (some by-id (:component/components c))))]
+                    (let [[_ cs] (children c)]
+                      (some by-id cs))))]
       (some by-id
             (common-controller/page-state app :cost-item :asset/components)))
 
@@ -131,8 +162,8 @@
           (let [c (if (= component-id oid)
                     (apply update-fn c args)
                     c)]
-            (if-let [sub-components (:component/components c)]
-              (assoc c :component/components
+            (if-let [[subcomponent-key sub-components] (children c)]
+              (assoc c subcomponent-key
                      (update-component sub-components component-id update-fn args))
               c))) components))
 
@@ -149,6 +180,15 @@
     ;; Update asset itself
     (apply common-controller/update-page-state
            app [:cost-item] update-fn args)))
+
+(defn- update-material-form
+  "Update material form state."
+  [app update-fn & args]
+  ;; Update some nested component by id
+  (common-controller/update-page-state
+   app [:cost-item :asset/components]
+   update-component (form-material-id app) update-fn args))
+
 
 (def locked?
   "Check from app state if BOQ version is locked."
@@ -186,7 +226,7 @@
       form-update-data)
     form-update-data))
 
-(declare project-relevant-roads)
+(declare project-relevant-roads prepare-location)
 
 (extend-protocol t/Event
 
@@ -196,7 +236,7 @@
       (do
         (log/debug "Not saving, BOQ version is locked.")
         app)
-      (let [form-data (form-state app)
+      (let [form-data (prepare-location (form-state app))
             project-id (get-in app [:params :project])
             id (if (= "new" (get-in app [:params :id]))
                  (next-id! "costitem")
@@ -246,7 +286,7 @@
       (do
         (log/debug "Not saving, BOQ version is locked.")
         app)
-      (let [form-data (form-state app)
+      (let [form-data (prepare-location (form-state app))
             {parent-id :asset/oid}
             (-> (common-controller/page-state app :cost-item)
                 (asset-model/find-component-path (:asset/oid form-data))
@@ -274,21 +314,112 @@
                          :query nil})
                       common-controller/refresh-fx]))))
 
+  AddMaterial
+  (process-event [{:keys [type component-oid]} {:keys [page params query] :as app}]
+    (let [new-id (next-id! "m")]
+      (t/fx
+       (update-form app
+                    (fn [parent]
+                      (update parent :component/materials
+                              #(conj (or % [])
+                                     {:db/id new-id
+                                      :asset/oid new-id
+                                      :material/type type}))))
+       {:tuck.effect/type :navigate
+        :params params
+        :page page
+        :query (merge query {:material new-id})})))
+
+  DeleteMaterial
+  (process-event [{:keys [fetched-cost-item-atom id]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not deleting material, BOQ version is locked.")
+        app)
+      (let [project-id (get-in app [:params :project])]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/delete-material
+               :payload {:db/id id
+                         :project-id project-id}
+               :result-event common-controller/->Refresh}))))
+
+  SaveMaterial
+  (process-event [_ app]
+    (if (locked? app)
+      (do
+        (log/debug "Not saving, BOQ version is locked.")
+        app)
+      (let [form-data (form-state app)
+            {parent-id :asset/oid}
+            (-> (common-controller/page-state app :cost-item)
+                (asset-model/find-component-path (:asset/oid form-data))
+                butlast last)]
+        (t/fx app
+              {:tuck.effect/type :command!
+               :command :asset/save-material
+               :payload {:project-id (get-in app [:params :project])
+                         :parent-id parent-id
+                         :material (dissoc form-data
+                                           :material/materials
+                                           :location/geojson)}
+               :result-event ->SaveMaterialResponse}))))
+
+  SaveMaterialResponse
+  (process-event [{:keys [response]} {params :params :as app}]
+    (let [oid (:asset/oid response)]
+      (apply t/fx app
+             (remove nil?
+                     [(when (not= oid (params :id))
+                        {:tuck.effect/type :navigate
+                         :page :cost-item
+                         :params (merge (:params app)
+                                        {:id oid})
+                         :query nil})
+                      common-controller/refresh-fx]))))
+
+  UpdateMaterialForm
+  (process-event [{:keys [form-data]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not editing form, BOQ version is locked.")
+        app)
+      (update-material-form app #(merge % form-data))))
+
+  ResetMaterialForm
+  (process-event [{:keys [form-data]} app]
+    (if (locked? app)
+      (do
+        (log/debug "Not editing form, BOQ version is locked.")
+        app)
+      (update-material-form app (constantly form-data))))
+
   UpdateForm
   (process-event [{:keys [form-data]} app]
     (if (locked? app)
       (do
         (log/debug "Not editing form, BOQ version is locked.")
         app)
-      (let [old-form (form-state app)
-            new-form (cu/deep-merge
-                      old-form
-                      (default-carriageway form-data
-                                           old-form
-                                           (project-relevant-roads (get-in app [:params :project]))))]
-        (process-location-change
-         (update-form app (constantly new-form))
-         old-form new-form))))
+      (if (= (list :location/single-point?) (keys form-data))
+        ;; Only changing single point on/off, don't refetch location
+        (update-form app (fn [form]
+                           (let [single? (:location/single-point? form-data)
+                                 remove-if-single #(if single? nil %)]
+                             (-> form
+                                 (assoc :location/single-point? single?)
+                                 (cu/update-in-if-exists [:location/end-point] remove-if-single)
+                                 (cu/update-in-if-exists [:location/end-km] remove-if-single)
+                                 (cu/update-in-if-exists [:location/end-offset-m] remove-if-single)))))
+        ;; Other form change, maybe refetch location
+        (let [old-form (form-state app)
+              new-form (cu/deep-merge
+                        old-form
+                        (default-carriageway form-data
+                                             old-form
+                                             (project-relevant-roads (get-in app [:params :project]))))]
+          (process-location-change
+           (update-form app (constantly new-form))
+           old-form new-form)))))
 
   ;; When road address was changed on the form, update geometry
   ;; and start/end points from the fetched response
@@ -303,17 +434,18 @@
        app
        (fn [form]
          ;; Set start/end points and GeoJSON geometry
-         (if (:location/end-m address)
+         (if (:location/end-km address)
            ;; Line geometry
-           (assoc form
-                  :location/start-point (first response)
-                  :location/end-point (last response)
-                  :location/geojson
-                  (feature-collection-geojson
-                   #js {:type "LineString"
-                        :coordinates (clj->js response)}
-                   (point-geojson (first response) "start/end" "start")
-                   (point-geojson (last response) "start/end" "end")))
+           (let [{:keys [road-line start-point end-point]} response]
+             (assoc form
+                    :location/start-point start-point
+                    :location/end-point end-point
+                    :location/geojson
+                    (feature-collection-geojson
+                     #js {:type "LineString"
+                          :coordinates (clj->js road-line)}
+                     (point-geojson start-point "start/end" "start")
+                     (point-geojson end-point "start/end" "end"))))
            ;; Point geometry
            (-> form
                (assoc :location/start-point response
@@ -331,46 +463,61 @@
         (log/debug "Stale response for " start-end-points " => " response)
         app)
 
-      (update-form
-       (if (empty? response)
-         (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
-         app)
-       (fn [form]
+      (let [{:keys [road start-point end-point start-offset-m end-offset-m]}
+            response]
+        (println "RESPONSE: " (pr-str response))
+        (update-form
          (if (empty? response)
-           (-> form
-               (dissoc :location/road-nr :location/carriageway :location/start-m :location/end-m)
-               (merge {:location/geojson (let [{:location/keys [start-point end-point]}
-                                               (cu/map-vals point start-end-points)]
-                                           (feature-collection-geojson
-                                            (clj->js {:type "LineString"
-                                                      :coordinates [start-point end-point]})
-                                            (point-geojson start-point "start/end" "start")
-                                            (point-geojson end-point "start/end" "end")))}))
-           (let [{:keys [geometry road-nr carriageway start-m end-m m]}
-                 (first (sort-by :distance response))]
+           (snackbar-controller/open-snack-bar app (tr [:asset :location :no-road-found-for-points]) :warning)
+           app)
+         (fn [form]
+           (if (nil? road)
+             (-> form
+                 (dissoc :location/road-nr :location/carriageway
+                         :location/start-km :location/end-km
+                         :location/start-offset-m :location/end-offset-m)
+                 (merge {:location/geojson
+                         (feature-collection-geojson
+                          (clj->js {:type "LineString"
+                                    :coordinates [start-point end-point]})
+                          (point-geojson start-point "start/end" "start")
+                          (point-geojson end-point "start/end" "end"))}))
+             (let [{:keys [geometry road-nr carriageway start-km end-km km]} road]
+               (when geometry
+                 (let [geojson (js/JSON.parse geometry)]
+                   (merge form
+                          {:location/start-point start-point
+                           :location/start-offset-m start-offset-m
+                           :location/end-point end-point
+                           :location/end-offset-m end-offset-m
+                           :location/geojson
+                           #js {:type "FeatureCollection"
+                                :features
+                                (if end-km
+                                  #js [geojson
+                                       (point-geojson start-point "start/end" "start")
+                                       (point-geojson end-point "start/end" "end")]
+                                  #js [(point-geojson start-point "start/end" "start")])}
+                           :location/road-nr road-nr
+                           :location/carriageway carriageway
+                           :location/start-km (or km start-km)
+                           :location/end-km end-km}))))))))))
 
-             (when geometry
-               (let [geojson (js/JSON.parse geometry)
-                     start (when start-m (aget geojson "coordinates" 0))
-                     end (when end-m (last (aget geojson "coordinates")))]
-                 (log/debug "RECEIVED NEW START/END start: " start ", end: " end )
-
-                 (merge form
-                        (when (and start end)
-                          {:location/start-point (vec start)
-                           :location/end-point (vec end)})
-                        {:location/geojson
-                         #js {:type "FeatureCollection"
-                              :features
-                              (if end-m
-                                #js [geojson
-                                     (point-geojson start "start/end" "start")
-                                     (point-geojson end "start/end" "end")]
-                                #js [geojson])}
-                         :location/road-nr road-nr
-                         :location/carriageway carriageway
-                         :location/start-m (or m start-m)
-                         :location/end-m end-m})))))))))
+  InitMap
+  (process-event [_ app]
+    (let [{:location/keys [start-point end-point]} (form-state app)
+          start (some-> start-point point)
+          end (some-> end-point point)]
+      (if (or start end)
+        (update-form app merge
+                     {:location/geojson
+                      #js {:type "FeatureCollection"
+                           :features
+                           (if end
+                             #js [(point-geojson start "start/end" "start")
+                                  (point-geojson end "start/end" "end")]
+                             #js [(point-geojson start "start/end" "start")])}})
+        app)))
 
   AddComponent
   (process-event [{type :type} {:keys [page params query] :as app}]
@@ -434,33 +581,37 @@
 
           ;; No valid points, don't fetch anything and remove road address
           :else
-          (dissoc app :location/road-nr :location/carriageway :location/start-m :location/end-m)))
+          (dissoc app :location/road-nr :location/carriageway :location/start-km :location/end-km)))
 
       ;; Manually edited road location, refetch geometry and points
       (not= (road-address old-form)
             (road-address new-form))
-      (let [{:location/keys [road-nr carriageway start-m end-m]} (road-address new-form)]
+      (let [{:location/keys [road-nr carriageway
+                             start-km start-offset-m
+                             end-km end-offset-m]} (road-address new-form)]
         (log/debug "ROAD ADDRESS CHANGED")
         (cond
           ;; All values present, fetch line geometry
-          (and road-nr carriageway start-m end-m)
+          (and road-nr carriageway start-km end-km)
           (t/fx app
                 {:tuck.effect/type :query
                  :query :road/line-by-road
                  :args {:road-nr road-nr
                         :carriageway carriageway
-                        :start-m start-m
-                        :end-m end-m}
+                        :start-km start-km
+                        :start-offset-m start-offset-m
+                        :end-km end-km
+                        :end-offset-m end-offset-m}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; Valid start point, fetch a point geometry
-          (and road-nr carriageway start-m)
+          (and road-nr carriageway start-km)
           (t/fx app
                 {:tuck.effect/type :query
                  :query :road/point-by-road
                  :args {:road-nr road-nr
                         :carriageway carriageway
-                        :start-m start-m}
+                        :start-km start-km}
                  :result-event (partial ->FetchLocationResponse (road-address new-form))})
 
           ;; No valid road address
@@ -475,7 +626,7 @@
 (extend-protocol t/Event
 
   SaveCostGroupPrice
-  (process-event [{:keys [cost-group price]} app]
+  (process-event [{:keys [cost-group price finish-saving!]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :asset/save-cost-group-price
@@ -486,14 +637,22 @@
                                          :total-cost
                                          :quantity-unit :type
                                          :ui/group)
-                     :price price}
-           :result-event ->SaveCostGroupPriceResponse}))
+                     :price (if (str/blank? price) nil price)}
+           :result-event (partial ->SaveCostGroupPriceResponse finish-saving!)
+           :error-event (partial ->SaveCostGroupPriceError finish-saving!)}))
 
   SaveCostGroupPriceResponse
-  (process-event [{response :response} app]
+  (process-event [{:keys [finish-saving! response]} app]
     (println "Response: " response)
+    (finish-saving!)
     (t/fx app
           common-controller/refresh-fx))
+
+  SaveCostGroupPriceError
+  (process-event [{:keys [finish-saving! error]} app]
+    (println "Error: " error)
+    (finish-saving!)
+    (common-controller/on-server-error error app))
 
   ToggleOpenTotals
   (process-event [{ident :ident} app]
@@ -501,14 +660,14 @@
      app [:closed-totals] cu/toggle ident))
 
   SetTotalsRoadFilter
-  (process-event [{road :road} app]
+  (process-event [{road :road} {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page (:page app)
-           :params (:params app)
+           :page page
+           :params params
            :query (if road
-                    {:road road}
-                    {})})))
+                    (assoc query :road road)
+                    (dissoc query :road))})))
 
 (extend-protocol t/Event
   SaveBOQVersion
@@ -576,6 +735,49 @@
             (filter filter-pred))
            cost-group-totals)]))
 
+(defn material-used-in-fgroup-fclass-or-ctype?
+  "Is the material used for the given feature group, feature class or
+  component type? It is used if there is a component in the project that
+  - is of the given component type or
+  - the component belongs to the given feature class or feature group"
+  [fgroup-fclass-or-ctype material]
+  (->> material
+       :component/_materials
+       (map (comp (partial map :db/ident)
+                  (juxt :fgroup :fclass :component/ctype)))
+       (some (partial some (partial = fgroup-fclass-or-ctype)))))
+
+(defn remove-nonmatching-components
+  "Removes components that don't belong to the given feature group,
+  feature class or component type"
+  [fgroup-fclass-or-ctype material]
+  (if (nil? fgroup-fclass-or-ctype)
+    material
+    (update material
+           :component/_materials
+           #(filter (fn [component]
+                      (->> ((juxt :fgroup :fclass :component/ctype) component)
+                           (map :db/ident)
+                           (some (partial = fgroup-fclass-or-ctype))))
+                    %))))
+
+(defn filtered-materials-and-products
+  "Returns a structure similar to `filtered-cost-group-totals`. Here the
+  `:ui/group` path is built manually using the material's `:fgroup` and `:fclass`
+  values."
+  [app atl materials-and-products]
+  (let [kw (some-> app (get-in [:query :filter])
+                   cljs.reader/read-string)
+        filter-pred (if kw
+                      (partial material-used-in-fgroup-fclass-or-ctype? kw)
+                      identity)]
+
+    [(some->> kw (asset-type-library/item-by-ident atl))
+     (into []
+           (comp
+            (filter filter-pred)
+            (map (partial remove-nonmatching-components kw)))
+           materials-and-products)]))
 
 (def relevant-road-cache
   "Atom to cache relevant roads by project."
@@ -604,3 +806,21 @@
                :query :asset/project-relevant-roads
                :args {:thk.project/id project-id}
                :result-event (partial ->FetchRelevantRoadsResponse project-id)})))))
+
+(defn- prepare-location
+  "Prepare location for saving."
+  [form-data]
+  (dissoc form-data :location/map-open? :location/geojson))
+
+(def location-form-keys [:location/start-point :location/end-point
+                         :location/road-nr :location/carriageway
+                         :location/start-km :location/end-km
+                         :location/geojson :location/single-point?])
+
+(def location-form-value
+  #(select-keys % location-form-keys))
+
+
+(defn location-form-change
+  [value]
+  (->UpdateForm value))

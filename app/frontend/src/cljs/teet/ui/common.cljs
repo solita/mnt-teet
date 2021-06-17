@@ -220,6 +220,20 @@
     :display :flex
     :align-items :center})
 
+(defn- contract-link-style
+  []
+  ^{:pseudo {:last-child {:margin-right 0}}}
+  {:margin-right "1rem"
+   :white-space :nowrap
+   :display :flex
+   :align-items :center
+   :font-size "0.875rem"})
+
+ (defn- contract-link-icon-style
+   []
+   {:margin-left "0.5rem"
+    :font-size "1rem"})
+
 (defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
@@ -243,6 +257,14 @@
           opts)
    label
    [icons/action-open-in-new {:class (<class vektorio-link-icon-style)}]])
+
+(defn external-contract-link
+  [opts label]
+  [Link (merge {:class (<class contract-link-style)
+                :target :_blank}
+               opts)
+   label
+   [icons/action-open-in-new {:class (<class contract-link-icon-style)}]])
 
 (defn estate-group-style
   []
@@ -428,11 +450,15 @@
   (.format number-formatter s))
 
 (defn info-row-item-style
-  [right-align-last?]
-  (with-meta {:margin-right "1rem"
-              :margin-bottom "1rem"}
-             (when right-align-last?
-               {:pseudo {:last-child {:margin-right 0 :margin-left "auto"}}})))
+  [right-align-last? font-size]
+  (with-meta (merge {:margin-right "1.5rem"
+                     :margin-bottom "1rem"}
+               (when (some? font-size)
+                 {:font-size font-size}))
+    (merge (when (some? font-size)
+      {:combinators {[:> :h6] {:font-size font-size}}})
+      (when right-align-last?
+        {:pseudo {:last-child {:margin-right 0 :margin-left "auto"}}}))))
 
 (defn basic-information-row
   "[[data-title data-value]...]"
@@ -445,10 +471,43 @@
            :when row]
         ^{:key (str (:key opts) "-" label)}
         [:div (merge row-options
-                     {:class [(<class info-row-item-style (:right-align-last? opts))
+                     {:class [(<class info-row-item-style (:right-align-last? opts) (:font-size opts))
                               (:class row-options)]})
          [typography/SectionHeading label]
          [:div data]]))]))
+
+(defn- basic-information-column-row-style
+  []
+  {:border-top (str "1px solid " theme-colors/gray-lighter)})
+
+(defn basic-information-column-cell-style
+  []
+  ^{:pseudo {:last-of-type {:padding "0.5rem 0 0.5rem 0.5rem"
+                            :border-right 0}}}
+  {:display :table-cell
+   :max-width "0px"
+   :word-break :break-word
+   :padding "0.5rem 0.5rem 0.5rem 0"
+   :border-right (str "1px solid " theme-colors/gray-lighter)})
+
+(defn info-box-icon-container-style
+  []
+  {:margin-right "0.25rem"
+   :display :flex})
+
+(defn basic-information-column
+  "Takes a list of maps with keys [:label :data :key] and displays given data in a table"
+  [rows]
+  [:table {:style {:border-collapse :collapse
+                   :width "100%"}}
+   [:tbody
+    (for [{:keys [label data] :as row} rows]
+      ^{:key (str (or (:key row) (:db/id row) (str label "+" data)))}
+      [:tr {:class (<class basic-information-column-row-style)}
+       [:td {:class (<class basic-information-column-cell-style)}
+        label]
+       [:td {:class (<class basic-information-column-cell-style)}
+        data]])]])
 
 (defn column-with-space-between [space-between & children]
   (let [cls (<class common-styles/padding-bottom space-between)]
@@ -471,8 +530,13 @@
                    {:data-cy cy}))
      [:div {:class [(<class common-styles/flex-align-center)
                     (<class common-styles/margin-bottom 0.5)]}
-      icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]
-     content]))
+      [:div {:class (<class info-box-icon-container-style)}
+       icon]
+      (if title
+        [typography/Heading3 title]
+        content)]
+     (when (and title content)
+       content)]))
 
 (defn popper-tooltip-content [{:keys [variant title body icon]
                         :or {variant :info}}]
@@ -492,36 +556,50 @@
        [typography/TextBold title]
        [typography/Text body]]]]))
 
+(defn popper-tooltip-container-style
+  []
+  {:display :block})
 
 (defn popper-tooltip
   "Wrap component in an error tooltip. When component is hovered, the
   error message is displayed.
 
   If msg is nil, the component is returned as is.
-  Otherwise msg must be a map containig :title and :body  for the error message."
-  [{:keys [title body variant icon] :as msg
-    :or {variant :error}} component]
+  Otherwise msg must be a map containing :title and :body  for the error message.
+  If `hidden?` is true, render the tooltip wrapper without content, to avoid problems when
+  adding/removing the wrapper dynamically.
+  Option `tabIndex` can be used stop the popup wrapper participating in sequential keyboard
+  navigation (default: 0)."
+  [{:keys [title body variant icon class hidden? tabIndex] :as msg
+    :or {variant :error tabIndex 0}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
                set-anchor-el! #(reset! anchor-el %)
                enter! #(reset! hover? true)
-               leave! #(reset! hover? false)]
+               leave! #(reset! hover? false)
+               container-class (if (nil? class)
+                                 (<class popper-tooltip-container-style)
+                                 class)]
     (if (nil? msg)
       component
       [:div {:on-mouse-enter enter!
              :on-mouse-leave leave!
              :on-click enter!
+             :on-focus enter!
+             :on-blur leave!
              :ref set-anchor-el!
-             :style {:display :inline-block}}
+             :tabIndex tabIndex
+             :class container-class}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
                 :open @hover?
                 :anchor-el @anchor-el
                 :placement "bottom-start"}
-        [popper-tooltip-content {:variant variant
-                                 :title title
-                                 :body body
-                                 :icon icon}]]])))
+        (when-not hidden?
+          [popper-tooltip-content {:variant variant
+                                   :title title
+                                   :body body
+                                   :icon icon}])]])))
 
 
 (defn portal
@@ -608,3 +686,43 @@
     [:div
      {:style {:padding-left "0.3em"}}
      [typography/Text (format/date value)]]]])
+
+(defn scroll-sensor [on-scroll]
+  (let [observer (js/IntersectionObserver.
+                  (fn [entries]
+                    (when (.-isIntersecting (aget entries 0))
+                      (on-scroll)))
+                  #js {:threshold #js [1]})]
+    (fn [_]
+      [:span {:ref #(when %
+                      (.observe observer %))}])))
+
+(defn tag-style
+  [bg-color]
+  {:color theme-colors/white
+   :display :inline-block
+   :background-color bg-color
+   :padding "1px 5px"
+   :border-radius "2px"})
+
+(defn primary-tag
+  [text]
+  [:div {:class (<class tag-style theme-colors/primary)}
+   [typography/Text3Bold text]])
+
+(defn error-boundary [_child]
+  (let [error (r/atom nil)]
+    (r/create-class
+     {:component-did-catch (fn [_ err info]
+                             (reset! error {:error err
+                                            :error-info info
+                                            :details-open? false}))
+      :reagent-render
+      (fn [child]
+        (if-let [err @error]
+          [:div
+           [:b "ERROR: " (:error err)]
+           [:a {:on-click (swap! error :details-open? not)} "details"]
+           [Collapse {:in (:details-open? err)}
+            [:div (pr-str (:error-info err))]]]
+          child))})))

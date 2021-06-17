@@ -1,6 +1,7 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.common.responsivity-styles :as responsivity-styles]
             [herb.core :refer [defglobal]]
             [garden.color :refer [darken]]
             [garden.stylesheet :refer [at-media]]
@@ -60,7 +61,7 @@
   {:font-family "Roboto"
    :font-style "normal"
    :font-weight "normal"
-   :color "#005AA3"})
+   :color theme-colors/primary})
 
 (def link-1
   (with-meta
@@ -170,6 +171,10 @@
    :padding-bottom "0.75rem"
    :margin-bottom  "0.5rem"
    :border-bottom  (str "1px solid " theme-colors/gray-light)})
+
+(defn gray-light-border-bottom
+  []
+  {:border-bottom  (str "1px solid " theme-colors/gray-light)})
 
 (defn top-info-spacing
   []
@@ -432,11 +437,14 @@
                   :bold
                   :normal)})
 
-(defn white-link-button-style
+(defn white-text
+  []
+  {:color theme-colors/white})
+
+(defn link-button-style
   []
   ^{:pseudo {:hover {:text-decoration :none}}}
-  {:color theme-colors/white
-   :display :flex
+  {:display :flex
    :text-decoration :underline
    :align-items :center})
 
@@ -472,8 +480,21 @@
   [amount]
   {:padding-bottom (str amount "rem")})
 
+(defn margin
+  ([val]
+   (margin val val))
+  ([vertical horizontal]
+   (margin vertical horizontal vertical horizontal))
+  ([up right down left]
+   {:margin-top (str up "rem")
+    :margin-right (str right "rem")
+    :margin-bottom (str down "rem")
+    :margin-left (str left "rem")}))
+
 (defn padding
   "Add padding. Amounts specified in rem unit."
+  ([all]
+   (padding all all))
   ([vertical horizontal]
    (padding vertical horizontal vertical horizontal))
   ([up right down left]
@@ -519,7 +540,7 @@
      :border-radius "3px"
      :line-height 1
      :background-color background
-     :padding "0.5rem"
+     :padding "0.5rem 0.7rem 0.5rem 0.5rem"
      :max-width "315px"}))
 
 (defn text-ellipsis [max-width]
@@ -535,6 +556,17 @@
   []
   {:display :flex
    :flex-direction :column
+   :flex 1})
+
+(defn flex-1
+  []
+  {:flex 1})
+
+(defn flex-1-align-center-justify-center
+  []
+  {:display :flex
+   :justify-content :center
+   :align-items :center
    :flex 1})
 
 (defn min-width-0
@@ -554,7 +586,8 @@
 
 (defn input-label-style
   [disabled? dark-theme?]
-  (merge {:display :block
+  (merge ^{:combinators {[:> :p] {:margin-bottom "0.25rem"}}}
+         {:display :block
           :color (if dark-theme?
                    theme-colors/white
                    theme-colors/black-coral)}
@@ -563,6 +596,26 @@
 
 (defn indent-rem [rems]
   {:padding-left (str rems "rem")})
+
+
+(defn content-start [& element-heights-above-content]
+  (let [appbar-height (if (responsivity-styles/mobile?)
+                        theme-spacing/appbar-height-mobile
+                        theme-spacing/appbar-height)]
+    (if (seq element-heights-above-content)
+      (str "calc(" appbar-height " + "
+           (str/join " + " element-heights-above-content)
+           ")")
+      appbar-height)))
+
+(defn content-height [& element-heights-above-content]
+  (let [appbar-height (if (responsivity-styles/mobile?)
+                        theme-spacing/appbar-height-mobile
+                        theme-spacing/appbar-height)]
+    (str "calc(100vh - " appbar-height
+         (when (seq element-heights-above-content)
+           (str " - " (str/join " - " element-heights-above-content)))
+         ")")))
 
 (defn content-scroll-max-height
   "Return style for scrollable content with max-height, calculates
@@ -573,3 +626,14 @@
    :max-height (str "calc(100vh - " theme-spacing/appbar-height " - "
                     (str/join " - " element-heights-above-content)
                     ")")})
+
+(defn rounded-border
+  ([]
+   (rounded-border "50%"))
+  ([border-radius]
+   (rounded-border border-radius theme-colors/black-coral))
+  ([border-radius color]
+   (rounded-border border-radius color "1px"))
+  ([border-radius color border-width]
+   {:border (str "solid " border-width " " color)
+    :border-radius border-radius}))

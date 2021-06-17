@@ -23,7 +23,7 @@ sen lisätä se itse ol3 karttaan (addLayer)")
     Extent on nykyisen kartan näkyvä koordinaattialue [x1 y1 x2 y2] vektorina."))
 
 ;; Wrapper raa'alle ol.layer tasolle joka toteuttaa Taso protokollan
-(defrecord OpenLayersTaso [layer]
+(defrecord OpenLayersTaso [layer on-update]
   Layer
   (set-z-index [this z-index]
     (.setZIndex layer z-index)
@@ -33,8 +33,26 @@ sen lisätä se itse ol3 karttaan (addLayer)")
   (opacity [this] 1)
   (selitteet [this] [])
   (paivita [this ol3 ol-layer aiempi-paivitystieto]
-    (.log js/console "PÄIVITÄ OPENLAYERS TASO")
-    (when (nil? aiempi-paivitystieto)
-      (.log js/console " -> LISÄTÄÄN LAYER")
-      (.addLayer ol3 layer))
+    (.log js/console "PÄIVITÄ OPENLAYERS TASO " this)
+    (cond
+      (nil? aiempi-paivitystieto)
+      (do (.log js/console " -> LISÄTÄÄN LAYER")
+          (.addLayer ol3 layer))
+
+      (not= ol-layer layer)
+      (do (js/console.log " -> VAIHDETAAN LAYER")
+          (.removeLayer ol3 ol-layer)
+          (.addLayer ol3 layer)))
+    (when on-update
+      (on-update ol3 layer))
     [layer :ok]))
+
+(defn ol-layer
+  "Create raw OpenLayers Layer that implements the Taso protocol.
+  Optionally takes an on-update fn that is called when the layer is
+  updated. The on-update takes 2 arguments: the ol3 map instance and
+  the layer instance."
+  ([layer]
+   (ol-layer layer nil))
+  ([layer on-update]
+   (->OpenLayersTaso layer on-update)))

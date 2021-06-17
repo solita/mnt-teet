@@ -1,57 +1,35 @@
 (ns teet.asset.cost-items-view
   "Cost items view"
-  (:require [teet.project.project-view :as project-view]
-            [teet.ui.typography :as typography]
-            [teet.localization :refer [tr tr-enum] :as localization]
-            [teet.ui.buttons :as buttons]
-            [reagent.core :as r]
-            [teet.ui.form :as form]
-            [teet.ui.select :as select]
-            [teet.asset.asset-library-view :as asset-library-view :refer [tr*]]
-            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
-            [teet.ui.text-field :as text-field]
-            [clojure.string :as str]
-            [teet.util.string :as string]
-            [teet.util.collection :as cu]
-            [teet.util.datomic :as du]
-            [teet.ui.context :as context]
-            [teet.ui.icons :as icons]
-            [teet.common.responsivity-styles :as responsivity-styles]
+  (:require [clojure.string :as str]
             [herb.core :refer [<class]]
-            [teet.ui.common :as common]
-            [teet.ui.container :as container]
-            [teet.asset.cost-items-controller :as cost-items-controller]
-            [teet.asset.asset-type-library :as asset-type-library]
+            [reagent.core :as r]
             [teet.asset.asset-model :as asset-model]
-            [teet.ui.url :as url]
+            [teet.asset.asset-type-library :as asset-type-library]
+            [teet.asset.asset-ui :as asset-ui
+             :refer [tr* label label-for select-fgroup-and-fclass]]
+            [teet.asset.cost-items-controller :as cost-items-controller]
+            [teet.asset.cost-items-map-view :as cost-items-map-view]
+            [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.localization :refer [tr] :as localization]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.map.openlayers.drag :as drag]
-            [teet.map.map-view :as map-view]
-            [teet.map.map-layers :as map-layers]
-            [teet.map.map-features :as map-features]
-            [teet.ui.table :as table]
-            [teet.user.user-model :as user-model]
-            [teet.ui.format :as fmt]
-            [teet.ui.panels :as panels]
-            [teet.ui.query :as query]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.container :as container]
+            [teet.ui.context :as context]
             [teet.ui.date-picker :as date-picker]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.project-context :as project-context]))
-
-(defn- label [m]
-  (let [l (tr* m)]
-    (if (str/blank? l)
-      (str (:db/ident m))
-      l)))
-
-(defn- label-for* [item rotl]
-  [:span (label (rotl item))])
-
-(defn- label-for [item]
-  [context/consume :rotl [label-for* item]])
+            [teet.ui.form :as form]
+            [teet.ui.format :as fmt]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Grid CircularProgress Link]]
+            [teet.ui.select :as select]
+            [teet.ui.text-field :as text-field]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]))
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -133,13 +111,14 @@
             ;; no validation otherwise
             nil)))))
 
-(defn- attribute-group [{ident :db/ident
+(defn- attribute-group [common-attr-idents
+                        {ident :db/ident
                          cost-grouping? :attribute/cost-grouping?}]
   (cond
     cost-grouping?
     :cost-grouping
 
-    (= "common" (namespace ident))
+    (common-attr-idents ident)
     :common
 
     :else
@@ -166,47 +145,9 @@
      (str (format value) (when unit (str "\u00a0" unit)))
      "\u2400")])
 
-(defn- road-nr-format [relevant-roads]
-  (let [road-nr->item-name (->> relevant-roads
-                                (map (juxt :road-nr
-                                           #(str (:road-nr %) " " (:road-name %))))
-                                (into {}))]
-    (fn [select-value]
-      (get road-nr->item-name
-           select-value
-           ""))))
-
-(defn- with-relevant-roads* [{e! :e!} _ {project-id :thk.project/id}]
-  (e! (cost-items-controller/->FetchRelevantRoads project-id))
-  (fn [_ component _]
-    (conj component
-          (get @cost-items-controller/relevant-road-cache project-id))))
-
-(defn- with-relevant-roads [opts component]
-  [project-context/consume
-   [with-relevant-roads* opts component]])
-
-(defn- relevant-road-select* [{:keys [empty-label] :as opts
-                               :or {empty-label ""}} relevant-roads]
-  (let [items (->> relevant-roads (map :road-nr) sort vec)]
-    [select/form-select
-     (-> opts
-         (merge {:show-empty-selection? true
-                 :empty-selection-label empty-label
-                 :items items
-                 :format-item (road-nr-format relevant-roads)})
-         (update :value
-                 #(if (string? %)
-                    (js/parseInt %)
-                    %)))]))
-
-(defn- relevant-road-select [opts]
-  [with-relevant-roads opts
-   [relevant-road-select* opts]])
-
-(defn- carriageway-for-road-select [opts selected-road-nr relevant-roads]
+(defn- carriageway-for-road-select* [opts selected-road-nr relevant-roads]
   [select/form-select
-   (merge opts
+   (merge (asset-ui/number-value opts)
           {:show-empty-selection? true
            :items (or (cost-items-controller/carriageways-for-road
                        selected-road-nr
@@ -214,111 +155,102 @@
                       [1])
            :format-item str})])
 
-(defn- location-entry [e! locked? selected-road-nr]
+(defn- carriageway-for-road-select [opts selected-road-nr]
+  [asset-ui/with-relevant-roads
+   opts
+   [carriageway-for-road-select* opts selected-road-nr]])
+
+(defn- location-entry [e! locked? selected-road-nr single-point?]
   (let [input-textfield (if locked? display-input text-field/TextField)]
     [:<>
      [Grid {:item true
-            :md 5
+            :md 4}]
+     [Grid {:item true
+            :md (if single-point? 8 4)
+            :xs 12
+            :style {:padding "0.2rem"}}
+      [form/field {:attribute :location/start-point
+                   :required? true}
+       [input-textfield {}]]]
+
+     (when-not single-point?
+       [Grid {:item true
+              :md 4
+              :xs 12
+              :style {:padding "0.2rem"}}
+        [form/field {:attribute :location/end-point
+                     :required? true}
+         [input-textfield {}]]])
+
+     [Grid {:item true
+            :md 3
             :xs 12
             :style {:padding "0.2rem"}}
       [form/field :location/road-nr
-       [relevant-road-select {:e! e!}]]]
+       (if locked?
+         [input-textfield {}]
+         [asset-ui/relevant-road-select {:e! e!}])]]
 
      [Grid {:item true
-            :container true
-            :md 7
+            :md 1
             :xs 12
             :style {:padding "0.2rem"}}
-      [Grid {:item true
-             :md 2
-             :xs 12}
-       [form/field :location/carriageway
-        [with-relevant-roads
-         {:e! e!}
-         [carriageway-for-road-select {} selected-road-nr]]]]]
+      [form/field :location/carriageway
+       (if locked?
+         [input-textfield {}]
+         [carriageway-for-road-select {:e! e!} selected-road-nr])]]
 
      [Grid {:item true
-            :md 3
+            :md (if single-point? 4 2)
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/start-point
-       [input-textfield {}]]]
+      [form/field {:attribute :location/start-km
+                   :required? true}
+       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
 
      [Grid {:item true
-            :md 3
+            :md (if single-point? 4 2)
             :xs 12
             :style {:padding "0.2rem"}}
-      [form/field :location/start-m
-       [input-textfield {:type :number}]]]
+      [form/field :location/start-offset-m
+       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
 
-     [Grid {:item true
-            :md 3
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/end-point
-       [input-textfield {}]]]
 
-     [Grid {:item true
-            :md 3
-            :xs 12
-            :style {:padding "0.2rem"}}
-      [form/field :location/end-m
-       [input-textfield {:type :number}]]]]))
+     (when-not single-point?
+       [Grid {:item true
+              :md 2
+              :xs 12
+              :style {:padding "0.2rem"}}
+        [form/field :location/end-km
+         [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]])
 
-(defn- location-map [{:keys [e! value on-change]}]
-  (r/with-let [current-value (atom value)
-               dragging? (atom false)]
-    ;;(project-map-view/create-project-map e! app project)
-    (let [geojson (last value)]
-      (reset! current-value value)
-      [map-view/map-view e!
-       {:on-click (fn [{c :coordinate}]
-                    (let [[start end :as v] @current-value]
-                      (cond
-                        ;; If no start point, set it
-                        (nil? start) (on-change (assoc v 0 c))
+     (when-not single-point?
+       [Grid {:item true
+              :md 2
+              :xs 12
+              :style {:padding "0.2rem"}}
+        [form/field :location/end-offset-m
+         [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
-                        ;; If no end point, set it
-                        (nil? end) (on-change (assoc v 1 c))
+     (when-not locked?
+       [Grid {:item true
+              :md 12 :xs 12}
+        [form/field :location/single-point?
+         [select/checkbox {}]]])]))
 
-                        ;; Otherwise do nothing
-                        :else nil)))
-        :event-handlers (drag/drag-feature
-                         {:accept (comp :map/feature :geometry)
-                          :on-drag drag/on-drag-set-coordinates
-                          :on-drop
-                          (fn [target to]
-                            (when-let [p (some-> target :geometry :map/feature
-                                                 .getProperties (aget "start/end"))]
-                              (on-change
-                               (assoc @current-value
-                                      (case p
-                                        "start" 0
-                                        "end" 1)
-                                      to))))
-                          :dragging? dragging?})
-        :layers {:selected-road-geometry
-                 (when-let [g geojson]
-                   (map-layers/geojson-data-layer
-                    "selected-road-geometry"
-                    geojson
-                    map-features/asset-road-line-style
-                    {:fit-on-load? true
-                     :fit-condition
-                     (fn [_]
-                       (not @dragging?))}))}}])))
-
-(defn- attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
-                            common? ctype]}
+(defn attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
+                            common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
-    (let [common-attrs (:attribute/_parent (:ctype/common rotl))
-          attrs-groups (->> (concat (when common? common-attrs) attributes)
-                            (group-by attribute-group)
+    (let [common-attrs (some-> common rotl :attribute/_parent)
+          common-attr-idents (into #{} (map :db/ident) common-attrs)
+          attrs-groups (->> (concat common-attrs attributes)
+                            (group-by (partial attribute-group common-attr-idents))
                             (cu/map-vals
                              (partial sort-by (juxt (complement :attribute/mandatory?)
-                                                    label))))]
+                                                    label))))
+          map-open? (:location/map-open? cost-item-data)]
       [:<>
        ;; Show location group if not inherited from parent
        (when (not inherits-location?)
@@ -327,23 +259,19 @@
            :on-toggle (r/partial toggle-open! :location)}
           [:<>
            (tr [:asset :field-group :location])
-           [buttons/button-text {:style {:float :right}
-                                 :on-click (r/partial toggle-open! :map)}
-            (if (@open? :map)
+           [buttons/button-text
+            {:style {:float :right}
+             :on-click (e! cost-items-controller/->UpdateForm
+                           {:location/map-open? (not map-open?)})}
+            (if map-open?
               (tr [:asset :location :hide-map])
               (tr [:asset :location :show-map]))]]
           [Grid {:container true
                  :justify :flex-start
                  :alignItems :flex-end}
-           (when (@open? :map)
-             [Grid {:item true :xs 12 :md 12}
-              [form/field {:attribute [:location/start-point :location/end-point
-                                       :location/road-nr :location/carriageway
-                                       :location/start-m :location/end-m
-                                       :location/geojson]}
-
-               [location-map {:e! e!}]]])
-           [location-entry e! locked? (:location/road-nr cost-item-data)]]])
+           [location-entry e! locked?
+            (:location/road-nr cost-item-data)
+            (:location/single-point? cost-item-data)]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -362,7 +290,7 @@
                     :attribute/keys [mandatory?]
                     :asset-schema/keys [unit] :as attr} attrs
                    :let [type (:db/ident valueType)
-                         unit (if (= ident :common/quantity)
+                         unit (if (= ident :component/quantity)
                                 (:component/quantity-unit ctype)
                                 unit)]]
                ^{:key (str ident)}
@@ -389,13 +317,17 @@
                        :label (label attr)
                        :show-empty-selection? true
                        :items (mapv :db/ident (:enum/_attribute attr))
-                       :format-item (comp label rotl)}])
+                       :format-item (comp label rotl)
+                       ;; Show error message as tooltip instead of adding a span, so that input
+                       ;; elements in the grid will stay aligned.
+                       :error-tooltip? true}])
 
                    (= type :db.type/instant)
                    (if locked?
                      [display-input {:label (label attr)
                                      :format fmt/date}]
-                     [date-picker/date-input {:label (label attr)}])
+                     [date-picker/date-input {:label (label attr)
+                                              :error-tooltip? true}])
 
                    ;; Text field
                    :else
@@ -406,19 +338,20 @@
                       {:label (label attr)
                        :read-only? locked?
                        :end-icon (when unit
-                                   (text-field/unit-end-icon unit))}]))]]))]]))])))
+                                   (text-field/unit-end-icon unit))
+                       :error-tooltip? true}]))]]))]]))])))
 
 (defn- attributes
   "Render grid of attributes."
   [opts]
   [context/consume-many [:rotl :locked?] [attributes* opts]])
 
-(defn- add-component-menu* [allowed-components add-component! locked?]
+(defn- add-component-menu* [menu-label allowed-components add-component! locked?]
   (when-not locked?
     [:<>
      (if (> (count allowed-components) 3)
        [common/context-menu
-        {:label (tr [:asset :add-component])
+        {:label menu-label
          :icon [icons/content-add-circle-outline]
          :items (for [c allowed-components]
                   {:label (label c)
@@ -433,60 +366,13 @@
                                       :start-icon (r/as-element [icons/content-add])}
             (label c)]])))]))
 
-(defn- add-component-menu [allowed-components add-component!]
+(defn- add-component-menu [menu-label allowed-components add-component!]
   [context/consume :locked?
-   [add-component-menu* allowed-components add-component!]])
+   [add-component-menu* menu-label allowed-components add-component!]])
 
-(defn- format-fg-and-fc [[fg fc]]
-  (if (and (nil? fg)
-           (nil? fc))
-    ""
-    (str (label fg) " / " (label fc))))
 
-(defn group-and-class-selection [{:keys [e! on-change value atl read-only?]}]
-  (let [[fg-ident fc-ident] value
-        fg (if fg-ident
-             (asset-type-library/item-by-ident atl fg-ident)
-             (when fc-ident
-               (asset-type-library/fgroup-for-fclass atl fc-ident)))
-        fc (and fc-ident (asset-type-library/item-by-ident atl fc-ident))
-        fgroups (:fgroups atl)]
-    (if read-only?
-      [typography/Heading3 (format-fg-and-fc [fg fc])]
-      [Grid {:container true}
-       [Grid {:item true :xs 12 :class (<class responsivity-styles/visible-desktop-only)}
-        [select/select-search
-         {:e! e!
-          :on-change #(on-change (mapv :db/ident %))
-          :placeholder (tr [:asset :feature-group-and-class-placeholder])
-          :no-results (tr [:asset :no-matching-feature-classes])
-          :value (when fc [fg fc])
-          :format-result format-fg-and-fc
-          :show-empty-selection? true
-          :query (fn [text]
-                   #(vec
-                     (for [fg fgroups
-                           fc (:fclass/_fgroup fg)
-                           :let [result [fg fc]]
-                           :when (string/contains-words? (format-fg-and-fc result) text)]
-                       result)))}]]
 
-       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
-        [select/select-with-action
-         {:show-empty-selection? true
-          :items fgroups
-          :format-item tr*
-          :value fg
-          :on-change #(on-change [(:db/ident %) nil])}]]
 
-       [Grid {:item true :xs 6 :class (<class responsivity-styles/visible-mobile-only)}
-        (when-let [{fclasses :fclass/_fgroup} fg]
-          [select/select-with-action
-           {:show-empty-selection? true
-            :items fclasses
-            :format-item tr*
-            :value fc
-            :on-change #(on-change [fg-ident (:db/ident %)])}])]])))
 
 (defn- component-tree-level-indent [level]
   [:<>
@@ -501,7 +387,8 @@
                     {:margin-left "-0.9rem"}))}])))])
 
 (defn- component-rows [{:keys [e! level components locked?
-                               delete-component!]}]
+                               delete-fn children-label-fn
+                               link-fn]}]
   (when (seq components)
     [:<>
      (doall
@@ -512,9 +399,11 @@
           [:div {:class (<class common-styles/flex-table-column-style
                                 40 :flex-start 1 nil)}
            [component-tree-level-indent level]
-           [url/Link {:page :cost-item
-                      :params {:id (:asset/oid c)}}
-            (:asset/oid c)]]
+           [url/Link (if link-fn
+                       (link-fn (:asset/oid c))
+                       {:page :cost-item
+                        :params {:id (:asset/oid c)}})
+            (children-label-fn c)]]
           [:div {:class (<class common-styles/flex-table-column-style
                                 35 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
@@ -526,27 +415,60 @@
               [buttons/delete-button-with-confirm
                {:small? true
                 :icon-position :start
-                :action (r/partial delete-component! (:db/id c))}
+                :action (r/partial delete-fn (:db/id c))}
                (tr [:buttons :delete])]])]]
          [component-rows {:e! e!
                           :locked? locked?
                           :components (:component/components c)
-                          :level (inc (or level 0))}]]))]))
+                          :children-label-fn children-label-fn
+                          :delete-fn delete-fn
+                          :level (inc (or level 0))
+                          :link-fn link-fn}]]))]))
 
-(defn- components-tree*
+(defn- children-tree*
   "Show listing of all components (and their subcomponents recursively) for the asset."
-  [{:keys [e! asset]} locked?]
+  [{:keys [e! parent label-fn children-fn children-label-fn delete-fn
+           link-fn]} locked?]
   [:<>
-   [typography/Heading3 (tr [:asset :components :label])
-    (str " (" (cu/count-matching-deep :component/ctype (:asset/components asset)) ")")]
+   [typography/Heading3 (label-fn parent)]
    [component-rows {:e! e!
                     :locked? locked?
-                    :components (:asset/components asset)
-                    :delete-component! (e! cost-items-controller/->DeleteComponent)}]])
+                    :components (children-fn parent)
+                    :children-label-fn children-label-fn
+                    :delete-fn delete-fn
+                    :link-fn link-fn}]])
 
-(defn- components-tree [opts]
+(defn components-tree
+  "Relevant options:
+   - label-fn takes the asset, produces
+   - delete-fn when called with db/id deletes the said entity
+   - link-fn  fn from OID to link description map (including :page and :params)"
+  [asset {:keys [e!] :as opts}]
   [context/consume :locked?
-   [components-tree* opts]])
+   [children-tree* (assoc opts
+                          :parent asset
+                          :label-fn #(str (tr [:asset :components :label])
+                                          " ("
+                                          (cu/count-matching-deep :component/ctype
+                                                                  (:asset/components %))
+                                          ")")
+                          :children-label-fn :asset/oid
+                          :children-fn #(or (not-empty (:asset/components %))
+                                            (not-empty (:component/components %)))
+                          :delete-fn (e! cost-items-controller/->DeleteComponent))]])
+
+(defn- material-label [atl m]
+  (->> m :material/type (asset-type-library/item-by-ident atl) tr*))
+
+(defn materials-list
+  [component {:keys [e! atl] :as opts}]
+  [context/consume :locked?
+   [children-tree* (assoc opts
+                          :parent component
+                          :label-fn (constantly (tr [:asset :materials :label]))
+                          :children-fn :component/materials
+                          :children-label-fn #(str (:asset/oid %) " " (material-label atl %))
+                          :delete-fn (e! cost-items-controller/->DeleteMaterial))]])
 
 (defn- form-paper
   "Wrap the form input portion in a light gray paper."
@@ -557,16 +479,15 @@
    component])
 
 (defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
-  (r/with-let [initial-data form-data
-               new? (nil? form-data)
+  (r/with-let [initial-data form-data]
+    (let [new? (nil? (:asset/oid form-data))
+          cancel-event (if new?
+                         #(common-controller/->NavigateWithSameParams :cost-items)
 
-               cancel-event (if new?
-                              #(common-controller/->SetQueryParam :id nil)
-
-                              ;; Update with initial data to cancel
-                              (r/partial
-                               cost-items-controller/->UpdateForm initial-data))]
-    (let [feature-class (when fclass
+                         ;; Update with initial data to cancel
+                         (r/partial
+                          cost-items-controller/->UpdateForm initial-data))
+          feature-class (when fclass
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
        (when-let [oid (:asset/oid form-data)]
@@ -580,7 +501,7 @@
          :disable-buttons? (= initial-data form-data)}
 
         [form/field {:attribute [:fgroup :asset/fclass]}
-         [group-and-class-selection
+         [select-fgroup-and-fclass
           {:e! e!
            :atl atl
            :read-only? (seq (dissoc form-data :asset/fclass :fgroup :db/id))}]]
@@ -591,8 +512,7 @@
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
                         :cost-item-data form-data
-                        ;; TODO: cost-item-data here as well
-                        :common? false
+                        :common :ctype/feature
                         :inherits-location? false
                         :relevant-roads relevant-roads}]])
 
@@ -601,20 +521,21 @@
        ;; Components (show only for existing)
        (when initial-data
          [:<>
-          [components-tree {:e! e!
-                            :asset form-data
-                            :allowed-components (:ctype/_parent feature-class)}]
+          [components-tree  form-data
+                            {:e! e!}]
 
           [add-component-menu
-           (asset-type-library/allowed-component-types atl fclass)
+           (tr [:asset :add-component])
+           (into []
+                 (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
-(defn- component-form-navigation [atl [asset :as component-path]]
+(defn- component-form-navigation [atl component-path]
   [:<>
    [breadcrumbs/breadcrumbs
     (for [p component-path]
       {:link [url/Link {:page :cost-item
-                        :params {:id (:asset/oid asset)}}
+                        :params {:id (:asset/oid p)}}
               (:asset/oid p)]
        :title (if (number? (:db/id p))
                 (:asset/oid p)
@@ -627,7 +548,8 @@
                                       atl
                                       (:asset/fclass (first component-path))))]
                          (map #(or (:asset/fclass %)
-                                   (:component/ctype %)))
+                                   (:component/ctype %)
+                                   (:material/type %)))
                          component-path)]
              [label-for p])
            (repeat " / "))))])
@@ -668,21 +590,46 @@
                        :inherits-location? (:component/inherits-location? ctype)
                        :component-oid component-oid
                        :cost-item-data cost-item-data
-                       :common? true
+                       :common :ctype/component
                        :ctype ctype}]]]
+
+        (when (:component/materials component-data)
+          [materials-list component-data {:e! e! :atl atl}])
+
+        (when (not new?)
+          ;; The component can either have
+          ;; - subcomponents or
+          ;; - materials
+          ;; That is, only leaf components can have materials
+          (let [allowed-components (not-empty (asset-type-library/allowed-component-types atl ctype))
+                can-have-subcomponents? (boolean allowed-components)]
+            [:div
+             (when can-have-subcomponents?
+               [components-tree component-data {:e! e!}])
+             (when can-have-subcomponents?
+               [add-component-menu
+                (tr [:asset :add-component])
+                allowed-components
+                (e! cost-items-controller/->AddComponent)])
+             ;; A leaf component can only have a single material of
+             ;; each allowed material type. For example, only one
+             ;; material of type Asphalt is allowed.
+             (let [added-materials (into #{} (map :material/type) (:component/materials component-data))
+                   allowed-materials
+                   (remove (comp added-materials :db/ident)
+                           (asset-type-library/allowed-material-types atl ctype))]
+               (when (seq allowed-materials)
+                 [add-component-menu
+                  (tr [:asset :add-material])
+                  allowed-materials
+                  (e! cost-items-controller/->AddMaterial)]))]))
 
         [:div {:class (<class common-styles/flex-row-space-between)
                :style {:align-items :center}}
          [url/Link {:page :cost-item
                     :params {:id (:asset/oid cost-item-data)}}
           (tr [:asset :back-to-cost-item] {:name (:common/name cost-item-data)})]
-         [form/footer2]]]
-
-       (when (not new?)
-         (let [allowed-components (asset-type-library/allowed-component-types atl ctype)]
-           (when (seq allowed-components)
-             [add-component-menu allowed-components
-              (e! cost-items-controller/->AddComponent)])))])))
+         [form/footer2]]]])))
 
 (defn component-form
   [e! atl component-oid cost-item-data]
@@ -692,6 +639,60 @@
   (if (nil? (asset-model/find-component-path cost-item-data component-oid))
     [CircularProgress]
     [component-form* e! atl component-oid cost-item-data]))
+
+
+(defn- material-form* [e! atl material-oid cost-item-data]
+  (r/with-let [initial-material-data
+               (last (asset-model/find-component-path cost-item-data
+                                                      material-oid))
+               new? (string? (:db/id initial-material-data))
+               material-type (asset-type-library/item-by-ident
+                              atl
+                              (:material/type initial-material-data))
+               cancel-event (if new?
+                              #(common-controller/->SetQueryParam :material nil)
+                              #(cost-items-controller/->ResetMaterialForm initial-material-data))]
+    (let [material-path (asset-model/find-component-path cost-item-data material-oid)
+          material-data (last material-path)]
+      [:<>
+       (when (asset-model/material-oid? material-oid)
+         [typography/Heading2 material-oid])
+       [component-form-navigation atl material-path]
+
+       [form/form2
+        {:e! e!
+         :on-change-event cost-items-controller/->UpdateMaterialForm
+         :value material-data
+         :save-event cost-items-controller/->SaveMaterial
+         :cancel-event cancel-event
+         :disable-buttons? (= material-data initial-material-data)}
+
+        ;; Attributes for material
+        [form-paper
+         [:<>
+          (label material-type)
+          [attributes {:e! e!
+                       :attributes (some-> material-type :attribute/_parent)
+                       :inherits-location? true
+                       :material-oid material-oid
+                       :cost-item-data cost-item-data
+                       :common :ctype/material
+                       :material-type material-type}]]]
+
+        [:div {:class (<class common-styles/flex-row-space-between)
+               :style {:align-items :center}}
+         [url/Link {:page :cost-item
+                    :params {:id (:asset/oid cost-item-data)}}
+          (tr [:asset :back-to-cost-item] {:name (or (:common/name cost-item-data)
+                                                     (:asset/oid cost-item-data))})]
+         [form/footer2]]]])))
+
+(defn material-form
+  [e! atl material-oid cost-item-data]
+  (if (nil? (asset-model/find-component-path cost-item-data material-oid))
+    [CircularProgress]
+    [material-form* e! atl material-oid cost-item-data]))
+
 
 (defn- add-cost-item [app version]
   (when-not (asset-model/locked? version)
@@ -704,447 +705,68 @@
                                               [icons/content-add])}
        (tr [:asset :add-cost-item])])))
 
-(defn- cost-item-hierarchy
-  "Show hierarchy of existing cost items, grouped by fgroup and fclass."
-  [{:keys [e! app cost-items fgroup-link-fn fclass-link-fn list-features?]
-    :or {list-features? true}}]
-  (r/with-let [open (r/atom #{})
-               toggle-open! #(swap! open cu/toggle %)]
-    [:div.cost-items-by-fgroup
-     (doall
-      (for [[{ident :db/ident :as fgroup} fclasses] cost-items
-            :let [label (str (tr* fgroup)
-                             " (" (apply + (map (comp count val) fclasses)) ")")]]
-        ^{:key (str ident)}
-        [container/collapsible-container
-         {:on-toggle (r/partial toggle-open! ident)
-          :open? (contains? @open ident)}
-         (if fgroup-link-fn
-           [Link {:href (fgroup-link-fn fgroup)} label]
-           label)
-         [:div.cost-items-by-fclass {:data-fgroup (str ident)
-                                     :style {:margin-left "0.5rem"}}
-          (doall
-           (for [[{ident :db/ident :as fclass} cost-items] fclasses
-                 :let [label (str/upper-case (tr* fclass))]]
-             ^{:key (str ident)}
-             [:div {:style {:margin-top "1rem"
-                            :margin-left "1rem"}}
-              [typography/Text2Bold
-               (if fclass-link-fn
-                 [Link {:href (fclass-link-fn fclass)} label]
-                 label)]
-              (when list-features?
-                [:div.cost-items {:style {:margin-left "1rem"}}
-                 (for [{oid :asset/oid} cost-items]
-                   ^{:key oid}
-                   [:div
-                    [url/Link {:page :cost-item
-                               :params {:id oid}} oid]])])]))]]))]))
-
-(defn- cost-items-navigation [e! {:keys [page params]}]
-  [:div {:class (<class common-styles/padding 1 1)}
-   [select/form-select
-    {:on-change #(e! (common-controller/->Navigate % params nil))
-     :items [:cost-items :cost-items-totals]
-     :value page
-     :format-item #(tr [:asset :page %])}]])
-
-(defn- save-boq-version-dialog [{:keys [e! on-close]}]
-  (r/with-let [form-state (r/atom {})
-               form-change (form/update-atom-event form-state merge)
-               save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
-    [panels/modal {:title (tr [:asset :save-boq-version])
-                   :on-close on-close}
-
-     [form/form {:e! e!
-                 :value @form-state
-                 :on-change-event form-change
-                 :save-event save-event
-                 :cancel-event (form/callback-event on-close)}
-      ^{:attribute :boq-version/type
-        :required? true}
-      [select/select-enum {:e! e!
-                           :attribute :boq-version/type
-                           :database :asset}]
-
-      ^{:attribute :boq-version/explanation
-        :required? true
-        :validate (fn [v]
-                    (when (> (count v) 2000)
-                      (tr [:asset :validate :max-length] {:max-length 2000})))}
-      [text-field/TextField {:multiline true
-                             :rows 4}]]]))
-
-(defn- unlock-for-edits-dialog [{:keys [e! on-close version]}]
-  [panels/modal {:title (tr [:asset :unlock-for-edits])
-                 :on-close on-close}
-   [:<>
-    (when-let [warn (condp du/enum= (:boq-version/type version)
-                      :boq-version.type/tender
-                      (tr [:asset :unlock-tender-boq-warning])
-
-                      :boq-version.type/contract
-                      (tr [:asset :unlock-contract-boq-warning])
-
-                      nil)]
-      [common/info-box {:variant :warning
-                        :content warn}])
-    [:div {:class (<class common-styles/flex-row-space-between)}
-     [buttons/button-secondary {:on-click on-close}
-      (tr [:buttons :cancel])]
-     [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
-      (tr [:asset :confirm-unlock-for-edits])]]]])
-
-(defn- boq-version-statusline [e! {:keys [latest-change version]}]
-  (r/with-let [dialog (r/atom nil)
-               set-dialog! #(reset! dialog %)]
-    (let [{:keys [user timestamp] :as chg} latest-change
-          locked? (asset-model/locked? version)
-          action (if locked?
-                   :asset/unlock-for-edits
-                   :asset/lock-version)]
-      [:div {:class (<class common-styles/flex-row)
-             :style {:background-color theme-colors/gray-lightest
-                     :width "100%"}}
-
-       (cond
-         (asset-model/locked? version)
-         [:<>
-          (tr-enum (:boq-version/type version))
-          " v." (:boq-version/number version)]
-         chg
-         [:<>
-          [:b (tr [:common :last-modified]) ": "]
-          (fmt/date-time timestamp)])
-
-       (when chg
-         [common/popper-tooltip
-          {:title (tr [:common :last-modified])
-           :variant :info
-           :body [:<>
-                  [:div (fmt/date-time timestamp)]
-                  [:div (user-model/user-name user)]]}
-          [icons/alert-error-outline]])
-
-       ;; Save or unlock button
-       [when-authorized action nil
-        [buttons/button-secondary
-         {:disabled (some? @dialog)
-          :size :small
-          :on-click (r/partial set-dialog! action)}
-         (tr [:asset (case action
-                       :asset/unlock-for-edits :unlock-for-edits
-                       :asset/lock-version :save-boq-version)])]]
-
-       (when-let [dialog @dialog]
-         (case dialog
-           :asset/unlock-for-edits
-           [unlock-for-edits-dialog {:e! e!
-                                     :on-close (r/partial set-dialog! nil)
-                                     :version version}]
-
-           :asset/lock-version
-           [save-boq-version-dialog
-            {:e! e!
-             :on-close (r/partial set-dialog! nil)}]))])))
-
-(defn- export-boq-form [e! on-close project versions]
-  (r/with-let [export-options
-               (r/atom {:thk.project/id project
-                        :boq-export/unit-prices? true
-                        :boq-export/version (first versions)})
-               change-event (form/update-atom-event export-options merge)
-               format-version (fn [{:boq-version/keys [type number] :as v}]
-                                (if-not v
-                                  (tr [:asset :unofficial-version])
-                                  (str (tr-enum type) " v" number)))]
-    [:<>
-     [form/form {:e! e!
-                 :value @export-options
-                 :on-change-event change-event}
-      ^{:attribute :boq-export/unit-prices?}
-      [select/checkbox {}]
-
-      ^{:attribute :boq-export/version}
-      [select/form-select
-       {:items (into [nil] versions)
-        :format-item format-version}]]
-
-     [:div {:class (<class common-styles/flex-row-space-between)}
-      [buttons/button-secondary {:on-click on-close}
-       (tr [:buttons :cancel])]
-      [buttons/button-primary
-       {:element :a
-        :target :_blank
-        :href (common-controller/query-url
-               :asset/export-boq
-               (cu/without-nils
-                (merge
-                 {:boq-export/language @localization/selected-language}
-                 (update @export-options
-                         :boq-export/version :db/id))))}
-       (tr [:asset :export-boq])]]]))
-
-(defn- export-boq-dialog [e! app close-export-dialog!]
-  [panels/modal {:title (tr [:asset :export-boq])
-                 :on-close close-export-dialog!}
-   [query/query
-    {:e! e!
-     :query :asset/version-history
-     :args {:thk.project/id (get-in app [:params :project])}
-     :simple-view [export-boq-form e! close-export-dialog!
-                   (get-in app [:params :project])]}]])
-
-(defn cost-items-page-structure
-  [{:keys [e! app state left-panel-action hierarchy]} main-content]
-  (r/with-let [export-dialog-open? (r/atom false)
-               open-export-dialog! #(reset! export-dialog-open? true)
-               close-export-dialog! #(reset! export-dialog-open? false)]
-    [:<>
-     (when @export-dialog-open?
-       [export-boq-dialog e! app close-export-dialog!])
-
-     (let [{:keys [asset-type-library]} app
-           {:keys [cost-items project version] :as page-state} state]
-       [context/provide :rotl (asset-type-library/rotl-map asset-type-library)
-        [context/provide :locked? (asset-model/locked? version)
-         [project-view/project-full-page-structure
-          {:e! e!
-           :app app
-           :project project
-           :export-menu-items
-           [{:id "export-boq"
-             :label (tr [:asset :export-boq])
-             :icon [icons/file-download]
-             :on-click open-export-dialog!}]
-           :left-panel
-           [:div {:style {:overflow-y :scroll}}
-            [cost-items-navigation e! app]
-            left-panel-action
-            [cost-item-hierarchy
-             (merge hierarchy
-                    {:e! e!
-                     :app app
-                     :add? (= :new-cost-item (:page app))
-                     :project project
-                     :cost-items cost-items})]]
-           :main
-           [:<>
-            [boq-version-statusline e! page-state]
-            main-content]}]]])]))
-
-(defn- format-properties [atl properties]
-  (into [:<>]
-        (map (fn [[k v u]]
-               [:div
-                [typography/BoldGrayText k ": "]
-                v
-                (when u
-                  (str "\u00a0" u))]))
-        (asset-type-library/format-properties @localization/selected-language
-                                              atl properties)))
-
-(defn format-euro [val]
-  (when val
-    (str val "\u00A0€")))
-
-(defn cost-group-unit-price [e! value row]
-  (r/with-let [initial-value value
-               price (r/atom initial-value)
-               change! #(reset! price (-> % .-target .-value))
-               saving? (r/atom false)
-               save! (fn [row]
-                       (when (not= initial-value @price)
-                         (reset! saving? true)
-                         (e! (cost-items-controller/->SaveCostGroupPrice row @price))))
-               save-on-enter! (fn [row e]
-                                (when (= "Enter" (.-key e))
-                                  (save! row)))]
-    (when (not= value initial-value)
-      (reset! saving? false))
-    [:div {:class (<class common-styles/flex-row)
-           :style {:justify-content :flex-end
-                   ;; to have same padding as header for alignment
-                   :padding-right "16px"}}
-     [text-field/TextField {:input-style {:text-align :right
-                                          :width "8rem"}
-                            :value @price
-                            :on-change change!
-                            :on-key-down (r/partial save-on-enter! row)
-                            :on-blur (r/partial save! row)
-                            :disabled @saving?
-                            :end-icon [text-field/euro-end-icon]}]]))
-
-(defn- table-section-header [e! listing-opts closed-set {ident :db/ident :as header-type} subtotal]
-  [table/listing-table-body-component listing-opts
-   [container/collapsible-container-heading
-    {:container-class [(<class common-styles/flex-row)
-                       (when (= "fclass" (namespace ident))
-                         (<class common-styles/indent-rem 1))]
-     :open? (not (closed-set ident))
-     :on-toggle (e! cost-items-controller/->ToggleOpenTotals ident)}
-    [:<>
-     [url/Link {:page :cost-items-totals
-                :query {:filter (str ident)}}
-      (label header-type)]
-     [:div {:style {:float :right :font-weight 700
-                    :font-size "80%"}} subtotal]]]])
-
-
-(defn- format-cost-table-column [{:keys [e! atl locked?]} column value row]
-  (case column
-    :type (label (asset-type-library/item-by-ident atl value))
-    :common/status (label (asset-type-library/item-by-ident
-                           atl (:db/ident value)))
-    :properties (format-properties atl row)
-    :quantity (str value
-                   (when-let [qu (:quantity-unit row)]
-                     (str " " qu)))
-    :cost-per-quantity-unit (if locked?
-                              (format-euro value)
-                              [cost-group-unit-price e! value row])
-    :total-cost (format-euro value)
-    (str value)))
-
-(defn- filter-breadcrumbs [atl filter-fg-or-fc]
-  (when-let [hierarchy (some->> filter-fg-or-fc
-                                (asset-type-library/type-hierarchy atl))]
-    [breadcrumbs/breadcrumbs
-     (into
-      [{:link [url/Link {:page :cost-items-totals :query {:filter nil}}
-               (tr [:asset :totals-table :all-components])]
-        :title (tr [:asset :totals-table :all-components])}]
-      (for [h hierarchy
-            :let [title (label h)]]
-        {:link [url/Link {:page :cost-items-totals
-                          :query {:filter (str (:db/ident h))}}
-                title]
-         :title title}))]))
-
-(defn- wrap-atl-loader [page-fn e! {atl :asset-type-library :as app} state]
-  (if-not atl
-    [CircularProgress {}]
-    [page-fn e! app state]))
-
-(defn- cost-items-totals-page*
-  [e! {atl :asset-type-library :as app}
-   {totals :cost-totals version :version
-    closed-totals :closed-totals
-    :or {closed-totals #{}}
-    :as state}]
-  (r/with-let [listing-state (table/listing-table-state)]
-    (let [locked? (asset-model/locked? version)
-          listing-opts {:columns asset-model/cost-totals-table-columns
-                        :column-align asset-model/cost-totals-table-align
-                        :column-label-fn #(if (= % :common/status)
-                                            (label (asset-type-library/item-by-ident atl %))
-                                            (tr [:asset :totals-table %]))
-                        :format-column (r/partial format-cost-table-column
-                                                  {:e! e! :atl atl :locked? locked?})}
-
-          [filter-fg-or-fc filtered-cost-groups]
-          (->> totals :cost-groups
-               (cost-items-controller/filtered-cost-group-totals app atl))
-
-          grouped-totals (->> filtered-cost-groups
-                              (group-by (comp first :ui/group))
-                              ;; sort by translated fgroup label
-                              (sort-by (comp label first)))
-          filter-link-fn #(url/cost-items-totals
-                           {:project (get-in app [:params :project])
-                            ::url/query {:filter (str (:db/ident %))}})]
-      [cost-items-page-structure
-       {:e! e!
-        :app  app
-        :state state
-        :hierarchy {:fclass-link-fn filter-link-fn
-                    :fgroup-link-fn filter-link-fn
-                    :list-features? false}}
-       [:div.cost-items-totals
-        [filter-breadcrumbs atl filter-fg-or-fc]
-        [:div {:style {:max-width "25vw"}}
-         [relevant-road-select
-          {:e! e!
-           :value (get-in app [:query :road])
-           :empty-label (tr [:asset :totals-table :all-roads])
-           :on-change (e! cost-items-controller/->SetTotalsRoadFilter)}]]
-        [:div {:style {:float :right}}
-         [:b
-          (tr [:asset :totals-table :project-total]
-              {:total (:total-cost totals)})]]
-
-        [table/listing-table-container
-         [table/listing-header (assoc listing-opts :state listing-state)]
-         (doall
-          (for [[fg fgroup-rows] grouped-totals
-                :let [ident (:db/ident fg)
-                      open? (not (closed-totals ident))]]
-            ^{:key (str ident)}
-            [:<>
-             [table-section-header e! listing-opts closed-totals fg
-              (get-in totals [:fclass-and-fgroup-totals (:db/ident fg)])]
-             (when open?
-               [:<>
-                (doall
-                 (for [[fc fclass-rows] (group-by (comp second :ui/group)
-                                                  fgroup-rows)
-                       :let [ident (:db/ident fc)
-                             open? (not (closed-totals ident))]]
-                   ^{:key (str ident)}
-                   [:<>
-                    [table-section-header e! listing-opts closed-totals fc
-                     (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
-                    (when open?
-                      [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
-
-(defn cost-items-totals-page [e! app state]
-  [wrap-atl-loader cost-items-totals-page* e! app state])
-
-(defn- cost-items-page* [e! app {version :version :as state}]
-  [cost-items-page-structure
+(defn- cost-items-page* [e! app {:keys [version project] :as state}]
+  [asset-ui/cost-items-page-structure
    {:e! e!
     :app app
     :state state
     :left-panel-action [add-cost-item app version]}
-   [map-view/map-view {}]])
+   [cost-items-map-view/project-map {:e! e!}]])
 
 (defn cost-items-page [e! app state]
-  [wrap-atl-loader cost-items-page* e! app state])
+  [asset-ui/wrap-atl-loader cost-items-page* e! app state])
+
+(defn cost-item-map-panel [e! form-state]
+  (when (:location/map-open? form-state)
+    [cost-items-map-view/location-map
+     {:e! e!
+      :value (cost-items-controller/location-form-value form-state)
+      :on-change (e! cost-items-controller/location-form-change)}]))
 
 (defn- new-cost-item-page*
   [e! {atl :asset-type-library :as app}
    {cost-item :cost-item
     version :version relevant-roads :relevant-roads :as state}]
-  [cost-items-page-structure
+  [asset-ui/cost-items-page-structure
    {:e! e!
     :app app
     :state state
-    :left-panel-action [add-cost-item app version]}
+    :left-panel-action [add-cost-item app version]
+    :right-panel (cost-item-map-panel e! cost-item)}
    [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn new-cost-item-page [e! app state]
-  [wrap-atl-loader new-cost-item-page* e! app state])
+  [asset-ui/wrap-atl-loader new-cost-item-page* e! app state])
 
 (defn- cost-item-page*
   [e! {:keys [query params asset-type-library] :as app} {:keys [cost-item version relevant-roads] :as state}]
   (let [oid (:id params)
         component (or (get query :component)
-                      (and (asset-model/component-oid? oid) oid))]
+                      (and (asset-model/component-oid? oid) oid))
+        material (or (get query :material)
+                     (and (asset-model/material-oid? oid) oid))]
     (if (= "new" oid)
       [new-cost-item-page e! app state]
 
-      [cost-items-page-structure
+      [asset-ui/cost-items-page-structure
        {:e! e!
         :app app
         :state state
-        :left-panel-action [add-cost-item app version]}
-       (if component
-         ^{:key component}
-         [component-form e! asset-type-library component cost-item]
+        :left-panel-action [add-cost-item app version]
+        :right-panel (cost-item-map-panel e! (if component
+                                               (last (asset-model/find-component-path cost-item component))
+                                               cost-item))}
+       (cond material
+             ^{:key material}
+             [material-form e! asset-type-library material cost-item]
 
-         ^{:key oid}
-         [cost-item-form e! asset-type-library relevant-roads cost-item])])))
+             component
+             ^{:key component}
+             [component-form e! asset-type-library component cost-item]
+
+             :else
+             ^{:key oid}
+             [cost-item-form e! asset-type-library relevant-roads cost-item])])))
 
 (defn cost-item-page [e! app state]
-  [wrap-atl-loader cost-item-page* e! app state])
+  [asset-ui/wrap-atl-loader cost-item-page* e! app state])

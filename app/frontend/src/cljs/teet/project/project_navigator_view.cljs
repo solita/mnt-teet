@@ -254,7 +254,7 @@
                    (group-by :task/group tasks)))]
        [:div {:class (<class empty-section-style)}
         [typography/GrayText (tr [:project :activity :no-tasks])]])
-     [:div #_{:class (<class item-class (= :done activity-state) dark-theme?)}
+     [:div
       [when-authorized :activity/add-tasks
        activity
        [:div.project-navigator-add-task
@@ -438,9 +438,10 @@
         (when (and
                 (common-controller/feature-enabled? :vektorio)
                 (some? (:vektorio/project-id project)))
-          [common/vektorio-link {:href (common-controller/query-url
-                                         :vektorio/instant-login (select-keys project [:db/id :vektorio/project-id]))
-                                 :target "_blank"}
+          [common/vektorio-link
+           {:href (str "/#/vektorio-redirect/"
+                       (:db/id project) "/" (:vektorio/project-id project))
+            :target "_blank"}
            (tr [:project :bim-models])])
         [common/thk-link {:href thk-url
                           :target "_blank"}
@@ -454,8 +455,7 @@
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
-     {:db/id (:db/id project)
-      :thk.project/id (:thk.project/id project)}
+     project
      [:<>
       [project-header project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}

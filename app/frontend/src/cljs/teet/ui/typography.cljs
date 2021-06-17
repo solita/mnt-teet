@@ -112,6 +112,8 @@
 
 (def GrayText (util/make-component :span {:class (<class gray-text-style)}))
 
+(def GrayTextDiv (util/make-component :div {:class (<class gray-text-style)}))
+
 (def BoldGrayText (util/make-component :span {:class (<class dark-gray-text-style)}))
 
 (def WarningText (util/make-component :p {:class (<class warning-text-style)}))

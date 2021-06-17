@@ -91,3 +91,11 @@
   (let [localization-key (localization-key-by-selected-language)]
     (.toLocaleString date localization-key #js {:weekday "long"})))
 
+(defn decimal
+  "Format locale specific decimal number `n` with `fraction-digits` accuracy (defaults to 1)."
+  ([n]
+   (decimal 1 n))
+  ([fraction-digits n]
+   (when n
+     (.toLocaleString n "et-EE" #js {:minimumFractionDigits fraction-digits
+                                     :maximumFractionDigits fraction-digits}))))

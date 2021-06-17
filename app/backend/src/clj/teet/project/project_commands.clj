@@ -56,9 +56,7 @@
       (when (not= (geometry-update-attrs db-before [:thk.project/id id])
                   (geometry-update-attrs db [:thk.project/id id]))
         (project-geometry/update-project-geometries!
-         (environment/config-map {:api-url [:api-url]
-                                  :api-secret [:auth :jwt-secret]
-                                  :wfs-url [:road-registry :wfs-url]})
+         (environment/config-map {:wfs-url [:road-registry :wfs-url]})
          [(d/pull db '[:db/id :integration/id
                        :thk.project/project-name :thk.project/name
                        :thk.project/road-nr :thk.project/carriageway

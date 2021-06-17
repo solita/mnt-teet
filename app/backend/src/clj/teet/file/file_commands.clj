@@ -19,10 +19,12 @@
             [teet.file.file-export :as file-export]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.integration.integration-email :as integration-email]
-            [teet.localization :refer [tr tr-enum with-language]]))
+            [teet.localization :refer [tr tr-enum with-language]]
+            [teet.util.url :as url-util])
+  (:import (java.util UUID)))
 
 (defn- new-file-key [{name :file/name}]
-  (str (java.util.UUID/randomUUID) "-" name))
+  (str (UUID/randomUUID) "-" name))
 
 (defn latest-file-version-id
   [db file-id]
@@ -131,7 +133,7 @@
         res (tx [{:db/id id
                   :file/upload-complete? true
                   :file/id (or file-id
-                               (java.util.UUID/randomUUID))}]
+                               (UUID/randomUUID))}]
                 (when file-id
                   ;; If moving :file/id from previous version, retract it from
                   ;; previous file entity
@@ -178,7 +180,7 @@
                                            (:file/name file))))
 
             key (new-file-key file)
-            res (tx [(list 'teet.file.file-tx/upload-file-to-task
+            res (tx [(list 'teet.file.file-tx/upload-file-to-task user
                            {:db/id task-id
                             :task/files
                             [(cu/without-nils
@@ -221,26 +223,29 @@
           version (or (some-> old-file :file/version inc) 1)
 
           key (new-file-key file)
-          tx-data [(list 'teet.file.file-tx/upload-file-to-task
-                         {:db/id (or task-id "new-task")
-                          :task/files [(cu/without-nils
-                                         (merge (select-keys file file-keys)
-                                                {:db/id "new-file"
-                                                 :file/s3-key key
-                                                 :file/status :file.status/draft
-                                                 :file/version version
-                                                 :file/original-name (:file/name file)}
-                                                (when (:file/description file)
-                                                  {:file/name (str (:file/description file) "." (:file/extension file))})
-                                                (when old-file
-                                                  {:file/previous-version (:db/id old-file)})
+          tx-data [(list 'teet.file.file-tx/upload-file-to-task user
+                         (merge
+                           {:db/id (or task-id "new-task")
+                                   :task/files [(cu/without-nils
+                                                  (merge (select-keys file file-keys)
+                                                         {:db/id "new-file"
+                                                          :file/s3-key key
+                                                          :file/status :file.status/draft
+                                                          :file/version version
+                                                          :file/original-name (:file/name file)}
+                                                         (when (:file/description file)
+                                                               {:file/name (str (:file/description file) "." (:file/extension file))})
+                                                         (when old-file
+                                                               {:file/previous-version (:db/id old-file)})
 
-                                                ;; Replacement version is uploaded to the same part
-                                                (when-let [old-part (:file/part old-file)]
-                                                  {:file/part old-part})
-                                                (when-let [old-seq-number (:file/sequence-number old-file)]
-                                                  {:file/sequence-number old-seq-number})
-                                                (creation-meta user)))]})]
+                                                         ;; Replacement version is uploaded to the same part
+                                                         (when-let [old-part (:file/part old-file)]
+                                                         {:file/part old-part})
+                                                         (when-let [old-seq-number (:file/sequence-number old-file)]
+                                                         {:file/sequence-number old-seq-number})
+                                                         (creation-meta user)))]}
+                           (when (du/enum= (:task/status (d/pull db [:task/status] task-id)) :task.status/not-started)
+                                 {:task/status :task.status/in-progress})))]
           res (tx tx-data)
           t-id (or task-id (get-in res [:tempids "new-task"]))
           file-id (get-in res [:tempids "new-file"])]
@@ -320,19 +325,19 @@
     (future
       (try
         (let [{:keys [filename input-stream]} (export-fn)
-              s3-key (str (java.util.UUID/randomUUID))
+              s3-key (str (UUID/randomUUID))
               _response (integration-s3/put-object export-bucket
                                                    s3-key
                                                    input-stream)
-              download-url (integration-s3/presigned-url {:content-disposition (str "attachment; filename=" filename)
-                                                          :expiration-seconds (* 24 60 60)}
-                                                         "GET" export-bucket s3-key)]
+
+              redirect-url (url-util/query-url :file/redirect-to-zip {:s3-key s3-key
+                                                                      :filename filename})]
           (integration-email/send-email!
            {:to email
             :subject email-subject-message
             :body [{:type "text/plain; charset=utf-8"
                     :content (tr [:file :export-files-zip :email-body]
-                                 {:link (str "\n" download-url "\n")})}]}))
+                                 {:link (str "\n" redirect-url "\n")})}]}))
         (catch Throwable t
           (log/error t "Error exporting zip" opts))))
     (db-api/fail! {:error :user-has-no-email})))

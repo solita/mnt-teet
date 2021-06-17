@@ -1,5 +1,5 @@
 (ns teet.ui.buttons
-  (:require [herb.core :refer [<class]]
+  (:require [herb.core :as herb :refer [<class]]
             [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText
                                          IconButton MenuList MenuItem
                                          ClickAwayListener Popper Paper]]
@@ -56,7 +56,6 @@
   ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
   {:color (str theme-colors/green " !important")})
 
-
 (def button-text
   (util/make-component Button {:variant        :text
                                :disable-ripple true}))
@@ -75,6 +74,18 @@
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
                                :color          :primary}))
+(def small-button-primary
+  (util/make-component Button {:variant :contained
+                               :disable-ripple true
+                               :size :small
+                               :color :primary}))
+
+(def small-button-secondary
+  (util/make-component Button {:variant :contained
+                               :disable-ripple true
+                               :size :small
+                               :color :secondary}))
+
 (def large-button-primary
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
@@ -127,9 +138,10 @@
                :id id
                }
    icon])
+
 (defn link-button-with-icon
-  [{:keys [on-click icon]} label]
-  [link-button {:class (<class common-styles/white-link-button-style)
+  [{:keys [on-click icon class]} label]
+  [link-button {:class (herb/join class (<class common-styles/link-button-style))
                 :on-click on-click}
    icon
    label])

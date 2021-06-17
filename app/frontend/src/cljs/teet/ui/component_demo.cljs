@@ -4,6 +4,8 @@
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [teet.localization :refer [tr tr-enum]]
+            [herb.core :refer [<class]]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
@@ -19,7 +21,15 @@
             [reagent.core :as r]
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.mentions :as mentions]
-            [teet.ui.common :as common-ui]))
+            [teet.ui.common :as common-ui]
+            [teet.contract.contract-status :as contract-status]
+            [teet.contract.contract-common :as contract-common]
+            [teet.contract.contracts-view :as contracts-view]
+            [teet.ui.table :as table]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.form :as form]))
+
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -90,6 +100,14 @@
                     :placeholder "Placeholder"
                     :error true
                     :error-text "Form field is required"
+                    :variant :filled}]
+        [TextField {:label "Tekstiä"
+                    :on-change on-change
+                    :value @val
+                    :placeholder "Placeholder"
+                    :error true
+                    :error-text "Form field is required"
+                    :error-tooltip? true
                     :variant :filled}]]
        [Divider]])))
 
@@ -247,9 +265,37 @@
                   :margin "2rem 0"}}
     [select/form-select {:value "et"
                          :label "Language"
+                         :on-change #()
                          :show-empty-selection? true
                          :id "language-select"
                          :name "Language"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :items
+                         [{:value "et" :label "bar"}
+                          {:value "en" :label "baz"}]}]]
+   [:div {:style {:width "50%"
+                  :margin "2rem 0"}}
+    [select/form-select {:value "et"
+                         :label "Language"
+                         :on-change #()
+                         :show-empty-selection? true
+                         :id "language-select-with-error-tooltip"
+                         :name "Language"
+                         :error true
+                         :error-text "This is an error"
+                         :error-tooltip? true
                          :items
                          [{:value "et" :label "bar"}
                           {:value "en" :label "baz"}]}]]
@@ -260,6 +306,25 @@
                                 :items [{:value "foo" :label "Foo"}
 
                                         {:value "bar" :label "Bar"}]}]]])
+
+(defn datepicker-demo []
+  [:section
+   [:div {:style {:display "flex"
+                  :justify-content "space-evenly"}}
+    [date-picker/date-input {:label "Date"
+                             :placeholder "Placeholder"
+                             :on-change #()}]
+    [date-picker/date-input {:label "Date with error label"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"}]
+    [date-picker/date-input {:label "Date with error tooltip"
+                             :placeholder "Placeholder"
+                             :on-change #()
+                             :error true
+                             :error-text "This is an error"
+                             :error-tooltip? true}]]])
 
 (defn- labeled-data-demo []
   [:div
@@ -298,6 +363,130 @@
                                      :link {:target :_blank
                                             :href "http://example.com"}
                                      :icon [icons/notification-bluetooth-audio]}]}]])
+
+(defn contract-demo
+  [e!]
+  [:div
+   [:h4 {:style {:margin-top "8px"}} "Status"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-bottom "8px"}} "Status without label, default size"]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [contract-status/contract-status {} :thk.contract.status/signed]
+     [contract-status/contract-status {} :thk.contract.status/completed]
+     [contract-status/contract-status {} :thk.contract.status/in-progress]
+     [contract-status/contract-status {} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {} :thk.contract.status/warranty]]]
+   [:div {:style {:margin-top "16px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-top "16px" :margin-bottom "8px"}} "Status with label. default size"]
+    [:div
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/signed]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/completed]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/in-progress]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {:show-label? true} :thk.contract.status/warranty]]]
+   [:div {:style {:margin-top "16px" :margin-bottom "8px"}}
+    [:h5 {:style {:margin-top "16px" :margin-bottom "8px"}} "Status without label. Size 15px"]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [contract-status/contract-status {:size 15} :thk.contract.status/signed]
+     [contract-status/contract-status {:size 15} :thk.contract.status/completed]
+     [contract-status/contract-status {:size 15} :thk.contract.status/in-progress]
+     [contract-status/contract-status {:size 15} :thk.contract.status/deadline-approaching]
+     [contract-status/contract-status {:size 15} :thk.contract.status/deadline-overdue]
+     [contract-status/contract-status {:size 15} :thk.contract.status/warranty]]]
+   [:h4 {:style {:margin-top "24px"}} "External links"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [contract-common/contract-external-links {:thk.contract/procurement-id 1234
+                                              :thk.contract/procurement-number "12341234"
+                                              :thk.contract/external-link "www.test.test"}]]
+   [:h4 {:style {:margin-top "24px"}} "Information row"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    [contract-common/contract-information-row {:thk.contract/type :thk.contract.type/construction-works
+                                               :thk.contract/signed-at #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/start-of-work #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/deadline #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/extended-deadline #inst "2021-05-04T00:00:00.000-00:00"
+                                               :thk.contract/warranty-end-date #inst "2048-05-08T00:00:00.000-00:00"
+                                               :thk.contract/cost "34324"
+                                               :thk.contract/status :thk.contract.status/warranty}]]
+   [:h4 {:style {:margin-top "24px"}} "Quick Filters"]
+   [:div {:style {:margin-top "8px" :margin-bottom "8px"}}
+    (r/with-let [shortcut-atom (r/atom :my-contracts)
+                 change-shortcut (fn [new-value]
+                                   (reset! shortcut-atom new-value))
+                 shortcuts [:my-contracts
+                            :all-contracts
+                            :unassigned]]
+      [contracts-view/search-shortcuts {:value @shortcut-atom
+                                        :options shortcuts
+                                        :change-shortcut change-shortcut}])]
+   [:h4 {:style {:margin-top "24px"}} "Filters (this component is contract list specific. Changes are required, if it will be reused)"]
+   [:div
+    (r/with-let [filter-fields [[:road-number {:type :search-field}]
+                                [:project-name {:type :search-field}]
+                                [:contract-name {:type :search-field}]
+                                [:procurement-number {:type :search-field}]]]
+      [contracts-view/filter-inputs {:e! e!
+                                     :filter-input-fields filter-fields
+                                     :filters-visibility? true}])]])
+
+
+(defn simple-table-demo
+  []
+  [table/simple-table
+   [["Foo" {}]
+    ["bar" {}]
+    ["baz" {}]
+    ["bax" {}]]
+   [[["Foo"]
+     ["bar"]
+     ["baz"]
+     ["bax"]]
+    [["Foo"]
+     ["bar"]
+     ["baz"]
+     ["bax"]]]])
+
+(defn basic-information-column-demo
+  []
+  [:div {:style {:display :flex
+                 :justify-content :center}}
+   [:div {:style {:flex 1
+                  :max-width "500px"}}
+    [common-ui/basic-information-column
+     [{:key "1"
+       :label [:strong "foo"]
+       :data [:span "wiuh"]}
+      {:key "2"
+       :label [:strong "bar"]
+       :data [:span "wiuh"]}]]]])
+
+(defn basic-ui-component-demo
+  []
+  [:div
+   [:div {:class (<class common-styles/margin-bottom 2)}
+    [:h1 {:class (<class common-styles/margin-bottom 1)}
+     "Primary tag component: "]
+    [common-ui/primary-tag "Primary tag"]]])
+
+
+(defn multiselect-demo
+  [e!]
+  (r/with-let [form-atom (r/atom {})]
+    [form/form2 {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom merge)
+                 :save-event #(println %)}
+     [form/field :test-value
+      [select/select-user-roles-for-contract {:e! e!
+                                              :placeholder "placeholder"
+                                              :no-results "no matches"
+                                              :show-empty-selection? true
+                                              :clear-value [nil nil]}]]]))
+
 (def demos
   [{:id :context-menu
     :heading "Context menu"
@@ -326,6 +515,9 @@
    {:id :select
     :heading "Select"
     :component [select-demo]}
+   {:id :datepicker
+    :heading "Datepicker"
+    :component [datepicker-demo]}
    {:id :labeled-data
     :heading "Labeled data"
     :component [labeled-data-demo]}
@@ -334,7 +526,24 @@
     :component [container-demo]}
    {:id :mentions
     :heading "Mentions input"
-    :component [mentions-demo]}])
+    :component [mentions-demo]}
+   {:id :contracts
+    :heading "Contract components"
+    :component [contract-demo]}
+   {:id :simple-table
+    :heading "simple table"
+    :component [simple-table-demo]}
+   {:id :basic-information-column
+    :heading "basic info column demo"
+    :component [basic-information-column-demo]}
+
+   {:id :common-basic-ui-components
+    :heading "basic UI components demo"
+    :component [basic-ui-component-demo]}
+
+   {:id :multi-select-demo
+    :heading "DEMO for multiselect and user roles"
+    :component [multiselect-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
@@ -343,7 +552,7 @@
                           (map keyword)
                           (str/split show #","))
                     (constantly true))]
-    [:<>
+    [:div {:style {:padding "0 3rem"}}
      (for [{:keys [id heading component]} demos
            :when (show-demo? id)]
        ^{:key (str id)}

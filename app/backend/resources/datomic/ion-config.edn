@@ -12,13 +12,17 @@
          teet.cooperation.cooperation-tx/delete-application
          teet.cooperation.cooperation-tx/edit-application
          teet.cooperation.cooperation-tx/save-3rd-party
+         teet.contract.contract-tx/update-contract-partner
          teet.util.string/contains-words?
          teet.user.user-tx/set-global-role
          teet.user.user-tx/ensure-unique-email
          clojure.string/includes?
+         teet.util.date/dec-days
          teet.task.task-tx/delete-task
          teet.asset.asset-tx/save-asset
          teet.asset.asset-tx/save-component
+         teet.asset.asset-tx/save-material
+         teet.asset.asset-tx/import-assets
          teet.asset.asset-tx/lock]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
@@ -62,6 +66,10 @@
            {:fn teet.backup.backup-ion/restore
             :description "Restore environment from S3 backup file"}
 
+           :delete-db
+           {:fn teet.backup.backup-ion/delete-db
+            :description "Delete Datomic TEET DB and Asset DB"}
+
            :datasource-cleanup
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
             :description "Cleanup unreferenced deleted features"}
@@ -71,7 +79,12 @@
             :description "Delete user email addresses from user information stored in Datomic"}
 
            :notify
-            {:fn teet.notification.notification-ion/notify
-             :description "Scheduled notifications"}}
+           {:fn teet.notification.notification-ion/notify
+            :description "Scheduled notifications"}
+
+           :asset-import
+           {:fn teet.asset.asset-road-registry-import/import-ion
+            :description "Import road registry WFS objects by type"}
+           }
 
  :app-name "teet-datomic"}
