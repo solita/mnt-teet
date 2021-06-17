@@ -98,11 +98,7 @@
                   :textarea
                   :input)
         error? (and error error-text)]
-    (r/with-let [focus? (r/atom false)
-                 on-focus (juxt (or on-focus identity)
-                                #(reset! focus? true))
-                 on-blur (juxt (or on-blur identity)
-                               #(reset! focus? false))]
+    (r/with-let [focus? (r/atom false)]
       [common/popper-tooltip (when error-tooltip?
                                ;; Show error as tooltip instead of label.
                                {:title error-text
@@ -137,8 +133,10 @@
                                   :step :on-key-down :disabled :min :max :type :ref
                                   :required :id :on-blur :placeholder :pattern])
                     {:value (or (:value props) "")
-                     :on-focus on-focus
-                     :on-blur on-blur
+                     :on-focus (juxt (or on-focus identity)
+                                    #(reset! focus? true))
+                     :on-blur (juxt (or on-blur identity)
+                                   #(reset! focus? false))
                      :style input-style
                      :class (herb/join input-class
                                        (<class input-field-style

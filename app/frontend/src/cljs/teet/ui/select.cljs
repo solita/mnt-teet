@@ -64,11 +64,7 @@
                            (on-change nil)
                            (on-change (nth items (int val))))))
         error? (and error error-text)]
-    (r/with-let [focus? (r/atom false)
-                 on-focus (juxt (or on-focus identity)
-                                #(reset! focus? true))
-                 on-blur (juxt (or on-blur identity)
-                               #(reset! focus? false))]
+    (r/with-let [focus? (r/atom false)]
       [common/popper-tooltip (when error-tooltip?
                                ;; Show error as tooltip instead of label.
                                {:title error-text
@@ -94,8 +90,10 @@
         [:div {:style {:position :relative}}
          [:select
           {:value (or (option-idx value) "")
-           :on-focus on-focus
-           :on-blur on-blur
+           :on-focus (juxt (or on-focus identity)
+                           #(reset! focus? true))
+           :on-blur (juxt (or on-blur identity)
+                          #(reset! focus? false))
            :name name
            :disabled read-only?
            :class (<class primary-select-style error read-only?)
