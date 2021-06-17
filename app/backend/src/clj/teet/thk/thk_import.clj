@@ -357,6 +357,17 @@
                 :in $ ?procurement-id]
               db procurement-id))))
 
+(defn- resolve-target
+  "road-safety-audit and owner-supervision cases skip lookup by task-id and activity-db-id as they imported from THK"
+  [db target]
+  (if (or
+        (= :activity.name/road-safety-audit (:activity/name target))
+        (= :activity.name/owners-supervision (:activity/name target)))
+    (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)]))
+    (if-let [target-id (or (:activity/task-id target) (:activity-db-id target))]
+      (:db/id (lookup db [:integration/id target-id]))
+      (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)])))))
+
 (defn contract-tx-data
   [db [contract-ids rows]]                                  ;; a contract can have multiple targets, each row has same contract information
   (let [{:thk.contract/keys [procurement-id procurement-part-id]
@@ -364,11 +375,7 @@
         (first rows)]
     ;; check the contract-ids if they exist already
     (let [targets (->> rows
-                    (mapv
-                      (fn [target]
-                        (if-let [target-id (or (:activity/task-id target) (:activity-db-id target))]
-                          (:db/id (lookup db [:integration/id target-id]))
-                          (:db/id (lookup db [:thk.activity/id (:thk.activity/id target)])))))
+                    (mapv #(resolve-target db %))
                     (filterv some?))
           regions (->> rows
                     (map :ta/region)
@@ -376,21 +383,27 @@
           region-tx (when (= (count regions) 1)             ;; Only TX region when targets only have 1 region
                           {:ta/region (first regions)})
           contract-db-id (contract-exists? db contract-ids)]
-      (if (not-empty targets)
-        [(merge {:db/id (if-not contract-db-id
-                          (str procurement-id "-" procurement-part-id "-new-contract")
-                          contract-db-id)
-                 :thk.contract/targets targets}
+      ;; for the existing contracts we skip targets update
+      (if (some? contract-db-id)
+        [(merge
+           {:db/id contract-db-id}
            region-tx
-           (select-keys contract-info [:thk.contract/procurement-id
-                                       :thk.contract/name
+           (select-keys contract-info [:thk.contract/name
                                        :thk.contract/part-name
-                                       :thk.contract/procurement-number
-                                       :thk.contract/procurement-part-id
-                                       :thk.contract/type])
-           (when-not contract-db-id
-                     (meta-model/system-created)))]
-        (log/warn "No targets found for contract with ids: " contract-ids "Contract row details: " contract-info)))))
+                                       :thk.contract/procurement-number]))]
+        (if (not-empty targets)
+          [(merge
+             {:db/id (str procurement-id "-" procurement-part-id "-new-contract")
+              :thk.contract/targets targets}
+             region-tx
+             (select-keys contract-info [:thk.contract/procurement-id
+                                         :thk.contract/name
+                                         :thk.contract/part-name
+                                         :thk.contract/procurement-number
+                                         :thk.contract/procurement-part-id
+                                         :thk.contract/type])
+             (meta-model/system-created))]
+          (log/warn "No targets found for contract with ids: " contract-ids "Contract row details: " contract-info))))))
 
 (defn final-contract?
   [[procurement-id [info & _]]]
@@ -462,9 +475,9 @@
         projects))
 
 (defn import-thk-contracts! [connection url contracts]
-  (let [db (d/db connection)]
-    (d/transact connection
-                {:tx-data (thk-import-contracts-tx db url contracts)})))
+  (let [db (d/db connection)
+        tx-data {:tx-data (thk-import-contracts-tx db url contracts)}]
+    (d/transact connection tx-data)))
 
 (defn import-thk-projects! [connection url projects]
   (let [duplicate-activity-id-projects
