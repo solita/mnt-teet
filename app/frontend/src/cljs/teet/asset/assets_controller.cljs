@@ -100,31 +100,32 @@
 
   SearchBy
   (process-event [{search-by :search-by} app]
-    (common-controller/update-page-state
-     app [:criteria]
-     (fn [{cleanup :cleanup :as criteria}]
-       (let [criteria (if cleanup
-                        (cleanup criteria)
-                        criteria)]
-         (merge
-          criteria
-          {:search-by search-by}
-          (case search-by
-            :current-location
-            {:radius 10
-             :ol-geolocation
-             (doto (ol.Geolocation.
-                    #js {:projection "EPSG:3301"
-                         :trackingOptions #js {:enableHighAccuracy true}})
-               (.on "change" (t/send-async! ->SetCurrentLocation))
-               (.setTracking true))
-             :cleanup (fn [{g :ol-geolocation :as criteria}]
-                        (.setTracking g false)
-                        (dissoc criteria :radius :ol-geolocation :cleanup))}
+    (debounced-search
+     (common-controller/update-page-state
+      app [:criteria]
+      (fn [{cleanup :cleanup :as criteria}]
+        (let [criteria (if cleanup
+                         (cleanup criteria)
+                         criteria)]
+          (merge
+           criteria
+           {:search-by search-by}
+           (case search-by
+             :current-location
+             {:radius 10
+              :ol-geolocation
+              (doto (ol.Geolocation.
+                     #js {:projection "EPSG:3301"
+                          :trackingOptions #js {:enableHighAccuracy true}})
+                (.on "change" (t/send-async! ->SetCurrentLocation))
+                (.setTracking true))
+              :cleanup (fn [{g :ol-geolocation :as criteria}]
+                         (.setTracking g false)
+                         (dissoc criteria :radius :ol-geolocation :cleanup))}
 
-            :road-address
-            {:road-address []
-             :cleanup #(dissoc % :road-address :cleanup)}))))))
+             :road-address
+             {:road-address []
+              :cleanup #(dissoc % :road-address :cleanup)})))))))
 
   SetCurrentLocation
   (process-event [{location :location} app]

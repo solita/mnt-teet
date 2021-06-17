@@ -569,8 +569,9 @@
   If `hidden?` is true, render the tooltip wrapper without content, to avoid problems when
   adding/removing the wrapper dynamically.
   Option `tabIndex` can be used stop the popup wrapper participating in sequential keyboard
-  navigation (default: 0)."
-  [{:keys [title body variant icon class hidden? tabIndex] :as msg
+  navigation (default: 0).
+  Option `force-open?` can be used to show the popup even if not hovering."
+  [{:keys [title body variant icon class hidden? tabIndex force-open?] :as msg
     :or {variant :error tabIndex 0}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
@@ -592,7 +593,7 @@
              :class container-class}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
-                :open @hover?
+                :open (or @hover? force-open?)
                 :anchor-el @anchor-el
                 :placement "bottom-start"}
         (when-not hidden?

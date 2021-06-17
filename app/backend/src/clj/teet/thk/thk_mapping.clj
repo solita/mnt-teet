@@ -317,6 +317,11 @@
 
 (def thk->teet-contract
   {"activity_id" {:attribute :thk.activity/id}
+   "activity_typefk" {:attribute :activity/name
+                      :parse thk-activity-type->activity-name
+                      :format (comp activity-name->thk-activity-type :db/ident)
+                      :task {:attribute :task/type
+                             :format #(get-in % [:thk/task-type :thk/code])}}
    "activity_teetid" {:attribute :activity-db-id
                       :parse ->numeric-uuid}
    "activity_taskid" {:attribute :activity/task-id
