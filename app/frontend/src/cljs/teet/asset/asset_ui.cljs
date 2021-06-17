@@ -295,9 +295,10 @@
                                :params {:id oid}} oid]])])]))]]))]))
 
 (defn- save-boq-version-dialog [{:keys [e! on-close]} last-locked-version]
-  (r/with-let [form-state (r/atom {:boq-version/type (-> last-locked-version
-                                                         :boq-version/type
-                                                         :db/ident)})
+  (r/with-let [current-type (-> last-locked-version
+                                :boq-version/type
+                                :db/ident)
+               form-state (r/atom {:boq-version/type current-type})
                form-change (form/update-atom-event form-state merge)
                save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
     [panels/modal {:title (tr [:asset :save-boq-version])
@@ -316,6 +317,14 @@
         :required? true}
       [select/select-enum {:e! e!
                            :attribute :boq-version/type
+                           ;; Show "(current)" with the type of latest locked bill of quantities
+                           :format-enum-fn (fn [_]
+                                             (fn [t]
+                                               (str (tr [:enum t])
+                                                    (when (= t current-type)
+                                                      (str " ("
+                                                           (tr [:common :current])
+                                                           ")")))))
                            :database :asset}]
 
       ^{:attribute :boq-version/explanation
