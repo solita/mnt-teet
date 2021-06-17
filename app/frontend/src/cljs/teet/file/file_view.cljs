@@ -122,17 +122,16 @@
 (defn get-document-groups
   "Returns the document groups for the file list"
   [files]
-  (let [outs (mapv (fn [x]
-                     (-> x
-                         (assoc :file/group-code (get-in x [:file/document-group :filename/code]))
-                         (assoc :file/group-name (get-in x [:file/document-group :db/ident]))
-                         (dissoc :file/document-group))) files)]
-    outs))
+  (mapv (fn [x]
+          (-> x
+              (assoc :file/group-code (get-in x [:file/document-group :filename/code])
+                     :file/group-name (get-in x [:file/document-group :db/ident]))
+              (dissoc :file/document-group))) files))
 
 (defn sort-document-groups
   "Sort document group vector by 'ungrouped' first and the rest alphabetically"
   [doc-group first-el]
-  (mapv (fn [x] (:key x))
+  (map :key
         (sort-by
           (juxt #(not= first-el (:key %)) :name)
           (mapv (fn [x] {:name (tr-enum x) :key x}) doc-group))))
@@ -198,9 +197,13 @@
                     (fn [{:file/keys [name group-name] :as file}]
                       (and
                           (str/includes? (str/lower-case name) (str/lower-case @search-term))
-                        (if (not (nil? @selected-group))
+                        (if @selected-group
                           (and
-                            (= (if (nil? group-name) :file.document-group/ungrouped group-name) (:document.group/key @selected-group))
+                            (= (if
+                                 (nil? group-name)
+                                 :file.document-group/ungrouped
+                                 group-name)
+                               (:document.group/key @selected-group))
                             file)
                           file)))
                     (get-document-groups files))
@@ -428,23 +431,31 @@
                (when data-cy
                  {:data-cy data-cy}))
    (doall
-       (for [file-group (sort-document-groups (distinct (mapv #(if (nil? (:file/group-name %)) :ungrouped-files (:file/group-name %)) files)) :ungrouped-files)]
-       ^{:key (str file-group)}
-       [:<>
-
-                      [:div {:class (<class common/hierarchical-heading-container2 theme-colors/white theme-colors/black-coral @closed?)}
-                       [:div {:class (<class common-styles/space-between-center)} (document-group-heading file-group)
-                       [:div {:class [(<class common-styles/flex-row-end)]}
-                        [buttons/button-secondary
-                         {:size :small
-                          :on-click (r/partial toggle-open! file-group)}
-                         [(if (contains? @closed? file-group) icons/hardware-keyboard-arrow-down icons/hardware-keyboard-arrow-up)]]]]
-                       [Collapse {:in (not (contains? @closed? file-group))
-                                  :mount-on-enter true}
-                        [:div
-                         (document-group-content opts
-                                                 (if (= file-group :ungrouped-files) nil file-group)
-                                                 (sorted-by sort-by-value files))]]]]))]))
+       (for [file-group (sort-document-groups
+                          (distinct (mapv #(if
+                                             (nil? (:file/group-name %))
+                                             :ungrouped-files
+                                             (:file/group-name %))
+                                          files))
+                          :ungrouped-files)]
+         ^{:key (str file-group)}
+         [:<>
+          [:div {:class (<class common/hierarchical-heading-container2
+                                theme-colors/white
+                                theme-colors/black-coral
+                                @closed?)}
+           [:div {:class (<class common-styles/space-between-center)} (document-group-heading file-group)
+            [:div {:class [(<class common-styles/flex-row-end)]}
+             [buttons/button-secondary
+              {:size :small
+               :on-click (r/partial toggle-open! file-group)}
+              [(if (contains? @closed? file-group) icons/hardware-keyboard-arrow-down icons/hardware-keyboard-arrow-up)]]]]
+           [Collapse {:in (not (contains? @closed? file-group))
+                      :mount-on-enter true}
+            [:div
+             (document-group-content opts
+                                     (if (= file-group :ungrouped-files) nil file-group)
+                                     (sorted-by sort-by-value files))]]]]))]))
 
 (defn file-list2-with-search
   [opts files]
