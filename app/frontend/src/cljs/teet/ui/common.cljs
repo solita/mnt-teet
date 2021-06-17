@@ -557,6 +557,7 @@
       (if multi
         [:div
          (doall (for [{:keys [title body]} multi]
+                  ^{:key title}
                   [:div
                    [typography/TextBold title]
                    [typography/Text body]]))]
