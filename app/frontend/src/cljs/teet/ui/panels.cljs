@@ -125,7 +125,7 @@
 
 (defn modal
   "Default modal container"
-  [{:keys [title on-close open-atom actions disable-content-wrapper? max-width data-cy]
+  [{:keys [title subtitle on-close open-atom actions disable-content-wrapper? max-width data-cy]
     :or {max-width "sm"}
     :as _opts} content]
   (r/with-let [open-atom (or open-atom (r/atom true))       ;;creates new atoms unnecessarily
@@ -151,6 +151,10 @@
         [typography/Heading1
          {:class (<class dialog-heading-style)}
          title]
+        (when subtitle
+          [typography/Heading2
+           {:class (<class dialog-heading-style)}
+           subtitle])
         close-button]
 
        ;; No title specified, just show floating close button

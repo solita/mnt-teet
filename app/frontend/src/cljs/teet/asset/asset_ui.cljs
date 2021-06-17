@@ -294,11 +294,17 @@
                     [url/Link {:page :cost-item
                                :params {:id oid}} oid]])])]))]]))]))
 
-(defn- save-boq-version-dialog [{:keys [e! on-close]}]
-  (r/with-let [form-state (r/atom {})
+(defn- save-boq-version-dialog [{:keys [e! on-close]} last-locked-version]
+  (r/with-let [form-state (r/atom {:boq-version/type (-> last-locked-version
+                                                         :boq-version/type
+                                                         :db/ident)})
                form-change (form/update-atom-event form-state merge)
                save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
     [panels/modal {:title (tr [:asset :save-boq-version])
+                   :subtitle (when (:boq-version/type last-locked-version)
+                               (str (tr-enum (:boq-version/type last-locked-version))
+                                    " v. "
+                                    (:boq-version/number last-locked-version)))
                    :on-close on-close}
 
      [form/form {:e! e!
@@ -400,7 +406,8 @@
            :asset/lock-version
            [save-boq-version-dialog
             {:e! e!
-             :on-close (r/partial set-dialog! nil)}]))])))
+             :on-close (r/partial set-dialog! nil)}
+            last-locked-version]))])))
 
 
 (defn cost-items-page-structure
