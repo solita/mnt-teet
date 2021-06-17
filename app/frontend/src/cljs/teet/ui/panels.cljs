@@ -2,10 +2,9 @@
   "Different panels for showing content."
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent
-                                         Collapse IconButton Divider
-                                         Modal Fade Dialog DialogTitle
-                                         DialogContent]]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.material-ui :refer [Card CardHeader CardContent IconButton
+                                         Divider Dialog DialogTitle DialogContent]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
@@ -44,10 +43,18 @@
    :justify-content :space-between
    :align-items     :flex-start})
 
+(defn title-and-subtitle-style
+  []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :flex-start
+   :align-items :flex-end})
+
 (defn dialog-heading-style
   []
   {:margin-bottom 0
-   :margin-top    "1rem"})
+   :margin-top "1rem"
+   :margin-right "1rem"})
 
 (defn modal-style
   []
@@ -148,13 +155,16 @@
        ;; Title specified, show title and close button
        [DialogTitle {:disable-typography true
                      :class              (<class dialog-title-style)}
-        [typography/Heading1
-         {:class (<class dialog-heading-style)}
-         title]
-        (when subtitle
-          [typography/Heading2
-           {:class (<class dialog-heading-style)}
-           subtitle])
+        [:span
+         {:class (<class title-and-subtitle-style)}
+         [typography/Heading1
+          {:class (<class dialog-heading-style)}
+          title]
+         (when subtitle
+           [typography/GrayText
+            {:class (<class (fn [] common-styles/h4-desktop))}
+            subtitle])]
+
         close-button]
 
        ;; No title specified, just show floating close button
