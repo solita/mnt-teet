@@ -97,7 +97,7 @@
    :file/status :file/part :file/group-number
    :file/original-name
    {:task/_files [:db/id :activity/_tasks]}
-   :file/document-group
+   {:file/document-group [:db/id :db/ident :filename/code]}
    :file/sequence-number
    {:file/previous-version [:db/id]}
    :meta/created-at
