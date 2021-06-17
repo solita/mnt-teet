@@ -279,18 +279,19 @@
        :on-change-event :_ignore ; the form cannot be changed, so we can ignore
        :value item
        :disable-buttons? true}
-      [cost-items-view/attributes* {:e! e!
-                                    :attributes attributes
-                                    :component-oid (when component? oid)
-                                    :cost-item-data asset
-                                    :common (cond
-                                              component? :ctype/component
-                                              :else :ctype/feature)
-                                    :inherits-location?
-                                    (cond
-                                      component? (:component/inherits-location? ctype)
-                                      :else false)}
-       rotl true]]
+      [:span {:style {:overflow-wrap :break-word}}
+       [cost-items-view/attributes* {:e! e!
+                                     :attributes attributes
+                                     :component-oid (when component? oid)
+                                     :cost-item-data asset
+                                     :common (cond
+                                               component? :ctype/component
+                                               :else :ctype/feature)
+                                     :inherits-location?
+                                     (cond
+                                       component? (:component/inherits-location? ctype)
+                                       :else false)}
+        rotl true]]]
      (when-let [materials (and component? (:component/materials item))]
        [:<>
         [:h3 (tr [:asset :materials :label])]
@@ -345,6 +346,10 @@
     (str result-count-limit "+")
     (count assets)))
 
+(defmethod common-controller/map-item-selected "asset-results" [{f :map/feature}]
+  (when-let [oid (some-> f .getProperties (aget "oid"))]
+    (assets-controller/->ShowDetails {:asset/oid oid})))
+
 (defn results-map [{:keys [e! atl criteria results map-key]
                     :or {map-key "results-map"}}]
   (let [{:keys [geojson highlight-oid]} results]
@@ -388,7 +393,15 @@
            [_ old-opts]]
         (let [[_ new-opts] (r/argv this)
               old-query (:asset-query old-opts)
-              new-query (:asset-query new-opts)]
+              new-query (:asset-query new-opts)
+              new-details (:details new-opts)]
+
+          ;; Details present, but not showing table... enable it
+          (when (and new-details
+                     (not (@show :table)))
+            (swap! show conj :table))
+
+          ;; Query changed, remount map
           (when (not= old-query new-query)
             (next-map-key!))))
 
@@ -411,7 +424,7 @@
               [:<>
                (when-not (@show :table)
                  [:div {:style {:position :absolute
-                                :z-index 9999
+                                :z-index 5
                                 :background-color (theme-colors/white-alpha 0.8)
                                 :margin "1rem"}}
                   [result-indicator {:show @show :set-show! set-show!
@@ -484,8 +497,11 @@
                        :height (common-styles/content-height "50px")
                        :overflow-y :scroll}}
          (if (= @mode :map)
-           [results-map {:e! e! :atl atl :criteria criteria
-                         :results results}]
+           [:<>
+            [results-map {:e! e! :atl atl :criteria criteria
+                          :results results}]
+             (when (= :current-location (:search-by criteria))
+                 [radius-display e! criteria])]
            (if-let [details (get-in app [:query :details])]
              [context/consume :rotl
               [result-details-view e! details atl]]
