@@ -239,8 +239,9 @@
         [form/field :location/single-point?
          [select/checkbox {}]]])]))
 
-(defn attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
-                            common ctype]}
+(defn attributes* [{:keys [e! attributes component-oid cost-item-data
+                           inherits-location? single-point?
+                           common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
@@ -272,7 +273,7 @@
                  :alignItems :flex-end}
            [location-entry e! locked?
             (:location/road-nr cost-item-data)
-            (:location/single-point? cost-item-data)]]])
+            single-point?]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -525,6 +526,7 @@
           [form-paper [attributes
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
+                        :single-point? (:location/single-point? form-data)
                         :cost-item-data form-data
                         :common :ctype/feature
                         :inherits-location? false
@@ -602,6 +604,7 @@
           [attributes {:e! e!
                        :attributes (some-> ctype :attribute/_parent)
                        :inherits-location? (:component/inherits-location? ctype)
+                       :single-point? (:location/single-point? component-data)
                        :component-oid component-oid
                        :cost-item-data cost-item-data
                        :common :ctype/component
