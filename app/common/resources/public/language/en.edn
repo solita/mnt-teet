@@ -200,6 +200,7 @@
   :date "Date",
   :log-out "Log out",
   :back-to-project "Back to project",
+  :project-menu "Project menu",
   :now "Now",
   :construction-phase "Phase",
   :general "General",

@@ -128,7 +128,7 @@
           show-opinion-export? (and (= (get-in app [:query :tab]) "land")
                                     (common-controller/feature-enabled? :land-owner-opinions))]
       [:div {:class (<class project-style/project-page-structure)}
-       [project-navigator-view/project-header project
+       [project-navigator-view/project-header e! app project
         (when show-opinion-export?
           [{:id "owner-opinion-export"
             :label (tr [:land-owner-opinion :opinion-export])
@@ -686,7 +686,7 @@
       ^{:key "project-view"}
       [project-page-structure e! app project
        (merge {:key (name tab-name)
-               :header [project-menu/project-menu e! app project false]
+               :header [project-menu/project-tab-header e! app project false]
                :body [project-menu/project-tab-content tab-name e! app project]
                :map-settings {:layers (or (:layers tab)
                                           #{:thk-project :surveys})}
@@ -714,7 +714,7 @@
     [project-context/provide
      project
      [:<>
-      [project-navigator-view/project-header project export-menu-items]
+      [project-navigator-view/project-header e! app project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
@@ -724,7 +724,7 @@
                 :xs 12
                 :md navigator-w
                 :class (<class navigation-style/navigator-left-panel-style)}
-          [project-menu/project-menu e! app project true]
+          [project-menu/project-tab-header e! app project true]
           (or left-panel
               [project-navigator-view/project-navigator e! project app
                (merge {:dark-theme? true

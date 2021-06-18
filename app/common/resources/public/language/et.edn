@@ -197,6 +197,7 @@
   :date "kuupäev",
   :log-out "Väljun",
   :back-to-project "Tagasi projekti",
+  :project-menu "Projekti menüü",
   :now "Nüüd",
   :construction-phase "Ehitusetapp",
   :general "Üldine",

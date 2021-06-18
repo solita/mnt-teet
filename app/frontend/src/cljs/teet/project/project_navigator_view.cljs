@@ -418,15 +418,19 @@
                                           (select-keys project [:thk.project/id]))}})])
 
 (defn project-header
-  ([project]
-   (project-header project nil))
-  ([project export-menu-items]
+  ([e! app project]
+   (project-header e! app  project nil))
+  ([e! app project export-menu-items]
    (let [thk-url (project-info/thk-url project)]
      [:div {:class (<class project-header-style)}
       [:div {:style {:display :flex
                      :justify-content :space-between}}
-       [typography/Heading1 {:style {:margin-bottom 0}}
-        (project-model/get-column project :thk.project/project-name)]
+       [:div {:style {:display :flex
+                      :justify-content :flex-start}}
+        [project-menu/project-menu e! app project]
+        [typography/Heading1 {:style {:margin-bottom 0
+                                      :margin-left "1rem"}}
+         (project-model/get-column project :thk.project/project-name)]]
        [:div {:style {:display :flex
                       :align-items :center}}
         [common/context-menu
@@ -457,7 +461,7 @@
     [project-context/provide
      project
      [:<>
-      [project-header project export-menu-items]
+      [project-header e! app project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [project-navigator-dialogs opts]
        [Paper {:class (<class task-style/task-page-paper-style)}
@@ -468,7 +472,7 @@
                 :md nav-w
                 :xs 12
                 :class (<class navigation-style/navigator-left-panel-style)}
-          [project-menu/project-menu e! app project true]
+          [project-menu/project-tab-header e! app project true]
           [project-task-navigator e! project app true]]
          [Grid {:item true
                 :xs 12
