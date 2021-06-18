@@ -226,7 +226,7 @@
               :xs 12
               :md 6}
         [form/form2 {:e! e!
-                     :value selected-company
+                     :value form-value
                      :on-change-event on-change}
 
          [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
@@ -441,10 +441,6 @@
                                       :partner partner-id}})}
       (tr [:buttons :edit])]]))
 
-(defn get-company-edit-data
-  [params app]
-  {:form-data (:edit-company app)})
-
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
@@ -455,15 +451,14 @@
 
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
-  (let [_ (println "partners-page-router PARAMS " params " QUERY " query " CONTRACT " contract)
-        selected-partner-id (:partner query)
+  (let [selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
                               (filter
                                 (fn [contract]
                                   (= (str (:teet/id contract)) selected-partner-id)))
                               first)
 
-        form-data (get-company-edit-data params app)]
+        partner-form-data (:company-contract/company (first (:company-contract/_contract contract)))]
 
     (case (keyword (:page query))
       :add-partner
@@ -471,7 +466,7 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app (:company-contract/_contract contract)]
+      [edit-partner-form e! app partner-form-data]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner

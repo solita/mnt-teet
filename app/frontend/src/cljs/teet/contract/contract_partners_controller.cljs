@@ -17,13 +17,14 @@
 (extend-protocol t/Event
   UpdateNewCompanyForm
   (process-event [{form-data :form-data} app]
+    (println "UpdateNewCompanyForm form-data: " form-data )
     (update-in app [:forms :new-partner] merge form-data))
 
   UpdateEditCompanyForm
-  (process-event [company app]
+  (process-event [{form-data :form-data} app]
     ; @TODO: implement
-    (println "UpdateEditCompanyForm" company)
-    (update-in app [:forms :edit-partner] merge company))
+    (println "UpdateEditCompanyForm" form-data)
+    (update-in app [:forms :edit-partner] merge form-data))
 
   InitializeNewCompanyForm
   (process-event [{} app]
