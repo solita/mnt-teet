@@ -585,7 +585,10 @@
 
   Option `force-open?` can be used to show the popup even if not hovering."
   [{:keys [title body variant icon class hidden? tabIndex multi force-open?] :as msg
-    :or {variant :error tabIndex 0}} component]
+    :or {variant :error
+         tabIndex 0
+         force-open? false}}
+   component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
                set-anchor-el! #(reset! anchor-el %)
