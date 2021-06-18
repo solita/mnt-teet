@@ -224,6 +224,7 @@
   :language "Keel",
   :filter-shortcuts "Filtri otseteed",
   :unassigned "Määramata",
+  :current "praegune",
   :confirm-deletion "Kinnitan kustutamise",
   :files "Failid",
   :deadline "Tähtaeg",

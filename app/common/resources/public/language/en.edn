@@ -226,6 +226,7 @@
   :language "Language",
   :filter-shortcuts "Filter shortcuts",
   :unassigned "Unassigned",
+  :current "current",
   :confirm-deletion "Confirm delete",
   :files "Files",
   :deadline "Deadline",
