@@ -435,10 +435,13 @@
       ^{:key (str (:db/id tx))}
       [:div {:style {:margin-top "1.5rem"}}
        [typography/Heading3
-        (format/date-time (:db/txInstant tx))
+        (format/date-time-with-milliseconds (:db/txInstant tx))
         " "
-        (when-let [author (:tx/author tx)]
-          (user-model/user-name author))]
+        (if-let [author (:tx/author tx)]
+          (user-model/user-name author)
+          (let [tx-info (dissoc tx :db/id :db/txInstant :tx/author)]
+            (when (seq tx-info)
+              (pr-str tx-info))))]
        [inspector-attribute-table
         (for [[k values] (sort-by first changes)]
           ^{:key (str k)}

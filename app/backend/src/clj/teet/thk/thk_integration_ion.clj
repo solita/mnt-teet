@@ -63,17 +63,22 @@
     (.flush writer)
     (assoc ctx :file (.toByteArray baos))))
 
-(defn- upsert-projects [{:keys [bucket file-key project-rows connection] :as ctx}]
+(defn- integration-uri
+  "Determine S3 integration uri for tx metadata use from context."
+  [{{:keys [bucket file-key]} :s3}]
+  (str "s3://" bucket "/" file-key))
+
+(defn- upsert-projects [{:keys [project-rows connection] :as ctx}]
   (let [import-tx-result (thk-import/import-thk-projects! connection
-                                                          (str "s3://" bucket "/" file-key)
+                                                          (integration-uri ctx)
                                                           project-rows)]
     (assoc ctx
            :db (:db-after import-tx-result))))
 
-(defn- upsert-tasks [{:keys [bucket file-key project-rows connection] :as ctx}]
+(defn- upsert-tasks [{:keys [project-rows connection] :as ctx}]
   (if (environment/feature-enabled? :contracts)             ;; Added because these tasks are related to contracts
     (let [import-tx-result (thk-import/import-thk-tasks! connection
-                                                         (str "s3://" bucket "/" file-key)
+                                                         (integration-uri ctx)
                                                          project-rows)]
       (assoc ctx
         :db (:db-after import-tx-result)))
@@ -81,10 +86,10 @@
       (log/info "Skipping upserting of tasks because feature flag contracts is not enabled")
       ctx)))
 
-(defn- upsert-contracts [{:keys [bucket file-key contract-rows connection] :as ctx}]
+(defn- upsert-contracts [{:keys [contract-rows connection] :as ctx}]
   (if (environment/feature-enabled? :contracts)
     (let [import-tx-result (thk-import/import-thk-contracts! connection
-                                                             (str "s3://" bucket "/" file-key)
+                                                             (integration-uri ctx)
                                                              contract-rows)]
       (assoc ctx
         :db (:db-after import-tx-result)))

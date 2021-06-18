@@ -294,11 +294,18 @@
                     [url/Link {:page :cost-item
                                :params {:id oid}} oid]])])]))]]))]))
 
-(defn- save-boq-version-dialog [{:keys [e! on-close]}]
-  (r/with-let [form-state (r/atom {})
+(defn- save-boq-version-dialog [{:keys [e! on-close]} last-locked-version]
+  (r/with-let [current-type (-> last-locked-version
+                                :boq-version/type
+                                :db/ident)
+               form-state (r/atom {:boq-version/type current-type})
                form-change (form/update-atom-event form-state merge)
                save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
     [panels/modal {:title (tr [:asset :save-boq-version])
+                   :subtitle (when (:boq-version/type last-locked-version)
+                               (str (tr-enum (:boq-version/type last-locked-version))
+                                    " v. "
+                                    (:boq-version/number last-locked-version)))
                    :on-close on-close}
 
      [form/form {:e! e!
@@ -310,6 +317,14 @@
         :required? true}
       [select/select-enum {:e! e!
                            :attribute :boq-version/type
+                           ;; Show "(current)" with the type of latest locked bill of quantities
+                           :format-enum-fn (fn [_]
+                                             (fn [t]
+                                               (str (tr [:enum t])
+                                                    (when (= t current-type)
+                                                      (str " ("
+                                                           (tr [:common :current])
+                                                           ")")))))
                            :database :asset}]
 
       ^{:attribute :boq-version/explanation
@@ -340,14 +355,17 @@
      [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
       (tr [:asset :confirm-unlock-for-edits])]]]])
 
-(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+(defn- boq-version-statusline [e! {:keys [latest-change version version-history]}]
   (r/with-let [dialog (r/atom nil)
                set-dialog! #(reset! dialog %)]
     (let [{:keys [user timestamp] :as chg} latest-change
           locked? (asset-model/locked? version)
           action (if locked?
                    :asset/unlock-for-edits
-                   :asset/lock-version)]
+                   :asset/lock-version)
+          last-locked-version (if locked?
+                                version
+                                (first version-history))]
       [:div {:class (<class common-styles/flex-row)
              :style {:background-color theme-colors/gray-lightest
                      :width "100%"}}
@@ -364,12 +382,17 @@
 
        (when chg
          [common/popper-tooltip
-          {:title (tr [:common :last-modified])
-           :variant :info
-           :body [:<>
-                  (fmt/date-time timestamp)
-                  [:br]
-                  (user-model/user-name user)]}
+          {
+           :variant :no-icon
+           :multi [{:title (tr-enum (:boq-version/type last-locked-version))
+                    :body (str " v." (:boq-version/number last-locked-version))}
+                   {:title (tr [:fields :boq-version/explanation])
+                    :body (:boq-version/explanation last-locked-version)}
+                   {:title (tr [:common :last-modified])
+                    :body [:<>
+                           (fmt/date-time timestamp)
+                           [:br]
+                           (user-model/user-name user)]}]}
           [icons/alert-error-outline]])
 
        ;; Save or unlock button
@@ -392,7 +415,8 @@
            :asset/lock-version
            [save-boq-version-dialog
             {:e! e!
-             :on-close (r/partial set-dialog! nil)}]))])))
+             :on-close (r/partial set-dialog! nil)}
+            last-locked-version]))])))
 
 
 (defn cost-items-page-structure
