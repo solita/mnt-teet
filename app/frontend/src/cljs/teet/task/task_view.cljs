@@ -367,11 +367,12 @@
                  (<class common-styles/margin-bottom 1)]}
 
    [:div {:class [(<class common-styles/margin-right 0.5)
-                  (<class common-styles/flex-align-end)]}
+                  (<class common-styles/flex-align-center)]}
     [typography/Heading2 {:style {:margin-right "0.5rem"
                                   :display :inline-block}}
      (tr [:common :files])]
-    [file-view/file-sorter sort-by-atom items]]
+    [:div {:class (<class common-styles/margin-left 1)}
+     [file-view/file-sorter sort-by-atom items]]]
    (when (task-model/can-submit? task)
      [when-authorized :file/upload
       task
@@ -382,7 +383,7 @@
         (tr [:buttons :upload])]]])])
 
 (defn- file-content-view
-  [e! upload! activity task files-form project-id files parts selected-part]
+  [e! upload! activity task files-form project-id files parts selected-part is-filtered?]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
     (let [allow-replacement-opts (when (task-model/can-submit? task)
@@ -412,16 +413,20 @@
         (when (not (zero? (:file.part/number selected-part)))
           (mapc
             (fn [part]
-              [file-section-view {:e! e!
-                                  :sort-by-value @sort-by-atom
-                                  :allow-replacement-opts allow-replacement-opts
-                                  :upload! upload!
-                                  :land-acquisition? land-acquisition?}
-               task part
-               (filterv
-                 (fn [file]
-                   (= (:db/id part) (get-in file [:file/part :db/id])))
-                 files)])
+              (let [task-files (filterv
+                                 (fn [file]
+                                   (= (:db/id part) (get-in file [:file/part :db/id])))
+                                 files)
+                    show-files (if is-filtered?
+                                     (if (seq task-files) true false)
+                                     true)]
+                (when show-files
+                  [file-section-view {:e! e!
+                                      :sort-by-value @sort-by-atom
+                                      :allow-replacement-opts allow-replacement-opts
+                                      :upload! upload!
+                                      :land-acquisition? land-acquisition?}
+                   task part task-files])))
             (if (nil? selected-part)
               parts
               [selected-part])))]])))

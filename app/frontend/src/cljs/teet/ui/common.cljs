@@ -582,8 +582,9 @@
 
   `:multi option allows adding multiple maps containing keys `:variant`, `:title`,
   `:body` and `:icon` instead of having those as main level keys.
-"
-  [{:keys [title body variant icon class hidden? tabIndex multi] :as msg
+
+  Option `force-open?` can be used to show the popup even if not hovering."
+  [{:keys [title body variant icon class hidden? tabIndex multi force-open?] :as msg
     :or {variant :error tabIndex 0}} component]
   (r/with-let [hover? (r/atom false)
                anchor-el (r/atom nil)
@@ -605,7 +606,7 @@
              :class container-class}
        component
        [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
-                :open @hover?
+                :open (or @hover? force-open?)
                 :anchor-el @anchor-el
                 :placement "bottom-start"}
         (when-not hidden?
