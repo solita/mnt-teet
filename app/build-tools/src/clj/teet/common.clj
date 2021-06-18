@@ -11,13 +11,13 @@
       keyword))
 
 (defn role->column-mapping
-  [sheet role-count rows-to-drop]
+  [sheet role-count nth-row]
   (into {}
         (for [cell (take role-count
                          (drop 2                            ;; Discard first 2 columns
                                (sheet/cell-seq
-                                 ;; rows to drop until we get to the row where the roles are in excel
-                                 (nth (sheet/row-seq sheet) rows-to-drop))))
+                                 ;; take only the row where the roles are
+                                 (nth (sheet/row-seq sheet) nth-row))))
               :let [role (-> cell sheet/read-cell keywordize)
                     cell-ref (sheet/cell-reference cell)
                     column (subs cell-ref 0 (dec (count cell-ref)))]]
