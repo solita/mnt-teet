@@ -261,7 +261,7 @@
   :contract-save-success "Contract saved",
   :partners {:title "Companies & persons"},
   :persons "Persons",
-  :add-company "Add company",
+  :add-company "Add Partner information",
   :status "Status",
   :table-heading
   {:activity "Activity",
@@ -285,7 +285,9 @@
   :no-company-found-content
   "No company matching the business registry code was found.",
   :xroad-exception-title "X-Road query failed",
+  :edit-company "Edit company",
   :role-required "Employee needs to have a role",
+  :employee-added "Employee added",
   :add-person "Add person",
   :search-companies-business-registry
   "Search for partner information from Estonian business registry",
@@ -518,7 +520,7 @@
   :file.status/returned "Returned",
   :land-acquisition.impact/purchase-not-needed
   "Acquisition not needed",
-  :ungrouped-files "Ungrouped files",
+  :ungrouped-files "Document group not specified",
   :task.type/funding-plan "Funding plan",
   :thk.lifecycle-type/maintenance "Maintenance",
   :comment.status/resolved "Changes implemented",
@@ -952,7 +954,7 @@
   "Respondents connection to the land",
   :thk.contract/warranty-period "Warranty period",
   :land-acquisition/pos-number "POS#",
-  :company/country "Country",
+  :company/country "Country of registeration",
   :meeting.agenda/responsible "Responsible person",
   :document/sub-category "Document subtype",
   :location/road-address "Road address",
@@ -1061,10 +1063,10 @@
   :full-name "TEET Full name",
   :switch-to-latest-version "Switch back to latest version",
   :sort-by
-  {:file/name "Sort by name",
+  {:file/name "Sort by file description",
    :file/status "Sort by status",
    :file/type "Sort by file type",
-   :meta/created-at "Sort by date",
+   :meta/created-at "Sort by date of upload",
    :file/default "Default sorting"},
   :replace-dialog-info-text
   "Don't worry we will keep the current version, so you can go back to it if you need to.",

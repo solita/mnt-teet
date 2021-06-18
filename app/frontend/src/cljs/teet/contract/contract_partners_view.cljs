@@ -218,15 +218,16 @@
 
 (defn edit-partner-form
   [e! app selected-company]
-  (e! (contract-partners-controller/->InitializeEditCompanyForm))
-  (fn [e! contract {:keys [search-success?] :as form-value}]
-    (r/with-let [on-change #(e! (contract-partners-controller/->UpdateNewCompanyForm %))]
+  (e! (contract-partners-controller/->InitializeEditCompanyForm selected-company))
+  (fn [e! selected-company {:keys [search-success?] :as form-value}]
+    (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       [Grid {:container true}
        [Grid {:item true
               :xs 12
               :md 6}
         [form/form2 {:e! e!
-                     :value form-value}
+                     :value selected-company
+                     :on-change-event on-change}
 
          [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
           (tr [:contract :edit-company])]
@@ -427,39 +428,50 @@
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
-  [partner-name params]
-  [:<>
-   [:h1 partner-name]
-   [buttons/button-secondary
-    {:edit-icon (r/as-element [icons/image-edit])
-     :href (routes/url-for {:page :contract-partners
-                            :params params
-                            :query {:page :edit-partner}})}
-    (tr [:buttons :edit])]])
+  [app partner params]
+  (let [partner-name (get-in partner [:company-contract/company :company/name])
+        partner-id (get-in partner [:company-contract/company :teet/id])]
+    [:<>
+     [:h1 partner-name]
+     [buttons/button-secondary
+      {:start-icon (r/as-element [icons/content-add])
+       :href (routes/url-for {:page :contract-partners
+                              :params params
+                              :query {:page :edit-partner
+                                      :partner partner-id}})}
+      (tr [:buttons :edit])]]))
+
+(defn get-company-edit-data
+  [params app]
+  {:form-data (:edit-company app)})
 
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header (get-in selected-partner [:company-contract/company :company/name]) params]
+   [partner-info-header app selected-partner params]
    [:p (pr-str selected-partner)]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
-  (let [selected-partner-id (:partner query)
+  (let [_ (println "partners-page-router PARAMS " params " QUERY " query " CONTRACT " contract)
+        selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
                               (filter
                                 (fn [contract]
                                   (= (str (:teet/id contract)) selected-partner-id)))
-                              first)]
+                              first)
+
+        form-data (get-company-edit-data params app)]
+
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app selected-partner]
+      [edit-partner-form e! app (:company-contract/_contract contract)]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner

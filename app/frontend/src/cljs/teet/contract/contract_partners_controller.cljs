@@ -8,7 +8,7 @@
 (defrecord UpdateEditCompanyForm [form-data])
 (defrecord CancelAddNewCompany [])
 (defrecord InitializeNewCompanyForm [])
-(defrecord InitializeEditCompanyForm [])
+(defrecord InitializeEditCompanyForm [company])
 (defrecord SearchBusinessRegistry [business-id])
 (defrecord SearchBusinessRegistryError [error])
 (defrecord SelectCompany [company])
@@ -20,10 +20,10 @@
     (update-in app [:forms :new-partner] merge form-data))
 
   UpdateEditCompanyForm
-  (process-event [{form-data :form-data} app]
+  (process-event [company app]
     ; @TODO: implement
-    (println "UpdateEditCompanyForm" form-data)
-    (update-in app [:forms :new-partner] merge form-data))
+    (println "UpdateEditCompanyForm" company)
+    (update-in app [:forms :edit-partner] merge company))
 
   InitializeNewCompanyForm
   (process-event [{} app]
@@ -38,10 +38,10 @@
         (assoc-in app [:forms :new-partner] {:company/country :ee}))))
 
   InitializeEditCompanyForm
-  (process-event [{} app]
+  (process-event [{company :company} app]
     ; @TODO: implement
-    (println "Edit Company Form initialized")
-    (assoc-in app [:forms :new-partner] {:company/country :ee}))
+    (println "Edit Company Form initialized with form-data: " company)
+    (assoc-in app [:forms :edit-partner] company))
 
   CancelAddNewCompany
   (process-event [{} app]
