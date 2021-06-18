@@ -29,7 +29,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.util :as util]))
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -397,7 +398,7 @@
         [:span
          [:div {:class (<class common-styles/flex-row)}
           [:div {:class (<class common-styles/flex-table-column-style
-                                40 :flex-start 1 nil)}
+                                30 :flex-start 1 nil)}
            [component-tree-level-indent level]
            [url/Link (if link-fn
                        (link-fn (:asset/oid c))
@@ -405,10 +406,23 @@
                         :params {:id (:asset/oid c)}})
             (children-label-fn c)]]
           [:div {:class (<class common-styles/flex-table-column-style
-                                35 :flex-start 0 nil)}
+                                20 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
           [:div {:class (<class common-styles/flex-table-column-style
-                                25 :flex-end 0 nil)}
+                                20 :flex-start 0 nil)}
+           [label-for (:common/status c)]]
+
+          [:div {:class (<class common-styles/flex-table-column-style
+                                20 :flex-start 0 nil)}
+           (util/with-keys
+             (butlast
+              (interleave
+               (for [m (:component/materials c)]
+                 [label-for (:material/type m)])
+               (repeat [:span ",\u00A0"]))))]
+
+          [:div {:class (<class common-styles/flex-table-column-style
+                                10 :flex-end 0 nil)}
            (when-not locked?
              [when-authorized
               :asset/delete-component nil
