@@ -454,11 +454,15 @@
   (let [selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
                               (filter
-                                (fn [contract]
-                                  (= (str (:teet/id contract)) selected-partner-id)))
+                                (fn [partner]
+                                  (= (str (:teet/id partner)) selected-partner-id)))
                               first)
-
-        partner-form-data (:company-contract/company (first (:company-contract/_contract contract)))]
+        edit-form-data (:company-contract/company
+                            (first
+                              (filter
+                                (fn [company]
+                                  (= (str (:teet/id (:company-contract/company company))) selected-partner-id))
+                                (:company-contract/_contract contract))))]
 
     (case (keyword (:page query))
       :add-partner
@@ -466,7 +470,7 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app partner-form-data]
+      [edit-partner-form e! app edit-form-data]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
