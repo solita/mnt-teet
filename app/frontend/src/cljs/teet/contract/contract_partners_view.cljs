@@ -221,7 +221,8 @@
   (e! (contract-partners-controller/->InitializeEditCompanyForm (:company-contract/company selected-company)))
   (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
-      (let [form-state (:edit-partner forms)]
+      (let [form-state (:edit-partner forms)
+            partner-save-command :thk.contract/add-new-contract-partner-company]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
@@ -229,7 +230,7 @@
           [form/form2 {:e! e!
                        :value form-state
                        :save-event #(common-controller/->SaveFormWithConfirmation
-                                      identity
+                                      partner-save-command
                                       {:form-data form-state
                                        :contract (select-keys (:company-contract/company selected-company) [:db/id])}
                                       (fn [response]
