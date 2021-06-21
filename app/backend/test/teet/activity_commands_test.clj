@@ -111,7 +111,7 @@
                           {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                       :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                       :activity/name :activity.name/land-acquisition}
-                           :tasks [[:task.group/land-purchase :task.type/road-safety-audit false]]
+                           :tasks [[:task.group/land-purchase :task.type/preliminary-agreements false]]
                            :lifecycle-id (tu/->db-id "p3-lc1")}))))
 
 (deftest add-tasks
