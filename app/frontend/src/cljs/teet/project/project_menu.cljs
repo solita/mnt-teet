@@ -17,7 +17,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.ui.url :as url]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -168,7 +169,8 @@
               (tr [:common :project-menu])])
            [Popper {:open @open?
                     :anchor-el @anchor-el
-                    :classes {:paper (<class project-style/project-view-selection-menu)}
+                    :classes #js {:paper (<class project-style/project-view-selection-menu)}
+                    :style {:z-index 1200}
                     :placement "bottom-start"}
             (project-context/consume
               (fn [{project-id :thk.project/id}]
