@@ -301,3 +301,13 @@
     :activity.name/preliminary-design
     '([:task.group/study :task.type/archeological-study true]
      [:task.group/study :task.type/topogeodesy true]))))
+
+(deftest can-not-create-thk-tasks-in-teet
+  (testing "Tasks are not valid when list of tasks contains road-safety-audit or supervision"
+    (is
+      (not
+        (task-db/valid-tasks?
+          (tu/db)
+          :activity.name/preliminary-design
+          '([:task.group/construction-quality-assurance :task.type/owners-supervision false]
+            [:task.group/construction-approval :task.type/road-safety-audit false]))))))
