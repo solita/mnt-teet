@@ -36,5 +36,13 @@ describe("Task view", function() {
         costItemOid = $h2.text()
       })
     })
+
+    it("a component can be added to the asset", function() {
+      // Navigate to the created component via the navigation on the left panel
+      cy.get("[data-cy='navigation-fgroup-drainage'] button").click()
+      cy.get("[data-cy='navigation-fclass-culvert'] a").contains(costItemOid).click()
+      cy.get("h2[data-cy='cost-item-oid']").contains(costItemOid)
+
+    })
   })
 })
