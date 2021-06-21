@@ -30,7 +30,8 @@
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -162,13 +163,22 @@
    [carriageway-for-road-select* opts selected-road-nr]])
 
 (defn- location-entry [e! locked? selected-road-nr single-point?]
-  (let [input-textfield (if locked? display-input text-field/TextField)]
+  (let [input-textfield (if locked? display-input text-field/TextField)
+        mobile? (responsivity-styles/mobile?)
+        subhead-w (if mobile? 12 2)
+        subhead (fn [text]
+                  [Grid {:item true :md subhead-w :xs subhead-w
+                         ;; Add margin here because grid is aligned
+                         ;; to bottom.
+                         :class (<class common-styles/margin-bottom 1.5)}
+                   [typography/BoldGrayText text]])]
     [:<>
+
+     (subhead (tr [:asset :location :project-coordinates]))
+
      [Grid {:item true
-            :md 4}]
-     [Grid {:item true
-            :md (if single-point? 8 4)
-            :xs 12
+            :md (if single-point? 10 5)
+            :xs (if mobile? 6 12)
             :style {:padding "0.2rem"}}
       [form/field {:attribute :location/start-point
                    :required? true}
@@ -176,16 +186,18 @@
 
      (when-not single-point?
        [Grid {:item true
-              :md 4
-              :xs 12
+              :md 5
+              :xs (if mobile? 6 12)
               :style {:padding "0.2rem"}}
         [form/field {:attribute :location/end-point
                      :required? true}
          [input-textfield {}]]])
 
+     (subhead (tr [:asset :location :project-address]))
+
      [Grid {:item true
-            :md 3
-            :xs 12
+            :md 5
+            :xs 10
             :style {:padding "0.2rem"}}
       [form/field :location/road-nr
        (if locked?
@@ -193,17 +205,19 @@
          [asset-ui/relevant-road-select {:e! e!}])]]
 
      [Grid {:item true
-            :md 1
-            :xs 12
+            :md 5
+            :xs 2
             :style {:padding "0.2rem"}}
       [form/field :location/carriageway
        (if locked?
          [input-textfield {}]
          [carriageway-for-road-select {:e! e!} selected-road-nr])]]
 
+     [Grid {:item true :md 2}]
+
      [Grid {:item true
-            :md (if single-point? 4 2)
-            :xs 12
+            :md (if single-point? 6 3)
+            :xs (if single-point? 6 3)
             :style {:padding "0.2rem"}}
       [form/field {:attribute :location/start-km
                    :required? true}
@@ -211,7 +225,7 @@
 
      [Grid {:item true
             :md (if single-point? 4 2)
-            :xs 12
+            :xs (if single-point? 6 3)
             :style {:padding "0.2rem"}}
       [form/field :location/start-offset-m
        [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
@@ -219,8 +233,8 @@
 
      (when-not single-point?
        [Grid {:item true
-              :md 2
-              :xs 12
+              :md 3
+              :xs 3
               :style {:padding "0.2rem"}}
         [form/field :location/end-km
          [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]])
@@ -228,7 +242,7 @@
      (when-not single-point?
        [Grid {:item true
               :md 2
-              :xs 12
+              :xs 3
               :style {:padding "0.2rem"}}
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])

@@ -112,7 +112,9 @@
   :location
   {:hide-map "Peida kaart",
    :no-road-found-for-points "Punktide jaoks ei leitud teed",
-   :show-map "Näita kaarti"},
+   :show-map "Näita kaarti",
+   :project-coordinates "Projekti koordinaadid",
+   :project-address "Projekti aadress"},
   :confirm-unlock-for-edits "Jah, ava",
   :type-library
   {:description "Kirjeldus",
@@ -197,7 +199,6 @@
   :date "kuupäev",
   :log-out "Väljun",
   :back-to-project "Tagasi projekti",
-  :project-menu "Projekti menüü",
   :now "Nüüd",
   :construction-phase "Ehitusetapp",
   :general "Üldine",
