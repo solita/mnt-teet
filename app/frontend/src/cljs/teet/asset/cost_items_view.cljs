@@ -368,16 +368,19 @@
      (if (> (count allowed-components) 3)
        [common/context-menu
         {:label menu-label
+         :data-cy :component-menu-button
          :icon [icons/content-add-circle-outline]
          :items (for [c allowed-components]
                   {:label (label c)
                    :icon [icons/content-add]
-                   :on-click (r/partial add-component! (:db/ident c))})}]
+                   :on-click (r/partial add-component! (:db/ident c))
+                   :data-cy (-> c :db/ident name)})}]
        (doall
         (for [c allowed-components]
           ^{:key (str (:db/ident c))}
           [Grid {:item true :xs 12 :md 4}
            [buttons/button-secondary {:size :small
+                                      :data-cy (str "add-" (-> c :db/ident name))
                                       :on-click (r/partial add-component! (:db/ident c))
                                       :start-icon (r/as-element [icons/content-add])}
             (label c)]])))]))
@@ -600,7 +603,9 @@
           component-data (last component-path)]
       [:<>
        (when (asset-model/component-oid? component-oid)
-         [typography/Heading2 component-oid])
+         [typography/Heading2
+          {:data-cy :component-oid}
+          component-oid])
        [component-form-navigation atl component-path]
 
        [form/form2
