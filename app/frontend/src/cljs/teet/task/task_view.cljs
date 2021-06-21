@@ -48,7 +48,7 @@
                         :or {existing #{}}}
                        task-groups task-types]
   (let [selectable-task-types (remove (fn [task]            ;; Remove tasks that are created in thk from being created in the modal
-                                        (task-model/created-in-thk (:db/ident task)))
+                                        (task-model/not-creatable-in-teet (:db/ident task)))
                                       task-types)]
     [:div {:style {:max-height "70vh" :overflow-y :scroll}}
      (mapc (fn [g]
