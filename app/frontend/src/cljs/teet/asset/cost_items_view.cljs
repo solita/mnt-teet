@@ -520,7 +520,7 @@
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
        (when-let [oid (:asset/oid form-data)]
-         [typography/Heading2 oid])
+         [typography/Heading2 {:data-cy :cost-item-oid} oid])
        [form/form2
         {:e! e!
          :on-change-event cost-items-controller/->UpdateForm

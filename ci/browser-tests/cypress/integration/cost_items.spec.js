@@ -9,6 +9,8 @@ describe("Task view", function() {
 
   })
 
+  let costItemOid
+
   context("Assets", function() {
 
     it("new asset can be added", function() {
@@ -29,7 +31,10 @@ describe("Task view", function() {
       // Submit
       cy.get("button[type=submit]").click()
 
-
+      // Check we're redirected to the cost item view, store cost item id
+      cy.get("h2[data-cy='cost-item-oid']").then(($h2) => {
+        costItemOid = $h2.text()
+      })
     })
   })
 })
