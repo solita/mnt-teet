@@ -130,11 +130,12 @@
                              :type      :button}))
 
 (defn stand-alone-icon-button
-  [{:keys [id on-click icon class href]}]
+  [{:keys [id on-click icon class href ref]}]
   [IconButton {:size :small
                :class (conj class (<class common-styles/stand-alone-icon-button-style))
                :on-click on-click
                :href href
+               :ref ref
                :id id
                }
    icon])

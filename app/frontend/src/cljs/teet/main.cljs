@@ -65,7 +65,7 @@
     (let [{:keys [page]} (page-and-title e! app)]      
       [:<>
        [drag/drag-handler e!]
-       [navigation-view/header e!
+       [navigation-view/header e! app
         {:open? nav-open?
          :page (:page app)
          :quick-search (:quick-search app)

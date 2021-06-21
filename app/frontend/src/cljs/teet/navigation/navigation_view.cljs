@@ -22,7 +22,8 @@
             [teet.ui.typography :as typography]
             [teet.user.user-model :as user-model]
             [teet.ui.events :as events]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.project.project-view :as project-view]))
 
 
 (def uri-quote (fnil js/encodeURIComponent "(nil)"))
@@ -333,35 +334,37 @@
      [header-extra-panel e! user {:quick-search quick-search} extra-panel]]]])
 
 (defn header
-  [e! {:keys [open? page quick-search url extra-panel extra-panel-open?]} user]
+  [e! app {:keys [open? page quick-search url extra-panel extra-panel-open?]} user]
   [:<>
    [ClickAwayListener {:on-click-away #(e! (navigation-controller/->CloseExtraPanel))}
-    [AppBar {:position "sticky"
-             :className (herb/join (<class navigation-style/appbar)
-                                   (<class navigation-style/appbar-position open?))}
-     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
-      [buttons/stand-alone-icon-button
-       {:class [(<class responsivity-styles/mobile-navigation-button)]
-        :icon [icons/navigation-menu {:color :primary}]
-        :on-click #(e! (navigation-controller/->ToggleDrawer))}]
-      [:div {:class (<class navigation-style/logo-style)}
-       [navigation-logo/maanteeamet-logo false]]
-      [:div {:class (<class responsivity-styles/desktop-only-style
-                            {:position   :relative
-                             :flex-grow  1
-                             :flex-basis "400px"
-                             :display    :block}
-                            {:display :none})}
-       [search-view/quick-search
-        e!
-        quick-search
-        (<class navigation-style/search-input-style)]]
-      [navigation-header-links e! user url]]
-     [header-extra-panel-container e!
-      {:user user
-       :quick-search quick-search
-       :extra-panel extra-panel
-       :extra-panel-open? extra-panel-open?}]]]
+    [AppBar {:position "sticky"}
+     [:div {:className (herb/join (<class navigation-style/appbar)
+                                  (<class navigation-style/appbar-position open?))}
+      [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
+       [buttons/stand-alone-icon-button
+        {:class [(<class responsivity-styles/mobile-navigation-button)]
+         :icon [icons/navigation-menu {:color :primary}]
+         :on-click #(e! (navigation-controller/->ToggleDrawer))}]
+       [:div {:class (<class navigation-style/logo-style)}
+        [navigation-logo/maanteeamet-logo false]]
+       [:div {:class (<class responsivity-styles/desktop-only-style
+                             {:position :relative
+                              :flex-grow 1
+                              :flex-basis "400px"
+                              :display :block}
+                             {:display :none})}
+        [search-view/quick-search
+         e!
+         quick-search
+         (<class navigation-style/search-input-style)]]
+       [navigation-header-links e! user url]]
+      [header-extra-panel-container e!
+       {:user user
+        :quick-search quick-search
+        :extra-panel extra-panel
+        :extra-panel-open? extra-panel-open?}]]
+     ;; Header extension for project views (mobile)
+     [project-view/project-menu-header e! app open?]]]
 
    (if (responsivity-styles/mobile?)
      [Drawer {:classes {"paperAnchorDockedLeft"

@@ -22,12 +22,12 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase]]
+            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase Toolbar]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.typography :refer [Heading1 Heading3] :as typography]
+            [teet.ui.typography :refer [Heading1 Heading3 TextBold] :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc] :as util]
             [teet.util.collection :as cu]
@@ -50,7 +50,8 @@
             [teet.navigation.navigation-style :as navigation-style]
             [teet.contract.contract-style :as contract-style]
             [teet.contract.contract-status :as contract-status]
-            [teet.contract.contract-model :as contract-model]))
+            [teet.contract.contract-model :as contract-model]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (defn contract-info
   [{:thk.contract/keys [status] :as contract}]
@@ -700,6 +701,22 @@
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-view e! app project]]])
+
+(defn project-menu-header
+  [e! app open?]
+  (when-let [project (project-controller/app->project app)]
+    [project-context/provide
+     project
+     (if (responsivity-styles/mobile?)
+       [:div {:className (herb/join (<class navigation-style/appbar)
+                                    (<class navigation-style/appbar-position open?))}
+        [Toolbar {:className (herb/join (<class navigation-style/toolbar))
+                  :style {:display "flex"
+                          :justify-content :space-between}}
+         [TextBold {:style {:text-transform :uppercase}
+                    :class (<class common-styles/margin-left 0.5)}
+          (:thk.project/name project)]
+         [project-menu/project-menu e! app (get-in app [:route :project])]]])]))
 
 (defn project-full-page-structure
   "Structure for project pages that don't have map, but have
