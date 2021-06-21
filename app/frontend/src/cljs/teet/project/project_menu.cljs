@@ -153,13 +153,19 @@
       (fn [e! app project]
         (let [{tab-name :name} (active-tab app)]
           [:<>
-           [buttons/button-primary
-            {:class "project-menu"
-             :size "small"
-             :start-icon (r/as-element [icons/navigation-menu])
-             :on-click toggle-open!
-             :ref set-anchor!}
-            (tr [:common :project-menu])]
+           (if (responsivity-styles/mobile?)
+             [buttons/stand-alone-icon-button
+              {:class ["project-menu" (<class responsivity-styles/mobile-navigation-button)]
+               :icon [icons/navigation-menu {:color :primary}]
+               :on-click toggle-open!
+               :ref set-anchor!}]
+             [buttons/button-primary
+              {:class "project-menu"
+               :size "small"
+               :start-icon (r/as-element [icons/navigation-menu])
+               :on-click toggle-open!
+               :ref set-anchor!}
+              (tr [:common :project-menu])])
            [Popper {:open @open?
                     :anchor-el @anchor-el
                     :classes {:paper (<class project-style/project-view-selection-menu)}
