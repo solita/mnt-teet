@@ -113,7 +113,7 @@
   {:hide-map "Peida kaart",
    :no-road-found-for-points "Punktide jaoks ei leitud teed",
    :show-map "Näita kaarti",
-   :project-coordinates "Projekti koordinaadid",
+   :project-coordinates "Koordinaadid",
    :project-address "Projekti aadress"},
   :confirm-unlock-for-edits "Jah, ava",
   :type-library
@@ -299,8 +299,9 @@
  {:contracts-list
   {:collapse-all "Sulgen kõik",
    :expand-all "Avan kõik",
-   :result "Tulemus",
-   :results "tulemust",
+   :filtered-result "{count} Tulemust",
+   :filtered-results "Filtreeritud {count} tulemust",
+   :results "{count} tulemust",
    :view "Vaata"},
   :external-link "Lepingu nr.",
   :filters

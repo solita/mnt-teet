@@ -19,7 +19,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.container :as container]
             [teet.contract.contract-status :as contract-status]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.common :as common-ui]))
 
 (defn contract-card-header
   [contract-status contract-name contract-url-id]
@@ -64,34 +65,42 @@
     (tr [:contracts :contracts-list :collapse-all])]])
 
 (defn contacts-list-header
-  [{:keys [contracts-count expand-contracts collapse-contracts]}]
+  [{:keys [contracts-count expand-contracts collapse-contracts all-contracts?]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
    [contract-list-expansion-buttons expand-contracts collapse-contracts]
-   [typography/SmallText (str contracts-count " "
-                           (tr (if (= contracts-count 1)
-                                 [:contracts :contracts-list :result]
-                                 [:contracts :contracts-list :results])))]])
+   [typography/SmallText
+    (tr
+      (if all-contracts?
+        [:contracts :contracts-list :results]
+        (if (= contracts-count 1)
+          [:contracts :contracts-list :filtered-result]
+          [:contracts :contracts-list :filtered-results]))
+      {:count (str contracts-count)})]])
 
 (defn contract-expansion-map
   [contracts open?]
   (reduce (fn [expansion-map contract] (assoc expansion-map (:db/id contract) open?)) {} contracts))
 
 (defn contracts-list
-  [contracts]
+  [all-contracts? contracts]
   (r/with-let [contract-expansion-atom (r/atom (contract-expansion-map contracts false))
                expand-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts true))
                collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))
                toggle-card (fn [contract-id]
-                             (swap! contract-expansion-atom update contract-id #(not %)))]
+                             (swap! contract-expansion-atom update contract-id #(not %)))
+               show-count (r/atom 20)
+               hit-scroll-limit #(swap! show-count + 20)]
     [:div {:class (<class contract-style/contracts-list-style)}
-     [contacts-list-header {:contracts-count (count contracts)
+     [contacts-list-header {:all-contracts? all-contracts?
+                            :contracts-count (count contracts)
                             :expand-contracts expand-contracts
                             :collapse-contracts collapse-contracts}]
      (doall
-       (for [contract contracts
+       (for [contract (take @show-count contracts)
              :let [open? (get @contract-expansion-atom (:db/id contract))]]
          ^{:key (str (:db/id contract))}
-         [contract-card contract #(toggle-card (:db/id contract)) open?]))]))
+         [contract-card contract #(toggle-card (:db/id contract)) open?]))
+     [common-ui/scroll-sensor hit-scroll-limit]]))
 
 (def filter-options
   [:my-contracts
@@ -214,7 +223,7 @@
 
 (defn contract-search
   [{:keys [e! filter-options clear-filters filtering-atom input-change change-shortcut]}]
-  (r/with-let [filters-visibility? (r/atom false)
+  (r/with-let [filters-visibility? (r/atom true)
                toggle-filters-visibility #(swap! filters-visibility? not)]
     [:div {:class (<class contract-style/contract-search-container-style)}
      [:div {:class (<class contract-style/search-header-style)}
@@ -234,7 +243,7 @@
 
 ;; Targeted from routes.edn will be located in route /contracts
 (defn contracts-listing-view
-  [e! {route :route :as app}]
+  [e! {route :route :as _app}]
   (r/with-let [default-filtering-value {:shortcut :my-contracts}
                filtering-atom (local-storage (r/atom default-filtering-value)
                                              :contract-filters)
@@ -261,5 +270,5 @@
          :query :contracts/list-contracts
          :args {:search-params @filtering-atom
                 :refresh (:contract-refresh route)}
-         :simple-view [contracts-list]}
+         :simple-view [contracts-list (= {:shortcut :all-contracts} @filtering-atom)]}
         250]]]]))

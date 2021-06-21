@@ -114,7 +114,7 @@
   {:hide-map "Hide map",
    :no-road-found-for-points "No road found for points",
    :show-map "Show map",
-   :project-coordinates "Project coordinates",
+   :project-coordinates "Coordinates",
    :project-address "Project address"},
   :confirm-unlock-for-edits "Yes, unlock",
   :type-library
@@ -299,8 +299,9 @@
  {:contracts-list
   {:collapse-all "Collapse all",
    :expand-all "Expand all",
-   :result "Result",
-   :results "results",
+   :filtered-result "Filtered {count} result",
+   :filtered-results "Filtered {count} results",
+   :results "{count} results",
    :view "View"},
   :external-link "Contract no.",
   :filters
