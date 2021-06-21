@@ -453,9 +453,10 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths show-map? export-menu-items content-padding]
+  [{:keys [e! project app column-widths show-map? export-menu-items content-margin]
     :or {column-widths [3 6 :auto]
-         show-map? true}
+         show-map? true
+         content-margin "0rem 0.5rem"}
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
@@ -477,7 +478,7 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style {:padding (or content-padding "2rem 1.5rem")
+                :style {:margin content-margin
                         :overflow-y :auto
                         :max-height "100%"
                         ;; content area should scroll, not the whole page because we

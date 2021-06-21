@@ -742,7 +742,9 @@
     :app app
     :state state
     :left-panel-action [add-cost-item app version]}
-   [cost-items-map-view/project-map {:e! e!}]])
+   [:div {:style {:height "calc(100% - 30px)"}}
+    [cost-items-map-view/project-map {:e! e!
+                                      :full-height? true}]]])
 
 (defn cost-items-page [e! app state]
   [asset-ui/wrap-atl-loader cost-items-page* e! app state])

@@ -452,6 +452,7 @@
                      :add? (= :new-cost-item (:page app))
                      :project project
                      :cost-items cost-items})]]
+           :content-margin "0 0"
            :main
            [:<>
             [boq-version-statusline e! page-state]
