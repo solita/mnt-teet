@@ -2,6 +2,7 @@
   "Code for handling asset type library and generated forms data."
   (:require [teet.util.collection :as cu]
             [teet.util.datomic :as du]
+            [teet.util.string :as string]
             #?@(:clj [[clojure.string :as str]
                       [clojure.walk :as walk]
                       [teet.util.coerce :refer [->long ->bigdec]]])))
@@ -203,3 +204,51 @@
                 (str v))
               u]))
          (sort-by (comp label key) attr->val))))
+
+(defn- matching-component-labels [language text acc {cs :ctype/_parent :as fclass}]
+  (let [l (label language fclass)
+        pos (string/match-pos l text)
+        acc (if pos
+              (conj acc {:pos pos :component l})
+              acc)]
+    (reduce (partial matching-component-labels  language text)
+            acc cs)))
+
+(defn search-fclass
+  "Search for feature classes by search term.
+  Returns sequence of [fgroup fclass] vectors of matching items
+  sorted by relevance.
+
+  Includes any fclass where the group name, class name or a component
+  name contains the search term."
+  [{fgroups :fgroups :as _atl} language search-term]
+  (let [match
+        (fn [fg fc]
+          (let [fgl (label language fg)
+                fcl (label language fc)
+                cs (matching-component-labels language search-term [] fc)
+                fgl-pos (string/match-pos fgl search-term)
+                fcl-pos (string/match-pos fcl search-term)]
+            (when (or fgl-pos fcl-pos (seq cs))
+              ;; this matches, return result with relevance
+              {:fgl-pos fgl-pos
+               :fcl-pos fcl-pos
+               :fgl fgl
+               :fcl fcl
+               :components cs})))]
+    (->> (for [fg fgroups
+               fc (:fclass/_fgroup fg)
+               :let [m (match fg fc)]
+
+               :when m]
+           [m [fg fc (:components m)]])
+
+         ;; Sort results based on match positions and actual labels
+         (sort-by (fn [[{:keys [fcl fgl fcl-pos fgl-pos components]} _]]
+                    [(or fgl-pos 99999)
+                     (or fcl-pos 99999)
+                     (or (reduce min (map :pos components)) 99999)
+                     fgl fcl]))
+
+         ;; Return only the [fg fc components] as results
+         (mapv second))))
