@@ -222,7 +222,7 @@
   (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
-            partner-save-command :thk.contract/add-new-contract-partner-company]
+            partner-save-command :thk.contract/save-contract-partner-company]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
