@@ -228,7 +228,21 @@
                 :md 6}
           [form/form2 {:e! e!
                        :value form-state
-                       :on-change-event on-change}
+                       :save-event #(common-controller/->SaveFormWithConfirmation
+                                      identity
+                                      {:form-data form-state
+                                       :contract (select-keys (:company-contract/company selected-company) [:db/id])}
+                                      (fn [response]
+                                        (fn [e!]
+                                          (e! (common-controller/->Refresh))
+                                          (e! (contract-partners-controller/->InitializeEditCompanyForm
+                                                (:company-contract/company selected-company)))
+                                          (e! (common-controller/map->NavigateWithExistingAsDefault
+                                                {:query {:page :partner-info
+                                                         :partner (:company-contract-id response)}}))))
+                                      (tr [:contract :partner-saved]))
+                       :on-change-event on-change
+                       :cancel-event contract-partners-controller/->CancelAddNewCompany}
 
            [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
             (tr [:contract :edit-company])]
