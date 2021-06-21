@@ -146,7 +146,7 @@
         anchor-el (atom nil)
         toggle-open! #(do
                         (swap! open? not)
-                        (.blur @anchor-el))
+                        (some-> @anchor-el .blur))
         set-anchor! #(reset! anchor-el %)]
     (common/component
       (hotkeys/hotkey "Q" toggle-open!)
