@@ -113,7 +113,9 @@
   :location
   {:hide-map "Hide map",
    :no-road-found-for-points "No road found for points",
-   :show-map "Show map"},
+   :show-map "Show map",
+   :project-coordinates "Project coordinates",
+   :project-address "Project address"},
   :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
@@ -200,7 +202,6 @@
   :date "Date",
   :log-out "Log out",
   :back-to-project "Back to project",
-  :project-menu "Project menu",
   :now "Now",
   :construction-phase "Phase",
   :general "General",
