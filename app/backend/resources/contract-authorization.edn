@@ -1,8 +1,8 @@
 {:file-management/edit-files
  #{:admin
    :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/subcontractor
    :company-contract-employee.role/supervisor
-   :subcontractor
    :company-contract-employee.role/team-member
    :ta-project-manager
    :ta-responsible-person
@@ -111,8 +111,8 @@
  #{:internal-consultant
    :admin
    :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/subcontractor
    :company-contract-employee.role/supervisor
-   :subcontractor
    :company-contract-employee.role/team-member
    :ta-project-manager
    :ta-responsible-person
@@ -124,8 +124,8 @@
  #{:internal-consultant
    :admin
    :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/subcontractor
    :company-contract-employee.role/supervisor
-   :subcontractor
    :company-contract-employee.role/team-member
    :ta-project-manager
    :ta-responsible-person

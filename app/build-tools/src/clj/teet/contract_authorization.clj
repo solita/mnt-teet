@@ -21,8 +21,7 @@
    :supervisor :company-contract-employee.role/supervisor
    :team-member :company-contract-employee.role/team-member
 
-   :subcontractor :subcontractor                            ;; This is a bit open for interpretation
-   })
+   :subcontractor :company-contract-employee.role/subcontractor})
 
 
 (defn get-authorizations-from-sheet [sheet-path]
