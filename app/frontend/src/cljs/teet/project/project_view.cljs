@@ -708,8 +708,9 @@
   If left-side content is not specified, the project navigator is used.
   The :project-navigator map options can be used to override default parameters."
   [{:keys [e! app project main left-panel right-panel project-navigator
-           export-menu-items right-panel-padding]
-    :or {right-panel-padding "1rem 1.5rem"}}]
+           export-menu-items right-panel-padding content-margin]
+    :or {right-panel-padding "1rem 1.5rem"
+         content-margin "0rem 0.5rem"}}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
      project
@@ -734,7 +735,7 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style (merge {:padding "2rem 1.5rem"
+                :style (merge {:margin content-margin
                                :overflow-y :auto
                                :max-height "100%"}
                               (when (not right-panel)
