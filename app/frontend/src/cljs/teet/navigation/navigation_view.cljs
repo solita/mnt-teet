@@ -366,22 +366,21 @@
      ;; Header extension for project views (mobile)
      [project-view/project-menu-header e! app open?]]]
 
-   (if (responsivity-styles/mobile?)
-     [Drawer {:classes {"paperAnchorDockedLeft"
-                        (<class navigation-style/mobile-drawer open?)}
-              :variant "temporary"
-              :on-close (e! navigation-controller/->CloseDrawer)
-              :anchor "left"
-              :open open?
-              :disablePortal true}
-      [page-listing e! open? user page]]
-     [Drawer {:classes {"paperAnchorDockedLeft"
-                        (<class navigation-style/desktop-drawer open?)}
-              :variant "permanent"
-              :on-close (e! navigation-controller/->CloseDrawer)
-              :anchor "left"
-              :open open?}
-      [page-listing e! open? user page]])])
+   [Drawer {:classes {"paperAnchorDockedLeft"
+                      (<class navigation-style/mobile-drawer open?)}
+            :variant "temporary"
+            :on-close (e! navigation-controller/->CloseDrawer)
+            :anchor "left"
+            :open open?
+            :disablePortal true}
+    [page-listing e! open? user page]]
+   [Drawer {:classes {"paperAnchorDockedLeft"
+                      (<class navigation-style/desktop-drawer open?)}
+            :variant "permanent"
+            :on-close (e! navigation-controller/->CloseDrawer)
+            :anchor "left"
+            :open open?}
+    [page-listing e! open? user page]]])
 
 (defn login-header
   [e! {:keys [url extra-panel extra-panel-open?] :as _app}]
