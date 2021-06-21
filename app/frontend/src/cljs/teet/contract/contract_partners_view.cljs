@@ -243,6 +243,7 @@
                                                          :partner (:company-contract-id response)}}))))
                                       (tr [:contract :partner-saved]))
                        :on-change-event on-change
+                       :spec :contract-company/edit-company
                        :cancel-event contract-partners-controller/->CancelAddNewCompany}
 
            [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
