@@ -730,6 +730,7 @@
     (let [add? (= "new" (get-in app [:params :id]))
           project (get-in app [:params :project])]
       [buttons/button-secondary {:element "a"
+                                 :data-cy :add-cost-item
                                  :href (url/cost-item project "new")
                                  :disabled add?
                                  :start-icon (r/as-element

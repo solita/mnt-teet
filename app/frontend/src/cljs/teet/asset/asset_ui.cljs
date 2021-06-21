@@ -89,6 +89,7 @@
           :format-result format-fg-and-fc
           :show-empty-selection? true
           :clear-value [nil nil]
+          :data-cy :select-fgroup-and-fclass
           :query (fn [text]
                    #(vec
                      (for [fg fgroups

@@ -471,7 +471,7 @@
            show-label? after-results-action
            query placeholder no-results clear-value
            start-icon input-button-icon input-element
-           query-threshold]
+           query-threshold data-cy]
     :or {show-label? true
          query-threshold 2
          placeholder (tr [:user :autocomplete :placeholder])
@@ -562,7 +562,9 @@
                (when input-button-icon
                  {:input-button-icon input-button-icon})
                (when-let [ic (:input-class opts)]
-                 {:class ic}))]
+                 {:class ic})
+               (when data-cy
+                 {:data-cy data-cy}))]
        (when open?
          [Popper {:open true
                   :anchorEl current-input-ref

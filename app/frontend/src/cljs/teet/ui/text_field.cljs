@@ -131,7 +131,8 @@
                     (select-keys props
                                  [:on-change :lang :on-focus :auto-complete
                                   :step :on-key-down :disabled :min :max :type :ref
-                                  :required :id :on-blur :placeholder :pattern])
+                                  :required :id :on-blur :placeholder :pattern
+                                  :data-cy])
                     {:value (or (:value props) "")
                      :on-focus (juxt (or on-focus identity)
                                     #(reset! focus? true))
