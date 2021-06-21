@@ -218,22 +218,22 @@
 
 (defn edit-partner-form
   [e! app selected-company]
-  (e! (contract-partners-controller/->InitializeEditCompanyForm selected-company))
-  (fn [e! selected-company {:keys [search-success?] :as form-value}]
+  (e! (contract-partners-controller/->InitializeEditCompanyForm (:company-contract/company selected-company)))
+  (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
-      [Grid {:container true}
-       [Grid {:item true
-              :xs 12
-              :md 6}
-        [form/form2 {:e! e!
-                     :value form-value
-                     :on-change-event on-change}
+      (let [form-state (:edit-partner forms)]
+        [Grid {:container true}
+         [Grid {:item true
+                :xs 12
+                :md 6}
+          [form/form2 {:e! e!
+                       :value form-state
+                       :on-change-event on-change}
 
-         [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
-          (tr [:contract :edit-company])]
-         (edit-company-form-fields form-value)
-         [form/footer2 (r/partial edit-company-footer e! form-value)]]]]
-      )))
+           [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
+            (tr [:contract :edit-company])]
+           [edit-company-form-fields form-state]
+           [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
   [e! _ _]
@@ -430,7 +430,8 @@
 (defn partner-info-header
   [app partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
-        partner-id (get-in partner [:company-contract/company :teet/id])]
+        partner-id (get-in partner [:company-contract/company :teet/id])
+        teet-id (:teet/id partner)]
     [:<>
      [:h1 partner-name]
      [buttons/button-secondary
@@ -438,7 +439,7 @@
        :href (routes/url-for {:page :contract-partners
                               :params params
                               :query {:page :edit-partner
-                                      :partner partner-id}})}
+                                      :partner teet-id}})}
       (tr [:buttons :edit])]]))
 
 (defn partner-info
@@ -456,21 +457,14 @@
                               (filter
                                 (fn [partner]
                                   (= (str (:teet/id partner)) selected-partner-id)))
-                              first)
-        edit-form-data (:company-contract/company
-                            (first
-                              (filter
-                                (fn [company]
-                                  (= (str (:teet/id (:company-contract/company company))) selected-partner-id))
-                                (:company-contract/_contract contract))))]
-
+                              first)]
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app edit-form-data]
+      [edit-partner-form e! app selected-partner]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
