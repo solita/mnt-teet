@@ -1,4 +1,5 @@
 (ns generate-schema
+  "Walks entities in a Datomic DB and generates a CSV file of entities and their attributes. We use incoming references for entity names."
   (:require [datomic.client.api :as d]
             [clojure.data.csv :as csv]
             [clojure.string :refer [join split]]
@@ -24,7 +25,7 @@
         ref-key-set (into #{}
                           (map first kv-pairs-with-db-id))
         all-keys-set (set (keys e))]
-    (into [] (concat (map #(str  %1 " (entity ref)")
+    (into [] (concat (map #(str %1 " (entity ref)")
                           ref-key-set)
                      (difference all-keys-set ref-key-set)))))
 
@@ -34,11 +35,6 @@
        (d/q '[:find (pull ?e [*])
               :in $ [?e ...]]
             db eids)))
-
-(defn pull-entities-filtered [db attr]
-  (d/index-pull db {:index :avet
-                    :selector [attr]
-                    :start [attr]}))
 
 (defn walk-entity
   ([db entity-map]
@@ -54,8 +50,7 @@
       (doall (for [[key val] entity-map
                    :when (and (vector? val)
                               (-> val seq first :db/id)
-                              (not (key descend-blacklist))
-                              #_(< (count parents) 3))]
+                              (not (key descend-blacklist)))]
                (let [eids (keep :db/id (filter map? val))
                      child-parents (conj parents key)]
 
@@ -70,10 +65,9 @@
   (assert (map? m) m)
   (let [parents (:parents m)
         field-rows (for [f (:fields m)]
-                     (do
+                    (do
                        ; (println "parents" parents-text)
                        [:entity name
-                                        ; :parents parents-text
                         :parents parents
                         :field f]))
         child-rows (doall (for [child (:children m)]
@@ -115,8 +109,7 @@
        (spit out-csv-name)))
 
 (defn make-flat-csv-for-db [db root-entity-key out-csv-name root-parent-name]
-  (let [;; entity-tree (take 1 (walk-db db root-entity-key))
-        entity-tree (walk-db db root-entity-key)
+  (let [entity-tree (walk-db db root-entity-key)
         flattened (mapcat #(partition (* 2 (count pre-split-columns))
                                       (flatten (flatten-db root-parent-name %)))
                           entity-tree)]
