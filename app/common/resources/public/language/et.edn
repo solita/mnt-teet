@@ -193,6 +193,7 @@
   :comments-for "{file-name} märkused"},
  :common
  {:hide-menu "Peidan menüü",
+  :project-menu "Projekti menüü",
   :send-feedback "Saadan tagasisidet",
   :forbidden-explanation "Puuduvad juurdepääsu õigused",
   :select-files "Valin fail(id)",

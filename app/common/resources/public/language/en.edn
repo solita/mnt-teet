@@ -195,6 +195,7 @@
   :comments-for "Comments for {file-name}:"},
  :common
  {:hide-menu "Hide menu",
+  :project-menu "Project menu",
   :send-feedback "Send feedback",
   :forbidden-explanation
   "You have tried to access a resource you're not authorized to access.",
