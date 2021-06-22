@@ -61,6 +61,15 @@
     ""
     (str (label fg) " / " (label fc))))
 
+(defn- format-fg-and-fc-with-components [[_fg _fc cs :as result]]
+  (if (seq cs)
+    [:div
+     (format-fg-and-fc result)
+     (doall
+      (for [{:keys [component]} cs]
+        [typography/SmallText {:style {:margin-left "2rem"}} component]))]
+    (format-fg-and-fc result)))
+
 (defn- format-fc [[_fg fc]]
   (label fc))
 
@@ -86,17 +95,12 @@
           :placeholder (tr [:asset :feature-group-and-class-placeholder])
           :no-results (tr [:asset :no-matching-feature-classes])
           :value (when fc [fg fc])
-          :format-result format-fg-and-fc
+          :format-result format-fg-and-fc-with-components
           :show-empty-selection? true
           :clear-value [nil nil]
           :query (fn [text]
-                   #(vec
-                     (for [fg fgroups
-                           fc (:fclass/_fgroup fg)
-                           :let [result [fg fc]]
-                           :when (string/contains-words? (format-fg-and-fc result) text)]
-
-                       result)))}]]])))
+                   #(asset-type-library/search-fclass
+                     atl @localization/selected-language text))}]]])))
 
 (defn select-fgroup-and-fclass-multiple
   "Select multiple [fgroup fclass] values."
@@ -107,18 +111,13 @@
     :placeholder (tr [:asset :feature-group-and-class-placeholder])
     :no-results (tr [:asset :no-matching-feature-classes])
     :value value
-    :format-result format-fg-and-fc
+    :format-result format-fg-and-fc-with-components
     :format-result-chip format-fc
     :show-empty-selection? true
     :clear-value [nil nil]
     :query (fn [text]
-             #(vec
-               (for [fg (:fgroups atl)
-                     fc (:fclass/_fgroup fg)
-                     :let [result [fg fc]]
-                     :when (string/contains-words? (format-fg-and-fc result) text)]
-
-                 result)))}])
+             #(asset-type-library/search-fclass
+               atl @localization/selected-language text))}])
 
 (defn select-listitem-multiple [{:keys [atl attribute]}]
   (let [attr (asset-type-library/item-by-ident atl attribute)
@@ -294,11 +293,18 @@
                     [url/Link {:page :cost-item
                                :params {:id oid}} oid]])])]))]]))]))
 
-(defn- save-boq-version-dialog [{:keys [e! on-close]}]
-  (r/with-let [form-state (r/atom {})
+(defn- save-boq-version-dialog [{:keys [e! on-close]} last-locked-version]
+  (r/with-let [current-type (-> last-locked-version
+                                :boq-version/type
+                                :db/ident)
+               form-state (r/atom {:boq-version/type current-type})
                form-change (form/update-atom-event form-state merge)
                save-event #(cost-items-controller/->SaveBOQVersion on-close @form-state)]
     [panels/modal {:title (tr [:asset :save-boq-version])
+                   :subtitle (when (:boq-version/type last-locked-version)
+                               (str (tr-enum (:boq-version/type last-locked-version))
+                                    " v. "
+                                    (:boq-version/number last-locked-version)))
                    :on-close on-close}
 
      [form/form {:e! e!
@@ -310,6 +316,14 @@
         :required? true}
       [select/select-enum {:e! e!
                            :attribute :boq-version/type
+                           ;; Show "(current)" with the type of latest locked bill of quantities
+                           :format-enum-fn (fn [_]
+                                             (fn [t]
+                                               (str (tr [:enum t])
+                                                    (when (= t current-type)
+                                                      (str " ("
+                                                           (tr [:common :current])
+                                                           ")")))))
                            :database :asset}]
 
       ^{:attribute :boq-version/explanation
@@ -340,14 +354,17 @@
      [buttons/button-primary {:on-click (e! cost-items-controller/->UnlockForEdits on-close)}
       (tr [:asset :confirm-unlock-for-edits])]]]])
 
-(defn- boq-version-statusline [e! {:keys [latest-change version]}]
+(defn- boq-version-statusline [e! {:keys [latest-change version version-history]}]
   (r/with-let [dialog (r/atom nil)
                set-dialog! #(reset! dialog %)]
     (let [{:keys [user timestamp] :as chg} latest-change
           locked? (asset-model/locked? version)
           action (if locked?
                    :asset/unlock-for-edits
-                   :asset/lock-version)]
+                   :asset/lock-version)
+          last-locked-version (if locked?
+                                version
+                                (first version-history))]
       [:div {:class (<class common-styles/flex-row)
              :style {:background-color theme-colors/gray-lightest
                      :width "100%"}}
@@ -364,12 +381,17 @@
 
        (when chg
          [common/popper-tooltip
-          {:title (tr [:common :last-modified])
-           :variant :info
-           :body [:<>
-                  (fmt/date-time timestamp)
-                  [:br]
-                  (user-model/user-name user)]}
+          {
+           :variant :no-icon
+           :multi [{:title (tr-enum (:boq-version/type last-locked-version))
+                    :body (str " v." (:boq-version/number last-locked-version))}
+                   {:title (tr [:fields :boq-version/explanation])
+                    :body (:boq-version/explanation last-locked-version)}
+                   {:title (tr [:common :last-modified])
+                    :body [:<>
+                           (fmt/date-time timestamp)
+                           [:br]
+                           (user-model/user-name user)]}]}
           [icons/alert-error-outline]])
 
        ;; Save or unlock button
@@ -392,7 +414,8 @@
            :asset/lock-version
            [save-boq-version-dialog
             {:e! e!
-             :on-close (r/partial set-dialog! nil)}]))])))
+             :on-close (r/partial set-dialog! nil)}
+            last-locked-version]))])))
 
 
 (defn cost-items-page-structure
@@ -428,6 +451,7 @@
                      :add? (= :new-cost-item (:page app))
                      :project project
                      :cost-items cost-items})]]
+           :content-margin "0 0"
            :main
            [:<>
             [boq-version-statusline e! page-state]

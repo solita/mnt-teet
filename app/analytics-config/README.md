@@ -2,6 +2,12 @@
 
 See Datomic cloud analytics documentation: https://docs.datomic.com/cloud/analytics/analytics-concepts.html
 
+## Syncing configuration
+
+In this folder run:
+```datomic analytics sync teet-datomic .```
+
+
 ## Connecting
 
 Connect using datomic cli: (leave tunnel open)

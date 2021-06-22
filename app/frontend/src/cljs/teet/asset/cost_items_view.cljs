@@ -29,7 +29,9 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.util :as util]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -161,13 +163,22 @@
    [carriageway-for-road-select* opts selected-road-nr]])
 
 (defn- location-entry [e! locked? selected-road-nr single-point?]
-  (let [input-textfield (if locked? display-input text-field/TextField)]
+  (let [input-textfield (if locked? display-input text-field/TextField)
+        mobile? (responsivity-styles/mobile?)
+        subhead-w (if mobile? 12 2)
+        subhead (fn [text]
+                  [Grid {:item true :md subhead-w :xs subhead-w
+                         ;; Add margin here because grid is aligned
+                         ;; to bottom.
+                         :class (<class common-styles/margin-bottom 1.5)}
+                   [typography/BoldGrayText text]])]
     [:<>
+
+     (subhead (tr [:asset :location :project-coordinates]))
+
      [Grid {:item true
-            :md 4}]
-     [Grid {:item true
-            :md (if single-point? 8 4)
-            :xs 12
+            :md (if single-point? 10 5)
+            :xs (if mobile? 6 12)
             :style {:padding "0.2rem"}}
       [form/field {:attribute :location/start-point
                    :required? true}
@@ -175,16 +186,18 @@
 
      (when-not single-point?
        [Grid {:item true
-              :md 4
-              :xs 12
+              :md 5
+              :xs (if mobile? 6 12)
               :style {:padding "0.2rem"}}
         [form/field {:attribute :location/end-point
                      :required? true}
          [input-textfield {}]]])
 
+     (subhead (tr [:asset :location :project-address]))
+
      [Grid {:item true
-            :md 3
-            :xs 12
+            :md 5
+            :xs 10
             :style {:padding "0.2rem"}}
       [form/field :location/road-nr
        (if locked?
@@ -192,17 +205,19 @@
          [asset-ui/relevant-road-select {:e! e!}])]]
 
      [Grid {:item true
-            :md 1
-            :xs 12
+            :md 5
+            :xs 2
             :style {:padding "0.2rem"}}
       [form/field :location/carriageway
        (if locked?
          [input-textfield {}]
          [carriageway-for-road-select {:e! e!} selected-road-nr])]]
 
+     [Grid {:item true :md 2}]
+
      [Grid {:item true
-            :md (if single-point? 4 2)
-            :xs 12
+            :md (if single-point? 6 3)
+            :xs (if single-point? 6 3)
             :style {:padding "0.2rem"}}
       [form/field {:attribute :location/start-km
                    :required? true}
@@ -210,7 +225,7 @@
 
      [Grid {:item true
             :md (if single-point? 4 2)
-            :xs 12
+            :xs (if single-point? 6 3)
             :style {:padding "0.2rem"}}
       [form/field :location/start-offset-m
        [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
@@ -218,8 +233,8 @@
 
      (when-not single-point?
        [Grid {:item true
-              :md 2
-              :xs 12
+              :md 3
+              :xs 3
               :style {:padding "0.2rem"}}
         [form/field :location/end-km
          [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]])
@@ -227,7 +242,7 @@
      (when-not single-point?
        [Grid {:item true
               :md 2
-              :xs 12
+              :xs 3
               :style {:padding "0.2rem"}}
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
@@ -238,8 +253,9 @@
         [form/field :location/single-point?
          [select/checkbox {}]]])]))
 
-(defn attributes* [{:keys [e! attributes component-oid cost-item-data inherits-location?
-                            common ctype]}
+(defn attributes* [{:keys [e! attributes component-oid cost-item-data
+                           inherits-location? single-point?
+                           common ctype]}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
@@ -271,7 +287,7 @@
                  :alignItems :flex-end}
            [location-entry e! locked?
             (:location/road-nr cost-item-data)
-            (:location/single-point? cost-item-data)]]])
+            single-point?]]])
        (doall
         (for [g [:cost-grouping :common :details]
               :let [attrs (attrs-groups g)]
@@ -397,7 +413,7 @@
         [:span
          [:div {:class (<class common-styles/flex-row)}
           [:div {:class (<class common-styles/flex-table-column-style
-                                40 :flex-start 1 nil)}
+                                30 :flex-start 1 nil)}
            [component-tree-level-indent level]
            [url/Link (if link-fn
                        (link-fn (:asset/oid c))
@@ -405,10 +421,23 @@
                         :params {:id (:asset/oid c)}})
             (children-label-fn c)]]
           [:div {:class (<class common-styles/flex-table-column-style
-                                35 :flex-start 0 nil)}
+                                20 :flex-start 0 nil)}
            [label-for (:component/ctype c)]]
           [:div {:class (<class common-styles/flex-table-column-style
-                                25 :flex-end 0 nil)}
+                                20 :flex-start 0 nil)}
+           [label-for (:common/status c)]]
+
+          [:div {:class (<class common-styles/flex-table-column-style
+                                20 :flex-start 0 nil)}
+           (util/with-keys
+             (butlast
+              (interleave
+               (for [m (:component/materials c)]
+                 [label-for (:material/type m)])
+               (repeat [:span ",\u00A0"]))))]
+
+          [:div {:class (<class common-styles/flex-table-column-style
+                                10 :flex-end 0 nil)}
            (when-not locked?
              [when-authorized
               :asset/delete-component nil
@@ -511,6 +540,7 @@
           [form-paper [attributes
                        {:e! e!
                         :attributes (some-> feature-class :attribute/_parent)
+                        :single-point? (:location/single-point? form-data)
                         :cost-item-data form-data
                         :common :ctype/feature
                         :inherits-location? false
@@ -588,6 +618,7 @@
           [attributes {:e! e!
                        :attributes (some-> ctype :attribute/_parent)
                        :inherits-location? (:component/inherits-location? ctype)
+                       :single-point? (:location/single-point? component-data)
                        :component-oid component-oid
                        :cost-item-data cost-item-data
                        :common :ctype/component
@@ -711,7 +742,9 @@
     :app app
     :state state
     :left-panel-action [add-cost-item app version]}
-   [cost-items-map-view/project-map {:e! e!}]])
+   [:div {:style {:height "calc(100% - 30px)"}}
+    [cost-items-map-view/project-map {:e! e!
+                                      :full-height? true}]]])
 
 (defn cost-items-page [e! app state]
   [asset-ui/wrap-atl-loader cost-items-page* e! app state])

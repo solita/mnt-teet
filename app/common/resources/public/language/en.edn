@@ -113,7 +113,9 @@
   :location
   {:hide-map "Hide map",
    :no-road-found-for-points "No road found for points",
-   :show-map "Show map"},
+   :show-map "Show map",
+   :project-coordinates "Project coordinates",
+   :project-address "Project address"},
   :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
@@ -226,6 +228,7 @@
   :language "Language",
   :filter-shortcuts "Filter shortcuts",
   :unassigned "Unassigned",
+  :current "current",
   :confirm-deletion "Confirm delete",
   :files "Files",
   :deadline "Deadline",
@@ -954,7 +957,7 @@
   "Respondents connection to the land",
   :thk.contract/warranty-period "Warranty period",
   :land-acquisition/pos-number "POS#",
-  :company/country "Country of registeration",
+  :company/country "Country of registration",
   :meeting.agenda/responsible "Responsible person",
   :document/sub-category "Document subtype",
   :location/road-address "Road address",

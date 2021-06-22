@@ -16,7 +16,8 @@
             [teet.ui.project-context :as project-context]
             [teet.theme.theme-colors :as theme-colors]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.ui.buttons :as buttons]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -128,7 +129,19 @@
          [:span (tr label)]]
         [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
 
-(defn project-menu [_e! _app _project _dark-theme?]
+(defn project-tab-header [e! app project dark-theme?]
+  (let [{tab-name :name
+         tab-label :label} (active-tab app)]
+    [:div {:class (<class project-style/project-tab-container dark-theme?)}
+     [:div {:class (<class common-styles/space-between-center)}
+      [:div {:class (<class common-styles/flex-align-center)}
+       [typography/Heading2 {:class (herb/join (<class common-styles/inline-block)
+                                               (<class common-styles/no-margin)
+                                               (<class common-styles/padding 0 0 0 0.5))}
+        (tr tab-label)]]
+      [project-tab-action tab-name e! app project]]]))
+
+(defn project-menu [_e! _app _project]
   (let [open? (r/atom false)
         anchor-el (atom nil)
         toggle-open! #(do
@@ -136,43 +149,37 @@
                         (.blur @anchor-el))
         set-anchor! #(reset! anchor-el %)]
     (common/component
-     (hotkeys/hotkey "Q" toggle-open!)
-     (fn [e! app project dark-theme?]
-       (let [{tab-name :name
-              tab-label :label} (active-tab app)]
-         [:div {:class (<class project-style/project-tab-container dark-theme?)}
-          [:div {:class (<class common-styles/space-between-center)}
-           [:div {:class (<class common-styles/flex-align-center)}
-            [IconButton {:class "project-menu"
-                         :on-click toggle-open!
-                         :ref set-anchor!}
-             [icons/navigation-apps (when dark-theme?
-                                      {:style {:color theme-colors/white}})]]
-            [typography/Heading2 {:class (herb/join (<class common-styles/inline-block)
-                                                    (<class common-styles/no-margin)
-                                                    (<class common-styles/padding 0 0 0 0.5))}
-             (tr tab-label)]]
-           [project-tab-action tab-name e! app project]]
-          [Popper {:open @open?
-                   :anchor-el @anchor-el
-                   :classes {:paper (<class project-style/project-view-selection-menu)}
-                   :placement "bottom-start"}
-           (project-context/consume
-             (fn [{project-id :thk.project/id}]
-               [ClickAwayListener {:on-click-away toggle-open!}
-                [Paper
-                 [MenuList {}
-                  (doall
-                   (for [{ff :feature-flag
-                          authz :authorization :as tab} project-tabs-layout
-                         :when (and (or (nil? ff)
-                                        (common-controller/feature-enabled? ff))
-                                    (or (nil? authz)
-                                        (authorization-check/authorized?
-                                         {:functionality authz
-                                          :project-id (:db/id project)})))]
-                     ^{:key (name (:name tab))}
-                     [project-tabs-item
-                      e! toggle-open! (= tab-name (:name tab))
-                      tab
-                      project-id]))]]]))]])))))
+      (hotkeys/hotkey "Q" toggle-open!)
+      (fn [e! app project]
+        (let [{tab-name :name} (active-tab app)]
+          [:<>
+           [buttons/button-primary
+            {:class "project-menu"
+             :size "small"
+             :start-icon (r/as-element [icons/navigation-menu])
+             :on-click toggle-open!
+             :ref set-anchor!}
+            (tr [:common :project-menu])]
+           [Popper {:open @open?
+                    :anchor-el @anchor-el
+                    :classes {:paper (<class project-style/project-view-selection-menu)}
+                    :placement "bottom-start"}
+            (project-context/consume
+              (fn [{project-id :thk.project/id}]
+                [ClickAwayListener {:on-click-away toggle-open!}
+                 [Paper
+                  [MenuList {}
+                   (doall
+                     (for [{ff :feature-flag
+                            authz :authorization :as tab} project-tabs-layout
+                           :when (and (or (nil? ff)
+                                          (common-controller/feature-enabled? ff))
+                                      (or (nil? authz)
+                                          (authorization-check/authorized?
+                                            {:functionality authz
+                                             :project-id (:db/id project)})))]
+                       ^{:key (name (:name tab))}
+                       [project-tabs-item
+                        e! toggle-open! (= tab-name (:name tab))
+                        tab
+                        project-id]))]]]))]])))))

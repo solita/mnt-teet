@@ -17,11 +17,36 @@
   (when date
     (gstr/format "%02d:%02d" (.getHours date) (.getMinutes date))))
 
+(defn time-with-seconds
+  "Format time with seconds"
+  [date]
+  (when date
+    (gstr/format "%02d:%02d:%02d" (.getHours date) (.getMinutes date) (.getSeconds date))))
+
+(defn time-with-milliseconds
+  "Format time with seconds"
+  [date]
+  (when date
+    (gstr/format "%02d:%02d:%02d.%03d" (.getHours date) (.getMinutes date) (.getSeconds date)
+                 (.getMilliseconds date))))
+
 (defn date-time
   "Format date to a dd.mm.yyyy hh:mm"
   [date-obj]
   (when date-obj
     (str (date date-obj) " " (time* date-obj))))
+
+(defn date-time-with-seconds
+  "Format date to a dd.mm.yyyy hh:mm:ss"
+  [date-obj]
+  (when date-obj
+    (str (date date-obj) " " (time-with-seconds date-obj))))
+
+(defn date-time-with-milliseconds
+  "Format date to a dd.mm.yyyy hh:mm:ss.SSS"
+  [date-obj]
+  (when date-obj
+    (str (date date-obj) " " (time-with-milliseconds date-obj))))
 
 (defn date-with-time-range
   [date1 date2]

@@ -414,7 +414,7 @@
 
 (defn thk-import-contracts-tx
   [db url contract-rows]
-  (into [{:db/id "datomic.tx-contracts"
+  (into [{:db/id "datomic.tx"
           :integration/source-uri url}]
         (mapcat
           (fn [contract-row]

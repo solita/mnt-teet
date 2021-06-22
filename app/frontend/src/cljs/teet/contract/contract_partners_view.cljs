@@ -167,7 +167,8 @@
     [TextField {}]]
    [form/field :company/name
     [TextField {}]]
-   [form/field :company/emails
+   [form/field {:attribute :company/emails
+                :validate validation/validate-email-optional}
     [TextField {}]]
    [form/field :company/phone-numbers
     [TextField {}]]])

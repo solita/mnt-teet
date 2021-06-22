@@ -128,7 +128,7 @@
           show-opinion-export? (and (= (get-in app [:query :tab]) "land")
                                     (common-controller/feature-enabled? :land-owner-opinions))]
       [:div {:class (<class project-style/project-page-structure)}
-       [project-navigator-view/project-header project
+       [project-navigator-view/project-header e! app project
         (when show-opinion-export?
           [{:id "owner-opinion-export"
             :label (tr [:land-owner-opinion :opinion-export])
@@ -686,7 +686,7 @@
       ^{:key "project-view"}
       [project-page-structure e! app project
        (merge {:key (name tab-name)
-               :header [project-menu/project-menu e! app project false]
+               :header [project-menu/project-tab-header e! app project false]
                :body [project-menu/project-tab-content tab-name e! app project]
                :map-settings {:layers (or (:layers tab)
                                           #{:thk-project :surveys})}
@@ -708,13 +708,14 @@
   If left-side content is not specified, the project navigator is used.
   The :project-navigator map options can be used to override default parameters."
   [{:keys [e! app project main left-panel right-panel project-navigator
-           export-menu-items right-panel-padding]
-    :or {right-panel-padding "1rem 1.5rem"}}]
+           export-menu-items right-panel-padding content-margin]
+    :or {right-panel-padding "1rem 1.5rem"
+         content-margin "0rem 0.5rem"}}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
      project
      [:<>
-      [project-navigator-view/project-header project export-menu-items]
+      [project-navigator-view/project-header e! app project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [Paper {:class (<class task-style/task-page-paper-style)}
         [Grid {:container true
@@ -724,7 +725,7 @@
                 :xs 12
                 :md navigator-w
                 :class (<class navigation-style/navigator-left-panel-style)}
-          [project-menu/project-menu e! app project true]
+          [project-menu/project-tab-header e! app project true]
           (or left-panel
               [project-navigator-view/project-navigator e! project app
                (merge {:dark-theme? true
@@ -734,7 +735,7 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style (merge {:padding "2rem 1.5rem"
+                :style (merge {:margin content-margin
                                :overflow-y :auto
                                :max-height "100%"}
                               (when (not right-panel)
