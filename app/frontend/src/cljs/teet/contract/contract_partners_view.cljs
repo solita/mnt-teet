@@ -194,14 +194,14 @@
 
 (defn edit-company-form-fields
   [form-value]
-  ; @TODO Fix!
-  (println "edit-company-form-fields")
   (let [foreign-company? (not= :ee (:company/country form-value))
         business-search-failed? (:no-results? form-value)
         exception-in-xroad? (:exception-in-xroad? form-value)]
     [:div
-     [form/field :company/country
-      [select/country-select {:show-empty-selection? true}]]
+     [:span
+      {:style {:pointer-events :none}}
+      [form/field :company/country
+       [select/country-select {:show-empty-selection? true}]]]
      [foreign-fields]]))
 
 (defn new-company-form-fields
