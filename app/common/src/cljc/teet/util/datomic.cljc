@@ -294,12 +294,3 @@
                (when (> duration 1000)
                  (log/debug "SLOW DATOMIC QUERY TOOK " duration "msecs: "
                             (first args))))))))))
-
-(defn update-one-to-many-attr-tx
-  "takes entity, attr and comma separated list
-  and spits out the correct :db/add and :db/retract statements"
-  [entity attr old-values new-values]
-  ; naive implementation: @TODO: advance!
-  (concat
-    (for [old-value old-values] [:db/retract entity attr old-value])
-    (for [new-value new-values] [:db/add entity attr new-value])))

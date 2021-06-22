@@ -80,14 +80,17 @@
                                     :company/business-registry-code
                                     :company/name
                                     :teet/id])
+        company-id (:db/id form-data)
+        retract-emails-tx [:db/retract company-id :company/emails]
+        retract-phone-numbers-tx [:db/retract company-id :company/phone-numbers]
         contract-eid (:db/id contract)
         lead-partner? (:company-contract/lead-partner? form-data)
-        new-company-id "new-company"
+        _ (:tempids (tx [retract-emails-tx] [retract-phone-numbers-tx]))
         tempids
         (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
                          contract-eid
                          lead-partner?
-                         new-company-id
+                         company-id
                          [(merge
                             company-fields
                             (meta-model/modification-meta user))])]))]
