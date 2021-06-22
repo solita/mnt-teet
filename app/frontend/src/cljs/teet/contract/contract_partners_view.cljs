@@ -221,12 +221,14 @@
 
 (defn edit-partner-form
   [e! app selected-company]
-  (e! (contract-partners-controller/->InitializeEditCompanyForm (:company-contract/company selected-company)))
+  (e! (contract-partners-controller/->InitializeEditCompanyForm
+        (merge
+          {:company-contract/lead-partner? (:company-contract/lead-partner? selected-company)}
+          (:company-contract/company selected-company))))
   (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
             selected-company? (boolean (:db/id form-state))
-            _ (println "LEAD PARTNER" form-state)
             partner-save-command :thk.contract/save-contract-partner-company]
         [Grid {:container true}
          [Grid {:item true
@@ -256,7 +258,7 @@
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}
-              [select/checkbox {:value (:company-contract/lead-partner? form-state)}]])
+              [select/checkbox {}]])
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form

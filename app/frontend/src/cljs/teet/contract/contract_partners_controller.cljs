@@ -43,7 +43,6 @@
 
   InitializeEditCompanyForm
   (process-event [{company :company} app]
-    (println "InitializeEditCompanyForm" company)
     (init-form app :edit-partner company))
 
   CancelAddNewCompany
