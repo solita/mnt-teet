@@ -713,8 +713,9 @@
         [Toolbar {:className (herb/join (<class navigation-style/toolbar))
                   :style {:display "flex"
                           :justify-content :space-between}}
-         [TextBold {:style {:text-transform :uppercase}
-                    :class (<class common-styles/margin-left 0.5)}
+         [TextBold {:data-cy "project-header"
+                    :style {:text-transform :uppercase}
+                    :class (<class common-styles/truncate-text)}
           (:thk.project/name project)]
          [project-menu/project-menu e! app (get-in app [:route :project])]]])]))
 

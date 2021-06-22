@@ -579,6 +579,10 @@
   {:overflow :hidden
    :text-overflow :ellipsis})
 
+(defn truncate-text []
+  (merge (overflow-ellipsis)
+         (white-space-nowrap)))
+
 (defn flex-shrink-no-wrap
   []
   {:display :flex
