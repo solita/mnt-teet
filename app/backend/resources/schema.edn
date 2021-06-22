@@ -2127,5 +2127,9 @@
 
  {:db/ident :migration/change-cardinality-many-to-one-company-emails
   :txes [[{:db/ident :company/emails :db/cardinality :db.cardinality/many}
-          {:db/ident :company/emails :db/cardinality :db.cardinality/one}]]}]
+          {:db/ident :company/emails :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/change-cardinality-many-to-one-company-phones
+  :txes [[{:db/ident :company/phone-numbers :db/cardinality :db.cardinality/many}
+          {:db/ident :company/phone-numbers :db/cardinality :db.cardinality/one}]]}]
 
