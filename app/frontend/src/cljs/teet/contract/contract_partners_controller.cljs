@@ -4,6 +4,19 @@
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]))
 
+(defn- is-first-partner? [app]
+  (-> app
+    (get-in [:route :contract-partners :company-contract/_contract])
+    count
+    (= 0)))
+
+(defn- init-form [app key company]
+  (let [lead-partner? (or
+                        (is-first-partner? app)
+                        (:company-contract/lead-partner? company))]
+    (assoc-in app [:forms key :company-contract/lead-partner?] lead-partner?)
+    (assoc-in app [:forms key] company)))
+
 (defrecord UpdateNewCompanyForm [form-data])
 (defrecord UpdateEditCompanyForm [form-data])
 (defrecord CancelAddNewCompany [])
@@ -18,32 +31,20 @@
 (extend-protocol t/Event
   UpdateNewCompanyForm
   (process-event [{form-data :form-data} app]
-    (println "UpdateNewCompanyForm form-data: " form-data )
     (update-in app [:forms :new-partner] merge form-data))
 
   UpdateEditCompanyForm
   (process-event [{form-data :form-data} app]
-    ; @TODO: implement
-    (println "UpdateEditCompanyForm" form-data)
     (update-in app [:forms :edit-partner] merge form-data))
 
   InitializeNewCompanyForm
   (process-event [{} app]
-    (let [first-partner? (-> app
-                             (get-in [:route :contract-partners :company-contract/_contract])
-                             count
-                             (= 0))]
-      (if first-partner?
-        (-> app
-            (assoc-in [:forms :new-partner] {:company/country :ee})
-            (assoc-in [:forms :new-partner :company-contract/lead-partner?] true))
-        (assoc-in app [:forms :new-partner] {:company/country :ee}))))
+    (init-form app :new-partner {:company/country :ee}))
 
   InitializeEditCompanyForm
   (process-event [{company :company} app]
-    ; @TODO: implement
-    (println "Edit Company Form initialized with form-data: " company)
-    (assoc-in app [:forms :edit-partner] company))
+    (println "InitializeEditCompanyForm" company)
+    (init-form app :edit-partner company))
 
   CancelAddNewCompany
   (process-event [{} app]

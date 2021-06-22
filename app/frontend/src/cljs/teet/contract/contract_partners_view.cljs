@@ -198,12 +198,14 @@
   (let [foreign-company? (not= :ee (:company/country form-value))
         business-search-failed? (:no-results? form-value)
         exception-in-xroad? (:exception-in-xroad? form-value)]
-    [:div
-     [:span
-      {:style {:pointer-events :none}}
-      [form/field :company/country
-       [select/country-select {:show-empty-selection? true}]]]
-     [foreign-fields]]))
+    (if foreign-company?
+      [:div
+       [:span
+        {:style {:pointer-events :none}}
+        [form/field :company/country
+         [select/country-select {:show-empty-selection? true}]]]
+       [foreign-fields]]
+      [:div "TO BE implemented"])))
 
 (defn new-company-form-fields
   [form-value]
@@ -223,6 +225,8 @@
   (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
+            selected-company? (boolean (:db/id form-state))
+            _ (println "LEAD PARTNER" form-state)
             partner-save-command :thk.contract/save-contract-partner-company]
         [Grid {:container true}
          [Grid {:item true
@@ -250,6 +254,9 @@
            [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
             (tr [:contract :edit-company])]
            [edit-company-form-fields form-state]
+           (when (or selected-company? search-success?)
+             [form/field {:attribute :company-contract/lead-partner?}
+              [select/checkbox {:value (:company-contract/lead-partner? form-state)}]])
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
