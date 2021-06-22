@@ -7,7 +7,8 @@
             [teet.meta.meta-query :as meta-query]
             [teet.activity.activity-model :as activity-model]
             [taoensso.timbre :as log]
-            [teet.user.user-model :as user-model])
+            [teet.user.user-model :as user-model]
+            [teet.project.task-model :as task-model])
   (:import (java.util Date)))
 
 (defn activity-for-task-id
@@ -184,9 +185,18 @@
        (keyword? t-type)
        (boolean? send-to-thk?)))
 
+(defn- only-tasks-creatable-in-teet?
+  "List of tasks contains only tasks that can be created in teet"
+  [tasks]
+  (->> tasks
+       (mapv second)
+       (keep task-model/not-creatable-in-teet)
+       empty?))
+
 (defn valid-tasks? [db activity-name tasks]
   (or (empty? tasks)
       (and (every? valid-task-triple? tasks)
            (valid-task-types? db tasks)
+           (only-tasks-creatable-in-teet? tasks)
            (activity-model/valid-task-groups-for-activity? activity-name tasks)
            (valid-tasks-sent-to-thk? db tasks))))
