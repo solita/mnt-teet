@@ -2123,5 +2123,9 @@
 
  {:db/ident :migration/subcontractor-role
   :txes [[{:db/doc "Not selectable in UI. Added automatically to subcontractor employees"
-           :db/ident :company-contract-employee.role/subcontractor}]]}]
+           :db/ident :company-contract-employee.role/subcontractor}]]}
+
+ {:db/ident :migration/change-cardinality-many-to-one-company-emails
+  :txes [[{:db/ident :company/emails :db/cardinality :db.cardinality/many}
+          {:db/ident :company/emails :db/cardinality :db.cardinality/one}]]}]
 
