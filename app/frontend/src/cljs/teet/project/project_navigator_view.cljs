@@ -427,7 +427,8 @@
        (when-not (responsivity-styles/mobile?)
          [:div {:class (<class common-styles/flex-row-center)}
           [project-menu/project-menu e! app project]
-          [typography/TextBold {:style {:text-transform :uppercase}
+          [typography/TextBold {:data-cy "project-header"
+                                :style {:text-transform :uppercase}
                                 :class (<class common-styles/margin-left 0.5)}
            (project-model/get-column project :thk.project/project-name)]])
        [:div {:style {:display :flex

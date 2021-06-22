@@ -156,12 +156,13 @@
           [:<>
            (if (responsivity-styles/mobile?)
              [buttons/stand-alone-icon-button
-              {:class ["project-menu" (<class responsivity-styles/mobile-navigation-button)]
+              {:data-cy "project-menu"
+               :class (<class responsivity-styles/mobile-navigation-button)
                :icon [icons/navigation-menu {:color :primary}]
                :on-click toggle-open!
                :ref set-anchor!}]
              [buttons/button-primary
-              {:class "project-menu"
+              {:data-cy "project-menu"
                :size "small"
                :start-icon (r/as-element [icons/navigation-menu])
                :on-click toggle-open!
