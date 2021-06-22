@@ -241,7 +241,8 @@
                :let [m (match fg fc)]
 
                :when m]
-           [m [fg fc (:components m)]])
+           [m [fg fc (sort-by (juxt :pos :component)
+                              (:components m))]])
 
          ;; Sort results based on match positions and actual labels
          (sort-by (fn [[{:keys [fcl fgl fcl-pos fgl-pos components]} _]]
