@@ -584,7 +584,7 @@
   `:body` and `:icon` instead of having those as main level keys.
 
   Option `force-open?` can be used to show the popup even if not hovering."
-  [{:keys [title body variant icon class hidden? tabIndex multi force-open?] :as msg
+  [{:keys [title body variant icon class hidden? tabIndex multi force-open? data-cy] :as msg
     :or {variant :error
          tabIndex 0
          force-open? false}}
@@ -608,10 +608,12 @@
              :tabIndex tabIndex
              :class container-class}
        component
-       [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
-                :open (or @hover? force-open?)
-                :anchor-el @anchor-el
-                :placement "bottom-start"}
+       [Popper (merge {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
+                       :open (or @hover? force-open?)
+                       :anchor-el @anchor-el
+                       :placement "bottom-start"}
+                      (when data-cy
+                        {:data-cy data-cy}))
         (when-not hidden?
           [popper-tooltip-content (if multi
                                     {:variant variant

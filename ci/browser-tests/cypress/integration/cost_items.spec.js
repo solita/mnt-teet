@@ -52,6 +52,25 @@ describe("Cost items, totals and materials views", function() {
       cy.get("[data-cy='cost-item-oid']").contains(costItemOid)
     })
 
+    it("cost item can be edited", function() {
+      cy.visit("#/projects/" + projectId + "/cost-items/" + costItemOid)
+
+      // Check that error message is shown when trying to input invalid value
+      cy.get("[data-form-attribute=':culvert/culvertlength'] input").type("not a number")
+      cy.get("[data-cy='form-field-error-tooltip']").contains("Insert decimal value")
+      // Currently when form data contains errors, the submit button is enabled but clicking on it does nothing
+      // cy.get("button[type=submit]").should('be.disabled')
+
+      cy.get("[data-form-attribute=':culvert/culvertlength'] input").clear().type("10")
+      cy.get("button[type=submit]").click()
+
+      // Currently there's no success message to wait for
+      cy.wait(1000)
+      cy.reload()
+      cy.get("[data-form-attribute=':culvert/culvertlength'] input").should("have.value", "10")
+    })
+
+
     it("component can be added to the cost item", function() {
       cy.visit("#/projects/" + projectId + "/cost-items/" + costItemOid)
 

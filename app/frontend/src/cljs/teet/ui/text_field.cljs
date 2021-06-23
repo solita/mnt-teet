@@ -111,6 +111,7 @@
                                 ;; keyboard navigation. Otherwise we would need to hit tab twice to
                                 ;; reach the input element in the wrapper.
                                 :tabIndex -1
+                                :data-cy :form-field-error-tooltip
                                 ;; If the input is focused, show the popup even if not hovering.
                                 :force-open? @focus?})
        [:label {:for id
