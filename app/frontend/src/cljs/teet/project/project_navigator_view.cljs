@@ -423,14 +423,14 @@
   ([e! app project export-menu-items]
    (let [thk-url (project-info/thk-url project)]
      [:div {:class (<class project-header-style)}
-      [:div {:style {:display :flex
-                     :justify-content :space-between}}
-       [:div {:style {:display :flex
-                      :justify-content :flex-start}}
-        [project-menu/project-menu e! app project]
-        [typography/Heading1 {:style {:margin-bottom 0
-                                      :margin-left "1rem"}}
-         (project-model/get-column project :thk.project/project-name)]]
+      [:div {:class (<class common-styles/flex-row-space-between)}
+       (when-not (responsivity-styles/mobile?)
+         [:div {:class (<class common-styles/flex-row-center)}
+          [project-menu/project-menu e! app project]
+          [typography/TextBold {:data-cy "project-header"
+                                :style {:text-transform :uppercase}
+                                :class (<class common-styles/margin-left 0.5)}
+           (project-model/get-column project :thk.project/project-name)]])
        [:div {:style {:display :flex
                       :align-items :center}}
         [common/context-menu

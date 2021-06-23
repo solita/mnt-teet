@@ -60,6 +60,7 @@
 (defn appbar []
   (with-meta
     {:display :flex
+     :flex-direction :column
       :top 0
       :bottom :auto
       :background-color theme-colors/white

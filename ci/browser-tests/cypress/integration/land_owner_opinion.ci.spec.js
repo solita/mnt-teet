@@ -45,7 +45,7 @@ context('Land owner opinions', function() {
 
     function navigateToProjectLand(projectId) {
         cy.visit("#/projects/"+projectId);
-        cy.get("button.project-menu").click({force: true});
+        cy.get("[data-cy='project-menu']").click({force: true});
         cy.get("li#navigation-item-land").click({force: true})
 
     }

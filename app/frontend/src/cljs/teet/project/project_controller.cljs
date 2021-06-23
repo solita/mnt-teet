@@ -130,6 +130,17 @@
 
 (defrecord FetchFeatureCandidatesResponse [candidate-type response])
 
+(defmulti app->project
+  "Get project map from app state.
+  Currently the default implementation works for all /projects/* pages, but this can be overridden
+  for new pages if needed."
+  (fn [app] (:page app)))
+
+(defmethod app->project :default [app]
+  (or (and (common-controller/page-state app :thk.project/id)
+           (common-controller/page-state app))
+      (common-controller/page-state app :project)))
+
 (defn datasource-ids-by-type
   [app type]
   (case type

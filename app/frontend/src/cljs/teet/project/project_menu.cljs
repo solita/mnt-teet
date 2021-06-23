@@ -17,7 +17,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.ui.url :as url]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -146,23 +147,31 @@
         anchor-el (atom nil)
         toggle-open! #(do
                         (swap! open? not)
-                        (.blur @anchor-el))
+                        (some-> @anchor-el .blur))
         set-anchor! #(reset! anchor-el %)]
     (common/component
       (hotkeys/hotkey "Q" toggle-open!)
       (fn [e! app project]
         (let [{tab-name :name} (active-tab app)]
           [:<>
-           [buttons/button-primary
-            {:class "project-menu"
-             :size "small"
-             :start-icon (r/as-element [icons/navigation-menu])
-             :on-click toggle-open!
-             :ref set-anchor!}
-            (tr [:common :project-menu])]
+           (if (responsivity-styles/mobile?)
+             [buttons/stand-alone-icon-button
+              {:data-cy "project-menu"
+               :class (<class responsivity-styles/mobile-navigation-button)
+               :icon [icons/navigation-menu {:color :primary}]
+               :on-click toggle-open!
+               :ref set-anchor!}]
+             [buttons/button-primary
+              {:data-cy "project-menu"
+               :size "small"
+               :start-icon (r/as-element [icons/navigation-menu])
+               :on-click toggle-open!
+               :ref set-anchor!}
+              (tr [:common :project-menu])])
            [Popper {:open @open?
                     :anchor-el @anchor-el
-                    :classes {:paper (<class project-style/project-view-selection-menu)}
+                    :classes #js {:paper (<class project-style/project-view-selection-menu)}
+                    :style {:z-index 1200}
                     :placement "bottom-start"}
             (project-context/consume
               (fn [{project-id :thk.project/id}]
