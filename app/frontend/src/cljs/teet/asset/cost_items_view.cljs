@@ -549,7 +549,7 @@
         [form/footer2]]
 
        ;; Components (show only for existing)
-       (when initial-data
+       (when-not new?
          [:<>
           [components-tree  form-data
                             {:e! e!}]
