@@ -7,17 +7,17 @@ describe("Cost items, totals and materials views", function() {
   beforeEach(() => {
     cy.dummyLogin("benjamin")
     cy.selectLanguage("#EN")
-    cy.projectByName("integration test project")
-    cy.location().then((loc) => {
-      let matches = loc.hash.match(/#\/projects\/(\d+)/)
-      projectId = matches[1]
-    })
     // TODO store projectId
   })
 
   context("Cost items", function() {
 
     it("new cost item can be created", function() {
+      cy.projectByName("integration test project")
+      cy.location().then((loc) => {
+        let matches = loc.hash.match(/#\/projects\/(\d+)/)
+        projectId = matches[1]
+      })
       cy.get("button.project-menu").click({force: true})
       cy.get("li#navigation-item-cost-items").click({force: true})
 

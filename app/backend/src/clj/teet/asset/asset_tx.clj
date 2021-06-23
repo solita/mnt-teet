@@ -5,7 +5,6 @@
             [teet.util.datomic :as du]
             [teet.asset.asset-model :as asset-model]
             [datomic.client.api :as d]
-            [teet.meta.meta-model :as meta-model]
             [clojure.walk :as walk]))
 
 (def ^:const bigdec-scale
@@ -62,18 +61,19 @@
   [db parent-oid {id :db/id
                   type :material/type
                   :as material}]
-  (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
+    (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
     (throw (ex-info "Not a leaf component OID"
                     {:parent-oid parent-oid})))
-  (when (seq (d/q '[:find ?m
-                    :where
-                    [?c :component/materials ?m]
-                    [?m :material/type ?t]
-                    :in $ ?c ?t]
-                  db [:asset/oid parent-oid] type))
-    (throw (ex-info "Material of the same type already exists for component"
-                    {:parent-oid parent-oid
-                     :type type})))
+  (when-let [existing-material-of-given-type (ffirst (d/q '[:find ?m
+                                                            :where
+                                                            [?c :component/materials ?m]
+                                                            [?m :material/type ?t]
+                                                            :in $ ?c ?t]
+                                                          db [:asset/oid parent-oid] type))]
+    (when (not= id existing-material-of-given-type)
+      (throw (ex-info "Material of the same type already exists for component"
+                      {:parent-oid parent-oid
+                       :type type}))))
   ;; TODO: spec
   (when (not (:material/type material))
     (throw (ex-info "No material type"
@@ -87,11 +87,6 @@
       (assoc material
              :asset/oid
              (asset-db/next-material-oid db parent-oid)))]))
-
-(defn- collect-oids [form]
-  (cu/collect #(and (map-entry? %)
-                    (= :asset/oid (first %)))
-              form))
 
 (defn import-assets
   "Import assets of the given type from road registry.
