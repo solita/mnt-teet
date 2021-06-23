@@ -7,7 +7,9 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.map.openlayers.drag :as drag]
-            [teet.asset.cost-items-controller :as cost-items-controller]))
+            [teet.asset.cost-items-controller :as cost-items-controller]
+            [teet.common.common-controller :as common-controller]
+            [teet.localization :as localization]))
 
 (defn project-map* [{:keys [e!] :as opts} {:keys [app project]}]
   (r/with-let [overlays (r/atom [])
@@ -26,7 +28,18 @@
                 (partial project-layers/project-road-geometry-layer
                          {:fitted-atom fitted-atom
                           :style (partial map-features/road-line-style
-                                          2.5 "gray")}))})]))
+                                          5 "rgba(100,100,100,0.5)")})
+
+                ;; Add geometries for possible parent asset and other components
+                (constantly
+                 {:asset-geometries
+                  (map-layers/geojson-layer
+                   (common-controller/query-url :asset/geometries
+                                                {:asset/oid (:asset/oid opts)
+                                                 :language @localization/selected-language})
+                   "asset-geometries" nil
+                   map-features/asset-or-component
+                   {})}))})]))
 
 (defn project-map [opts]
   [context/consume :cost-items-map [project-map* opts]])
@@ -37,7 +50,7 @@
    child])
 
 
-(defn location-map [{:keys [e! value]}]
+(defn location-map [{oid :asset/oid :keys [e! value]}]
   (e! (cost-items-controller/->InitMap))
   (let [current-value (atom value)
         dragging? (atom false)]
@@ -45,6 +58,7 @@
       (reset! current-value value)
       [project-map
        {:e! e!
+        :asset/oid oid
         :on-click
         (fn [{c :coordinate}]
           (let [{start :location/start-point
