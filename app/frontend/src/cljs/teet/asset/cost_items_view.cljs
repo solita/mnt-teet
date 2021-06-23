@@ -374,7 +374,7 @@
                   {:label (label c)
                    :icon [icons/content-add]
                    :on-click (r/partial add-component! (:db/ident c))
-                   :data-cy (-> c :db/ident name)})}]
+                   :data-cy (str "add-" (-> c :db/ident name))})}]
        (doall
         (for [c allowed-components]
           ^{:key (str (:db/ident c))}
@@ -692,7 +692,7 @@
           material-data (last material-path)]
       [:<>
        (when (asset-model/material-oid? material-oid)
-         [typography/Heading2 material-oid])
+         [typography/Heading2 {:data-cy :material-oid} material-oid])
        [component-form-navigation atl material-path]
 
        [form/form2
