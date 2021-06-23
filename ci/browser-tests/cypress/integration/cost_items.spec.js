@@ -31,6 +31,8 @@ describe("Cost items, totals and materials views", function() {
       cy.get("[data-form-attribute=':location/start-point'] input").type("600236.0080478053,6557242.769895551")
       cy.get("[data-form-attribute=':location/end-point'] input").type("600274.183778265,6557247.541861858")
 
+      cy.wait(1000)
+
       // Fill required data
       cy.get("select[id='links-type-select:common/status']").select("Planned")
       cy.get("select[id='links-type-select:culvert/culvertlocation']").select("Under main road")
@@ -42,6 +44,13 @@ describe("Cost items, totals and materials views", function() {
       cy.get("h2[data-cy='cost-item-oid']").then(($h2) => {
         costItemOid = $h2.text()
       })
+
+      // Check that the saved values correspond to what was input
+      cy.get("[data-form-attribute=':location/start-point'] input").should("have.value", "600236.0080478053,6557242.769895551")
+      cy.get("[data-form-attribute=':location/end-point'] input").should("have.value", "600274.183778265,6557247.541861858")
+      cy.get("select[id='links-type-select:common/status'] option:selected").should("have.text", "Planned")
+      cy.get("select[id='links-type-select:culvert/culvertlocation']  option:selected").should("have.text", "Under main road")
+
     })
 
     it("cost item can be accessed using the left panel navigation", function() {
@@ -88,7 +97,35 @@ describe("Cost items, totals and materials views", function() {
       cy.get("h2[data-cy='component-oid']").then(($h2) => {
         componentOid = $h2.text()
       })
+
+      // Check that the saved values correspond to what was input
+      cy.get("[data-form-attribute=':culvertpipe/culvertpipediameter'] input").should("have.value", "10")
+      cy.get("[data-form-attribute=':component/quantity'] input").should("have.value", "20")
+      cy.get("select[id='links-type-select:common/status'] option:selected").should("have.text", "Planned")
+      cy.get("[data-form-attribute=':culvertpipe/culvertpipelenght'] input").should("have.value", "20")
     })
+
+    it("component can be edited", function() {
+      cy.visit("#/projects/" + projectId + "/cost-items/" + componentOid)
+
+      cy.get("button[type=submit]").should("be.disabled")
+
+      // If nothing has changed, the save button should be disabled
+      cy.get("[data-form-attribute=':culvertpipe/culvertpipediameter'] input").clear().type("10")
+      cy.get("button[type=submit]").should("be.disabled")
+
+      // Edit culvert pipe diameter
+      cy.get("[data-form-attribute=':culvertpipe/culvertpipediameter'] input").clear().type("20")
+
+      // Submit
+      cy.get("button[type=submit]").click()
+
+      // Check the edited diameter is saved correctly
+      cy.wait(1000)
+      cy.reload()
+      cy.get("[data-form-attribute=':culvertpipe/culvertpipediameter'] input").should("have.value", "20")
+    })
+
 
     it("material can be added to the added component", function() {
       // Open the component page
@@ -108,7 +145,25 @@ describe("Cost items, totals and materials views", function() {
         materialOid = $h2.text()
       })
 
+      cy.get("[data-form-attribute=':concrete/concreteclass'] select option:selected").should("have.text", "C25")
+      cy.get("[data-form-attribute=':concrete/concreteenvironmentalclass'] select option:selected").should("have.text", "X0")
+
     })
 
+    it("material can edited", function() {
+      // Open the material page
+      cy.visit("#/projects/" + projectId + "/cost-items/" + materialOid)
+
+      // Change concrete class
+      cy.get("[data-form-attribute=':concrete/concreteclass'] select").select("C35")
+
+      // Submit
+      cy.get("button[type=submit]").click()
+
+      // Check that concrete class is saved correctly
+      cy.wait(1000)
+      cy.reload()
+      cy.get("[data-form-attribute=':concrete/concreteclass'] select option:selected").should("have.text", "C35")
+    })
   })
 })
