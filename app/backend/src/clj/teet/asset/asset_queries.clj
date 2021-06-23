@@ -396,3 +396,58 @@
      (asset-type-library/rotl-map
       (asset-db/asset-type-library adb))
      (d/pull adb '[*] [:asset/oid oid]))))
+
+(defquery :asset/geometries
+  {:doc "Return GeoJSON for asset and components by asset id. This is for showing
+the parent asset and sibling components on the map when creating a new component."
+   :spec (s/keys :req [:asset/oid])
+   :args {oid :asset/oid
+          except :except
+          language :language
+          :or {except #{}
+               language :et}}
+   :context {adb :asset-db}
+   :project-id nil
+   :authorization {}}
+  (println "fetching " oid)
+  (let [oid (if (asset-model/component-oid? oid)
+              (asset-model/component-asset-oid oid)
+              oid)
+        oids (into []
+                   (remove except)
+                   (concat [oid]
+                           (asset-db/asset-component-oids adb oid)))
+        assets
+        (map first
+             (d/qseq '[:find (pull ?a [:asset/fclass :component/ctype :asset/oid
+                                       :location/start-point :location/end-point])
+                       :where [?a :asset/oid ?oid]
+                       :in $ [?oid ...]]
+                     adb oids))
+        atl (asset-db/asset-type-library adb)
+        feature-tooltip (fn [oid type]
+                          (str oid " "
+                               (asset-type-library/label
+                                language
+                                (asset-type-library/item-by-ident atl type))))]
+    ^{:format :raw}
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (cheshire/encode
+            {:type "FeatureCollection"
+             :features
+             (for [{:location/keys [start-point end-point] :as a} assets
+                   :when start-point]
+               {:type "Feature"
+                :properties (merge {"oid" (:asset/oid a)}
+                                   (when-let [fc (some-> a :asset/fclass :db/ident)]
+                                     {:fclass fc
+                                      :tooltip (feature-tooltip (:asset/oid a) fc)})
+                                   (when-let [ct (some-> a :component/ctype :db/ident)]
+                                     {:ctype ct
+                                      :tooltip (feature-tooltip (:asset/oid a) ct)}))
+                :geometry (if end-point
+                            {:type "LineString"
+                             :coordinates [start-point end-point]}
+                            {:type "Point"
+                             :coordinates start-point})})})}))

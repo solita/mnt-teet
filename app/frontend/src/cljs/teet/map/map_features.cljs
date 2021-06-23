@@ -413,10 +413,32 @@ an icon based on asset class."
                                                            :width 3})
                             :radius 15})}))]))))
 
+(defn asset-or-component
+  "Show line or circle for asset/component."
+  [^ol.render.Feature feature _res]
+  (def *f feature)
+  (println "asset-or-component " feature)
+  (if (some->> feature .getGeometry .getType (= "Point"))
+    #js [(ol.style.Style.
+          #js {:image (ol.style.Circle.
+                       #js {:stroke (ol.style.Stroke. #js {:color "red"
+                                                           :width 2})
+                            :radius 10})})
+         (ol.style.Style.
+          #js {:image (ol.style.Circle.
+                       #js {:fill (ol.style.Fill. #js {:color "black"
+                                                       :width 1})
+                            :radius 3})})]
+    (ol.style.Style.
+     #js {:stroke (ol.style.Stroke. #js {:color "red"
+                                         :width 3
+                                         ;:lineCap "butt"
+                                         })
+          :zIndex 3})))
+
 
 (defn current-location-radius-style
   "Show circle radius around current location (point)"
-  [^ol.render.Feature feature _res]
-  (def *f feature)
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "blue"})}))
