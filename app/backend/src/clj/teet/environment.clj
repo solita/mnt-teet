@@ -306,7 +306,10 @@
   []
   (or *connection*
       (let [db (db-name)
-            client (datomic-client)
+            client (try
+                     (datomic-client)
+                     (catch Exception e
+                       (throw (ex-info "error: datomic-client runtime not set up yet so can't construct a datomic client - if in dev env call (user/restart) first" {:orig-exception (str e)}))))
             db-status (ensure-database client db)
             conn (d/connect client {:db-name db})]
         (log/info "Using database: " db db-status)
