@@ -735,7 +735,7 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :classes #js {:item (<class project-style/desktop-scroll-content-separately)}
+                :class (<class project-style/desktop-scroll-content-separately)
                 :style (merge {:margin content-margin
                                :max-height "100%"}
                               (when (not right-panel)
