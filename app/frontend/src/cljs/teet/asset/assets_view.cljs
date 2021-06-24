@@ -18,7 +18,6 @@
             [teet.ui.material-ui :refer [CircularProgress IconButton Slider]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.util.collection :as cu]
-            [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.buttons :as buttons]
             [teet.map.openlayers.layer :as layer]
             [herb.core :refer [<class]]
@@ -350,7 +349,7 @@
   (when-let [oid (some-> f .getProperties (aget "oid"))]
     (assets-controller/->ShowDetails {:asset/oid oid})))
 
-(defn results-map [{:keys [e! atl criteria results map-key]
+(defn results-map [{:keys [e! atl criteria results map-key map-info]
                     :or {map-key "results-map"}}]
   (let [{:keys [geojson highlight-oid]} results]
     ^{:key map-key}
@@ -365,7 +364,8 @@
            "asset-results"
            (js/JSON.parse geojson)
            (partial map-features/asset-line-and-icon highlight-oid)
-           {})}))}]))
+           {})}))}
+     map-info]))
 
 
 (defn- results-table [{:keys [e! atl results]}]
@@ -406,7 +406,7 @@
             (next-map-key!))))
 
       :reagent-render
-      (fn [{:keys [e! atl criteria assets-query results details]}]
+      (fn [{:keys [e! atl criteria assets-query results details map-info]}]
         (let [{:keys [assets geojson highlight-oid]} results
               result-count (result-count-label results)
               table-pane
@@ -431,7 +431,8 @@
                                      :result-count result-count}]])
                [results-map {:e! e! :atl atl :criteria criteria
                              :results results
-                             :map-key (str "map" @map-key)}]
+                             :map-key (str "map" @map-key)
+                             :map-info map-info}]
                (when (= :current-location (:search-by criteria))
                  [radius-display e! criteria])]]
           [:<>
@@ -517,6 +518,7 @@
      [asset-filters-container e! atl criteria filters-collapsed?]
      [context/provide :rotl (asset-type-library/rotl-map atl)
       [assets-results {:e! e! :atl atl :criteria criteria
+                       :map-info (:map app)
                        :asset-query query
                        :results results
                        :details (get-in app [:query :details])}]]]))
