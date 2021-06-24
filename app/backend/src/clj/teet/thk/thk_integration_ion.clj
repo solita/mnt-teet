@@ -291,6 +291,7 @@
       (read-string (str "#inst " (pr-str x))))))
 
 (defn activity-date-fixup-ion [event]
+
   (let [decoded (cheshire/decode (:input event))
         {:strs [actual-start-date actual-end-date]} decoded
         integration-id-string (get decoded "integration-id")
@@ -304,8 +305,7 @@
                      :activity/actual-start-date sd-inst
                      :activity/actual-end-date ed-inst}]
 
-    (clojure.pprint/pprint (user/entity activity-eid))
-    (println sd-inst)
+    (log/info "activity date fixup ion invoked - input:" decoded)
     (cond
       (nil? integration-uuid)
       (cheshire/encode {"error" (str "uuid missing from input, got:" (pr-str decoded))})
@@ -320,6 +320,7 @@
 
       :else
       (do
+        (log/info "lambda params ok and activity found, transacting:" transaction)
         (d/transact (environment/datomic-connection)
                     {:tx-data [transaction]})
         (cheshire/encode {"success" "yes"})))))
