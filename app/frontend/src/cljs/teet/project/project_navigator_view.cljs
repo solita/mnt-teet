@@ -426,7 +426,7 @@
       [:div {:class (<class common-styles/flex-row-space-between)}
        (when-not (responsivity-styles/mobile?)
          [:div {:class (<class common-styles/flex-row-center)}
-          [project-menu/project-menu e! app project]
+          [project-menu/project-menu-desktop e! app project]
           [typography/TextBold {:data-cy "project-header"
                                 :style {:text-transform :uppercase}
                                 :class (<class common-styles/margin-left 0.5)}
