@@ -85,6 +85,10 @@
            :asset-import
            {:fn teet.asset.asset-road-registry-import/import-ion
             :description "Import road registry WFS objects by type"}
-           }
+
+           :activity-dates-teet-1714
+           {:fn teet.thk.thk-integration-ion/activity-date-fixup-ion
+            :description "Change activity start/end dates by integration id"}
+}
 
  :app-name "teet-datomic"}

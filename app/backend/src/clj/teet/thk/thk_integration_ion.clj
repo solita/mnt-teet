@@ -5,6 +5,7 @@
   csvq -d \\; -f json \"select * from csvfile\" | jq"
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [cheshire.core :as cheshire]
             [teet.log :as log]
             [teet.thk.thk-import :as thk-import]
             [teet.thk.thk-export :as thk-export]
@@ -265,3 +266,60 @@
            csv->file
            dump))
   :ok)
+
+
+(def date-fixup-test-event
+  {:input "{\"integration-id\":\"00000000-0000-0000-7030-a16828e2d9e5\",\"actual-start-date\":\"2012-12-12T11:11:11+00:00\",\"actual-end-date\":\"2012-12-22T12:12:12+00:00\"}"})
+
+(defn activity-by-iid [db iid]
+  (when (some? iid)
+    (println "gettingfor" iid)
+    (let [q-result
+          (d/q '[:find ?e
+                 :in $ ?iid
+                 :where [?e :activity/status _]
+                        [?e :integration/id ?iid]]
+               db iid)]
+      (if (= 1 (count q-result))
+        (ffirst q-result)
+        (log/warn "multiple activities matching" iid)))))
+
+(defn str->inst [x]
+  (when (and (string? x)
+             (re-matches #"\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d[\+-]\d\d:\d\d" x))
+    (binding [*read-eval* false]
+      (read-string (str "#inst " (pr-str x))))))
+
+(defn activity-date-fixup-ion [event]
+  (let [decoded (cheshire/decode (:input event))
+        {:strs [actual-start-date actual-end-date]} decoded
+        integration-id-string (get decoded "integration-id")
+        integration-uuid (when integration-id-string
+                           (java.util.UUID/fromString integration-id-string))
+        db (d/db (environment/datomic-connection))
+        activity-eid (activity-by-iid db integration-uuid)
+        ed-inst (str->inst actual-end-date)
+        sd-inst (str->inst actual-start-date)
+        transaction {:db/id activity-eid
+                     :activity/actual-start-date sd-inst
+                     :activity/actual-end-date ed-inst}]
+
+    (clojure.pprint/pprint (user/entity activity-eid))
+    (println sd-inst)
+    (cond
+      (nil? integration-uuid)
+      (cheshire/encode {"error" (str "uuid missing from input, got:" (pr-str decoded))})
+
+      (nil? activity-eid)
+      (cheshire/encode {"error" "activity not found"})
+
+      (or (nil? ed-inst) (nil? sd-inst))
+      (cheshire/encode {"error" "bad dates"
+                        "start-parsed" (str sd-inst)
+                        "end-parsed" (str ed-inst)})
+
+      :else
+      (do
+        (d/transact (environment/datomic-connection)
+                    {:tx-data [transaction]})
+        (cheshire/encode {"success" "yes"})))))
