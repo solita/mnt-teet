@@ -165,5 +165,46 @@ describe("Cost items, totals and materials views", function() {
       cy.reload()
       cy.get("[data-form-attribute=':concrete/concreteclass'] select option:selected").should("have.text", "C35")
     })
+
+    it("component is shown in cost items totals", function() {
+      cy.visit("#/projects/" + projectId + "/cost-items-totals")
+      cy.get("[data-cy='navigation-fgroup-drainage'] button").click()
+      cy.get("[data-cy='navigation-fclass-culvert'] a").click()
+
+      // Add cost per quantity of 100
+      cy.get("tr[data-cy='row-Concrete_class:C35;Environmental_class:X0;Opening_diameter:20,00'] [data-cy='table-body-column-cost-per-quantity-unit'] input")
+        .clear().type("100").blur()
+      cy.get("tr[data-cy='row-Concrete_class:C35;Environmental_class:X0;Opening_diameter:20,00'] [data-cy='table-body-column-cost-per-quantity-unit'] input")
+        .should("have.value", "100,00")
+    })
+
+    it("material can be deleted", function() {
+      // Open the component page
+      cy.visit("#/projects/" + projectId + "/cost-items/" + componentOid)
+
+      // The material is listed
+      cy.get(`a[href='#/projects/${projectId}/cost-items/${materialOid}']`).should("exist")
+      // Delete material
+      cy.get("button").contains("Delete").click()
+      cy.get("button#confirm-delete").click()
+
+      // The material is not listed any more
+      cy.get(`a[href='#/projects/${projectId}/cost-items/${materialOid}']`).should("not.exist")
+    })
+
+    it("component can be deleted", function() {
+      // Open the cost item page
+      cy.visit("#/projects/" + projectId + "/cost-items/" + costItemOid)
+
+      // The cost item is listed
+      cy.get(`a[href='#/projects/${projectId}/cost-items/${componentOid}']`).should("exist")
+      // Delete cost item
+      cy.get("button").contains("Delete").click()
+      cy.get("button#confirm-delete").click()
+
+      // The cost item is not listed any more
+      cy.get(`a[href='#/projects/${projectId}/cost-items/${componentOid}']`).should("not.exist")
+    })
+
   })
 })

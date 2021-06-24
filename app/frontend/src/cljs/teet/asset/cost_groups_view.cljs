@@ -1,5 +1,6 @@
 (ns teet.asset.cost-groups-view
-  (:require [herb.core :refer [<class]]
+  (:require [clojure.string :as str]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
             [teet.asset.asset-model :as asset-model]
             [teet.asset.asset-type-library :as asset-type-library]
@@ -87,6 +88,16 @@
      [:div {:style {:float :right :font-weight 700
                     :font-size "80%"}} subtotal]]]])
 
+(defn- row-key [atl row]
+  (->> (asset-type-library/format-properties :en
+                                             atl
+                                             row)
+       (sort-by first)
+       (map (comp #(str/replace % #"\s+" "_")
+                  #(str/join ":" %)
+                  #(take 2 %)))
+       (str/join ";")))
+
 (defn- cost-items-totals-page*
   [e! {query :query atl :asset-type-library :as app}
    {totals :cost-totals version :version
@@ -163,7 +174,9 @@
                     [table-section-header e! query listing-opts closed-totals fc
                      (get-in totals [:fclass-and-fgroup-totals (:db/ident fc)])]
                     (when open?
-                      [table/listing-body (assoc listing-opts :rows fclass-rows)])]))])]))]]])))
+                      [table/listing-body (assoc listing-opts
+                                                 :rows fclass-rows
+                                                 :key (partial row-key atl))])]))])]))]]])))
 
 (defn cost-items-totals-page [e! app state]
   [asset-ui/wrap-atl-loader cost-items-totals-page* e! app state])
