@@ -20,7 +20,8 @@
             [teet.util.coerce :refer [->long ->bigdec]]
             [teet.util.collection :as cu]
             [clojure.set :as set]
-            [teet.util.geo :as geo]))
+            [teet.util.geo :as geo]
+            [jeesql.core :as jeesql]))
 
 (defquery :asset/type-library
   {:doc "Query the asset types"
@@ -451,3 +452,40 @@ the parent asset and sibling components on the map when creating a new component
                              :coordinates [start-point end-point]}
                             {:type "Point"
                              :coordinates start-point})})})}))
+
+(jeesql/defqueries "teet/asset/asset_queries.sql")
+
+(defquery :assets/regions
+  {:doc "Fetch counties/municipalities list for selection."
+   :args _
+   :context {c :sql-conn}
+   :project-id nil
+   :authorization {}}
+  (let [areas (fetch-regions c)
+        counties (into []
+                       (comp
+                        (filter (complement :okood))
+                        )
+                       areas)
+        municipalities-by-county (group-by :mkood
+                                           (filter :okood areas))]
+    (mapv
+     (fn [county]
+       (-> county
+           (select-keys [:id :label])
+           (assoc :municipalities
+                  (into []
+                        (map #(select-keys % [:id :label]))
+                        (municipalities-by-county (:mkood county))))))
+     counties)))
+
+(defquery :assets/regions-geojson
+  {:doc "Fetch GeoJSON for selected regions"
+   :args {regions :regions}
+   :context {c :sql-conn}
+   :project-id nil
+   :authorization {}}
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (fetch-regions-geojson-by-ids c {:ids (into-array String regions)})})

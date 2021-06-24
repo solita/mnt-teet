@@ -125,7 +125,10 @@
 
              :road-address
              {:road-address []
-              :cleanup #(dissoc % :road-address :cleanup)})))))))
+              :cleanup #(dissoc % :road-address :cleanup)}
+
+             :region
+             {:region #{}})))))))
 
   SetCurrentLocation
   (process-event [{location :location} app]
