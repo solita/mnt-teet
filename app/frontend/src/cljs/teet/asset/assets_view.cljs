@@ -210,7 +210,7 @@
        :assets/regions-geojson
        {:regions (into #{} (map :id) region)})
       "search-by-region" nil
-      map-features/drawn-area-style ; FIXME: own style def
+      map-features/region-area-style
       {:fit-on-load? true})}))
 
 (defn- asset-filters [e! atl filters]
