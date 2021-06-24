@@ -23,7 +23,7 @@
             [teet.user.user-model :as user-model]
             [teet.ui.events :as events]
             [teet.common.common-styles :as common-styles]
-            [teet.project.project-view :as project-view]))
+            [teet.project.project-menu :as project-menu]))
 
 
 (def uri-quote (fnil js/encodeURIComponent "(nil)"))
@@ -364,7 +364,8 @@
         :extra-panel extra-panel
         :extra-panel-open? extra-panel-open?}]]
      ;; Header extension for project views (mobile)
-     [project-view/project-menu-header e! app open?]]]
+     (if (responsivity-styles/mobile?)
+       [project-menu/project-menu-header-mobile e! app open?])]]
 
    (if (responsivity-styles/mobile?)
      [Drawer {:classes {"paperAnchorDockedLeft"
