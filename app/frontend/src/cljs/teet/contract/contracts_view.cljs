@@ -9,10 +9,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
-            [clojure.string :as str]
             [teet.ui.url :as url]
-            [teet.ui.common :as common]
-            [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
@@ -198,6 +195,7 @@
           (let [general-input-options (merge {:e! e!
                                               :class (<class contract-style/filter-input-style)
                                               :label (tr [:contracts :filters :inputs field-name])
+                                              :id (str "contract-filter-input/" field-name)
                                               :value (field-name filter-values)
                                               :on-change #(input-change
                                                             field-name
