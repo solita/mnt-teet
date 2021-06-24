@@ -22,6 +22,7 @@ SELECT row_to_json(fc)::TEXT
                        ST_AsGeoJSON(f.geometry)::json as geometry,
                        (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id))
 		        || (jsonb_build_object('deleted', f.deleted))
+                        || (jsonb_build_object('tooltip', f.label))
 			|| f.properties) AS properties
                   FROM teet.feature f
                   JOIN features fs ON (f.datasource_id = fs.datasource AND f.id = fs.id)) f) fc;
