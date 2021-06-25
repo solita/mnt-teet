@@ -87,9 +87,9 @@
      {:label [typography/TextBold (tr [:fields :company/name])]
       :data name}
      {:label [typography/TextBold (tr [:fields :company/emails])]
-      :data emails}
+      :data (str/join "" emails)}
      {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
-      :data phone-numbers}]]])
+      :data (str/join "" phone-numbers)}]]])
 
 (defn selected-company-information
   [company]
