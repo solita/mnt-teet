@@ -85,6 +85,7 @@
                                     :teet/id])
         company-id (:db/id form-data)
         contract-eid (:db/id contract)
+        company-contract-uuid (contract-db/contract-partner-relation-entity-uuid db company-id contract-eid)
         lead-partner? (:company-contract/lead-partner? form-data)
         tempids
         (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
