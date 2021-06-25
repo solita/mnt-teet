@@ -87,9 +87,9 @@
      {:label [typography/TextBold (tr [:fields :company/name])]
       :data name}
      {:label [typography/TextBold (tr [:fields :company/emails])]
-      :data (str/join ", " emails)}
+      :data emails}
      {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
-      :data (str/join ", " phone-numbers)}]]])
+      :data phone-numbers}]]])
 
 (defn selected-company-information
   [company]
@@ -97,6 +97,14 @@
    [:div {:class (<class common-styles/margin-bottom 1.5)}
     [common/info-box {:variant :success
                       :title (tr [:contract :information-found])
+                      :content [company-info-column company]}]]])
+
+(defn edit-company-information
+  [company]
+  [:div
+   [:div {:class (<class common-styles/margin-bottom 1.5)}
+    [common/info-box {:variant :success
+                      :title (tr [:contract :edit-company])
                       :content [company-info-column company]}]]])
 
 (defn edit-company-footer
@@ -205,7 +213,7 @@
         [form/field :company/country
          [select/country-select {:show-empty-selection? true}]]]
        [foreign-fields]]
-      [:div "TO BE implemented"])))
+      (edit-company-information form-value))))
 
 (defn new-company-form-fields
   [form-value]

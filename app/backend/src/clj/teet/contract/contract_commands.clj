@@ -5,7 +5,8 @@
             [teet.util.datomic :as du]
             [teet.company.company-db :as company-db]
             [teet.company.company-model :as company-model]
-            [teet.contract.contract-db :as contract-db])
+            [teet.contract.contract-db :as contract-db]
+            [clojure.string :as str])
   (:import (java.util UUID)))
 
 
@@ -32,8 +33,10 @@
          (company-db/business-registry-code-unique?
            db
            (company-model/company-business-registry-id-with-country-code form-data))]}
-  (let [company-fields (-> (select-keys form-data [:company/country :company/emails :company/phone-numbers
+  (let [company-fields (-> (select-keys form-data [:company/country
                                                    :company/business-registry-code :company/name])
+                           (assoc :company/emails (str/join (:company/emails form-data)))
+                           (assoc :company/phone-numbers (str/join (:company/phone-numbers form-data)))
                            (assoc :company/business-registry-code
                                   (company-model/company-business-registry-id-with-country-code form-data)))
         contract-eid (:db/id contract)
@@ -81,11 +84,8 @@
                                     :company/name
                                     :teet/id])
         company-id (:db/id form-data)
-        retract-emails-tx [:db/retract company-id :company/emails]
-        retract-phone-numbers-tx [:db/retract company-id :company/phone-numbers]
         contract-eid (:db/id contract)
         lead-partner? (:company-contract/lead-partner? form-data)
-        _ (:tempids (tx [retract-emails-tx] [retract-phone-numbers-tx]))
         tempids
         (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
                          contract-eid
