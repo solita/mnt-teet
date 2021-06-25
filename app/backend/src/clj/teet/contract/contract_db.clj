@@ -216,6 +216,18 @@
             db contract-id)
        first))
 
+(defn contract-partner-relation-entity-uuid
+  "Fetch company-contract entity uuid"
+  [db company-id contract-id]
+  (->> (d/q '[:find ?t
+              :where
+              [?cc :teet/id ?t]
+              [?cc :company-contract/contract ?contract]
+              [?cc :company-contract/company ?company]
+              :in $ ?contract ?company]
+         db contract-id company-id)
+    ffirst))
+
 (defn is-company-contract-employee?
   "Given user id and company-contract check if the user is an employee"
   [db company-contract-eid user-eid]

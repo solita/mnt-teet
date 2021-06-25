@@ -231,8 +231,8 @@
   [e! app selected-company]
   (e! (contract-partners-controller/->InitializeEditCompanyForm
         (merge
-          {:company-contract/lead-partner? (:company-contract/lead-partner? selected-company)}
-          (:company-contract/company selected-company))))
+          (:company-contract/company selected-company)
+          {:company-contract/lead-partner? (:company-contract/lead-partner? selected-company)})))
   (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
@@ -247,7 +247,7 @@
                        :save-event #(common-controller/->SaveFormWithConfirmation
                                       partner-save-command
                                       {:form-data form-state
-                                       :contract (select-keys (:company-contract/company selected-company) [:db/id])}
+                                       :contract (select-keys (:company-contract/contract selected-company) [:db/id])}
                                       (fn [response]
                                         (fn [e!]
                                           (e! (common-controller/->Refresh))
