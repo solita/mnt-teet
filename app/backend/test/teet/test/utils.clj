@@ -164,6 +164,12 @@
     :document-storage {:bucket-name (System/getenv "DOCUMENT_BUCKET")}}
    (f)))
 
+(defn with-postgresql []
+  []
+  (fn with-postgresql [f]
+    (run-with-config {:postgresql {:uri "jdbc:postgresql://localhost:5432/teet" :password ""}}
+      (f))))
+
 (defn with-db
   ([] (with-db {}))
   ([{:keys [data-fixtures migrate? mock-users? skip-delete? timestamp]
