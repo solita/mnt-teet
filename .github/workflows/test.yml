@@ -19,6 +19,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: teet
           POSTGRES_DB: teet
+          POSTGRES_HOST_AUTH_METHOD: trust
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
