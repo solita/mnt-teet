@@ -164,6 +164,13 @@
     :document-storage {:bucket-name (System/getenv "DOCUMENT_BUCKET")}}
    (f)))
 
+(defn with-postgresql [f]
+  (run-with-config
+   {:postgresql {:uri "jdbc:postgresql://localhost:5432/teet"
+                 :user "authenticator"
+                 :password ""}}
+   (f)))
+
 (defn with-db
   ([] (with-db {}))
   ([{:keys [data-fixtures migrate? mock-users? skip-delete? timestamp]
@@ -281,6 +288,9 @@
       :user (when user-ref
               (user-db/user-info db user-ref))
       :session "foo"}
+     (when (environment/config-value :postgresql)
+       ;; NOTE: we are not closing these...
+       {:sql-conn {:connection (environment/get-pg-connection)}})
      (when (environment/feature-enabled? :asset-db)
        {:asset-conn (asset-connection)
         :asset-db (d/db (asset-connection))}))))

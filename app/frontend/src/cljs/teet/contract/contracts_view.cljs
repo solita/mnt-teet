@@ -9,17 +9,15 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
-            [clojure.string :as str]
             [teet.ui.url :as url]
-            [teet.ui.common :as common]
-            [teet.environment :as environment]
             [teet.contract.contract-model :as contract-model]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
             [teet.ui.typography :as typography]
             [teet.ui.container :as container]
             [teet.contract.contract-status :as contract-status]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.common :as common-ui]))
 
 (defn contract-card-header
   [contract-status contract-name contract-url-id]
@@ -43,7 +41,8 @@
                                                       (contract-model/contract-name contract)
                                                       (contract-model/contract-url-id contract))
                                     :on-toggle toggle-card
-                                    :open? open?}
+                                    :open? open?
+                                    :mount-on-enter true}
    ""
    [:div {:class (<class contract-style/contract-card-details-style)}
     [contract-common/contract-external-links contract]
@@ -64,34 +63,41 @@
     (tr [:contracts :contracts-list :collapse-all])]])
 
 (defn contacts-list-header
-  [{:keys [contracts-count expand-contracts collapse-contracts]}]
+  [{:keys [contracts-count expand-contracts collapse-contracts all-contracts?]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
    [contract-list-expansion-buttons expand-contracts collapse-contracts]
-   [typography/SmallText (str contracts-count " "
-                           (tr (if (= contracts-count 1)
-                                 [:contracts :contracts-list :result]
-                                 [:contracts :contracts-list :results])))]])
+   [typography/SmallText
+    (tr
+      (if all-contracts?
+        [:contracts :contracts-list :results]
+        (if (= contracts-count 1)
+          [:contracts :contracts-list :filtered-result]
+          [:contracts :contracts-list :filtered-results]))
+      {:count (str contracts-count)})]])
 
-(defn contract-expansion-map
-  [contracts open?]
-  (reduce (fn [expansion-map contract] (assoc expansion-map (:db/id contract) open?)) {} contracts))
 
 (defn contracts-list
-  [contracts]
-  (r/with-let [contract-expansion-atom (r/atom (contract-expansion-map contracts false))
-               expand-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts true))
-               collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))
+  [increase-show-count show-count all-contracts? contracts]
+  (r/with-let [open-contracts (r/atom #{})
+               expand-contracts #(reset! open-contracts (->> contracts
+                                                            (mapv :db/id)
+                                                            set))
+               collapse-contracts #(reset! open-contracts #{})
                toggle-card (fn [contract-id]
-                             (swap! contract-expansion-atom update contract-id #(not %)))]
+                             (if (@open-contracts contract-id)
+                               (swap! open-contracts disj contract-id)
+                               (swap! open-contracts conj contract-id)))]
     [:div {:class (<class contract-style/contracts-list-style)}
-     [contacts-list-header {:contracts-count (count contracts)
+     [contacts-list-header {:all-contracts? all-contracts?
+                            :contracts-count (count contracts)
                             :expand-contracts expand-contracts
                             :collapse-contracts collapse-contracts}]
      (doall
-       (for [contract contracts
-             :let [open? (get @contract-expansion-atom (:db/id contract))]]
+       (for [contract (take show-count contracts)
+             :let [open? (@open-contracts (:db/id contract))]]
          ^{:key (str (:db/id contract))}
-         [contract-card contract #(toggle-card (:db/id contract)) open?]))]))
+         [contract-card contract #(toggle-card (:db/id contract)) open?]))
+     [common-ui/scroll-sensor increase-show-count]]))
 
 (def filter-options
   [:my-contracts
@@ -198,6 +204,7 @@
           (let [general-input-options (merge {:e! e!
                                               :class (<class contract-style/filter-input-style)
                                               :label (tr [:contracts :filters :inputs field-name])
+                                              :id (str "contract-filter-input/" field-name)
                                               :value (field-name filter-values)
                                               :on-change #(input-change
                                                             field-name
@@ -214,7 +221,7 @@
 
 (defn contract-search
   [{:keys [e! filter-options clear-filters filtering-atom input-change change-shortcut]}]
-  (r/with-let [filters-visibility? (r/atom false)
+  (r/with-let [filters-visibility? (r/atom true)
                toggle-filters-visibility #(swap! filters-visibility? not)]
     [:div {:class (<class contract-style/contract-search-container-style)}
      [:div {:class (<class contract-style/search-header-style)}
@@ -234,13 +241,19 @@
 
 ;; Targeted from routes.edn will be located in route /contracts
 (defn contracts-listing-view
-  [e! {route :route :as app}]
-  (r/with-let [default-filtering-value {:shortcut :my-contracts}
+  [e! {route :route :as _app}]
+  (r/with-let [default-show-amount 20
+               default-filtering-value {:shortcut :my-contracts}
+               show-count (r/atom default-show-amount)
                filtering-atom (local-storage (r/atom default-filtering-value)
                                              :contract-filters)
-               change-shortcut #(swap! filtering-atom assoc :shortcut %)
+               change-shortcut (fn [val]
+                                 (reset! show-count default-show-amount)
+                                 (swap! filtering-atom assoc :shortcut val))
                input-change (fn [key value]
+                              (reset! show-count default-show-amount)
                               (swap! filtering-atom assoc key value))
+               increase-show-count #(swap! show-count + 5)
                clear-filters #(reset! filtering-atom default-filtering-value)]
     [Grid {:style {:flex 1}
            :class (<class common-styles/flex-1)
@@ -261,5 +274,8 @@
          :query :contracts/list-contracts
          :args {:search-params @filtering-atom
                 :refresh (:contract-refresh route)}
-         :simple-view [contracts-list]}
+         :simple-view [contracts-list
+                       increase-show-count
+                       @show-count
+                       (= {:shortcut :all-contracts} @filtering-atom)]}
         250]]]]))

@@ -12,7 +12,7 @@ describe("Task view", function() {
     it("carla can't delete task", function() {
         cy.dummyLogin("Carla")
         cy.visit(this.taskURL)
-        cy.get("h1").contains("TASK TESTING")
+        cy.get("[data-cy='project-header']").contains("TASK TESTING")
         cy.get("div.task-page")
         cy.get(".task-header button").should("not.exist")
     })
@@ -20,7 +20,7 @@ describe("Task view", function() {
     it("Danny can edit task", function() {
         cy.dummyLogin("Danny")
         cy.visit(this.taskURL)
-        cy.get("h1").contains("TASK TESTING")
+        cy.get("[data-cy='project-header']").contains("TASK TESTING")
         cy.get("div.task-page")
         cy.get(".task-header button").click()
         cy.get(".edit-task-form")

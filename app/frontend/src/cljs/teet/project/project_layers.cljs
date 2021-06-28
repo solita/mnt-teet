@@ -255,6 +255,8 @@
   is passed to each layer."
   [opts & layers]
   (reduce (fn [layers layer-fn]
-            (merge layers (layer-fn opts)))
+            (if layer-fn
+              (merge layers (layer-fn opts))
+              layers))
           {}
           layers))

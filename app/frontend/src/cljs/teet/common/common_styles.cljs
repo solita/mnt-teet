@@ -523,7 +523,8 @@
     :success [theme-colors/sea-green theme-colors/mint-cream]
     :warning [theme-colors/dark-tangerine-11 theme-colors/dark-tangerine-1]
     :error [theme-colors/red theme-colors/red-lightest]
-    :info [theme-colors/blue theme-colors/blue-lightest]))
+    :info [theme-colors/blue theme-colors/blue-lightest]
+    [theme-colors/blue theme-colors/blue-lightest]))
 
 (defn info-box [variant]
   (let [[border background] (variant->background&border variant)]
@@ -577,6 +578,10 @@
   []
   {:overflow :hidden
    :text-overflow :ellipsis})
+
+(defn truncate-text []
+  (merge (overflow-ellipsis)
+         (white-space-nowrap)))
 
 (defn flex-shrink-no-wrap
   []
