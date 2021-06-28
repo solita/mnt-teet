@@ -26,3 +26,16 @@ SELECT row_to_json(fc)::TEXT
 			|| f.properties) AS properties
                   FROM teet.feature f
                   JOIN features fs ON (f.datasource_id = fs.datasource AND f.id = fs.id)) f) fc;
+
+-- name: fetch-feature-geometry-by-datasource-and-id
+-- single?: true
+SELECT f.geometry
+  FROM teet.feature f
+ WHERE f.datasource_id = :datasource
+   AND f.id = :id;
+
+-- name: fetch-assets-intersecting-geometry
+-- Find any asset OIDs where the geometry is within the given geometry.
+SELECT a.oid FROM teet.asset a
+ WHERE ST_Intersects(a.geometry, :geometry)
+   AND LENGTH(a.oid) = 14;

@@ -141,6 +141,7 @@
   [:div
    [select/select-search-multiple
     {:e! e!
+     :query-threshold 0
      :value (:region criteria)
      :query (fn [text]
               #(for [r regions

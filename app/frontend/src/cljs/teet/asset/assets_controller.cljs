@@ -53,6 +53,11 @@
     (assoc out :road-address addr)
     out))
 
+(defmethod search-criteria :region [out {:keys [region search-by]}]
+  (if (and (= search-by :region) (seq region))
+    (assoc out :region (into #{} (map :id) region))
+    out))
+
 (defn assets-query [criteria]
   (let [args (reduce (fn [out key]
                        (search-criteria out criteria key))

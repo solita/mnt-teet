@@ -23,6 +23,8 @@
             [teet.util.geo :as geo]
             [jeesql.core :as jeesql]))
 
+(jeesql/defqueries "teet/asset/asset_queries.sql")
+
 (defquery :asset/type-library
   {:doc "Query the asset types"
    :context {adb :asset-db}
@@ -251,24 +253,24 @@
   [db fclass]
   (e= db :asset/fclass fclass))
 
-(defmulti search-by (fn [_db key _value] key))
+(defmulti search-by (fn [_db _sql-conn key _value] key))
 
-(defmethod search-by :fclass [db _ fclasses]
+(defmethod search-by :fclass [db _ _ fclasses]
   (apply set/union
          (map #(fclass= db %)
               fclasses)))
 
-(defmethod search-by :common/status [db _ statuses]
+(defmethod search-by :common/status [db _ _ statuses]
   (assets-only
    db
    (into #{}
          (mapcat #(e= db :common/status %))
          statuses)))
 
-(defmethod search-by :bbox [db _ [xmin ymin xmax ymax]]
+(defmethod search-by :bbox [db _ _ [xmin ymin xmax ymax]]
   (bbq db xmin ymin xmax ymax))
 
-(defmethod search-by :current-location [db _ [x y radius]]
+(defmethod search-by :current-location [db _ _ [x y radius]]
   (bbq db (- x radius) (- y radius) (+ x radius) (+ y radius)
        (fn [{point :v}]
          (<= (geo/distance point [x y]) radius))))
@@ -299,14 +301,36 @@
                                   (some-> start-km ->bigdec)
                                   (some-> end-km ->bigdec)])})))
 
-(defmethod search-by :road-address [db _ addrs]
+(defmethod search-by :road-address [db _ _ addrs]
   (apply set/union
          (map (partial search-by-road-address db)
               addrs)))
 
-(defn- search-by-map [db criteria-map]
+(defmethod search-by :region [db sql-conn _ regions]
+  (loop [acc #{}
+         [r & regions] regions]
+    (if-not r
+      ;; Resolve OIDs to db ids
+      (into #{}
+            (map first)
+            (d/q '[:find ?e
+                   :where [?e :asset/oid ?oid]
+                   :in $ [?oid ...]]
+                 db acc))
+      (let [[ds id] (str/split r #":")
+            g (fetch-feature-geometry-by-datasource-and-id
+               sql-conn
+               {:datasource (Integer/parseInt ds)
+                :id id})]
+        (recur (into acc
+                     (map :oid (fetch-assets-intersecting-geometry
+                                sql-conn
+                                {:geometry g})))
+               regions)))))
+
+(defn- search-by-map [db sql-conn criteria-map]
   (reduce-kv (fn [acc by val]
-               (let [result (search-by db by val)]
+               (let [result (search-by db sql-conn by val)]
                  (if (nil? acc)
                    result
                    (set/intersection acc result))))
@@ -314,15 +338,17 @@
              criteria-map))
 
 
+
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
    :args search-criteria
-   :context {adb :asset-db}
+   :context {adb :asset-db
+             sql-conn :sql-conn}
    :project-id nil
    :authorization {}}
   (let [ids (take (inc result-count-limit)
-                  (search-by-map adb search-criteria))
+                  (search-by-map adb sql-conn search-criteria))
         more-results? (> (count ids) result-count-limit)
         assets
         (map first
@@ -354,7 +380,8 @@
   {:doc "Return GeoJSON for assets found by search."
    :spec (s/keys :opt-un [:assets-search/fclass])
    :args criteria
-   :context {adb :asset-db}
+   :context {adb :asset-db
+             sql-conn :sql-conn}
    :project-id nil
    :authorization {}}
   (let [criteria (update criteria :bbox #(mapv bigdec %))
@@ -364,7 +391,7 @@
                                        :location/start-point :location/end-point])
                        :in $ [?a ...]]
                      adb
-                     (search-by-map adb criteria)))]
+                     (search-by-map adb sql-conn criteria)))]
     ^{:format :raw}
     {:status 200
      :headers {"Content-Type" "application/json"}
@@ -453,8 +480,6 @@ the parent asset and sibling components on the map when creating a new component
                             {:type "Point"
                              :coordinates start-point})})})}))
 
-(jeesql/defqueries "teet/asset/asset_queries.sql")
-
 (defquery :assets/regions
   {:doc "Fetch counties/municipalities list for selection."
    :args _
@@ -463,10 +488,8 @@ the parent asset and sibling components on the map when creating a new component
    :authorization {}}
   (let [areas (fetch-regions c)
         counties (into []
-                       (comp
-                        (filter (complement :okood))
-                        )
-                       areas)
+                       (filter (complement :okood))
+                       (sort-by :label areas))
         municipalities-by-county (group-by :mkood
                                            (filter :okood areas))]
     (mapv
@@ -476,7 +499,7 @@ the parent asset and sibling components on the map when creating a new component
            (assoc :municipalities
                   (into []
                         (map #(select-keys % [:id :label]))
-                        (municipalities-by-county (:mkood county))))))
+                        (sort-by :label (municipalities-by-county (:mkood county)))))))
      counties)))
 
 (defquery :assets/regions-geojson
