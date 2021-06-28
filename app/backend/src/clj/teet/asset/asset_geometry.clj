@@ -54,4 +54,5 @@
   (future
     (log/info "Updating all assets to SQL")
     (environment/call-with-pg-connection
-     #(update-all-assets! (environment/asset-db) %))))
+     #(update-all-assets! (environment/asset-db) %)))
+  "{\"success\": true}")
