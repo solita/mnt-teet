@@ -166,7 +166,9 @@
 
 (defn with-postgresql [f]
   (run-with-config
-   {:postgresql {:uri "jdbc:postgresql://localhost:5432/teet" :password ""}}
+   {:postgresql {:uri "jdbc:postgresql://localhost:5432/teet"
+                 :user "authenticator"
+                 :password ""}}
    (f)))
 
 (defn with-db
