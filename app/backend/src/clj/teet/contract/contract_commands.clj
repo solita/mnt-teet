@@ -75,14 +75,14 @@
          (company-db/business-registry-code-unique?
            db
            (company-model/company-business-registry-id-with-country-code form-data))]}
-  (let [company-fields (select-keys
-                         form-data [:db/id
-                                    :company/country
-                                    :company/emails
-                                    :company/phone-numbers
-                                    :company/business-registry-code
-                                    :company/name
-                                    :teet/id])
+  (let [company-fields (-> (select-keys
+                             form-data [:db/id
+                                        :company/country
+                                        :company/business-registry-code
+                                        :company/name
+                                        :teet/id])
+                         (assoc :company/emails (str/join "" (:company/emails form-data)))
+                         (assoc :company/phone-numbers (str/join "" (:company/phone-numbers form-data))))
         company-id (:db/id form-data)
         contract-eid (:db/id contract)
         company-contract-uuid (contract-db/contract-partner-relation-entity-uuid db company-id contract-eid)

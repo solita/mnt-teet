@@ -91,6 +91,21 @@
      {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
       :data (str/join "" phone-numbers)}]]])
 
+(defn company-edit-info-column
+  [{:company/keys [country name emails phone-numbers business-registry-code]}]
+  [:div
+   [common/basic-information-column
+    [{:label [typography/TextBold (tr [:fields :company/country])]
+      :data (tr [:countries country])}
+     {:label [typography/TextBold (tr [:fields :company/name])]
+      :data name}
+     {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
+      :data business-registry-code}
+     {:label [typography/TextBold (tr [:fields :company/emails])]
+      :data (str/join "" emails)}
+     {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
+      :data (str/join "" phone-numbers)}]]])
+
 (defn selected-company-information
   [company]
   [:div
@@ -105,16 +120,12 @@
    [:div {:class (<class common-styles/margin-bottom 1.5)}
     [common/info-box {:variant :success
                       :title (tr [:contract :edit-company])
-                      :content [company-info-column company]}]]])
+                      :content [company-edit-info-column company]}]]])
 
 (defn edit-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
-  (let [search-disabled? (or (not
-                               (validation/valid-estonian-business-registry-id?
-                                 (:company/business-registry-code form-value)))
-                           (:search-in-progress? form-value))
-        estonian-company? (= (:company/country form-value) :ee)
-        search-success? (:search-success? form-value)]
+  (let [search-disabled? (:search-in-progress? form-value)
+        estonian-company? (= (:company/country form-value) :ee)]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
                     :text-align :center}}
@@ -125,17 +136,17 @@
                                     :class "cancel"
                                     :on-click cancel}
           (tr [:buttons :cancel])])
-       (if (and estonian-company? (not search-success?))
+       (when (true? estonian-company?)
          [buttons/button-primary {:disabled search-disabled?
-                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry
-                                              (:company/business-registry-code form-value))}
-          (tr [:buttons :search])]
-         (when validate
-           [buttons/button-primary {:disabled disabled?
-                                    :type :submit
-                                    :class "submit"
-                                    :on-click validate}
-            (tr [:buttons :save])]))]]]))
+                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry :edit-partner
+                                              (subs (:company/business-registry-code form-value) 2))} ; skip 'EE' prefix
+          (tr [:buttons :search])])
+       (when validate
+         [buttons/button-primary {:disabled disabled?
+                                  :type :submit
+                                  :class "submit"
+                                  :on-click validate}
+          (tr [:buttons :save])])]]]))
 
 (defn new-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
@@ -157,7 +168,7 @@
           (tr [:buttons :cancel])])
        (if (and estonian-company? (not search-success?))
          [buttons/button-primary {:disabled search-disabled?
-                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry
+                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry :new-partner
                                                 (:company/business-registry-code form-value))}
           (tr [:buttons :search])]
          (when validate

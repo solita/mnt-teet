@@ -23,10 +23,10 @@
 (defrecord CancelEditCompany [])
 (defrecord InitializeNewCompanyForm [])
 (defrecord InitializeEditCompanyForm [company])
-(defrecord SearchBusinessRegistry [business-id])
-(defrecord SearchBusinessRegistryError [error])
+(defrecord SearchBusinessRegistry [form-key business-id])
+(defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
-(defrecord SearchBusinessRegistryResult [result])
+(defrecord SearchBusinessRegistryResult [form-key result])
 
 (extend-protocol t/Event
   UpdateNewCompanyForm
@@ -66,31 +66,31 @@
                :query {}})))))
 
   SearchBusinessRegistryResult
-  (process-event [{result :result} app]
+  (process-event [{:keys [form-key result]} app]
     (if result
       (-> app
-          (update-in [:forms :new-partner] merge result)
-          (assoc-in [:forms :new-partner :search-success?] true)
-          (update-in [:forms :new-partner] dissoc :search-in-progress?))
+          (update-in [:forms form-key] merge result)
+          (assoc-in [:forms form-key :search-success?] true)
+          (update-in [:forms form-key] dissoc :search-in-progress?))
       (-> app
-          (assoc-in [:forms :new-partner :no-results?] true)
-          (update-in [:forms :new-partner] dissoc :search-in-progress?))))
+          (assoc-in [:forms form-key :no-results?] true)
+          (update-in [:forms form-key] dissoc :search-in-progress?))))
 
   SearchBusinessRegistryError
-  (process-event [{error :error} app]
+  (process-event [{:keys [form-key error]} app]
     (log/warn "Business registry search failed on error: " error)
     (-> app
-        (assoc-in [:forms :new-partner :exception-in-xroad?] true)
-        (update-in [:forms :new-partner] dissoc :search-in-progress?)))
+        (assoc-in [:forms form-key :exception-in-xroad?] true)
+        (update-in [:forms form-key] dissoc :search-in-progress?)))
 
   SearchBusinessRegistry
-  (process-event [{business-id :business-id} app]
-    (t/fx (assoc-in app [:forms :new-partner :search-in-progress?] true)
-          {:tuck.effect/type :query
-           :query :company/business-registry-search
-           :args {:business-id business-id}
-           :error-event ->SearchBusinessRegistryError
-           :result-event ->SearchBusinessRegistryResult}))
+  (process-event [{:keys [form-key business-id]} app]
+    (t/fx (assoc-in app [:forms form-key :search-in-progress?] true)
+      {:tuck.effect/type :query
+       :query :company/business-registry-search
+       :args {:business-id business-id}
+       :error-event (partial ->SearchBusinessRegistryError form-key)
+       :result-event (partial ->SearchBusinessRegistryResult form-key)}))
 
   SelectCompany
   (process-event [{company :company} app]
