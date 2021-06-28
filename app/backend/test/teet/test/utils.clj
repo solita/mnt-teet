@@ -286,6 +286,9 @@
       :user (when user-ref
               (user-db/user-info db user-ref))
       :session "foo"}
+     (when (environment/config-value :postgresql)
+       ;; NOTE: we are not closing these...
+       {:sql-conn (environment/get-pg-connection)})
      (when (environment/feature-enabled? :asset-db)
        {:asset-conn (asset-connection)
         :asset-db (d/db (asset-connection))}))))
