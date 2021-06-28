@@ -85,6 +85,11 @@
            :asset-import
            {:fn teet.asset.asset-road-registry-import/import-ion
             :description "Import road registry WFS objects by type"}
+
+           :update-asset-geometries
+           {:fn teet.asset.asset-geometry/update-ion
+            :description "Update all asset geometries to PostgreSQL"}
+
            }
 
  :app-name "teet-datomic"}
