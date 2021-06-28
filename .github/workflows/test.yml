@@ -55,11 +55,12 @@ jobs:
         mkdir /tmp/datomic-storage
         echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
     - name: migrate postgres
-      run: |
-        export DB_URI="jdbc:postgresql://localhost:5432/teet"
-        export DB_USER="teet"
-        export DB_PASSWORD="postgres"
-        clojure -m migrate
+      working-directory: db/
+      env:
+        DB_URI: jdbc:postgresql://localhost:5432/teet
+        DB_USER: teet
+        DB_PASSWORD: postgres
+      run: clojure -m migrate
     - name: run backend tests
       run: clojure -A:ci-test
       working-directory: app/backend/
