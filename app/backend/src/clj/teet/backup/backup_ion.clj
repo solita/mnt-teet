@@ -201,13 +201,6 @@
 (def ^:private old-tuple-attrs
     {:file-seen/file+user [:file-seen/file :file-seen/user]})
 
-(defn- progress-fn [message]
-  (let [prg (atom 0)]
-    (fn []
-      (let [p (swap! prg inc)]
-        (when (zero? (mod p 500))
-          (log/info p message))))))
-
 (defn- output-all-tx [conn out]
   (let [db (d/db conn)
         attr-ident-cache (atom {})
@@ -229,7 +222,7 @@
                                db))
         ignore-attributes (into ignore-attributes
                                 (keys tuple-attrs))
-        progress! (progress-fn "backup transactions written")]
+        progress! (log/progress-fn "backup transactions written")]
 
     (out! {:ref-attrs ref-attrs
            :tuple-attrs tuple-attrs
@@ -356,7 +349,7 @@
                                                   [?a :db/cardinality :db.cardinality/many]
                                                   [?a :db/ident ?ident]]
                                                 (d/db conn))))
-        progress! (progress-fn "transactions restored")]
+        progress! (log/progress-fn "transactions restored")]
     (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
     (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
     (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")

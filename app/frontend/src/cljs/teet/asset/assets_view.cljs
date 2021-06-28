@@ -43,7 +43,8 @@
             [teet.asset.materials-and-products-view :as materials-and-products-view]
             [teet.ui.url :as url]
             [teet.common.common-controller :as common-controller]
-            [teet.road.road-model :as road-model]))
+            [teet.road.road-model :as road-model]
+            [teet.util.string :as string]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -135,6 +136,27 @@
                                        :disabled (nil? (:road @form))}
          (tr [:asset :manager :select-road-address])]])]))
 
+(defn- select-region [e! criteria regions]
+
+  [:div
+   [select/select-search-multiple
+    {:e! e!
+     :query-threshold 0
+     :value (:region criteria)
+     :query (fn [text]
+              #(for [r regions
+                     m (into [r] (:municipalities r))
+                     :when (string/contains-words? (:label m) text)]
+                 m))
+     :format-result :label
+     :checkbox? true
+     :on-change #(e! (assets-controller/->UpdateSearchCriteria
+                      {:region %}))}]])
+
+(defmethod search-by-fields :region [e! atl criteria]
+  [query/query {:e! e! :query :assets/regions :args {}
+                :simple-view [select-region e! criteria]}])
+
 (defn radius-display [e! {location :location radius :radius :as filters}]
   [:div {:class (<class asset-styles/map-radius-overlay-container)}
    [filter-component {:e! e! :filters filters}
@@ -180,6 +202,18 @@
       (partial map-features/road-line-style 3 "orange")
       {:fit-on-load? true})}))
 
+(defmethod search-by-map-layers :region
+  [_ _ {:keys [region]}]
+  (when (seq region)
+    {:search-by-region
+     (map-layers/geojson-layer
+      (common-controller/query-url
+       :assets/regions-geojson
+       {:regions (into #{} (map :id) region)})
+      "search-by-region" nil
+      map-features/region-area-style
+      {:fit-on-load? true})}))
+
 (defn- asset-filters [e! atl filters]
   (let [opts {:e! e! :atl atl :filters filters}]
     [:<>
@@ -194,7 +228,8 @@
                     (<class common-styles/margin 0.5 0)]}
       (doall
        (for [[search-by-kw label] [[:current-location (tr [:asset :manager :search-nearby])]
-                                   [:road-address (tr [:fields :location/road-address])]]]
+                                   [:road-address (tr [:fields :location/road-address])]
+                                   [:region (tr [:asset :manager :search-region])]]]
          ^{:key (name search-by-kw)}
          [buttons/button-primary
           {:on-click (e! assets-controller/->SearchBy search-by-kw)
