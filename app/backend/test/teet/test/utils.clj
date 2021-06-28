@@ -290,7 +290,7 @@
       :session "foo"}
      (when (environment/config-value :postgresql)
        ;; NOTE: we are not closing these...
-       {:sql-conn (environment/get-pg-connection)})
+       {:sql-conn {:connection (environment/get-pg-connection)}})
      (when (environment/feature-enabled? :asset-db)
        {:asset-conn (asset-connection)
         :asset-db (d/db (asset-connection))}))))
