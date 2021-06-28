@@ -22,12 +22,12 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase]]
+            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase Toolbar]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.typography :refer [Heading1 Heading3] :as typography]
+            [teet.ui.typography :refer [Heading1 Heading3 TextBold] :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc] :as util]
             [teet.util.collection :as cu]
@@ -701,6 +701,7 @@
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-view e! app project]]])
 
+
 (defn project-full-page-structure
   "Structure for project pages that don't have map, but have
   a left panel content, main content and optional right panel content.
@@ -735,8 +736,8 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
+                :class (<class project-style/desktop-scroll-content-separately)
                 :style (merge {:margin content-margin
-                               :overflow-y :auto
                                :max-height "100%"}
                               (when (not right-panel)
                                 {:flex 1}))}

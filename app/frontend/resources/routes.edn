@@ -173,6 +173,7 @@
  :cost-items
  {:path "/projects/:project/cost-items"
   :parent :project
+  :crumb (str (tr [:project :tabs :cost-items]) ": " (tr [:asset :page :cost-items]))
   :view teet.asset.cost-items-view/cost-items-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
@@ -181,6 +182,7 @@
  :cost-items-totals
  {:path "/projects/:project/cost-items-totals"
   :parent :project
+  :crumb (str (tr [:project :tabs :cost-items]) ": " (tr [:asset :page :cost-items-totals]))
   :view teet.asset.cost-groups-view/cost-items-totals-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
@@ -190,6 +192,7 @@
  :materials-and-products
  {:path "/projects/:project/materials-and-products"
   :parent :project
+  :crumb (str (tr [:project :tabs :cost-items]) ": " (tr [:asset :page :materials-and-products]))
   :view teet.asset.materials-and-products-view/materials-and-products-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project
@@ -199,6 +202,7 @@
  :cost-item
  {:path "/projects/:project/cost-items/:id"
   :parent :cost-items
+  :crumb (-> state :cost-item :asset/oid)
   :view teet.asset.cost-items-view/cost-item-page
   :state {:query :asset/project-cost-items
           :args {:thk.project/id project

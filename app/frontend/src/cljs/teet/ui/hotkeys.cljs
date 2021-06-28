@@ -35,10 +35,13 @@
    {:component-did-mount (fn
                            [this]
                            (update-or-assoc-hotkey-registry this key on-key-press focus-element-name))
-    :component-will-unmount #(swap! hotkey-registry update key (fn [key-handlers]
-                                                                 (if (seq key-handlers)
-                                                                   (pop key-handlers)
-                                                                   key-handlers)))
+    :component-will-unmount #(swap! hotkey-registry update key
+                                    (fn [key-handlers]
+                                      (vec
+                                        ;; Remove handler by identity instead of popping, so that
+                                        ;; order does not matter when there are multiple handlers.
+                                        (remove (fn [h] (= h on-key-press))
+                                                key-handlers))))
     :component-will-receive-props (fn
                                     [this new-argv]
                                     (let [current-props (reagent/props this)

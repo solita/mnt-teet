@@ -549,7 +549,7 @@
         [form/footer2]]
 
        ;; Components (show only for existing)
-       (when initial-data
+       (when-not new?
          [:<>
           [components-tree  form-data
                             {:e! e!}]
@@ -749,10 +749,11 @@
 (defn cost-items-page [e! app state]
   [asset-ui/wrap-atl-loader cost-items-page* e! app state])
 
-(defn cost-item-map-panel [e! form-state]
+(defn- cost-item-map-panel [e! oid form-state]
   (when (:location/map-open? form-state)
     [cost-items-map-view/location-map
      {:e! e!
+      :asset/oid oid
       :value (cost-items-controller/location-form-value form-state)
       :on-change (e! cost-items-controller/location-form-change)}]))
 
@@ -765,7 +766,7 @@
     :app app
     :state state
     :left-panel-action [add-cost-item app version]
-    :right-panel (cost-item-map-panel e! cost-item)}
+    :right-panel (cost-item-map-panel e! (get-in app [:params :id]) cost-item)}
    [cost-item-form e! atl relevant-roads cost-item]])
 
 (defn new-cost-item-page [e! app state]
@@ -786,9 +787,10 @@
         :app app
         :state state
         :left-panel-action [add-cost-item app version]
-        :right-panel (cost-item-map-panel e! (if component
-                                               (last (asset-model/find-component-path cost-item component))
-                                               cost-item))}
+        :right-panel (cost-item-map-panel e! oid
+                                          (if component
+                                            (last (asset-model/find-component-path cost-item component))
+                                            cost-item))}
        (cond material
              ^{:key material}
              [material-form e! asset-type-library material cost-item]

@@ -109,7 +109,7 @@ Cypress.Commands.add("projectByName", (projectName) => {
   cy.get("td").contains(projectName).click()
 
   // check project page is rendered
-  cy.get("h1").contains(projectName)
+  cy.get("[data-cy='project-header']").contains(projectName)
 })
 
 Cypress.Commands.add("backendCommand", (commandName, payload) => {
