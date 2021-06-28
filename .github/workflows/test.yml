@@ -15,6 +15,10 @@ jobs:
     env:
        POSTGRES_PASSWORD: test1234567890
        POSTGRES_USER: test
+       POSTGRES_DB: teet
+    steps:
+      - name: run psql
+        run: psql -U test teet
 
   build:
     runs-on: ubuntu-latest
