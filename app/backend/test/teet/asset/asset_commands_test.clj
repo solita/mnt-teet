@@ -10,6 +10,7 @@
   (tu/with-config {:asset {:default-owner-code "TST"}
                    :enabled-features #{:asset-db :cost-items}})
   (tu/with-db {:data-fixtures [:projects :asset]})
+  tu/with-postgresql
   tu/with-global-data)
 
 (deftest locking-denies-edits
