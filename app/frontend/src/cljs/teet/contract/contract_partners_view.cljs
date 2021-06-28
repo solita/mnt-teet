@@ -20,7 +20,9 @@
             [clojure.string :as str]
             [teet.ui.validation :as validation]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.ui.format :as format]
+            [teet.theme.theme-colors :as theme-colors]))
 
 
 (defn partner-listing
@@ -92,7 +94,7 @@
       :data (str/join "" phone-numbers)}]]])
 
 (defn company-edit-info-column
-  [{:company/keys [country name emails phone-numbers business-registry-code]}]
+  [{:company/keys [country name emails phone-numbers business-registry-code] :as info}]
   [:div
    [common/basic-information-column
     [{:label [typography/TextBold (tr [:fields :company/country])]
@@ -248,7 +250,8 @@
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
             selected-company? (boolean (:db/id form-state))
-            partner-save-command :thk.contract/save-contract-partner-company]
+            partner-save-command :thk.contract/save-contract-partner-company
+            time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
@@ -278,6 +281,15 @@
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}
               [select/checkbox {}]])
+           [Grid {:container true
+                  :direction :row
+                  :justify :left
+                  :alignItems  :left}
+            time-icon
+            [typography/SmallGrayText (str (tr [:common :last-modified]) " "
+                                   (format/date-time (if (nil? (:meta/modified-at selected-company))
+                                                       (:meta/created-at selected-company)
+                                                       (:meta/modified-at selected-company))))]]
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
