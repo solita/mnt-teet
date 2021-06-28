@@ -138,11 +138,6 @@
                                     :class "cancel"
                                     :on-click cancel}
           (tr [:buttons :cancel])])
-       (when (true? estonian-company?)
-         [buttons/button-primary {:disabled search-disabled?
-                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry :edit-partner
-                                              (subs (:company/business-registry-code form-value) 2))} ; skip 'EE' prefix
-          (tr [:buttons :search])])
        (when validate
          [buttons/button-primary {:disabled disabled?
                                   :type :submit
@@ -251,7 +246,10 @@
       (let [form-state (:edit-partner forms)
             selected-company? (boolean (:db/id form-state))
             partner-save-command :thk.contract/save-contract-partner-company
-            time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]]
+            time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
+            search-disabled? (:search-in-progress? form-state)
+            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)
+            _ (println "SELECTED-COMPANY" selected-company)]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
@@ -290,6 +288,13 @@
                                    (format/date-time (if (nil? (:meta/modified-at selected-company))
                                                        (:meta/created-at selected-company)
                                                        (:meta/modified-at selected-company))))]]
+           (when (true? estonian-company?)
+             [buttons/button-primary {:disabled search-disabled?
+                                      :on-click (e! contract-partners-controller/->SearchBusinessRegistry :edit-partner
+                                                  (subs
+                                                    (get-in selected-company
+                                                      [:company-contract/company :company/business-registry-code] ) 2))} ; skip 'EE' prefix
+              (tr [:partner :update-business-registry-data])])
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
