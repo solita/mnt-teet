@@ -60,7 +60,9 @@ jobs:
         DB_URI: jdbc:postgresql://localhost:5432/teet
         DB_USER: teet
         DB_PASSWORD: postgres
-      run: clojure -m migrate
+      run: |
+        ./devdb_create_template.sh
+        ./devdb_clean.sh
     - name: run backend tests
       run: clojure -A:ci-test
       working-directory: app/backend/
