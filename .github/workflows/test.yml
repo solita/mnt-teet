@@ -17,7 +17,7 @@ jobs:
         image: postgis/postgis:12-3.1-alpine
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: teet
+          POSTGRES_USER: postgres
           POSTGRES_DB: teet
           POSTGRES_HOST_AUTH_METHOD: trust
         # Set health checks to wait until postgres has started
@@ -57,10 +57,6 @@ jobs:
         echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
     - name: migrate postgres
       working-directory: db/
-      env:
-        DB_URI: jdbc:postgresql://localhost:5432/teet
-        DB_USER: teet
-        DB_PASSWORD: postgres
       run: |
         ./devdb_create_template.sh
         ./devdb_clean.sh
