@@ -2116,6 +2116,10 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Reference to cost index type"}
+          {:db/ident :cost-index/valid-from
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Valid from date"}
           {:db/ident :cost-index/unit
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one

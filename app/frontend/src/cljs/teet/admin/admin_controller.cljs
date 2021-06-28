@@ -14,6 +14,18 @@
 (defrecord DeactivateUser [user])
 (defrecord ReactivateUser [user])
 
+(defrecord AddIndex [])
+(defrecord UpdateIndexForm [form-data])
+(defrecord SaveIndexResponse [response])
+(defrecord SaveIndex [])
+(defrecord CancelIndex [])
+(defrecord EditIndex [form-data])
+(defrecord EditIndexValues [])
+(defrecord CancelIndexValues [])
+(defrecord UpdateIndexValues [form-data])
+(defrecord SaveIndexValuesResponse [response])
+(defrecord SaveIndexValues [])
+
 (defn- ensure-starts-with-double-e
   "If the person id doesn't start with EE, prepend it"
   [person-id]
@@ -78,4 +90,69 @@
 
   CancelUser
   (process-event [_ app]
-    (update app :admin dissoc :create-user)))
+    (update app :admin dissoc :create-user))
+
+  AddIndex
+  (process-event [_ app]
+    (assoc-in app [:admin :add-index] {:form-open true}))
+
+  CancelIndex
+  (process-event [_ app]
+    (update app :admin dissoc :add-index))
+
+  UpdateIndexForm
+  (process-event [{form-data :form-data} app]
+    (update-in app [:admin :add-index] merge form-data))
+
+  SaveIndexResponse
+  (process-event [_ app]
+    (-> app
+        (update :admin dissoc :add-index)
+        common-controller/refresh-page))
+
+  SaveIndex
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :admin/add-index
+           :success-message (tr [:admin :index-added-successfully])
+           :payload (get-in app [:admin :add-index])
+           :result-event ->SaveIndexResponse}))
+
+  EditIndex
+  (process-event [{form-data :form-data} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :admin/edit-index
+           :success-message (tr [:admin :index-edited-successfully])
+           :payload form-data
+           :result-event common-controller/->Refresh}))
+
+  EditIndexValues
+  (process-event [_ app]
+    (assoc-in app [:admin :edit-index-values] {:form-open true}))
+
+  CancelIndexValues
+  (process-event [_ app]
+    (update app :admin dissoc :edit-index-values))
+
+  UpdateIndexValues
+  (process-event [{form-data :form-data} app]
+    (update-in app [:admin :edit-index-values] merge form-data))
+
+  SaveIndexValuesResponse
+  (process-event [_ app]
+    (-> app
+        (update :admin dissoc :edit-index-values)
+        common-controller/refresh-page))
+
+  SaveIndexValues
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :admin/edit-index-values
+           :success-message (tr [:admin :index-values-changed])
+           :payload (get-in app [:admin :edit-index-values])
+           :result-event ->SaveIndexValuesResponse}))
+
+  )

@@ -228,11 +228,22 @@
   :crumb (tr [:admin :title-users])}
 
  :admin-indexes
- {:path "/admin/indexes/:id"
+ {:path "/admin/indexes"
   :parent :admin
   :view teet.admin.admin-view/admin-indexes-page
   :title (tr [:admin :title-indexes])
-  :crumb (tr [:admin :title-indexes])}
+  :crumb (tr [:admin :title-indexes])
+  :state {:query :admin/indexes-data
+          :args {}}}
+
+ :admin-index-page
+ {:path "/admin/index/:id"
+  :parent :admin-indexes
+  :view teet.admin.indexes-view/indexes-page
+  :title (tr [:admin :title-indexes])
+  :crumb (tr [:admin :title-indexes])
+  :state {:query :admin/indexes-data
+          :args {:id id}}}
 
  :admin-inspector
  {:path "/admin/inspect/:id"

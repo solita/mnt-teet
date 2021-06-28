@@ -356,13 +356,14 @@
 
 
 (defn admin-indexes-page
-  [e! {{id :id} :params :as _app}]
+  [e! app route]
   [:div
    [admin-heading-menu]
-   [indexes-view/indexes-page e! id]])
+   [indexes-view/indexes-page e! app route]])
 
 (defn admin-users-page
-  [e! admin route]
+  [e! {admin :admin
+       route :route}]
   (r/with-let [filtering-atom (r/atom {:user-group nil})]
     (let [user-form (:create-user admin)]
       [:div
