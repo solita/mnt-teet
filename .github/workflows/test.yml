@@ -9,6 +9,13 @@ on:
     - master
 
 jobs:
+  services:
+    runs-on: ubuntu-latest
+    container: postgis/postgis:12-3.1-alpine
+    env:
+       POSTGRES_PASSWORD: test1234567890
+       POSTGRES_USER: test
+
   build:
     runs-on: ubuntu-latest
     steps:
