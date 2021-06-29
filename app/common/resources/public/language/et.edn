@@ -95,6 +95,7 @@
    :cost-items-totals "Summad",
    :materials-and-products "Materjalid ja tooted"},
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
+  :component-saved "Komponendi salvestatud",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
   :manager
@@ -110,6 +111,7 @@
   :components {:label "Komponendid"},
   :back-to-cost-item "< Tagasi {name}",
   :materials {:label "Materjalid"},
+  :material-saved "Materjal salvestatud",
   :location
   {:hide-map "Peida kaart",
    :no-road-found-for-points "Punktide jaoks ei leitud teed",

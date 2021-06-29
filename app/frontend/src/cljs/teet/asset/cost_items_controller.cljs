@@ -304,7 +304,8 @@
   SaveComponentResponse
   (process-event [{:keys [response]} {params :params :as app}]
     (let [oid (:asset/oid response)]
-      (apply t/fx app
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app (tr [:asset :component-saved]))
              (remove nil?
                      [(when (not= oid (params :id))
                         {:tuck.effect/type :navigate
@@ -368,7 +369,8 @@
   SaveMaterialResponse
   (process-event [{:keys [response]} {params :params :as app}]
     (let [oid (:asset/oid response)]
-      (apply t/fx app
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app (tr [:asset :material-saved]))
              (remove nil?
                      [(when (not= oid (params :id))
                         {:tuck.effect/type :navigate
