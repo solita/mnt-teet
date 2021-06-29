@@ -55,6 +55,23 @@
                      candidate-words)))
             search-words)))
 
+(defn- normalize-search
+  "Normalize text for search, converts to lower case, trims
+  and replaces consecutive whitespace with a single space."
+  [text]
+  (-> text str/trim str/lower-case (str/replace #"\s+" " ")))
+
+(defn match-pos
+  "Returns the position at which `search-text` if found within
+  `candidate-text` ignores case and normalizes spaces.
+
+  If no match, returns nil."
+  [candidate-text search-text]
+  (when (and candidate-text search-text)
+    (let [candidate (normalize-search candidate-text)
+          search-text (normalize-search search-text)]
+      (str/index-of candidate search-text))))
+
 (defn strip-leading-zeroes
   "Strip leading zeroes from numbers in string."
   [string]

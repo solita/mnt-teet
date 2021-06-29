@@ -102,6 +102,7 @@
                           {:connection c}))
                    ctx {:conn conn
                         :db db
+                        :sql-conn pg
                         :asset-conn aconn
                         :asset-db (delay (d/db @aconn))
                         :user (merge user

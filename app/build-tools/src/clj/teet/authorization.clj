@@ -1,28 +1,10 @@
 (ns teet.authorization
   (:require [dk.ative.docjure.spreadsheet :as sheet]
             [clojure.string :as str]
-            [clojure.pprint :as pp]))
+            [clojure.pprint :as pp]
+            [teet.common :as common]))
 
-(defn- keywordize [s]
-  (-> s
-      str/lower-case
-      (str/replace #"\([^)]+\)" "")
-      str/trim
-      (str/replace #" +" "-")
-      keyword))
 
-(def role-count 6)
-(defn- role->column-mapping [sheet]
-  (into {}
-        (for [cell (take role-count
-                         (drop 2           ; discard A and B columns
-                               (sheet/cell-seq
-                                ;; Take the 4th row
-                                (nth (sheet/row-seq sheet) 3))))
-              :let [role (-> cell sheet/read-cell keywordize)
-                    cell-ref (sheet/cell-reference cell)
-                    column (subs cell-ref 0 (dec (count cell-ref)))]]
-          [role column])))
 
 (def permission-type
   {;; Asterisk means access to any project
@@ -39,7 +21,7 @@
                    (sheet/select-sheet "Authorization"))
 
         ;; Roles are in the 4th row of the sheet
-        role->column (role->column-mapping sheet)]
+        role->column (common/role->column-mapping sheet 6 3)]
 
     ;; Read all authorization rows (skip 4 header rows)
     (into
@@ -49,8 +31,8 @@
            :let [[section functionality & _] (map sheet/read-cell
                                                   (sheet/cell-seq row))
                  row-num (inc (.getRowNum row))]]
-       [(keyword (name (keywordize section))
-                 (name (keywordize functionality)))
+       [(keyword (name (common/keywordize section))
+                 (name (common/keywordize functionality)))
         (reduce-kv
          (fn [perms role column]
            (if-let [permission (->> sheet

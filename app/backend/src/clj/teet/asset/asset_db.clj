@@ -165,7 +165,7 @@
                       (group-by #(-> % :asset/fclass (dissoc :fclass/fgroup))
                                 cost-items-for-fgroup)))))
 
-(defn- asset-component-oids
+(defn asset-component-oids
   "Return all OIDs of components (at any level) contained in asset."
   [db asset-oid]
   {:pre [(asset-model/asset-oid? asset-oid)]}

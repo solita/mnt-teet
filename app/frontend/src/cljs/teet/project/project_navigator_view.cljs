@@ -418,15 +418,19 @@
                                           (select-keys project [:thk.project/id]))}})])
 
 (defn project-header
-  ([project]
-   (project-header project nil))
-  ([project export-menu-items]
+  ([e! app project]
+   (project-header e! app  project nil))
+  ([e! app project export-menu-items]
    (let [thk-url (project-info/thk-url project)]
      [:div {:class (<class project-header-style)}
-      [:div {:style {:display :flex
-                     :justify-content :space-between}}
-       [typography/Heading1 {:style {:margin-bottom 0}}
-        (project-model/get-column project :thk.project/project-name)]
+      [:div {:class (<class common-styles/flex-row-space-between)}
+       (when-not (responsivity-styles/mobile?)
+         [:div {:class (<class common-styles/flex-row-center)}
+          [project-menu/project-menu-desktop e! app project]
+          [typography/TextBold {:data-cy "project-header"
+                                :style {:text-transform :uppercase}
+                                :class (<class common-styles/margin-left 0.5)}
+           (project-model/get-column project :thk.project/project-name)]])
        [:div {:style {:display :flex
                       :align-items :center}}
         [common/context-menu
@@ -449,15 +453,16 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths show-map? export-menu-items content-padding]
+  [{:keys [e! project app column-widths show-map? export-menu-items content-margin]
     :or {column-widths [3 6 :auto]
-         show-map? true}
+         show-map? true
+         content-margin "0rem 0.5rem"}
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
      project
      [:<>
-      [project-header project export-menu-items]
+      [project-header e! app project export-menu-items]
       [:div.project-navigator-with-content {:class (<class project-style/page-container)}
        [project-navigator-dialogs opts]
        [Paper {:class (<class task-style/task-page-paper-style)}
@@ -468,12 +473,12 @@
                 :md nav-w
                 :xs 12
                 :class (<class navigation-style/navigator-left-panel-style)}
-          [project-menu/project-menu e! app project true]
+          [project-menu/project-tab-header e! app project true]
           [project-task-navigator e! project app true]]
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style {:padding (or content-padding "2rem 1.5rem")
+                :style {:margin content-margin
                         :overflow-y :auto
                         :max-height "100%"
                         ;; content area should scroll, not the whole page because we

@@ -3,7 +3,8 @@
             [tuck.core :as t]
             [teet.common.common-controller :as common-controller]
             [ol.Geolocation]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.map.openlayers :as openlayers]))
 
 (defrecord UpdateSearchCriteria [criteria])
 (defrecord Search []) ; execute search on backend
@@ -51,6 +52,11 @@
   (if (and (= search-by :road-address)
            (seq addr))
     (assoc out :road-address addr)
+    out))
+
+(defmethod search-criteria :region [out {:keys [region search-by]}]
+  (if (and (= search-by :region) (seq region))
+    (assoc out :region (into #{} (map :id) region))
     out))
 
 (defn assets-query [criteria]
@@ -125,7 +131,10 @@
 
              :road-address
              {:road-address []
-              :cleanup #(dissoc % :road-address :cleanup)})))))))
+              :cleanup #(dissoc % :road-address :cleanup)}
+
+             :region
+             {:region #{}})))))))
 
   SetCurrentLocation
   (process-event [{location :location} app]
@@ -163,6 +172,7 @@
 
   BackToListing
   (process-event [_ app]
+    (openlayers/fit-map-to-layer! "teet-source" "asset-results")
     (t/fx app
           {:tuck.effect/type :navigate
            :page (:page app)

@@ -1,7 +1,8 @@
 (ns teet.project.project-style
   (:require [teet.theme.theme-spacing :as theme-spacing]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.common.responsivity-styles :as responsivity-styles]))
 
 (defn project-map-column []
   {:padding-top "0px!important"
@@ -162,8 +163,7 @@
      {:color theme-colors/white})))
 
 (defn page-container []
-  {:padding        "0 1.875rem 1.5rem 1.875rem"
-   :display        :flex
+  {:display        :flex
    :flex-direction :column
    :flex           1})
 
@@ -222,3 +222,6 @@
   {:padding-left "0.5rem"
    :margin-bottom "0.5rem"
    :border-left (str "solid 7px " theme-colors/gray-light)})
+
+(defn desktop-scroll-content-separately []
+  (responsivity-styles/desktop-only-style {:overflow-y :auto}))

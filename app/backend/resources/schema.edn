@@ -2158,5 +2158,9 @@
            :enum/attribute :task/type,
            :enum/valid-for :task.group/construction-approval,
            :thk/task-type :thk.task-type/road-safety-audit,
-           :filename/code "LA"}]]}]
+           :filename/code "LA"}]]}
+
+ {:db/ident :migration/subcontractor-role
+  :txes [[{:db/doc "Not selectable in UI. Added automatically to subcontractor employees"
+           :db/ident :company-contract-employee.role/subcontractor}]]}]
 

@@ -869,7 +869,7 @@
                   :project project
                   :column-widths [3 9 :auto]
                   :show-map? false
-                  :content-padding "0rem"}
+                  :content-margin "0 0"}
                  [Grid {:container true :spacing 0}
                   [Grid {:item true :xs 4
                          :class (<class common-styles/flex-column-1)}

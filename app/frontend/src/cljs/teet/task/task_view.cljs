@@ -47,34 +47,37 @@
 (defn- task-selection [{:keys [on-change-selected on-change-sent existing selected sent-to-thk activity-name]
                         :or {existing #{}}}
                        task-groups task-types]
-  [:div {:style {:max-height "70vh" :overflow-y :scroll}}
-   (mapc (fn [g]
-           [:div
-            [typography/Heading2 {:style {:font-variant :all-small-caps
-                                          :font-weight :bold}}
-             (tr-enum g)]
-            [:ul
-             (mapc (fn [{id :db/ident :as t}]
-                     [:div {:class (<class common-styles/flex-row)}
-                      [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
-                                               (<class common-styles/no-border))}
-                       [select/checkbox {:label (tr-enum t)
-                                         :disabled (existing id)
-                                         :value (boolean (or (existing id)
-                                                             (selected [(:db/ident g) id])))
-                                         :on-change (when-not (existing id)
-                                                      #(on-change-selected
-                                                        (cu/toggle selected [(:db/ident g) id])))}]]
-                      [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
-                                               (<class common-styles/no-border))}
-                       (when (and (:thk/task-type t)
-                                  (selected [(:db/ident g) id]))
-                         [select/checkbox {:label (tr [:fields :task/send-to-thk?])
-                                           :value (boolean (sent-to-thk [(:db/ident g) id]))
-                                           :on-change #(on-change-sent
-                                                             (cu/toggle sent-to-thk [(:db/ident g) id]))}])]])
-                   (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
-         (task-groups-for-activity activity-name task-groups))])
+  (let [selectable-task-types (remove (fn [task]            ;; Remove tasks that are created in thk from being created in the modal
+                                        (task-model/not-creatable-in-teet (:db/ident task)))
+                                      task-types)]
+    [:div {:style {:max-height "70vh" :overflow-y :scroll}}
+     (mapc (fn [g]
+             [:div
+              [typography/Heading2 {:style {:font-variant :all-small-caps
+                                            :font-weight :bold}}
+               (tr-enum g)]
+              [:ul
+               (mapc (fn [{id :db/ident :as t}]
+                       [:div {:class (<class common-styles/flex-row)}
+                        [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
+                                                 (<class common-styles/no-border))}
+                         [select/checkbox {:label (tr-enum t)
+                                           :disabled (existing id)
+                                           :value (boolean (or (existing id)
+                                                               (selected [(:db/ident g) id])))
+                                           :on-change (when-not (existing id)
+                                                        #(on-change-selected
+                                                           (cu/toggle selected [(:db/ident g) id])))}]]
+                        [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
+                                                 (<class common-styles/no-border))}
+                         (when (and (:thk/task-type t)
+                                    (selected [(:db/ident g) id]))
+                           [select/checkbox {:label (tr [:fields :task/send-to-thk?])
+                                             :value (boolean (sent-to-thk [(:db/ident g) id]))
+                                             :on-change #(on-change-sent
+                                                           (cu/toggle sent-to-thk [(:db/ident g) id]))}])]])
+                     (filter #(= (:db/ident g) (:enum/valid-for %)) selectable-task-types))]])
+           (task-groups-for-activity activity-name task-groups))]))
 
 (defn task-groups-and-tasks [{e! :e! :as opts} task-groups]
   [select/with-enum-values {:e! e! :attribute :task/type}
