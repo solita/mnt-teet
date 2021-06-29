@@ -944,7 +944,7 @@
   :meeting/agenda "Päevakava",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
-  :boq-version/explanation "Selgitus",
+  :boq-version/explanation "Põhjust",
   :user/phone-number "Telefoni number",
   :thk.project/carriageway "SO",
   :cooperation.application/activity "Tegevuse",
