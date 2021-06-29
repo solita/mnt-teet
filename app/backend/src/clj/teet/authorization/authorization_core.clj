@@ -26,7 +26,8 @@
   "Check rights either based on the target or company
   Given either company or a target find if the user has the right "
   [{:keys [db user action target company]}]
-  {:pre [(or target company)
+  {:pre [(and db (keyword? action) (action @authorization-matrix))
+         (or target company)
          (not (and target company))]}
   (let [authorized-roles (action @authorization-matrix)
         user-ref (user-model/user-ref user)
@@ -39,9 +40,6 @@
               company
               (authorization-db/user-roles-for-company db user-ref company))
         roles (set/union user-global-roles specific-roles)]
-
-    (println "specific-roles: " specific-roles)
-    (println "authorized-roles " authorized-roles)
     (-> (set/intersection authorized-roles roles)
         seq
         boolean)))
