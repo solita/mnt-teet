@@ -1343,7 +1343,9 @@
   :topic-created "Päevakavapunkt edukalt lisatud"},
  :page-title {:project-list "{name} projekt"},
  :partner
- {:update-business-registry-data "Värskenda äriregistri andmeid"},
+ {:business-registry-data-successfully-updated
+  "Äriregistri andmeid värskendatud",
+  :update-business-registry-data "Värskenda äriregistri andmeid"},
  :people-tab
  {:active "AKTIIVNE",
   :consultants "Konsultandid",

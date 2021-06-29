@@ -1345,7 +1345,9 @@
   :topic-created "Topic created succesfully"},
  :page-title {:project-list "{name} project"},
  :partner
- {:update-business-registry-data "Update business register data"},
+ {:business-registry-data-successfully-updated
+  "Business registry data is successfully updated",
+  :update-business-registry-data "Update business register data"},
  :people-tab
  {:active "ACTIVE",
   :consultants "Consultants",

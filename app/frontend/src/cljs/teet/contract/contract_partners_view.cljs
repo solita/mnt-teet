@@ -247,9 +247,11 @@
             selected-company? (boolean (:db/id form-state))
             partner-save-command :thk.contract/save-contract-partner-company
             time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
+            search-success? (:search-success? form-state)
             search-disabled? (:search-in-progress? form-state)
             estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)
-            _ (println "SELECTED-COMPANY" selected-company)]
+            _ (println "SELECTED-COMPANY" selected-company)
+            _ (println "FORM-STATE" form-state)]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
@@ -295,6 +297,9 @@
                                                     (get-in selected-company
                                                       [:company-contract/company :company/business-registry-code] ) 2))} ; skip 'EE' prefix
               (tr [:partner :update-business-registry-data])])
+           (when (true? search-success?)
+             [common/info-box {:variant :success
+                               :title (tr [:partner :business-registry-data-successfully-updated])}])
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
