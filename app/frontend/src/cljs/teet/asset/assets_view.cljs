@@ -44,7 +44,8 @@
             [teet.ui.url :as url]
             [teet.common.common-controller :as common-controller]
             [teet.road.road-model :as road-model]
-            [teet.util.string :as string]))
+            [teet.util.string :as string]
+            [teet.map.openlayers :as openlayers]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -284,62 +285,65 @@
 
     (str value)))
 
-(defn- result-details-view* [e! atl rotl oid asset]
-  (let [component? (asset-model/component-oid? oid)
-        item (if component?
-               (-> asset (asset-model/find-component-path oid) last)
-               asset)
-        fclass (-> asset :asset/fclass rotl)
-        ctype (when component?
-                (-> item :component/ctype rotl))
-        attributes (cond
-                     component?
-                     (-> ctype :attribute/_parent)
+(defn- result-details-view* [_e! _atl _rotl oid _asset]
+  (openlayers/fit-map-to-feature! "oid" oid)
+  (fn [e! atl rotl oid asset]
+    (let [component? (asset-model/component-oid? oid)
+          item (if component?
+                 (-> asset (asset-model/find-component-path oid) last)
+                 asset)
+          fclass (-> asset :asset/fclass rotl)
+          ctype (when component?
+                  (-> item :component/ctype rotl))
+          attributes (cond
+                       component?
+                       (-> ctype :attribute/_parent)
 
-                     :else
-                     (-> fclass :attribute/_parent))
-        details-link-fn (fn [oid]
-                          {:page :assets :query {:details oid}})]
-    [:div
-     [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
-      [icons/navigation-arrow-back]
-      (tr [:asset :manager :back-to-result-listing])]
-     (when component?
-       [url/Link {:page :assets
-                  :query {:details (asset-model/component-asset-oid oid)}}
-        (tr [:asset :back-to-cost-item] {:name (asset-ui/tr* fclass)})])
-     [form/form2
-      {:e! e!
-       :on-change-event :_ignore ; the form cannot be changed, so we can ignore
-       :value item
-       :disable-buttons? true}
-      [:span {:style {:overflow-wrap :break-word}}
-       [cost-items-view/attributes* {:e! e!
-                                     :attributes attributes
-                                     :component-oid (when component? oid)
-                                     :cost-item-data asset
-                                     :common (cond
-                                               component? :ctype/component
-                                               :else :ctype/feature)
-                                     :inherits-location?
-                                     (cond
-                                       component? (:component/inherits-location? ctype)
-                                       :else false)}
-        rotl true]]]
-     (when-let [materials (and component? (:component/materials item))]
-       [:<>
-        [:h3 (tr [:asset :materials :label])]
-        (doall
-         (for [m materials
-               :let [mtype (-> m :material/type rotl)]]
-           ^{:key (str (:db/id m))}
-           [:div
-            [asset-ui/label mtype]
-            [materials-and-products-view/format-properties atl m]]))])
-     [context/provide :locked? true
-      [cost-items-view/components-tree asset
-       {:e! e!
-        :link-fn details-link-fn}]]]))
+                       :else
+                       (-> fclass :attribute/_parent))
+          details-link-fn (fn [oid]
+                            {:page :assets :query {:details oid}})]
+      [:div
+       [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
+        [icons/navigation-arrow-back]
+        (tr [:asset :manager :back-to-result-listing])]
+       (when component?
+         [url/Link {:page :assets
+                    :query {:details (asset-model/component-asset-oid oid)}}
+          (tr [:asset :back-to-cost-item] {:name (asset-ui/tr* fclass)})])
+       [form/form2
+        {:e! e!
+         :on-change-event :_ignore ; the form cannot be changed, so we can ignore
+         :value item
+         :disable-buttons? true}
+        [:span {:style {:overflow-wrap :break-word}}
+         [cost-items-view/attributes* {:e! e!
+                                       :toggle-map? false
+                                       :attributes attributes
+                                       :component-oid (when component? oid)
+                                       :cost-item-data asset
+                                       :common (cond
+                                                 component? :ctype/component
+                                                 :else :ctype/feature)
+                                       :inherits-location?
+                                       (cond
+                                         component? (:component/inherits-location? ctype)
+                                         :else false)}
+          rotl true]]]
+       (when-let [materials (and component? (:component/materials item))]
+         [:<>
+          [:h3 (tr [:asset :materials :label])]
+          (doall
+           (for [m materials
+                 :let [mtype (-> m :material/type rotl)]]
+             ^{:key (str (:db/id m))}
+             [:div
+              [asset-ui/label mtype]
+              [materials-and-products-view/format-properties atl m]]))])
+       [context/provide :locked? true
+        [cost-items-view/components-tree asset
+         {:e! e!
+          :link-fn details-link-fn}]]])))
 
 (defn- result-details-view [e! oid atl rotl]
   (let [asset-oid (if (asset-model/component-oid? oid)
