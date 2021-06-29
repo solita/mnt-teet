@@ -91,6 +91,7 @@
        [Grid {:item true :xs 12}
         [select/select-search
          {:e! e!
+          :autofocus? true
           :on-change #(on-change (mapv :db/ident %))
           :placeholder (tr [:asset :feature-group-and-class-placeholder])
           :no-results (tr [:asset :no-matching-feature-classes])
