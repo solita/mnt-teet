@@ -219,8 +219,9 @@
       [:div
        [:span
         {:style {:pointer-events :none}}
-        [form/field :company/country
-         [select/country-select {:show-empty-selection? true}]]]
+        [TextField {:label (tr [:fields :company/country])
+                    :read-only? true
+                    :value (tr [:countries (:company/country form-value)])}]]
        [foreign-fields]]
       (edit-company-information form-value))))
 
