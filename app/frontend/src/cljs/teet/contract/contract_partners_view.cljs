@@ -250,12 +250,12 @@
         (get-in selected-company [:company-contract/company :meta/modifier :user/family-name])))))
 
 (defn edit-partner-form
-  [e! app selected-company]
+  [e! _ selected-company]
   (e! (contract-partners-controller/->InitializeEditCompanyForm
         (merge
           (:company-contract/company selected-company)
           {:company-contract/lead-partner? (:company-contract/lead-partner? selected-company)})))
-  (fn [e! {:keys [forms]} {:keys [search-success?] :as form-value}]
+  (fn [e! {:keys [forms]} _]
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
             selected-company? (boolean (:db/id form-state))
@@ -263,9 +263,7 @@
             time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
             search-success? (:search-success? form-state)
             search-disabled? (:search-in-progress? form-state)
-            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)
-            _ (println "SELECTED-COMPANY" selected-company)
-            _ (println "FORM-STATE" form-state)]
+            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
@@ -502,15 +500,13 @@
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
-  [app partner params]
+  [_ partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
-        partner-id (get-in partner [:company-contract/company :teet/id])
         teet-id (:teet/id partner)]
     [:<>
      [:h1 partner-name]
      [buttons/button-secondary
-      {:start-icon (r/as-element [icons/content-add])
-       :href (routes/url-for {:page :contract-partners
+      {:href (routes/url-for {:page :contract-partners
                               :params params
                               :query {:page :edit-partner
                                       :partner teet-id}})}
