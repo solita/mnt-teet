@@ -193,7 +193,7 @@
                      :required? true}
          [input-textfield {}]]])
 
-     (subhead (tr [:asset :location :project-address]))
+     (subhead (tr [:asset :location :road-address]))
 
      [Grid {:item true
             :md 5
@@ -247,11 +247,10 @@
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
-     (when-not locked?
-       [Grid {:item true
-              :md 12 :xs 12}
-        [form/field :location/single-point?
-         [select/checkbox {}]]])]))
+     [Grid {:item true
+            :md 12 :xs 12}
+      [form/field :location/single-point?
+       [select/checkbox {:disabled (boolean locked?)}]]]]))
 
 (defn attributes* [{:keys [e! attributes component-oid cost-item-data
                            inherits-location? single-point?

@@ -115,7 +115,8 @@
    :no-road-found-for-points "Punktide jaoks ei leitud teed",
    :show-map "Näita kaarti",
    :project-coordinates "Koordinaadid",
-   :project-address "Projekti aadress"},
+   :project-address "Projekti aadress",
+   :road-address "Tee aadress"},
   :confirm-unlock-for-edits "Jah, ava",
   :type-library
   {:description "Kirjeldus",
@@ -1342,6 +1343,10 @@
   :cadastral-units-updated "Katastriüksused edukalt värskendatud",
   :topic-created "Päevakavapunkt edukalt lisatud"},
  :page-title {:project-list "{name} projekt"},
+ :partner
+ {:business-registry-data-successfully-updated
+  "Äriregistri andmeid värskendatud",
+  :update-business-registry-data "Värskenda äriregistri andmeid"},
  :people-tab
  {:active "AKTIIVNE",
   :consultants "Konsultandid",
