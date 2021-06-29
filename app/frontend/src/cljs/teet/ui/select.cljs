@@ -471,8 +471,9 @@
            show-label? after-results-action
            query placeholder no-results clear-value
            start-icon input-button-icon input-element
-           query-threshold]
+           query-threshold autofocus?]
     :or {show-label? true
+         autofocus? false
          query-threshold 2
          placeholder (tr [:user :autocomplete :placeholder])
          no-results (tr [:user :autocomplete :no-options])
@@ -485,7 +486,9 @@
                               :open? false
                               :input ""})
                input-ref (atom nil)
-               set-ref! #(reset! input-ref %)
+               set-ref! #(do
+                           (reset! input-ref %)
+                           (when (and % autofocus?) (.focus %)))
                on-key-down (partial arrow-navigation state on-change)]
     (let [{:keys [loading? results open? input highlight]} @state
           current-input-ref (or (:input-ref opts) @input-ref)
