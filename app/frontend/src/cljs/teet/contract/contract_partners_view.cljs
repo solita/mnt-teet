@@ -268,8 +268,7 @@
                                           (e! (contract-partners-controller/->InitializeEditCompanyForm
                                                 (:company-contract/company selected-company)))
                                           (e! (common-controller/map->NavigateWithExistingAsDefault
-                                                {:query {:page :partner-info
-                                                         :partner (:company-contract-id response)}}))))
+                                                {:query {:page :partner-info :partner (:teet/id selected-company)}}))))
                                       (tr [:contract :partner-saved]))
                        :on-change-event on-change
                        :spec :contract-company/edit-company
