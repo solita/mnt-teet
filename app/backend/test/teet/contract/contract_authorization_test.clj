@@ -83,6 +83,13 @@
                (:db/id (tu/entity [:thk.activity/id "222"])))
              #{:company-contract-employee.role/company-representative})))
 
+    (testing "Contract roles can be fetched for companies as well"
+      (is (= (authorization-db/user-roles-for-company
+               (tu/db)
+               tu/mock-user-edna-consultant
+               [:company/business-registry-code "EE1231234"])
+             #{:company-contract-employee.role/company-representative})))
+
     (testing "Contract under a project grants read access to the project"
       (is (true? (authorization/project-read-access?
                (tu/db) tu/mock-user-edna-consultant
