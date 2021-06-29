@@ -116,7 +116,8 @@
    :no-road-found-for-points "No road found for points",
    :show-map "Show map",
    :project-coordinates "Coordinates",
-   :project-address "Project address"},
+   :project-address "Project address",
+   :road-address "Road address"},
   :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
@@ -1344,6 +1345,10 @@
   :cadastral-units-updated "Cadastral units updated successfully",
   :topic-created "Topic created succesfully"},
  :page-title {:project-list "{name} project"},
+ :partner
+ {:business-registry-data-successfully-updated
+  "Business registry data is successfully updated",
+  :update-business-registry-data "Update business register data"},
  :people-tab
  {:active "ACTIVE",
   :consultants "Consultants",
