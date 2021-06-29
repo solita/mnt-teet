@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-06-04T08:27:54.030-00:00"}
+  :tx/schema-imported-at #inst "2021-06-29T13:18:47.984-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -80,6 +80,11 @@
   :asset-schema/description
   ["Raudtee signalisatsiooni ja turvangusüsteemid, toide, jne."
    "Signalling, power and safety systems for railway."]}
+ {:db/id ":fgroup/roadaccessories",
+  :db/ident :fgroup/roadaccessories,
+  :asset-schema/type :asset-schema.type/fgroup,
+  :asset-schema/label ["Päraldised" "Road accessories"],
+  :asset-schema/description ["Parklad, bussipeatused jne" ""]}
  {:db/id ":fgroup/roadmarkings",
   :db/ident :fgroup/roadmarkings,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -131,7 +136,8 @@
   :db/ident :fclass/animaldetectionstation,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Loomatuvastuseade" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "LTS"}
  {:db/id ":fclass/animalfencing",
   :db/ident :fclass/animalfencing,
   :asset-schema/type :asset-schema.type/fclass,
@@ -172,7 +178,7 @@
  {:db/id ":fclass/chipping",
   :db/ident :fclass/chipping,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Pindamine" "Chipping"],
+  :asset-schema/label ["Pindamine" "Surface dressing"],
   :fclass/fgroup ":fgroup/carriageway",
   :fclass/oid-prefix "PIN"}
  {:db/id ":fclass/culvert",
@@ -308,11 +314,18 @@
   :asset-schema/label ["Mürasein või vall" "Noise barrier"],
   :fclass/fgroup ":fgroup/landscaping",
   :fclass/oid-prefix "MYR"}
+ {:db/id ":fclass/parkinglot",
+  :db/ident :fclass/parkinglot,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Parklad" "Parking lots"],
+  :fclass/fgroup ":fgroup/roadaccessories",
+  :fclass/oid-prefix "PAR"}
  {:db/id ":fclass/parkingsystem",
   :db/ident :fclass/parkingsystem,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Parkimissüsteem" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :asset-schema/label ["Parkimissüsteem" "Parkingsystem"],
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "PST"}
  {:db/id ":fclass/pavementstructure",
   :db/ident :fclass/pavementstructure,
   :asset-schema/type :asset-schema.type/fclass,
@@ -381,9 +394,10 @@
  {:db/id ":fclass/roadsurfacecamera",
   :db/ident :fclass/roadsurfacecamera,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Teekaamera" ""],
+  :asset-schema/label ["Teekaamera" "Roadsurface camera"],
   :asset-schema/description ["Monitoorib teekatet" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "TEK"}
  {:db/id ":fclass/sedimentarypool",
   :db/ident :fclass/sedimentarypool,
   :asset-schema/type :asset-schema.type/fclass,
@@ -425,14 +439,16 @@
  {:db/id ":fclass/speedcamera",
   :db/ident :fclass/speedcamera,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Kiiruskaamera" ""],
+  :asset-schema/label ["Kiiruskaamera" "Speedcamera"],
   :asset-schema/description ["Mõõdab kiirust" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "KKM"}
  {:db/id ":fclass/speeddisplay",
   :db/ident :fclass/speeddisplay,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Kirustablood" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :asset-schema/label ["Kirustablood" "Speedisplay"],
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "KIT"}
  {:db/id ":fclass/subbase",
   :db/ident :fclass/subbase,
   :asset-schema/type :asset-schema.type/fclass,
@@ -472,9 +488,10 @@
  {:db/id ":fclass/trafficcamera",
   :db/ident :fclass/trafficcamera,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Liikluskaamera" ""],
+  :asset-schema/label ["Liikluskaamera" "Traffic camera"],
   :asset-schema/description ["Monitoorib liiklust" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "LKM"}
  {:db/id ":fclass/trafficisland",
   :db/ident :fclass/trafficisland,
   :asset-schema/type :asset-schema.type/fclass,
@@ -484,15 +501,18 @@
  {:db/id ":fclass/trafficmonitoringstation",
   :db/ident :fclass/trafficmonitoringstation,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Liiklusloenduspunkt" ""],
+  :asset-schema/label
+  ["Liiklusloenduspunkt" "Traffic monitoring station"],
   :asset-schema/description ["Alaline" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "LLP"}
  {:db/id ":fclass/trafficsignalsystem",
   :db/ident :fclass/trafficsignalsystem,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label
   ["Foorisüsteem (siia juurde arvata ka kõrgushoiatussüsteem)" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "FOR"}
  {:db/id ":fclass/trashbin",
   :db/ident :fclass/trashbin,
   :asset-schema/type :asset-schema.type/fclass,
@@ -515,19 +535,24 @@
  {:db/id ":fclass/ups",
   :db/ident :fclass/ups,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["UPS-i kapp" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :asset-schema/label ["UPS-i kapp" "UPS device "],
+  :asset-schema/description
+  ["Tagavara vool seadmele või seadmetele" ""],
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "UPS"}
  {:db/id ":fclass/v2iterminal",
   :db/ident :fclass/v2iterminal,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["top secret :)" "V2I terminal"],
+  :asset-schema/label ["V2I terminal" "V2I terminal"],
   :asset-schema/description ["Tööstuslik wifi saatja/vastuvõtja" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "WIF"}
  {:db/id ":fclass/variablemessagesign",
   :db/ident :fclass/variablemessagesign,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Muutuva teabega liiklusmärk" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "VMS"}
  {:db/id ":fclass/verge",
   :db/ident :fclass/verge,
   :asset-schema/type :asset-schema.type/fclass,
@@ -543,15 +568,17 @@
  {:db/id ":fclass/weatherstation",
   :db/ident :fclass/weatherstation,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label
-  ["Teeilmajaam (temepratuuri mõõtmine konstruktsioonis üheks tüübiks)"
-   ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :asset-schema/label ["Teeilmajaam" ""],
+  :asset-schema/description
+  ["(temepratuuri mõõtmine konstruktsioonis üheks tüübiks)" ""],
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "TIJ"}
  {:db/id ":fclass/weightingstation",
   :db/ident :fclass/weightingstation,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Kaalupunkt" ""],
-  :fclass/fgroup ":fgroup/equipment"}
+  :asset-schema/label ["Kaalupunkt" "Weighting  station"],
+  :fclass/fgroup ":fgroup/equipment",
+  :fclass/oid-prefix "KAP"}
  {:db/id ":ctype/alignmentclothoid",
   :db/ident :ctype/alignmentclothoid,
   :asset-schema/type :asset-schema.type/ctype,
@@ -787,13 +814,6 @@
   :component/inherits-location? true,
   :component/quantity-unit "m",
   :ctype/parent ":fclass/linearmarking"}
- {:db/id ":ctype/chipping",
-  :db/ident :ctype/chipping,
-  :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Pindamine" "Survace chipping"],
-  :asset-schema/description ["Killustikuga pindamine" ""],
-  :component/quantity-unit "m2",
-  :ctype/parent ":fclass/paving"}
  {:db/id ":ctype/column",
   :db/ident :ctype/column,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1054,12 +1074,99 @@
   :component/inherits-location? true,
   :component/quantity-unit "m2",
   :ctype/parent ":fclass/pavementstructure"}
+ {:db/id ":ctype/noisebarrierfoundation",
+  :db/ident :ctype/noisebarrierfoundation,
+  :asset-schema/type :asset-schema.type/ctype,
+  :ctype/parent ":fclass/noisebarrier"}
+ {:db/id ":ctype/noisebarrierwall",
+  :db/ident :ctype/noisebarrierwall,
+  :asset-schema/type :asset-schema.type/ctype,
+  :ctype/parent ":fclass/noisebarrier"}
+ {:db/id ":ctype/noiseembankment",
+  :db/ident :ctype/noiseembankment,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Müratõkke vall" ""],
+  :component/quantity-unit "m3",
+  :ctype/parent ":fclass/noisebarrier"}
  {:db/id ":ctype/parkinglot",
   :db/ident :ctype/parkinglot,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Parkla" "Parking lot"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/parkinglotactivityarea",
+  :db/ident :ctype/parkinglotactivityarea,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Virgestusala" "Activity area"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotbench",
+  :db/ident :ctype/parkinglotbench,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Istepink" "Bench"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotbicyclerack",
+  :db/ident :ctype/parkinglotbicyclerack,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Jalgrattahoidja" "Bycycle rack"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotborehole",
+  :db/ident :ctype/parkinglotborehole,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Puurkaev" "Bore hole"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotcamera",
+  :db/ident :ctype/parkinglotcamera,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kaamera" "Camera"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotlightning",
+  :db/ident :ctype/parkinglotlightning,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Valgustus" "Lightning"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotpavement",
+  :db/ident :ctype/parkinglotpavement,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kate" "Pavement"],
+  :component/inherits-location? true,
+  :component/quantity-unit "m2",
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotsewagetank",
+  :db/ident :ctype/parkinglotsewagetank,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Reoveemahuti" "Sewage tank"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglotsnowladder",
+  :db/ident :ctype/parkinglotsnowladder,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Lumeredel" "Snow ladder"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglottable",
+  :db/ident :ctype/parkinglottable,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Laud" "Table"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglottoilet",
+  :db/ident :ctype/parkinglottoilet,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Wc" "Toilet"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
+ {:db/id ":ctype/parkinglottrashbin",
+  :db/ident :ctype/parkinglottrashbin,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Prügikast" "Trash bin"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/parkinglot"}
  {:db/id ":ctype/pedestriancrossing",
   :db/ident :ctype/pedestriancrossing,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1146,6 +1253,24 @@
   :asset-schema/label ["Märgi kujutis" "Road sign"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/featuremarking"}
+ {:db/id ":ctype/roadsurfacecameracamera",
+  :db/ident :ctype/roadsurfacecameracamera,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kaamera" "Camera"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/roadsurfacecamera"}
+ {:db/id ":ctype/roadsurfacecameracameracase",
+  :db/ident :ctype/roadsurfacecameracameracase,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Korpus" "Camera case"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/roadsurfacecamera"}
+ {:db/id ":ctype/roadsurfacecamerairlamp",
+  :db/ident :ctype/roadsurfacecamerairlamp,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["IR lamp" "IR lamp"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/roadsurfacecamera"}
  {:db/id ":ctype/rowbuilding",
   :db/ident :ctype/rowbuilding,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1235,6 +1360,30 @@
    ""],
   :component/inherits-location? true,
   :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/speedcameracabin",
+  :db/ident :ctype/speedcameracabin,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kabiin" "Cabin"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/speedcamera"}
+ {:db/id ":ctype/speeddisplaybattery",
+  :db/ident :ctype/speeddisplaybattery,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Aku" "Battery"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/speeddisplay"}
+ {:db/id ":ctype/speeddisplaysolarpanel",
+  :db/ident :ctype/speeddisplaysolarpanel,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Päiksepaneel" "Solar panel"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/speeddisplay"}
+ {:db/id ":ctype/speeddistplaydisplay",
+  :db/ident :ctype/speeddistplaydisplay,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Tabloo" "Display"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/speeddisplay"}
  {:db/id ":ctype/stair",
   :db/ident :ctype/stair,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1286,6 +1435,13 @@
   :component/inherits-location? true,
   :component/quantity-unit "m3",
   :ctype/parent ":ctype/bridgesupport"}
+ {:db/id ":ctype/surfacedressing",
+  :db/ident :ctype/surfacedressing,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Pindamine" "Surface dressing"],
+  :asset-schema/description ["Killustikuga pindamine" ""],
+  :component/quantity-unit "m2",
+  :ctype/parent ":fclass/paving"}
  {:db/id ":ctype/tensionelement",
   :db/ident :ctype/tensionelement,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1302,6 +1458,18 @@
   ["Kasvupinnas tee maa-alal" "Topsoil in right of way"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/subgrade"}
+ {:db/id ":ctype/trafficcameracamera",
+  :db/ident :ctype/trafficcameracamera,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kaamera" "Camera"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/trafficcamera"}
+ {:db/id ":ctype/trafficcameranetworkdevice",
+  :db/ident :ctype/trafficcameranetworkdevice,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Võrguseade" "Network device"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/trafficcamera"}
  {:db/id ":ctype/trafficislandcover",
   :db/ident :ctype/trafficislandcover,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1329,6 +1497,11 @@
   :asset-schema/label ["Liikluspeegel" "Traffic mirror"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/signagelocation"}
+ {:db/id ":ctype/trafficmonitoringstationsensor",
+  :db/ident :ctype/trafficmonitoringstationsensor,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Loendusandur" "Traffic sensor"],
+  :ctype/parent ":fclass/trafficmonitoringstation"}
  {:db/id ":ctype/trafficsign",
   :db/ident :ctype/trafficsign,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1403,6 +1576,12 @@
   :asset-schema/label
   ["Katkematu voolu allikas" "Uninterrupted power source"],
   :ctype/parent ":fclass/animalcrossing"}
+ {:db/id ":ctype/v2iterminaldevice",
+  :db/ident :ctype/v2iterminaldevice,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Seade" "Device"],
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/v2iterminal"}
  {:db/id ":ctype/vault",
   :db/ident :ctype/vault,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1468,6 +1647,22 @@
   ["Tee ilmajaama mõõteseade" "Weatherstation probe"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/weatherstation"}
+ {:db/id ":ctype/weightingstationcamera",
+  :db/ident :ctype/weightingstationcamera,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Numbrituvastuskaamera" "Number detection camera"],
+  :ctype/parent ":fclass/weightingstation"}
+ {:db/id ":ctype/weightingstationsensor",
+  :db/ident :ctype/weightingstationsensor,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kaalumisandur" "Weighting sensor"],
+  :ctype/parent ":fclass/weightingstation"}
+ {:db/id ":ctype/weightingstationvehiclesensor",
+  :db/ident :ctype/weightingstationvehiclesensor,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Sõidukiandur" "Vehicle detection sensor"],
+  :ctype/parent ":fclass/weightingstation"}
  {:db/id ":ctype/wingwall",
   :db/ident :ctype/wingwall,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1658,15 +1853,30 @@
   :db/ident :asphalt/asphaltstonematerial,
   :attribute/cost-grouping? false}
  {:attribute/parent [":material/asphalt"],
+  :db/valueType :db.type/bigdec,
+  :attribute/min-value 1,
+  :asset-schema/type :asset-schema.type/attribute,
+  :attribute/max-value 6,
+  :asset-schema/label
+  ["Jämetäitematerjali miinimum kvaliteedinõu"
+   "Fill material minimum quality"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":asphalt/asphaltstonematerialquality",
+  :db/ident :asphalt/asphaltstonematerialquality,
+  :attribute/cost-grouping? true,
+  :asset-schema/description
+  ["Vaata stadardis sõltuvust prognoositavast liiklussagedusest" ""]}
+ {:attribute/parent [":material/asphalt"],
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Kivimaterjali tera suurus" "Stone size"],
-  :attribute/mandatory? false,
+  :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
   :db/id ":asphalt/asphaltstonesize",
   :db/ident :asphalt/asphaltstonesize,
-  :attribute/cost-grouping? false}
+  :attribute/cost-grouping? true}
  {:attribute/parent [":material/asphalt"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -1731,6 +1941,16 @@
   :db/id ":backfill/backfillfineparticlecontent",
   :db/ident :backfill/backfillfineparticlecontent,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/backfill"],
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Täitematerjali nimetus (klass)" "Backfill material type"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":backfill/backfillmaterial",
+  :db/ident :backfill/backfillmaterial,
+  :attribute/cost-grouping? true}
  {:attribute/parent [":fclass/backfill"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2448,18 +2668,6 @@
   :attribute/cost-grouping? false,
   :asset-schema/description
   ["Kaldasammas, vahesammas või liigend." "Column, abutment or hinge"]}
- {:attribute/parent [":ctype/chipping"],
-  :asset-schema/unit "m",
-  :db/valueType :db.type/bigdec,
-  :attribute/min-value 0,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Pindamise laius" "Chipping width"],
-  :attribute/mandatory? true,
-  :attribute/max-value-ref ":paving/pavingwidth",
-  :db/cardinality :db.cardinality/one,
-  :db/id ":chipping/chippingwidth",
-  :db/ident :chipping/chippingwidth,
-  :attribute/cost-grouping? false}
  {:attribute/parent [":ctype/column"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2632,12 +2840,6 @@
   :db/ident :culvert/culvertlocation,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/culvert"],
-  :db/valueType :db.type/ref,
-  :asset-schema/type :asset-schema.type/attribute,
-  :db/cardinality :db.cardinality/one,
-  :db/id ":culvert/culvertmaterial",
-  :db/ident :culvert/culvertmaterial}
- {:attribute/parent [":fclass/culvert"],
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2732,6 +2934,15 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":culvertprotection/culvertprotectiontype",
   :db/ident :culvertprotection/culvertprotectiontype,
+  :attribute/cost-grouping? true}
+ {:attribute/parent [":ctype/deckslab"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Plaadi kuju ja keerukusaste" ""],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":deckslab/deckslabconfiguration",
+  :db/ident :deckslab/deckslabconfiguration,
   :attribute/cost-grouping? true}
  {:attribute/parent [":fclass/ditch"],
   :db/valueType :db.type/ref,
@@ -2974,6 +3185,15 @@
   :db/id ":flexibleverticalpostlinear/flexibleverticalposttype",
   :db/ident :flexibleverticalpostlinear/flexibleverticalposttype,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":product/geosyntetic"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Geosünteedi tüüp" ""],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":geosyntetic/geosunthetictype",
+  :db/ident :geosyntetic/geosunthetictype,
+  :attribute/cost-grouping? true}
  {:attribute/parent [":ctype/girder"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -3238,6 +3458,64 @@
   :db/id ":milledrattles/milledrattleswidth",
   :db/ident :milledrattles/milledrattleswidth,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/noisebarrier"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Müratõkke tüüp" "Noisebarrier type"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":noisebarrier/noisebarriertype",
+  :db/ident :noisebarrier/noisebarriertype,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":ctype/noisebarrierwall"],
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Müraseina kõrgus tee pinnast" "Noisewall height from road"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":noisebarrierwall/wallheightfromroadlevel",
+  :db/ident :noisebarrierwall/wallheightfromroadlevel,
+  :attribute/cost-grouping? true}
+ {:attribute/parent [":product/noisepanel"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":noisepanel/noisepanelenvironmentclass",
+  :db/ident :noisepanel/noisepanelenvironmentclass,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":product/noisepanel"],
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":noisepanel/noisereflectivity",
+  :db/ident :noisepanel/noisereflectivity,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/parkinglot"],
+  :asset-schema/unit "m2",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Parkla pindala" "Parking lot area"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":parkinglot/parkinglotarea",
+  :db/ident :parkinglot/parkinglotarea}
+ {:attribute/parent [":fclass/parkinglot"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Parkla nimi" "Parking lot name"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":parkinglot/parkinglotname",
+  :db/ident :parkinglot/parkinglotname}
+ {:attribute/parent [":fclass/parkinglot"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Parkla tüüp" "Parking lot type"],
+  :db/cardinality :db.cardinality/one,
+  :db/id ":parkinglot/parkinglottype",
+  :db/ident :parkinglot/parkinglottype}
  {:attribute/parent [":fclass/pavementstructure"],
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -3246,6 +3524,15 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":pavementstructure/pavementstructurewidth",
   :db/ident :pavementstructure/pavementstructurewidth}
+ {:attribute/parent [":fclass/paving"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Katte funktsioon" "Paving function"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":paving/pavingfunction",
+  :db/ident :paving/pavingfunction,
+  :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/paving"],
   :asset-schema/unit "m",
   :db/valueType :db.type/bigdec,
@@ -3657,6 +3944,102 @@
   :db/id ":rigidpaving/rigidpavingwidth",
   :db/ident :rigidpaving/rigidpavingwidth,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/roadsurfacecamera"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kanduri tüüp" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecamera/roadsurfacecameramountingtype",
+  :db/ident :roadsurfacecamera/roadsurfacecameramountingtype}
+ {:attribute/parent [":fclass/roadsurfacecamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" ""],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecamera/roadsurfacecameraname",
+  :db/ident :roadsurfacecamera/roadsurfacecameraname}
+ {:attribute/parent [":ctype/roadsurfacecameracamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecameracamera/roadsurfacecameramanufacturer",
+  :db/ident :roadsurfacecameracamera/roadsurfacecameramanufacturer}
+ {:attribute/parent [":ctype/roadsurfacecameracamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecameracamera/roadsurfacecameraproduct",
+  :db/ident :roadsurfacecameracamera/roadsurfacecameraproduct}
+ {:attribute/parent [":ctype/roadsurfacecameracamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecameracamera/roadsurfacecameraserialnumber",
+  :db/ident :roadsurfacecameracamera/roadsurfacecameraserialnumber}
+ {:attribute/parent [":ctype/roadsurfacecameracameracase"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":roadsurfacecameracameracase/roadsurfacecamecaseraserialnumber",
+  :db/ident
+  :roadsurfacecameracameracase/roadsurfacecamecaseraserialnumber}
+ {:attribute/parent [":ctype/roadsurfacecameracameracase"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":roadsurfacecameracameracase/roadsurfacecameracasemanufacturer",
+  :db/ident
+  :roadsurfacecameracameracase/roadsurfacecameracasemanufacturer}
+ {:attribute/parent [":ctype/roadsurfacecameracameracase"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecameracameracase/roadsurfacecameracaseproduct",
+  :db/ident :roadsurfacecameracameracase/roadsurfacecameracaseproduct}
+ {:attribute/parent [":ctype/roadsurfacecamerairlamp"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":roadsurfacecamerairlamp/roadsurfacecamerairlampproduct",
+  :db/ident :roadsurfacecamerairlamp/roadsurfacecamerairlampproduct}
+ {:attribute/parent [":ctype/roadsurfacecamerairlamp"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":roadsurfacecamerairlamp/roadsurfacecamerairlampserialnumber",
+  :db/ident
+  :roadsurfacecamerairlamp/roadsurfacecamerairlampserialnumber}
+ {:attribute/parent [":ctype/roadsurfacecamerairlamp"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":roadsurfacecamerairlamp/roadsurfacecameramairlampnufacturer",
+  :db/ident
+  :roadsurfacecamerairlamp/roadsurfacecameramairlampnufacturer}
  {:attribute/parent [":fclass/sedimentarypool"],
   :asset-schema/unit "m2",
   :db/valueType :db.type/bigdec,
@@ -3770,6 +4153,86 @@
   :db/id ":solidwood/solidwoodtimber",
   :db/ident :solidwood/solidwoodtimber,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/speedcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speedcamera/speedcabinname",
+  :db/ident :speedcamera/speedcabinname}
+ {:attribute/parent [":ctype/speedcameracabin"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speedcameracabin/speedcabinmanufacturer",
+  :db/ident :speedcameracabin/speedcabinmanufacturer}
+ {:attribute/parent [":ctype/speedcameracabin"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speedcameracabin/speedcabinproduct",
+  :db/ident :speedcameracabin/speedcabinproduct}
+ {:attribute/parent [":ctype/speedcameracabin"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speedcameracabin/speedcabinserialnumber",
+  :db/ident :speedcameracabin/speedcabinserialnumber}
+ {:attribute/parent [":fclass/speeddisplay"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Energiaallika liik" "Power source"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speeddisplay/speeddisplayenergysource",
+  :db/ident :speeddisplay/speeddisplayenergysource}
+ {:attribute/parent [":fclass/speeddisplay"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kanduri tüüp" "Carrier type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speeddisplay/speeddisplaymountingtype",
+  :db/ident :speeddisplay/speeddisplaymountingtype}
+ {:attribute/parent [":fclass/speeddisplay"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speeddisplay/speeddisplayname",
+  :db/ident :speeddisplay/speeddisplayname}
+ {:attribute/parent [":ctype/speeddistplaydisplay"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speeddistplaydisplay/speeddisplaymanufacturer",
+  :db/ident :speeddistplaydisplay/speeddisplaymanufacturer}
+ {:attribute/parent [":ctype/speeddistplaydisplay"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speeddistplaydisplay/speeddisplayproduct",
+  :db/ident :speeddistplaydisplay/speeddisplayproduct}
+ {:attribute/parent [":ctype/speeddistplaydisplay"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":speeddistplaydisplay/speeddisplayserialnumber",
+  :db/ident :speeddistplaydisplay/speeddisplayserialnumber}
  {:attribute/parent [":fclass/telecomcontract"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -3885,6 +4348,86 @@
   :db/id ":threshold/thresholdtype",
   :db/ident :threshold/thresholdtype,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/trafficcamera"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kanduri tüüp" "Carrier type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficcamera/trafficcameramountingtype",
+  :db/ident :trafficcamera/trafficcameramountingtype}
+ {:attribute/parent [":fclass/trafficcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficcamera/trafficcameraname",
+  :db/ident :trafficcamera/trafficcameraname}
+ {:attribute/parent [":fclass/trafficcamera"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kaamera tüüp" "Camera type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficcamera/trafficcameratype",
+  :db/ident :trafficcamera/trafficcameratype,
+  :asset-schema/description
+  ["Kas on juhitav või mitte (PTZ, Fixed jne)" ""]}
+ {:attribute/parent [":ctype/trafficcameracamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficcameracamera/trafficcameracameramanufacturer",
+  :db/ident :trafficcameracamera/trafficcameracameramanufacturer}
+ {:attribute/parent [":ctype/trafficcameracamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficcameracamera/trafficcameracameraproduct",
+  :db/ident :trafficcameracamera/trafficcameracameraproduct}
+ {:attribute/parent [":ctype/trafficcameracamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficcameracamera/trafficcameracameraserialnumber",
+  :db/ident :trafficcameracamera/trafficcameracameraserialnumber}
+ {:attribute/parent [":ctype/trafficcameranetworkdevice"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficcameranetworkdevice/trafficcameranetworkdevicemanufacturer",
+  :db/ident
+  :trafficcameranetworkdevice/trafficcameranetworkdevicemanufacturer}
+ {:attribute/parent [":ctype/trafficcameranetworkdevice"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficcameranetworkdevice/trafficcameranetworkdeviceproduct",
+  :db/ident
+  :trafficcameranetworkdevice/trafficcameranetworkdeviceproduct}
+ {:attribute/parent [":ctype/trafficcameranetworkdevice"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" ""],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficcameranetworkdevice/trafficcameranetworkdeviceserialnumber",
+  :db/ident
+  :trafficcameranetworkdevice/trafficcameranetworkdeviceserialnumber}
  {:attribute/parent [":fclass/trafficisland"],
   :db/valueType :db.type/long,
   :asset-schema/type :asset-schema.type/attribute,
@@ -4004,6 +4547,100 @@
   :db/id ":trafficmirror/trafficmirrorshape",
   :db/ident :trafficmirror/trafficmirrorshape,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/trafficmonitoringstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstation/trafficmonitoringstationmanufacturer",
+  :db/ident
+  :trafficmonitoringstation/trafficmonitoringstationmanufacturer}
+ {:attribute/parent [":fclass/trafficmonitoringstation"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kanduri tüüp" "Carrier type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstation/trafficmonitoringstationmountingtype",
+  :db/ident
+  :trafficmonitoringstation/trafficmonitoringstationmountingtype}
+ {:attribute/parent [":fclass/trafficmonitoringstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficmonitoringstation/trafficmonitoringstationname",
+  :db/ident :trafficmonitoringstation/trafficmonitoringstationname}
+ {:attribute/parent [":fclass/trafficmonitoringstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficmonitoringstation/trafficmonitoringstationproduct",
+  :db/ident :trafficmonitoringstation/trafficmonitoringstationproduct}
+ {:attribute/parent [":fclass/trafficmonitoringstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstation/trafficmonitoringstationserialnumber",
+  :db/ident
+  :trafficmonitoringstation/trafficmonitoringstationserialnumber}
+ {:attribute/parent [":fclass/trafficmonitoringstation"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seadme tüüp" "Station type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":trafficmonitoringstation/trafficmonitoringstationtype",
+  :db/ident :trafficmonitoringstation/trafficmonitoringstationtype}
+ {:attribute/parent [":ctype/trafficmonitoringstationsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstationsensor/trafficmonitoringstationsensormanufacturer",
+  :db/ident
+  :trafficmonitoringstationsensor/trafficmonitoringstationsensormanufacturer}
+ {:attribute/parent [":ctype/trafficmonitoringstationsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstationsensor/trafficmonitoringstationsensorserialnumber",
+  :db/ident
+  :trafficmonitoringstationsensor/trafficmonitoringstationsensorserialnumber}
+ {:attribute/parent [":ctype/trafficmonitoringstationsensor"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Anduri tüüp" "Sensor type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstationsensor/trafficmonitoringstationsensortype",
+  :db/ident
+  :trafficmonitoringstationsensor/trafficmonitoringstationsensortype}
+ {:attribute/parent [":ctype/trafficmonitoringstationsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":trafficmonitoringstationsensor/trafficmonitoringstationsensproduct",
+  :db/ident
+  :trafficmonitoringstationsensor/trafficmonitoringstationsensproduct}
  {:attribute/parent [":ctype/trafficsign"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -4194,6 +4831,96 @@
   :db/id ":unboundpavinglayer/unboundlayerwidth",
   :db/ident :unboundpavinglayer/unboundlayerwidth,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/ups"],
+  :asset-schema/unit "Ah",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Aku mahtuvus" "Battery capacity"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":ups/upsbatterycapacity",
+  :db/ident :ups/upsbatterycapacity,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/ups"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":ups/upsmanufacturer",
+  :db/ident :ups/upsmanufacturer}
+ {:attribute/parent [":fclass/ups"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":ups/upsname",
+  :db/ident :ups/upsname}
+ {:attribute/parent [":fclass/ups"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":ups/upsproduct",
+  :db/ident :ups/upsproduct}
+ {:attribute/parent [":fclass/ups"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":ups/upsserialnumber",
+  :db/ident :ups/upsserialnumber}
+ {:attribute/parent [":fclass/v2iterminal"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Energiaallika liik" "Power source"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":v2iterminal/v2iterminalenergysource",
+  :db/ident :v2iterminal/v2iterminalenergysource}
+ {:attribute/parent [":fclass/v2iterminal"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kanduri tüüp" "Carrier type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":v2iterminal/v2iterminalmountingtype",
+  :db/ident :v2iterminal/v2iterminalmountingtype}
+ {:attribute/parent [":fclass/v2iterminal"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":v2iterminal/v2iterminalname",
+  :db/ident :v2iterminal/v2iterminalname}
+ {:attribute/parent [":ctype/v2iterminaldevice"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":v2iterminaldevice/v2iterminalmanufacturer",
+  :db/ident :v2iterminaldevice/v2iterminalmanufacturer}
+ {:attribute/parent [":ctype/v2iterminaldevice"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":v2iterminaldevice/v2iterminalproduct",
+  :db/ident :v2iterminaldevice/v2iterminalproduct}
+ {:attribute/parent [":ctype/v2iterminaldevice"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":v2iterminaldevice/v2iterminalserialnumber",
+  :db/ident :v2iterminaldevice/v2iterminalserialnumber}
  {:attribute/parent [":ctype/waterproofing"],
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -4244,6 +4971,106 @@
   :db/id ":weatherstationprobe/weatherstationprobetype",
   :db/ident :weatherstationprobe/weatherstationprobetype,
   :attribute/cost-grouping? false}
+ {:attribute/parent [":fclass/weightingstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstation/weightingstationmanufacturer",
+  :db/ident :weightingstation/weightingstationmanufacturer}
+ {:attribute/parent [":fclass/weightingstation"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kanduri tüüp" "Carrier type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstation/weightingstationmountingtype",
+  :db/ident :weightingstation/weightingstationmountingtype}
+ {:attribute/parent [":fclass/weightingstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstation/weightingstationname",
+  :db/ident :weightingstation/weightingstationname}
+ {:attribute/parent [":fclass/weightingstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstation/weightingstationproduct",
+  :db/ident :weightingstation/weightingstationproduct}
+ {:attribute/parent [":fclass/weightingstation"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstation/weightingstationserialnumber",
+  :db/ident :weightingstation/weightingstationserialnumber}
+ {:attribute/parent [":ctype/weightingstationcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstationcamera/weightingstationcameramanufacturer",
+  :db/ident :weightingstationcamera/weightingstationcameramanufacturer}
+ {:attribute/parent [":ctype/weightingstationcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstationcamera/weightingstationcameraproduct",
+  :db/ident :weightingstationcamera/weightingstationcameraproduct}
+ {:attribute/parent [":ctype/weightingstationcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstationcamera/weightingstationcameraserialnumber",
+  :db/ident :weightingstationcamera/weightingstationcameraserialnumber}
+ {:attribute/parent [":ctype/weightingstationsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstationsensor/weightingstationsensorserialnumber",
+  :db/ident :weightingstationsensor/weightingstationsensorserialnumber}
+ {:attribute/parent [":ctype/weightingstationsensor"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Anduri tüüp" "Sensor type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":weightingstationsensor/weightingstationsensortype",
+  :db/ident :weightingstationsensor/weightingstationsensortype}
+ {:attribute/parent [":ctype/weightingstationvehiclesensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":weightingstationvehiclesensor/weightingstationvehiclesensorserialnumber",
+  :db/ident
+  :weightingstationvehiclesensor/weightingstationvehiclesensorserialnumber}
+ {:attribute/parent [":ctype/weightingstationvehiclesensor"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Anduri tüüp" "Sensor type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":weightingstationvehiclesensor/weightingstationvehiclesensortype",
+  :db/ident
+  :weightingstationvehiclesensor/weightingstationvehiclesensortype}
  {:db/id ":item/abandoned",
   :db/ident :item/abandoned,
   :db/doc "Not in use, but still exists",
@@ -4425,6 +5252,11 @@
   :asset-schema/label
   ["kattealune deformatsioonivuuk" "buried expansion joint"],
   :enum/attribute ":expansionjoint/expansionjointtype"}
+ {:db/id ":item/cancelled",
+  :db/ident :item/cancelled,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ei teostata" "Cancelled"],
+  :enum/attribute ":common/status"}
  {:db/id ":item/cantilever_expansion_joint",
   :db/ident :item/cantilever_expansion_joint,
   :asset-schema/type :asset-schema.type/enum,
@@ -4592,6 +5424,11 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Otsasein koos tiibadega" "Endwall with wings"],
   :enum/attribute ":culverthead/culvertheadtype"}
+ {:db/id ":item/culvertprotectiontypecocomatt",
+  :db/ident :item/culvertprotectiontypecocomatt,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Kookosmatt" "Cocomat"],
+  :enum/attribute ":culvertprotection/culvertprotectiontype"}
  {:db/id ":item/culvertprotectiontypeconcrete",
   :db/ident :item/culvertprotectiontypeconcrete,
   :asset-schema/type :asset-schema.type/enum,
@@ -5159,6 +5996,11 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Asfalt" "Asphalt"],
   :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
+ {:db/id ":material/backfillmaterial",
+  :db/ident :material/backfillmaterial,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Täitepinnas" "Backfill soil"],
+  :material/fgroups [":fgroup/embankment"]}
  {:db/id ":material/bitumen",
   :db/ident :material/bitumen,
   :asset-schema/type :asset-schema.type/material,
@@ -5182,7 +6024,8 @@
   :material/fgroups
   [":fgroup/structures"
    ":fgroup/trafficarrangement"
-   ":fgroup/drainage"]}
+   ":fgroup/drainage"
+   ":fgroup/carriageway"]}
  {:db/id ":material/crushedstone",
   :db/ident :material/crushedstone,
   :asset-schema/type :asset-schema.type/material,
@@ -5299,10 +6142,10 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Munakivid" "Cobblestones"],
   :material/fgroups [":fgroup/pavement" ":fgroup/drainage"]}
- {:db/id ":product/culvert",
-  :db/ident :product/culvert,
+ {:db/id ":product/culvertpipe",
+  :db/ident :product/culvertpipe,
   :asset-schema/type :asset-schema.type/material,
-  :asset-schema/label ["Truup" "Culvert"],
+  :asset-schema/label ["Truubitüüp" "Culvertpipe"],
   :material/fgroups [":fgroup/drainage"]}
  {:db/id ":product/drainagepipe",
   :db/ident :product/drainagepipe,
@@ -5339,10 +6182,10 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Geovõrk" "Geomembrane"],
   :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
- {:db/id ":product/geotextile",
-  :db/ident :product/geotextile,
+ {:db/id ":product/geosyntetic",
+  :db/ident :product/geosyntetic,
   :asset-schema/type :asset-schema.type/material,
-  :asset-schema/label ["Geotekstiil" "Geotextile"],
+  :asset-schema/label ["Geosünteet" "Geotextile"],
   :material/fgroups
   [":fgroup/carriageway"
    ":fgroup/pavement"
@@ -5368,6 +6211,12 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Kaev" "Manhole"],
   :material/fgroups [":fgroup/drainage" ":fgroup/utilities"]}
+ {:db/id ":product/noisepanel",
+  :db/ident :product/noisepanel,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Müratõkke paneel" "Noise panel"],
+  :material/fgroups
+  [":fgroup/trafficarrangement" ":fgroup/landscaping"]}
  {:db/id ":product/pavingstone",
   :db/ident :product/pavingstone,
   :asset-schema/type :asset-schema.type/material,
