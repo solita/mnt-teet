@@ -255,7 +255,8 @@
 
 (defn attributes* [{:keys [e! attributes component-oid cost-item-data
                            inherits-location? single-point?
-                           common ctype]}
+                           common ctype toggle-map?]
+                    :or {toggle-map? true}}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
@@ -275,13 +276,14 @@
            :on-toggle (r/partial toggle-open! :location)}
           [:<>
            (tr [:asset :field-group :location])
-           [buttons/button-text
-            {:style {:float :right}
-             :on-click (e! cost-items-controller/->UpdateForm
-                           {:location/map-open? (not map-open?)})}
-            (if map-open?
-              (tr [:asset :location :hide-map])
-              (tr [:asset :location :show-map]))]]
+           (when toggle-map?
+             [buttons/button-text
+              {:style {:float :right}
+               :on-click (e! cost-items-controller/->UpdateForm
+                             {:location/map-open? (not map-open?)})}
+              (if map-open?
+                (tr [:asset :location :hide-map])
+                (tr [:asset :location :show-map]))])]
           [Grid {:container true
                  :justify :flex-start
                  :alignItems :flex-end}
