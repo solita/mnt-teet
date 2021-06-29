@@ -122,7 +122,20 @@
 
 (defn get-contract-with-partners
   [db contract-eid]
-  (-> (d/q '[:find (pull ?c [* {:company-contract/_contract [* {:company-contract/company [*]}]}]) ?status
+  (-> (d/q '[:find (pull ?c
+                     [* {:company-contract/_contract
+                         [* {:company-contract/company
+                             [:company/business-registry-code
+                              :company/name
+                              :teet/id
+                              :db/id
+                              :company/phone-numbers
+                              :company/emails
+                              :company/country
+                              :meta/created-at
+                              :meta/modified-at
+                              {:meta/modifier [:user/id :user/family-name :user/given-name]}
+                              {:meta/creator [:user/id :user/family-name :user/given-name]}]}]}]) ?status
              :where
              (contract-status ?c ?status ?now)
              :in $ % ?c ?now]

@@ -236,6 +236,18 @@
        [foreign-fields]
        [estonian-form-section business-search-failed? exception-in-xroad?])]))
 
+(defn- last-modified [selected-company]
+  (str (tr [:common :last-modified]) " "
+    (if (nil? (:meta/modified-at selected-company))
+      (str (format/date-time (:meta/created-at selected-company)) " "
+        (get-in selected-company [:company-contract/company :meta/creator :user/given-name])
+        " "
+        (get-in selected-company [:company-contract/company :meta/creator :user/family-name]))
+      (str (format/date-time (:meta/modified-at selected-company)) " "
+        (get-in selected-company [:company-contract/company :meta/modifier :user/given-name])
+        " "
+        (get-in selected-company [:company-contract/company :meta/modifier :user/family-name])))))
+
 (defn edit-partner-form
   [e! app selected-company]
   (e! (contract-partners-controller/->InitializeEditCompanyForm
@@ -286,11 +298,7 @@
                   :justify :left
                   :alignItems  :left}
             time-icon
-            [typography/SmallGrayText (str (tr [:common :last-modified]) " "
-                                   (format/date-time (if (nil? (:meta/modified-at selected-company))
-                                                       (:meta/created-at selected-company)
-                                                       (:meta/modified-at selected-company))) " "
-                                        (:meta/modifier selected-company))]]
+            [typography/SmallGrayText (last-modified selected-company)]]
            (when (true? estonian-company?)
              [buttons/button-primary {:disabled search-disabled?
                                       :on-click (e! contract-partners-controller/->SearchBusinessRegistry :edit-partner
