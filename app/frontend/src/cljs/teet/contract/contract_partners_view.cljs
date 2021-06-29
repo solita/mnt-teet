@@ -98,10 +98,10 @@
   [{:company/keys [country name emails phone-numbers business-registry-code] :as info}]
   [:div
    [common/basic-information-column
-    [{:label [typography/TextBold (tr [:fields :company/country])]
-      :data (tr [:countries country])}
-     {:label [typography/TextBold (tr [:fields :company/name])]
+    [{:label [typography/TextBold (tr [:fields :company/name])]
       :data name}
+     {:label [typography/TextBold (tr [:fields :company/country])]
+      :data (tr [:countries country])}
      {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
       :data business-registry-code}
      {:label [typography/TextBold (tr [:fields :company/emails])]
@@ -121,7 +121,7 @@
   [company]
   [:div
    [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :success
+    [common/info-box {:variant :info
                       :title (tr [:contract :edit-company])
                       :content [company-edit-info-column company]}]]])
 
@@ -285,9 +285,6 @@
                        :on-change-event on-change
                        :spec :contract-company/edit-company
                        :cancel-event contract-partners-controller/->CancelAddNewCompany}
-
-           [typography/Heading2 {:class (<class common-styles/margin-bottom 2)}
-            (tr [:contract :edit-company])]
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}
