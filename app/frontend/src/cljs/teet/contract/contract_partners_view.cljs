@@ -22,7 +22,8 @@
             [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 
 (defn partner-listing
@@ -288,7 +289,8 @@
             [typography/SmallGrayText (str (tr [:common :last-modified]) " "
                                    (format/date-time (if (nil? (:meta/modified-at selected-company))
                                                        (:meta/created-at selected-company)
-                                                       (:meta/modified-at selected-company))))]]
+                                                       (:meta/modified-at selected-company))) " "
+                                        (:meta/modifier selected-company))]]
            (when (true? estonian-company?)
              [buttons/button-primary {:disabled search-disabled?
                                       :on-click (e! contract-partners-controller/->SearchBusinessRegistry :edit-partner
@@ -296,9 +298,6 @@
                                                     (get-in selected-company
                                                       [:company-contract/company :company/business-registry-code] ) 2))} ; skip 'EE' prefix
               (tr [:partner :update-business-registry-data])])
-           (when (true? search-success?)
-             [common/info-box {:variant :success
-                               :title (tr [:partner :business-registry-data-successfully-updated])}])
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form

@@ -2,7 +2,9 @@
   (:require [tuck.core :as t]
             tuck.effect
             [teet.common.common-controller :as common-controller]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defn- is-first-partner? [app]
   (-> app
@@ -69,9 +71,10 @@
   (process-event [{:keys [form-key result]} app]
     (if result
       (-> app
-          (update-in [:forms form-key] merge result)
-          (assoc-in [:forms form-key :search-success?] true)
-          (update-in [:forms form-key] dissoc :search-in-progress?))
+        (update-in [:forms form-key] merge result)
+        (assoc-in [:forms form-key :search-success?] true)
+        (update-in [:forms form-key] dissoc :search-in-progress?)
+        (snackbar-controller/open-snack-bar (tr [:partner :business-registry-data-successfully-updated])))
       (-> app
           (assoc-in [:forms form-key :no-results?] true)
           (update-in [:forms form-key] dissoc :search-in-progress?))))
