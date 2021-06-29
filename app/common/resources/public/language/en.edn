@@ -949,7 +949,7 @@
   :meeting/agenda "Agenda",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
-  :boq-version/explanation "Explanation",
+  :boq-version/explanation "Reason",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
   :cooperation.application/activity "Activity",
