@@ -304,7 +304,8 @@
   SaveComponentResponse
   (process-event [{:keys [response]} {params :params :as app}]
     (let [oid (:asset/oid response)]
-      (apply t/fx app
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app (tr [:asset :component-saved]))
              (remove nil?
                      [(when (not= oid (params :id))
                         {:tuck.effect/type :navigate
@@ -368,7 +369,8 @@
   SaveMaterialResponse
   (process-event [{:keys [response]} {params :params :as app}]
     (let [oid (:asset/oid response)]
-      (apply t/fx app
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app (tr [:asset :material-saved]))
              (remove nil?
                      [(when (not= oid (params :id))
                         {:tuck.effect/type :navigate
@@ -520,23 +522,45 @@
         app)))
 
   AddComponent
-  (process-event [{type :type} {:keys [page params query] :as app}]
+  (process-event [{type :type} {:keys [page params query] atl :asset-type-library :as app}]
     ;; Can add subcomponent as well, add to correct path
-    (let [new-id (next-id! "c")]
-      (t/fx
-       (update-form app
-                    (fn [parent]
-                      (update parent (if (:asset/fclass parent)
-                                       :asset/components
-                                       :component/components)
-                              #(conj (or % [])
-                                     {:db/id new-id
-                                      :asset/oid new-id
-                                      :component/ctype type}))))
-       {:tuck.effect/type :navigate
-        :params params
-        :page page
-        :query (merge query {:component new-id})})))
+    (let [new-id (next-id! "c")
+
+          ;; If not inheriting location, find road+carriageway from some parent
+          ;; so we can autofill that. Components are usually on the same road.
+          ctype (asset-type-library/item-by-ident atl type)
+          current-oid (:id params)
+          asset (common-controller/page-state app :cost-item)
+          location (when (not (:component/inherits-location? ctype))
+                     (some #(when (contains? % :location/road-nr)
+                              (select-keys % [:location/road-nr :location/carriageway]))
+                           (if (asset-model/asset-oid? current-oid)
+                             ;; direct child of asset
+                             [asset]
+                             ;; at some component, find location from parent chain
+                             (reverse
+                              (asset-model/find-component-path
+                               asset
+                               current-oid)))))
+
+          ;; Add new component to current parent (asset or component)
+          app (update-form
+               app
+               (fn [parent]
+                 (update parent (if (:asset/fclass parent)
+                                  :asset/components
+                                  :component/components)
+                         #(conj (or % [])
+                                (merge
+                                 location
+                                 {:db/id new-id
+                                  :asset/oid new-id
+                                  :component/ctype type})))))]
+      (t/fx app
+            {:tuck.effect/type :navigate
+             :params params
+             :page page
+             :query (merge query {:component new-id})})))
 
   AddComponentCancel
   (process-event [{id :id} app]

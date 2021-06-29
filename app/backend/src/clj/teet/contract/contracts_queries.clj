@@ -128,9 +128,9 @@
    :project-id nil
    :authorization {}}
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
-    (sort-by :meta/created-at)
-    reverse
-    (mapv du/idents->keywords)))
+       (sort-by :meta/created-at)
+       reverse
+       (mapv du/idents->keywords)))
 
 (defquery :contracts/project-related-contracts
   {:doc "Return a list of contracts related to the given project"

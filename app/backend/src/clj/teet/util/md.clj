@@ -134,14 +134,17 @@
   [:fo:block {:font-size (case (.getLevel h)
                            1 "24pt"
                            2 "18pt"
-                           3 "16pt")}
+                           3 "16pt"
+                           ;; fallback size for headings above 3
+                           "14pt")}
    (render-children h)])
 
 (defmethod md->html Heading [h]
   [(case (.getLevel h)
      1 :h3
      2 :h4
-     3 :h5)
+     3 :h5
+     :h6)
    (render-children-html h)])
 
 (defmethod md->xsl-fo LinkRef [node] nil)

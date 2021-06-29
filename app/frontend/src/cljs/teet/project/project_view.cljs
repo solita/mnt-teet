@@ -22,12 +22,12 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase]]
+            [teet.ui.material-ui :refer [Paper Divider Collapse Badge Grid ButtonBase Toolbar]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.typography :refer [Heading1 Heading3] :as typography]
+            [teet.ui.typography :refer [Heading1 Heading3 TextBold] :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc] :as util]
             [teet.util.collection :as cu]
@@ -701,6 +701,7 @@
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-view e! app project]]])
 
+
 (defn project-full-page-structure
   "Structure for project pages that don't have map, but have
   a left panel content, main content and optional right panel content.
@@ -708,8 +709,9 @@
   If left-side content is not specified, the project navigator is used.
   The :project-navigator map options can be used to override default parameters."
   [{:keys [e! app project main left-panel right-panel project-navigator
-           export-menu-items right-panel-padding]
-    :or {right-panel-padding "1rem 1.5rem"}}]
+           export-menu-items right-panel-padding content-margin]
+    :or {right-panel-padding "1rem 1.5rem"
+         content-margin "0rem 0.5rem"}}]
   (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
     [project-context/provide
      project
@@ -734,8 +736,8 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style (merge {:padding "2rem 1.5rem"
-                               :overflow-y :auto
+                :class (<class project-style/desktop-scroll-content-separately)
+                :style (merge {:margin content-margin
                                :max-height "100%"}
                               (when (not right-panel)
                                 {:flex 1}))}

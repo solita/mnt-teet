@@ -310,3 +310,19 @@
                  sub-path)))))]
 
     (containing [] form)))
+
+(defn combine-and-flatten
+  "Combines two collections/values and flattens the result.
+  ```
+(combine-and-flatten [1 2] 3)
+=> (1 2 3)
+(combine-and-flatten [1 2] [3 4])
+=> (1 2 3 4)
+(combine-and-flatten 1 2)
+=> (1 2)
+(combine-and-flatten 1 [2 3])
+=> (1 2 3)
+  ```"
+  [to from]
+  (->> (into [to] [from])
+       flatten))

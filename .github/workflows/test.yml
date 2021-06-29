@@ -11,6 +11,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgis/postgis:12-3.1-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: teet
+          POSTGRES_HOST_AUTH_METHOD: trust
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@v2
     - name: Cache local Maven repository
@@ -36,6 +55,11 @@ jobs:
         mkdir ~/.datomic
         mkdir /tmp/datomic-storage
         echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
+    - name: migrate postgres
+      working-directory: db/
+      run: |
+        ./devdb_create_template.sh
+        ./devdb_clean.sh
     - name: run backend tests
       run: clojure -A:ci-test
       working-directory: app/backend/

@@ -64,13 +64,17 @@
     (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
     (throw (ex-info "Not a leaf component OID"
                     {:parent-oid parent-oid})))
-  (when-let [existing-material-of-given-type (ffirst (d/q '[:find ?m
-                                                            :where
-                                                            [?c :component/materials ?m]
-                                                            [?m :material/type ?t]
-                                                            :in $ ?c ?t]
-                                                          db [:asset/oid parent-oid] type))]
-    (when (not= id existing-material-of-given-type)
+  (let [existing-material-ids
+        (into #{}
+              (map first)
+              (d/q '[:find ?m
+                     :where
+                     [?c :component/materials ?m]
+                     [?m :material/type ?t]
+                     :in $ ?c ?t]
+                   db [:asset/oid parent-oid] type))]
+
+    (when (seq (disj existing-material-ids id))
       (throw (ex-info "Material of the same type already exists for component"
                       {:parent-oid parent-oid
                        :type type}))))

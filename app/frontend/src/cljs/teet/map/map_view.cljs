@@ -279,27 +279,18 @@
 
 (defn map-control-buttons [e! {:keys [background-layer layers] :as _map-data
                                :or   {background-layer ["kaart"]}}]
-  (r/with-let [open? (r/atom false)]
-    [:div {:class (<class map-styles/map-control-buttons)}
-     (when @open?
-       [:div {:class (<class map-styles/map-legend-box)}
-        [:div {:class (<class map-styles/map-legend-header)}]
-        [Button {:start-icon (r/as-element [icons/maps-map])
-                 :on-click (e! map-controller/->SetBackgroundLayer
-                               (case background-layer
-                                 ["kaart"] ["foto"]
-                                 ["foto"]
-                                 ["foto" "hybriid"] ["kaart"]))}
-         (last background-layer)]
-        ;; Show legend
-        (mapc layer-legend layers)])
-     [Fab (merge
-           {:size     :small
-            :class    (<class map-styles/map-control-button)
-            :on-click #(swap! open? not)}
-           (when (= background-layer "foto")
-             {:color :primary}))
-      [icons/maps-layers]]]))
+  [:div {:class (<class map-styles/map-control-buttons)}
+   [Fab (merge
+         {:size     :small
+          :class    (<class map-styles/map-control-button)
+          :on-click (e! map-controller/->SetBackgroundLayer
+                        (case background-layer
+                          ["kaart"] ["foto"]
+                          ["foto"]
+                          ["foto" "hybriid"] ["kaart"]))}
+         (when (= background-layer "foto")
+           {:color :primary}))
+    [icons/maps-layers]]])
 
 (defn map-container-style
   [full-height?]

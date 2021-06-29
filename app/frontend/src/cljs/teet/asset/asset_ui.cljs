@@ -61,6 +61,15 @@
     ""
     (str (label fg) " / " (label fc))))
 
+(defn- format-fg-and-fc-with-components [[_fg _fc cs :as result]]
+  (if (seq cs)
+    [:div
+     (format-fg-and-fc result)
+     (doall
+      (for [{:keys [component]} cs]
+        [typography/SmallText {:style {:margin-left "2rem"}} component]))]
+    (format-fg-and-fc result)))
+
 (defn- format-fc [[_fg fc]]
   (label fc))
 
@@ -82,22 +91,18 @@
        [Grid {:item true :xs 12}
         [select/select-search
          {:e! e!
+          :autofocus? true
           :on-change #(on-change (mapv :db/ident %))
           :placeholder (tr [:asset :feature-group-and-class-placeholder])
           :no-results (tr [:asset :no-matching-feature-classes])
           :value (when fc [fg fc])
-          :format-result format-fg-and-fc
+          :format-result format-fg-and-fc-with-components
           :show-empty-selection? true
           :clear-value [nil nil]
           :data-cy :select-fgroup-and-fclass
           :query (fn [text]
-                   #(vec
-                     (for [fg fgroups
-                           fc (:fclass/_fgroup fg)
-                           :let [result [fg fc]]
-                           :when (string/contains-words? (format-fg-and-fc result) text)]
-
-                       result)))}]]])))
+                   #(asset-type-library/search-fclass
+                     atl @localization/selected-language text))}]]])))
 
 (defn select-fgroup-and-fclass-multiple
   "Select multiple [fgroup fclass] values."
@@ -108,18 +113,13 @@
     :placeholder (tr [:asset :feature-group-and-class-placeholder])
     :no-results (tr [:asset :no-matching-feature-classes])
     :value value
-    :format-result format-fg-and-fc
+    :format-result format-fg-and-fc-with-components
     :format-result-chip format-fc
     :show-empty-selection? true
     :clear-value [nil nil]
     :query (fn [text]
-             #(vec
-               (for [fg (:fgroups atl)
-                     fc (:fclass/_fgroup fg)
-                     :let [result [fg fc]]
-                     :when (string/contains-words? (format-fg-and-fc result) text)]
-
-                 result)))}])
+             #(asset-type-library/search-fclass
+               atl @localization/selected-language text))}])
 
 (defn select-listitem-multiple [{:keys [atl attribute]}]
   (let [attr (asset-type-library/item-by-ident atl attribute)
@@ -389,12 +389,13 @@
 
        (when chg
          [common/popper-tooltip
-          {
-           :variant :no-icon
-           :multi [{:title (tr-enum (:boq-version/type last-locked-version))
-                    :body (str " v." (:boq-version/number last-locked-version))}
-                   {:title (tr [:fields :boq-version/explanation])
-                    :body (:boq-version/explanation last-locked-version)}
+          {:variant :no-icon
+           :multi [(when last-locked-version
+                     {:title (tr-enum (:boq-version/type last-locked-version))
+                      :body (str " v." (:boq-version/number last-locked-version))})
+                   (when last-locked-version
+                     {:title (tr [:fields :boq-version/explanation])
+                      :body (:boq-version/explanation last-locked-version)})
                    {:title (tr [:common :last-modified])
                     :body [:<>
                            (fmt/date-time timestamp)
@@ -459,6 +460,7 @@
                      :add? (= :new-cost-item (:page app))
                      :project project
                      :cost-items cost-items})]]
+           :content-margin "0 0"
            :main
            [:<>
             [boq-version-statusline e! page-state]

@@ -10,7 +10,8 @@
             [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.util.collection :as collection]))
 
 (defn- white-button-style
   []
@@ -131,13 +132,15 @@
                              :type      :button}))
 
 (defn stand-alone-icon-button
-  [{:keys [id on-click icon class href]}]
+  [{:keys [id on-click icon class href ref]}]
   [IconButton {:size :small
-               :class (conj class (<class common-styles/stand-alone-icon-button-style))
+               :class (collection/combine-and-flatten
+                        class
+                        (<class common-styles/stand-alone-icon-button-style))
                :on-click on-click
                :href href
-               :id id
-               }
+               :ref ref
+               :id id}
    icon])
 
 (defn link-button-with-icon

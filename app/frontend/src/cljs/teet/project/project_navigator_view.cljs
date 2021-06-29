@@ -423,14 +423,14 @@
   ([e! app project export-menu-items]
    (let [thk-url (project-info/thk-url project)]
      [:div {:class (<class project-header-style)}
-      [:div {:style {:display :flex
-                     :justify-content :space-between}}
-       [:div {:style {:display :flex
-                      :justify-content :flex-start}}
-        [project-menu/project-menu e! app project]
-        [typography/Heading1 {:style {:margin-bottom 0
-                                      :margin-left "1rem"}}
-         (project-model/get-column project :thk.project/project-name)]]
+      [:div {:class (<class common-styles/flex-row-space-between)}
+       (when-not (responsivity-styles/mobile?)
+         [:div {:class (<class common-styles/flex-row-center)}
+          [project-menu/project-menu-desktop e! app project]
+          [typography/TextBold {:data-cy "project-header"
+                                :style {:text-transform :uppercase}
+                                :class (<class common-styles/margin-left 0.5)}
+           (project-model/get-column project :thk.project/project-name)]])
        [:div {:style {:display :flex
                       :align-items :center}}
         [common/context-menu
@@ -453,9 +453,10 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths show-map? export-menu-items content-padding]
+  [{:keys [e! project app column-widths show-map? export-menu-items content-margin]
     :or {column-widths [3 6 :auto]
-         show-map? true}
+         show-map? true
+         content-margin "0rem 0.5rem"}
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
@@ -477,7 +478,7 @@
          [Grid {:item true
                 :xs 12
                 :md content-w
-                :style {:padding (or content-padding "2rem 1.5rem")
+                :style {:margin content-margin
                         :overflow-y :auto
                         :max-height "100%"
                         ;; content area should scroll, not the whole page because we

@@ -111,7 +111,7 @@
                           {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                       :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                       :activity/name :activity.name/land-acquisition}
-                           :tasks [[:task.group/land-purchase :task.type/road-safety-audit false]]
+                           :tasks [[:task.group/land-purchase :task.type/preliminary-agreements false]]
                            :lifecycle-id (tu/->db-id "p3-lc1")}))))
 
 (deftest add-tasks
@@ -301,3 +301,13 @@
     :activity.name/preliminary-design
     '([:task.group/study :task.type/archeological-study true]
      [:task.group/study :task.type/topogeodesy true]))))
+
+(deftest can-not-create-thk-tasks-in-teet
+  (testing "Tasks are not valid when list of tasks contains road-safety-audit or supervision"
+    (is
+      (not
+        (task-db/valid-tasks?
+          (tu/db)
+          :activity.name/preliminary-design
+          '([:task.group/construction-quality-assurance :task.type/owners-supervision false]
+            [:task.group/construction-approval :task.type/road-safety-audit false]))))))

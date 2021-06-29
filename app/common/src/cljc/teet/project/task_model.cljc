@@ -13,6 +13,9 @@
     :task/actual-end-date
     :task/assignee})
 
+(def not-creatable-in-teet
+  #{:task.type/owners-supervision :task.type/road-safety-audit})
+
 (def task-group-order
   {:task.group/base-data 1
    :task.group/study 2

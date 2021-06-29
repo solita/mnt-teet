@@ -556,7 +556,8 @@
         icon])
       (if multi
         [:div
-         (doall (for [{:keys [title body]} multi]
+         (doall (for [{:keys [title body] :as content} multi
+                      :when content]
                   ^{:key title}
                   [:div
                    [typography/TextBold title]
