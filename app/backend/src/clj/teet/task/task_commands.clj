@@ -219,13 +219,6 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}
-   :pre [^{:error :contract-authorization-failed}           ;;Added for testing of authorization functions
-         (or
-           (not (environment/feature-enabled? :contract-partners))
-           (authorization/authorized-for-action? {:db db
-                                                  :user user
-                                                  :action :file-management/edit-task-part
-                                                  :target task-id}))]
    :transact [(list 'teet.file.file-tx/create-task-file-part
                     user task-id part-name)]})
 
