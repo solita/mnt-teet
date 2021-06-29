@@ -476,6 +476,7 @@
         projects))
 
 (defn import-thk-contracts! [connection url contracts]
+  (assert (some? connection))
   (let [db (d/db connection)
         tx-data {:tx-data (thk-import-contracts-tx db url contracts)}]
     (d/transact connection tx-data)))
