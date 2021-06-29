@@ -94,20 +94,20 @@
 
   AddIndex
   (process-event [_ app]
-    (assoc-in app [:admin :add-index] {:form-open true}))
+    (common-controller/assoc-page-state app {:add-index true}))
 
   CancelIndex
   (process-event [_ app]
-    (update app :admin dissoc :add-index))
+    (update app :route dissoc :add-index))
 
   UpdateIndexForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:admin :add-index] merge form-data))
+    (update-in app [:route :add-index] merge form-data))
 
   SaveIndexResponse
   (process-event [_ app]
     (-> app
-        (update :admin dissoc :add-index)
+        (update :route dissoc :add-index)
         common-controller/refresh-page))
 
   SaveIndex
@@ -116,7 +116,7 @@
           {:tuck.effect/type :command!
            :command :admin/add-index
            :success-message (tr [:admin :index-added-successfully])
-           :payload (get-in app [:admin :add-index])
+           :payload (get-in app [:route :add-index])
            :result-event ->SaveIndexResponse}))
 
   EditIndex
@@ -130,20 +130,20 @@
 
   EditIndexValues
   (process-event [_ app]
-    (assoc-in app [:admin :edit-index-values] {:form-open true}))
+    (assoc-in app [:route :edit-index-values] {}))
 
   CancelIndexValues
   (process-event [_ app]
-    (update app :admin dissoc :edit-index-values))
+    (update app :route dissoc :edit-index-values))
 
   UpdateIndexValues
   (process-event [{form-data :form-data} app]
-    (update-in app [:admin :edit-index-values] merge form-data))
+    (update-in app [:route :edit-index-values] merge form-data))
 
   SaveIndexValuesResponse
   (process-event [_ app]
     (-> app
-        (update :admin dissoc :edit-index-values)
+        (update :route dissoc :edit-index-values)
         common-controller/refresh-page))
 
   SaveIndexValues
@@ -152,7 +152,7 @@
           {:tuck.effect/type :command!
            :command :admin/edit-index-values
            :success-message (tr [:admin :index-values-changed])
-           :payload (get-in app [:admin :edit-index-values])
+           :payload (get-in app [:route :edit-index-values])
            :result-event ->SaveIndexValuesResponse}))
 
   )

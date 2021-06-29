@@ -27,9 +27,8 @@
             [cljs-time.core :as t]
             [cljs-time.coerce :as tc]))
 
-(defn- by-month [yyyy mm]
-  (iterate #(t/plus % (t/months 1))
-           (t/date-time yyyy mm)))
+(defn- by-month [start-date]
+  (iterate #(t/plus % (t/months 1)) start-date))
 
 (def enabled-indexes
   #{
@@ -139,26 +138,39 @@
 
 (defn edit-index-form
   [e! form-data index values]
-  [form/form2 {:e! e!
+  (let [index-start (t/date-time (:cost-index/valid-from index))
+        month-objects (take
+                        (t/in-months
+                          (t/interval
+                            index-start
+                            (t/now)))
+                        (by-month index-start))]
+    [form/form2 {:e! e!
                :on-change-event admin-controller/->UpdateIndexValues
                :save-event admin-controller/->SaveIndexValues
                :cancel-event admin-controller/->CancelIndexValues
                :value form-data}
    [:div
-    (str (str (take
-                (t/in-months
-                  (t/interval
-                    (t/date-time 2019 10 1)
-                    (t/now)))
-                (by-month 2019 10))))
-    [:div {:class (<class common-styles/flex-align-end)}
+    (mapc (fn [x]
+            [:div {:class [(<class common-styles/flex-align-end)
+                           (<class common-styles/flex-align-center)]}
+             [:div {:style {:min-width "200px"}}
+              (str (t/year x) " " (tr [:calendar :months (dec (t/month x))]))]
+             [:div {:class (<class common-styles/margin-left 2)}
+              [form/field (keyword (str "index-value-" (t/year x) "-" (t/month x)))
+               [TextField {:type :number
+                           :hide-label? true
+                           :id (str "index-value-" (t/year x) "-" (t/month x))
+                           :end-icon (teet.ui.text-field/euro-end-icon)}]]]]) month-objects)
+    [:div {:class[(<class common-styles/flex-align-end)
+                  (<class common-styles/margin 2 0 0 0)]}
     [index-form-cancel-button*]
-    [index-save-form-button*]]]]
+    [index-save-form-button*]]]])
   )
 
 (defn view-index-info
   ""
-  [e! admin index editmode?]
+  [e! route index editmode?]
     (let [_ (taoensso.timbre/debug "VI " index editmode?)
           values (:cost-index/values index)]
      [:div
@@ -168,7 +180,7 @@
       [:div {:class (<class common-styles/margin-bottom 2)}
        [:b "Index valid from "] (format/date (:cost-index/valid-from index))]
   (if editmode?
-    [:div [edit-index-form e! (:edit-index-values admin) index values]]
+    [:div [edit-index-form e! (:edit-index-values route) index values]]
     [:div
      (if (seq values)
        [view-index-values e! index values]
@@ -178,9 +190,9 @@
       (tr [:buttons :edit-index-values])]])]))
 
 (defn indexes-content
-  [e! admin route id]
-  (let [add-form (:add-index admin)
-        _ (taoensso.timbre/debug "ID " id)]
+  [e! route vals id]
+  (let [add-form (:add-index route)
+        _ (println "ID " route id)]
     [:<>
      (when add-form
       [add-index-form e! {:form-value add-form
@@ -188,24 +200,25 @@
                           :save-event admin-controller/->SaveIndex
                           :cancel-event admin-controller/->CancelIndex}])
     (when id
-      [view-index-info e! admin (first
+      [view-index-info e! route (first
                             (filterv
                               #(when (= id (str (:db/id %))) %)
-                              route))
-       (some? (:edit-index-values admin))])]))
+                              vals))
+       (some? (:edit-index-values route))])]))
 
 (defn indexes-page
   "The main indexes admin page"
-  [e! {admin :admin
-       params :params} route]
-  (let [id (:id params)]
+  [e! {params :params
+       route :route} vals]
+  (let [id (:id params)
+        _ (println "SOME" params route vals)]
    [:div {:class (<class common-styles/flex-align-end)}
    [query/debounce-query
     {:e! e!
      :query :admin/indexes-data
      :args {:payload {}
             :refresh (:admin-refresh route)}
-     :simple-view [indexes-selection e! route id]}
+     :simple-view [indexes-selection e! vals id]}
     500]
-   [indexes-content e! admin route id]])
+   [indexes-content e! route vals id]])
   )
