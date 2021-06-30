@@ -241,13 +241,9 @@
   (str (tr [:common :last-modified]) " "
     (if (nil? (:meta/modified-at selected-company))
       (str (format/date-time (:meta/created-at selected-company)) " "
-        (get-in selected-company [:company-contract/company :meta/creator :user/given-name])
-        " "
-        (get-in selected-company [:company-contract/company :meta/creator :user/family-name]))
+        (user-model/user-name (get-in selected-company [:company-contract/company :meta/creator])))
       (str (format/date-time (:meta/modified-at selected-company)) " "
-        (get-in selected-company [:company-contract/company :meta/modifier :user/given-name])
-        " "
-        (get-in selected-company [:company-contract/company :meta/modifier :user/family-name])))))
+        (user-model/user-name (get-in selected-company [:company-contract/company :meta/modifier]))))))
 
 (defn edit-partner-form
   [e! _ selected-company]
