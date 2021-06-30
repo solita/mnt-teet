@@ -2,7 +2,8 @@
   "Query business registry for company details"
   (:require [teet.integration.x-road.core :as x-road]
             [clojure.data.zip.xml :as z]
-            [teet.log :as log])
+            [teet.log :as log]
+            [clojure.string :as str])
   (:import (java.time.format DateTimeFormatter)))
 
 (defn detailandmed-request-xml [{business-id :business-id :as params}]
@@ -111,8 +112,8 @@
                                :content))]
       (if company-name
         {:company/name company-name
-         :company/email emails
-         :company/phone-number phone-numbers}
+         :company/email (str/join ", " emails)
+         :company/phone-number (str/join ", " phone-numbers)}
         (log/warn "No company name found in the business registry response")))))
 
 (def business-registry-params

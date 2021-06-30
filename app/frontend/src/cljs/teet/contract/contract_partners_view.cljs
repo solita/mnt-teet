@@ -90,9 +90,9 @@
      {:label [typography/TextBold (tr [:fields :company/name])]
       :data name}
      {:label [typography/TextBold (tr [:fields :company/email])]
-      :data (str/join "" email)}
+      :data email}
      {:label [typography/TextBold (tr [:fields :company/phone-number])]
-      :data (str/join "" phone-number)}]]])
+      :data phone-number}]]])
 
 (defn company-edit-info-column
   [{:company/keys [country name email phone-number business-registry-code] :as info}]
@@ -105,9 +105,9 @@
      {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
       :data business-registry-code}
      {:label [typography/TextBold (tr [:fields :company/email])]
-      :data (str/join "" email)}
+      :data email}
      {:label [typography/TextBold (tr [:fields :company/phone-number])]
-      :data (str/join "" phone-number)}]]])
+      :data phone-number}]]])
 
 (defn selected-company-information
   [company]
