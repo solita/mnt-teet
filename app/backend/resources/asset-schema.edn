@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-06-29T13:18:47.984-00:00"}
+  :tx/schema-imported-at #inst "2021-06-30T05:44:01.964-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -1942,7 +1942,7 @@
   :db/ident :backfill/backfillfineparticlecontent,
   :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/backfill"],
-  :db/valueType :db.type/bigdec,
+  :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
   ["Täitematerjali nimetus (klass)" "Backfill material type"],
