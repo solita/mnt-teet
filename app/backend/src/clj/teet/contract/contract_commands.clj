@@ -95,8 +95,9 @@
                             company-fields
                             (meta-model/modification-meta user))
                           (merge
-                            {:teet/id company-contract-uuid
-                             :company-contract/lead-partner? (if (true? lead-partner?) true false)}
+                            {:teet/id company-contract-uuid}
+                            (when (true? lead-partner?)
+                              {:company-contract/lead-partner? true})
                             (meta-model/modification-meta user))])]))]
     tempids))
 
