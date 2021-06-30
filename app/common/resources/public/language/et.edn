@@ -259,15 +259,15 @@
   :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
-  :person-name nil,
+  :person-name "Isiku nimi",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
   :thk.contract.status/deadline-overdue "Tähtaeg on hilinenud",
-  :add-person-not-in-teet nil,
-  :add-company-not-in-teet "Lisa uus ettevõtte",
+  :add-person-not-in-teet "Lisan TEET-u välise isiku",
+  :add-company-not-in-teet "Lisan uus ettevõtte",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
   :partners {:title nil},
-  :persons nil,
+  :persons "Isikud",
   :add-company "Lisan partneri info",
   :status "Staatus",
   :table-heading
@@ -275,7 +275,7 @@
    :project "Projekt",
    :project-manager "Projektijuht",
    :task "Ülesanne"},
-  :select-user-roles nil,
+  :select-user-roles "Valin roll",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
@@ -286,17 +286,17 @@
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Valmis",
   :company-search-label "Ettevõtte otsing",
-  :information-found nil,
+  :information-found "Leitud info",
   :contracts-listing "Lepingute loetelu",
-  :lead-partner "Juhtpartner",
+  :lead-partner "Peatöövõtja",
   :edit-contract "Lepingu info",
   :no-company-found-content
   "Äriregistri koodile vastavat ettevõtet ei leitud.",
   :xroad-exception-title "X-tee päring nurjus",
   :edit-company "Ettevõtte informatsiooni muutmine",
-  :role-required nil,
-  :employee-added nil,
-  :add-person nil,
+  :role-required "Isikul peab olema oma roll",
+  :employee-added "Isik lisatud",
+  :add-person "Lisa isik",
   :search-companies-business-registry
   "Ettevõtte informatsiooni otsing  äriregistrist",
   :thk.contract.status/in-progress "Töös"},
@@ -304,7 +304,7 @@
  {:contracts-list
   {:collapse-all "Sulgen kõik",
    :expand-all "Avan kõik",
-   :filtered-result "{count} Tulemust",
+   :filtered-result "{count} tulemust",
    :filtered-results "Filtreeritud {count} tulemust",
    :results "{count} tulemust",
    :view "Vaata"},
@@ -946,7 +946,7 @@
   :meeting/agenda "Päevakava",
   :cooperation.3rd-party/id-code
   "Kaasatud osapoole registrikood/isikukood",
-  :boq-version/explanation "Põhjust",
+  :boq-version/explanation "Põhjus",
   :user/phone-number "Telefoni number",
   :thk.project/carriageway "SO",
   :cooperation.application/activity "Tegevuse",
@@ -1348,6 +1348,7 @@
  :partner
  {:business-registry-data-successfully-updated
   "Äriregistri andmeid värskendatud",
+  :business-registry-search-failed "Äriregistri otsing ebaõnnestunud",
   :update-business-registry-data "Värskenda äriregistri andmeid"},
  :people-tab
  {:active "AKTIIVNE",

@@ -84,7 +84,8 @@
     (log/warn "Business registry search failed on error: " error)
     (-> app
         (assoc-in [:forms form-key :exception-in-xroad?] true)
-        (update-in [:forms form-key] dissoc :search-in-progress?)))
+        (update-in [:forms form-key] dissoc :search-in-progress?)
+        (snackbar-controller/open-snack-bar (tr [:partner :business-registry-search-failed]) :error)))
 
   SearchBusinessRegistry
   (process-event [{:keys [form-key business-id]} app]
