@@ -90,7 +90,7 @@
                                       :filter-kw filter-fg-or-fc
                                       :page :materials-and-products}]
         [:div {:style {:max-width "25vw"}}
-         [typography/Heading1 "Materials"]]
+         [typography/Heading1 (tr [:asset :page :materials-and-products])]]
         [table/listing-table-container
          [table/listing-header (assoc listing-opts :state listing-state)]
          [table/listing-body (assoc listing-opts

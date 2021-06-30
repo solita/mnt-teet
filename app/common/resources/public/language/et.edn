@@ -275,7 +275,7 @@
    :project "Projekt",
    :project-manager "Projektijuht",
    :task "Ülesanne"},
-  :select-user-roles "Valin rollid",
+  :select-user-roles "Valin roll",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
@@ -1348,7 +1348,7 @@
  :partner
  {:business-registry-data-successfully-updated
   "Äriregistri andmeid värskendatud",
-  :business-registry-search-failed "Päring äriregistrist ebaõnnestus",
+  :business-registry-search-failed "Äriregistri otsing ebaõnnestunud",
   :update-business-registry-data "Värskenda äriregistri andmeid"},
  :people-tab
  {:active "AKTIIVNE",

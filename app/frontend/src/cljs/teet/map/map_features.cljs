@@ -442,3 +442,11 @@ an icon based on asset class."
   [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "blue"})}))
+
+(def region-area-style
+  (constantly
+   (ol.style.Style.
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(100,100,100,0.5)"
+                                        :width 2})
+         :fill (ol.style.Fill. #js {:cursor :pointer
+                                    :color "rgba(200,200,200,0.5)"})})))

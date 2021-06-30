@@ -6,7 +6,8 @@
             [teet.asset.asset-type-library :as asset-type-library]
             [teet.util.datomic :as du]
             [teet.util.euro :as euro]
-            [teet.asset.asset-model :as asset-model]))
+            [teet.asset.asset-model :as asset-model]
+            [teet.asset.asset-geometry :as asset-geometry]))
 
 
 (defn- boq-unlocked? [db thk-project-id]
@@ -15,7 +16,8 @@
 
 (defcommand :asset/save-cost-item
   {:doc "Create/update an asset cost item"
-   :context {adb :asset-db}
+   :context {adb :asset-db
+             sql-conn :sql-conn}
    :payload {project-id :project-id asset :asset}
    :config {owner-code [:asset :default-owner-code]}
    :project-id [:thk.project/id project-id]
@@ -34,11 +36,13 @@
                 (merge {:asset/project project-id}
                        (asset-type-library/form->db
                         (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-                        (dissoc asset :asset/components))))])]
-    (d/pull db-after [:asset/oid]
-            (if (string? id)
-              (tempids id)
-              id))))
+                        (dissoc asset :asset/components))))])
+        asset (d/pull db-after [:asset/oid]
+                      (if (string? id)
+                        (tempids id)
+                        id))]
+    (asset-geometry/update-asset! db-after sql-conn (:asset/oid asset))
+    asset))
 
 (defcommand :asset/delete-component
   {:doc "Delete a component in an existing asset."
@@ -55,7 +59,8 @@
 
 (defcommand :asset/save-component
   {:doc "Save component for an asset or component."
-   :context {adb :asset-db}
+   :context {adb :asset-db
+             sql-conn :sql-conn}
    :payload {:keys [project-id parent-id component]}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/edit-cost-items {}}
@@ -71,11 +76,14 @@
                 parent-id
                 (asset-type-library/form->db
                  (asset-type-library/rotl-map (asset-db/asset-type-library adb))
-                 (dissoc component :component/components)))])]
-    (d/pull db-after [:asset/oid]
-            (if (string? id)
-              (tempids id)
-              id))))
+                 (dissoc component :component/components)))])
+        component (d/pull db-after [:asset/oid]
+                          (if (string? id)
+                            (tempids id)
+                            id))]
+    (asset-geometry/update-asset! db-after sql-conn
+                                  (asset-model/component-asset-oid (:asset/oid component)))
+    component))
 
 (defcommand :asset/save-material
   {:doc "Save material for a leaf component."

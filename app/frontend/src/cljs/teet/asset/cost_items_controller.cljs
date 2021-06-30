@@ -13,6 +13,7 @@
             [reagent.core :as r]))
 
 (defrecord AddComponentCancel [id])
+(defrecord AddMaterialCancel [id])
 
 (defrecord MaybeFetchAssetTypeLibrary []
   t/Event
@@ -32,10 +33,13 @@
 
 
 (defmethod routes/on-leave-event :cost-item [{:keys [query new-query]}]
-  (when (and (:component query)
-             (not (:component new-query)))
-    ;; Navigated away from component add form, cleanup state
-    (->AddComponentCancel (:component query))))
+  [(when (and (:component query)
+              (not (:component new-query)))
+     ;; Navigated away from component add form, cleanup state
+     (->AddComponentCancel (:component query)))
+   (when (and (:material query)
+              (not (:material new-query)))
+     (->AddMaterialCancel (:material query)))])
 
 (defonce next-id (atom 0))
 
@@ -304,7 +308,8 @@
   SaveComponentResponse
   (process-event [{:keys [response]} {params :params :as app}]
     (let [oid (:asset/oid response)]
-      (apply t/fx app
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app (tr [:asset :component-saved]))
              (remove nil?
                      [(when (not= oid (params :id))
                         {:tuck.effect/type :navigate
@@ -368,7 +373,8 @@
   SaveMaterialResponse
   (process-event [{:keys [response]} {params :params :as app}]
     (let [oid (:asset/oid response)]
-      (apply t/fx app
+      (apply t/fx
+             (snackbar-controller/open-snack-bar app (tr [:asset :material-saved]))
              (remove nil?
                      [(when (not= oid (params :id))
                         {:tuck.effect/type :navigate
@@ -569,7 +575,16 @@
                         :asset/components
                         :component/components)
                (fn [cs]
-                 (filterv #(not= (:asset/oid %) id) cs)))))))
+                 (filterv #(not= (:asset/oid %) id) cs))))))
+
+  AddMaterialCancel
+  (process-event [{id :id} app]
+    (update-form
+     app
+     (fn [parent]
+       (update parent :component/materials
+               (fn [ms]
+                 (filterv #(not= (:asset/oid %) id) ms)))))))
 
 (defn- process-location-change
   "Check if location fields have been edited and need to retrigger
