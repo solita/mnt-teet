@@ -121,7 +121,7 @@
   [company]
   [:div
    [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :info
+    [common/info-box {:variant :simple
                       :title (tr [:contract :edit-company])
                       :content [company-edit-info-column company]}]]])
 
