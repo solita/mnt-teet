@@ -111,8 +111,8 @@
                                :content))]
       (if company-name
         {:company/name company-name
-         :company/emails emails
-         :company/phone-numbers phone-numbers}
+         :company/email emails
+         :company/phone-number phone-numbers}
         (log/warn "No company name found in the business registry response")))))
 
 (def business-registry-params

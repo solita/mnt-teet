@@ -82,20 +82,20 @@
     (:company/business-registry-code partner)]])
 
 (defn company-info-column
-  [{:company/keys [country name emails phone-numbers]}]
+  [{:company/keys [country name email phone-number]}]
   [:div
    [common/basic-information-column
     [{:label [typography/TextBold (tr [:fields :company/country])]
       :data (tr [:countries country])}
      {:label [typography/TextBold (tr [:fields :company/name])]
       :data name}
-     {:label [typography/TextBold (tr [:fields :company/emails])]
-      :data (str/join "" emails)}
-     {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
-      :data (str/join "" phone-numbers)}]]])
+     {:label [typography/TextBold (tr [:fields :company/email])]
+      :data (str/join "" email)}
+     {:label [typography/TextBold (tr [:fields :company/phone-number])]
+      :data (str/join "" phone-number)}]]])
 
 (defn company-edit-info-column
-  [{:company/keys [country name emails phone-numbers business-registry-code] :as info}]
+  [{:company/keys [country name email phone-number business-registry-code] :as info}]
   [:div
    [common/basic-information-column
     [{:label [typography/TextBold (tr [:fields :company/name])]
@@ -104,10 +104,10 @@
       :data (tr [:countries country])}
      {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
       :data business-registry-code}
-     {:label [typography/TextBold (tr [:fields :company/emails])]
-      :data (str/join "" emails)}
-     {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
-      :data (str/join "" phone-numbers)}]]])
+     {:label [typography/TextBold (tr [:fields :company/email])]
+      :data (str/join "" email)}
+     {:label [typography/TextBold (tr [:fields :company/phone-number])]
+      :data (str/join "" phone-number)}]]])
 
 (defn selected-company-information
   [company]
@@ -184,10 +184,10 @@
     [TextField {}]]
    [form/field :company/name
     [TextField {}]]
-   [form/field {:attribute :company/emails
+   [form/field {:attribute :company/email
                 :validate validation/validate-email-optional}
     [TextField {}]]
-   [form/field :company/phone-numbers
+   [form/field :company/phone-number
     [TextField {}]]])
 
 (defn estonian-form-section

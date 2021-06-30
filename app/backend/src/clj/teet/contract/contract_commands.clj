@@ -35,8 +35,8 @@
            (company-model/company-business-registry-id-with-country-code form-data))]}
   (let [company-fields (-> (select-keys form-data [:company/country
                                                    :company/business-registry-code :company/name])
-                           (assoc :company/emails (str/join "" (:company/emails form-data)))
-                           (assoc :company/phone-numbers (str/join "" (:company/phone-numbers form-data)))
+                           (assoc :company/email (str/join "" (:company/email form-data)))
+                           (assoc :company/phone-number (str/join "" (:company/phone-number form-data)))
                            (assoc :company/business-registry-code
                                   (company-model/company-business-registry-id-with-country-code form-data)))
         contract-eid (:db/id contract)
@@ -81,8 +81,8 @@
                                         :company/business-registry-code
                                         :company/name
                                         :teet/id])
-                         (assoc :company/emails (str/join "" (:company/emails form-data)))
-                         (assoc :company/phone-numbers (str/join "" (:company/phone-numbers form-data))))
+                         (assoc :company/email (str/join "" (:company/email form-data)))
+                         (assoc :company/phone-number (str/join "" (:company/phone-number form-data))))
         company-id (:db/id form-data)
         contract-eid (:db/id contract)
         company-contract-uuid (contract-db/contract-partner-relation-entity-uuid db company-id contract-eid)

@@ -129,8 +129,8 @@
                               :company/name
                               :teet/id
                               :db/id
-                              :company/phone-numbers
-                              :company/emails
+                              :company/phone-number
+                              :company/email
                               :company/country
                               :meta/created-at
                               :meta/modified-at
