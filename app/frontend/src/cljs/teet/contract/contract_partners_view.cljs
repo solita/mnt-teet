@@ -259,7 +259,7 @@
     (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
       (let [form-state (:edit-partner forms)
             selected-company? (boolean (:db/id form-state))
-            partner-save-command :thk.contract/save-contract-partner-company
+            partner-save-command :thk.contract/edit-contract-partner-company
             time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
             search-success? (:search-success? form-state)
             search-disabled? (:search-in-progress? form-state)

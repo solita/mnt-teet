@@ -63,7 +63,7 @@
      (merge tempids
             {:company-contract-id new-company-contract-id})))
 
-(defcommand :thk.contract/save-contract-partner-company
+(defcommand :thk.contract/edit-contract-partner-company
   {:doc "Save a new contract partner"
    :payload {form-data :form-data
              contract :contract}
