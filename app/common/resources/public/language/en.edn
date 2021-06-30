@@ -286,7 +286,7 @@
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",
   :company-search-label "Company search",
-  :information-found "Information found.",
+  :information-found "Information found",
   :contracts-listing "Contract listing",
   :lead-partner "Lead partner",
   :edit-contract "Contract information",
@@ -294,8 +294,8 @@
   "No company matching the business registry code was found.",
   :xroad-exception-title "X-Road query failed",
   :edit-company "Edit company",
-  :role-required "Employee needs to have a role",
-  :employee-added "Employee added",
+  :role-required "Person needs to have a role",
+  :employee-added "Person added",
   :add-person "Add person",
   :search-companies-business-registry
   "Search for partner information from Estonian business registry",
@@ -1350,6 +1350,7 @@
  :partner
  {:business-registry-data-successfully-updated
   "Business registry data is successfully updated",
+  :business-registry-search-failed "Business registry search failed",
   :update-business-registry-data "Update business register data"},
  :people-tab
  {:active "ACTIVE",
