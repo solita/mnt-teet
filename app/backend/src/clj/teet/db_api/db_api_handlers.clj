@@ -190,9 +190,12 @@
      (log/debug "  " command " result => " result)
 
      (if-let [error (:error result)]
-       (with-meta
-         error
-         {:format :raw})
+       (try
+         (with-meta
+           error
+           {:format :raw})
+         (catch java.lang.ClassCastException e
+           (throw (ex-info "Bad :error value incompatible with object metadata" {:value error}))))
        result))))
 
 (def command-handler
