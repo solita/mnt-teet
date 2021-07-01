@@ -51,12 +51,14 @@
   [:div
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
+                              :data-cy "expand-contracts"
                               :on-click expand-contracts
                               :start-icon (r/as-element [icons/navigation-unfold-more])}
     (tr [:contracts :contracts-list :expand-all])]
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
                               :on-click collapse-contracts
+                              :data-cy "collapse-contracts"
                               :start-icon (r/as-element [icons/navigation-unfold-less])}
     (tr [:contracts :contracts-list :collapse-all])]])
 
@@ -76,7 +78,10 @@
 (defn contracts-list
   [contracts]
   (r/with-let [contract-expansion-atom (r/atom (contract-expansion-map contracts false))
-               expand-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts true))
+               expand-contracts #(do
+                                   (.log js/console "expand-contracts called, old val" (pr-str @contract-expansion-atom))
+                                   (reset! contract-expansion-atom (contract-expansion-map contracts true))
+                                   (.log js/console "..  new val" (pr-str @contract-expansion-atom)))
                collapse-contracts #(reset! contract-expansion-atom (contract-expansion-map contracts false))
                toggle-card (fn [contract-id]
                              (swap! contract-expansion-atom update contract-id #(not %)))]
@@ -106,6 +111,7 @@
   [buttons/button-secondary {:size :small
                              :class (<class contract-style/contract-list-secondary-button 0)
                              :on-click toggle-filters-visibility
+                             :data-cy "toggle-filters-visibility"
                              :start-icon (r/as-element [icons/content-filter-alt-outlined])}
    (if filters-visibility?
      (tr [:contracts :filters :hide-filters])
@@ -126,6 +132,7 @@
                (tr [:contracts :shortcuts option])]
               [:span
                [buttons/link-button {:class (<class contract-style/search-shortcut-item-style selected?)
+                                     :data-cy (str "search-shortcut-" (name option))
                                      :on-click #(change-shortcut option)}
                 (tr [:contracts :shortcuts option])]])]))
        options))])
