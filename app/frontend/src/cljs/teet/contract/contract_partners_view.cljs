@@ -20,7 +20,8 @@
             [clojure.string :as str]
             [teet.ui.validation :as validation]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            ))
 
 
 (defn partner-listing
@@ -212,7 +213,8 @@
             (tr [:contract :add-company])]
            (cond
              (or selected-company? search-success?)
-             [selected-company-information form-value]
+             [:div
+              [selected-company-information form-value]]
              @add-new-company?
              [new-company-form-fields form-value]
              :else
@@ -369,15 +371,18 @@
 
 (defn partner-info-header
   [partner-name lead-partner? on-partner-edit]
-  [:<>
+  [:div {:class (<class contract-style/partner-info-header)}
    [:h1 partner-name]
+   (when lead-partner?
+     [common/primary-tag (tr [:contract :lead-partner])])
    [buttons/button-secondary (tr [:buttons :edit])]])
 
 (defn partner-info
   [e! app selected-partner]
   [:div
-   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])]
-   [:p (pr-str selected-partner)]
+   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])
+    (:company-contract/lead-partner? selected-partner)]
+   [company-info-column (:company-contract/company selected-partner)]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
@@ -409,12 +414,12 @@
     [Grid {:container true}
      [Grid {:item true
             :xs 3
-            :class (herb/join (<class common-styles/padding 2)
+            :class (herb/join (<class common-styles/padding 1.5)
                               (<class contract-style/contract-partners-panel-style))}
       [partner-right-panel e! app contract]]
      [Grid {:item true
             :xs :auto
-            :class (herb/join (<class common-styles/padding 2)
+            :class (herb/join (<class common-styles/padding 1.5)
                               (<class common-styles/flex-1))}
       [partners-page-router e! app contract]]]]])
 
