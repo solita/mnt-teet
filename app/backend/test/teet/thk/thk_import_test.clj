@@ -21,20 +21,6 @@
     ;; Skip data fixtures, we want clean migrated db
     {:data-fixtures []}))
 
-(defn import-projects-csv!
-  ([] (import-projects-csv! (.getBytes (slurp "test/teet/thk/thk-test-data.csv"))))
-  ([csv-data]
-   (let [conn (tu/connection)
-         projects (thk-import/parse-thk-export-csv
-                    {:input (java.io.ByteArrayInputStream.
-                             csv-data)
-                     :column-mapping thk-mapping/thk->teet-project
-                     :group-by-fn #(get % :thk.project/id)})
-         import-result (thk-import/import-thk-projects! conn "test://test-csv" projects)]
-     (tu/store-data! :projects-csv projects)
-     (d/sync conn (get-in import-result [:db-after :t]))
-     import-result)))
-
 (defn import-contracts-csv!
   ([] (import-contracts-csv! (.getBytes (slurp "test/teet/thk/thk-test-data.csv"))))
   ([csv-data]
@@ -59,10 +45,10 @@
    (let [conn (tu/connection)
          projects
          (thk-import/parse-thk-export-csv
-           {:input (java.io.ByteArrayInputStream.
-                     csv-data)
-            :column-mapping thk-mapping/thk->teet-project
-            :group-by-fn #(get % :thk.project/id)})
+          {:input (java.io.ByteArrayInputStream.
+                   csv-data)
+           :column-mapping thk-mapping/thk->teet-project
+           :group-by-fn #(get % :thk.project/id)})
          import-tasks-result (thk-import/import-thk-tasks! conn "test://test-csv" projects)]
      (tu/store-data! :projects-csv projects)
      (d/sync conn (get-in import-tasks-result [:db-after :t]))
