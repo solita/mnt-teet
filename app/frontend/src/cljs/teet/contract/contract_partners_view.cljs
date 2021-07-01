@@ -21,7 +21,14 @@
             [teet.ui.validation :as validation]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
-            ))
+            [teet.ui.format :as format]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+;=======
+;            [teet.ui.format :as format]
+;            [teet.theme.theme-colors :as theme-colors]
+;            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+;>>>>>>> master
 
 
 (defn partner-listing
@@ -80,17 +87,32 @@
     (:company/business-registry-code partner)]])
 
 (defn company-info-column
-  [{:company/keys [country name emails phone-numbers]}]
+  [{:company/keys [country name email phone-number]}]
   [:div
    [common/basic-information-column
     [{:label [typography/TextBold (tr [:fields :company/country])]
       :data (tr [:countries country])}
      {:label [typography/TextBold (tr [:fields :company/name])]
       :data name}
-     {:label [typography/TextBold (tr [:fields :company/emails])]
-      :data (str/join ", " emails)}
-     {:label [typography/TextBold (tr [:fields :company/phone-numbers])]
-      :data (str/join ", " phone-numbers)}]]])
+     {:label [typography/TextBold (tr [:fields :company/email])]
+      :data email}
+     {:label [typography/TextBold (tr [:fields :company/phone-number])]
+      :data phone-number}]]])
+
+(defn company-edit-info-column
+  [{:company/keys [country name email phone-number business-registry-code] :as info}]
+  [:div
+   [common/basic-information-column
+    [{:label [typography/TextBold (tr [:fields :company/name])]
+      :data name}
+     {:label [typography/TextBold (tr [:fields :company/country])]
+      :data (tr [:countries country])}
+     {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
+      :data business-registry-code}
+     {:label [typography/TextBold (tr [:fields :company/email])]
+      :data email}
+     {:label [typography/TextBold (tr [:fields :company/phone-number])]
+      :data phone-number}]]])
 
 (defn selected-company-information
   [company]
@@ -99,6 +121,35 @@
     [common/info-box {:variant :success
                       :title (tr [:contract :information-found])
                       :content [company-info-column company]}]]])
+
+(defn edit-company-information
+  [company]
+  [:div
+   [:div {:class (<class common-styles/margin-bottom 1.5)}
+    [common/info-box {:variant :simple
+                      :title (tr [:contract :edit-company])
+                      :content [company-edit-info-column company]}]]])
+
+(defn edit-company-footer
+  [e! form-value {:keys [cancel validate disabled?]}]
+  (let [search-disabled? (:search-in-progress? form-value)
+        estonian-company? (= (:company/country form-value) :ee)]
+    [:div {:class (<class form/form-buttons)}
+     [:div {:style {:margin-left :auto
+                    :text-align :center}}
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (when cancel
+         [buttons/button-secondary {:style {:margin-right "1rem"}
+                                    :disabled disabled?
+                                    :class "cancel"
+                                    :on-click cancel}
+          (tr [:buttons :cancel])])
+       (when validate
+         [buttons/button-primary {:disabled disabled?
+                                  :type :submit
+                                  :class "submit"
+                                  :on-click validate}
+          (tr [:buttons :save])])]]]))
 
 (defn new-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
@@ -120,7 +171,7 @@
           (tr [:buttons :cancel])])
        (if (and estonian-company? (not search-success?))
          [buttons/button-primary {:disabled search-disabled?
-                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry
+                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry :new-partner
                                                 (:company/business-registry-code form-value))}
           (tr [:buttons :search])]
          (when validate
@@ -138,10 +189,10 @@
     [TextField {}]]
    [form/field :company/name
     [TextField {}]]
-   [form/field {:attribute :company/emails
+   [form/field {:attribute :company/email
                 :validate validation/validate-email-optional}
     [TextField {}]]
-   [form/field :company/phone-numbers
+   [form/field :company/phone-number
     [TextField {}]]])
 
 (defn estonian-form-section
@@ -164,6 +215,21 @@
      [common/info-box {:variant :info
                        :content [:span (tr [:contract :search-companies-business-registry])]}])])
 
+(defn edit-company-form-fields
+  [form-value]
+  (let [foreign-company? (not= :ee (:company/country form-value))
+        business-search-failed? (:no-results? form-value)
+        exception-in-xroad? (:exception-in-xroad? form-value)]
+    (if foreign-company?
+      [:div
+       [:span
+        {:style {:pointer-events :none}}
+        [TextField {:label (tr [:fields :company/country])
+                    :read-only? true
+                    :value (tr [:countries (:company/country form-value)])}]]
+       [foreign-fields]]
+      (edit-company-information form-value))))
+
 (defn new-company-form-fields
   [form-value]
   (let [foreign-company? (not= :ee (:company/country form-value))
@@ -175,6 +241,71 @@
      (if foreign-company?
        [foreign-fields]
        [estonian-form-section business-search-failed? exception-in-xroad?])]))
+
+(defn- last-modified [selected-company]
+  (str (tr [:common :last-modified]) " "
+    (if (nil? (:meta/modified-at selected-company))
+      (str (format/date-time (:meta/created-at selected-company)) " "
+        (user-model/user-name (get-in selected-company [:company-contract/company :meta/creator])))
+      (str (format/date-time (:meta/modified-at selected-company)) " "
+        (user-model/user-name (get-in selected-company [:company-contract/company :meta/modifier]))))))
+
+(defn edit-partner-form
+  [e! _ selected-company]
+  (e! (contract-partners-controller/->InitializeEditCompanyForm
+        (merge
+          (:company-contract/company selected-company)
+          {:company-contract/lead-partner? (:company-contract/lead-partner? selected-company)})))
+  (fn [e! {:keys [forms]} _]
+    (r/with-let [on-change #(e! (contract-partners-controller/->UpdateEditCompanyForm %))]
+      (let [form-state (:edit-partner forms)
+            selected-company? (boolean (:db/id form-state))
+            partner-save-command :thk.contract/edit-contract-partner-company
+            time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
+            search-success? (:search-success? form-state)
+            search-disabled? (:search-in-progress? form-state)
+            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)]
+        [Grid {:container true}
+         [Grid {:item true
+                :xs 12
+                :md 6}
+          [form/form2 {:e! e!
+                       :value form-state
+                       :save-event #(common-controller/->SaveFormWithConfirmation
+                                      partner-save-command
+                                      {:form-data form-state
+                                       :contract (select-keys (:company-contract/contract selected-company) [:db/id])}
+                                      (fn [response]
+                                        (fn [e!]
+                                          (e! (common-controller/->Refresh))
+                                          (e! (contract-partners-controller/->InitializeEditCompanyForm
+                                                (:company-contract/company selected-company)))
+                                          (e! (common-controller/map->NavigateWithExistingAsDefault
+                                                {:query {:page :partner-info :partner (:teet/id selected-company)}}))))
+                                      (tr [:contract :partner-saved]))
+                       :on-change-event on-change
+                       :spec :contract-company/edit-company
+                       :cancel-event contract-partners-controller/->CancelAddNewCompany}
+           [edit-company-form-fields form-state]
+           (when (or selected-company? search-success?)
+             [form/field {:attribute :company-contract/lead-partner?}
+              [select/checkbox {}]])
+           [Grid {:container true
+                  :direction :column
+                  :justify :space-evenly
+                  :alignItems :flex-start}
+            [Grid {:item true :xs 12}
+             [Grid {:container true :direction :row :justify :space-evenly :style {:margin-bottom :1rem}}
+              time-icon
+              [typography/SmallGrayText (last-modified selected-company)]]]
+            [Grid {:item true :xs 6} (when (true? estonian-company?)
+                                       [buttons/small-button-secondary
+                                        {:disabled search-disabled?
+                                         :on-click (e! contract-partners-controller/->SearchBusinessRegistry
+                                                     :edit-partner (subs (get-in selected-company
+                                                                           [:company-contract/company :company/business-registry-code]) 2))} ; skip 'EE' prefix
+                                        (tr [:partner :update-business-registry-data])])]]
+           [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
   [e! _ _]
@@ -370,19 +501,41 @@
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
-  [partner-name lead-partner? on-partner-edit]
-  [:div {:class (<class contract-style/partner-info-header)}
-   [:h1 partner-name]
-   (when lead-partner?
-     [common/primary-tag (tr [:contract :lead-partner])])
-   [buttons/button-secondary (tr [:buttons :edit])]])
+;<<<<<<< HEAD
+;  [:div {:class (<class contract-style/partner-info-header)}
+;   [:h1 partner-name]
+;   (when lead-partner?
+;     [common/primary-tag (tr [:contract :lead-partner])])
+;   [buttons/button-secondary (tr [:buttons :edit])]])
+;=======
+  [partner params]
+  (let [partner-name (get-in partner [:company-contract/company :company/name])
+        lead-partner? (:company-contract/lead-partner? partner)
+        teet-id (:teet/id partner)]
+    [:div {:class (<class contract-style/partner-info-header)}
+     [:h1 partner-name]
+     (when lead-partner?
+       [common/primary-tag (tr [:contract :lead-partner])])
+     [buttons/button-secondary
+      {:href (routes/url-for {:page :contract-partners
+                              :params params
+                              :query {:page :edit-partner
+                                      :partner teet-id}})}
+      (tr [:buttons :edit])]]))
+;>>>>>>> master
 
 (defn partner-info
-  [e! app selected-partner]
+  [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])
-    (:company-contract/lead-partner? selected-partner)]
+;<<<<<<< HEAD
+;   [partner-info-header (get-in selected-partner [:company-contract/company :company/name])
+;    (:company-contract/lead-partner? selected-partner)]
+;   [company-info-column (:company-contract/company selected-partner)]
+;=======
+   [partner-info-header selected-partner params]
    [company-info-column (:company-contract/company selected-partner)]
+   [:p (pr-str (:company-contract/company selected-partner))]
+;>>>>>>> master
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
@@ -391,14 +544,16 @@
   (let [selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
                               (filter
-                                (fn [contract]
-                                  (= (str (:teet/id contract)) selected-partner-id)))
+                                (fn [partner]
+                                  (= (str (:teet/id partner)) selected-partner-id)))
                               first)]
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
       :partner-info
       [partner-info e! app selected-partner]
+      :edit-partner
+      [edit-partner-form e! app selected-partner]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner

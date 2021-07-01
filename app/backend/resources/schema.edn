@@ -2123,5 +2123,17 @@
 
  {:db/ident :migration/subcontractor-role
   :txes [[{:db/doc "Not selectable in UI. Added automatically to subcontractor employees"
-           :db/ident :company-contract-employee.role/subcontractor}]]}]
+           :db/ident :company-contract-employee.role/subcontractor}]]}
+
+ {:db/ident :migration/add-company-phone-and-email-singular-attributes
+  :txes [[{:db/ident :company/email
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :company/phone-number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :company/emails
+           :db/doc "Not in use"}
+          {:db/ident :company/phone-numbers
+           :db/doc "Not in use"}]]}]
 
