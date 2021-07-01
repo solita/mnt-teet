@@ -107,8 +107,8 @@
         projects (user-projects db user (map :project-id tasks))
         ;;activities (user-activities db user)
         notifications-by-project
-        (group-by (comp :db/id :notification/project)
-                  (notification-db/user-notifications db user 100))]
+        (notification-db/user-notifications-by-project
+         db user (map :db/id projects))]
     (for [{id :db/id :as project} projects]
       {:project (-> project
                     (cu/update-path
@@ -118,8 +118,12 @@
                         (assoc activity :activity/tasks
                                         (mapv :task (tasks-by-activity id)))))
                     (update :thk.project/lifecycles project-model/sort-lifecycles))
-       :notifications (mapv #(dissoc % :notification/project)
-                            (notifications-by-project id))})))
+       :notifications (->> id
+                           notifications-by-project
+                           (map #(dissoc % :notification/project))
+                           (sort-by :meta/created-at)
+                           reverse
+                           vec)})))
 
 (defquery :dashboard/user-dashboard
   {:doc "Get a dashboard for the current user"
