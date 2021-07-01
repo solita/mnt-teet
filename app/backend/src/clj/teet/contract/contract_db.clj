@@ -2,6 +2,7 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
+            [teet.company.company-model :as company-model]
             [teet.user.user-queries :as user-queries])
   (:import (java.util Date)))
 
@@ -122,7 +123,14 @@
 
 (defn get-contract-with-partners
   [db contract-eid]
-  (-> (d/q '[:find (pull ?c [* {:company-contract/_contract [* {:company-contract/company [*]}]}]) ?status
+  (-> (d/q '[:find (pull ?c
+                     [* {:company-contract/_contract
+                         [* {:company-contract/company
+                             [company-model/company-keys
+                              :meta/created-at
+                              :meta/modified-at
+                              {:meta/modifier [:user/id :user/family-name :user/given-name]}
+                              {:meta/creator [:user/id :user/family-name :user/given-name]}]}]}]) ?status
              :where
              (contract-status ?c ?status ?now)
              :in $ % ?c ?now]
@@ -215,6 +223,18 @@
               :in $ ?contract]
             db contract-id)
        first))
+
+(defn contract-partner-relation-entity-uuid
+  "Fetch company-contract entity uuid"
+  [db company-id contract-id]
+  (->> (d/q '[:find ?t
+              :where
+              [?cc :teet/id ?t]
+              [?cc :company-contract/contract ?contract]
+              [?cc :company-contract/company ?company]
+              :in $ ?contract ?company]
+         db contract-id company-id)
+    ffirst))
 
 (defn is-company-contract-employee?
   "Given user id and company-contract check if the user is an employee"
