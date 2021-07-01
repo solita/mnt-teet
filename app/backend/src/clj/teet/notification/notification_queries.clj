@@ -13,8 +13,7 @@
   {:doc "Fetch unread notifications for user, sorted by most recent first."
    :context {:keys [db user]}
    :args _
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (->> (notification-db/unread-notifications db user)
        (sort-by :meta/created-at)))
 
@@ -23,8 +22,7 @@
    :context {:keys [db user]}
    :args _
    :spec any?
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (notification-db/user-notifications db user 20))
 
 (defn task-navigation-info [db task-id]
@@ -164,7 +162,6 @@
   {:doc "Fetch navigation info for notification."
    :context {:keys [db user]}
    :args {:keys [notification-id]}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (or (notification-navigation-info db user notification-id)
       (db-api/bad-request! "No such notification")))

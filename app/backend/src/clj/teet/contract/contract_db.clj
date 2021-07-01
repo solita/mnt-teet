@@ -3,7 +3,7 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.company.company-model :as company-model]
-            [teet.user.user-queries :as user-queries])
+            [teet.user.user-db :as user-db])
   (:import (java.util Date)))
 
 (def contract-query-rules
@@ -257,6 +257,6 @@
                         [?company-contract :company-contract/employees ?cce]
                         [?cce :company-contract-employee/user ?u])
               :in $ % ?search ?company-contract]
-            db user-queries/user-query-rules
+            db user-db/user-query-rules
             search company-contract-eid)
        (mapv first)))

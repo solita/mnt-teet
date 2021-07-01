@@ -7,8 +7,7 @@
   {:doc "Return the single contracts information"
    :context {db :db user :user}
    :args {contract-ids :contract-ids}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         result (-> (contract-db/get-contract
@@ -24,8 +23,7 @@
   {:doc "Return contract partners information"
    :context {db :db user :user}
    :args {contract-ids :contract-ids}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         result (-> (contract-db/get-contract-with-partners

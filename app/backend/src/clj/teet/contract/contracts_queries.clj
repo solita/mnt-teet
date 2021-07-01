@@ -124,9 +124,7 @@
 (defquery :contracts/list-contracts
   {:doc "Return a list of contracts matching given search params"
    :context {db :db user :user}
-   :args {search-params :search-params}
-   :project-id nil
-   :authorization {}}
+   :args {search-params :search-params}}
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
        (sort-by :meta/created-at)
        reverse
@@ -136,8 +134,7 @@
   {:doc "Return a list of contracts related to the given project"
    :context {db :db}
    :args {project-id :thk.project/id}
-   :project-id project-id
-   :authorization {}}
+   :project-id project-id}
   (->> (contract-db/project-related-contracts db [:thk.project/id project-id])
        (sort-by
          (comp contract-model/contract-status-order :thk.contract/status))

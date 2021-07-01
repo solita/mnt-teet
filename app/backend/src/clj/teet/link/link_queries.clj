@@ -109,8 +109,7 @@
                  lang  ;; Selected session language
                  types ;; Set of link types, example elements: `:task`, `:cadastral-unit`
                  ]}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    :config {api-url [:api-url]
             api-secret [:auth :jwt-secret]}
    :pre [(link-model/valid-from? from)]}

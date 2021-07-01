@@ -6,8 +6,7 @@
   {:doc "Acknowledge a notification"
    :context {:keys [db user]}
    :payload {notification-id :notification-id}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    :pre [(notification-db/user-notification? db user notification-id)]
    :transact
    (vec
@@ -19,8 +18,7 @@
   {:doc "Acknowledge many notifications at once"
    :context {:keys [db user]}
    :payload {notification-ids :notification-ids}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    :pre [(every? #(notification-db/user-notification? db user %) notification-ids)]
    :transact
    (vec

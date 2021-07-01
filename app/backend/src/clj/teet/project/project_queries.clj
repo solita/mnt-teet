@@ -29,8 +29,7 @@
   {:doc "Fetch THK project id for given entity :integration/id number"
    :context {db :db}
    :args {id :integration/id}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (:thk.project/id
    (du/entity db [:integration/id
                   (cond
@@ -252,8 +251,7 @@
    :context {db :db}
    :args _
    :spec empty?
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (map
     project-model/project-with-status
     (meta-query/without-deleted
@@ -321,8 +319,7 @@
   {:doc "Search for a projects"
    :context {db :db}
    :args payload
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [{:keys [where in]}
         (reduce (fn [clauses-and-args search]
                   (let [{:keys [where in]} (search-clause search)]
