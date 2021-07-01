@@ -83,16 +83,11 @@
 
 (defn contracts-list
   [increase-show-count show-count all-contracts? contracts]
-  (when (not-empty contracts)
+  (when (not-empty contracts) ;; appease cypress test
     (r/with-let [open-contracts (r/atom #{})
-                 expand-contracts #(do
-                                     (.log js/console "before expand-contracts: value" (pr-str @open-contracts))
-                                     (reset! open-contracts (->> contracts
-                                                                 (mapv :db/id)
-                                                                 set))
-                                     ;; (js/alert (str "oc: " (pr-str @open-contracts)))
-                                     (js/alert (str "c#: " (count contracts)))
-                                     (.log js/console ".. after:" (pr-str @open-contracts)))
+                 expand-contracts #((reset! open-contracts (->> contracts
+                                                                (mapv :db/id)
+                                                                set)))
                  collapse-contracts #(reset! open-contracts #{})
                  toggle-card (fn [contract-id]
                                (if (@open-contracts contract-id)
