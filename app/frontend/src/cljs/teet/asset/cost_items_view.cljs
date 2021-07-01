@@ -561,29 +561,7 @@
                  (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
-(defn- component-form-navigation [atl component-path]
-  [:<>
-   [breadcrumbs/breadcrumbs
-    (for [p component-path]
-      {:link [url/Link {:page :cost-item
-                        :params {:id (:asset/oid p)}}
-              (:asset/oid p)]
-       :title (if (number? (:db/id p))
-                (:asset/oid p)
-                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
 
-   (into [:div]
-         (butlast
-          (interleave
-           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
-                                      atl
-                                      (:asset/fclass (first component-path))))]
-                         (map #(or (:asset/fclass %)
-                                   (:component/ctype %)
-                                   (:material/type %)))
-                         component-path)]
-             [label-for p])
-           (repeat " / "))))])
 
 (defn- component-form* [e! atl component-oid cost-item-data]
   (r/with-let [initial-component-data
@@ -602,7 +580,7 @@
       [:<>
        (when (asset-model/component-oid? component-oid)
          [typography/Heading2 component-oid])
-       [component-form-navigation atl component-path]
+       [asset-ui/asset-breadcrumbs {:atl atl :path component-path}]
 
        [form/form2
         {:e! e!
@@ -689,7 +667,7 @@
       [:<>
        (when (asset-model/material-oid? material-oid)
          [typography/Heading2 material-oid])
-       [component-form-navigation atl material-path]
+       [asset-ui/asset-breadcrumbs {:atl atl :path material-path}]
 
        [form/form2
         {:e! e!
