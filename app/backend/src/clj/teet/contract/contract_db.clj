@@ -121,31 +121,33 @@
   [[contract status]]
   (assoc contract :thk.contract/status status))
 
+(def contract-partner-attributes
+  (let [company-with-meta-keys (into []
+                                 (concat
+                                   company-model/company-keys
+                                   [:meta/created-at
+                                    :meta/modified-at
+                                    {:meta/modifier [:user/id :user/family-name :user/given-name]}
+                                    {:meta/creator [:user/id :user/family-name :user/given-name]}]))
+        pull-attributes `[~'*
+                          {:company-contract/_contract
+                           [~'*
+                            {:company-contract/company ~company-with-meta-keys}]}]]
+    pull-attributes))
+
 (defn get-contract-with-partners
   [db contract-eid]
-  (-> (d/q '[:find (pull ?c
-                     [* {:company-contract/_contract
-                         [* {:company-contract/company
-                             [:company/business-registry-code
-                              :company/name
-                              :teet/id
-                              :db/id
-                              :company/phone-number
-                              :company/email
-                              :company/country
-                              :meta/created-at
-                              :meta/modified-at
-                              {:meta/modifier [:user/id :user/family-name :user/given-name]}
-                              {:meta/creator [:user/id :user/family-name :user/given-name]}]}]}]) ?status
+  (-> (d/q '[:find (pull ?c contract-partners-attributes) ?status
              :where
              (contract-status ?c ?status ?now)
-             :in $ % ?c ?now]
-           db
-           contract-status-rules
-           contract-eid
-           (Date.))
-      first
-      contract-with-status))
+             :in $ % ?c ?now contract-partners-attributes]
+        db
+        contract-status-rules
+        contract-eid
+        (Date.)
+        contract-partner-attributes)
+    first
+    contract-with-status))
 
 (defn contract-query
   [db contract-eid]
