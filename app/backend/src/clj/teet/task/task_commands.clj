@@ -13,7 +13,9 @@
             [clojure.spec.alpha :as s]
             [teet.task.task-db :as task-db]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.db-api.db-api-large-text :as db-api-large-text]))
+            [teet.db-api.db-api-large-text :as db-api-large-text]
+            [teet.environment :as environment]
+            [teet.authorization.authorization-core :as authorization]))
 
 (defn allow-delete?
   "Check extra access for deleting task that has been sent to THK"

@@ -524,6 +524,7 @@
     :warning [theme-colors/dark-tangerine-11 theme-colors/dark-tangerine-1]
     :error [theme-colors/red theme-colors/red-lightest]
     :info [theme-colors/blue theme-colors/blue-lightest]
+    :simple [theme-colors/white theme-colors/white]
     [theme-colors/blue theme-colors/blue-lightest]))
 
 (defn info-box [variant]

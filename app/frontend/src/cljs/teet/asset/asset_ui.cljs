@@ -91,6 +91,7 @@
        [Grid {:item true :xs 12}
         [select/select-search
          {:e! e!
+          :autofocus? true
           :on-change #(on-change (mapv :db/ident %))
           :placeholder (tr [:asset :feature-group-and-class-placeholder])
           :no-results (tr [:asset :no-matching-feature-classes])
@@ -381,12 +382,13 @@
 
        (when chg
          [common/popper-tooltip
-          {
-           :variant :no-icon
-           :multi [{:title (tr-enum (:boq-version/type last-locked-version))
-                    :body (str " v." (:boq-version/number last-locked-version))}
-                   {:title (tr [:fields :boq-version/explanation])
-                    :body (:boq-version/explanation last-locked-version)}
+          {:variant :no-icon
+           :multi [(when last-locked-version
+                     {:title (tr-enum (:boq-version/type last-locked-version))
+                      :body (str " v." (:boq-version/number last-locked-version))})
+                   (when last-locked-version
+                     {:title (tr [:fields :boq-version/explanation])
+                      :body (:boq-version/explanation last-locked-version)})
                    {:title (tr [:common :last-modified])
                     :body [:<>
                            (fmt/date-time timestamp)
@@ -473,3 +475,30 @@
                           :query (merge query {:filter (str (:db/ident h))})}
                 title]
          :title title}))]))
+
+(defn asset-breadcrumbs
+  "Asset/component/material hierarchy breadcrumbs."
+  [{:keys [atl path link-opts-fn]
+    :or {link-opts-fn (fn [oid]
+                        {:page :cost-item :params {:id oid}})}}]
+  [:<>
+   [breadcrumbs/breadcrumbs
+    (for [p path]
+      {:link [url/Link (link-opts-fn (:asset/oid p))
+              (:asset/oid p)]
+       :title (if (number? (:db/id p))
+                (:asset/oid p)
+                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
+
+   (into [:div]
+         (butlast
+          (interleave
+           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
+                                      atl
+                                      (:asset/fclass (first path))))]
+                         (map #(or (:asset/fclass %)
+                                   (:component/ctype %)
+                                   (:material/type %)))
+                         path)]
+             [label-for p])
+           (repeat " / "))))])

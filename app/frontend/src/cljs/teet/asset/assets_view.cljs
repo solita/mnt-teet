@@ -43,7 +43,9 @@
             [teet.asset.materials-and-products-view :as materials-and-products-view]
             [teet.ui.url :as url]
             [teet.common.common-controller :as common-controller]
-            [teet.road.road-model :as road-model]))
+            [teet.road.road-model :as road-model]
+            [teet.util.string :as string]
+            [teet.map.openlayers :as openlayers]))
 
 (defn filter-component [{:keys [e! filters] :as opts} attribute label component]
   [:div {:style {:margin-top "0.5rem"}}
@@ -135,6 +137,27 @@
                                        :disabled (nil? (:road @form))}
          (tr [:asset :manager :select-road-address])]])]))
 
+(defn- select-region [e! criteria regions]
+
+  [:div
+   [select/select-search-multiple
+    {:e! e!
+     :query-threshold 0
+     :value (:region criteria)
+     :query (fn [text]
+              #(for [r regions
+                     m (into [r] (:municipalities r))
+                     :when (string/contains-words? (:label m) text)]
+                 m))
+     :format-result :label
+     :checkbox? true
+     :on-change #(e! (assets-controller/->UpdateSearchCriteria
+                      {:region %}))}]])
+
+(defmethod search-by-fields :region [e! atl criteria]
+  [query/query {:e! e! :query :assets/regions :args {}
+                :simple-view [select-region e! criteria]}])
+
 (defn radius-display [e! {location :location radius :radius :as filters}]
   [:div {:class (<class asset-styles/map-radius-overlay-container)}
    [filter-component {:e! e! :filters filters}
@@ -180,6 +203,18 @@
       (partial map-features/road-line-style 3 "orange")
       {:fit-on-load? true})}))
 
+(defmethod search-by-map-layers :region
+  [_ _ {:keys [region]}]
+  (when (seq region)
+    {:search-by-region
+     (map-layers/geojson-layer
+      (common-controller/query-url
+       :assets/regions-geojson
+       {:regions (into #{} (map :id) region)})
+      "search-by-region" nil
+      map-features/region-area-style
+      {:fit-on-load? true})}))
+
 (defn- asset-filters [e! atl filters]
   (let [opts {:e! e! :atl atl :filters filters}]
     [:<>
@@ -194,7 +229,8 @@
                     (<class common-styles/margin 0.5 0)]}
       (doall
        (for [[search-by-kw label] [[:current-location (tr [:asset :manager :search-nearby])]
-                                   [:road-address (tr [:fields :location/road-address])]]]
+                                   [:road-address (tr [:fields :location/road-address])]
+                                   [:region (tr [:asset :manager :search-region])]]]
          ^{:key (name search-by-kw)}
          [buttons/button-primary
           {:on-click (e! assets-controller/->SearchBy search-by-kw)
@@ -249,62 +285,71 @@
 
     (str value)))
 
-(defn- result-details-view* [e! atl rotl oid asset]
-  (let [component? (asset-model/component-oid? oid)
-        item (if component?
-               (-> asset (asset-model/find-component-path oid) last)
-               asset)
-        fclass (-> asset :asset/fclass rotl)
-        ctype (when component?
-                (-> item :component/ctype rotl))
-        attributes (cond
-                     component?
-                     (-> ctype :attribute/_parent)
+(defn- result-details-view* [_e! _atl _rotl oid _asset]
+  (openlayers/fit-map-to-feature! "oid" oid)
+  (fn [e! atl rotl oid asset]
+    (let [component? (asset-model/component-oid? oid)
+          item (if component?
+                 (-> asset (asset-model/find-component-path oid) last)
+                 asset)
+          fclass (-> asset :asset/fclass rotl)
+          ctype (when component?
+                  (-> item :component/ctype rotl))
+          attributes (cond
+                       component?
+                       (-> ctype :attribute/_parent)
 
-                     :else
-                     (-> fclass :attribute/_parent))
-        details-link-fn (fn [oid]
-                          {:page :assets :query {:details oid}})]
-    [:div
-     [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
-      [icons/navigation-arrow-back]
-      (tr [:asset :manager :back-to-result-listing])]
-     (when component?
-       [url/Link {:page :assets
-                  :query {:details (asset-model/component-asset-oid oid)}}
-        (tr [:asset :back-to-cost-item] {:name (asset-ui/tr* fclass)})])
-     [form/form2
-      {:e! e!
-       :on-change-event :_ignore ; the form cannot be changed, so we can ignore
-       :value item
-       :disable-buttons? true}
-      [:span {:style {:overflow-wrap :break-word}}
-       [cost-items-view/attributes* {:e! e!
-                                     :attributes attributes
-                                     :component-oid (when component? oid)
-                                     :cost-item-data asset
-                                     :common (cond
-                                               component? :ctype/component
-                                               :else :ctype/feature)
-                                     :inherits-location?
-                                     (cond
-                                       component? (:component/inherits-location? ctype)
-                                       :else false)}
-        rotl true]]]
-     (when-let [materials (and component? (:component/materials item))]
-       [:<>
-        [:h3 (tr [:asset :materials :label])]
-        (doall
-         (for [m materials
-               :let [mtype (-> m :material/type rotl)]]
-           ^{:key (str (:db/id m))}
-           [:div
-            [asset-ui/label mtype]
-            [materials-and-products-view/format-properties atl m]]))])
-     [context/provide :locked? true
-      [cost-items-view/components-tree asset
-       {:e! e!
-        :link-fn details-link-fn}]]]))
+                       :else
+                       (-> fclass :attribute/_parent))
+          details-link-fn (fn [oid]
+                            {:page :assets :query {:details oid}})]
+      [:div
+       [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
+        [icons/navigation-arrow-back]
+        (tr [:asset :manager :back-to-result-listing])]
+
+       [typography/Heading2 oid]
+       [asset-ui/asset-breadcrumbs {:atl atl :path (asset-model/find-component-path asset oid)
+                                    :link-opts-fn (fn [oid]
+                                                    {:page :assets
+                                                     :query {:details oid}})}]
+       (when component?
+         [url/Link {:page :assets
+                    :query {:details (asset-model/component-asset-oid oid)}}
+          (tr [:asset :back-to-cost-item] {:name (asset-ui/tr* fclass)})])
+       [form/form2
+        {:e! e!
+         :on-change-event :_ignore ; the form cannot be changed, so we can ignore
+         :value item
+         :disable-buttons? true}
+        [:span {:style {:overflow-wrap :break-word}}
+         [cost-items-view/attributes* {:e! e!
+                                       :toggle-map? false
+                                       :attributes attributes
+                                       :component-oid (when component? oid)
+                                       :cost-item-data asset
+                                       :common (cond
+                                                 component? :ctype/component
+                                                 :else :ctype/feature)
+                                       :inherits-location?
+                                       (cond
+                                         component? (:component/inherits-location? ctype)
+                                         :else false)}
+          rotl true]]]
+       (when-let [materials (and component? (:component/materials item))]
+         [:<>
+          [:h3 (tr [:asset :materials :label])]
+          (doall
+           (for [m materials
+                 :let [mtype (-> m :material/type rotl)]]
+             ^{:key (str (:db/id m))}
+             [:div
+              [asset-ui/label mtype]
+              [materials-and-products-view/format-properties atl m]]))])
+       [context/provide :locked? true
+        [cost-items-view/components-tree asset
+         {:e! e!
+          :link-fn details-link-fn}]]])))
 
 (defn- result-details-view [e! oid atl rotl]
   (let [asset-oid (if (asset-model/component-oid? oid)

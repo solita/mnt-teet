@@ -193,7 +193,7 @@
                      :required? true}
          [input-textfield {}]]])
 
-     (subhead (tr [:asset :location :project-address]))
+     (subhead (tr [:asset :location :road-address]))
 
      [Grid {:item true
             :md 5
@@ -247,15 +247,15 @@
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
-     (when-not locked?
-       [Grid {:item true
-              :md 12 :xs 12}
-        [form/field :location/single-point?
-         [select/checkbox {}]]])]))
+     [Grid {:item true
+            :md 12 :xs 12}
+      [form/field :location/single-point?
+       [select/checkbox {:disabled (boolean locked?)}]]]]))
 
 (defn attributes* [{:keys [e! attributes component-oid cost-item-data
                            inherits-location? single-point?
-                           common ctype]}
+                           common ctype toggle-map?]
+                    :or {toggle-map? true}}
                     rotl locked?]
   (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
                toggle-open! #(swap! open? cu/toggle %)]
@@ -275,13 +275,14 @@
            :on-toggle (r/partial toggle-open! :location)}
           [:<>
            (tr [:asset :field-group :location])
-           [buttons/button-text
-            {:style {:float :right}
-             :on-click (e! cost-items-controller/->UpdateForm
-                           {:location/map-open? (not map-open?)})}
-            (if map-open?
-              (tr [:asset :location :hide-map])
-              (tr [:asset :location :show-map]))]]
+           (when toggle-map?
+             [buttons/button-text
+              {:style {:float :right}
+               :on-click (e! cost-items-controller/->UpdateForm
+                             {:location/map-open? (not map-open?)})}
+              (if map-open?
+                (tr [:asset :location :hide-map])
+                (tr [:asset :location :show-map]))])]
           [Grid {:container true
                  :justify :flex-start
                  :alignItems :flex-end}
@@ -560,29 +561,7 @@
                  (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
-(defn- component-form-navigation [atl component-path]
-  [:<>
-   [breadcrumbs/breadcrumbs
-    (for [p component-path]
-      {:link [url/Link {:page :cost-item
-                        :params {:id (:asset/oid p)}}
-              (:asset/oid p)]
-       :title (if (number? (:db/id p))
-                (:asset/oid p)
-                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
 
-   (into [:div]
-         (butlast
-          (interleave
-           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
-                                      atl
-                                      (:asset/fclass (first component-path))))]
-                         (map #(or (:asset/fclass %)
-                                   (:component/ctype %)
-                                   (:material/type %)))
-                         component-path)]
-             [label-for p])
-           (repeat " / "))))])
 
 (defn- component-form* [e! atl component-oid cost-item-data]
   (r/with-let [initial-component-data
@@ -601,7 +580,7 @@
       [:<>
        (when (asset-model/component-oid? component-oid)
          [typography/Heading2 component-oid])
-       [component-form-navigation atl component-path]
+       [asset-ui/asset-breadcrumbs {:atl atl :path component-path}]
 
        [form/form2
         {:e! e!
@@ -688,7 +667,7 @@
       [:<>
        (when (asset-model/material-oid? material-oid)
          [typography/Heading2 material-oid])
-       [component-form-navigation atl material-path]
+       [asset-ui/asset-breadcrumbs {:atl atl :path material-path}]
 
        [form/form2
         {:e! e!
