@@ -6,7 +6,8 @@
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.environment :as environment]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.authorization.authorization-core :as authorization]))
 
 (defmulti query
   "Execute a given named query.
@@ -90,17 +91,43 @@
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
-   {:keys [spec payload args context unauthenticated? authorization project-id transact
-           config audit?] :as options}
+   {:keys [spec payload args context unauthenticated? authorization
+           contract-authorization project-id transact
+           config audit? allowed-for-all-users?] :as options}
    & body]
 
-  (assert (or (and unauthenticated?
-                   (not (contains? options :authorization))
-                   (not (contains? options :project-id)))
-              (and (not unauthenticated?)
-                   (contains? options :authorization)
-                   (contains? options :project-id)))
-          "Specify :unauthenticated? true for unauthenticated access, or :project-id and :authorization")
+  (assert (or
+            (and allowed-for-all-users?
+                 (not (contains? options :authorization))
+                 (not (contains? options :contract-authorization))
+                 (not (contains? options :project-id)))
+            (and unauthenticated?
+                 (not (contains? options :allowed-for-all-users?))
+                 (not (contains? options :authorization))
+                 (not (contains? options :contract-authorization))
+                 (not (contains? options :project-id)))
+            (and (not unauthenticated?)
+                 (or (contains? options :authorization)
+                     (contains? options :contract-authorization))
+                 (contains? options :project-id))
+            (and (not unauthenticated?)
+                 (= request-type :query)
+                 (nil? authorization)
+                 (nil? contract-authorization)
+                 (some? project-id)))
+          "Invalid options passed:
+
+          allowed-for-all-users? is to be used when the only requirement is that a user is logged in, can not contain other authorization keys.
+
+          unauthenticated? is when the user doesn't need to be logged in
+
+          If authorization key is given will check the permissions of the user against the given rule
+          If contract-authorization key is given will check the roles of the user in related contracts
+
+          For defqueries the final option is to give only the project-id so we check if the contracts give read access to the project."
+
+          #_"Specify :unauthenticated? true for unauthenticated access, or :project-id and :authorization
+          defquery will use project-id if no authorization or contract-authorization is given")
 
   (assert (string? (:doc options)) "Specify :doc for request")
   (assert (and (keyword? request-name)
@@ -109,6 +136,8 @@
   (assert (map? options) "Options must be a map")
   (assert (or (not (contains? options :authorization))
               (map? authorization)) "Authorization option must be a map")
+  (assert (or (not (contains? options :contract-authorization))
+              (map? contract-authorization)) "Contract authorization must be a map")
   (assert (or (not (contains? options :audit?))
               (boolean? audit?))
           ":audit? must be boolean")
@@ -163,23 +192,41 @@
 
                     ;; Go through the declared authorization requirements
                     ;; and try to find user permissions that satisfy them
+
                     `(when-not
-                         (every?
-                          (fn [[functionality# {entity-id# :db/id
-                                                eid# :eid
-                                                access# :access
-                                                link# :link
-                                                :as options#}]]
-                            (let [id# (or entity-id# eid#)]
-                              (authorization-check/authorized?
-                               ~-user functionality#
-                               (merge
-                                (when link#
-                                  {:link link#})
-                                {:access access#
-                                 :project-id ~-proj-id
-                                 :entity (when id# (du/entity ~-db id#))}))))
-                          ~authorization)
+                       ~(if allowed-for-all-users?
+                          `(some? ~-user)
+                          `(or
+                             ~(when (seq authorization)
+                                `(every?
+                                   (fn [[functionality# {entity-id# :db/id
+                                                         eid# :eid
+                                                         access# :access
+                                                         link# :link
+                                                         :as options#}]]
+                                     (let [id# (or entity-id# eid#)]
+                                       (authorization-check/authorized?
+                                         ~-user functionality#
+                                         (merge
+                                           (when link#
+                                             {:link link#})
+                                           {:access access#
+                                            :project-id ~-proj-id
+                                            :entity (when id# (du/entity ~-db id#))}))))
+                                   ~authorization))
+
+                             ;; Expand new authorization if contract-authorzation key in options
+                             ~(when contract-authorization
+                                `(authorization/authorized-for-action? (merge
+                                                                         ~contract-authorization
+                                                                         {:db ~-db
+                                                                          :user ~-user})))
+                             ~(when (and (= request-type :query)
+                                         (nil? contract-authorization)
+                                         (nil? authorization)
+                                         (some? project-id))
+                                `(authorization/project-read-access? ~-db ~-user ~project-id)))
+                          )
                        (log/warn "Failed to authorize " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
                                        {:status 403

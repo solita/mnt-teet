@@ -4,7 +4,8 @@
             [teet.authorization.authorization-db :as authorization-db]
             [clojure.set :as set]
             [teet.user.user-model :as user-model]
-            [teet.user.user-db :as user-db]))
+            [teet.user.user-db :as user-db]
+            [teet.environment :as environment]))
 
 (defonce authorization-matrix
          (delay
@@ -29,18 +30,20 @@
   {:pre [(and db (keyword? action) (action @authorization-matrix))
          (or target company)
          (not (and target company))]}
-  (let [authorized-roles (action @authorization-matrix)
-        user-ref (user-model/user-ref user)
-        user-global-roles (->> (user-db/users-valid-global-permissions db user-ref)
-                               (mapv :permission/role)
-                               set)
-        specific-roles
-        (cond target
-              (authorization-db/user-roles-for-target db user-ref target)
-              company
-              (authorization-db/user-roles-for-company db user-ref company))
-        roles (set/union user-global-roles specific-roles)]
-    (-> (set/intersection authorized-roles roles)
-        seq
-        boolean)))
+  (if-not (environment/feature-enabled? :contract-partners)
+    false
+    (let [authorized-roles (action @authorization-matrix)
+          user-ref (user-model/user-ref user)
+          user-global-roles (->> (user-db/users-valid-global-permissions db user-ref)
+                                 (mapv :permission/role)
+                                 set)
+          specific-roles
+          (cond target
+                (authorization-db/user-roles-for-target db user-ref target)
+                company
+                (authorization-db/user-roles-for-company db user-ref company))
+          roles (set/union user-global-roles specific-roles)]
+      (-> (set/intersection authorized-roles roles)
+          seq
+          boolean))))
 
