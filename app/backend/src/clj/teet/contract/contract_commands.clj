@@ -6,6 +6,8 @@
             [teet.company.company-db :as company-db]
             [teet.company.company-model :as company-model]
             [teet.contract.contract-db :as contract-db]
+            [teet.authorization.authorization-core :as authorization]
+            [teet.environment :as environment]
             [clojure.string :as str])
   (:import (java.util UUID)))
 
@@ -139,7 +141,13 @@
    :pre [(not
            (contract-db/is-company-contract-employee?
              db company-contract-eid
-             (get-in form-value [:company-contract-employee/user :db/id])))]
+             (get-in form-value [:company-contract-employee/user :db/id])))
+         ^{:error :contract-authorization-failed}
+         (authorization/authorized-for-action? {:db db
+                                                :user user
+                                                :action :contracts/add-existing-teet-users-to-contract
+                                                :company (get-in (du/entity db company-contract-eid)
+                                                                 [:company-contract/company :db/id])})]
    :transact [(merge
                 {:db/id "new-company-contract-employee"
                  :company-contract-employee/user (:company-contract-employee/user form-value)
