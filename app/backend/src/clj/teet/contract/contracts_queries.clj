@@ -124,7 +124,8 @@
 (defquery :contracts/list-contracts
   {:doc "Return a list of contracts matching given search params"
    :context {db :db user :user}
-   :args {search-params :search-params}}
+   :args {search-params :search-params}
+   :allowed-for-all-users? true}
   (->> (contract-listing-query db user (cu/without-empty-vals search-params))
        (sort-by :meta/created-at)
        reverse
