@@ -2,6 +2,7 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
+            [teet.company.company-model :as company-model]
             [teet.user.user-queries :as user-queries])
   (:import (java.util Date)))
 
@@ -125,13 +126,7 @@
   (-> (d/q '[:find (pull ?c
                      [* {:company-contract/_contract
                          [* {:company-contract/company
-                             [:company/business-registry-code
-                              :company/name
-                              :teet/id
-                              :db/id
-                              :company/phone-number
-                              :company/email
-                              :company/country
+                             [company-model/company-keys
                               :meta/created-at
                               :meta/modified-at
                               {:meta/modifier [:user/id :user/family-name :user/given-name]}
