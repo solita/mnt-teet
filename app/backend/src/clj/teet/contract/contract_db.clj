@@ -126,7 +126,13 @@
   (-> (d/q '[:find (pull ?c
                      [* {:company-contract/_contract
                          [* {:company-contract/company
-                             [company-model/company-keys
+                             [:company/business-registry-code
+                              :company/name
+                              :teet/id
+                              :db/id
+                              :company/phone-number
+                              :company/email
+                              :company/country
                               :meta/created-at
                               :meta/modified-at
                               {:meta/modifier [:user/id :user/family-name :user/given-name]}
