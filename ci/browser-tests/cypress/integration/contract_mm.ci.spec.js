@@ -6,11 +6,14 @@ context("Contracts MM", () => {
     });
 
     it("finds contracts with search and navigates there", () => {
-        cy.get("button").contains("All contracts").click();
-
+        cy.get("[data-cy='search-shortcut-all-contracts']").click();
+        // cy.get("[data-cy='toggle-filters-visibility']").click(); // uncomment if default is hidden, has been in flux
         cy.get("input[id='contract-filter-input/:contract-name']").type("TEPPO");
 
-        cy.get("button").contains("Expand all").click();
+        // cy.get("[data-cy='expand-contracts']").click({force: true});
+        // cy.get("[data-cy='expand-contracts'] span").first().click();
+        cy.get("[data-cy='expand-contracts']").click();
+
 
         cy.get('h6:contains("TA Project manager")').should('be.visible');
 

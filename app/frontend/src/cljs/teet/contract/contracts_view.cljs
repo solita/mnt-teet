@@ -49,11 +49,14 @@
     [contract-common/contract-information-row contract]]])
 
 (defn contract-list-expansion-buttons
-  [expand-contracts collapse-contracts]
+  [expand-contracts collapse-contracts contracts-count]
   [:div
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
-                              :data-cy "expand-contracts"
+                              :data-cy (if (pos? contracts-count)
+                                         "expand-contracts"
+                                         ;; else
+                                         "empty-contracts-expand")
                               :on-click expand-contracts
                               :start-icon (r/as-element [icons/navigation-unfold-more])}
     (tr [:contracts :contracts-list :expand-all])]
@@ -67,7 +70,7 @@
 (defn contacts-list-header
   [{:keys [contracts-count expand-contracts collapse-contracts all-contracts?]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
-   [contract-list-expansion-buttons expand-contracts collapse-contracts]
+   [contract-list-expansion-buttons expand-contracts collapse-contracts contracts-count]
    [typography/SmallText
     (tr
       (if all-contracts?
@@ -80,26 +83,32 @@
 
 (defn contracts-list
   [increase-show-count show-count all-contracts? contracts]
-  (r/with-let [open-contracts (r/atom #{})
-               expand-contracts #(reset! open-contracts (->> contracts
-                                                            (mapv :db/id)
-                                                            set))
-               collapse-contracts #(reset! open-contracts #{})
-               toggle-card (fn [contract-id]
-                             (if (@open-contracts contract-id)
-                               (swap! open-contracts disj contract-id)
-                               (swap! open-contracts conj contract-id)))]
-    [:div {:class (<class contract-style/contracts-list-style)}
-     [contacts-list-header {:all-contracts? all-contracts?
-                            :contracts-count (count contracts)
-                            :expand-contracts expand-contracts
-                            :collapse-contracts collapse-contracts}]
-     (doall
-       (for [contract (take show-count contracts)
-             :let [open? (@open-contracts (:db/id contract))]]
-         ^{:key (str (:db/id contract))}
-         [contract-card contract #(toggle-card (:db/id contract)) open?]))
-     [common-ui/scroll-sensor increase-show-count]]))
+  (when (not-empty contracts)
+    (r/with-let [open-contracts (r/atom #{})
+                 expand-contracts #(do
+                                     (.log js/console "before expand-contracts: value" (pr-str @open-contracts))
+                                     (reset! open-contracts (->> contracts
+                                                                 (mapv :db/id)
+                                                                 set))
+                                     ;; (js/alert (str "oc: " (pr-str @open-contracts)))
+                                     (js/alert (str "c#: " (count contracts)))
+                                     (.log js/console ".. after:" (pr-str @open-contracts)))
+                 collapse-contracts #(reset! open-contracts #{})
+                 toggle-card (fn [contract-id]
+                               (if (@open-contracts contract-id)
+                                 (swap! open-contracts disj contract-id)
+                                 (swap! open-contracts conj contract-id)))]
+      [:div {:class (<class contract-style/contracts-list-style)}
+       [contacts-list-header {:all-contracts? all-contracts?
+                              :contracts-count (count contracts)
+                              :expand-contracts expand-contracts
+                              :collapse-contracts collapse-contracts}]
+       (doall
+        (for [contract (take show-count contracts)
+              :let [open? (@open-contracts (:db/id contract))]]
+          ^{:key (str (:db/id contract))}
+          [contract-card contract #(toggle-card (:db/id contract)) open?]))
+       [common-ui/scroll-sensor increase-show-count]])))
 
 (def filter-options
   [:my-contracts
