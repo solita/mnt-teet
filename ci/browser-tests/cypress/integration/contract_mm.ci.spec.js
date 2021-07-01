@@ -15,7 +15,7 @@ context("Contracts MM", () => {
         cy.get("[data-cy='expand-contracts']").click();
 
 
-        cy.get('h6:contains("TA Project manager")').should('be.visible');
+        cy.get('h6:contains("Region")').should('be.visible');
 
         cy.get("h4 + a[href^=\"#/contracts/\"").click();
 
