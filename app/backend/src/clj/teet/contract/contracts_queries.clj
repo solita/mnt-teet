@@ -98,8 +98,8 @@
           (fn [accumulator attribute]
             (let [{:keys [where in]} (contract-search-clause attribute user)]
               (-> accumulator
-                  (update :where concat where)
-                  (update :in merge in))))
+                (update :where concat where)
+                (update :in merge in))))
           {:where '[]
            :in {}}
           search-params)
@@ -107,19 +107,22 @@
         in (into '[$ % ?now] (map first) arglist)
         args (into [db
                     (into contract-db/contract-query-rules
-                          contract-db/contract-status-rules)
+                      contract-db/contract-status-rules)
                     (Date.)]
-                   (map second)
-                   arglist)]
-    (->> (d/q {:query {:find '[(pull ?c [* {:thk.contract/targets [* {:activity/manager [:user/given-name :user/family-name]}]}])
-                               ?calculated-status]
-                       :where (into '[[?c :thk.contract/procurement-id _]
-                                      (contract-status ?c ?calculated-status ?now)]
-                                where)
-                       :in in}
-               :args args})
-      (mapv contract-db/contract-with-status)
-      (mapv contract-model/db-values->frontend))))
+               (map second)
+               arglist)
+        contracts-list (->> (d/q {:query {:find '[(pull ?c
+                                     [* {:thk.contract/targets
+                                         [* {:activity/manager
+                                             [:user/given-name :user/family-name]}]}])
+                                                  ?calculated-status]
+                                          :where (into '[[?c :thk.contract/procurement-id _]
+                                                         (contract-status ?c ?calculated-status ?now)] where)
+                                          :in in} :args args})
+                         (mapv contract-db/contract-with-status)
+                         (mapv (partial contract-db/contract-with-lead-partner db))
+                         (mapv contract-model/db-values->frontend))]
+    contracts-list))
 
 (defquery :contracts/list-contracts
   {:doc "Return a list of contracts matching given search params"

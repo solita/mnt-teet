@@ -232,6 +232,19 @@
             db contract-id)
        first))
 
+(defn get-lead-partner-company [db contract-id]
+  (let [lead-partner-entities (contract-lead-partner-entities db contract-id)]
+    (when (some? lead-partner-entities)
+          (d/pull db '[*]
+               (first lead-partner-entities)))))
+
+(defn contract-with-lead-partner
+  "Used for list items"
+  [db contract]
+  (let [contract-eid (:thk.contract/procurement-id+procurement-part-id contract)
+        lead-partner (get-lead-partner-company db [:thk.contract/procurement-id+procurement-part-id contract-eid])]
+    (assoc contract :thk.contract/lead-partner lead-partner)))
+
 (defn contract-partner-relation-entity-uuid
   "Fetch company-contract entity uuid"
   [db company-id contract-id]
