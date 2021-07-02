@@ -70,43 +70,44 @@
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
                         warranty-end-date contract-with-partners cost targets] :as contract}]
-  [common/basic-information-row
-   {:right-align-last? false
-    :font-size "0.875rem"}
-   [[(tr [:contract :status])
-     [contract-status/contract-status {:show-label? true :size 17}
-      (:thk.contract/status contract)]]
-    (when-let [region (:ta/region contract)]
-      [(tr [:fields :ta/region])
-       [typography/Paragraph (tr [:enum region])]])
-    (when type
-      [(tr [:contract :thk.contract/type])
-       [typography/Paragraph (tr [:enum type])]])
-    (when signed-at
-      [(tr [:fields :thk.contract/signed-at])
-       [typography/Paragraph (format/date signed-at)]])
-    (when start-of-work
-      [(tr [:fields :thk.contract/start-of-work])
-       [typography/Paragraph (format/date start-of-work)]])
-    (when deadline
-      [(tr [:fields :thk.contract/deadline])
-       [typography/Paragraph (format/date deadline)]])
-    (when extended-deadline
-      [(tr [:fields :thk.contract/extended-deadline])
-       [typography/Paragraph (format/date extended-deadline)]])
-    (when warranty-end-date
-      [(tr [:contract :thk.contract/warranty-end-date])
-       [typography/Paragraph (format/date warranty-end-date)]])
-    (when (not-empty (filterv some?
-                       (distinct (mapv #(user-model/user-name (:activity/manager %))
-                                   targets))))
-      [(tr [:contracts :filters :inputs :project-manager])
-       [typography/Paragraph (str/join ", " (filter some?
-                                              (distinct (mapv #(user-model/user-name (:activity/manager %))
-                                                          targets))))]])
-    (when contract-with-partners
-      [(tr [:fields :company-contract/partners])
-       [typography/Paragraph (contract-partners-names contract-with-partners)]])
-    (when cost
-      [(tr [:fields :thk.contract/cost])
-       [typography/Paragraph (euro/format cost)]])]])
+  (let [partners (contract-partners-names contract-with-partners)]
+    [common/basic-information-row
+     {:right-align-last? false
+      :font-size "0.875rem"}
+     [[(tr [:contract :status])
+       [contract-status/contract-status {:show-label? true :size 17}
+        (:thk.contract/status contract)]]
+      (when-let [region (:ta/region contract)]
+        [(tr [:fields :ta/region])
+         [typography/Paragraph (tr [:enum region])]])
+      (when type
+        [(tr [:contract :thk.contract/type])
+         [typography/Paragraph (tr [:enum type])]])
+      (when signed-at
+        [(tr [:fields :thk.contract/signed-at])
+         [typography/Paragraph (format/date signed-at)]])
+      (when start-of-work
+        [(tr [:fields :thk.contract/start-of-work])
+         [typography/Paragraph (format/date start-of-work)]])
+      (when deadline
+        [(tr [:fields :thk.contract/deadline])
+         [typography/Paragraph (format/date deadline)]])
+      (when extended-deadline
+        [(tr [:fields :thk.contract/extended-deadline])
+         [typography/Paragraph (format/date extended-deadline)]])
+      (when warranty-end-date
+        [(tr [:contract :thk.contract/warranty-end-date])
+         [typography/Paragraph (format/date warranty-end-date)]])
+      (when (not-empty (filterv some?
+                         (distinct (mapv #(user-model/user-name (:activity/manager %))
+                                     targets))))
+        [(tr [:contracts :filters :inputs :project-manager])
+         [typography/Paragraph (str/join ", " (filter some?
+                                                (distinct (mapv #(user-model/user-name (:activity/manager %))
+                                                            targets))))]])
+      (when (not-empty partners)
+        [(tr [:fields :company-contract/partners])
+         [typography/Paragraph partners]])
+      (when cost
+        [(tr [:fields :thk.contract/cost])
+         [typography/Paragraph (euro/format cost)]])]]))
