@@ -217,7 +217,6 @@
                     :read-only? true
                     :value (tr [:countries (:company/country form-value)])}]]
        [foreign-fields]]
-      ;(edit-company-information form-value)
       [company-info form-value :edit])))
 
 (defn new-company-form-fields

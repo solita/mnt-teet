@@ -534,7 +534,7 @@
       (when (not (str/blank? title)) [:div {:class (<class info-box-icon-container-style)}
        icon])
       (if title
-        [:<> [typography/Heading3 title] ]
+        [:<> [typography/Heading3 title]]
         content)]
      (when (and title content)
        content)]))
