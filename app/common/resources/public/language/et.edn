@@ -95,7 +95,7 @@
    :cost-items-totals "Summad",
    :materials-and-products "Materjalid ja tooted"},
   :feature-group-and-class-placeholder "Otsi vara gruppi või liiki",
-  :component-saved "Komponendi salvestatud",
+  :component-saved "Komponent salvestatud",
   :export-boq-filename "THK-{project}-kululoend-{version}.xlsx",
   :save-boq-version "Salvesta kululoendi versioon",
   :manager
@@ -268,14 +268,14 @@
   :contract-save-success "Leping salvestatud",
   :partners {:title nil},
   :persons "Isikud",
-  :add-company "Lisan partneri info",
+  :add-company "Lisan ettevõtte",
   :status "Staatus",
   :table-heading
   {:activity "Tegevus",
    :project "Projekt",
    :project-manager "Projektijuht",
    :task "Ülesanne"},
-  :select-user-roles "Valin roll",
+  :select-user-roles "Valin rollid",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
   "Otsingule vastavaid ettevõtteid ei leitud",
@@ -892,7 +892,7 @@
   :activity/manager "Projektijuht",
   :cooperation.response/valid-months "Kehtivus kuudes",
   :cooperation.response/valid-until "Aegumiskuupäev",
-  :ta/region "Piirkond",
+  :ta/region "Regioon",
   :land-owner-opinion/authority-position "Pädeva asutuse seisukoht",
   :location/end-offset-m "Lõpp kaugus teljest",
   :thk.contract/cost "Maksumus",
@@ -953,6 +953,7 @@
   :cooperation.application/activity "Tegevuse",
   :participation/participant "Kasutaja",
   :land-acquisition/status "Olek",
+  :company-contract/partners "Töövõtjad",
   :common {"description" "Kirjeldus", "name" "Nimi"},
   :location/start-offset-m "Algus kaugus teljest",
   :land-owner-opinion/respondent-connection-to-land
@@ -1348,7 +1349,7 @@
  :partner
  {:business-registry-data-successfully-updated
   "Äriregistri andmeid värskendatud",
-  :business-registry-search-failed "Äriregistri otsing ebaõnnestunud",
+  :business-registry-search-failed "Päring äriregistrist ebaõnnestus",
   :update-business-registry-data "Värskenda äriregistri andmeid"},
  :people-tab
  {:active "AKTIIVNE",

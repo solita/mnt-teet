@@ -57,9 +57,19 @@
       (contract-model/contract-name contract)]]
     [contract-external-links contract]]])
 
+(defn contract-partners-names [contract-with-partners]
+  (let [partners (:company-contract/_contract contract-with-partners)
+        names (reduce
+                (fn [acc item]
+                  (conj acc
+                    (get-in item [:company-contract/company :company/name])))
+                []
+                partners)]
+    (str/join "," names)))
+
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
-                        warranty-end-date lead-partner cost targets] :as contract}]
+                        warranty-end-date contract-with-partners cost targets] :as contract}]
   [common/basic-information-row
    {:right-align-last? false
     :font-size "0.875rem"}
@@ -94,9 +104,9 @@
        [typography/Paragraph (str/join ", " (filter some?
                                               (distinct (mapv #(user-model/user-name (:activity/manager %))
                                                           targets))))]])
-    (when lead-partner
-      [(tr [:fields :company-contract/lead-partner?])
-       [typography/Paragraph (:company/name lead-partner)]])
+    (when contract-with-partners
+      [(tr [:fields :company-contract/partners])
+       [typography/Paragraph (contract-partners-names contract-with-partners)]])
     (when cost
       [(tr [:fields :thk.contract/cost])
        [typography/Paragraph (euro/format cost)]])]])
