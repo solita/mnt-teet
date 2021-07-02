@@ -136,10 +136,12 @@
   []
   ^{:combinators
     {[:> :h1] {:margin-right "1rem"
-               :line-height "3rem"}
-     [:> :button] {:margin-left :auto}}}
+               :line-height "3rem"
+               :font-size "2rem"}
+     [:> :a] {:margin-left :auto}}}
   {:display :flex
-   :align-items :center})
+   :align-items :center
+   :margin-bottom "3rem"})
 
 (defn project-contract-container-style
   []
