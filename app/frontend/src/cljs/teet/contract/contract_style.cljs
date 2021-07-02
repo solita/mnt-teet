@@ -141,7 +141,7 @@
      [:> :a] {:margin-left :auto}}}
   {:display :flex
    :align-items :center
-   :margin-bottom "3rem"})
+   :margin-bottom "2rem"})
 
 (defn project-contract-container-style
   []

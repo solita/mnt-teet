@@ -81,55 +81,42 @@
     (:company/business-registry-code partner)]])
 
 (defn company-info-column
-  [company-display-data]
-  [:div
-   [common/basic-information-column
-    (mapv
-    (fn [{label-key :label-key data :data}]
-      {:label [typography/Text2Bold (tr label-key)]
-        :data data})
-    company-display-data)]
-   ])
+  [display-data info-box-title info-box-variant]
+  (let [info-column-data (mapv (fn [{label-key :label-key data :data}]
+                                 {:label [typography/Text2Bold (tr label-key)]
+                                  :data data})
+                           display-data)]
+    [:div {:class (<class common-styles/margin-bottom 1.5)}
+     [common/info-box {:variant info-box-variant
+                       :title info-box-title
+                       :content [common/basic-information-column info-column-data]}]]))
 
 (defmulti company-info (fn [company key] key))
 
 (defmethod company-info :edit
   [{:company/keys [name country business-registry-code email phone-number ] :as info}]
-  [company-info-column [{:label-key [:fields :company/name] :data name}
-                        {:label-key [:fields :company/country] :data (tr [:countries country])}
-                        {:label-key [:fields :company/business-registry-code] :data business-registry-code}
-                        {:label-key [:fields :company/email] :data email}
-                        {:label-key [:fields :company/phone-number] :data phone-number}]])
+  (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/country] :data (tr [:countries country])}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data (tr [:contract :edit-company]) :simple]))
 
 (defmethod company-info :info
   [{:company/keys [country business-registry-code email phone-number ] :as info}]
-  [company-info-column [{:label-key [:fields :company/country] :data (tr [:countries country])}
-                        {:label-key [:fields :company/business-registry-code] :data business-registry-code}
-                        {:label-key [:fields :company/email] :data email}
-                        {:label-key [:fields :company/phone-number] :data phone-number}]])
+  (let [display-data [{:label-key [:fields :company/country] :data (tr [:countries country])}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data "" :simple]))
 
 (defmethod company-info :information-found
   [{:company/keys [name business-registry-code email phone-number] :as info}]
-  [company-info-column [{:label-key [:fields :company/name] :data name}
-                        {:label-key [:fields :company/business-registry-code] :data business-registry-code}
-                        {:label-key [:fields :company/email] :data email}
-                        {:label-key [:fields :company/phone-number] :data phone-number}]])
-
-(defn selected-company-information
-  [company]
-  [:div
-   [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :success
-                      :title (tr [:contract :information-found])
-                      :content [company-info company :information-found]}]]])
-
-(defn edit-company-information
-  [company]
-  [:div
-   [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :simple
-                      :title (tr [:contract :edit-company])
-                      :content [company-info company :edit]}]]])
+  (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data (tr [:contract :information-found]) :success]))
 
 (defn edit-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
@@ -229,7 +216,8 @@
                     :read-only? true
                     :value (tr [:countries (:company/country form-value)])}]]
        [foreign-fields]]
-      (edit-company-information form-value))))
+      ;(edit-company-information form-value)
+      [company-info form-value :edit])))
 
 (defn new-company-form-fields
   [form-value]
@@ -346,7 +334,7 @@
            (cond
              (or selected-company? search-success?)
              [:div
-              [selected-company-information form-value]]
+              [company-info form-value :information-found]]
              @add-new-company?
              [new-company-form-fields form-value]
              :else
