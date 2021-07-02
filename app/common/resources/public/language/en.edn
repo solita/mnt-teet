@@ -269,7 +269,7 @@
   :contract-save-success "Contract saved",
   :partners {:title "Companies & persons"},
   :persons "Persons",
-  :add-company "Add Partner information",
+  :add-company "Add Company",
   :status "Status",
   :table-heading
   {:activity "Activity",
@@ -328,7 +328,7 @@
   :shortcuts
   {:all-contracts "All contracts",
    :my-contracts "My contracts",
-   :unassigned "Unassigned"},
+   :unassigned "Unassigned contracts"},
   :state-procurement-link "Procurement no.",
   :thk-procurement-link "THK"},
  :cooperation
