@@ -145,8 +145,9 @@
                                (validation/valid-estonian-business-registry-id?
                                  (:company/business-registry-code form-value)))
                              (:search-in-progress? form-value))
-        estonian-company? (= (:company/country form-value) :ee)
-        search-success? (:search-success? form-value)]
+        estonia-selected? (= (:company/country form-value) :ee)
+        search-success? (:search-success? form-value)
+        existing-company? (:db/id form-value)]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
                     :text-align :center}}
@@ -157,7 +158,7 @@
                                     :class "cancel"
                                     :on-click cancel}
           (tr [:buttons :cancel])])
-       (if (and estonian-company? (not search-success?))
+       (if (and estonia-selected? (not search-success?) (not existing-company?))
          [buttons/button-primary {:disabled search-disabled?
                                   :on-click (e! contract-partners-controller/->SearchBusinessRegistry :new-partner
                                                 (:company/business-registry-code form-value))}
