@@ -13,7 +13,7 @@
 
 
 # exit on unhandled error status, error on undefined var references, consider pipelines failed when either side fails
-set -euo pipefail 
+set -euo pipefail
 
 TEET_GIT_URL=https://github.com/solita/mnt-teet.git
 export AWS_REGION=eu-central-1
@@ -44,17 +44,17 @@ function start-teet-app {
     mkdir -p mnt-teet-private
 
     patient-docker-pull postgrest/postgrest
-    
+
     docker run -d --network docker_teet --name teetapi -p 127.0.0.1:3000:3000 \
        -e PGRST_DB_URI="$DB_URI" \
        -e PGRST_DB_ANON_ROLE="teet_anon" \
        -e PGRST_DB_SCHEMA="teet" \
        -e PGRST_JWT_SECRET="$JWT_SECRET" \
-       postgrest/postgrest    
+       postgrest/postgrest
     cat > ~/.datomic/dev-local.edn <<EOF
 {:storage-dir "/home/root/.datomic/dev-local-data"}
 EOF
-    
+
     cat > mnt-teet-private/config.edn <<EOF
 {:datomic
  {:db-name "teet"
@@ -127,13 +127,13 @@ EOF
 	echo sleeping until datomic ssh forward seems active
 	sleep 3
     done
-    
+
 }
 
 function control-datomic-bastion-ssh-access {
     # also set up revocation for it in exit trap (but it's fail-open..)
     local SG
-    SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)    
+    SG=$(aws ec2 describe-security-groups  --filters Name=tag:Name,Values=teet-datomic-bastion --query "SecurityGroups[*].{ID:GroupId}" --output text)
     if [ "$1" = on ]; then
 	aws ec2 authorize-security-group-ingress \
 	    --group-id "$SG" \
@@ -162,7 +162,7 @@ function import-datomic-to-dev-local {
      (require 'datomic.dev-local)
      (datomic.dev-local/import-cloud
     	    {:source {:system \"teet-datomic\"
-              :db-name \"$DATOMIC_SOURCE_DB_NAME\" ; use SSM /teet/datomic/db-name 
+              :db-name \"$DATOMIC_SOURCE_DB_NAME\" ; use SSM /teet/datomic/db-name
               :server-type :ion
               :region \"eu-central-1\"
               :endpoint \"http://entry.teet-datomic.eu-central-1.datomic.net:8182/\"
@@ -180,14 +180,14 @@ function setup-postgres {
     AWS_SSM_DB_URI=$(ssm-get /teet/migrate/db-uri)
     SOURCE_DB_USER=$(ssm-get /teet/migrate/db-user)
     SOURCE_DB_PASS=$(ssm-get /teet/migrate/db-password)
-    
+
     SOURCE_DB_NAME=$AWS_SSM_DB_URI; SOURCE_DB_NAME=${AWS_SSM_DB_URI#*//}; SOURCE_DB_NAME=${SOURCE_DB_NAME#*/}
     SOURCE_DB_HOST=$AWS_SSM_DB_URI; SOURCE_DB_HOST=${AWS_SSM_DB_URI#*//}; SOURCE_DB_HOST=${SOURCE_DB_HOST%/*};
     cd mnt-teet/db
     bash devdb_create_template.sh
     env PSQL_TEET_DB_OWNER=teetmaster bash devdb_clean.sh
     cd ../..
-    
+
     PGPASSWORD=$SOURCE_DB_PASS /usr/bin/pg_dump -Fc -h "$SOURCE_DB_HOST" -U "$SOURCE_DB_USER" "$SOURCE_DB_NAME" > t.dump
     du -h t.dump
     pg_restore -c -d teet -h localhost -U postgres < t.dump || true # sadly no way to tell between drop errors and actual restore errors
@@ -218,7 +218,7 @@ function update-dyndns {
 
 function new-certs {
     local MY_EMAIL
-    MY_EMAIL=$(ssm-get /teet/email/from)    
+    MY_EMAIL=$(ssm-get /teet/email/from)
     local MYDOMAINS
     MYDOMAINS="$(for x in a b c d e; do echo -n ,${x}."$DNS_SUFFIX"; done | sed s/,//)"
     certbot certonly \
@@ -243,7 +243,7 @@ function new-certs {
 function get-certs {
     # we have to do the renew / cert bundle caching thing because of https://letsencrypt.org/docs/rate-limits/
     aws s3 cp "${BUILD_S3_BUCKET}"/standalonevm-certs.tgz .
-    tar -C /etc -xzf standalonevm-certs.tgz    
+    tar -C /etc -xzf standalonevm-certs.tgz
     certbot renew # will renew only if expiry is imminent
     tar -C /etc -zcf standalonevm-certs.tgz letsencrypt
     aws s3 cp standalonevm-certs.tgz "${BUILD_S3_BUCKET}"/standalonevm-certs.tgz
@@ -252,7 +252,7 @@ function get-certs {
     rm -f /etc/cron.d/certbot
     systemctl stop certbot.timer
     systemctl disable certbot.timer
-    
+
     openssl pkcs12 -export \
 	    -inkey "/etc/letsencrypt/live/a.${DNS_SUFFIX}/privkey.pem" -in "/etc/letsencrypt/live/a.${DNS_SUFFIX}/fullchain.pem" \
 	    -out jetty.pkcs12 -passout 'pass:dummypass'
@@ -266,7 +266,7 @@ function get-certs {
 function read-instance-tag {
     local myid
     myid="$(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
-    TEET_BRANCH="$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=$1" | jq -r ".Tags[0].Value")"
+    echo "$(aws ec2 describe-tags --filters "Name=resource-id,Values=$myid" "Name=key,Values=$1" | jq -r ".Tags[0].Value")"
 
 }
 
@@ -304,10 +304,10 @@ function install-deps-and-app {
     ./linux-install-1.10.3.822.sh
     clojure -e true > /dev/null
 
-    read-instance-tag teet-branch
+    TEET_BRANCH="$(read-instance-tag teet-branch)"
     echo checking out "$TEET_GIT_URL" branch "$TEET_BRANCH"
     git clone -b "$TEET_BRANCH" "$TEET_GIT_URL"
-    
+
     gensecret pgpasswd
     systemctl status docker | grep -q running || systemctl restart docker
     docker network create docker_teet
@@ -316,26 +316,26 @@ function install-deps-and-app {
 	echo Waiting for pg to come up
 	docker ps
 	sleep 5
-    done       
+    done
     for cmd in "apt-get update" "apt-get -y install --no-install-recommends postgresql-11-postgis-2.5 postgresql-11-postgis-2.5-scripts" ; do
 	docker exec -i teetdb bash -c "$cmd"
     done
     docker exec teetdb sed -i -e '1i host all all 172.16.0.0/14 trust' /var/lib/postgresql/data/pg_hba.conf
     echo -e "max_wal_senders = 0\nwal_level = minimal\nfsync = off\nfull_page_writes = off\n" | docker exec -i teetdb bash -c 'cat >> /var/lib/postgresql/data/postgresql.conf' # try to make loading faster
-    docker restart teetdb    
+    docker restart teetdb
 
     gensecret jwt
-    
+
     TEET_ENV=$(ssm-get /teet/env)
     DNS_SUFFIX=$(ssm-get /dev-testsetup/testvm-dns-suffix)
     BUILD_S3_BUCKET="s3://${TEET_ENV}-build"
-    
-    
+
+
     test -f cognitect-dev-tools.zip || aws s3 cp "${BUILD_S3_BUCKET}"/cognitect-dev-tools.zip .
     unzip cognitect-dev-tools.zip
     cd cognitect-dev-tools-*
     ./install
-    cd ..      
+    cd ..
 
     test -f datomic-deps.tar.gz || aws s3 cp "${BUILD_S3_BUCKET}"/datomic-deps.tar.gz .
     tar -C ~ -zxf datomic-deps.tar.gz
@@ -344,23 +344,23 @@ function install-deps-and-app {
 
     wget https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.82.zip
     unzip datomic-cli*.zip
-    install --mode=755 datomic-cli/datomic* /usr/local/bin/ 
+    install --mode=755 datomic-cli/datomic* /usr/local/bin/
 
-    start-datomic-portforward    
-    
+    start-datomic-portforward
+
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/db-name)" teet
     import-datomic-to-dev-local "$(ssm-get /teet/datomic/asset-db-name)" asset
-    
-    MACHINE_ID=$(read-instance-tag teet-machine-id)
+
+    MACHINE_ID="$(read-instance-tag teet-machine-id)"
     update-dyndns $MACHINE_ID # sets $MYDNS. tbd: select which dns name from the pool to assume
     get-certs
-    
+
     run-caddy-revproxy
     setup-postgres
-    
+
     start-teet-app # config generation, backend, frontend & postgrest
 
-    
+
     until netstat -pant | grep LISTEN | grep -E -q ':4000.*LISTEN.*/java *$'; do
 	echo sleeping until backend starts listening on :4000
 	sleep 3
@@ -386,7 +386,7 @@ function run-in-ec2 {
     else
 	THISBRANCH="$(git rev-parse --abbrev-ref HEAD)"
     fi
-    
+
     echo using branch "$THISBRANCH"
     SCRIPTPATH="$(realpath "$0")"
     if [ $# -gt 0 ]; then
@@ -399,24 +399,24 @@ function run-in-ec2 {
 	--tag-specifications "ResourceType=instance,Tags=[{Key=teet-branch,Value=${THISBRANCH}},{Key=teet-machine-id,Value=${MACHINE_ID}}]"  \
         --launch-template LaunchTemplateName=standalone-teetapp-template | tee "$RUNINFOFILE"
     INSTANCEID="$(jq -r .Instances[0].InstanceId < "$RUNINFOFILE")"
-    echo "waiting for address assignment"    
+    echo "waiting for address assignment"
     while sleep 10; do
 	ADDR="$(public-addr-of-instance "$INSTANCEID")"
 	if [ -z "$ADDR" ]; then
 	    continue
 	else
 	    break
-	fi	
+	fi
     done
     echo vm ec2 dns is "$ADDR"
     MYIP="$(python3 -c "import socket; print(socket.gethostbyname(\"$ADDR\"))")"
     control-datomic-bastion-ssh-access on
-        
+
     SLEEPSECS="$[60 * 60 * 8 - 300]"
     echo Will terminate instance "$INSTANCEID" on "$(date --iso=seconds -d "now + $SLEEPSECS seconds")"
     echo "Toggle termination protection on the instance to prevent automatic termination"
     echo "To terminate early, run: aws ec2 terminate-instances --instance-ids $INSTANCEID"
-    
+
     sleep $[60 * 60 * 8 - 300] # 5 mins short of 8 hours, for 8 build codebuild time limit
     echo not running aws ec2 terminate-instances --instance-ids "$INSTANCEID"
     control-datomic-bastion-ssh-access off
@@ -432,7 +432,7 @@ if [ $# -gt 0 ]; then
     shift
     # assume we're running in codebuild or dev workstation
     run-in-ec2 "$@" # keypair name passed as arg
-    
+
 else
     # we're running as the cloud-init script (aka user-data script) inside the vm
     # - output will appear as cloud-init messages in /var/log/syslog
