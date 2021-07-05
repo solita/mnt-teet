@@ -30,6 +30,7 @@ context("Contracts MM", () => {
                      ":thk.contract/extended-deadline", "19.06.2021",
                      ":thk.contract/cost", "599");
         cy.formSubmit();
+        cy.get(".MuiSnackbar-root")
         cy.get("[data-cy='contract-related-link']").click()
         cy.url().should('contain', 'projects/');
     });
