@@ -25,7 +25,6 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
-
 (defn partner-listing
   [{:keys [params query]} contract-partners]
   [:div
@@ -82,48 +81,42 @@
     (:company/business-registry-code partner)]])
 
 (defn company-info-column
-  [{:company/keys [country name email phone-number]}]
-  [:div
-   [common/basic-information-column
-    [{:label [typography/TextBold (tr [:fields :company/country])]
-      :data (tr [:countries country])}
-     {:label [typography/TextBold (tr [:fields :company/name])]
-      :data name}
-     {:label [typography/TextBold (tr [:fields :company/email])]
-      :data email}
-     {:label [typography/TextBold (tr [:fields :company/phone-number])]
-      :data phone-number}]]])
+  [display-data info-box-title info-box-variant]
+  (let [info-column-data (mapv (fn [{label-key :label-key data :data}]
+                                 {:label [typography/Text2Bold (tr label-key)]
+                                  :data data})
+                           display-data)]
+    [:div {:class (<class common-styles/margin-bottom 1.5)}
+     [common/info-box {:variant info-box-variant
+                       :title info-box-title
+                       :content [common/basic-information-column info-column-data]}]]))
 
-(defn company-edit-info-column
-  [{:company/keys [country name email phone-number business-registry-code] :as info}]
-  [:div
-   [common/basic-information-column
-    [{:label [typography/TextBold (tr [:fields :company/name])]
-      :data name}
-     {:label [typography/TextBold (tr [:fields :company/country])]
-      :data (tr [:countries country])}
-     {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
-      :data business-registry-code}
-     {:label [typography/TextBold (tr [:fields :company/email])]
-      :data email}
-     {:label [typography/TextBold (tr [:fields :company/phone-number])]
-      :data phone-number}]]])
+(defmulti company-info (fn [company key] key))
 
-(defn selected-company-information
-  [company]
-  [:div
-   [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :success
-                      :title (tr [:contract :information-found])
-                      :content [company-info-column company]}]]])
+(defmethod company-info :edit
+  [{:company/keys [name country business-registry-code email phone-number ] :as info}]
+  (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/country] :data (tr [:countries country])}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data (tr [:contract :edit-company]) :simple]))
 
-(defn edit-company-information
-  [company]
-  [:div
-   [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :simple
-                      :title (tr [:contract :edit-company])
-                      :content [company-edit-info-column company]}]]])
+(defmethod company-info :info
+  [{:company/keys [country business-registry-code email phone-number ] :as info}]
+  (let [display-data [{:label-key [:fields :company/country] :data (tr [:countries country])}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data "" :simple]))
+
+(defmethod company-info :information-found
+  [{:company/keys [name business-registry-code email phone-number] :as info}]
+  (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data (tr [:contract :information-found]) :success]))
 
 (defn edit-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
@@ -224,7 +217,7 @@
                     :read-only? true
                     :value (tr [:countries (:company/country form-value)])}]]
        [foreign-fields]]
-      (edit-company-information form-value))))
+      [company-info form-value :edit])))
 
 (defn new-company-form-fields
   [form-value]
@@ -340,7 +333,8 @@
             (tr [:contract :add-company])]
            (cond
              (or selected-company? search-success?)
-             [selected-company-information form-value]
+             [:div
+              [company-info form-value :information-found]]
              @add-new-company?
              [new-company-form-fields form-value]
              :else
@@ -403,13 +397,13 @@
   [{:user/keys [person-id email phone-number] :as user}]
   [:div
    [common/basic-information-column
-    [{:label [typography/TextBold (tr [:common :name])]
+    [{:label [typography/Text2Bold (tr [:common :name])]
       :data (user-model/user-name user)}
-     {:label [typography/TextBold (tr [:fields :user/person-id])]
+     {:label [typography/Text2Bold (tr [:fields :user/person-id])]
       :data person-id}
-     {:label [typography/TextBold (tr [:fields :user/email])]
+     {:label [typography/Text2Bold (tr [:fields :user/email])]
       :data email}
-     {:label [typography/TextBold (tr [:fields :user/phone-number])]
+     {:label [typography/Text2Bold (tr [:fields :user/phone-number])]
       :data phone-number}]]])
 
 (defn selected-user-information
@@ -496,11 +490,14 @@
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
-  [_ partner params]
+  [partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
+        lead-partner? (:company-contract/lead-partner? partner)
         teet-id (:teet/id partner)]
-    [:<>
+    [:div {:class (<class contract-style/partner-info-header)}
      [:h1 partner-name]
+     (when lead-partner?
+       [common/primary-tag (tr [:contract :lead-partner])])
      [buttons/button-secondary
       {:href (routes/url-for {:page :contract-partners
                               :params params
@@ -511,8 +508,8 @@
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header app selected-partner params]
-   [:p (pr-str selected-partner)]
+   [partner-info-header selected-partner params]
+   [company-info (:company-contract/company selected-partner) :info]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
@@ -546,12 +543,12 @@
     [Grid {:container true}
      [Grid {:item true
             :xs 3
-            :class (herb/join (<class common-styles/padding 2)
+            :class (herb/join (<class common-styles/padding 1.5)
                               (<class contract-style/contract-partners-panel-style))}
       [partner-right-panel e! app contract]]
      [Grid {:item true
             :xs :auto
-            :class (herb/join (<class common-styles/padding 2)
+            :class (herb/join (<class common-styles/padding 1.5)
                               (<class common-styles/flex-1))}
       [partners-page-router e! app contract]]]]])
 
