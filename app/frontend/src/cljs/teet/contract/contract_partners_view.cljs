@@ -508,7 +508,7 @@
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header selected-p]
+   [partner-info-header selected-partner params]
    [company-info (:company-contract/company selected-partner) :info]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
