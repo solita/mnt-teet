@@ -308,7 +308,7 @@
    :filtered-results "Filtered {count} results",
    :results "{count} results",
    :view "View"},
-  :company-partners "Parnters",
+  :company-partners "Partners",
   :external-link "Contract no.",
   :filters
   {:hide-filters "Hide filters",
