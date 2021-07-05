@@ -11,7 +11,8 @@
             [teet.common.common-controller :as common-controller]
             [teet.localization :as localization]))
 
-(defn project-map* [{:keys [e!] :as opts} {:keys [app project]}]
+(defn project-map* [{:keys [e!]
+                     oid :asset/oid :as opts} {:keys [app project]}]
   (r/with-let [overlays (r/atom [])
                fitted-atom (atom false)
                set-overlays! #(when (not= @overlays %)
@@ -32,7 +33,7 @@
                                             5 "rgba(100,100,100,0.5)")}))
 
                 ;; Add geometries for possible parent asset and other components
-                (when-let [oid (:asset/oid opts)]
+                (when (not= "new" oid)
                   (constantly
                    {:asset-geometries
                     (map-layers/geojson-layer

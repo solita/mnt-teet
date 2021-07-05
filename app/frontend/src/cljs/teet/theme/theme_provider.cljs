@@ -93,8 +93,9 @@
                          :button (merge
                                    common-styles/link-1
                                    {"&:hover" {:text-decoration :none}})}
-               :MuiButton {:sizeSmall {:padding "0 10px"
-                                       :font-size "0.875rem"}
+               :MuiButton {:sizeSmall {:padding "0 1rem"
+                                       :line-height "1.125rem"
+                                       :font-size "0.75rem"}
 
                            :outlined {:border (str "1px solid " theme-colors/white)
                                       :color theme-colors/white
