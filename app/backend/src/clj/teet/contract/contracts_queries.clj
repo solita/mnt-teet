@@ -112,9 +112,9 @@
                (map second)
                arglist)
         contracts-list (->> (d/q {:query {:find '[(pull ?c
-                                     [* {:thk.contract/targets
-                                         [* {:activity/manager
-                                             [:user/given-name :user/family-name]}]}])
+                                                    [* {:thk.contract/targets
+                                                        [* {:activity/manager
+                                                            [:user/given-name :user/family-name]}]}])
                                                   ?calculated-status]
                                           :where (into '[[?c :thk.contract/procurement-id _]
                                                          (contract-status ?c ?calculated-status ?now)] where)
