@@ -337,16 +337,13 @@
              nil
              criteria-map))
 
-
-
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
    :args search-criteria
    :context {adb :asset-db
              sql-conn :sql-conn}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [ids (take (inc result-count-limit)
                   (search-by-map adb sql-conn search-criteria))
         more-results? (> (count ids) result-count-limit)
@@ -382,8 +379,7 @@
    :args criteria
    :context {adb :asset-db
              sql-conn :sql-conn}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [criteria (update criteria :bbox #(mapv bigdec %))
         assets
         (map first
@@ -410,8 +406,7 @@
   {:doc "Fetch one asset for details view"
    :context {adb :asset-db}
    :args {oid :asset/oid}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [oid (cond
               (asset-model/material-oid? oid)
               (asset-model/material-asset-oid oid)
@@ -435,8 +430,7 @@ the parent asset and sibling components on the map when creating a new component
           :or {except #{}
                language :et}}
    :context {adb :asset-db}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (println "fetching " oid)
   (let [oid (if (asset-model/component-oid? oid)
               (asset-model/component-asset-oid oid)
@@ -484,8 +478,7 @@ the parent asset and sibling components on the map when creating a new component
   {:doc "Fetch counties/municipalities list for selection."
    :args _
    :context {c :sql-conn}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [areas (fetch-regions c)
         counties (into []
                        (filter (complement :okood))
@@ -506,8 +499,7 @@ the parent asset and sibling components on the map when creating a new component
   {:doc "Fetch GeoJSON for selected regions"
    :args {regions :regions}
    :context {c :sql-conn}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   ^{:format :raw}
   {:status 200
    :headers {"Content-Type" "application/json"}
