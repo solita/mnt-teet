@@ -437,7 +437,6 @@ the parent asset and sibling components on the map when creating a new component
    :context {adb :asset-db}
    :project-id nil
    :authorization {}}
-  (println "fetching " oid)
   (let [oid (if (asset-model/component-oid? oid)
               (asset-model/component-asset-oid oid)
               oid)
