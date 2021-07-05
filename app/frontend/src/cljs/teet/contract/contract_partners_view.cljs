@@ -431,9 +431,14 @@
                                   :on-click validate}
           (tr [:buttons :save])])]]]))
 
+(defn new-person-form-fields [form-value]
+  [:div "new person form fields here"])
+
 (defn add-personnel-form
   [e! {:keys [query] :as app} selected-partner]
-  (r/with-let [form-atom (r/atom {})]
+  (r/with-let [form-atom (r/atom {})
+               add-new-person? (r/atom false)
+               add-new-person #(reset! add-new-person? true)]
     (let [selected-user (:company-contract-employee/user @form-atom)
           user-selected? (boolean
                            selected-user)]
@@ -466,17 +471,8 @@
                                     (tr [:contract :employee-added]))}
          [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
           (tr [:contract :add-person])]
-         (if selected-user
-           [selected-user-information selected-user]
-           [form/field :company-contract-employee/user
-            [select/select-search
-             {:e! e!
-              :query (fn [text]
-                       {:args {:search text
-                               :company-contract-id (:db/id selected-partner)}
-                        :query :contract/possible-partner-employees})
-              :format-result select/user-search-select-result}]])
-         (when user-selected?
+         (cond
+           (true? user-selected?)
            [form/field {:attribute :company-contract-employee/role}
             [select/select-user-roles-for-contract
              {:e! e!
@@ -484,7 +480,22 @@
               :placeholder (tr [:contract :select-user-roles])
               :no-results (tr [:contract :no-matching-roles])
               :show-empty-selection? true
-              :clear-value [nil nil]}]])
+              :clear-value [nil nil]}]]
+           @add-new-person?
+           [new-person-form-fields (:form-value @form-atom)]
+           :else
+           [:div
+            [form/field :company-contract-employee/user
+             [select/select-search
+              {:e! e!
+               :query (fn [text]
+                        {:args {:search text
+                                :company-contract-id (:db/id selected-partner)}
+                         :query :contract/possible-partner-employees})
+               :format-result select/user-search-select-result
+               :after-results-action {:title (tr [:contract :add-person-not-in-teet])
+                                      :on-click add-new-person
+                                      :icon [icons/content-add]}}]]])
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
