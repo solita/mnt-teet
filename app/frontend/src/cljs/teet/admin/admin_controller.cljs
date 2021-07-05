@@ -94,65 +94,65 @@
 
   AddIndex
   (process-event [_ app]
-    (common-controller/assoc-page-state app {:add-index true}))
+    (common-controller/assoc-page-state app [:add-index] {:form-open true}))
 
   CancelIndex
   (process-event [_ app]
-    (update app :route dissoc :add-index))
+    (common-controller/update-page-state app [] dissoc :add-index))
 
   UpdateIndexForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :add-index] merge form-data))
+    (common-controller/update-page-state app [:add-index] merge form-data))
 
   SaveIndexResponse
   (process-event [_ app]
     (-> app
-        (update :route dissoc :add-index)
+        (common-controller/update-page-state [] dissoc :add-index)
         common-controller/refresh-page))
 
   SaveIndex
   (process-event [_ app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :admin/add-index
+           :command :index/add-index
            :success-message (tr [:admin :index-added-successfully])
-           :payload (get-in app [:route :add-index])
+           :payload (get-in app [:route :admin-indexes :add-index])
            :result-event ->SaveIndexResponse}))
 
   EditIndex
   (process-event [{form-data :form-data} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :admin/edit-index
+           :command :index/edit-index
            :success-message (tr [:admin :index-edited-successfully])
            :payload form-data
            :result-event common-controller/->Refresh}))
 
   EditIndexValues
   (process-event [_ app]
-    (assoc-in app [:route :edit-index-values] {}))
+    (common-controller/assoc-page-state app [:edit-index-values] {:form-open true}))
 
   CancelIndexValues
   (process-event [_ app]
-    (update app :route dissoc :edit-index-values))
+    (common-controller/update-page-state app [] dissoc :edit-index-values))
 
   UpdateIndexValues
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :edit-index-values] merge form-data))
+    (common-controller/update-page-state app [:edit-index-values] merge form-data {:index-id (get-in app [:params :id])}))
 
   SaveIndexValuesResponse
   (process-event [_ app]
     (-> app
-        (update :route dissoc :edit-index-values)
+        (common-controller/update-page-state [] dissoc :edit-index-values)
         common-controller/refresh-page))
 
   SaveIndexValues
   (process-event [_ app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :admin/edit-index-values
+           :command :index/edit-index-values
            :success-message (tr [:admin :index-values-changed])
-           :payload (get-in app [:route :edit-index-values])
+           :payload (get-in app [:route :admin-index-page :edit-index-values])
            :result-event ->SaveIndexValuesResponse}))
 
   )

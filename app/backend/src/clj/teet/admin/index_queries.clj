@@ -11,7 +11,7 @@
 
 (defn- with-bigdec-format [x]
   (transit/with-write-options
-    {java.math.BigDecimal pr-str}
+    {java.math.BigDecimal teet.util.euro/format-no-sign}
     x))
 
 (def index-listing-attributes
@@ -33,9 +33,10 @@
            :args {}
            :project-id nil
            :authorization {:admin/manage-indexes {}}}
-            (with-bigdec-format
+          (with-bigdec-format
+            {:index-data
               (->> (d/q '[:find (pull ?e columns)
                           :in $ columns
                           :where [?e :cost-index/name _]]
                         db index-listing-attributes)
-                   (mapv first))))
+                   (mapv first))}))

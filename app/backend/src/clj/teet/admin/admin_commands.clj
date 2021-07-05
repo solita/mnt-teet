@@ -115,13 +115,3 @@
                   (meta-model/modification-meta user))
                 [:db/retract (:db/id deactivated-user)
                  :user/deactivated? true]])})
-
-(defcommand :admin/add-index
-            {:doc "Add new index"
-             :context {:keys [user db]}
-             :payload index-data
-             :project-id nil
-             :audit? true
-             :authorization {:admin/manage-indexes {}}
-             :transact [(merge (select-keys index-data [:cost-index/name :cost-index/type :cost-index/valid-from])
-                               (meta-model/creation-meta user))]})
