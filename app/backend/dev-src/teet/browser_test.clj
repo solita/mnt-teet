@@ -58,7 +58,7 @@
   (let [config-file (first args)]
     (environment/load-local-config! (io/file config-file))
     (user/make-mock-users!)
-    (user/give-admin-permission [:user/id user/manager-uid])
+    (user/give-admin-permission [:user/id user/boss-uid])
 
     (import-test-data!)
 
