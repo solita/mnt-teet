@@ -59,12 +59,7 @@
 
 (defn contract-partners-names [contract-with-partners]
   (let [partners (:company-contract/_contract contract-with-partners)
-        names (reduce
-                (fn [acc item]
-                  (conj acc
-                    (get-in item [:company-contract/company :company/name])))
-                []
-                partners)]
+        names (mapv #(get-in % [:company-contract/company :company/name]) partners)]
     (str/join "," names)))
 
 (defn contract-information-row
