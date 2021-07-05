@@ -59,8 +59,8 @@
 
 (defn contract-partners-names [contract-partners]
   (str/join ","
-    (mapv #(get-in % [:company-contract/company :company/name])
-      (get-in contract-partners [:company-contract/_contract]))))
+            (mapv #(get-in % [:company-contract/company :company/name])
+                  (get-in contract-partners [:company-contract/_contract]))))
 
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline

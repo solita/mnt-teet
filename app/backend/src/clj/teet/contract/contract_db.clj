@@ -232,13 +232,6 @@
             db contract-id)
        first))
 
-(defn get-lead-partner-company [db contract-id]
-  (let [lead-partner-entities (contract-lead-partner-entities db contract-id)]
-    (when (some? lead-partner-entities)
-          (d/pull db '[*]
-               (first lead-partner-entities)))))
-
-
 (defn contract-partner-relation-entity-uuid
   "Fetch company-contract entity uuid"
   [db company-id contract-id]
