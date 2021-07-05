@@ -114,7 +114,8 @@
         contracts-list (->> (d/q {:query {:find '[(pull ?c
                                                     [* {:thk.contract/targets
                                                         [* {:activity/manager
-                                                            [:user/given-name :user/family-name]}]}])
+                                                            [:user/given-name :user/family-name]}]}
+                                                     {:company-contract/_contract [{:company-contract/company [*]}]}])
                                                   ?calculated-status]
                                           :where (into '[[?c :thk.contract/procurement-id _]
                                                          (contract-status ?c ?calculated-status ?now)] where)

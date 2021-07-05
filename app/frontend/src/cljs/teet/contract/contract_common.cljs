@@ -57,15 +57,15 @@
       (contract-model/contract-name contract)]]
     [contract-external-links contract]]])
 
-(defn contract-partners-names [contract-with-partners]
-  (let [partners (:company-contract/_contract contract-with-partners)
-        names (mapv #(get-in % [:company-contract/company :company/name]) partners)]
-    (str/join "," names)))
+(defn contract-partners-names [contract-partners]
+  (str/join ","
+    (mapv #(get-in % [:company-contract/company :company/name])
+      (get-in contract-partners [:company-contract/_contract]))))
 
 (defn contract-information-row
   [{:thk.contract/keys [type signed-at start-of-work deadline extended-deadline
-                        warranty-end-date contract-with-partners cost targets] :as contract}]
-  (let [partners (contract-partners-names contract-with-partners)]
+                        warranty-end-date cost targets] :as contract}]
+  (let [partners (contract-partners-names contract)]
     [common/basic-information-row
      {:right-align-last? false
       :font-size "0.875rem"}

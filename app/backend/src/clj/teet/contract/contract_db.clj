@@ -238,20 +238,6 @@
           (d/pull db '[*]
                (first lead-partner-entities)))))
 
-(defn contract-with-lead-partner
-  "Can be used in contract card to show only Lead partner"
-  [db contract]
-  (let [contract-eid (:thk.contract/procurement-id+procurement-part-id contract)
-        lead-partner (get-lead-partner-company db [:thk.contract/procurement-id+procurement-part-id contract-eid])]
-    (assoc contract :thk.contract/lead-partner lead-partner)))
-
-(defn contract-with-all-partners
-  "Used in contract card to show all partners"
-  [db contract]
-  (let [contract-eid (:thk.contract/procurement-id+procurement-part-id contract)
-        partners (get-contract-with-partners db
-                   [:thk.contract/procurement-id+procurement-part-id contract-eid])]
-    (assoc contract :thk.contract/contract-with-partners partners)))
 
 (defn contract-partner-relation-entity-uuid
   "Fetch company-contract entity uuid"
