@@ -12,7 +12,10 @@
             [datomic.client.api :as d]
             [teet.environment :as environment]
             [teet.log :as log]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [teet.integration.postgresql :as postgresql]
+            [teet.asset.asset-geometry :as asset-geometry]
+            [teet.util.collection :as cu]))
 
 
 (defn- road-registry-objects [config type gml-area]
@@ -86,64 +89,79 @@
                    2 :material/plastic
                    3 :material/structuralsteel
                    4 :material/sheetmetal
-                   ;;5 :material/stone (which stone to use?)
-
+                   5 :material/stone
                    ;; For unmapped values, don't create any material
                    nil)]
-    (merge
-     (from-point-to-perpendicular-line ctx wfs-feature :ms:trpik)
-     {:road-registry/id id
-      :asset/fclass :fclass/culvert
-      :culvert/culvertpipenumber culvertpipenumber
-      :location/road-nr (from-wfs wfs-feature :ms:tee_number ->long)
-      :location/carriageway (from-wfs wfs-feature :ms:soidutee_nr ->long)
-      :location/start-km (from-wfs wfs-feature :ms:km ->bigdec)
-      :common/status status
-      :asset/components
-      (vec
-       (concat
-        (for [i (range culvertpipenumber)
-              :let [id (str id "-pipe" i)]]
-          (merge
-           {:component/ctype :ctype/culvertpipe
-            :road-registry/id id
-            :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
-            :culvertpipe/culvertpipelenght len
-            :common/quantity len}
-           (when material
-             {:component/materials [{:material/type material
-                                     :road-registry/id (str id "-m0")}]})))
+    (when-not culvertpipenumber
+      (log/debug "Road registry culvert (oid: " id ") has no pipe number, not valid: " (from-wfs wfs-feature :ms:truup str)))
+    (cu/without-nils
+     (merge
+      (from-point-to-perpendicular-line ctx wfs-feature :ms:trpik)
+      (if (some? culvertpipenumber)
+        {:culvert/culvertpipenumber culvertpipenumber}
+        {:common/remark "missing truup (culvert pipe number) in road registry"})
+      {:road-registry/id id
+       :asset/fclass :fclass/culvert
+       :location/road-nr (from-wfs wfs-feature :ms:tee_number ->long)
+       :location/carriageway (from-wfs wfs-feature :ms:soidutee_nr ->long)
+       :location/start-km (from-wfs wfs-feature :ms:km ->bigdec)
+       :common/status status
+       :asset/components
+       (vec
+        (concat
+         (when culvertpipenumber
+           (for [i (range culvertpipenumber)
+                 :let [id (str id "-pipe" i)]]
+             (cu/without-nils
+              (merge
+               {:component/ctype :ctype/culvertpipe
+                :road-registry/id id
+                :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
+                :culvertpipe/culvertpipelenght len
+                :component/quantity len}
+               (when material
+                 {:component/materials [{:material/type material
+                                         :road-registry/id (str id "-m0")}]})))))
 
-        (when (= 1 trotsad)
-          (list
-           ;; If otsad_trotsad_xv = 1, create 2 culverthead components
-           {:component/ctype :ctype/culverthead
-            :road-registry/id (str id "-head" 1)}
-           {:component/ctype :ctype/culverthead
-            :road-registry/id (str id "-head" 2)}))
+         (when (= 1 trotsad)
+           (list
+            ;; If otsad_trotsad_xv = 1, create 2 culverthead components
+            {:component/ctype :ctype/culverthead
+             :road-registry/id (str id "-head" 1)}
+            {:component/ctype :ctype/culverthead
+             :road-registry/id (str id "-head" 2)}))
 
-        (when (> trotsad 1)
-          (list
-           ;; If otsad_trotsad_xv > 1, create 2 culvertprotection components
-           {:component/ctype :ctype/culvertprotection
-            :road-registry/id (str id "-prot1")}
-           {:component/ctype :ctype/culvertprotection
-            :road-registry/id (str id "-prot2")}))))})))
+         (when (and (some? trotsad) (> trotsad 1))
+           (list
+            ;; If otsad_trotsad_xv > 1, create 2 culvertprotection components
+            {:component/ctype :ctype/culvertprotection
+             :road-registry/id (str id "-prot1")}
+            {:component/ctype :ctype/culvertprotection
+             :road-registry/id (str id "-prot2")}))))}))))
 
-(defn import-road-registry-features! [conn ctx fclass wfs-type type-mapping [upper-left lower-right]]
+(defn import-road-registry-features! [conn sql-conn ctx fclass wfs-type type-mapping [upper-left lower-right]]
   (let [objects (road-registry-objects ctx wfs-type (gml-area upper-left lower-right))]
     (log/debug "Found" (count objects) "WFS objects to import.")
     (when (seq objects)
-      (d/transact
-       conn
-       {:tx-data
-        [{:db/id "datomic.tx"
-          :road-registry/import-url (:wfs-url ctx)}
-         (list 'teet.asset.asset-tx/import-assets
-               (environment/config-value :asset :default-owner-code)
-               fclass
-               (mapv (partial type-mapping ctx)
-                     objects))]}))))
+      (let [assets (vec (keep (partial type-mapping ctx) objects))
+            rr-ids (mapv :road-registry/id assets)
+            {db :db-after}
+            (d/transact
+             conn
+             {:tx-data
+              [{:db/id "datomic.tx"
+                :road-registry/import-url (:wfs-url ctx)}
+               (list 'teet.asset.asset-tx/import-assets
+                     (environment/config-value :asset :default-owner-code)
+                     fclass assets)]})]
+        (postgresql/with-transaction sql-conn
+          (doseq [[oid] (d/q '[:find ?oid
+                               :where
+                               [?e :road-registry/id ?id]
+                               [?e :asset/oid ?oid]
+                               :in $ [?id ...]]
+                             db rr-ids)]
+            (asset-geometry/update-asset! db sql-conn oid)))))))
 
 (def ^:private epsg-3301-bounds
   {:minx 282560.67
@@ -180,11 +198,14 @@
           (doseq [slice (reverse (estonia-slices 100))]
             (log/info "Importing area slice: " slice)
             (try
-              (import-road-registry-features!
-               (environment/asset-connection)
-               (assoc client :cache-atom (atom {})) ; cache per slice
-               fclass wfs-type mapping
-               slice)
+              (environment/call-with-pg-connection
+               (fn import-rr-feature [sql-conn]
+                 (import-road-registry-features!
+                  (environment/asset-connection)
+                  sql-conn
+                  (assoc client :cache-atom (atom {})) ; cache per slice
+                  fclass wfs-type mapping
+                  slice)))
               (catch Exception e
                 (log/error e "Error while import slice")))))
         "{\"success\": true}"))))
