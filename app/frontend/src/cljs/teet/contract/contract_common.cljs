@@ -101,7 +101,7 @@
                                                 (distinct (mapv #(user-model/user-name (:activity/manager %))
                                                             targets))))]])
       (when (not-empty partners)
-        [(tr [:fields :company-contract/partners])
+        [(tr [:contracts :company-partners])
          [typography/Paragraph partners]])
       (when cost
         [(tr [:fields :thk.contract/cost])

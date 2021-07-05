@@ -308,6 +308,7 @@
    :filtered-results "Filtreeritud {count} tulemust",
    :results "{count} tulemust",
    :view "Vaata"},
+  :company-partners "Töövõtjad",
   :external-link "Lepingu nr.",
   :filters
   {:hide-filters "Peida filtrid",
@@ -876,7 +877,7 @@
   :task/thk-type "THK tüüp",
   :task/type "Ülesanne",
   :task/actual-end-date "Lõppkuupäev",
-  :location/single-point? "Üksik punkt?",
+  :location/single-point? "Üksik punkt",
   :meeting/title "Pealkiri",
   :estate-procedure/process-fees "Asjaajamistasud",
   :thk.project/activity-status "Olek",
@@ -953,7 +954,6 @@
   :cooperation.application/activity "Tegevuse",
   :participation/participant "Kasutaja",
   :land-acquisition/status "Olek",
-  :company-contract/partners "Töövõtjad",
   :common {"description" "Kirjeldus", "name" "Nimi"},
   :location/start-offset-m "Algus kaugus teljest",
   :land-owner-opinion/respondent-connection-to-land

@@ -308,6 +308,7 @@
    :filtered-results "Filtered {count} results",
    :results "{count} results",
    :view "View"},
+  :company-partners "Parnters",
   :external-link "Contract no.",
   :filters
   {:hide-filters "Hide filters",
@@ -882,7 +883,7 @@
   :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
-  :location/single-point? "Single point?",
+  :location/single-point? "Single point",
   :meeting/title "Title",
   :estate-procedure/process-fees "Processing fees",
   :thk.project/activity-status "Status",
@@ -958,7 +959,6 @@
   :cooperation.application/activity "Activity",
   :participation/participant "User",
   :land-acquisition/status "Status",
-  :company-contract/partners "Partners",
   :common {"description" "Description", "name" "Name"},
   :location/start-offset-m "Start offset",
   :land-owner-opinion/respondent-connection-to-land
