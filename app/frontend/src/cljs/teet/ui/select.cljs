@@ -416,7 +416,7 @@
 
 (defn- arrow-navigation
   "Arrow navigation key handler for select-search results"
-  [state on-change e]
+  [state on-change on-backspace e]
   (let [{:keys [results open? highlight]} @state
         hl-idx (and (seq results) highlight
                     (cu/find-idx #(= highlight %) results))]
@@ -451,6 +451,10 @@
       (when open?
         (swap! state assoc :open? false)
         (.stopPropagation e))
+
+      "Backspace"
+      (when on-backspace
+        (on-backspace e))
 
       nil)))
 
@@ -488,10 +492,19 @@
                input-ref (atom nil)
                set-ref! #(do
                            (reset! input-ref %)
-                           (when (and % autofocus?) (.focus %)))
-               on-key-down (partial arrow-navigation state on-change)]
+                           (when (and % autofocus?) (.focus %)))]
     (let [{:keys [loading? results open? input highlight]} @state
           current-input-ref (or (:input-ref opts) @input-ref)
+          on-key-down (partial arrow-navigation state on-change
+                               (fn backspace-handler [e]
+                                 ;; When input contains the current selected value and user presses
+                                 ;; backspace, remove the selected value and clear input.
+                                 (when (and value current-input-ref
+                                            (= (format-result value) (.-value current-input-ref)))
+                                   (on-change clear-value)
+                                   (swap! state assoc :input "")
+                                   (.preventDefault e)
+                                   (.stopPropagation e))))
           load! (fn [text]
                   (let [result-fn-or-query-map (query text)]
                     (if (fn? result-fn-or-query-map)
@@ -523,6 +536,7 @@
                 :error error
                 :placeholder placeholder
                 :on-key-down on-key-down
+
                 :on-blur #(js/setTimeout
                            ;; Delay closing because we might be blurring
                            ;; because user clicked one of the options
