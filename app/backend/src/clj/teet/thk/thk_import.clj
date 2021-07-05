@@ -333,13 +333,11 @@
    for all others project's Activities of types: 4006 and 4009"
   [db [project-id rows]]
   (if-let [construction-activity-id (:construction-activity-db-id (get-project-attrs db project-id rows))]
-    (do
-      (println "got caid")
-      [{:db/id construction-activity-id
-        :activity/tasks (reduce
-                         #(conj %1 (add-task-from-thk db %2 construction-activity-id))
-                         []
-                         (filter activity-is-supervision-or-audit? rows))}])
+    [{:db/id construction-activity-id
+      :activity/tasks (reduce
+                       #(conj %1 (add-task-from-thk db %2 construction-activity-id))
+                       []
+                       (filter activity-is-supervision-or-audit? rows))}]
     (log/debug "no construction acitivty id for project" project-id "so returning empty tasks tx data")))
 
 (defn teet-project? [[_ [p1 & _]]]
@@ -453,10 +451,8 @@
           (mapcat
             (fn [prj]                                       ;; {"project-id" [{"rows"}..]}
               (when (teet-project? prj)
-                (let [tasks-tx-maps (tasks-tx-data db prj)]
-                  (println "got task maps:" tasks-tx-map)
-                      tasks-tx-maps))))
-                          projects-csv)]
+                (tasks-tx-data db prj))))
+          projects-csv)]
     tx-import-tasks))
 
 (defn- check-unique-activity-ids [projects]
@@ -507,7 +503,7 @@
 
 (defn import-thk-tasks! [connection url projects]
   (let [db (d/db connection)]
-    (println "transacting thk tasks:")
-    (clojure.pprint/pprint (thk-import-tasks-tx db url projects))
+    ;; (println "transacting thk tasks:")
+    ;; (clojure.pprint/pprint (thk-import-tasks-tx db url projects))
     (d/transact connection
                 {:tx-data (thk-import-tasks-tx db url projects)})))
