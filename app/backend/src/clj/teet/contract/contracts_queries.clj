@@ -121,7 +121,6 @@
                                                          (contract-status ?c ?calculated-status ?now)] where)
                                           :in in} :args args})
                          (mapv contract-db/contract-with-status)
-                         (mapv (partial contract-db/contract-with-all-partners db))
                          (mapv contract-model/db-values->frontend))]
     contracts-list))
 
