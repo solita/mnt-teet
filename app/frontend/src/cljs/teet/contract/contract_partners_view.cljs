@@ -17,13 +17,11 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.ui.common :as common]
-            [clojure.string :as str]
             [teet.ui.validation :as validation]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -498,17 +496,19 @@
      [:h1 partner-name]
      (when lead-partner?
        [common/primary-tag (tr [:contract :lead-partner])])
-     [buttons/button-secondary
-      {:href (routes/url-for {:page :contract-partners
-                              :params params
-                              :query {:page :edit-partner
-                                      :partner teet-id}})}
-      (tr [:buttons :edit])]]))
+     [authorization-check/when-authorized
+      :thk.contract/edit-contract-partner-company partner
+      [buttons/button-secondary
+       {:href (routes/url-for {:page :contract-partners
+                               :params params
+                               :query {:page :edit-partner
+                                       :partner teet-id}})}
+       (tr [:buttons :edit])]]]))
 
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header selected-partner params]
+   [partner-info-header selected-p]
    [company-info (:company-contract/company selected-partner) :info]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
@@ -527,7 +527,9 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app selected-partner]
+      [authorization-check/when-authorized
+       :thk.contract/edit-contract-partner-company selected-partner
+       [edit-partner-form e! app selected-partner]]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
@@ -536,7 +538,7 @@
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
 (defn partners-page
-  [e! {:keys [user] :as app} {:thk.contract/keys [targets] :as contract}]
+  [e! app contract]
   [:div {:class (<class common-styles/flex-column-1)}
    [contract-common/contract-heading e! app contract]
    [:div {:class (<class contract-style/partners-page-container)}
