@@ -1,9 +1,9 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-06-30T05:44:01.964-00:00"}
+  :tx/schema-imported-at #inst "2021-07-05T07:34:05.718-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
-  :asset-schema/label ["Teekonstruktsioon II" "Carriageway II"],
+  :asset-schema/label ["Teekonstruktsioon" "Carriageway"],
   :asset-schema/description
   ["Kate, katendi konstruktsioon, äärekivi, peenar, eraldusriba"
    "Paving layer, pavement structure, kerb, shoulder, venge"]}
@@ -32,7 +32,7 @@
   :asset-schema/description ["Teeseadmed." "Road equipment, IoT."]}
  {:db/id ":fgroup/immaterial",
   :db/ident :fgroup/immaterial,
-  :db/doc "Non-physical assets, like reference geometry",
+  :db/doc "non-physical assets, like reference geometry",
   :asset-schema/type :asset-schema.type/fgroup,
   :asset-schema/label ["Immateriaalne vara" "Immaterial asset"],
   :asset-schema/description
@@ -132,12 +132,6 @@
   ["Spetsiaalne ülepääsukoht ulukitele, ulukitara katkestus." ""],
   :fclass/fgroup ":fgroup/landscaping",
   :fclass/oid-prefix "ULY"}
- {:db/id ":fclass/animaldetectionstation",
-  :db/ident :fclass/animaldetectionstation,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Loomatuvastuseade" ""],
-  :fclass/fgroup ":fgroup/equipment",
-  :fclass/oid-prefix "LTS"}
  {:db/id ":fclass/animalfencing",
   :db/ident :fclass/animalfencing,
   :asset-schema/type :asset-schema.type/fclass,
@@ -503,14 +497,13 @@
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label
   ["Liiklusloenduspunkt" "Traffic monitoring station"],
-  :asset-schema/description ["Alaline" ""],
+  :asset-schema/description ["Alaline leonduspunkt" ""],
   :fclass/fgroup ":fgroup/equipment",
   :fclass/oid-prefix "LLP"}
  {:db/id ":fclass/trafficsignalsystem",
   :db/ident :fclass/trafficsignalsystem,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label
-  ["Foorisüsteem (siia juurde arvata ka kõrgushoiatussüsteem)" ""],
+  :asset-schema/label ["Foorisüsteem (ka kõrgushoiatussüsteem)" ""],
   :fclass/fgroup ":fgroup/equipment",
   :fclass/oid-prefix "FOR"}
  {:db/id ":fclass/trashbin",
@@ -547,10 +540,13 @@
   :asset-schema/description ["Tööstuslik wifi saatja/vastuvõtja" ""],
   :fclass/fgroup ":fgroup/equipment",
   :fclass/oid-prefix "WIF"}
- {:db/id ":fclass/variablemessagesign",
-  :db/ident :fclass/variablemessagesign,
+ {:db/id ":fclass/variablemessagesystem",
+  :db/ident :fclass/variablemessagesystem,
   :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Muutuva teabega liiklusmärk" ""],
+  :asset-schema/label
+  ["Muutuva teabega liiklusmärkide süsteem"
+   "Variable message sign system"],
+  :asset-schema/description ["Loomatuvastus ka siin sees" ""],
   :fclass/fgroup ":fgroup/equipment",
   :fclass/oid-prefix "VMS"}
  {:db/id ":fclass/verge",
@@ -569,8 +565,6 @@
   :db/ident :fclass/weatherstation,
   :asset-schema/type :asset-schema.type/fclass,
   :asset-schema/label ["Teeilmajaam" ""],
-  :asset-schema/description
-  ["(temepratuuri mõõtmine konstruktsioonis üheks tüübiks)" ""],
   :fclass/fgroup ":fgroup/equipment",
   :fclass/oid-prefix "TIJ"}
  {:db/id ":fclass/weightingstation",
@@ -1336,6 +1330,11 @@
   :asset-schema/label ["Plaat" "Slab"],
   :component/inherits-location? true,
   :ctype/parent ":ctype/bridgespan"}
+ {:db/id ":ctype/slope",
+  :db/ident :ctype/slope,
+  :asset-schema/type :asset-schema.type/ctype,
+  :component/inherits-location? true,
+  :ctype/parent ":fclass/backfill"}
  {:db/id ":ctype/slopeprotection",
   :db/ident :ctype/slopeprotection,
   :asset-schema/type :asset-schema.type/ctype,
@@ -1582,6 +1581,39 @@
   :asset-schema/label ["Seade" "Device"],
   :component/inherits-location? true,
   :ctype/parent ":fclass/v2iterminal"}
+ {:db/id ":ctype/variablemessagesystemanimaldetectionsensor",
+  :db/ident :ctype/variablemessagesystemanimaldetectionsensor,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Loomatuvaastuse andur" "Animal detection sensor"],
+  :ctype/parent ":fclass/variablemessagesystem"}
+ {:db/id ":ctype/variablemessagesystemcamera",
+  :db/ident :ctype/variablemessagesystemcamera,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Kaamera" "Camera"],
+  :ctype/parent ":fclass/variablemessagesystem"}
+ {:db/id ":ctype/variablemessagesystemcontroller",
+  :db/ident :ctype/variablemessagesystemcontroller,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Süsteemi kontroller" "System controller"],
+  :ctype/parent ":fclass/variablemessagesystem"}
+ {:db/id ":ctype/variablemessagesystempedestriandetectionsensor",
+  :db/ident :ctype/variablemessagesystempedestriandetectionsensor,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Kergliilejatuvastuse andur" "Pedestrian detection sensor"],
+  :ctype/parent ":fclass/variablemessagesystem"}
+ {:db/id ":ctype/variablemessagesystemsign",
+  :db/ident :ctype/variablemessagesystemsign,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Muutuva teabe märk" "VMS device"],
+  :ctype/parent ":fclass/variablemessagesystem"}
+ {:db/id ":ctype/variablemessagesystemtrafficmonitoringsensor",
+  :db/ident :ctype/variablemessagesystemtrafficmonitoringsensor,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label
+  ["Sõidukituvastuse andur" "Trafic monitoring sensor"],
+  :ctype/parent ":fclass/variablemessagesystem"}
  {:db/id ":ctype/vault",
   :db/ident :ctype/vault,
   :asset-schema/type :asset-schema.type/ctype,
@@ -4015,7 +4047,7 @@
  {:attribute/parent [":ctype/roadsurfacecamerairlamp"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Toode" ""],
+  :asset-schema/label ["Toode" "Product name"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id ":roadsurfacecamerairlamp/roadsurfacecamerairlampproduct",
@@ -4023,7 +4055,7 @@
  {:attribute/parent [":ctype/roadsurfacecamerairlamp"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Seerianumber" ""],
+  :asset-schema/label ["Seerianumber" "Serial number"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id
@@ -4033,7 +4065,7 @@
  {:attribute/parent [":ctype/roadsurfacecamerairlamp"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Tootja" ""],
+  :asset-schema/label ["Tootja" "Manufacturer"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id
@@ -4377,7 +4409,7 @@
  {:attribute/parent [":ctype/trafficcameracamera"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Tootja" ""],
+  :asset-schema/label ["Tootja" "Manufacturer"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id ":trafficcameracamera/trafficcameracameramanufacturer",
@@ -4385,7 +4417,7 @@
  {:attribute/parent [":ctype/trafficcameracamera"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Toode" ""],
+  :asset-schema/label ["Toode" "Product name"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id ":trafficcameracamera/trafficcameracameraproduct",
@@ -4393,7 +4425,7 @@
  {:attribute/parent [":ctype/trafficcameracamera"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Seerianumber" ""],
+  :asset-schema/label ["Seerianumber" "Serial number"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id ":trafficcameracamera/trafficcameracameraserialnumber",
@@ -4401,7 +4433,7 @@
  {:attribute/parent [":ctype/trafficcameranetworkdevice"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Tootja" ""],
+  :asset-schema/label ["Tootja" "Manufacturer"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id
@@ -4411,7 +4443,7 @@
  {:attribute/parent [":ctype/trafficcameranetworkdevice"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Toode" ""],
+  :asset-schema/label ["Toode" "Product name"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id
@@ -4421,7 +4453,7 @@
  {:attribute/parent [":ctype/trafficcameranetworkdevice"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Seerianumber" ""],
+  :asset-schema/label ["Seerianumber" "Serial number"],
   :attribute/mandatory? false,
   :db/cardinality :db.cardinality/one,
   :db/id
@@ -4921,6 +4953,263 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":v2iterminaldevice/v2iterminalserialnumber",
   :db/ident :v2iterminaldevice/v2iterminalserialnumber}
+ {:attribute/parent [":fclass/variablemessagesystem"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Asukoha nimi" "Name"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":variablemessagesystem/variablemessagesignsystemname",
+  :db/ident :variablemessagesystem/variablemessagesignsystemname}
+ {:attribute/parent [":fclass/variablemessagesystem"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["VMS süsteem tüüp" "VMS system type"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":variablemessagesystem/variablemessagesignsystemntype",
+  :db/ident :variablemessagesystem/variablemessagesignsystemntype,
+  :asset-schema/description
+  ["Näitekskas on jalakäiate tuvastus, sõidukite tuvastus, loomade tuvastus..."
+   ""]}
+ {:attribute/parent
+  [":ctype/variablemessagesystemanimaldetectionsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensormanufacturer",
+  :db/ident
+  :variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensormanufacturer}
+ {:attribute/parent
+  [":ctype/variablemessagesystemanimaldetectionsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensorproduct",
+  :db/ident
+  :variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensorproduct}
+ {:attribute/parent
+  [":ctype/variablemessagesystemanimaldetectionsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensorserialnumber",
+  :db/ident
+  :variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensorserialnumber}
+ {:attribute/parent
+  [":ctype/variablemessagesystemanimaldetectionsensor"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Anduri tüüp" "Sensor type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensortype",
+  :db/ident
+  :variablemessagesystemanimaldetectionsensor/variablemessagesystemanimaldetectionsensortype}
+ {:attribute/parent [":ctype/variablemessagesystemcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcamera/variablemessagesystemcameramanufacturer",
+  :db/ident
+  :variablemessagesystemcamera/variablemessagesystemcameramanufacturer}
+ {:attribute/parent [":ctype/variablemessagesystemcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcamera/variablemessagesystemcameraproduct",
+  :db/ident
+  :variablemessagesystemcamera/variablemessagesystemcameraproduct}
+ {:attribute/parent [":ctype/variablemessagesystemcamera"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcamera/variablemessagesystemcameraserialnumber",
+  :db/ident
+  :variablemessagesystemcamera/variablemessagesystemcameraserialnumber}
+ {:attribute/parent [":ctype/variablemessagesystemcamera"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kaamera tüüp" "Camera type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcamera/variablemessagesystemcameratype",
+  :db/ident
+  :variablemessagesystemcamera/variablemessagesystemcameratype,
+  :asset-schema/description ["Termokaamera, videokaamera jne" ""]}
+ {:attribute/parent [":ctype/variablemessagesystemcontroller"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcontroller/variablemessagesigncontrollermanufacturer",
+  :db/ident
+  :variablemessagesystemcontroller/variablemessagesigncontrollermanufacturer}
+ {:attribute/parent [":ctype/variablemessagesystemcontroller"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcontroller/variablemessagesigncontrollerproduct",
+  :db/ident
+  :variablemessagesystemcontroller/variablemessagesigncontrollerproduct}
+ {:attribute/parent [":ctype/variablemessagesystemcontroller"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemcontroller/variablemessagesigncontrollerserialnumkber",
+  :db/ident
+  :variablemessagesystemcontroller/variablemessagesigncontrollerserialnumkber}
+ {:attribute/parent
+  [":ctype/variablemessagesystempedestriandetectionsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensormanufacturer",
+  :db/ident
+  :variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensormanufacturer}
+ {:attribute/parent
+  [":ctype/variablemessagesystempedestriandetectionsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensorproduct",
+  :db/ident
+  :variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensorproduct}
+ {:attribute/parent
+  [":ctype/variablemessagesystempedestriandetectionsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensorserialnumber",
+  :db/ident
+  :variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensorserialnumber}
+ {:attribute/parent
+  [":ctype/variablemessagesystempedestriandetectionsensor"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Anduri tüüp" "Sensor type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensortype",
+  :db/ident
+  :variablemessagesystempedestriandetectionsensor/variablemessagesystempedestriandetectionsensortype}
+ {:attribute/parent [":ctype/variablemessagesystemsign"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seadme ID kood" "ID code"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":variablemessagesystemsign/variablemessagesignidcode",
+  :db/ident :variablemessagesystemsign/variablemessagesignidcode}
+ {:attribute/parent [":ctype/variablemessagesystemsign"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":variablemessagesystemsign/variablemessagesignmanufacturer",
+  :db/ident :variablemessagesystemsign/variablemessagesignmanufacturer}
+ {:attribute/parent [":ctype/variablemessagesystemsign"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":variablemessagesystemsign/variablemessagesignserialnumber",
+  :db/ident :variablemessagesystemsign/variablemessagesignserialnumber}
+ {:attribute/parent [":ctype/variablemessagesystemsign"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["VMS tüüp" "VMS type"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":variablemessagesystemsign/variablemessagesigntype",
+  :db/ident :variablemessagesystemsign/variablemessagesigntype,
+  :asset-schema/description
+  ["Näiteks kas kiirusmärk, hoiatusmärk, nende kombinatsioon, teksti tabloo jne"
+   ""]}
+ {:attribute/parent
+  [":ctype/variablemessagesystemtrafficmonitoringsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Tootja" "Manufacturer"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensormanufacturer",
+  :db/ident
+  :variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensormanufacturer}
+ {:attribute/parent
+  [":ctype/variablemessagesystemtrafficmonitoringsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Toode" "Product name"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensorproduct",
+  :db/ident
+  :variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensorproduct}
+ {:attribute/parent
+  [":ctype/variablemessagesystemtrafficmonitoringsensor"],
+  :db/valueType :db.type/string,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Seerianumber" "Serial number"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensorserialnumber",
+  :db/ident
+  :variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensorserialnumber}
+ {:attribute/parent
+  [":ctype/variablemessagesystemtrafficmonitoringsensor"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Anduri tüüp" "Sensor type"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id
+  ":variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensortype",
+  :db/ident
+  :variablemessagesystemtrafficmonitoringsensor/variablemessagesystemtrafficmonitoringsensortype}
  {:attribute/parent [":ctype/waterproofing"],
   :asset-schema/unit "%",
   :db/valueType :db.type/bigdec,
@@ -6120,6 +6409,11 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Stabiliseeritud segu" "Stabilized mix"],
   :material/fgroups [":fgroup/carriageway" ":fgroup/pavement"]}
+ {:db/id ":material/stone",
+  :db/ident :material/stone,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Kivi" "Stone"],
+  :material/fgroups [":fgroup/drainage" ":fgroup/carriageway"]}
  {:db/id ":material/structuralsteel",
   :db/ident :material/structuralsteel,
   :asset-schema/type :asset-schema.type/material,
