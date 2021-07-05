@@ -256,11 +256,15 @@
      :value page
      :format-item #(tr [:asset :page %])}]])
 
+;; Keep open items in memory, we don't want remounts of the component to
+;; lose the open items.
+(defonce open-item-hierarchy-atom  (r/atom #{}))
+
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
   [{:keys [_e! _app cost-items fgroup-link-fn fclass-link-fn list-features?]
     :or {list-features? true}}]
-  (r/with-let [open (r/atom #{})
+  (r/with-let [open open-item-hierarchy-atom
                toggle-open! #(swap! open cu/toggle %)]
     [:div.cost-items-by-fgroup
      (doall
