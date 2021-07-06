@@ -14,7 +14,7 @@ context("Meetings", () => {
         cy.get("#add-agenda").click()
         cy.formInput(":meeting.agenda/topic", title)
         cy.get("[data-cy='meeting-details'] [type=submit]").click()
-        cy.get(".MuiSnackbar-root").should("exist")
+        cy.get("[data-cy='snackbar-success']").should("exist");
     }
     function createMeetingWithTopic() {
 
