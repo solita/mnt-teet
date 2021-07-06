@@ -133,51 +133,51 @@
            {:company-contract-id new-company-contract-id})))
 
 (defcommand :thk.contract/add-contract-employee
-            {:doc "Add an existing user as a member in a given contract-company"
-             :payload {form-value :form-value
-                      company-contract-eid :company-contract-eid}
-             :context {:keys [user db]}
-             :project-id nil
-             :authorization {:contracts/contract-editing {}}
-             :pre [(not
-                     (contract-db/is-company-contract-employee?
-                       db company-contract-eid
-                       (get-in form-value [:company-contract-employee/user :db/id])))]
-             :transact [(merge
-                          {:db/id "new-company-contract-employee"
-                           :company-contract-employee/active? true    ;; employees are active by default
-                           :company-contract-employee/user (:company-contract-employee/user form-value)
-                           :company-contract-employee/role (mapv
-                                                             :db/id
-                                                             (:company-contract-employee/role form-value))}
-                          (meta-model/creation-meta user))
-                        {:db/id company-contract-eid
-                         :company-contract/employees "new-company-contract-employee"}]})
+  {:doc "Add an existing user as a member in a given contract-company"
+   :payload {form-value :form-value
+             company-contract-eid :company-contract-eid}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [(not
+           (contract-db/is-company-contract-employee?
+             db company-contract-eid
+             (get-in form-value [:company-contract-employee/user :db/id])))]
+   :transact [(merge
+                {:db/id "new-company-contract-employee"
+                 :company-contract-employee/active? true    ;; employees are active by default
+                 :company-contract-employee/user (:company-contract-employee/user form-value)
+                 :company-contract-employee/role (mapv
+                                                   :db/id
+                                                   (:company-contract-employee/role form-value))}
+                (meta-model/creation-meta user))
+              {:db/id company-contract-eid
+               :company-contract/employees "new-company-contract-employee"}]})
 
 (defcommand :thk.contract/add-new-contract-employee
-            {:doc "Save a new contract partner"
-             :payload {form-value :form-value
-                       company-contract-eid :company-contract-eid}
-             :context {:keys [user db]}
-             :project-id nil
-             :authorization {:contracts/contract-editing {}}}
-            (let [employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
-                                                             :user/email :user/phone-number]))
-                  user-person-id (user-model/normalize-person-id (:user/person-id form-value))
-                  new-employee-id "new-employee"
-                  tempids
-                  (:tempids (tx [(merge
-                                      {:db/id new-employee-id
-                                       :user/person-id user-person-id
-                                       :user/id (java.util.UUID/randomUUID)}
-                                      employee-fields
-                                      (meta-model/creation-meta user))
-                                 (merge
-                                   {:db/id "new-company-contract-employee"
-                                    :company-contract-employee/active? true ;; employees are active by default
-                                    :company-contract-employee/user new-employee-id
-                                    :company-contract-employee/role (mapv
-                                                                      :db/id
-                                                                      (:company-contract-employee/role form-value))}
-                                   (meta-model/creation-meta user))]))]
-              tempids))
+  {:doc "Save a new contract partner"
+   :payload {form-value :form-value
+             company-contract-eid :company-contract-eid}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}}
+  (let [employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
+                                                     :user/email :user/phone-number]))
+        user-person-id (user-model/normalize-person-id (:user/person-id form-value))
+        new-employee-id "new-employee"
+        tempids
+        (:tempids (tx [(merge
+                         {:db/id new-employee-id
+                          :user/person-id user-person-id
+                          :user/id (java.util.UUID/randomUUID)}
+                         employee-fields
+                         (meta-model/creation-meta user))
+                       (merge
+                         {:db/id "new-company-contract-employee"
+                          :company-contract-employee/active? true ;; employees are active by default
+                          :company-contract-employee/user new-employee-id
+                          :company-contract-employee/role (mapv
+                                                            :db/id
+                                                            (:company-contract-employee/role form-value))}
+                         (meta-model/creation-meta user))]))]
+    tempids))
