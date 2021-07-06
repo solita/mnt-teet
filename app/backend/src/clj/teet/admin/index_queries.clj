@@ -1,7 +1,8 @@
 (ns teet.admin.index-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
-            [teet.transit :as transit])
+            [teet.transit :as transit]
+            [teet.util.euro :as euro])
   (:import (java.util UUID)))
 
 (defn- get-index-data
@@ -11,7 +12,7 @@
 
 (defn- with-bigdec-format [x]
   (transit/with-write-options
-    {java.math.BigDecimal teet.util.euro/format-no-sign}
+    {java.math.BigDecimal euro/format-no-sign}
     x))
 
 (def index-listing-attributes

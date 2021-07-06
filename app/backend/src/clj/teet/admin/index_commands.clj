@@ -27,9 +27,6 @@
   [db index-id index-data]
   (let [index-vals (d/pull db [:cost-index/valid-from :cost-index/values] index-id)
         valid-from (c/from-date (:cost-index/valid-from index-vals))
-        _ (println "VF" index-vals index-id (t/interval
-                                              valid-from
-                                              (t/now)))
         values (:cost-index/values index-vals)
         month-objects (take
                         (t/in-months
@@ -41,9 +38,16 @@
         last-month-kw (str "index-value-" (t/year last-month) "-" (t/month last-month))]
     (if values
       (let [last-month-id (:db/id (index-value-id db index-id (t/year last-month) (t/month last-month)))
-            last-month-value ((keyword last-month-kw) index-data)]
-        {:db/id last-month-id
-         :index-value/value (bigdec last-month-value)})                                                    ; In case values are there, update only last month
+            last-month-value ((keyword last-month-kw) index-data)
+            _ (println "Updating index value: " last-month-kw last-month-id last-month-value)]
+        (if (nil? last-month-id)
+          {:db/id index-id
+           :cost-index/values
+           {:index-value/year (t/year last-month)
+            :index-value/month (t/month last-month)
+            :index-value/value (bigdec last-month-value)}}
+          {:db/id last-month-id
+         :index-value/value (bigdec last-month-value)}))                                                    ; In case values are there, update only last month
       {:db/id index-id
        :cost-index/values
        (mapv (fn [cur-month]
@@ -74,9 +78,19 @@
              :project-id nil
              :audit? true
              :authorization {:admin/manage-indexes {}}
-             :transact (let [index-id (:index-id index-data)]
+             :transact (let [index-id (cc/->long (:index-id index-data))]
                          [{:db/id index-id
                            :cost-index/name (:cost-index/name index-data)}])})
+
+(defcommand :index/delete-index
+            {:doc "Remove the index"
+             :context {:keys [user db]}
+             :payload index-data
+             :project-id nil
+             :audit? true
+             :authorization {:admin/manage-indexes {}}
+             :transact (let [index-id (cc/->long (:index-id index-data))]
+                         [[:db/retractEntity index-id]])})
 
 (defcommand :index/edit-index-values
             {:doc "Edit index details (name)"
@@ -85,7 +99,5 @@
              :project-id nil
              :audit? true
              :authorization {:admin/manage-indexes {}}
-             :transact (let [tx-data (let [index-id (cc/->long (:index-id index-data))]
-                         [(edit-index-values-tx db index-id index-data)])
-                             _ (println "TX-DATA" tx-data)]
-                         tx-data)})
+             :transact (let [index-id (cc/->long (:index-id index-data))]
+                         [(edit-index-values-tx db index-id index-data)])})

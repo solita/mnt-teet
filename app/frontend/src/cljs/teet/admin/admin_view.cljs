@@ -329,7 +329,7 @@
                    :label (tr [:fields field])
                    :on-change #(on-change field (-> % .-target .-value))}]))])
 
-(defn- admin-heading-menu
+(defn admin-heading-menu
   []
   [:div {:class (<class common-styles/top-info-spacing)}
    [common-ui/context-menu {:label "Admin menu"
@@ -358,7 +358,6 @@
 (defn admin-indexes-page
   [e! app route]
   [:div
-   [admin-heading-menu]
    [indexes-view/indexes-page e! app route]])
 
 (defn admin-users-page

@@ -220,9 +220,9 @@
  :admin
  {:path "/admin"
   :permission :admin/add-user
-  :view teet.admin.admin-view/admin-page
-  :title "Admin view"
-  :crumb (tr [:admin :title])}
+  :view teet.admin.admin-view/admin-users-page
+  :title (tr [:admin :title-users])
+  :crumb (tr [:admin :title-users])}
 
  :admin-users
  {:path "/admin/users"
@@ -244,8 +244,8 @@
  {:path "/admin/index/:id"
   :parent :admin-indexes
   :view teet.admin.indexes-view/indexes-page
-  :title (tr [:admin :title-indexes])
-  :crumb (tr [:admin :title-indexes])
+  :title (:cost-index/name (first (filterv (fn [x] (= (:db/id x) (teet.util.coerce/->long id))) (:index-data state))))
+  :crumb (:cost-index/name (first (filterv (fn [x] (= (:db/id x) (teet.util.coerce/->long id))) (:index-data state))))
   :state {:query :admin/indexes-data
           :args {:id id}}}
 
