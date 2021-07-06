@@ -144,6 +144,7 @@
              (get-in form-value [:company-contract-employee/user :db/id])))]
    :transact [(merge
                 {:db/id "new-company-contract-employee"
+                 :company-contract-employee/active? true    ;; employees are active by default
                  :company-contract-employee/user (:company-contract-employee/user form-value)
                  :company-contract-employee/role (mapv
                                                    :db/id
