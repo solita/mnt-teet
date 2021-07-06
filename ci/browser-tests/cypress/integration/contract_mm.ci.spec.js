@@ -6,22 +6,22 @@ context("Contracts MM", () => {
 
     it("finds contracts with search and navigates there + edits details + project link", () => {
         cy.visit("#/contracts");
-        cy.get("[data-cy='search-shortcut-all-contracts']").click();
-        // cy.get("[data-cy='toggle-filters-visibility']").click(); // uncomment if default is hidden, has been in flux
+        cy.get("[data-cy='search-shortcut-all-contracts']").click({force: true});
+        // cy.get("[data-cy='toggle-filters-visibility']").click({force: true}); // uncomment if default is hidden, has been in flux
         cy.get("input[id='contract-filter-input/:contract-name']").type("TEPPO");
 
         // cy.get("[data-cy='expand-contracts']").click({force: true});
-        // cy.get("[data-cy='expand-contracts'] span").first().click();
-        cy.get("[data-cy='expand-contracts']").click();
+        // cy.get("[data-cy='expand-contracts'] span").first().click({force: true});
+        cy.get("[data-cy='expand-contracts']").click({force: true});
 
 
         cy.get('h6:contains("Region")').should('be.visible');
 
-        cy.get("h4 + a[href^=\"#/contracts/\"").click();
+        cy.get("h4 + a[href^=\"#/contracts/\"").last().click({force: true});
 
         cy.url().should('contain', 'contracts/');
 
-        cy.get('h1 + button').contains("Edit").click();
+        cy.get('h1 + button').contains("Edit").click({force: true});
         cy.formInput(":thk.contract/number", "123",
                      ":thk.contract/external-link", "https://example.com",
                      ":thk.contract/signed-at", "16.06.2021",
@@ -31,7 +31,7 @@ context("Contracts MM", () => {
                      ":thk.contract/cost", "599");
         cy.formSubmit();
         cy.get("[data-cy='snackbar-success']");
-        cy.get("[data-cy='contract-related-link']").click()
+        cy.get("[data-cy='contract-related-link']").click({force: true})
         cy.url().should('contain', 'projects/');
     });
 
