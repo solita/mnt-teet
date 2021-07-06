@@ -434,17 +434,17 @@
 (defn new-person-form-fields [e! form-value]
   []
   [:div
-   ^{:key "id-code"}
-   [form/field :company-contract-employee/id-code
+   ^{:key "person-id"}
+   [form/field :user/person-id
     [TextField {}]]
-   [form/field :company-contract-employee/given-name
+   [form/field :user/given-name
     [TextField {}]]
-   [form/field :company-contract-employee/family-name
+   [form/field :user/family-name
     [TextField {}]]
-   [form/field {:attribute :company-contract-employee/email
+   [form/field {:attribute :user/email
                 :validate validation/validate-email-optional}
     [TextField {}]]
-   [form/field :person/phone-number
+   [form/field :user/phone-number
     [TextField {}]]
    [form/field {:attribute :company-contract-employee/role}
     [select/select-user-roles-for-contract
