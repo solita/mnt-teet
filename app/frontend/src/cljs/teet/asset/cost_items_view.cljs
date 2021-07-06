@@ -171,96 +171,99 @@
                    :simple-view [:span " "]}])])
 
 (defn- location-entry [e! locked? selected-road-nr single-point?]
-  (let [input-textfield (if locked? display-input text-field/TextField)
-        mobile? (responsivity-styles/mobile?)
-        subhead-w (if mobile? 12 2)
-        subhead (fn [text]
-                  [Grid {:item true :md subhead-w :xs subhead-w
-                         ;; Add margin here because grid is aligned
-                         ;; to bottom.
-                         :class (<class common-styles/margin-bottom 1.5)}
-                   [typography/BoldGrayText text]])]
-    [:<>
+  (r/with-let [;; Open map initially
+               _ (when-not locked?
+                   (e! (cost-items-controller/->UpdateForm {:location/map-open? true})))]
+    (let [input-textfield (if locked? display-input text-field/TextField)
+          mobile? (responsivity-styles/mobile?)
+          subhead-w (if mobile? 12 2)
+          subhead (fn [text]
+                    [Grid {:item true :md subhead-w :xs subhead-w
+                           ;; Add margin here because grid is aligned
+                           ;; to bottom.
+                           :class (<class common-styles/margin-bottom 1.5)}
+                     [typography/BoldGrayText text]])]
+      [:<>
 
-     (subhead (tr [:asset :location :project-coordinates]))
+       (subhead (tr [:asset :location :project-coordinates]))
 
-     [Grid {:item true
-            :md (if single-point? 10 5)
-            :xs (if mobile? 6 12)
-            :style {:padding "0.2rem"}}
-      [form/field {:attribute :location/start-point
-                   :required? true}
-       [input-textfield {}]]]
-
-     (when-not single-point?
        [Grid {:item true
-              :md 5
+              :md (if single-point? 10 5)
               :xs (if mobile? 6 12)
               :style {:padding "0.2rem"}}
-        [form/field {:attribute :location/end-point
+        [form/field {:attribute :location/start-point
                      :required? true}
-         [input-textfield {}]]])
+         [input-textfield {}]]]
 
-     (subhead (tr [:asset :location :road-address]))
+       (when-not single-point?
+         [Grid {:item true
+                :md 5
+                :xs (if mobile? 6 12)
+                :style {:padding "0.2rem"}}
+          [form/field {:attribute :location/end-point
+                       :required? true}
+           [input-textfield {}]]])
 
-     [Grid {:item true
-            :md 5
-            :xs 10
-            :style {:padding "0.2rem"}}
+       (subhead (tr [:asset :location :road-address]))
 
-      (if locked?
-        [form/field [:location/road-nr :location/carriageway]
-         [road-number-and-name {:e! e!}]]
-        [form/field :location/road-nr
-         [asset-ui/relevant-road-select {:e! e!}]])]
-
-     [Grid {:item true
-            :md 5
-            :xs 2
-            :style {:padding "0.2rem"}}
-      [form/field :location/carriageway
-       (if locked?
-         [input-textfield {}]
-         [carriageway-for-road-select {:e! e!} selected-road-nr])]]
-
-     [Grid {:item true :md 2}]
-
-     [Grid {:item true
-            :md (if single-point? 6 3)
-            :xs (if single-point? 6 3)
-            :style {:padding "0.2rem"}}
-      [form/field {:attribute :location/start-km
-                   :required? true}
-       [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
-
-     [Grid {:item true
-            :md (if single-point? 4 2)
-            :xs (if single-point? 6 3)
-            :style {:padding "0.2rem"}}
-      [form/field :location/start-offset-m
-       [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
-
-
-     (when-not single-point?
        [Grid {:item true
-              :md 3
-              :xs 3
+              :md 5
+              :xs 10
               :style {:padding "0.2rem"}}
-        [form/field :location/end-km
-         [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]])
 
-     (when-not single-point?
+        (if locked?
+          [form/field [:location/road-nr :location/carriageway]
+           [road-number-and-name {:e! e!}]]
+          [form/field :location/road-nr
+           [asset-ui/relevant-road-select {:e! e!}]])]
+
        [Grid {:item true
-              :md 2
-              :xs 3
+              :md 5
+              :xs 2
               :style {:padding "0.2rem"}}
-        [form/field :location/end-offset-m
-         [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
+        [form/field :location/carriageway
+         (if locked?
+           [input-textfield {}]
+           [carriageway-for-road-select {:e! e!} selected-road-nr])]]
 
-     [Grid {:item true
-            :md 12 :xs 12}
-      [form/field :location/single-point?
-       [select/checkbox {:disabled (boolean locked?)}]]]]))
+       [Grid {:item true :md 2}]
+
+       [Grid {:item true
+              :md (if single-point? 6 3)
+              :xs (if single-point? 6 3)
+              :style {:padding "0.2rem"}}
+        [form/field {:attribute :location/start-km
+                     :required? true}
+         [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]]
+
+       [Grid {:item true
+              :md (if single-point? 4 2)
+              :xs (if single-point? 6 3)
+              :style {:padding "0.2rem"}}
+        [form/field :location/start-offset-m
+         [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]]
+
+
+       (when-not single-point?
+         [Grid {:item true
+                :md 3
+                :xs 3
+                :style {:padding "0.2rem"}}
+          [form/field :location/end-km
+           [input-textfield {:end-icon (text-field/unit-end-icon "km")}]]])
+
+       (when-not single-point?
+         [Grid {:item true
+                :md 2
+                :xs 3
+                :style {:padding "0.2rem"}}
+          [form/field :location/end-offset-m
+           [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
+
+       [Grid {:item true
+              :md 12 :xs 12}
+        [form/field :location/single-point?
+         [select/checkbox {:disabled (boolean locked?)}]]]])))
 
 (defn attributes* [{:keys [e! attributes component-oid cost-item-data
                            inherits-location? single-point?
@@ -519,7 +522,9 @@
    component])
 
 (defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
-  (r/with-let [initial-data form-data]
+  (r/with-let [initial-data form-data
+
+               ]
     (let [new? (nil? (:asset/oid form-data))
           cancel-event (if new?
                          #(common-controller/->NavigateWithSameParams :cost-items)
