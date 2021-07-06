@@ -473,9 +473,6 @@
                      :autocomplete-off? true
                      :value @form-atom
                      :on-change-event (form/update-atom-event form-atom (fn [old new]
-                                                                          (let [_ (println "on-chane-event")
-                                                                                _ (cljs.pprint/pprint old)
-                                                                                _ (cljs.pprint/pprint new)])
                                                                           (if (= {:company-contract-employee/role #{}} new)
                                                                             (dissoc old :company-contract-employee/role)
                                                                             (merge old new))))
