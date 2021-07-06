@@ -221,8 +221,8 @@
  {:path "/admin"
   :permission :admin/add-user
   :view teet.admin.admin-view/admin-users-page
-  :title (tr [:admin :title-users])
-  :crumb (tr [:admin :title-users])}
+  :title (tr [:admin :title])
+  :crumb (tr [:admin :title])}
 
  :admin-users
  {:path "/admin/users"

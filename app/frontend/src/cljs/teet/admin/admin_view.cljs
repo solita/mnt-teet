@@ -334,10 +334,10 @@
   [:div {:class (<class common-styles/top-info-spacing)}
    [common-ui/context-menu {:label "Admin menu"
                             :icon [icons/navigation-menu]
-                            :items [{:label "Users"
+                            :items [{:label (tr [:admin :title-users])
                                      :link {:href "../#/admin/users"}
                                      :icon [icons/action-verified-user]}
-                                    {:label "Indexes"
+                                    {:label (tr [:admin :title-indexes])
                                      :link {:href "../#/admin/indexes"}
                                      :icon [icons/action-list]}
                                     ]}]])

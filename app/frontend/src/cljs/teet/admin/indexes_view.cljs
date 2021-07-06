@@ -103,8 +103,8 @@
      [TextField {}]]]
    [:div {:style {:margin-bottom "1rem"}}
     [form/field :cost-index/type
-     [select/form-select {:format-item #(if % (name %) (str "- select -"))
-                          :items (into [nil] (mapv #(tr-enum (:type %)) enabled-indexes))}]]]
+     [select/form-select {:format-item #(if % (tr-enum %) (tr [:common :select :empty]))
+                          :items (into [nil] (mapv #(:type %) enabled-indexes))}]]]
     [:div {:style {:margin-bottom "1rem"}}
      [form/field :cost-index/valid-from
       [date-picker/date-input {}]]]]
@@ -143,17 +143,17 @@
      (tr [:buttons :add-index])]]
    [:div
     (if index-data
-      (doall (for [index-group (distinct (mapv (fn [x] (:db/ident (:cost-index/type x))) index-data))]
+      (doall (for [index-group (distinct (mapv (fn [x] (:cost-index/type x)) index-data))]
                ^{:key (str index-group)}
                [:<>
-                [:div {:class [(<class common-styles/margin 1 0 0 0)]} [:b (str index-group)]]
+                [:div {:class [(<class common-styles/margin 1 0 0 0)]} [:b (tr-enum index-group)]]
                 (mapc (fn [x] [:div [url/Link {:page :admin-index-page
                                               :params {:id (:db/id x)}}
                                     (if (= id (str (:db/id x)))
                                       [:b (:cost-index/name x)]
                                       (:cost-index/name x))]])
                       (sort :cost-index/valid-from (filterv
-                                               (fn [y] (= index-group (:db/ident (:cost-index/type y))))
+                                               (fn [y] (= index-group (:cost-index/type y)))
                                                index-data)))]))
       (tr [:indexes-admin :no-indexes-added]))]])])
 
@@ -236,8 +236,7 @@
                               :step ".01"
                               :required true
                               :hide-label? true
-                              :id (str "index-value-" (t/year x) "-" (t/month x))
-                              :end-icon (teet.ui.text-field/euro-end-icon)}]]]
+                              :id (str "index-value-" (t/year x) "-" (t/month x))}]]]
                  (str field-value))]])) month-objects)
     [:div {:class[(<class common-styles/flex-align-end)
                   (<class common-styles/margin 2 0 0 0)]}
@@ -273,7 +272,8 @@
     (let [values (:cost-index/values index)
           index-valid (t/date-time (:cost-index/valid-from index))]
      [:div
-      [:div {:class (<class common-styles/flex-align-center)}
+      [:div {:class [(<class common-styles/margin-bottom 2)
+                     (<class common-styles/flex-align-center)]}
        [:div {:style {:min-width "600px"}}
         (if edit?
           [edit-index-form e! index (:edit-index page-state)]
