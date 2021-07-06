@@ -479,7 +479,6 @@
                                                                           (if (= {:company-contract-employee/role #{}} new)
                                                                             (dissoc old :company-contract-employee/role)
                                                                             (merge old new))))
-
                      :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                       {:query (merge query
                                                      {:page :partner-info})})
@@ -501,31 +500,33 @@
                                     (tr [:contract :employee-added]))}
          [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
           (tr [:contract :add-person])]
-         (cond
-           (true? user-selected?)
-           [form/field {:attribute :company-contract-employee/role}
-            [select/select-user-roles-for-contract
-             {:e! e!
-              :error-text (tr [:contract :role-required])
-              :placeholder (tr [:contract :select-user-roles])
-              :no-results (tr [:contract :no-matching-roles])
-              :show-empty-selection? true
-              :clear-value [nil nil]}]]
-           @add-new-person?
-           [new-person-form-fields e! (:form-value @form-atom)]
-           :else
-           [:div
-            [form/field :company-contract-employee/user
-             [select/select-search
-              {:e! e!
-               :query (fn [text]
-                        {:args {:search text
-                                :company-contract-id (:db/id selected-partner)}
-                         :query :contract/possible-partner-employees})
-               :format-result select/user-search-select-result
-               :after-results-action {:title (tr [:contract :add-person-not-in-teet])
-                                      :on-click add-new-person
-                                      :icon [icons/content-add]}}]]])
+         (if selected-user
+           [selected-user-information selected-user]
+           (cond
+             (true? user-selected?)
+             [form/field {:attribute :company-contract-employee/role}
+              [select/select-user-roles-for-contract
+               {:e! e!
+                :error-text (tr [:contract :role-required])
+                :placeholder (tr [:contract :select-user-roles])
+                :no-results (tr [:contract :no-matching-roles])
+                :show-empty-selection? true
+                :clear-value [nil nil]}]]
+             @add-new-person?
+             [new-person-form-fields e! (:form-value @form-atom)]
+             :else
+             [:div
+              [form/field :company-contract-employee/user
+               [select/select-search
+                {:e! e!
+                 :query (fn [text]
+                          {:args {:search text
+                                  :company-contract-id (:db/id selected-partner)}
+                           :query :contract/possible-partner-employees})
+                 :format-result select/user-search-select-result
+                 :after-results-action {:title (tr [:contract :add-person-not-in-teet])
+                                        :on-click add-new-person
+                                        :icon [icons/content-add]}}]]]))
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
