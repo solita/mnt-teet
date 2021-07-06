@@ -413,7 +413,8 @@
 
 (defn contract-personnel-form-footer
   [form-value {:keys [cancel validate disabled?]}]
-  (let [save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
+  (let [_ (cljs.pprint/pprint "form footer")
+        save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
                     :text-align :center}}
@@ -472,6 +473,9 @@
                      :autocomplete-off? true
                      :value @form-atom
                      :on-change-event (form/update-atom-event form-atom (fn [old new]
+                                                                          (let [_ (println "on-chane-event")
+                                                                                _ (cljs.pprint/pprint old)
+                                                                                _ (cljs.pprint/pprint new)])
                                                                           (if (= {:company-contract-employee/role #{}} new)
                                                                             (dissoc old :company-contract-employee/role)
                                                                             (merge old new))))

@@ -152,3 +152,32 @@
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
 
+(defcommand :thk.contract/add-new-contract-employee
+            {:doc "Save a new contract partner"
+             :payload {form-value :form-value
+                       company-contract-eid :company-contract-eid}
+             :context {:keys [user db]}
+             :project-id nil
+             :authorization {:contracts/contract-editing {}}}
+            (let [employee-fields (-> (select-keys form-value [:user/person-id :user/given-name :user/family-name
+                                                             :user/email :user/phone-number]))
+
+                  new-company-contract-employee-id (UUID/randomUUID)
+                  new-employee-id "new-employee"
+                  tempids
+                  (:tempids (tx [(list 'teet.contract.contract-tx/update-company-contract-employee
+                                       company-contract-eid
+                                       new-employee-id
+                                       [(merge
+                                          {:db/id new-employee-id}
+                                          employee-fields
+                                          (meta-model/creation-meta user))
+                                        (merge
+                                          {:db/id "new-company-contract-employee"
+                                           :company-contract-employee/user new-employee-id
+                                           :company-contract-employee/role (mapv
+                                                                             :db/id
+                                                                             (:company-contract-employee/role form-value))}
+                                          (meta-model/creation-meta user))])]))]
+              (merge tempids
+                     {:company-contract-employee-id new-company-contract-employee-id})))
