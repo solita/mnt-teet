@@ -77,6 +77,7 @@ describe('Meeting Links', function () {
             ":meeting/title", this.testmeeting,
             ":meeting/location", "Test environment RAM")
         cy.formSubmit()
+        cy.get("[data-cy='snackbar-success']");
     }
 
     function createAgenda() {
