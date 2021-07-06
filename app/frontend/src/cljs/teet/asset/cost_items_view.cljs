@@ -529,9 +529,7 @@
    component])
 
 (defn- cost-item-form [e! atl relevant-roads {:asset/keys [fclass] :as form-data}]
-  (r/with-let [initial-data form-data
-
-               ]
+  (r/with-let [initial-data form-data]
     (let [new? (nil? (:asset/oid form-data))
           cancel-event (if new?
                          #(common-controller/->NavigateWithSameParams :cost-items)
