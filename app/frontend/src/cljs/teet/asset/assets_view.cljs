@@ -142,6 +142,7 @@
   [:div
    [select/select-search-multiple
     {:e! e!
+     :no-results (tr [:link :search :no-results])
      :query-threshold 0
      :value (:region criteria)
      :query (fn [text]

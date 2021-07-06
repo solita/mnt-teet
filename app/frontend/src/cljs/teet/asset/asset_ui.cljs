@@ -127,6 +127,7 @@
       [select/select-search-multiple
        {:e! e!
         :placeholder (str (label attr) "...")
+        :no-results (tr [:link :search :no-results])
         :value value
         :on-change on-change
         :format-result label
