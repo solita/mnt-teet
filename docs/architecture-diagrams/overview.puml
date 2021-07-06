@@ -41,6 +41,10 @@ end note
         note bottom of mapsAlias
 	Front end requests map tiles from Maa-amet tile server
 end note
+
+  (Tableau analytics) as tableauAlias
+
+  (Vektor.io) as vektorio
 }
 
 
@@ -67,7 +71,7 @@ package "Datomic" {
   Lambda(thkIntegrationIonAlias, "THK Integration ion", "Processes CSV files")
   Lambda(uploadProcessingIonAlias, "Upload processing ion", "uploaded files")
   Lambda(taraLoginIon, "TARA login", "OpenID Connect")
-  EC2(datomicComputeNode, "Compute node", "Handles actual lambda logic")
+  EC2(datomicComputeNode, "Compute node", "Handles actual query and business logic")
 
   note right of datomicComputeNode
 	Datomic Cloud runs a set of compute nodes,
@@ -77,6 +81,8 @@ package "Datomic" {
   note left of datomicAlias
 	Datomic DB data is backed by AWS DynamoDB, S3 & EBS services
   end note
+
+  EC2(datomicBastion,"Bastion/analytics", "Handles Presto analytics connector")
 
 }
 
@@ -99,6 +105,11 @@ commandIonAlias <--> datomicComputeNode
 uploadProcessingIonAlias <--> datomicComputeNode
 taraLoginIon <--> datomicComputeNode
 
+datomicComputeNode --> pgAlias
+
+tableauAlias --> datomicBastion
+datomicBastion --> datomicComputeNode
+
 taraLoginIon --> taraAlias
 Datomic -u-> pgRestAlias
 uploadProcessingIonAlias <--> storageAlias
@@ -110,7 +121,7 @@ note left of integrationS3Alias
 	THK system periodically uploads CSV file to S3 integration bucket
 end note
 
-
+datomicComputeNode --> vektorio
 
 datomicComputeNode --> xroad :VPN connection
 xroad --> propertyRegistry
