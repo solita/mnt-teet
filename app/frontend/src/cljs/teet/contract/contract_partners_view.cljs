@@ -431,8 +431,30 @@
                                   :on-click validate}
           (tr [:buttons :save])])]]]))
 
-(defn new-person-form-fields [form-value]
-  [:div "new person form fields here"])
+(defn new-person-form-fields [e! form-value]
+  []
+  [:div
+   ^{:key "id-code"}
+   [form/field :company-contract-employee/id-code
+    [TextField {}]]
+   [form/field :company-contract-employee/given-name
+    [TextField {}]]
+   [form/field :company-contract-employee/family-name
+    [TextField {}]]
+   [form/field {:attribute :company-contract-employee/email
+                :validate validation/validate-email-optional}
+    [TextField {}]]
+   [form/field :person/phone-number
+    [TextField {}]]
+   [form/field {:attribute :company-contract-employee/role}
+    [select/select-user-roles-for-contract
+     {:e! e!
+      :error-text (tr [:contract :role-required])
+      :placeholder (tr [:contract :select-user-roles])
+      :no-results (tr [:contract :no-matching-roles])
+      :show-empty-selection? true
+      :clear-value [nil nil]}]]
+   ])
 
 (defn add-personnel-form
   [e! {:keys [query] :as app} selected-partner]
@@ -482,7 +504,7 @@
               :show-empty-selection? true
               :clear-value [nil nil]}]]
            @add-new-person?
-           [new-person-form-fields (:form-value @form-atom)]
+           [new-person-form-fields e! (:form-value @form-atom)]
            :else
            [:div
             [form/field :company-contract-employee/user
