@@ -8,7 +8,8 @@
             [teet.contract.contract-db :as contract-db]
             [teet.authorization.authorization-core :as authorization]
             [teet.environment :as environment]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.user.user-model :as user-model])
   (:import (java.util UUID)))
 
 
@@ -144,6 +145,7 @@
              (get-in form-value [:company-contract-employee/user :db/id])))]
    :transact [(merge
                 {:db/id "new-company-contract-employee"
+                 :company-contract-employee/active? true    ;; employees are active by default
                  :company-contract-employee/user (:company-contract-employee/user form-value)
                  :company-contract-employee/role (mapv
                                                    :db/id
@@ -159,25 +161,23 @@
              :context {:keys [user db]}
              :project-id nil
              :authorization {:contracts/contract-editing {}}}
-            (let [employee-fields (-> (select-keys form-value [:user/person-id :user/given-name :user/family-name
+            (let [employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                              :user/email :user/phone-number]))
-
-                  new-company-contract-employee-id (UUID/randomUUID)
+                  user-person-id (user-model/normalize-person-id (:user/person-id form-value))
                   new-employee-id "new-employee"
                   tempids
-                  (:tempids (tx [(list 'teet.contract.contract-tx/update-company-contract-employee
-                                       company-contract-eid
-                                       new-employee-id
-                                       [(merge
-                                          {:db/id new-employee-id}
-                                          employee-fields
-                                          (meta-model/creation-meta user))
-                                        (merge
-                                          {:db/id "new-company-contract-employee"
-                                           :company-contract-employee/user new-employee-id
-                                           :company-contract-employee/role (mapv
-                                                                             :db/id
-                                                                             (:company-contract-employee/role form-value))}
-                                          (meta-model/creation-meta user))])]))]
-              (merge tempids
-                     {:company-contract-employee-id new-company-contract-employee-id})))
+                  (:tempids (tx [(merge
+                                      {:db/id new-employee-id
+                                       :user/person-id user-person-id
+                                       :user/id (java.util.UUID/randomUUID)}
+                                      employee-fields
+                                      (meta-model/creation-meta user))
+                                 (merge
+                                   {:db/id "new-company-contract-employee"
+                                    :company-contract-employee/active? true ;; employees are active by default
+                                    :company-contract-employee/user new-employee-id
+                                    :company-contract-employee/role (mapv
+                                                                      :db/id
+                                                                      (:company-contract-employee/role form-value))}
+                                   (meta-model/creation-meta user))]))]
+              tempids))

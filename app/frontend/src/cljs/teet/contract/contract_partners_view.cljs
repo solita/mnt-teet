@@ -413,7 +413,7 @@
 
 (defn contract-personnel-form-footer
   [form-value {:keys [cancel validate disabled?]}]
-  (let [_ (cljs.pprint/pprint "form footer")
+  (let [_ (cljs.pprint/pprint form-value)
         save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
@@ -426,7 +426,7 @@
                                     :on-click cancel}
           (tr [:buttons :cancel])])
        (when validate
-         [buttons/button-primary {:disabled (or save-disabled? disabled?)
+         [buttons/button-primary {:disabled disabled?
                                   :type :submit
                                   :class "submit"
                                   :on-click validate}
@@ -479,12 +479,16 @@
                                                                           (if (= {:company-contract-employee/role #{}} new)
                                                                             (dissoc old :company-contract-employee/role)
                                                                             (merge old new))))
-                     :spec :thk.contract/add-contract-employee
+
                      :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                       {:query (merge query
                                                      {:page :partner-info})})
                      :save-event #(common-controller/->SaveFormWithConfirmation
-                                    :thk.contract/add-contract-employee
+                                    (cond
+                                      @add-new-person?
+                                      :thk.contract/add-new-contract-employee
+                                      :else
+                                      :thk.contract/add-contract-employee)
                                     {:form-value @form-atom
                                      :company-contract-eid (:db/id selected-partner)}
                                     (fn [_response]
