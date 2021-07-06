@@ -31,7 +31,8 @@
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.ui.util :as util]
-            [teet.common.responsivity-styles :as responsivity-styles]))
+            [teet.common.responsivity-styles :as responsivity-styles]
+            [teet.ui.query :as query]))
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -162,6 +163,13 @@
    opts
    [carriageway-for-road-select* opts selected-road-nr]])
 
+(defn- road-number-and-name [{e! :e! [road-nr carriageway] :value}]
+  [:span road-nr " "
+   (when (and road-nr carriageway)
+     [query/query {:e! e! :query :road/name :args {:road-nr road-nr :carriageway carriageway}
+                   :loading-state " "
+                   :simple-view [:span " "]}])])
+
 (defn- location-entry [e! locked? selected-road-nr single-point?]
   (let [input-textfield (if locked? display-input text-field/TextField)
         mobile? (responsivity-styles/mobile?)
@@ -199,10 +207,12 @@
             :md 5
             :xs 10
             :style {:padding "0.2rem"}}
-      [form/field :location/road-nr
-       (if locked?
-         [input-textfield {}]
-         [asset-ui/relevant-road-select {:e! e!}])]]
+
+      (if locked?
+        [form/field [:location/road-nr :location/carriageway]
+         [road-number-and-name {:e! e!}]]
+        [form/field :location/road-nr
+         [asset-ui/relevant-road-select {:e! e!}]])]
 
      [Grid {:item true
             :md 5

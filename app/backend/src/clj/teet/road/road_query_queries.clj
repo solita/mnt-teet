@@ -273,3 +273,14 @@
    :authorization {}}
   (teeregister-api/road-search (teeregister-api/create-client client)
                                text))
+
+
+(defquery :road/name
+  {:doc "Get road name for road nr and carriageway"
+   :config {client [:road-registry :api]}
+   :project-id nil
+   :authorization {}
+   :args {:keys [road-nr carriageway]}}
+  (teeregister-api/road-name (teeregister-api/create-client client)
+                             (->long road-nr)
+                             (->long carriageway)))
