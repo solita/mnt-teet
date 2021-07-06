@@ -12,7 +12,8 @@
             [teet.ui.buttons :as buttons]
             [re-svg-icons.feather-icons :as fi]
             [teet.ui.util :refer [mapc]]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [clojure.string :as str]))
 
 (def Link typography/Link)
 (def Link2 typography/Link2)
@@ -530,10 +531,10 @@
                    {:data-cy cy}))
      [:div {:class [(<class common-styles/flex-align-center)
                     (<class common-styles/margin-bottom 0.5)]}
-      [:div {:class (<class info-box-icon-container-style)}
-       icon]
+      (when (not (str/blank? title)) [:div {:class (<class info-box-icon-container-style)}
+       icon])
       (if title
-        [typography/Heading3 title]
+        [:<> [typography/Heading3 title]]
         content)]
      (when (and title content)
        content)]))
@@ -556,7 +557,8 @@
         icon])
       (if multi
         [:div
-         (doall (for [{:keys [title body]} multi]
+         (doall (for [{:keys [title body] :as content} multi
+                      :when content]
                   ^{:key title}
                   [:div
                    [typography/TextBold title]

@@ -142,6 +142,7 @@
   [:div
    [select/select-search-multiple
     {:e! e!
+     :no-results (tr [:link :search :no-results])
      :query-threshold 0
      :value (:region criteria)
      :query (fn [text]
@@ -307,6 +308,15 @@
        [buttons/button-secondary {:on-click (e! assets-controller/->BackToListing)}
         [icons/navigation-arrow-back]
         (tr [:asset :manager :back-to-result-listing])]
+
+       [typography/Heading2 oid]
+       [asset-ui/asset-breadcrumbs {:atl atl
+                                    :path (if (asset-model/asset-oid? oid)
+                                            [asset]
+                                            (asset-model/find-component-path asset oid))
+                                    :link-opts-fn (fn [oid]
+                                                    {:page :assets
+                                                     :query {:details oid}})}]
        (when component?
          [url/Link {:page :assets
                     :query {:details (asset-model/component-asset-oid oid)}}

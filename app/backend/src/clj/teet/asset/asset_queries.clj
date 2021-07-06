@@ -437,7 +437,6 @@ the parent asset and sibling components on the map when creating a new component
    :context {adb :asset-db}
    :project-id nil
    :authorization {}}
-  (println "fetching " oid)
   (let [oid (if (asset-model/component-oid? oid)
               (asset-model/component-asset-oid oid)
               oid)
@@ -486,7 +485,8 @@ the parent asset and sibling components on the map when creating a new component
    :context {c :sql-conn}
    :project-id nil
    :authorization {}}
-  (let [areas (fetch-regions c)
+  (let [region-ds (map :id (fetch-region-ds c))
+        areas (fetch-regions c {:ds region-ds})
         counties (into []
                        (filter (complement :okood))
                        (sort-by :label areas))

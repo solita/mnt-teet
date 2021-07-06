@@ -31,7 +31,8 @@
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.ui.util :as util]
-            [teet.common.responsivity-styles :as responsivity-styles]))
+            [teet.common.responsivity-styles :as responsivity-styles]
+            [teet.ui.query :as query]))
 
 (def ^:private integer-pattern #"^-?\d*$")
 (def ^:private decimal-pattern #"^-?\d+((,|\.)\d*)?$")
@@ -162,6 +163,13 @@
    opts
    [carriageway-for-road-select* opts selected-road-nr]])
 
+(defn- road-number-and-name [{e! :e! [road-nr carriageway] :value}]
+  [:span road-nr " "
+   (when (and road-nr carriageway)
+     [query/query {:e! e! :query :road/name :args {:road-nr road-nr :carriageway carriageway}
+                   :loading-state " "
+                   :simple-view [:span " "]}])])
+
 (defn- location-entry [e! locked? selected-road-nr single-point?]
   (let [input-textfield (if locked? display-input text-field/TextField)
         mobile? (responsivity-styles/mobile?)
@@ -193,16 +201,18 @@
                      :required? true}
          [input-textfield {}]]])
 
-     (subhead (tr [:asset :location :project-address]))
+     (subhead (tr [:asset :location :road-address]))
 
      [Grid {:item true
             :md 5
             :xs 10
             :style {:padding "0.2rem"}}
-      [form/field :location/road-nr
-       (if locked?
-         [input-textfield {}]
-         [asset-ui/relevant-road-select {:e! e!}])]]
+
+      (if locked?
+        [form/field [:location/road-nr :location/carriageway]
+         [road-number-and-name {:e! e!}]]
+        [form/field :location/road-nr
+         [asset-ui/relevant-road-select {:e! e!}]])]
 
      [Grid {:item true
             :md 5
@@ -247,11 +257,10 @@
         [form/field :location/end-offset-m
          [input-textfield {:end-icon (text-field/unit-end-icon "m")}]]])
 
-     (when-not locked?
-       [Grid {:item true
-              :md 12 :xs 12}
-        [form/field :location/single-point?
-         [select/checkbox {}]]])]))
+     [Grid {:item true
+            :md 12 :xs 12}
+      [form/field :location/single-point?
+       [select/checkbox {:disabled (boolean locked?)}]]]]))
 
 (defn attributes* [{:keys [e! attributes component-oid cost-item-data
                            inherits-location? single-point?
@@ -562,29 +571,7 @@
                  (asset-type-library/allowed-component-types atl fclass))
            (e! cost-items-controller/->AddComponent)]])])))
 
-(defn- component-form-navigation [atl component-path]
-  [:<>
-   [breadcrumbs/breadcrumbs
-    (for [p component-path]
-      {:link [url/Link {:page :cost-item
-                        :params {:id (:asset/oid p)}}
-              (:asset/oid p)]
-       :title (if (number? (:db/id p))
-                (:asset/oid p)
-                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
 
-   (into [:div]
-         (butlast
-          (interleave
-           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
-                                      atl
-                                      (:asset/fclass (first component-path))))]
-                         (map #(or (:asset/fclass %)
-                                   (:component/ctype %)
-                                   (:material/type %)))
-                         component-path)]
-             [label-for p])
-           (repeat " / "))))])
 
 (defn- component-form* [e! atl component-oid cost-item-data]
   (r/with-let [initial-component-data
@@ -603,7 +590,7 @@
       [:<>
        (when (asset-model/component-oid? component-oid)
          [typography/Heading2 component-oid])
-       [component-form-navigation atl component-path]
+       [asset-ui/asset-breadcrumbs {:atl atl :path component-path}]
 
        [form/form2
         {:e! e!
@@ -690,7 +677,7 @@
       [:<>
        (when (asset-model/material-oid? material-oid)
          [typography/Heading2 material-oid])
-       [component-form-navigation atl material-path]
+       [asset-ui/asset-breadcrumbs {:atl atl :path material-path}]
 
        [form/form2
         {:e! e!

@@ -1,0 +1,5 @@
+Copy example-config.edn to config.edn and fill in values, then run with clojure -A:generate.
+
+Requires that the datomic access proxy is running, as in the datomic-repl scrip.
+
+

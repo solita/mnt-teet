@@ -96,6 +96,7 @@
    :materials-and-products "Materials and products"},
   :feature-group-and-class-placeholder
   "Search feature group or class...",
+  :component-saved "Component saved",
   :export-boq-filename "THK-{project}-BOQ-{version}.xlsx",
   :save-boq-version "Save BOQ version",
   :manager
@@ -111,12 +112,14 @@
   :components {:label "Components"},
   :back-to-cost-item "< Back to {name}",
   :materials {:label "Materials"},
+  :material-saved "Material saved",
   :location
   {:hide-map "Hide map",
    :no-road-found-for-points "No road found for points",
    :show-map "Show map",
    :project-coordinates "Coordinates",
-   :project-address "Project address"},
+   :project-address "Project address",
+   :road-address "Road address"},
   :confirm-unlock-for-edits "Yes, unlock",
   :type-library
   {:description "Description",
@@ -266,7 +269,7 @@
   :contract-save-success "Contract saved",
   :partners {:title "Companies & persons"},
   :persons "Persons",
-  :add-company "Add Partner information",
+  :add-company "Add Company",
   :status "Status",
   :table-heading
   {:activity "Activity",
@@ -283,7 +286,7 @@
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",
   :company-search-label "Company search",
-  :information-found "Information found.",
+  :information-found "Information found",
   :contracts-listing "Contract listing",
   :lead-partner "Lead partner",
   :edit-contract "Contract information",
@@ -291,8 +294,8 @@
   "No company matching the business registry code was found.",
   :xroad-exception-title "X-Road query failed",
   :edit-company "Edit company",
-  :role-required "Employee needs to have a role",
-  :employee-added "Employee added",
+  :role-required "Person needs to have a role",
+  :employee-added "Person added",
   :add-person "Add person",
   :search-companies-business-registry
   "Search for partner information from Estonian business registry",
@@ -305,6 +308,7 @@
    :filtered-results "Filtered {count} results",
    :results "{count} results",
    :view "View"},
+  :company-partners "Partners",
   :external-link "Contract no.",
   :filters
   {:hide-filters "Hide filters",
@@ -325,7 +329,7 @@
   :shortcuts
   {:all-contracts "All contracts",
    :my-contracts "My contracts",
-   :unassigned "Unassigned"},
+   :unassigned "Unassigned contracts"},
   :state-procurement-link "Procurement no.",
   :thk-procurement-link "THK"},
  :cooperation
@@ -879,7 +883,7 @@
   :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
-  :location/single-point? "Single point?",
+  :location/single-point? "Single point",
   :meeting/title "Title",
   :estate-procedure/process-fees "Processing fees",
   :thk.project/activity-status "Status",
@@ -904,6 +908,7 @@
   :cooperation.contact/id-code "Business reg / personal ID code",
   :file.part/name "Part name",
   :task/group "Task group",
+  :company/email "Company e-mail",
   :company/business-registry-code "Business registry code",
   :file/part "Part",
   :cooperation.3rd-party/name "Involved party name",
@@ -948,7 +953,7 @@
   :meeting/agenda "Agenda",
   :cooperation.3rd-party/id-code
   "Involved party registry/personal ID code",
-  :boq-version/explanation "Explanation",
+  :boq-version/explanation "Reason",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
   :cooperation.application/activity "Activity",
@@ -997,7 +1002,6 @@
   :file/timestamp "Upload date",
   :company-contract-employee/role "Role",
   :cooperation.3rd-party/email "E-mail address",
-  :company/phone-numbers "Company phone number",
   :user/email "Email",
   :land-acquisition/area-to-obtain "Area to obtain",
   :file/sequence-number "#",
@@ -1016,7 +1020,6 @@
   :meeting/links "Links",
   :activity/name "Activity name",
   :location/start-km "Start km",
-  :company/emails "Company e-mail",
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :boq-version/type "Update version status",
@@ -1025,6 +1028,7 @@
   :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
   :cooperation.contact/name "Name",
+  :company/phone-number "Company phone number",
   :boq-export/unit-prices? "Include unit prices?",
   :file/document-group "Group",
   :thk.contract/number "Contract number",
@@ -1344,6 +1348,11 @@
   :cadastral-units-updated "Cadastral units updated successfully",
   :topic-created "Topic created succesfully"},
  :page-title {:project-list "{name} project"},
+ :partner
+ {:business-registry-data-successfully-updated
+  "Business registry data is successfully updated",
+  :business-registry-search-failed "Business registry search failed",
+  :update-business-registry-data "Update business register data"},
  :people-tab
  {:active "ACTIVE",
   :consultants "Consultants",
