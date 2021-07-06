@@ -1,11 +1,11 @@
 context("Contracts MM", () => {
     beforeEach(() => {
         cy.dummyLogin("benjamin");
-        cy.visit("#/contracts");
         cy.selectLanguage("#EN");
     });
 
     it("finds contracts with search and navigates there + edits details + project link", () => {
+        cy.visit("#/contracts");
         cy.get("[data-cy='search-shortcut-all-contracts']").click();
         // cy.get("[data-cy='toggle-filters-visibility']").click(); // uncomment if default is hidden, has been in flux
         cy.get("input[id='contract-filter-input/:contract-name']").type("TEPPO");
@@ -30,7 +30,7 @@ context("Contracts MM", () => {
                      ":thk.contract/extended-deadline", "19.06.2021",
                      ":thk.contract/cost", "599");
         cy.formSubmit();
-        cy.get(".MuiSnackbar-root")
+        cy.get("[data-cy='snackbar-success']");
         cy.get("[data-cy='contract-related-link']").click()
         cy.url().should('contain', 'projects/');
     });
