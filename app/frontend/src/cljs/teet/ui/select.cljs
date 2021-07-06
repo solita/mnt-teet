@@ -475,7 +475,7 @@
            show-label? after-results-action
            query placeholder no-results clear-value
            start-icon input-button-icon input-element
-           query-threshold autofocus?]
+           query-threshold autofocus? on-backspace]
     :or {show-label? true
          autofocus? false
          query-threshold 2
@@ -495,16 +495,21 @@
                            (when (and % autofocus?) (.focus %)))]
     (let [{:keys [loading? results open? input highlight]} @state
           current-input-ref (or (:input-ref opts) @input-ref)
-          on-key-down (partial arrow-navigation state on-change
-                               (fn backspace-handler [e]
-                                 ;; When input contains the current selected value and user presses
-                                 ;; backspace, remove the selected value and clear input.
-                                 (when (and value current-input-ref
-                                            (= (format-result value) (.-value current-input-ref)))
-                                   (on-change clear-value)
-                                   (swap! state assoc :input "")
-                                   (.preventDefault e)
-                                   (.stopPropagation e))))
+          on-key-down (partial
+                       arrow-navigation state on-change
+                       (fn backspace-handler [e]
+                         (if on-backspace
+                           ;; If backspace handler given, call it with
+                           ;; event and the input text
+                           (on-backspace e input)
+                           ;; When input contains the current selected value and user presses
+                           ;; backspace, remove the selected value and clear input.
+                           (when (and value current-input-ref
+                                      (= (format-result value) (.-value current-input-ref)))
+                             (on-change clear-value)
+                             (swap! state assoc :input "")
+                             (.preventDefault e)
+                             (.stopPropagation e)))))
           load! (fn [text]
                   (let [result-fn-or-query-map (query text)]
                     (if (fn? result-fn-or-query-map)
@@ -681,7 +686,13 @@
                :input-ref @input-ref
                :show-label? false
                :value nil
-               :on-change #(on-change (conj (or value #{}) %))}
+               :on-change #(on-change (conj (or value #{}) %))
+               :on-backspace (fn select-search-multiple-backspace
+                               [_e text]
+                               (when (and (seq value)
+                                          (zero? (count text)))
+                                 ;; remove last value when backspacing
+                                 (on-change (disj value (last value)))))}
               (when checkbox?
                 {:format-result (partial search-result-with-checkbox opts)
                  :on-change #(on-change (cu/toggle value %))}))]]
