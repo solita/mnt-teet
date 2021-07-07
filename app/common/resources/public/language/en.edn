@@ -41,6 +41,7 @@
   :deactivate "Deactivate",
   :all-users "All users",
   :managers "Managers",
+  :admin-menu "Admin menu",
   :title-indexes "Indexes",
   :title "Admin",
   :role-and-contact-information "ROLE AND CONTACT INFORMATION",
@@ -57,6 +58,7 @@
   :deactivated-successfully "User deactivated successfully",
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
+  :activate "Activate",
   :current-permissions "Current permissions"},
  :asset
  {:unlock-contract-boq-warning
@@ -208,6 +210,7 @@
   :comments-for "Comments for {file-name}:"},
  :common
  {:hide-menu "Hide menu",
+  :view-more-info "View more info",
   :send-feedback "Send feedback",
   :forbidden-explanation
   "You have tried to access a resource you're not authorized to access.",
@@ -269,6 +272,10 @@
   :no-company-found-title "Company not found",
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
+  :partner
+  {:active-persons "Active persons",
+   :deactive-persons "Deactive persons",
+   :key-person "Key person"},
   :person-name "Person name",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",

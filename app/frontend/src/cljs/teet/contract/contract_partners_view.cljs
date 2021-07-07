@@ -21,7 +21,8 @@
             [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.table :as table]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -375,21 +376,50 @@
                               :query {:page :add-partner}})}
       (tr [:contract :add-company])]]]])
 
+(defn employee-table
+  [employees active?]
+  [:div {:class (<class contract-style/personnel-table-style)}
+   [:h4 (str (if active?
+               (tr [:contract :partner :active-persons])
+               (tr [:contract :partner :deactive-persons]))
+          " (" (count employees) ")")]
+   [table/simple-table
+    [[(tr [:common :name])]
+     [(tr [:user :role])]
+     [(tr [:contract :partner :key-person])]
+     []
+     []]
+    (for [employee employees]
+      [[(get-in employee [:company-contract-employee/user :db/id])] ;TODO find user name
+       [] ;TODO find employee role
+       [] ;TODO implement key person functionality
+       [[common/Link {:class (<class contract-style/personnel-activation-link-style active?)
+                      :href "#"}                            ;TODO add activation/deactivation functionality
+         (if active? (tr [:admin :deactivate]) (tr [:admin :activate]))]]
+       [[buttons/small-button-secondary
+         {:href "#"}                                        ;TODO add view-more-info functionality
+         (tr [:common :view-more-info])]]])]])
+
 (defn personnel-section
   [e! {:keys [params query] :as app} selected-partner]
-  [:div {:style {:display :flex
-                 :justify-content :space-between
-                 :align-items :center}}
-   [typography/Heading2 (tr [:contract :persons])]
-   [authorization-check/when-authorized
-    :thk.contract/add-contract-employee selected-partner
-    [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                               :href (routes/url-for {:page :contract-partners
-                                                      :params params
-                                                      :query (merge
-                                                               query
-                                                               {:page :add-personnel})})}
-     (tr [:contract :add-person])]]])
+  [:div {:class (<class contract-style/personnel-section-style)}
+   [:div {:class (<class contract-style/personnel-section-header-style)}
+    [typography/Heading2 (tr [:contract :persons])]
+    [authorization-check/when-authorized
+     :thk.contract/add-contract-employee selected-partner
+     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                                :href (routes/url-for {:page :contract-partners
+                                                       :params params
+                                                       :query (merge
+                                                                query
+                                                                {:page :add-personnel})})}
+      (tr [:contract :add-person])]]]
+   [employee-table (filterv #(:company-contract-employee/active? %)
+                     (:company-contract/employees selected-partner))
+    true]
+   [employee-table (filterv #(not (:company-contract-employee/active? %))
+                     (:company-contract/employees selected-partner))
+    false]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
