@@ -413,8 +413,7 @@
 
 (defn contract-personnel-form-footer
   [form-value {:keys [cancel validate disabled?]}]
-  (let [_ (cljs.pprint/pprint form-value)
-        save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
+  (let [save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
                     :text-align :center}}

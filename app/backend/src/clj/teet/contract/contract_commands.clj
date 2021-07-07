@@ -166,18 +166,18 @@
         user-person-id (user-model/normalize-person-id (:user/person-id form-value))
         new-employee-id "new-employee"
         tempids
-        (:tempids (tx [(merge
-                         {:db/id new-employee-id
-                          :user/person-id user-person-id
-                          :user/id (java.util.UUID/randomUUID)}
-                         employee-fields
-                         (meta-model/creation-meta user))
-                       (merge
-                         {:db/id "new-company-contract-employee"
-                          :company-contract-employee/active? true ;; employees are active by default
-                          :company-contract-employee/user new-employee-id
-                          :company-contract-employee/role (mapv
-                                                            :db/id
-                                                            (:company-contract-employee/role form-value))}
-                         (meta-model/creation-meta user))]))]
+        (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
+                             (:user/email form-value)
+                             [(merge {:db/id new-employee-id
+                                      :user/person-id user-person-id
+                                      :user/id (java.util.UUID/randomUUID)}
+                                     employee-fields
+                                     (meta-model/creation-meta user))
+                              (merge {:db/id "new-company-contract-employee"
+                                      :company-contract-employee/active? true ;; employees are active by default
+                                      :company-contract-employee/user new-employee-id
+                                      :company-contract-employee/role (mapv
+                                                                        :db/id
+                                                                        (:company-contract-employee/role form-value))}
+                                      (meta-model/creation-meta user))])]))]
     tempids))
