@@ -9,10 +9,10 @@ phases:
     runtime-versions:
       java: openjdk8
     commands:
-      - echo download & install datomic cli
+      - echo "download & install datomic cli"
       - wget https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.82.zip
       - unzip datomic-cli*.zip
-      - install --mode=755 datomic-cli/datomic* /usr/local/bin/
+      - echo install --mode=755 datomic-cli/datomic* /usr/local/bin/
 
   build:
     commands:
