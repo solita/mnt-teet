@@ -84,7 +84,7 @@
         culvertpipenumber (from-wfs wfs-feature :ms:truup ->long)
         len (from-wfs wfs-feature :ms:trpik ->bigdec)
         trotsad (from-wfs wfs-feature :ms:otsad_trotsad_xv ->long)
-        material (case (from-wfs wfs-feature :ms:trmater_xv ->long)
+        material (case (from-wfs wfs-feature :ms:trmater_trmater_xv ->long)
                    1 :material/concrete
                    2 :material/plastic
                    3 :material/structuralsteel
@@ -101,6 +101,7 @@
         {:culvert/culvertpipenumber culvertpipenumber}
         {:common/remark "missing truup (culvert pipe number) in road registry"})
       {:road-registry/id id
+       :db/id id
        :asset/fclass :fclass/culvert
        :location/road-nr (from-wfs wfs-feature :ms:tee_number ->long)
        :location/carriageway (from-wfs wfs-feature :ms:soidutee_nr ->long)
@@ -116,11 +117,13 @@
               (merge
                {:component/ctype :ctype/culvertpipe
                 :road-registry/id id
+                :db/id id
                 :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
                 :culvertpipe/culvertpipelenght len
                 :component/quantity len}
                (when material
-                 {:component/materials [{:material/type material
+                 {:component/materials [{:db/id (str id "-m0")
+                                         :material/type material
                                          :road-registry/id (str id "-m0")}]})))))
 
          (when (= 1 trotsad)
