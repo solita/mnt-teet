@@ -1,11 +1,11 @@
+-- name: fetch-region-ds
+-- Fetch the ids of datasources that contain regions
+SELECT id FROM teet.datasource WHERE name IN ('counties','municipalities');
+
 -- name: fetch-regions
 SELECT CONCAT(f.datasource_id,':',f.id) as id, f.label, f.properties->>'MKOOD' as mkood, f.properties->>'OKOOD' as okood
   FROM teet.feature f
- WHERE f.datasource_id = (select id from teet.datasource where name = 'counties')
-UNION
-SELECT CONCAT(f.datasource_id,':',f.id) as id, f.label, f.properties->>'MKOOD' as mkood, f.properties->>'OKOOD' as okood
-  FROM teet.feature f
- WHERE f.datasource_id = (select id from teet.datasource where name = 'municipalities');
+ WHERE f.datasource_id IN (:ds);
 
 
 -- name: fetch-regions-geojson-by-ids

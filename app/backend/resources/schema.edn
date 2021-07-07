@@ -2135,5 +2135,8 @@
           {:db/ident :company/emails
            :db/doc "Not in use"}
           {:db/ident :company/phone-numbers
-           :db/doc "Not in use"}]]}]
+           :db/doc "Not in use"}]]}
+
+ {:db/ident :migration/set-company-contract-employees-active
+  :txes [teet.migration.activate-contract-employees/mark-all-contract-company-employees-as-active]}]
 

@@ -33,7 +33,8 @@
                                             5 "rgba(100,100,100,0.5)")}))
 
                 ;; Add geometries for possible parent asset and other components
-                (when (not= "new" oid)
+                (when (and (some? oid)
+                           (not= "new" oid))
                   (constantly
                    {:asset-geometries
                     (map-layers/geojson-layer

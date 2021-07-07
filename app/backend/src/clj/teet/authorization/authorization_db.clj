@@ -8,6 +8,7 @@
               :in $ ?user ?target-param
               :where
               [?cce :company-contract-employee/user ?user]
+              [?cce :company-contract-employee/active? true]
               [?cc :company-contract/employees ?cce]
               [?cc :company-contract/contract ?contract]
               (or-join [?target-param ?contract]
@@ -27,6 +28,7 @@
               :in $ ?user ?company
               :where
               [?cce :company-contract-employee/user ?user]
+              [?cce :company-contract-employee/active? true]
               [?cc :company-contract/employees ?cce]
               [?cc :company-contract/company ?company]
               [?cce :company-contract-employee/role ?r]
@@ -41,6 +43,7 @@
               :in $ % ?user ?project
               :where
               [?cce :company-contract-employee/user ?user]
+              [?cce :company-contract-employee/active? true]
               [?cc :company-contract/employees ?cce]
               [?cc :company-contract/contract ?contract]
               (contract-target-project ?contract ?project)
