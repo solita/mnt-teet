@@ -16,7 +16,4 @@ cat > a-cfg/catalog/$DATOMIC_SYSTEM_NAME.properties <<EOF
 connector.name=datomic
 datomic.databases=[$ASSET_DB_NAME $MAIN_DB_NAME]
 EOF
-ls -l /usr/local/bin
-echo $PATH
-which datomic || echo nope
 /usr/local/bin/datomic analytics sync $DATOMIC_SYSTEM_NAME a-cfg
