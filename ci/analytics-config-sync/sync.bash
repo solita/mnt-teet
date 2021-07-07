@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+export PATH=$PATH:/usr/local/bin
 
 DATOMIC_SYSTEM_NAME=teet-datomic
 
 function ssm-get {
     aws ssm get-parameter --name "$1" --query "Parameter.Value" --output text
 }
+
 MAIN_DB_NAME="$(ssm-get /teet/datomic/db-name)"
 ASSET_DB_NAME="$(ssm-get /teet/datomic/asset-db-name)"
 mkdir -p  a-cfg/catalog
