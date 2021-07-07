@@ -15,6 +15,7 @@
    :cost-index/type
    :cost-index/unit
    :cost-index/valid-from
+   :meta/created-at
    {:cost-index/values
     [:db/id
      :index-value/month
