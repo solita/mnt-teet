@@ -163,12 +163,14 @@
    opts
    [carriageway-for-road-select* opts selected-road-nr]])
 
-(defn- road-number-and-name [{e! :e! [road-nr carriageway] :value}]
-  [:span road-nr " "
-   (when (and road-nr carriageway)
-     [query/query {:e! e! :query :road/name :args {:road-nr road-nr :carriageway carriageway}
-                   :loading-state " "
-                   :simple-view [:span " "]}])])
+(defn- road-number-and-name [{:keys [e!] [road-nr carriageway] :value}]
+  [:label {:class (<class common-styles/input-label-style false false)}
+   [typography/Text2Bold (tr [:fields :location/road-nr])]
+   [:span road-nr " "
+    (when (and road-nr carriageway)
+      [query/query {:e! e! :query :road/name :args {:road-nr road-nr :carriageway carriageway}
+                    :loading-state " "
+                    :simple-view [:span " "]}])]])
 
 (defn- location-entry [e! locked? selected-road-nr single-point?]
   (let [input-textfield (if locked? display-input text-field/TextField)
