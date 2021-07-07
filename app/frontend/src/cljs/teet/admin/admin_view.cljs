@@ -402,8 +402,7 @@
 
 (defn admin-page [e! {admin :admin
                       route :route}]
-    [admin-heading-menu]
-  )
+    [admin-heading-menu])
 
 (defn- inspector-value [db link? value]
   (if link?

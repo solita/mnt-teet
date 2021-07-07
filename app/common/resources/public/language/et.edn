@@ -25,6 +25,7 @@
   :user-contact-information "Kontakt informatsioon",
   :teet-users "Teet kasutajad",
   :index-deleted-successfully "Indeks kustutatud",
+  :add-index "Lisan uue indeksi",
   :optional-information "Valikuline informatsioon",
   :no-user-contact-information "Kontakt informatsioon puudub",
   :user-created-successfully "Kasutaja edukalt lisatud",

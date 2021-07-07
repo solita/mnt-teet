@@ -31,23 +31,19 @@
   (iterate #(t/plus % (t/months 1)) start-date))
 
 (def enabled-indexes
-  #{
-    {:name "Bitumen index"
+  #{{:name "Bitumen index"
      :id "bitumen"
      :type :cost-index.type/bitumen-index
      :unit "€"}
-    {
-     :name "Consumer Price index"
+    {:name "Consumer Price index"
      :id "consumer"
      :type :cost-index.type/consumer-price-index
-     :unit "p"
-     }
-    })
+     :unit "p"}})
+
 (defn- is-valid-index-id?
   "Checks if id is defined in the 'enabled-indexes' variable and returns the index"
   [index-id]
-  (filterv (fn [x] (if (= (:id x) index-id) x nil)) enabled-indexes)
-  )
+  (filterv (fn [x] (if (= (:id x) index-id) x nil)) enabled-indexes))
 
 (defn index-save-form-button
   [invalid-attributes {:keys [validate]}]
@@ -126,7 +122,6 @@
 (defn indexes-selection
   [e! page-state id]
   [:div
-   [teet.admin.admin-view/admin-heading-menu]
    (let [index-data (:index-data page-state)]
     [:div {:style {:min-width "300px"
                    :margin-left "2rem"
@@ -158,13 +153,12 @@
       (tr [:indexes-admin :no-indexes-added]))]])])
 
 (defn view-index-values
-  ""
-  [e! index values]
+  [values]
   [:div {:class (<class common-styles/margin-bottom 2)}
    (mapc (fn [val]
            [:div {:class [(<class common-styles/flex-align-end)
                           (<class common-styles/flex-align-center)]}
-            [:div {:style {:min-width "200px"}}
+            [:div {:style {:min-width "250px"}}
              (str (:index-value/year val) " " (tr [:calendar :months (dec (:index-value/month val))]))]
             [:div {:class (<class common-styles/margin-left 2) :style {:align-items :right}}
                 (str (uc/->double (:index-value/value val)))]]) values)])
@@ -259,15 +253,13 @@
       [form/field :cost-index/name
        [TextField {:e e!
                    :value (:cost-index/name index)
-                   :id (str "index-name-field")}]]
-     [:div {:class [(<class common-styles/flex-row-center)
-                    (<class common-styles/margin-left 2)]}
+                   :id (str "index-name-field")}]]]
+     [:div {:class [(<class common-styles/flex-align-center)]}
       [delete-index-button e! index]
       [index-form-cancel-button*]
-      [index-save-form-button*]]]]))
+      [index-save-form-button*]]]))
 
 (defn view-index-info
-  ""
   [e! page-state index edit? edit-values?]
     (let [values (:cost-index/values index)
           index-valid (t/date-time (:cost-index/valid-from index))]
@@ -284,28 +276,30 @@
          [buttons/button-secondary {:id (str "admin-editindex")
                                     :on-click (e! admin-controller/->EditIndexForm)}
           (tr [:buttons :edit-index])])]
-      [:div {:class (<class common-styles/flex-row)}
-       [:div {:style {:min-width "250px"}}
-        [:b (tr [:fields :cost-index/type])]]
-       (tr-enum (:cost-index/type index))]
-      [:div {:class [(<class common-styles/flex-row)
-                     (<class common-styles/margin-bottom 2)]}
-       [:div {:style {:min-width "250px"}}
-        [:b (tr [:fields :cost-index/valid-from])]] (str
-                                                             (tr [:calendar :months (dec (t/month index-valid))])
-                                                             " "
-                                                             (t/year index-valid))]
+      (when (not edit?)
+        [:<>
+         [:div {:class (<class common-styles/flex-row)}
+          [:div {:style {:min-width "250px"}}
+           [:b (tr [:fields :cost-index/type])]]
+          (tr-enum (:cost-index/type index))]
+         [:div {:class [(<class common-styles/flex-row)
+                        (<class common-styles/margin-bottom 2)]}
+          [:div {:style {:min-width "250px"}}
+           [:b (tr [:fields :cost-index/valid-from])]] (str (tr [:calendar :months (dec (t/month index-valid))])
+                                                            " "
+                                                            (t/year index-valid))]])
   (if edit-values?
     [:div [edit-index-values e! (:edit-index-values page-state) index values]]
-    [:div
-     (if (seq values)
-       [view-index-values e! index values]
-       [:div {:class [(<class common-styles/flex-row)
-                      (<class common-styles/margin-bottom 2)]} (tr [:indexes-admin :no-values-entered])])
-     (when-not edit?
+    (when-not edit?
+      [:div
+       (if (seq values)
+         [view-index-values values]
+         [:div {:class [(<class common-styles/flex-row)
+                        (<class common-styles/margin-bottom 2)]}
+          (tr [:indexes-admin :no-values-entered])])
        [buttons/button-primary {:id (str "admin-editindexvalues")
                                 :on-click (e! admin-controller/->EditIndexValues)}
-      (tr [:buttons :edit-index-values])])])]))
+      (tr [:buttons :edit-index-values])]]))]))
 
 (defn indexes-content
   [e! query page-state id]
@@ -328,16 +322,11 @@
 (defn indexes-page
   "The main indexes admin page"
   [e! {params :params
-       route :route
        query :query} page-state]
   (let [id (:id params)]
-   [:div {:class (<class common-styles/flex-align-end)}
-   [query/debounce-query
-    {:e! e!
-     :query :admin/indexes-data
-     :args {:payload {}
-            :refresh (:admin-refresh route)}
-     :simple-view [indexes-selection e! page-state id]}
-    500]
-   [indexes-content e! query page-state id]])
-  )
+    [:<>
+     [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+      [teet.admin.admin-view/admin-heading-menu]]
+     [:div {:class (<class common-styles/flex-align-end)}
+      [indexes-selection e! page-state id]
+      [indexes-content e! query page-state id]]]))

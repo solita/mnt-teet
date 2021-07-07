@@ -2,13 +2,7 @@
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
             [teet.transit :as transit]
-            [teet.util.euro :as euro])
-  (:import (java.util UUID)))
-
-(defn- get-index-data
-  "Returns the indexes data"
-  [db]
-  )
+            [teet.util.euro :as euro]))
 
 (defn- with-bigdec-format [x]
   (transit/with-write-options
@@ -25,8 +19,7 @@
     [:db/id
      :index-value/month
      :index-value/year
-     :index-value/value
-     ]}])
+     :index-value/value]}])
 
 (defquery :admin/indexes-data
           {:doc "Pull information about the indexes"
