@@ -525,6 +525,25 @@
                                         :icon [icons/content-add]}}]]]))
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
+(defn edit-personnel-form
+  [e! {:keys [query] :as app} selected-partner selected-person]
+  (r/with-let [form-atom (r/atom {:user/person-id "person-id"
+                                  :user/email "email"
+                                  :user/phone-number "phone-number"
+                                  :user/given-name "given-name"
+                                  :user/family-name "family-name"})]
+    (let [_ (cljs.pprint/pprint "edit-personel-form here!")]
+      [Grid {:container true}
+       [Grid {:itme true :xs 12 :md 6}]]
+        [form/form2 {:e! e!
+                     :value @form-atom
+                     :on-change-event (cljs.pprint/pprint "on-change-event")
+                     :cancel-even #(cljs.pprint/pprint "cancel-event")
+                     :save-event #(cljs.pprint/pprint "save-event")}
+         [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
+          (tr [:contract :edit-person])]
+         [new-person-form-fields e! (:form-value @form-atom)]])))
+
 (defn partner-info-header
   [partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
@@ -555,10 +574,12 @@
   [e! {:keys [query params] :as app} contract]
   (let [selected-partner-id (:partner query)
         selected-partner (->> (:company-contract/_contract contract)
-                              (filter
-                                (fn [partner]
-                                  (= (str (:teet/id partner)) selected-partner-id)))
-                              first)]
+                           (filter
+                             (fn [partner]
+                               (= (str (:teet/id partner)) selected-partner-id)))
+                           first)
+        selected-person "some person"                       ;;TODO: @implement
+        ]
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
@@ -572,6 +593,10 @@
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
        [add-personnel-form e! app selected-partner]]
+      :edit-personnel
+      [authorization-check/when-authorized
+       :thk.contract/add-contract-employee selected-partner
+       [edit-personnel-form e! app selected-partner selected-person]]
       [partners-default-view params contract])))
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
