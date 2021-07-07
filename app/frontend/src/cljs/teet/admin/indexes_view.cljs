@@ -25,7 +25,8 @@
             [teet.admin.admin-controller :as admin-controller]
             [teet.ui.url :as url]
             [cljs-time.core :as t]
-            [teet.util.coerce :as uc]))
+            [teet.util.coerce :as uc]
+            [teet.admin.admin-ui :as admin-ui]))
 
 (defn- by-month [start-date]
   (iterate #(t/plus % (t/months 1)) start-date))
@@ -158,7 +159,7 @@
    (mapc (fn [val]
            [:div {:class [(<class common-styles/flex-align-end)
                           (<class common-styles/flex-align-center)]}
-            [:div {:style {:min-width "250px"}}
+            [:div {:style {:min-width "220px"}}
              (str (:index-value/year val) " " (tr [:calendar :months (dec (:index-value/month val))]))]
             [:div {:class (<class common-styles/margin-left 2) :style {:align-items :right}}
                 (str (uc/->double (:index-value/value val)))]]) values)])
@@ -218,7 +219,7 @@
                   field-value (when month-val (uc/->double (:index-value/value (first month-val))))]
               [:div {:class [(<class common-styles/flex-align-end)
                            (<class common-styles/flex-align-center)]}
-             [:div {:style {:min-width "200px"}}
+             [:div {:style {:min-width "220px"}}
               (str (t/year x) " " (tr [:calendar :months (dec (t/month x))]))]
              [:div {:class (<class common-styles/margin-left 2)}
               (if editable?
@@ -275,7 +276,7 @@
        (when (not (or edit? edit-values?))
          [buttons/button-secondary {:id (str "admin-editindex")
                                     :on-click (e! admin-controller/->EditIndexForm)}
-          (tr [:buttons :edit-index])])]
+          (tr [:buttons :edit])])]
       (when (not edit?)
         [:<>
          [:div {:class (<class common-styles/flex-row)}
@@ -326,7 +327,7 @@
   (let [id (:id params)]
     [:<>
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [teet.admin.admin-view/admin-heading-menu]]
+      [admin-ui/admin-context-menu]]
      [:div {:class (<class common-styles/flex-align-end)}
       [indexes-selection e! page-state id]
       [indexes-content e! query page-state id]]]))

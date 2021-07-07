@@ -22,7 +22,8 @@
             [teet.ui.context :as context]
             [teet.user.user-model :as user-model]
             [teet.util.date :as date]
-            [teet.admin.indexes-view :as indexes-view]))
+            [teet.admin.indexes-view :as indexes-view]
+            [teet.admin.admin-ui :as admin-ui]))
 
 (defn user-save-form-button
   [invalid-attributes {:keys [validate]}]
@@ -329,19 +330,6 @@
                    :label (tr [:fields field])
                    :on-change #(on-change field (-> % .-target .-value))}]))])
 
-(defn admin-heading-menu
-  []
-  [:div {:class (<class common-styles/top-info-spacing)}
-   [common-ui/context-menu {:label "Admin menu"
-                            :icon [icons/navigation-menu]
-                            :items [{:label (tr [:admin :title-users])
-                                     :link {:href "../#/admin/users"}
-                                     :icon [icons/action-verified-user]}
-                                    {:label (tr [:admin :title-indexes])
-                                     :link {:href "../#/admin/indexes"}
-                                     :icon [icons/action-list]}
-                                    ]}]])
-
 (defn user-search-filters
   [e! filtering-atom]
   (r/with-let [change-group #(swap! filtering-atom assoc :user-group %)
@@ -366,7 +354,7 @@
   (r/with-let [filtering-atom (r/atom {:user-group nil})]
     (let [user-form (:create-user admin)]
       [:div
-       [admin-heading-menu]
+       [admin-ui/admin-context-menu]
        [:div {:style {:padding "1.875rem 1.5rem"
                      :display :flex
                      :height "calc(100vh - 220px)"
@@ -402,7 +390,7 @@
 
 (defn admin-page [e! {admin :admin
                       route :route}]
-    [admin-heading-menu])
+    [admin-ui/admin-context-menu])
 
 (defn- inspector-value [db link? value]
   (if link?
