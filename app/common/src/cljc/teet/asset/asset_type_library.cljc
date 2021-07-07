@@ -167,7 +167,7 @@
             (update
              x 1
              (if (:db/tupleType attr)
-               #(str/join "," %)
+               #(str/join ", " %)
                (case (get-in attr [:db/valueType :db/ident])
                  (:db.type/bigdec :db.type/long) str
                  identity)))
