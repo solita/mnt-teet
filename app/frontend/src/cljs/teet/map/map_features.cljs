@@ -416,8 +416,6 @@ an icon based on asset class."
 (defn asset-or-component
   "Show line or circle for asset/component."
   [^ol.render.Feature feature _res]
-  (def *f feature)
-  (println "asset-or-component " feature)
   (if (some->> feature .getGeometry .getType (= "Point"))
     #js [(ol.style.Style.
           #js {:image (ol.style.Circle.

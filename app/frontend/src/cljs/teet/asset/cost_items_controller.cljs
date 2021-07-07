@@ -861,3 +861,17 @@
 (defn location-form-change
   [value]
   (->UpdateForm value))
+
+(defonce map-open? (r/atom true))
+
+(defrecord ToggleMapOpen []
+  t/Event
+  (process-event [_ app]
+    (swap! map-open? not)
+    app))
+
+(defrecord SetMapOpen [open?]
+  t/Event
+  (process-event [{open? :open?} app]
+    (reset! map-open? open?)
+    app))

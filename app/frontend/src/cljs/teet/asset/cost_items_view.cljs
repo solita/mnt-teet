@@ -262,111 +262,121 @@
       [form/field :location/single-point?
        [select/checkbox {:disabled (boolean locked?)}]]]]))
 
-(defn attributes* [{:keys [e! attributes component-oid cost-item-data
-                           inherits-location? single-point?
-                           common ctype toggle-map?]
-                    :or {toggle-map? true}}
-                    rotl locked?]
-  (r/with-let [open? (r/atom #{:location :cost-grouping :common :details})
-               toggle-open! #(swap! open? cu/toggle %)]
-    (let [common-attrs (some-> common rotl :attribute/_parent)
-          common-attr-idents (into #{} (map :db/ident) common-attrs)
-          attrs-groups (->> (concat common-attrs attributes)
-                            (group-by (partial attribute-group common-attr-idents))
-                            (cu/map-vals
-                             (partial sort-by (juxt (complement :attribute/mandatory?)
-                                                    label))))
-          map-open? (:location/map-open? cost-item-data)]
-      [:<>
-       ;; Show location group if not inherited from parent
-       (when (not inherits-location?)
-         [container/collapsible-container
-          {:open? (@open? :location)
-           :on-toggle (r/partial toggle-open! :location)}
+(defn attributes* [{:keys [e! inherits-location?]} _rotl _locked?]
+  (let [open? (r/atom #{:location :cost-grouping :common :details})
+        toggle-open! #(swap! open? cu/toggle %)]
+    (e! (cost-items-controller/->SetMapOpen (not inherits-location?)))
+    (r/create-class
+     {:component-did-update
+      (fn [this [_ old-opts]]
+        (let [[_ new-opts] (r/argv this)]
+          (when (not= (:inherits-location? old-opts)
+                      (:inherits-location? new-opts))
+            (e! (cost-items-controller/->SetMapOpen
+                 (not (:inherits-location new-opts)))))))
+      :reagent-render
+      (fn  [{:keys [e! attributes component-oid cost-item-data
+                    inherits-location? single-point?
+                    common ctype toggle-map?]
+             :or {toggle-map? true}}
+            rotl locked?]
+        (let [common-attrs (some-> common rotl :attribute/_parent)
+              common-attr-idents (into #{} (map :db/ident) common-attrs)
+              attrs-groups (->> (concat common-attrs attributes)
+                                (group-by (partial attribute-group common-attr-idents))
+                                (cu/map-vals
+                                 (partial sort-by (juxt (complement :attribute/mandatory?)
+                                                        label))))
+              map-open? @cost-items-controller/map-open?]
           [:<>
-           (tr [:asset :field-group :location])
-           (when toggle-map?
-             [buttons/button-text
-              {:style {:float :right}
-               :on-click (e! cost-items-controller/->UpdateForm
-                             {:location/map-open? (not map-open?)})}
-              (if map-open?
-                (tr [:asset :location :hide-map])
-                (tr [:asset :location :show-map]))])]
-          [Grid {:container true
-                 :justify :flex-start
-                 :alignItems :flex-end}
-           [location-entry e! locked?
-            (:location/road-nr cost-item-data)
-            single-point?]]])
-       (doall
-        (for [g [:cost-grouping :common :details]
-              :let [attrs (attrs-groups g)]
-              :when (seq attrs)]
-          ^{:key (str g)}
-          [container/collapsible-container
-           {:open? (@open? g)
-            :on-toggle (r/partial toggle-open! g)
-            :size :small}
-           (tr [:asset :field-group g])
-           [Grid {:container true
-                  :justify :flex-start
-                  :alignItems :flex-end}
-            (doall
-             (for [{:db/keys [ident valueType]
-                    :attribute/keys [mandatory?]
-                    :asset-schema/keys [unit] :as attr} attrs
-                   :let [type (:db/ident valueType)
-                         unit (if (= ident :component/quantity)
-                                (:component/quantity-unit ctype)
-                                unit)]]
-               ^{:key (str ident)}
-               [attribute-grid-item
-                [form/field {:attribute ident
-                             :required? mandatory?
-                             :validate (r/partial validate
-                                                  (:db/ident valueType)
-                                                  component-oid
-                                                  cost-item-data
-                                                  (select-keys attr
-                                                               [:attribute/min-value
-                                                                :attribute/max-value
-                                                                :attribute/min-value-ref
-                                                                :attribute/max-value-ref]))}
-                 (cond
-                   ;; Selection value
-                   (= type :db.type/ref)
-                   (if locked?
-                     [display-list-item {:label (label attr)
-                                         :rotl rotl}]
-                     [select/form-select
-                      {:id ident
-                       :label (label attr)
-                       :show-empty-selection? true
-                       :items (mapv :db/ident (:enum/_attribute attr))
-                       :format-item (comp label rotl)
-                       ;; Show error message as tooltip instead of adding a span, so that input
-                       ;; elements in the grid will stay aligned.
-                       :error-tooltip? true}])
+           ;; Show location group if not inherited from parent
+           (when (not inherits-location?)
+             [container/collapsible-container
+              {:open? (@open? :location)
+               :on-toggle (r/partial toggle-open! :location)}
+              [:<>
+               (tr [:asset :field-group :location])
+               (when toggle-map?
+                 [buttons/button-text
+                  {:style {:float :right}
+                   :on-click (e! cost-items-controller/->ToggleMapOpen)}
+                  (if map-open?
+                    (tr [:asset :location :hide-map])
+                    (tr [:asset :location :show-map]))])]
+              [Grid {:container true
+                     :justify :flex-start
+                     :alignItems :flex-end}
+               [location-entry e! locked?
+                (:location/road-nr cost-item-data)
+                single-point?]]])
+           (doall
+            (for [g [:cost-grouping :common :details]
+                  :let [attrs (attrs-groups g)]
+                  :when (seq attrs)]
+              ^{:key (str g)}
+              [container/collapsible-container
+               {:open? (@open? g)
+                :on-toggle (r/partial toggle-open! g)
+                :size :small}
+               (tr [:asset :field-group g])
+               [Grid {:container true
+                      :justify :flex-start
+                      :alignItems :flex-end}
+                (doall
+                 (for [{:db/keys [ident valueType]
+                        :attribute/keys [mandatory?]
+                        :asset-schema/keys [unit] :as attr} attrs
+                       :let [type (:db/ident valueType)
+                             unit (if (= ident :component/quantity)
+                                    (:component/quantity-unit ctype)
+                                    unit)]]
+                   ^{:key (str ident)}
+                   [attribute-grid-item
+                    [form/field {:attribute ident
+                                 :required? mandatory?
+                                 :validate (r/partial validate
+                                                      (:db/ident valueType)
+                                                      component-oid
+                                                      cost-item-data
+                                                      (select-keys attr
+                                                                   [:attribute/min-value
+                                                                    :attribute/max-value
+                                                                    :attribute/min-value-ref
+                                                                    :attribute/max-value-ref]))}
+                     (cond
+                       ;; Selection value
+                       (= type :db.type/ref)
+                       (if locked?
+                         [display-list-item {:label (label attr)
+                                             :rotl rotl}]
+                         [select/form-select
+                          {:id ident
+                           :label (label attr)
+                           :show-empty-selection? true
+                           :items (mapv :db/ident (:enum/_attribute attr))
+                           :format-item (comp label rotl)
+                           ;; Show error message as tooltip instead of adding a span, so that input
+                           ;; elements in the grid will stay aligned.
+                           :error-tooltip? true}])
 
-                   (= type :db.type/instant)
-                   (if locked?
-                     [display-input {:label (label attr)
-                                     :format fmt/date}]
-                     [date-picker/date-input {:label (label attr)
-                                              :error-tooltip? true}])
+                       (= type :db.type/instant)
+                       (if locked?
+                         [display-input {:label (label attr)
+                                         :format fmt/date}]
+                         [date-picker/date-input {:label (label attr)
+                                                  :error-tooltip? true}])
 
-                   ;; Text field
-                   :else
-                   (if locked?
-                     [display-input {:label (label attr)
-                                     :unit unit}]
-                     [text-field/TextField
-                      {:label (label attr)
-                       :read-only? locked?
-                       :end-icon (when unit
-                                   (text-field/unit-end-icon unit))
-                       :error-tooltip? true}]))]]))]]))])))
+                       ;; Text field
+                       :else
+                       (if locked?
+                         [display-input {:label (label attr)
+                                         :unit unit}]
+                         [text-field/TextField
+                          {:label (label attr)
+                           :read-only? locked?
+                           :end-icon (when unit
+                                       (text-field/unit-end-icon unit))
+                           :error-tooltip? true}]))]]))]]))]))})))
 
 (defn- attributes
   "Render grid of attributes."
@@ -739,7 +749,7 @@
   [asset-ui/wrap-atl-loader cost-items-page* e! app state])
 
 (defn- cost-item-map-panel [e! oid form-state]
-  (when (:location/map-open? form-state)
+  (when @cost-items-controller/map-open?
     [cost-items-map-view/location-map
      {:e! e!
       :asset/oid oid
