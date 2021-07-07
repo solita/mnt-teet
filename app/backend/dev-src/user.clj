@@ -227,7 +227,9 @@
                              "company"
                              "company-contract"
                              "company-contract-employee"
-                             "review"}
+                             "review"
+                             "cost-index"
+                             "index-value"}
           types {:permission/projects "List<thk.project>"
                  :thk.project/lifecycles "List<thk.lifecycle>"
                  :thk.lifecycle/activities "List<activity>"
@@ -280,6 +282,8 @@
                  :review/of "meeting or company-contract-employee"
                  :notification/status "enum status"
                  :notification/type "enum type"
+                 :cost-index/values "List<index-value>"
+                 :cost-index/type "enum index type"
                  }
           skip #{:thk.contract/authority-contact :thk.contract/partner-name
                  :company/emails :company/phone-numbers}
@@ -335,6 +339,7 @@
            "review --> user\n"
            "\"company-contract-employee\" --> user\n"
            "comment --> user\n"
+           "\"cost-index\" ||--o{ \"index-value\"\n"
            "note top of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
 
            "note top of notification\n   target may refer to any entity type\nend note\n"

@@ -258,7 +258,9 @@
 
 (defn available-company-contract-employees
   [db company-contract-eid search]
-  (->> (d/q '[:find (pull ?u [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
+  (->> (d/q '[:find (pull ?u [:db/id :user/id
+                              :user/given-name :user/family-name
+                              :user/email :user/phone-number :user/person-id])
               :where
               (user-by-name ?u ?search)
               (not-join [?u ?company-contract]
