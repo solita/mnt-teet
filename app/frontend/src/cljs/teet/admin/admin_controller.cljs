@@ -100,7 +100,7 @@
 
   AddIndex
   (process-event [_ {:keys [query] :as app}]
-    (t/fx app
+    (t/fx (common-controller/assoc-page-state app [:add-index] {:form-open true})
           {:tuck.effect/type :navigate
            :page :admin-indexes
            :query (assoc query :add-index-form 1)}))

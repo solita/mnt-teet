@@ -10,7 +10,7 @@
   "Displays the top context menu for all admin pages"
   []
   [:div {:class (<class common-styles/top-info-spacing)}
-   [common-ui/context-menu {:label "Admin menu"
+   [common-ui/context-menu {:label (tr [:admin :admin-menu])
                             :icon [icons/navigation-menu]
                             :items [{:label (tr [:admin :title-users])
                                      :link {:href "../#/admin/users"}

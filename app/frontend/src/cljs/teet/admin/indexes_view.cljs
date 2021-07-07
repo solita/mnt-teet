@@ -130,7 +130,7 @@
                    :background-color theme-colors/gray-lightest
                    :color theme-colors/black-coral
                    :vertical-align :top}}
-   [:div [typography/Heading1 (str "Indexes")]]
+   [:div [typography/Heading1 (tr [:admin :title-indexes])]]
    [:div {:class (<class common-styles/margin 2 0 2 0)}
     [buttons/button-secondary {:size :small
                                :id (str "admin-addindex")
@@ -148,7 +148,7 @@
                                     (if (= id (str (:db/id x)))
                                       [:b (:cost-index/name x)]
                                       (:cost-index/name x))]])
-                      (sort :cost-index/valid-from (filterv
+                      (sort-by :meta/created-at #(compare %2 %1) (filterv
                                                (fn [y] (= index-group (:cost-index/type y)))
                                                index-data)))]))
       (tr [:indexes-admin :no-indexes-added]))]])])
@@ -175,37 +175,7 @@
                          (t/now)))
                      (by-month index-start))
      last-month (t/minus (t/now) (t/months 1))]
-   (mapv (fn [x]
-          (let [editable? (or
-                    (nil? values)
-                    (and
-                      values
-                      (and
-                        (= (t/month x) (t/month last-month))
-                        (= (t/year x) (t/year last-month)))))
-        month-val (filterv (fn [y] (and
-                                     (= (:index-value/year y) (t/year x))
-                                     (= (:index-value/month y) (t/month x)))) values)
-        field-value (when month-val (uc/->double (:index-value/value (first month-val))))]
-   (when editable?
-     (e! (admin-controller/->UpdateIndexValues
-           {(keyword (str "index-value-" (t/year x) "-" (t/month x))) field-value}))))) month-objects))
-  (fn [e! form-data index values]
-    (let [index-start (t/date-time (:cost-index/valid-from index))
-          month-objects (take
-                        (t/in-months
-                          (t/interval
-                            index-start
-                            (t/now)))
-                        (by-month index-start))
-        last-month (t/minus (t/now) (t/months 1))]
-    [form/form2 {:e! e!
-                 :on-change-event admin-controller/->UpdateIndexValues
-                 :save-event admin-controller/->SaveIndexValues
-               :cancel-event admin-controller/->CancelIndexValues
-               :value form-data}
-   [:div
-    (mapc (fn [x]
+    (mapv (fn [x]
             (let [editable? (or
                               (nil? values)
                               (and
@@ -214,29 +184,63 @@
                                   (= (t/month x) (t/month last-month))
                                   (= (t/year x) (t/year last-month)))))
                   month-val (filterv (fn [y] (and
-                                              (= (:index-value/year y) (t/year x))
-                                              (= (:index-value/month y) (t/month x)))) values)
+                                               (= (:index-value/year y) (t/year x))
+                                               (= (:index-value/month y) (t/month x)))) values)
                   field-value (when month-val (uc/->double (:index-value/value (first month-val))))]
-              [:div {:class [(<class common-styles/flex-align-end)
-                           (<class common-styles/flex-align-center)]}
-             [:div {:style {:min-width "220px"}}
-              (str (t/year x) " " (tr [:calendar :months (dec (t/month x))]))]
-             [:div {:class (<class common-styles/margin-left 2)}
-              (if editable?
-                [:<>
-                 [form/field (keyword (str "index-value-" (t/year x) "-" (t/month x)))
-                  [TextField {:e e!
-                              :value field-value
-                              :type :number
-                              :step ".01"
-                              :required true
-                              :hide-label? true
-                              :id (str "index-value-" (t/year x) "-" (t/month x))}]]]
-                 (str field-value))]])) month-objects)
-    [:div {:class[(<class common-styles/flex-align-end)
-                  (<class common-styles/margin 2 0 0 0)]}
-    [index-form-cancel-button*]
-    [index-save-form-button*]]]])))
+              (when editable?
+                (e! (admin-controller/->UpdateIndexValues
+                      {(keyword (str "index-value-" (t/year x) "-" (t/month x))) field-value}))))) month-objects))
+  (fn [e! form-data index values]
+    (let [index-start (t/date-time (:cost-index/valid-from index))
+          month-objects (take
+                          (t/in-months
+                            (t/interval
+                              index-start
+                              (t/now)))
+                          (by-month index-start))
+          last-month (t/minus (t/now) (t/months 1))]
+      [form/form2 {:e! e!
+                   :on-change-event admin-controller/->UpdateIndexValues
+                   :save-event admin-controller/->SaveIndexValues
+                   :cancel-event admin-controller/->CancelIndexValues
+                   :value form-data}
+       [:div
+        (mapc (fn [x]
+                (let [editable? (or
+                                  (nil? values)
+                                  (and
+                                    values
+                                    (and
+                                      (= (t/month x) (t/month last-month))
+                                      (= (t/year x) (t/year last-month)))))
+                      month-val (filterv (fn [y] (and
+                                                   (= (:index-value/year y) (t/year x))
+                                                   (= (:index-value/month y) (t/month x)))) values)
+                      field-value (when month-val (uc/->double (:index-value/value (first month-val))))]
+                  [:div {:class [(<class common-styles/flex-align-end)
+                                 (<class common-styles/flex-align-center)]}
+                   [:div {:style {:min-width "220px"}}
+                    (str (t/year x) " " (tr [:calendar :months (dec (t/month x))]))]
+                   [:div {:class (<class common-styles/margin-left 2)}
+                    (if editable?
+                      [:<>
+                       [form/field
+                        {:attribute (keyword (str "index-value-" (t/year x) "-" (t/month x)))
+                         :validate (fn [v]
+                                     (when (> (-> v (str/split #",|\.") second count) 2)
+                                       (tr [:asset :validate :decimal-precision] {:precision 2})))}
+                        [TextField {:e e!
+                                    :value field-value
+                                    :type :number
+                                    :step ".01"
+                                    :required true
+                                    :hide-label? true
+                                    :id (str "index-value-" (t/year x) "-" (t/month x))}]]]
+                      (str field-value))]])) month-objects)
+        [:div {:class [(<class common-styles/flex-align-end)
+                       (<class common-styles/margin 2 0 0 0)]}
+         [index-form-cancel-button*]
+         [index-save-form-button*]]]])))
 
 (defn edit-index-form
   [e! index form-data]

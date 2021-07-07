@@ -41,6 +41,7 @@
   :deactivate "Deactivate",
   :all-users "All users",
   :managers "Managers",
+  :admin-menu "Admin menu",
   :title-indexes "Indexes",
   :title "Admin",
   :role-and-contact-information "ROLE AND CONTACT INFORMATION",

@@ -40,6 +40,7 @@
   :deactivate "Deaktiveerin",
   :all-users "Kõik kasutajad",
   :managers "Projektijuhid",
+  :admin-menu "Administreeri",
   :title-indexes "Indeksid",
   :title "Admin",
   :role-and-contact-information "ROLLI JA KONTAKT INFORMATSIOON",
