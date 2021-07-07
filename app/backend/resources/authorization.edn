@@ -172,6 +172,7 @@
   :guest :read},
  :admin/remove-user {:admin :full, :manager :link},
  :admin/add-user {:admin :full, :manager :link},
+ :admin/manage-indexes {:admin :full},
  :cooperation/edit-application
  {:admin :full,
   :manager :full,
