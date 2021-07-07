@@ -425,15 +425,42 @@
                                     :on-click cancel}
           (tr [:buttons :cancel])])
        (when validate
-         [buttons/button-primary {:disabled (or save-disabled? disabled?)
+         [buttons/button-primary {:disabled disabled?
                                   :type :submit
                                   :class "submit"
                                   :on-click validate}
           (tr [:buttons :save])])]]]))
 
+(defn new-person-form-fields [e! form-value]
+  []
+  [:div
+   ^{:key "person-id"}
+   [form/field :user/person-id
+    [TextField {}]]
+   [form/field :user/given-name
+    [TextField {}]]
+   [form/field :user/family-name
+    [TextField {}]]
+   [form/field {:attribute :user/email
+                :validate validation/validate-email-optional}
+    [TextField {}]]
+   [form/field :user/phone-number
+    [TextField {}]]
+   [form/field {:attribute :company-contract-employee/role}
+    [select/select-user-roles-for-contract
+     {:e! e!
+      :error-text (tr [:contract :role-required])
+      :placeholder (tr [:contract :select-user-roles])
+      :no-results (tr [:contract :no-matching-roles])
+      :show-empty-selection? true
+      :clear-value [nil nil]}]]
+   ])
+
 (defn add-personnel-form
   [e! {:keys [query] :as app} selected-partner]
-  (r/with-let [form-atom (r/atom {})]
+  (r/with-let [form-atom (r/atom {})
+               add-new-person? (r/atom false)
+               add-new-person #(reset! add-new-person? true)]
     (let [selected-user (:company-contract-employee/user @form-atom)
           user-selected? (boolean
                            selected-user)]
@@ -448,12 +475,15 @@
                                                                           (if (= {:company-contract-employee/role #{}} new)
                                                                             (dissoc old :company-contract-employee/role)
                                                                             (merge old new))))
-                     :spec :thk.contract/add-contract-employee
                      :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                       {:query (merge query
                                                      {:page :partner-info})})
                      :save-event #(common-controller/->SaveFormWithConfirmation
-                                    :thk.contract/add-contract-employee
+                                    (cond
+                                      @add-new-person?
+                                      :thk.contract/add-new-contract-employee
+                                      :else
+                                      :thk.contract/add-contract-employee)
                                     {:form-value @form-atom
                                      :company-contract-eid (:db/id selected-partner)}
                                     (fn [_response]
@@ -468,23 +498,31 @@
           (tr [:contract :add-person])]
          (if selected-user
            [selected-user-information selected-user]
-           [form/field :company-contract-employee/user
-            [select/select-search
-             {:e! e!
-              :query (fn [text]
-                       {:args {:search text
-                               :company-contract-id (:db/id selected-partner)}
-                        :query :contract/possible-partner-employees})
-              :format-result select/user-search-select-result}]])
-         (when user-selected?
-           [form/field {:attribute :company-contract-employee/role}
-            [select/select-user-roles-for-contract
-             {:e! e!
-              :error-text (tr [:contract :role-required])
-              :placeholder (tr [:contract :select-user-roles])
-              :no-results (tr [:contract :no-matching-roles])
-              :show-empty-selection? true
-              :clear-value [nil nil]}]])
+           (cond
+             (true? user-selected?)
+             [form/field {:attribute :company-contract-employee/role}
+              [select/select-user-roles-for-contract
+               {:e! e!
+                :error-text (tr [:contract :role-required])
+                :placeholder (tr [:contract :select-user-roles])
+                :no-results (tr [:contract :no-matching-roles])
+                :show-empty-selection? true
+                :clear-value [nil nil]}]]
+             @add-new-person?
+             [new-person-form-fields e! (:form-value @form-atom)]
+             :else
+             [:div
+              [form/field :company-contract-employee/user
+               [select/select-search
+                {:e! e!
+                 :query (fn [text]
+                          {:args {:search text
+                                  :company-contract-id (:db/id selected-partner)}
+                           :query :contract/possible-partner-employees})
+                 :format-result select/user-search-select-result
+                 :after-results-action {:title (tr [:contract :add-person-not-in-teet])
+                                        :on-click add-new-person
+                                        :icon [icons/content-add]}}]]]))
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
