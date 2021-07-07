@@ -155,7 +155,7 @@
                :company-contract/employees "new-company-contract-employee"}]})
 
 (defcommand :thk.contract/add-new-contract-employee
-  {:doc "Save a new contract partner"
+  {:doc "Add a new contract employee"
    :payload {form-value :form-value
              company-contract-eid :company-contract-eid}
    :context {:keys [user db]}
