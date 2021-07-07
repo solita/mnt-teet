@@ -12,7 +12,8 @@ phases:
       - echo "download & install datomic cli"
       - wget https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.82.zip
       - unzip datomic-cli*.zip
-      - echo install --mode=755 datomic-cli/datomic* /usr/local/bin/
+      - cp datomic-cli/datomic* /usr/local/bin
+      - chmod 755 /usr/local/bin/datomic*
 
   build:
     commands:
