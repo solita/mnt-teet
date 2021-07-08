@@ -18,10 +18,6 @@ if [ $? -eq 124 ]; then
     exit 1;
 fi
 
-npm install playwright
-npx playwright install-deps
-pip3 install playwright
-
 python3 playwright/index_test.py
 
 EXIT_CODE=$?
