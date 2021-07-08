@@ -503,7 +503,5 @@
 
 (defn import-thk-tasks! [connection url projects]
   (let [db (d/db connection)]
-    ;; (println "transacting thk tasks:")
-    ;; (clojure.pprint/pprint (thk-import-tasks-tx db url projects))
     (d/transact connection
                 {:tx-data (thk-import-tasks-tx db url projects)})))

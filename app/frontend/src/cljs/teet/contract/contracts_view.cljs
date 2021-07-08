@@ -42,7 +42,8 @@
                                                       (contract-model/contract-url-id contract))
                                     :on-toggle toggle-card
                                     :open? open?
-                                    :mount-on-enter true}
+                                    :mount-on-enter true
+                                    :div-attrs {:data-cy "contract-card"}}
    ""
    [:div {:class (<class contract-style/contract-card-details-style)}
     [contract-common/contract-external-links contract]
@@ -83,27 +84,27 @@
 
 (defn contracts-list
   [increase-show-count show-count all-contracts? contracts]
-  (when (not-empty contracts) ;; appease cypress test
-    (r/with-let [open-contracts (r/atom #{})
-                 expand-contracts #((reset! open-contracts (->> contracts
-                                                                (mapv :db/id)
-                                                                set)))
-                 collapse-contracts #(reset! open-contracts #{})
-                 toggle-card (fn [contract-id]
-                               (if (@open-contracts contract-id)
-                                 (swap! open-contracts disj contract-id)
-                                 (swap! open-contracts conj contract-id)))]
-      [:div {:class (<class contract-style/contracts-list-style)}
-       [contacts-list-header {:all-contracts? all-contracts?
-                              :contracts-count (count contracts)
-                              :expand-contracts expand-contracts
-                              :collapse-contracts collapse-contracts}]
-       (doall
-        (for [contract (take show-count contracts)
-              :let [open? (@open-contracts (:db/id contract))]]
-          ^{:key (str (:db/id contract))}
-          [contract-card contract #(toggle-card (:db/id contract)) open?]))
-       [common-ui/scroll-sensor increase-show-count]])))
+  ;; appease cypress test
+  (r/with-let [open-contracts (r/atom #{})
+               expand-contracts #((reset! open-contracts (->> contracts
+                                                              (mapv :db/id)
+                                                              set)))
+               collapse-contracts #(reset! open-contracts #{})
+               toggle-card (fn [contract-id]
+                             (if (@open-contracts contract-id)
+                               (swap! open-contracts disj contract-id)
+                               (swap! open-contracts conj contract-id)))]
+    [:div {:class (<class contract-style/contracts-list-style)}
+     [contacts-list-header {:all-contracts? all-contracts?
+                            :contracts-count (count contracts)
+                            :expand-contracts expand-contracts
+                            :collapse-contracts collapse-contracts}]
+     (doall
+      (for [contract (take show-count contracts)
+            :let [open? (@open-contracts (:db/id contract))]]
+        ^{:key (str (:db/id contract))}
+        [contract-card contract #(toggle-card (:db/id contract)) open?]))
+     [common-ui/scroll-sensor increase-show-count]]))
 
 (def filter-options
   [:my-contracts

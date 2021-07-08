@@ -45,8 +45,7 @@
      :data-cy (str "snackbar-" (if (keyword? variant)
                                  (name variant)
                                  ;; else
-                                 (pr-str variant)
-                                 ))
+                                 (pr-str variant)))
      :message (r/as-element [:span
                              {:class (<class message-style)}
                              [(snack-icon variant) {:class (<class icon-style)}]

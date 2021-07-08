@@ -51,8 +51,7 @@
   ;; should investigate if we want to get tasks in browser tests too
   (import-tasks-test-data! (environment/datomic-connection))
 
-  (import-contracts-test-data! (environment/datomic-connection))
-)
+  (import-contracts-test-data! (environment/datomic-connection)))
 
 (defn -main [& args]
   (let [config-file (first args)]
