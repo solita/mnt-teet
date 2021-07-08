@@ -139,7 +139,7 @@
      (tr [:buttons :add-index])]]
    [:div
     (if index-data
-      (doall (for [index-group (distinct (mapv (fn [x] (:cost-index/type x)) index-data))]
+      (doall (for [index-group (sort-by :db/ident (distinct (mapv (fn [x] (:cost-index/type x)) index-data)))]
                ^{:key (str index-group)}
                [:<>
                 [:div {:class [(<class common-styles/margin 1 0 0 0)]} [:b (tr-enum index-group)]]
@@ -168,12 +168,12 @@
   [e! form-data index values]
   (let
     [index-start (t/date-time (:cost-index/valid-from index))
-     month-objects (take
+     month-objects (if (<= index-start t/now)(take
                      (t/in-months
                        (t/interval
                          index-start
                          (t/now)))
-                     (by-month index-start))
+                     (by-month index-start)))
      last-month (t/minus (t/now) (t/months 1))]
     (mapv (fn [x]
             (let [editable? (or
@@ -192,12 +192,14 @@
                       {(keyword (str "index-value-" (t/year x) "-" (t/month x))) field-value}))))) month-objects))
   (fn [e! form-data index values]
     (let [index-start (t/date-time (:cost-index/valid-from index))
-          month-objects (take
-                          (t/in-months
-                            (t/interval
-                              index-start
-                              (t/now)))
-                          (by-month index-start))
+          _ (println index-start t/now (<= index-start t/now))
+          month-objects (if (<= index-start t/now)
+                          (take
+                            (t/in-months
+                              (t/interval
+                                index-start
+                                (t/now)))
+                            (by-month index-start)))
           last-month (t/minus (t/now) (t/months 1))]
       [form/form2 {:e! e!
                    :on-change-event admin-controller/->UpdateIndexValues
