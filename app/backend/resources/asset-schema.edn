@@ -1,5 +1,5 @@
 [{:db/id "datomic.tx",
-  :tx/schema-imported-at #inst "2021-07-05T07:34:05.718-00:00"}
+  :tx/schema-imported-at #inst "2021-07-08T05:01:10.947-00:00"}
  {:db/id ":fgroup/carriageway",
   :db/ident :fgroup/carriageway,
   :asset-schema/type :asset-schema.type/fgroup,
@@ -169,12 +169,6 @@
   :asset-schema/description ["Sild, viadukt, estakaad, vms" ""],
   :fclass/fgroup ":fgroup/structures",
   :fclass/oid-prefix "SLD"}
- {:db/id ":fclass/chipping",
-  :db/ident :fclass/chipping,
-  :asset-schema/type :asset-schema.type/fclass,
-  :asset-schema/label ["Pindamine" "Surface dressing"],
-  :fclass/fgroup ":fgroup/carriageway",
-  :fclass/oid-prefix "PIN"}
  {:db/id ":fclass/culvert",
   :db/ident :fclass/culvert,
   :asset-schema/type :asset-schema.type/fclass,
@@ -455,6 +449,12 @@
   :asset-schema/label ["Aluskiht" "Subgrade"],
   :fclass/fgroup ":fgroup/embankment",
   :fclass/oid-prefix "ALK"}
+ {:db/id ":fclass/surfacedressing",
+  :db/ident :fclass/surfacedressing,
+  :asset-schema/type :asset-schema.type/fclass,
+  :asset-schema/label ["Pindamine" "Surface dressing"],
+  :fclass/fgroup ":fgroup/carriageway",
+  :fclass/oid-prefix "PIN"}
  {:db/id ":fclass/telecomcontract",
   :db/ident :fclass/telecomcontract,
   :asset-schema/type :asset-schema.type/fclass,
@@ -832,11 +832,14 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Truubipäis" "Culvert head"],
   :component/inherits-location? true,
+  :component/quantity-unit "m3",
   :ctype/parent ":fclass/culvert"}
  {:db/id ":ctype/culvertpipe",
   :db/ident :ctype/culvertpipe,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Truubitoru" "Culvert pipe"],
+  :asset-schema/description
+  ["Truubitoru arvestusühikuks on truubi pikkus." ""],
   :component/inherits-location? true,
   :component/quantity-unit "m",
   :ctype/parent ":fclass/culvert"}
@@ -845,6 +848,7 @@
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Truubikindlustus" "Culvert protection"],
   :component/inherits-location? true,
+  :component/quantity-unit "m2",
   :ctype/parent ":fclass/culvert"}
  {:db/id ":ctype/deckslab",
   :db/ident :ctype/deckslab,
@@ -884,7 +888,7 @@
   :db/ident :ctype/drainagechannel,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label
-  ["Drenaazi kanal või toru" "Dranaige channel or pipe"],
+  ["Drenaazi  toru või renn" "Dranaige channel or pipe"],
   :ctype/parent ":fclass/drainagesystem"}
  {:db/id ":ctype/drainagedevice",
   :db/ident :ctype/drainagedevice,
@@ -979,6 +983,14 @@
   :ctype/parent ":ctype/bridgesupport"}
  {:db/id ":ctype/kerb",
   :db/ident :ctype/kerb,
+  :asset-schema/type :asset-schema.type/ctype,
+  :asset-schema/label ["Äärekivi" "Kerb"],
+  :asset-schema/description
+  ["Äärekivi, mis eraldab kõnniteed, peenart, eraldusriba vms" ""],
+  :component/quantity-unit "m",
+  :ctype/parent ":fclass/paving"}
+ {:db/id ":ctype/kerb_",
+  :db/ident :ctype/kerb_,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Äärekivi" "Kerbstone"],
   :component/inherits-location? true,
@@ -1232,8 +1244,8 @@
    "Electrical overhead line protection panel"],
   :component/inherits-location? true,
   :ctype/parent ":ctype/bridgespan"}
- {:db/id ":ctype/rigidpaving",
-  :db/ident :ctype/rigidpaving,
+ {:db/id ":ctype/rigidpavinglayer",
+  :db/ident :ctype/rigidpavinglayer,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label
   ["Jäik kattekiht (betoon)" "Rigid paving layer (Concrete)"],
@@ -1298,7 +1310,6 @@
   :db/ident :ctype/shoulder,
   :asset-schema/type :asset-schema.type/ctype,
   :asset-schema/label ["Katte tugipeenar" "Paving support shoulder"],
-  :component/inherits-location? true,
   :component/quantity-unit "m2",
   :ctype/parent ":fclass/paving"}
  {:db/id ":ctype/shoulderfill",
@@ -1434,13 +1445,13 @@
   :component/inherits-location? true,
   :component/quantity-unit "m3",
   :ctype/parent ":ctype/bridgesupport"}
- {:db/id ":ctype/surfacedressing",
-  :db/ident :ctype/surfacedressing,
+ {:db/id ":ctype/surfacedressinglayer",
+  :db/ident :ctype/surfacedressinglayer,
   :asset-schema/type :asset-schema.type/ctype,
-  :asset-schema/label ["Pindamine" "Surface dressing"],
-  :asset-schema/description ["Killustikuga pindamine" ""],
+  :asset-schema/label ["Pindamiskiht" "Surface dressing layer"],
+  :asset-schema/description ["Killustikuga pindamine või möss" ""],
   :component/quantity-unit "m2",
-  :ctype/parent ":fclass/paving"}
+  :ctype/parent ":fclass/surfacedressing"}
  {:db/id ":ctype/tensionelement",
   :db/ident :ctype/tensionelement,
   :asset-schema/type :asset-schema.type/ctype,
@@ -2738,6 +2749,35 @@
   :db/id ":column/columnmaterial",
   :db/ident :column/columnmaterial,
   :attribute/cost-grouping? true}
+ {:attribute/parent
+  [":ctype/boundpavinglayer"
+   ":ctype/unboundpavinglayer"
+   ":ctype/shoulder"],
+  :asset-schema/unit "mm",
+  :db/valueType :db.type/bigdec,
+  :attribute/min-value 10,
+  :asset-schema/type :asset-schema.type/attribute,
+  :attribute/max-value 500,
+  :asset-schema/label ["Kihi paksus" "Layer thickness"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":common/layerthickness",
+  :db/ident :common/layerthickness,
+  :attribute/cost-grouping? true}
+ {:attribute/parent
+  [":ctype/boundpavinglayer"
+   ":ctype/unboundpavinglayer"
+   ":ctype/shoulder"],
+  :asset-schema/unit "m",
+  :db/valueType :db.type/bigdec,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kihi laius" "Layer width"],
+  :attribute/mandatory? false,
+  :attribute/max-value-ref ":paving/pavingwidth",
+  :db/cardinality :db.cardinality/one,
+  :db/id ":common/pavinglayerwidth",
+  :db/ident :common/pavinglayerwidth,
+  :attribute/cost-grouping? false}
  {:attribute/parent [":ctype/component" ":ctype/feature"],
   :db/valueType :db.type/string,
   :asset-schema/type :asset-schema.type/attribute,
@@ -2797,9 +2837,19 @@
   :attribute/cost-grouping? true,
   :asset-schema/description ["Vastavalt Eurokoodeksile" ""]}
  {:attribute/parent [":material/crushedstone"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Killustiku fraktsioon" ""],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":crushedstone/crushedstonefraction",
+  :db/ident :crushedstone/crushedstonefraction,
+  :attribute/cost-grouping? true}
+ {:attribute/parent [":material/crushedstone"],
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Killustiku fraktsioon" ""],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
   :db/id ":crushedstone/crushedstonesize",
@@ -2865,7 +2915,7 @@
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label
-  ["Truubi paiknemine (põhitee või mahasõit)" "Culvert location"],
+  ["Truubi asukoht (põhitee või mahasõit)" "Culvert location"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
   :db/id ":culvert/culvertlocation",
@@ -2884,6 +2934,7 @@
  {:attribute/parent [":fclass/culvert"],
   :asset-schema/unit "tk",
   :db/valueType :db.type/long,
+  :attribute/min-value 1,
   :asset-schema/type :asset-schema.type/attribute,
   :asset-schema/label ["Avade arv" "Number of pipes"],
   :attribute/mandatory? false,
@@ -2938,6 +2989,19 @@
   :db/id ":culvertpipe/culvertpipematerial",
   :db/ident :culvertpipe/culvertpipematerial,
   :attribute/cost-grouping? true}
+ {:attribute/parent [":ctype/culvertpipe"],
+  :db/valueType :db.type/boolean,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label
+  ["Arvutuslike avade osa" "Is part of pipe number"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":culvertpipe/culvertpipenumberadder",
+  :db/ident :culvertpipe/culvertpipenumberadder,
+  :attribute/cost-grouping? false,
+  :asset-schema/description
+  ["Määrab, kas toru järgi summeeritakse truubi avade arvu või mitte"
+   ""]}
  {:attribute/parent [":ctype/culvertprotection"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -3085,6 +3149,15 @@
   :db/id ":expansionjoint/expansionjointtype",
   :db/ident :expansionjoint/expansionjointtype,
   :attribute/cost-grouping? true}
+ {:attribute/parent [":ctype/feature"],
+  :db/valueType :db.type/boolean,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Kas katserajatis?" "Is it test site?"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":feature/testsite",
+  :db/ident :feature/testsite,
+  :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/featuremarking"],
   :asset-schema/unit "m2",
   :db/valueType :db.type/bigdec,
@@ -3290,6 +3363,15 @@
   :db/ident :impregnationsystem/impregnationsystemtype,
   :attribute/cost-grouping? false}
  {:attribute/parent [":ctype/lightingfixture"],
+  :db/valueType :db.type/boolean,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Dimmitav" ""],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":lightingfixture/lightingfixturedimmable",
+  :db/ident :lightingfixture/lightingfixturedimmable,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":ctype/lightingfixture"],
   :asset-schema/unit "W",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -3380,6 +3462,15 @@
   :db/ident :linearmarking/linearmarkinglinecode,
   :attribute/cost-grouping? true,
   :asset-schema/description [nil "line type"]}
+ {:attribute/parent [":ctype/linearmarking"],
+  :db/valueType :db.type/boolean,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Täristi" "Rumble structure"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":linearmarking/linearmarkingrumble",
+  :db/ident :linearmarking/linearmarkingrumble,
+  :attribute/cost-grouping? true}
  {:attribute/parent [":ctype/linearmarking"],
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
@@ -3570,7 +3661,7 @@
   :db/valueType :db.type/bigdec,
   :attribute/min-value 1,
   :asset-schema/type :asset-schema.type/attribute,
-  :attribute/max-value 25,
+  :attribute/max-value 100,
   :asset-schema/label ["Katte laius" "Paving width"],
   :attribute/mandatory? true,
   :db/cardinality :db.cardinality/one,
@@ -3952,30 +4043,6 @@
   :db/ident :retainingwall/retainingwallstructuraltype,
   :attribute/cost-grouping? false,
   :asset-schema/description ["Konstruktiivne lahendus" ""]}
- {:attribute/parent [":ctype/rigidpaving"],
-  :asset-schema/unit "mm",
-  :db/valueType :db.type/bigdec,
-  :attribute/min-value 50,
-  :asset-schema/type :asset-schema.type/attribute,
-  :attribute/max-value 500,
-  :asset-schema/label ["Jäiga katte paksus" "Rigid paving thickness"],
-  :attribute/mandatory? true,
-  :db/cardinality :db.cardinality/one,
-  :db/id ":rigidpaving/rigidpavingthickness",
-  :db/ident :rigidpaving/rigidpavingthickness,
-  :attribute/cost-grouping? true}
- {:attribute/parent [":ctype/rigidpaving"],
-  :asset-schema/unit "m",
-  :db/valueType :db.type/bigdec,
-  :attribute/min-value 1,
-  :asset-schema/type :asset-schema.type/attribute,
-  :asset-schema/label ["Jäiga katte laius" "Rigid paving width"],
-  :attribute/mandatory? true,
-  :attribute/max-value-ref ":paving/pavingwidth",
-  :db/cardinality :db.cardinality/one,
-  :db/id ":rigidpaving/rigidpavingwidth",
-  :db/ident :rigidpaving/rigidpavingwidth,
-  :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/roadsurfacecamera"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -4265,6 +4332,15 @@
   :db/cardinality :db.cardinality/one,
   :db/id ":speeddistplaydisplay/speeddisplayserialnumber",
   :db/ident :speeddistplaydisplay/speeddisplayserialnumber}
+ {:attribute/parent [":ctype/surfacedressinglayer"],
+  :db/valueType :db.type/ref,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["Pindamiskihi tüüp" "Dressing type"],
+  :attribute/mandatory? true,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":surfacedressinglayer/surfacedressingtype",
+  :db/ident :surfacedressinglayer/surfacedressingtype,
+  :attribute/cost-grouping? false}
  {:attribute/parent [":fclass/telecomcontract"],
   :db/valueType :db.type/ref,
   :asset-schema/type :asset-schema.type/attribute,
@@ -5230,6 +5306,15 @@
   :db/ident :waterproofing/waterproofingtype,
   :attribute/cost-grouping? true}
  {:attribute/parent [":ctype/waterproofing"],
+  :db/valueType :db.type/boolean,
+  :asset-schema/type :asset-schema.type/attribute,
+  :asset-schema/label ["UV vastupidavus" "UV stability"],
+  :attribute/mandatory? false,
+  :db/cardinality :db.cardinality/one,
+  :db/id ":waterproofing/waterproofinguvstability",
+  :db/ident :waterproofing/waterproofinguvstability,
+  :attribute/cost-grouping? false}
+ {:attribute/parent [":ctype/waterproofing"],
   :asset-schema/unit "mm",
   :db/valueType :db.type/bigdec,
   :asset-schema/type :asset-schema.type/attribute,
@@ -5392,28 +5477,28 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Kergasfaltbetoon (KAB)" "Light asphalt (KAB)"],
   :enum/attribute ":asphalt/asphalttype"}
+ {:db/id ":item/asphalttypemasticasphaltvas",
+  :db/ident :item/asphalttypemasticasphaltvas,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Valuasfalt (VAS)" "Mastic asphalt (VAS)"],
+  :enum/attribute ":asphalt/asphalttype"}
  {:db/id ":item/asphalttypepermeableasphaltpa",
   :db/ident :item/asphalttypepermeableasphaltpa,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label
   ["Dreenasfaltbetoon (PA)" "Permeable asphalt (PA)"],
   :enum/attribute ":asphalt/asphalttype"}
- {:db/id ":item/asphalttypeporousasphaltacbase",
-  :db/ident :item/asphalttypeporousasphaltacbase,
+ {:db/id ":item/asphalttypeporousasphaltacbase_bin",
+  :db/ident :item/asphalttypeporousasphaltacbase_bin,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label
-  ["Poorne asfaltbetoon (AC Base)" "Porous asphalt (AC Base)"],
+  ["Poorne asfaltbetoon (AC Base/Bin)" "Porous asphalt (AC Base/Bin)"],
   :enum/attribute ":asphalt/asphalttype"}
  {:db/id ":item/asphalttypestonemasticsasphalt",
   :db/ident :item/asphalttypestonemasticsasphalt,
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label
   ["Killustikmastiksasfalt (SMA)" "Stone mastics asphalt"],
-  :enum/attribute ":asphalt/asphalttype"}
- {:db/id ":item/asphalttypevas",
-  :db/ident :item/asphalttypevas,
-  :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Valuasfalt (VAS)" "(VAS)"],
   :enum/attribute ":asphalt/asphalttype"}
  {:db/id ":item/bcl_h1",
   :db/ident :item/bcl_h1,
@@ -5706,7 +5791,7 @@
  {:db/id ":item/culvertheadtypeconcreteendwall",
   :db/ident :item/culvertheadtypeconcreteendwall,
   :asset-schema/type :asset-schema.type/enum,
-  :asset-schema/label ["Betoonsein" "Concrete endwall"],
+  :asset-schema/label ["Otsasein" "Concrete endwall"],
   :enum/attribute ":culverthead/culvertheadtype"}
  {:db/id ":item/culvertheadtypeendwallwithwings",
   :db/ident :item/culvertheadtypeendwallwithwings,
@@ -6136,6 +6221,21 @@
   :asset-schema/type :asset-schema.type/enum,
   :asset-schema/label ["Püloon" "Pylon"],
   :enum/attribute ":bridgesupport/supporttype"}
+ {:db/id ":item/surfacedressingtypefull",
+  :db/ident :item/surfacedressingtypefull,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Lauspindamine" "Full dressing"],
+  :enum/attribute ":surfacedressinglayer/surfacedressingtype"}
+ {:db/id ":item/surfacedressingtyperut",
+  :db/ident :item/surfacedressingtyperut,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Roopa pindamine" "Rut dressing"],
+  :enum/attribute ":surfacedressinglayer/surfacedressingtype"}
+ {:db/id ":item/surfacedressingtypespot",
+  :db/ident :item/surfacedressingtypespot,
+  :asset-schema/type :asset-schema.type/enum,
+  :asset-schema/label ["Ribapindamine" "Spot dressing"],
+  :enum/attribute ":surfacedressinglayer/surfacedressingtype"}
  {:db/id ":item/tisa",
   :db/ident :item/tisa,
   :asset-schema/type :asset-schema.type/enum,
@@ -6357,6 +6457,11 @@
   :asset-schema/label
   ["Teemärgise materjal" "Pavement marking material"],
   :material/fgroups [":fgroup/trafficarrangement"]}
+ {:db/id ":material/mineralsoil",
+  :db/ident :material/mineralsoil,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Mineraalpinnas" "Mineral soil"],
+  :material/fgroups []}
  {:db/id ":material/paint",
   :db/ident :material/paint,
   :asset-schema/type :asset-schema.type/material,
@@ -6399,6 +6504,11 @@
   :asset-schema/type :asset-schema.type/material,
   :asset-schema/label ["Lehtteras" "Sheet metal"],
   :material/fgroups [":fgroup/trafficarrangement"]}
+ {:db/id ":material/slurryseal",
+  :db/ident :material/slurryseal,
+  :asset-schema/type :asset-schema.type/material,
+  :asset-schema/label ["Möss" "Slurry seal"],
+  :material/fgroups []}
  {:db/id ":material/solidwood",
   :db/ident :material/solidwood,
   :asset-schema/type :asset-schema.type/material,
