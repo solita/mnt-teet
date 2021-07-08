@@ -57,7 +57,6 @@
   :deactivated-successfully "Kasutaja edukalt deaktiveeritud",
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
-  :activate nil,
   :current-permissions "Kehtivad ligipääsud"},
  :asset
  {:unlock-contract-boq-warning

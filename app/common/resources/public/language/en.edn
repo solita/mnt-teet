@@ -58,7 +58,6 @@
   :deactivated-successfully "User deactivated successfully",
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
-  :activate "Activate",
   :current-permissions "Current permissions"},
  :asset
  {:unlock-contract-boq-warning
