@@ -8,8 +8,9 @@ const TerserPlugin = require('terser-webpack-plugin');
 //minimize = (teet_env !== "teet-dev2") && (branch !== "master")
 
 
-// always do minimize now, as it is fast after upgrade to webpack 5 (~1 minute)
-minimize = true
+// always do minimize unless doing testbuild now, as it is fast after upgrade to webpack 5 (~1 minute)
+
+minimize = (process.env["TEET_TESTBUILD"] !== "1")
 
 module.exports = {
     entry: './out/index.js',
