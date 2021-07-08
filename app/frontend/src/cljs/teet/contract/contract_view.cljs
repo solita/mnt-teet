@@ -20,7 +20,8 @@
             [teet.contract.contract-style :as contract-style]
             [teet.ui.table :as table]
             [teet.contract.contract-common :as contract-common]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 (defn target-table
   [targets]
@@ -96,14 +97,16 @@
      [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                               (<class common-styles/margin-bottom 2))}
       [typography/Heading1 (tr [:contract :contract-information-heading])]
-      [form/form-modal-button {:modal-title (tr [:contract :edit-contract])
-                               :max-width "sm"
-                               :button-component
-                               [buttons/button-secondary {}
-                                (tr [:buttons :edit])]
+      [authorization-check/when-authorized
+       :thk.contract/edit-contract-details contract
+       [form/form-modal-button {:modal-title (tr [:contract :edit-contract])
+                                :max-width "sm"
+                                :button-component
+                                [buttons/button-secondary {}
+                                 (tr [:buttons :edit])]
 
-                               :form-component [edit-contract-form e!]
-                               :form-value (select-keys contract contract-model/contract-form-keys)}]]
+                                :form-component [edit-contract-form e!]
+                                :form-value (select-keys contract contract-model/contract-form-keys)}]]]
      [contract-common/contract-information-row contract]]
     [:div
      [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}

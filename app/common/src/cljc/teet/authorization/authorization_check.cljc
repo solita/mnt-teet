@@ -1,8 +1,10 @@
 (ns teet.authorization.authorization-check
-  (:require #?(:clj  [clojure.java.io :as io]
+  (:require #?(:clj [clojure.java.io :as io]
                :cljs [cljs.reader :as reader])
             #?(:cljs [teet.app-state :as app-state])
             #?(:cljs [teet.ui.project-context :as project-context])
+            #?(:cljs [tuck.core :as tuck])
+            #?(:cljs [teet.common.common-controller :as common-controller])
             [teet.util.collection :as cu]
             [clojure.set :as set]
             [teet.log :as log]))
@@ -92,6 +94,23 @@
                                        :functionality functionality
                                        :entity        entity})))))
 
+#?(:cljs
+   (defn authorized-query
+     [user action entity contract-permissions _component]
+     (let [e! (tuck/control app-state/app)
+           cache-key [(:db/id user) action (:db/id entity)]]                            ;; check if task or activity is in params and use that as target
+       (when-not (contains? contract-permissions cache-key)
+         (e! (common-controller/map->QueryUserAccess {:action action
+                                                      :entity entity
+                                                      :result-event (partial common-controller/->AuthorizationResult cache-key)}))))
+     (fn [user action entity contract-permissions component]
+       (let [cache-key [(:db/id user) action (:db/id entity)]]
+         (if (get contract-permissions cache-key)
+           component
+           (do
+             (log/debug "AUTHORIZED QUERY FAILED for action: " action)
+             nil))))))
+
 #?(:cljs (defonce test-authorize (atom nil)))
 #?(:cljs
    (defn when-authorized
@@ -102,8 +121,10 @@
        [project-context/consume
          (fn [{project-id :db/id}]
           (let [permissions @app-state/action-permissions
+                contract-permissions @app-state/contract-permissions
                 user @app-state/user
-                action-permissions (action permissions)]
+                action-permissions (action permissions)
+                has-contract-auth? (:contract-authorization-rule action-permissions)]
             (if (and permissions user action-permissions)
               (if (every? (fn [[permission {:keys [link]}]]
                             (authorized? @app-state/user permission
@@ -114,9 +135,11 @@
                 (do
                   (log/debug "Action " action " authorized for " user)
                   component)
-                (do
-                  (log/debug "Action " action " NOT authorized for " user)
-                  nil))
+                (if has-contract-auth?
+                   [authorized-query user action entity contract-permissions component]
+                  (do
+                    (log/debug "Action " action " NOT authorized for " user)
+                    nil)))
 
               (do
                 (log/debug "Can't determine permissions to check authorization"

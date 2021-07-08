@@ -78,10 +78,12 @@
                (or authorization
                    {})))
 
-(defn register-permissions! [request-name _request-type permissions]
+(defn register-permissions! [request-name _request-type permissions contract-auth-rule]
   (swap! request-permissions
          assoc request-name
-         permissions))
+         (merge permissions
+                (when contract-auth-rule
+                  {:contract-authorization-rule contract-auth-rule}))))
 
 (defmacro with-last-modified [last-modified-code body]
   `(with-meta
@@ -124,10 +126,7 @@
           If authorization key is given will check the permissions of the user against the given rule
           If contract-authorization key is given will check the roles of the user in related contracts
 
-          For defqueries the final option is to give only the project-id so we check if the contracts give read access to the project."
-
-          #_"Specify :unauthenticated? true for unauthenticated access, or :project-id and :authorization
-          defquery will use project-id if no authorization or contract-authorization is given")
+          For defqueries the final option is to give only the project-id so we check if the contracts give read access to the project.")
 
   (assert (string? (:doc options)) "Specify :doc for request")
   (assert (and (keyword? request-name)
@@ -152,10 +151,12 @@
         -db (gensym "DB")
         -user (gensym "USER")
         -proj-id (gensym "PID")
-        prepared-permissions (authorization->registrable-permissions authorization)]
+        prepared-permissions (authorization->registrable-permissions authorization)
+        contract-auth-rule (:action contract-authorization)]
     `(do (register-permissions! ~request-name
                                 ~request-type
-                                ~prepared-permissions)
+                                ~prepared-permissions
+                                ~contract-auth-rule)
          ~(when spec
             `(clojure.spec.alpha/def ~request-name ~spec))
          (defmethod ~(case request-type

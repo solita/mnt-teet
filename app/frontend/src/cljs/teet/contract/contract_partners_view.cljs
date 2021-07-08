@@ -376,13 +376,13 @@
       (tr [:contract :add-company])]]]])
 
 (defn personnel-section
-  [e! {:keys [params query] :as app} selected-partner]
+  [_ {:keys [params query] :as _app} selected-partner]
   [:div {:style {:display :flex
                  :justify-content :space-between
                  :align-items :center}}
    [typography/Heading2 (tr [:contract :persons])]
    [authorization-check/when-authorized
-    :thk.contract/add-contract-employee selected-partner
+    :thk.contract/add-contract-employee (:company-contract/company selected-partner)
     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
                                :href (routes/url-for {:page :contract-partners
                                                       :params params
@@ -468,6 +468,9 @@
        [Grid {:item true
               :xs 12
               :md 6}
+        [:p (pr-str "selected user: " selected-user)]
+        [:p (pr-str "add-new-person? : " @add-new-person?)]
+        [:p (pr-str "user selected? : " user-selected?)]
         [form/form2 {:e! e!
                      :autocomplete-off? true
                      :value @form-atom
@@ -497,7 +500,16 @@
          [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
           (tr [:contract :add-person])]
          (if selected-user
-           [selected-user-information selected-user]
+           [:div
+            [selected-user-information selected-user]
+            [form/field {:attribute :company-contract-employee/role}
+             [select/select-user-roles-for-contract
+              {:e! e!
+               :error-text (tr [:contract :role-required])
+               :placeholder (tr [:contract :select-user-roles])
+               :no-results (tr [:contract :no-matching-roles])
+               :show-empty-selection? true
+               :clear-value [nil nil]}]]]
            (cond
              (true? user-selected?)
              [form/field {:attribute :company-contract-employee/role}
@@ -529,13 +541,14 @@
   [partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
         lead-partner? (:company-contract/lead-partner? partner)
-        teet-id (:teet/id partner)]
+        teet-id (:teet/id partner)
+        company (:company-contract/company partner)]
     [:div {:class (<class contract-style/partner-info-header)}
      [:h1 partner-name]
      (when lead-partner?
        [common/primary-tag (tr [:contract :lead-partner])])
      [authorization-check/when-authorized
-      :thk.contract/edit-contract-partner-company partner
+      :thk.contract/edit-contract-partner-company company
       [buttons/button-secondary
        {:href (routes/url-for {:page :contract-partners
                                :params params
@@ -558,7 +571,8 @@
                               (filter
                                 (fn [partner]
                                   (= (str (:teet/id partner)) selected-partner-id)))
-                              first)]
+                              first)
+        selected-company (:company-contract/company selected-partner)]
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
@@ -566,11 +580,11 @@
       [partner-info e! app selected-partner]
       :edit-partner
       [authorization-check/when-authorized
-       :thk.contract/edit-contract-partner-company selected-partner
+       :thk.contract/edit-contract-partner-company selected-company
        [edit-partner-form e! app selected-partner]]
       :add-personnel
       [authorization-check/when-authorized
-       :thk.contract/add-contract-employee selected-partner
+       :thk.contract/add-contract-employee selected-company
        [add-personnel-form e! app selected-partner]]
       [partners-default-view params contract])))
 
