@@ -28,7 +28,7 @@ context('Cooperation', function() {
 
         cy.formSubmit()
 
-        cy.get(".MuiSnackbar-root") // snackbar message is shown
+        cy.get("[data-cy='snackbar-success']");
     }
 
     function navigateToProjectCooperations(projectId) {
@@ -71,8 +71,7 @@ context('Cooperation', function() {
             ":cooperation.3rd-party/phone", "555-1234-567890")
 
         cy.formSubmit()
-
-        cy.get(".MuiSnackbar-root") // snackbar message is shown
+        cy.get("[data-cy='snackbar-success']");
 
         // new 3rd party appears in list, click it to navigate to it
         cy.get(`.cooperation-overview-page [data-third-party='${this.thirdparty}'] a`).click()

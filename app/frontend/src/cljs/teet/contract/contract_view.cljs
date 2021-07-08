@@ -39,7 +39,9 @@
            (tr [:enum (get-in target [:target :task/type])])]]
          [(get-in target [:activity :activity/manager])]]
         [[(get-in target [:project :thk.project/name])]
-         [[url/Link (:target-navigation-info target)
+         [[url/Link
+           (merge (:target-navigation-info target)
+                    {:component-opts {:data-cy "contract-related-link"}})
            (tr [:enum (get-in target [:target :activity/name])])]]
          [nil]
          [(get-in target [:activity :activity/manager])]]))]])
