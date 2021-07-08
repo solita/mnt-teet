@@ -58,6 +58,7 @@
   :deactivated-successfully "User deactivated successfully",
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
+  :activate "Activate",
   :current-permissions "Current permissions"},
  :asset
  {:unlock-contract-boq-warning
@@ -131,6 +132,7 @@
   :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
+   :db.type/boolean "Boolean",
    :fclass "Feature class",
    :unit "Unit",
    :datatype "Type",
@@ -209,12 +211,14 @@
   :comments-for "Comments for {file-name}:"},
  :common
  {:hide-menu "Hide menu",
+  :view-more-info "View more info",
   :send-feedback "Send feedback",
   :forbidden-explanation
   "You have tried to access a resource you're not authorized to access.",
   :select-files "Select files to upload",
   :date "Date",
   :log-out "Log out",
+  :yes "Yes",
   :back-to-project "Back to project",
   :now "Now",
   :construction-phase "Phase",
@@ -250,6 +254,7 @@
   :back-to-task "Back to task",
   :n-selected "{count} selected",
   :design-stage-activities "Project stages",
+  :no "No",
   :select {:empty "- Select value"},
   :clear "Clear"},
  :contact
@@ -270,6 +275,10 @@
   :no-company-found-title "Company not found",
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
+  :partner
+  {:active-persons "Active persons",
+   :deactive-persons "Deactive persons",
+   :key-person "Key person"},
   :person-name "Person name",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",

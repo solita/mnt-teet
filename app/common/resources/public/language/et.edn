@@ -57,6 +57,7 @@
   :deactivated-successfully "Kasutaja edukalt deaktiveeritud",
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
+  :activate nil,
   :current-permissions "Kehtivad ligipääsud"},
  :asset
  {:unlock-contract-boq-warning
@@ -130,6 +131,7 @@
   :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
+   :db.type/boolean "Boolean",
    :fclass "Vara liik",
    :unit "Ühik",
    :datatype "Tüüp",
@@ -207,11 +209,13 @@
   :comments-for "{file-name} märkused"},
  :common
  {:hide-menu "Peidan menüü",
+  :view-more-info nil,
   :send-feedback "Saadan tagasisidet",
   :forbidden-explanation "Puuduvad juurdepääsu õigused",
   :select-files "Valin fail(id)",
   :date "kuupäev",
   :log-out "Väljun",
+  :yes "Jah",
   :back-to-project "Tagasi projekti",
   :now "Nüüd",
   :construction-phase "Ehitusetapp",
@@ -248,6 +252,7 @@
   :back-to-task "Tagasi ülesandesse",
   :n-selected "{count} valitud",
   :design-stage-activities "Ülesanded",
+  :no "Ei",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
  :contact
@@ -269,6 +274,8 @@
   :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
+  :partner
+  {:active-persons nil, :deactive-persons nil, :key-person nil},
   :person-name "Isiku nimi",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
   :thk.contract.status/deadline-overdue "Tähtaeg on hilinenud",
