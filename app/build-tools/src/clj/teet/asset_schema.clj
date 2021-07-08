@@ -331,6 +331,7 @@
                                   "integer" :db.type/long
                                   "number" :db.type/bigdec
                                   "datetime" :db.type/instant
+                                  "boolean" :db.type/boolean
                                   nil)]
                 :when (and valueType
                            (every? exists? (:ctype p)))]
