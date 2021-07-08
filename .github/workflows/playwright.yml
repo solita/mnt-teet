@@ -47,5 +47,5 @@ jobs:
         run: ./ci-build.sh
         working-directory: app/frontend/
       - name: run browser tests
-        run: ./local-testing-env.sh "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        run: ./playwright-testing-env.sh "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
         working-directory: ci/browser-tests/
