@@ -20,6 +20,8 @@ fi
 
 python3 playwright/index_test.py
 
+aws s3 sync playwright/videos s3://teet-browser-test-documents/videos
+
 EXIT_CODE=$?
 
 exit $EXIT_CODE

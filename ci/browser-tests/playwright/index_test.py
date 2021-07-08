@@ -1,7 +1,7 @@
 from playwright.sync_api import sync_playwright
 def run(playwright):
     browser = playwright.chromium.launch(headless=True)
-    context = browser.new_context()
+    context = browser.new_context(record_video_dir="playwright/videos/")
     # Open new page
     page = context.new_page()
     # Go to http://localhost:4000/#/admin/indexes
@@ -23,7 +23,7 @@ def run(playwright):
     # Click button:has-text("addAdd new index")
     # with page.expect_navigation(url="http://localhost:4000/#/admin/indexes?add-index-form=1"):
     with page.expect_navigation():
-        page.click("button:has-text(\"addAdd new index\")")
+        page.click("button:has-text(\"Add new index\")")
     # Click text=Add new indexIndex name *Index type *- Select valueConsumer Price IndexBitumen I >> input
     page.click("text=Add new indexIndex name *Index type *- Select valueConsumer Price IndexBitumen I >> input")
     # Fill text=Add new indexIndex name *Index type *- Select valueConsumer Price IndexBitumen I >> input
