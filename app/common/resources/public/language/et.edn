@@ -40,6 +40,7 @@
   :deactivate "Deaktiveerin",
   :all-users "Kõik kasutajad",
   :managers "Projektijuhid",
+  :admin-menu "Admin menüü",
   :title-indexes "Indeksid",
   :title "Admin",
   :role-and-contact-information "ROLLI JA KONTAKT INFORMATSIOON",
@@ -56,6 +57,7 @@
   :deactivated-successfully "Kasutaja edukalt deaktiveeritud",
   :reactivate-user-btn "Aktiveeri kasutaja uuesti",
   :search-shortcuts "Otsingu kiirviited",
+  :activate nil,
   :current-permissions "Kehtivad ligipääsud"},
  :asset
  {:unlock-contract-boq-warning
@@ -206,6 +208,7 @@
   :comments-for "{file-name} märkused"},
  :common
  {:hide-menu "Peidan menüü",
+  :view-more-info nil,
   :send-feedback "Saadan tagasisidet",
   :forbidden-explanation "Puuduvad juurdepääsu õigused",
   :select-files "Valin fail(id)",
@@ -268,6 +271,8 @@
   :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
+  :partner
+  {:active-persons nil, :deactive-persons nil, :key-person nil},
   :person-name "Isiku nimi",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
   :thk.contract.status/deadline-overdue "Tähtaeg on hilinenud",
@@ -1000,7 +1005,7 @@
   :thk.project/effective-km-range "Km ulatus",
   :task/description "Kirjeldus",
   :thk.project/region-name "Regioon",
-  :cost-index/valid-from "Keshitiv alates",
+  :cost-index/valid-from "Kehtiv alates",
   :cooperation.response/date "Vastuse kuupäev",
   :estate-procedure/urgent-bonus "Kiirmenetluse tasu",
   :cooperation.contact/phone "Telefoni number",

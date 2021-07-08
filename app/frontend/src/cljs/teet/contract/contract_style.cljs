@@ -143,6 +143,36 @@
    :align-items :center
    :margin-bottom "2rem"})
 
+(defn personnel-section-style
+  []
+  {:display :flex
+   :flex-direction :column})
+
+(defn personnel-section-header-style
+  []
+  ^{:combinators
+    {[:> :h2] {:margin-right "1rem"
+               :line-height "2.6rem"
+               :font-size "1.75rem"
+               :font-weight "400"}
+     [:> :a] {:margin-left :auto}}}
+  {:display :flex
+   :align-items :center
+   :width "100%"
+   :margin-top "1.562rem"})
+
+(defn personnel-table-style
+  []
+  ^{:combinators
+    {[:> :h4] {:margin-bottom "1.5rem"}}}
+  {:margin-top "2.5rem"})
+
+(defn personnel-activation-link-style
+  [active?]
+  {:color (if active?
+            theme-colors/red
+            theme-colors/green)})
+
 (defn project-contract-container-style
   []
   ^{:pseudo {:last-of-type {:border-bottom 0}}}
