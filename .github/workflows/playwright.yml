@@ -42,6 +42,11 @@ jobs:
           mkdir ~/.datomic
           mkdir /tmp/datomic-storage
           echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
+      - name: install playwright deps
+        run: |
+          npm install playwright
+          npx playwright install-deps
+          pip3 install playwright
       - name: build frontend
         if: steps.frontend.outputs.cache-hit != 'true'
         run: ./ci-build.sh
