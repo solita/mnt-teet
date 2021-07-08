@@ -588,6 +588,8 @@
                            (conj open-types :selected))]
       (assoc-in app [:route :project :open-types] new-open-types)))
 
+
+
   ToggleRestrictionCategory
   (process-event [{restrictictions :restrictions
                    group           :group}

@@ -42,6 +42,10 @@
    [SnackbarContent
     {:style {:background-color (snack-color variant)
              :flex-grow 0}
+     :data-cy (str "snackbar-" (if (keyword? variant)
+                                 (name variant)
+                                 ;; else
+                                 (pr-str variant)))
      :message (r/as-element [:span
                              {:class (<class message-style)}
                              [(snack-icon variant) {:class (<class icon-style)}]
