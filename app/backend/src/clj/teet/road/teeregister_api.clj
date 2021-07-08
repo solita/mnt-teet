@@ -137,6 +137,16 @@
                       {:searchText search-text
                        :maxResults max-results}))))
 
+(defn road-name
+  "Fetch road-name for road number and carriageway."
+  [client road-nr carriageway]
+  (some #(when (and (= road-nr (:teeNumber %))
+                    (= carriageway (:soiduteeNr %)))
+           (:teeNimi %))
+        (get-request client "/api/road/like/nimetus"
+                     {:searchText (str road-nr)
+                      :maxResults 100})))
+
 ;; PENDING: following not implemented
 ;; /api/road/hooldaja
 ;; /api/road/hoole

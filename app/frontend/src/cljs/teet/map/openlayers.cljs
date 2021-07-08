@@ -182,6 +182,34 @@
     [(+ x1 (/ (- x2 x1) 2))
      (+ y1 (/ (- y2 y1) 2))]))
 
+(defn fit-map-to-feature!
+  "Fit map to feature by feature property (like id).
+  Finds the feature in any vector layer and fits to it.
+
+  If the feature can't be found, no change to map is made."
+  [property value]
+  (when-let [ol3 @the-map]
+    (doseq [source (->> ol3 .getLayers .getArray (map #(.getSource %)))
+            :when (instance? ol.source.Vector source)]
+      (.forEachFeature
+       source
+       (fn [^ol.Feature f]
+         (when (= (.get f property) value)
+           (some-> f .getGeometry fit!)
+           true))))))
+
+(defn fit-map-to-layer!
+  "Fit map to layer by property value.
+  Finds the given property (eg. \"teet-source\") and if the
+  value matches, fits map to source extent.
+
+  If the layer isn't found, no change to map is made."
+  [property value]
+  (when-let [ol3 @the-map]
+    (doseq [layer (->> ol3 .getLayers .getArray)]
+      (when (= (.get layer property) value)
+        (some-> layer .getSource .getExtent fit!)))))
+
 (defn feature-geometry [feature layer]
   ;; Background layer item (from vector tile)
   {:map/tooltip (.get feature "tooltip")

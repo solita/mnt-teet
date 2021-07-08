@@ -3,7 +3,8 @@
             [tuck.core :as t]
             [teet.common.common-controller :as common-controller]
             [ol.Geolocation]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.map.openlayers :as openlayers]))
 
 (defrecord UpdateSearchCriteria [criteria])
 (defrecord Search []) ; execute search on backend
@@ -171,6 +172,7 @@
 
   BackToListing
   (process-event [_ app]
+    (openlayers/fit-map-to-layer! "teet-source" "asset-results")
     (t/fx app
           {:tuck.effect/type :navigate
            :page (:page app)

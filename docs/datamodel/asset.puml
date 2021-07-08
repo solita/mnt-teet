@@ -1,0 +1,114 @@
+@startuml
+
+entity asset {
+  oid : text
+  fclass : fclass
+  components : [component]
+  location : location
+  --
+  any asset attributes
+}
+
+note left of asset
+     Top level asset, like a bridge or culvert.
+     May contain multiple components.
+end note
+
+entity component {
+  oid : text
+  ctype : component_type
+  components : [component]
+  materials : [material]
+  location : location
+  --
+  any component attributes
+}
+
+note left of component
+     Structural component of an asset, like bridge support
+     or culvert head. May contain other subcomponents
+     or materials. Only leaf components (that don't have
+     subcomponents) may have materials.
+end note
+
+asset ||--o{ component
+component ||--o{ component
+
+entity material {
+  oid : text
+  material : material_type
+  --
+  any material attributes
+}
+
+component ||--o{ material
+
+entity component_type {
+  * ident : keyword
+  --
+  inherits-location? : boolean
+  quantity-unit : string
+}
+
+entity material_type {
+  * ident : keyword
+  --
+  fgroups : [fgroup]
+}
+
+entity attribute {
+  * ident : keyword
+  type : keyword
+  --
+  min-value : long
+  max-value : long
+  parent : ref
+}
+
+note left of attribute
+     Attribute defines the actual fields where
+     asset information is stored. Attributes
+     belong to some type (like asset,
+     component or material).
+end note
+
+component --> component_type
+material --> material_type
+
+material_type ||--o{ attribute
+component_type ||--o{ attribute
+
+entity fclass {
+  * ident : keyword
+  --
+  attributes : [attribute]
+  label : tuple[string]
+  oid-prefix : text
+  oid-sequence-number : long
+  fgroup : fgroup
+}
+
+fclass ||--o{ attribute
+
+note right of fclass
+     Feature class defines a class of asset
+     where actual instances of assets belong to
+end note
+
+entity fgroup {
+  * ident keyword
+  --
+  label : tuple[string]
+}
+
+note left of fgroup
+     Feature group is a logical grouping
+     of feature classes.
+end note
+
+material_type ||--o{ fgroup
+asset --> fclass
+
+fclass --> fgroup
+
+@enduml

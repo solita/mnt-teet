@@ -28,6 +28,8 @@
 (s/def :admin/edit-user (s/keys :req [:user/email]))
 (s/def :admin/list-users (s/keys))
 
+(s/def :admin/add-index (s/keys :req [:cost-index/name :cost-index/type :cost-index/valid-from]))
+
 ;; User entity id
 (s/def :user/eid (s/or :db-id integer?
                        :user-id ::user-id-ref

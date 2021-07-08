@@ -65,15 +65,20 @@
   (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
     (throw (ex-info "Not a leaf component OID"
                     {:parent-oid parent-oid})))
-  (when (seq (d/q '[:find ?m
-                    :where
-                    [?c :component/materials ?m]
-                    [?m :material/type ?t]
-                    :in $ ?c ?t]
-                  db [:asset/oid parent-oid] type))
-    (throw (ex-info "Material of the same type already exists for component"
-                    {:parent-oid parent-oid
-                     :type type})))
+  (let [existing-material-ids
+        (into #{}
+              (map first)
+              (d/q '[:find ?m
+                     :where
+                     [?c :component/materials ?m]
+                     [?m :material/type ?t]
+                     :in $ ?c ?t]
+                   db [:asset/oid parent-oid] type))]
+
+    (when (seq (disj existing-material-ids id))
+      (throw (ex-info "Material of the same type already exists for component"
+                      {:parent-oid parent-oid
+                       :type type}))))
   ;; TODO: spec
   (when (not (:material/type material))
     (throw (ex-info "No material type"
@@ -88,10 +93,12 @@
              :asset/oid
              (asset-db/next-material-oid db parent-oid)))]))
 
-(defn- collect-oids [form]
-  (cu/collect #(and (map-entry? %)
-                    (= :asset/oid (first %)))
-              form))
+(defn- collect-values-for-key [key form]
+  (into #{}
+        (map second)
+        (cu/collect #(and (map-entry? %)
+                          (= key (first %)))
+                    form)))
 
 (defn import-assets
   "Import assets of the given type from road registry.
@@ -105,10 +112,16 @@
                                                 (swap! asset-seq-num inc))]
     (conj
      (mapv
-      (fn [{rr-oid :asset/road-registry-oid :as asset}]
-        (let [existing-oid (:asset/oid (d/pull db '[:asset/oid]
-                                               [:asset/road-registry-oid rr-oid]))
-              oid (or existing-oid
+      (fn [{rr-oid :road-registry/id :as asset}]
+        (let [rr-ids (collect-values-for-key :road-registry/id asset)
+              existing-oids (into {}
+                                  (d/q '[:find ?rr-id ?oid
+                                         :where
+                                         [?e :road-registry/id ?rr-id]
+                                         [?e :asset/oid ?oid]
+                                         :in $ [?rr-id ...]]
+                                       db rr-ids))
+              oid (or (existing-oids rr-oid)
                       (next-asset-oid!))
 
               component-seq-num (atom (asset-db/max-component-oid-number
@@ -122,7 +135,19 @@
                       ;; FIXME: currently only 1st level of components
                       ;; supported in import.
                       (fn [components]
-                        (mapv #(assoc % :asset/oid (next-component-id!))
+                        (mapv #(let [oid (or (existing-oids (:road-registry/id %))
+                                             (next-component-id!))]
+                                 (-> %
+                                     (assoc :asset/oid oid)
+                                     (cu/update-in-if-exists
+                                      [:component/materials]
+                                      (fn [materials]
+                                        (vec
+                                         (map-indexed (fn [i material]
+                                                        (assoc material :asset/oid
+                                                               (or (existing-oids (:road-registry/id material))
+                                                                   (asset-model/material-oid oid (inc i)))))
+                                                      materials))))))
                               components))))))
       assets)
 
