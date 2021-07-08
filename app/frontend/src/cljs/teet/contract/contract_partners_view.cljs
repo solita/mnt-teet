@@ -617,9 +617,7 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [authorization-check/when-authorized
-       :thk.contract/edit-contract-partner-company selected-partner
-       [edit-partner-form e! app selected-partner]]
+      [edit-partner-form e! app selected-partner]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
