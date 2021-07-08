@@ -16,7 +16,7 @@ env:
 phases:
   install:
     runtime-versions:
-      java: openjdk11
+      java: corretto11
   pre_build:
     commands:
       - echo $DOCKER_ACCESS_TOKEN > ~/token.txt
