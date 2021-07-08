@@ -148,9 +148,9 @@
                                     (if (= id (str (:db/id x)))
                                       [:b (:cost-index/name x)]
                                       (:cost-index/name x))]])
-                      (sort-by :meta/created-at #(compare %2 %1) (filterv
-                                               (fn [y] (= index-group (:cost-index/type y)))
-                                               index-data)))]))
+                      (filterv
+                        (fn [y] (= index-group (:cost-index/type y)))
+                        (sort-by :meta/created-at #(compare %2 %1) index-data)))]))
       (tr [:indexes-admin :no-indexes-added]))]])])
 
 (defn view-index-values
