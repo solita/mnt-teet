@@ -42,30 +42,36 @@
                                                       (contract-model/contract-url-id contract))
                                     :on-toggle toggle-card
                                     :open? open?
-                                    :mount-on-enter true}
+                                    :mount-on-enter true
+                                    :div-attrs {:data-cy "contract-card"}}
    ""
    [:div {:class (<class contract-style/contract-card-details-style)}
     [contract-common/contract-external-links contract]
     [contract-common/contract-information-row contract]]])
 
 (defn contract-list-expansion-buttons
-  [expand-contracts collapse-contracts]
+  [expand-contracts collapse-contracts contracts-count]
   [:div
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
+                              :data-cy (if (pos? contracts-count)
+                                         "expand-contracts"
+                                         ;; else
+                                         "empty-contracts-expand")
                               :on-click expand-contracts
                               :start-icon (r/as-element [icons/navigation-unfold-more])}
     (tr [:contracts :contracts-list :expand-all])]
    [buttons/button-secondary {:size :small
                               :class (<class contract-style/contract-list-secondary-button ".5rem")
                               :on-click collapse-contracts
+                              :data-cy "collapse-contracts"
                               :start-icon (r/as-element [icons/navigation-unfold-less])}
     (tr [:contracts :contracts-list :collapse-all])]])
 
 (defn contacts-list-header
   [{:keys [contracts-count expand-contracts collapse-contracts all-contracts?]}]
   [:div {:class (<class contract-style/contracts-list-header-style)}
-   [contract-list-expansion-buttons expand-contracts collapse-contracts]
+   [contract-list-expansion-buttons expand-contracts collapse-contracts contracts-count]
    [typography/SmallText
     (tr
       (if all-contracts?
@@ -78,10 +84,11 @@
 
 (defn contracts-list
   [increase-show-count show-count all-contracts? contracts]
+  ;; appease cypress test
   (r/with-let [open-contracts (r/atom #{})
-               expand-contracts #(reset! open-contracts (->> contracts
-                                                            (mapv :db/id)
-                                                            set))
+               expand-contracts #((reset! open-contracts (->> contracts
+                                                              (mapv :db/id)
+                                                              set)))
                collapse-contracts #(reset! open-contracts #{})
                toggle-card (fn [contract-id]
                              (if (@open-contracts contract-id)
@@ -93,10 +100,10 @@
                             :expand-contracts expand-contracts
                             :collapse-contracts collapse-contracts}]
      (doall
-       (for [contract (take show-count contracts)
-             :let [open? (@open-contracts (:db/id contract))]]
-         ^{:key (str (:db/id contract))}
-         [contract-card contract #(toggle-card (:db/id contract)) open?]))
+      (for [contract (take show-count contracts)
+            :let [open? (@open-contracts (:db/id contract))]]
+        ^{:key (str (:db/id contract))}
+        [contract-card contract #(toggle-card (:db/id contract)) open?]))
      [common-ui/scroll-sensor increase-show-count]]))
 
 (def filter-options
@@ -115,6 +122,7 @@
   [buttons/button-secondary {:size :small
                              :class (<class contract-style/contract-list-secondary-button 0)
                              :on-click toggle-filters-visibility
+                             :data-cy "toggle-filters-visibility"
                              :start-icon (r/as-element [icons/content-filter-alt-outlined])}
    (if filters-visibility?
      (tr [:contracts :filters :hide-filters])
@@ -135,6 +143,7 @@
                (tr [:contracts :shortcuts option])]
               [:span
                [buttons/link-button {:class (<class contract-style/search-shortcut-item-style selected?)
+                                     :data-cy (str "search-shortcut-" (name option))
                                      :on-click #(change-shortcut option)}
                 (tr [:contracts :shortcuts option])]])]))
        options))])
