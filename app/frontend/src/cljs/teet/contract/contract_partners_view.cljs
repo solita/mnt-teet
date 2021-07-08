@@ -390,8 +390,9 @@
      []
      []]
     (for [employee employees]
-      [[(get-in employee [:company-contract-employee/user :db/id])] ;TODO find user name
-       [] ;TODO find employee role
+      [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
+             (get-in employee [:company-contract-employee/user :user/given-name]))]
+       [(tr [(get-in employee [:company-contract-employee/role])])]
        [] ;TODO implement key person functionality
        [[common/Link {:class (<class contract-style/personnel-activation-link-style active?)
                       :href "#"}                            ;TODO add activation/deactivation functionality
@@ -529,15 +530,6 @@
          (if selected-user
            [selected-user-information selected-user]
            (cond
-             (true? user-selected?)
-             [form/field {:attribute :company-contract-employee/role}
-              [select/select-user-roles-for-contract
-               {:e! e!
-                :error-text (tr [:contract :role-required])
-                :placeholder (tr [:contract :select-user-roles])
-                :no-results (tr [:contract :no-matching-roles])
-                :show-empty-selection? true
-                :clear-value [nil nil]}]]
              @add-new-person?
              [new-person-form-fields e! (:form-value @form-atom)]
              :else
@@ -553,6 +545,15 @@
                  :after-results-action {:title (tr [:contract :add-person-not-in-teet])
                                         :on-click add-new-person
                                         :icon [icons/content-add]}}]]]))
+         (when user-selected?
+           [form/field {:attribute :company-contract-employee/role}
+            [select/select-user-roles-for-contract
+             {:e! e!
+              :error-text (tr [:contract :role-required])
+              :placeholder (tr [:contract :select-user-roles])
+              :no-results (tr [:contract :no-matching-roles])
+              :show-empty-selection? true
+              :clear-value [nil nil]}]])
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn edit-personnel-form
