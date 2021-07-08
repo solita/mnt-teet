@@ -345,6 +345,7 @@
                                                                     :attribute/max-value
                                                                     :attribute/min-value-ref
                                                                     :attribute/max-value-ref]))}
+                     ;; FIXME: this fn is too long, extract field-by-type to multimethod etc
                      (cond
                        ;; Selection value
                        (= type :db.type/ref)
@@ -367,6 +368,20 @@
                                          :format fmt/date}]
                          [date-picker/date-input {:label (label attr)
                                                   :error-tooltip? true}])
+
+                       (= type :db.type/boolean)
+                       (if locked?
+                         [display-input {:label (label attr)
+                                         :format #(if %
+                                                    (tr [:common :yes])
+                                                    (tr [:common :no]))}]
+                         [select/form-select
+                          {:id ident
+                           :label (label attr)
+                           :show-empty-selection? true
+                           :items [true false]
+                           :format-item #(tr [:common (if % :yes :no)])
+                           :error-tooltip? true}])
 
                        ;; Text field
                        :else

@@ -132,6 +132,7 @@
   :type-library
   {:description "Description",
    :db.type/instant "Timestamp",
+   :db.type/boolean "Boolean",
    :fclass "Feature class",
    :unit "Unit",
    :datatype "Type",
@@ -217,6 +218,7 @@
   :select-files "Select files to upload",
   :date "Date",
   :log-out "Log out",
+  :yes "Yes",
   :back-to-project "Back to project",
   :now "Now",
   :construction-phase "Phase",
@@ -252,6 +254,7 @@
   :back-to-task "Back to task",
   :n-selected "{count} selected",
   :design-stage-activities "Project stages",
+  :no "No",
   :select {:empty "- Select value"},
   :clear "Clear"},
  :contact

@@ -131,6 +131,7 @@
   :type-library
   {:description "Kirjeldus",
    :db.type/instant "Ajatempel",
+   :db.type/boolean "Boolean",
    :fclass "Vara liik",
    :unit "Ühik",
    :datatype "Tüüp",
@@ -214,6 +215,7 @@
   :select-files "Valin fail(id)",
   :date "kuupäev",
   :log-out "Väljun",
+  :yes "Jah",
   :back-to-project "Tagasi projekti",
   :now "Nüüd",
   :construction-phase "Ehitusetapp",
@@ -250,6 +252,7 @@
   :back-to-task "Tagasi ülesandesse",
   :n-selected "{count} valitud",
   :design-stage-activities "Ülesanded",
+  :no "Ei",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
  :contact

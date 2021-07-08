@@ -26,27 +26,29 @@
   ([csv-data]
    (let [conn (tu/connection)
          projects (thk-import/parse-thk-export-csv
-                    {:input (java.io.ByteArrayInputStream.
-                             csv-data)
-                     :column-mapping thk-mapping/thk->teet-project
-                     :group-by-fn #(get % :thk.project/id)})
+                   {:input (java.io.ByteArrayInputStream.
+                            csv-data)
+                    :column-mapping thk-mapping/thk->teet-project
+                    :group-by-fn #(get % :thk.project/id)})
          import-result (thk-import/import-thk-projects! conn "test://test-csv" projects)]
      (tu/store-data! :projects-csv projects)
      (d/sync conn (get-in import-result [:db-after :t]))
      import-result)))
 
+
 (defn import-contracts-csv!
   ([] (import-contracts-csv! (.getBytes (slurp "test/teet/thk/thk-test-data.csv"))))
   ([csv-data]
-   (let [conn (tu/connection)
-         contracts
+   (import-contracts-csv! csv-data (tu/connection)))
+  ([csv-data conn]
+   (let [contracts
          (thk-import/parse-thk-export-csv
-           {:input (java.io.ByteArrayInputStream.
-                     csv-data)
-            :column-mapping thk-mapping/thk->teet-contract
-            :group-by-fn (fn [val]
-                           (select-keys val [:thk.contract/procurement-part-id
-                                             :thk.contract/procurement-id]))})
+          {:input (java.io.ByteArrayInputStream.
+                   csv-data)
+           :column-mapping thk-mapping/thk->teet-contract
+           :group-by-fn (fn [val]
+                          (select-keys val [:thk.contract/procurement-part-id
+                                            :thk.contract/procurement-id]))})
          import-contract-result (thk-import/import-thk-contracts! conn "test://test-csv" contracts)]
      (tu/store-data! :contract-rows contracts)
      (d/sync conn (get-in import-contract-result [:db-after :t]))
@@ -58,10 +60,10 @@
    (let [conn (tu/connection)
          projects
          (thk-import/parse-thk-export-csv
-           {:input (java.io.ByteArrayInputStream.
-                     csv-data)
-            :column-mapping thk-mapping/thk->teet-project
-            :group-by-fn #(get % :thk.project/id)})
+          {:input (java.io.ByteArrayInputStream.
+                   csv-data)
+           :column-mapping thk-mapping/thk->teet-project
+           :group-by-fn #(get % :thk.project/id)})
          import-tasks-result (thk-import/import-thk-tasks! conn "test://test-csv" projects)]
      (tu/store-data! :projects-csv projects)
      (d/sync conn (get-in import-tasks-result [:db-after :t]))

@@ -1,0 +1,23 @@
+version: 0.2
+
+env:
+  variables:
+    JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+
+phases:
+  install:
+    runtime-versions:
+      java: openjdk8
+    commands:
+      - echo "install clojure"
+      - curl -O https://download.clojure.org/install/linux-install-1.10.1.466.sh
+      - bash linux-install-1.10.1.466.sh
+      - echo "download & install datomic cli"
+      - wget https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.82.zip
+      - unzip datomic-cli*.zip
+      - cp datomic-cli/datomic* /usr/local/bin
+      - chmod 755 /usr/local/bin/datomic*
+
+  build:
+    commands:
+      - ci/analytics-config-sync/sync.bash

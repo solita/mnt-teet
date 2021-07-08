@@ -91,7 +91,18 @@
                    4 :material/sheetmetal
                    5 :material/stone
                    ;; For unmapped values, don't create any material
-                   nil)]
+                   nil)
+        head-material (case trotsad
+                        2 :material/concrete
+                        3 :material/stone
+                        ;;4 :material/geogrid
+                        nil)
+        with-material (fn [id material component]
+                        (merge component
+                               (when material
+                                 {:component/materials [{:db/id (str id "-m0")
+                                                         :road-registry/id (str id "-m0")
+                                                         :material/type material}]})))]
     (when-not culvertpipenumber
       (log/debug "Road registry culvert (oid: " id ") has no pipe number, not valid: " (from-wfs wfs-feature :ms:truup str)))
     (cu/without-nils
@@ -114,33 +125,37 @@
            (for [i (range culvertpipenumber)
                  :let [id (str id "-pipe" i)]]
              (cu/without-nils
-              (merge
-               {:component/ctype :ctype/culvertpipe
-                :road-registry/id id
-                :db/id id
-                :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
-                :culvertpipe/culvertpipelenght len
-                :component/quantity len}
-               (when material
-                 {:component/materials [{:db/id (str id "-m0")
-                                         :material/type material
-                                         :road-registry/id (str id "-m0")}]})))))
+              (with-material
+                id material
+                {:component/ctype :ctype/culvertpipe
+                 :road-registry/id id
+                 :db/id id
+                 :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
+                 :culvertpipe/culvertpipelenght len
+                 :culvertpipe/culvertpipenumberadder true
+                 :component/quantity len}))))
 
          (when (= 1 trotsad)
            (list
             ;; If otsad_trotsad_xv = 1, create 2 culverthead components
-            {:component/ctype :ctype/culverthead
-             :road-registry/id (str id "-head" 1)}
-            {:component/ctype :ctype/culverthead
-             :road-registry/id (str id "-head" 2)}))
+            (with-material (str id "-head1") head-material
+              {:component/ctype :ctype/culverthead
+               :road-registry/id (str id "-head" 1)})
+            (with-material (str id "-head2") head-material
+              {:component/ctype :ctype/culverthead
+               :road-registry/id (str id "-head" 2)})))
 
          (when (and (some? trotsad) (> trotsad 1))
            (list
             ;; If otsad_trotsad_xv > 1, create 2 culvertprotection components
-            {:component/ctype :ctype/culvertprotection
-             :road-registry/id (str id "-prot1")}
-            {:component/ctype :ctype/culvertprotection
-             :road-registry/id (str id "-prot2")}))))}))))
+            (with-material
+              (str id "-prot1") head-material
+              {:component/ctype :ctype/culvertprotection
+               :road-registry/id (str id "-prot1")})
+            (with-material
+              (str id "-prot2") head-material
+              {:component/ctype :ctype/culvertprotection
+               :road-registry/id (str id "-prot2")})))))}))))
 
 (defn import-road-registry-features! [conn sql-conn ctx fclass wfs-type type-mapping [upper-left lower-right]]
   (let [objects (road-registry-objects ctx wfs-type (gml-area upper-left lower-right))]
