@@ -132,6 +132,7 @@
                  :db/id id
                  :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
                  :culvertpipe/culvertpipelenght len
+                 :culvertpipe/culvertpipenumberadder true
                  :component/quantity len}))))
 
          (when (= 1 trotsad)
