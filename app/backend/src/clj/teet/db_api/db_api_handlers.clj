@@ -20,6 +20,8 @@
             teet.enum.enum-queries
             teet.admin.admin-queries
             teet.admin.admin-commands
+            teet.admin.index-queries
+            teet.admin.index-commands
             teet.user.user-queries
             teet.account.account-commands
             teet.account.account-queries

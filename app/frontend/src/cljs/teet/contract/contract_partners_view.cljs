@@ -17,14 +17,11 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.ui.common :as common]
-            [clojure.string :as str]
             [teet.ui.validation :as validation]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
-
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -82,48 +79,42 @@
     (:company/business-registry-code partner)]])
 
 (defn company-info-column
-  [{:company/keys [country name email phone-number]}]
-  [:div
-   [common/basic-information-column
-    [{:label [typography/TextBold (tr [:fields :company/country])]
-      :data (tr [:countries country])}
-     {:label [typography/TextBold (tr [:fields :company/name])]
-      :data name}
-     {:label [typography/TextBold (tr [:fields :company/email])]
-      :data email}
-     {:label [typography/TextBold (tr [:fields :company/phone-number])]
-      :data phone-number}]]])
+  [display-data info-box-title info-box-variant]
+  (let [info-column-data (mapv (fn [{label-key :label-key data :data}]
+                                 {:label [typography/Text2Bold (tr label-key)]
+                                  :data data})
+                           display-data)]
+    [:div {:class (<class common-styles/margin-bottom 1.5)}
+     [common/info-box {:variant info-box-variant
+                       :title info-box-title
+                       :content [common/basic-information-column info-column-data]}]]))
 
-(defn company-edit-info-column
-  [{:company/keys [country name email phone-number business-registry-code] :as info}]
-  [:div
-   [common/basic-information-column
-    [{:label [typography/TextBold (tr [:fields :company/name])]
-      :data name}
-     {:label [typography/TextBold (tr [:fields :company/country])]
-      :data (tr [:countries country])}
-     {:label [typography/TextBold (tr [:fields :company/business-registry-code])]
-      :data business-registry-code}
-     {:label [typography/TextBold (tr [:fields :company/email])]
-      :data email}
-     {:label [typography/TextBold (tr [:fields :company/phone-number])]
-      :data phone-number}]]])
+(defmulti company-info (fn [company key] key))
 
-(defn selected-company-information
-  [company]
-  [:div
-   [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :success
-                      :title (tr [:contract :information-found])
-                      :content [company-info-column company]}]]])
+(defmethod company-info :edit
+  [{:company/keys [name country business-registry-code email phone-number ] :as info}]
+  (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/country] :data (tr [:countries country])}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data (tr [:contract :edit-company]) :simple]))
 
-(defn edit-company-information
-  [company]
-  [:div
-   [:div {:class (<class common-styles/margin-bottom 1.5)}
-    [common/info-box {:variant :simple
-                      :title (tr [:contract :edit-company])
-                      :content [company-edit-info-column company]}]]])
+(defmethod company-info :info
+  [{:company/keys [country business-registry-code email phone-number ] :as info}]
+  (let [display-data [{:label-key [:fields :company/country] :data (tr [:countries country])}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data "" :simple]))
+
+(defmethod company-info :information-found
+  [{:company/keys [name business-registry-code email phone-number] :as info}]
+  (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/business-registry-code] :data business-registry-code}
+                      {:label-key [:fields :company/email] :data email}
+                      {:label-key [:fields :company/phone-number] :data phone-number}]]
+    [company-info-column display-data (tr [:contract :information-found]) :success]))
 
 (defn edit-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
@@ -152,8 +143,9 @@
                                (validation/valid-estonian-business-registry-id?
                                  (:company/business-registry-code form-value)))
                              (:search-in-progress? form-value))
-        estonian-company? (= (:company/country form-value) :ee)
-        search-success? (:search-success? form-value)]
+        estonia-selected? (= (:company/country form-value) :ee)
+        search-success? (:search-success? form-value)
+        existing-company? (:db/id form-value)]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
                     :text-align :center}}
@@ -164,7 +156,7 @@
                                     :class "cancel"
                                     :on-click cancel}
           (tr [:buttons :cancel])])
-       (if (and estonian-company? (not search-success?))
+       (if (and estonia-selected? (not search-success?) (not existing-company?))
          [buttons/button-primary {:disabled search-disabled?
                                   :on-click (e! contract-partners-controller/->SearchBusinessRegistry :new-partner
                                                 (:company/business-registry-code form-value))}
@@ -223,7 +215,7 @@
                     :read-only? true
                     :value (tr [:countries (:company/country form-value)])}]]
        [foreign-fields]]
-      (edit-company-information form-value))))
+      [company-info form-value :edit])))
 
 (defn new-company-form-fields
   [form-value]
@@ -339,7 +331,8 @@
             (tr [:contract :add-company])]
            (cond
              (or selected-company? search-success?)
-             [selected-company-information form-value]
+             [:div
+              [company-info form-value :information-found]]
              @add-new-company?
              [new-company-form-fields form-value]
              :else
@@ -402,13 +395,13 @@
   [{:user/keys [person-id email phone-number] :as user}]
   [:div
    [common/basic-information-column
-    [{:label [typography/TextBold (tr [:common :name])]
+    [{:label [typography/Text2Bold (tr [:common :name])]
       :data (user-model/user-name user)}
-     {:label [typography/TextBold (tr [:fields :user/person-id])]
+     {:label [typography/Text2Bold (tr [:fields :user/person-id])]
       :data person-id}
-     {:label [typography/TextBold (tr [:fields :user/email])]
+     {:label [typography/Text2Bold (tr [:fields :user/email])]
       :data email}
-     {:label [typography/TextBold (tr [:fields :user/phone-number])]
+     {:label [typography/Text2Bold (tr [:fields :user/phone-number])]
       :data phone-number}]]])
 
 (defn selected-user-information
@@ -432,15 +425,42 @@
                                     :on-click cancel}
           (tr [:buttons :cancel])])
        (when validate
-         [buttons/button-primary {:disabled (or save-disabled? disabled?)
+         [buttons/button-primary {:disabled disabled?
                                   :type :submit
                                   :class "submit"
                                   :on-click validate}
           (tr [:buttons :save])])]]]))
 
+(defn new-person-form-fields [e! form-value]
+  []
+  [:div
+   ^{:key "person-id"}
+   [form/field :user/person-id
+    [TextField {}]]
+   [form/field :user/given-name
+    [TextField {}]]
+   [form/field :user/family-name
+    [TextField {}]]
+   [form/field {:attribute :user/email
+                :validate validation/validate-email-optional}
+    [TextField {}]]
+   [form/field :user/phone-number
+    [TextField {}]]
+   [form/field {:attribute :company-contract-employee/role}
+    [select/select-user-roles-for-contract
+     {:e! e!
+      :error-text (tr [:contract :role-required])
+      :placeholder (tr [:contract :select-user-roles])
+      :no-results (tr [:contract :no-matching-roles])
+      :show-empty-selection? true
+      :clear-value [nil nil]}]]
+   ])
+
 (defn add-personnel-form
   [e! {:keys [query] :as app} selected-partner]
-  (r/with-let [form-atom (r/atom {})]
+  (r/with-let [form-atom (r/atom {})
+               add-new-person? (r/atom false)
+               add-new-person #(reset! add-new-person? true)]
     (let [selected-user (:company-contract-employee/user @form-atom)
           user-selected? (boolean
                            selected-user)]
@@ -455,12 +475,15 @@
                                                                           (if (= {:company-contract-employee/role #{}} new)
                                                                             (dissoc old :company-contract-employee/role)
                                                                             (merge old new))))
-                     :spec :thk.contract/add-contract-employee
                      :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                       {:query (merge query
                                                      {:page :partner-info})})
                      :save-event #(common-controller/->SaveFormWithConfirmation
-                                    :thk.contract/add-contract-employee
+                                    (cond
+                                      @add-new-person?
+                                      :thk.contract/add-new-contract-employee
+                                      :else
+                                      :thk.contract/add-contract-employee)
                                     {:form-value @form-atom
                                      :company-contract-eid (:db/id selected-partner)}
                                     (fn [_response]
@@ -475,43 +498,56 @@
           (tr [:contract :add-person])]
          (if selected-user
            [selected-user-information selected-user]
-           [form/field :company-contract-employee/user
-            [select/select-search
-             {:e! e!
-              :query (fn [text]
-                       {:args {:search text
-                               :company-contract-id (:db/id selected-partner)}
-                        :query :contract/possible-partner-employees})
-              :format-result select/user-search-select-result}]])
-         (when user-selected?
-           [form/field {:attribute :company-contract-employee/role}
-            [select/select-user-roles-for-contract
-             {:e! e!
-              :error-text (tr [:contract :role-required])
-              :placeholder (tr [:contract :select-user-roles])
-              :no-results (tr [:contract :no-matching-roles])
-              :show-empty-selection? true
-              :clear-value [nil nil]}]])
+           (cond
+             (true? user-selected?)
+             [form/field {:attribute :company-contract-employee/role}
+              [select/select-user-roles-for-contract
+               {:e! e!
+                :error-text (tr [:contract :role-required])
+                :placeholder (tr [:contract :select-user-roles])
+                :no-results (tr [:contract :no-matching-roles])
+                :show-empty-selection? true
+                :clear-value [nil nil]}]]
+             @add-new-person?
+             [new-person-form-fields e! (:form-value @form-atom)]
+             :else
+             [:div
+              [form/field :company-contract-employee/user
+               [select/select-search
+                {:e! e!
+                 :query (fn [text]
+                          {:args {:search text
+                                  :company-contract-id (:db/id selected-partner)}
+                           :query :contract/possible-partner-employees})
+                 :format-result select/user-search-select-result
+                 :after-results-action {:title (tr [:contract :add-person-not-in-teet])
+                                        :on-click add-new-person
+                                        :icon [icons/content-add]}}]]]))
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
 
 (defn partner-info-header
-  [_ partner params]
+  [partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
+        lead-partner? (:company-contract/lead-partner? partner)
         teet-id (:teet/id partner)]
-    [:<>
+    [:div {:class (<class contract-style/partner-info-header)}
      [:h1 partner-name]
-     [buttons/button-secondary
-      {:href (routes/url-for {:page :contract-partners
-                              :params params
-                              :query {:page :edit-partner
-                                      :partner teet-id}})}
-      (tr [:buttons :edit])]]))
+     (when lead-partner?
+       [common/primary-tag (tr [:contract :lead-partner])])
+     [authorization-check/when-authorized
+      :thk.contract/edit-contract-partner-company partner
+      [buttons/button-secondary
+       {:href (routes/url-for {:page :contract-partners
+                               :params params
+                               :query {:page :edit-partner
+                                       :partner teet-id}})}
+       (tr [:buttons :edit])]]]))
 
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
-   [partner-info-header app selected-partner params]
-   [:p (pr-str selected-partner)]
+   [partner-info-header selected-partner params]
+   [company-info (:company-contract/company selected-partner) :info]
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
@@ -529,7 +565,9 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app selected-partner]
+      [authorization-check/when-authorized
+       :thk.contract/edit-contract-partner-company selected-partner
+       [edit-partner-form e! app selected-partner]]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
@@ -538,19 +576,19 @@
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
 (defn partners-page
-  [e! {:keys [user] :as app} {:thk.contract/keys [targets] :as contract}]
+  [e! app contract]
   [:div {:class (<class common-styles/flex-column-1)}
    [contract-common/contract-heading e! app contract]
    [:div {:class (<class contract-style/partners-page-container)}
     [Grid {:container true}
      [Grid {:item true
             :xs 3
-            :class (herb/join (<class common-styles/padding 2)
+            :class (herb/join (<class common-styles/padding 1.5)
                               (<class contract-style/contract-partners-panel-style))}
       [partner-right-panel e! app contract]]
      [Grid {:item true
             :xs :auto
-            :class (herb/join (<class common-styles/padding 2)
+            :class (herb/join (<class common-styles/padding 1.5)
                               (<class common-styles/flex-1))}
       [partners-page-router e! app contract]]]]])
 

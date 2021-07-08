@@ -8,7 +8,8 @@
             [teet.contract.contract-db :as contract-db]
             [teet.authorization.authorization-core :as authorization]
             [teet.environment :as environment]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.user.user-model :as user-model])
   (:import (java.util UUID)))
 
 
@@ -150,6 +151,7 @@
              (get-in form-value [:company-contract-employee/user :db/id])))]
    :transact [(merge
                 {:db/id "new-company-contract-employee"
+                 :company-contract-employee/active? true    ;; employees are active by default
                  :company-contract-employee/user (:company-contract-employee/user form-value)
                  :company-contract-employee/role (mapv
                                                    :db/id
@@ -158,3 +160,30 @@
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
 
+(defcommand :thk.contract/add-new-contract-employee
+  {:doc "Add a new contract employee"
+   :payload {form-value :form-value
+             company-contract-eid :company-contract-eid}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}}
+  (let [employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
+                                                     :user/email :user/phone-number]))
+        user-person-id (user-model/normalize-person-id (:user/person-id form-value))
+        new-employee-id "new-employee"
+        tempids
+        (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
+                             (:user/email form-value)
+                             [(merge {:db/id new-employee-id
+                                      :user/person-id user-person-id
+                                      :user/id (java.util.UUID/randomUUID)}
+                                     employee-fields
+                                     (meta-model/creation-meta user))
+                              (merge {:db/id "new-company-contract-employee"
+                                      :company-contract-employee/active? true ;; employees are active by default
+                                      :company-contract-employee/user new-employee-id
+                                      :company-contract-employee/role (mapv
+                                                                        :db/id
+                                                                        (:company-contract-employee/role form-value))}
+                                      (meta-model/creation-meta user))])]))]
+    tempids))

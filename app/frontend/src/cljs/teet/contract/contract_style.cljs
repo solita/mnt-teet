@@ -132,6 +132,17 @@
    :flex 1
    :display :flex})
 
+(defn partner-info-header
+  []
+  ^{:combinators
+    {[:> :h1] {:margin-right "1rem"
+               :line-height "3rem"
+               :font-size "2rem"}
+     [:> :a] {:margin-left :auto}}}
+  {:display :flex
+   :align-items :center
+   :margin-bottom "2rem"})
+
 (defn project-contract-container-style
   []
   ^{:pseudo {:last-of-type {:border-bottom 0}}}
@@ -142,5 +153,5 @@
 
 (defn contract-partners-panel-style
   []
-  {:min-width "400px"
+  {:min-width "15.6rem"
    :border-right (str "1px solid " theme-colors/border-dark)})

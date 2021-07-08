@@ -25,6 +25,7 @@
     :company/country :ee
     :db/id "company2"}
    {:company-contract-employee/role :company-contract-employee.role/company-project-manager
+    :company-contract-employee/active? true
     :company-contract-employee/user tu/mock-user-carla-consultant
     :db/id "employee1"}
    {:company-contract/contract "contract1"
@@ -38,6 +39,7 @@
 
    {:company-contract-employee/role :company-contract-employee.role/company-representative
     :company-contract-employee/user tu/mock-user-edna-consultant
+    :company-contract-employee/active? true
     :db/id "employee2"}
    {:company-contract/contract "contract2"
     :company-contract/company "company2"

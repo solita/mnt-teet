@@ -222,7 +222,14 @@
                              "cooperation.3rd-party"
                              "cooperation.application"
                              "cooperation.response"
-                             "cooperation.opinion"}
+                             "cooperation.opinion"
+                             "thk.contract"
+                             "company"
+                             "company-contract"
+                             "company-contract-employee"
+                             "review"
+                             "cost-index"
+                             "index-value"}
           types {:permission/projects "List<thk.project>"
                  :thk.project/lifecycles "List<thk.lifecycle>"
                  :thk.lifecycle/activities "List<activity>"
@@ -261,12 +268,31 @@
                  :estate-procedure/third-party-compensations "List<estate-process-fee>"
                  :estate-procedure/project "thk.project"
                  :meeting.agenda/responsible "user"
-                 :cooperation.3rd-party/applications "List<cooperation.application>"}
+                 :cooperation.3rd-party/applications "List<cooperation.application>"
+                 :thk.contract/targets "List<activity or task>"
+                 :thk.contract/type "enum contract type"
+                 :company-contract-employee/user "user"
+                 :company-contract-employee/role "enum role"
+                 :company-contract/employees "List<company-contract-employee>"
+                 :company-contract/contract "thk.contract"
+                 :company-contract/company "company"
+                 :company-contract/sub-company-contracts "List<company-contract>"
+                 :review/reviewer "user"
+                 :review/decision "enum review decision"
+                 :review/of "meeting or company-contract-employee"
+                 :notification/status "enum status"
+                 :notification/type "enum type"
+                 :cost-index/values "List<index-value>"
+                 :cost-index/type "enum index type"
+                 }
+          skip #{:thk.contract/authority-contact :thk.contract/partner-name
+                 :company/emails :company/phone-numbers}
           entities (->>
                     (q '[:find (pull ?e [*])
                          :where [?e :db/valueType _]]
                        (db))
                     (map first)
+                    (remove (comp skip :db/ident))
                     (group-by (comp namespace :db/ident)))]
       (str "@startuml\n"
            (str/join "\n"
@@ -301,8 +327,23 @@
            "\"cooperation.3rd-party\" ||--o{ cooperation.application\n"
            "cooperation.application --> cooperation.response\n"
            "cooperation.application --> cooperation.opinion\n"
+           "thk.contract ||--o{ task\n"
+           "thk.contract ||--o{ activity\n"
+           "\"company-contract\" ||--o{ \"company-contract-employee\"\n"
+           "\"company-contract\" --> company\n"
+           "\"company-contract\" --> thk.contract\n"
+           "\"company-contract\" ||--o{ \"company-contract\"\n"
 
+           "review --> meeting\n"
+           "review --> \"company-contract-employee\"\n"
+           "review --> user\n"
+           "\"company-contract-employee\" --> user\n"
+           "comment --> user\n"
+           "\"cost-index\" ||--o{ \"index-value\"\n"
            "note top of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
+
+           "note top of notification\n   target may refer to any entity type\nend note\n"
+
            "\n@enduml")))
 
   (spit "entity-diagram.puml" (output-datomic-entity-diagram)))
