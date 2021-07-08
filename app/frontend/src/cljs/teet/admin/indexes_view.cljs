@@ -192,7 +192,6 @@
                       {(keyword (str "index-value-" (t/year x) "-" (t/month x))) field-value}))))) month-objects))
   (fn [e! form-data index values]
     (let [index-start (t/date-time (:cost-index/valid-from index))
-          _ (println index-start t/now (<= index-start t/now))
           month-objects (if (<= index-start t/now)
                           (take
                             (t/in-months
