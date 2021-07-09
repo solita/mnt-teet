@@ -107,9 +107,7 @@
        (let [cache-key [(:db/id user) action (:db/id entity)]]
          (if (get contract-permissions cache-key)
            component
-           (do
-             (log/debug "AUTHORIZED QUERY FAILED for action: " action)
-             nil))))))
+           nil)))))
 
 #?(:cljs (defonce test-authorize (atom nil)))
 #?(:cljs

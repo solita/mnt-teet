@@ -453,11 +453,10 @@
       :placeholder (tr [:contract :select-user-roles])
       :no-results (tr [:contract :no-matching-roles])
       :show-empty-selection? true
-      :clear-value [nil nil]}]]
-   ])
+      :clear-value [nil nil]}]]])
 
 (defn add-personnel-form
-  [e! {:keys [query] :as app} selected-partner]
+  [e! {:keys [query]} selected-partner]
   (r/with-let [form-atom (r/atom {})
                add-new-person? (r/atom false)
                add-new-person #(reset! add-new-person? true)]
@@ -468,9 +467,6 @@
        [Grid {:item true
               :xs 12
               :md 6}
-        [:p (pr-str "selected user: " selected-user)]
-        [:p (pr-str "add-new-person? : " @add-new-person?)]
-        [:p (pr-str "user selected? : " user-selected?)]
         [form/form2 {:e! e!
                      :autocomplete-off? true
                      :value @form-atom
