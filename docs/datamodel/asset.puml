@@ -5,6 +5,7 @@ entity asset {
   fclass : fclass
   components : [component]
   location : location
+  project : text
   --
   any asset attributes
 }
@@ -12,6 +13,9 @@ entity asset {
 note left of asset
      Top level asset, like a bridge or culvert.
      May contain multiple components.
+
+     If part of project as a cost item, links
+     to project by the THK id.
 end note
 
 entity component {
