@@ -13,6 +13,7 @@
         query-url (common-controller/query-url
                    :vektorio/instant-login {:db/id project-eid
                                             :vektorio/project-id vektorio-project-id })]
-    (.setTimeout js/window #(set! (.-location js/window) query-url) 200)
-    [:div {:class (<class common-styles/spinner-style)}
-     [CircularProgress]]))
+    (fn [e! app state]
+      (.setTimeout js/window #(set! (.-location js/window) query-url) 200)
+      [:div {:class (<class common-styles/spinner-style)}
+       [CircularProgress]])))
