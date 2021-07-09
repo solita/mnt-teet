@@ -129,7 +129,9 @@
                                          (merge {:project-id project-id
                                                  :entity entity}
                                                 (when link {:link link}))))
-                          (action permissions))
+                          (dissoc
+                            (action permissions)
+                            :contract-authorization-rule)) ;; don't consider contract-auth in this old check.
                 (do
                   (log/debug "Action " action " authorized for " user)
                   component)
