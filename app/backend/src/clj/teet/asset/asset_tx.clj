@@ -92,6 +92,13 @@
              :asset/oid
              (asset-db/next-material-oid db parent-oid)))]))
 
+(defn- collect-values-for-key [key form]
+  (into #{}
+        (map second)
+        (cu/collect #(and (map-entry? %)
+                          (= key (first %)))
+                    form)))
+
 (defn import-assets
   "Import assets of the given type from road registry.
   Creates new OIDs for asset/components if they don't exist yet."
@@ -104,10 +111,16 @@
                                                 (swap! asset-seq-num inc))]
     (conj
      (mapv
-      (fn [{rr-oid :asset/road-registry-oid :as asset}]
-        (let [existing-oid (:asset/oid (d/pull db '[:asset/oid]
-                                               [:asset/road-registry-oid rr-oid]))
-              oid (or existing-oid
+      (fn [{rr-oid :road-registry/id :as asset}]
+        (let [rr-ids (collect-values-for-key :road-registry/id asset)
+              existing-oids (into {}
+                                  (d/q '[:find ?rr-id ?oid
+                                         :where
+                                         [?e :road-registry/id ?rr-id]
+                                         [?e :asset/oid ?oid]
+                                         :in $ [?rr-id ...]]
+                                       db rr-ids))
+              oid (or (existing-oids rr-oid)
                       (next-asset-oid!))
 
               component-seq-num (atom (asset-db/max-component-oid-number
@@ -121,7 +134,19 @@
                       ;; FIXME: currently only 1st level of components
                       ;; supported in import.
                       (fn [components]
-                        (mapv #(assoc % :asset/oid (next-component-id!))
+                        (mapv #(let [oid (or (existing-oids (:road-registry/id %))
+                                             (next-component-id!))]
+                                 (-> %
+                                     (assoc :asset/oid oid)
+                                     (cu/update-in-if-exists
+                                      [:component/materials]
+                                      (fn [materials]
+                                        (vec
+                                         (map-indexed (fn [i material]
+                                                        (assoc material :asset/oid
+                                                               (or (existing-oids (:road-registry/id material))
+                                                                   (asset-model/material-oid oid (inc i)))))
+                                                      materials))))))
                               components))))))
       assets)
 

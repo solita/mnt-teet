@@ -128,6 +128,7 @@
       [select/select-search-multiple
        {:e! e!
         :placeholder (str (label attr) "...")
+        :no-results (tr [:link :search :no-results])
         :value value
         :on-change on-change
         :format-result label
@@ -257,11 +258,15 @@
      :value page
      :format-item #(tr [:asset :page %])}]])
 
+;; Keep open items in memory, we don't want remounts of the component to
+;; lose the open items.
+(defonce open-item-hierarchy-atom  (r/atom #{}))
+
 (defn- cost-item-hierarchy
   "Show hierarchy of existing cost items, grouped by fgroup and fclass."
   [{:keys [_e! _app cost-items fgroup-link-fn fclass-link-fn list-features?]
     :or {list-features? true}}]
-  (r/with-let [open (r/atom #{})
+  (r/with-let [open open-item-hierarchy-atom
                toggle-open! #(swap! open cu/toggle %)]
     [:div.cost-items-by-fgroup
      (doall
@@ -482,3 +487,30 @@
                           :query (merge query {:filter (str (:db/ident h))})}
                 title]
          :title title}))]))
+
+(defn asset-breadcrumbs
+  "Asset/component/material hierarchy breadcrumbs."
+  [{:keys [atl path link-opts-fn]
+    :or {link-opts-fn (fn [oid]
+                        {:page :cost-item :params {:id oid}})}}]
+  [:<>
+   [breadcrumbs/breadcrumbs
+    (for [p path]
+      {:link [url/Link (link-opts-fn (:asset/oid p))
+              (:asset/oid p)]
+       :title (if (number? (:db/id p))
+                (:asset/oid p)
+                (str (tr [:common :new]) " " (label (asset-type-library/item-by-ident atl (:component/ctype p)))))})]
+
+   (into [:div]
+         (butlast
+          (interleave
+           (for [p (into [(:db/ident (asset-type-library/fgroup-for-fclass
+                                      atl
+                                      (:asset/fclass (first path))))]
+                         (map #(or (:asset/fclass %)
+                                   (:component/ctype %)
+                                   (:material/type %)))
+                         path)]
+             [label-for p])
+           (repeat " / "))))])

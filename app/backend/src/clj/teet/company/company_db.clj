@@ -6,8 +6,8 @@
   [db search-term contract-id]
   (->> (d/q '[:find (pull ?company [:db/id
                                    :company/name
-                                   :company/emails
-                                   :company/phone-numbers
+                                   :company/email
+                                   :company/phone-number
                                    :company/business-registry-code
                                    :company/country])
              :where

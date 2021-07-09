@@ -11,7 +11,11 @@
           retract-previous-lead-partner? (and current-lead-company
                                               (not= current-lead-company company-id))
           lead-partner-retraction
-          (if retract-previous-lead-partner?
+          (if (or
+                retract-previous-lead-partner?
+                (or
+                  (false? lead-partner?)
+                  (nil? lead-partner?)))
             [[:db/retract contract-company :company-contract/lead-partner? true]]
             [])]
       (into tx-data lead-partner-retraction))))

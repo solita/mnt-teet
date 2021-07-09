@@ -68,14 +68,17 @@
 (defn unread-notifications
   "Return unread notifications for user"
   [db user]
-  ;; TODO
-  (mapv first
-       (d/q '[:find (pull ?notification notification-keys)
-              :in $ ?user notification-keys
-              :where
-              [?notification :notification/receiver ?user]
-              [?notification :notification/status :notification.status/unread]]
-            db (user-model/user-ref user) notification-keys)))
+  (->>
+   (d/q '[:find (pull ?notification notification-keys)
+          :in $ ?user notification-keys
+          :where
+          [?notification :notification/receiver ?user]
+          [?notification :notification/status :notification.status/unread]]
+        db (user-model/user-ref user) notification-keys)
+   (map first)
+   (sort-by :meta/created-at)
+   reverse
+   vec))
 
 
 (defn user-notifications
@@ -106,6 +109,23 @@
            (mapv first)
            (sort-by :meta/created-at)
            reverse))))
+
+(defn user-notifications-by-project
+  "Return notifications for user by project.
+  Returns map from project id to vector of notifications."
+  [db user project-ids]
+  (reduce
+   (fn [projects [project notification]]
+     (update projects project (fnil conj []) notification))
+   {}
+   (d/qseq '[:find ?project (pull ?n notification-keys)
+             :where
+             [?n :notification/receiver ?user]
+             [?n :notification/project ?project]
+             :in $ notification-keys ?user [?project ...]]
+           db notification-keys
+           (user-model/user-ref user)
+           project-ids)))
 
 (defn navigation-info
   "Fetch notification type and target for user's notification."

@@ -14,6 +14,24 @@
 (defrecord DeactivateUser [user])
 (defrecord ReactivateUser [user])
 
+(defrecord AddIndex [])
+(defrecord AddIndexNav [])
+(defrecord UpdateAddIndexForm [form-data])
+(defrecord SaveIndexResponse [response])
+(defrecord SaveIndex [])
+(defrecord CancelIndex [])
+(defrecord EditIndexForm [])
+(defrecord UpdateEditIndexForm [form-data])
+(defrecord CancelEditIndex [])
+(defrecord DeleteIndex [index-id])
+(defrecord DeleteIndexResponse [])
+(defrecord EditIndex [form-data])
+(defrecord EditIndexValues [])
+(defrecord CancelIndexValues [])
+(defrecord UpdateIndexValues [form-data])
+(defrecord SaveIndexValuesResponse [response])
+(defrecord SaveIndexValues [])
+
 (defn- ensure-starts-with-double-e
   "If the person id doesn't start with EE, prepend it"
   [person-id]
@@ -78,4 +96,104 @@
 
   CancelUser
   (process-event [_ app]
-    (update app :admin dissoc :create-user)))
+    (update app :admin dissoc :create-user))
+
+  AddIndex
+  (process-event [_ {:keys [query] :as app}]
+    (t/fx (common-controller/assoc-page-state app [:add-index] {:form-open true})
+          {:tuck.effect/type :navigate
+           :page :admin-indexes
+           :query (assoc query :add-index-form 1)}))
+
+  CancelIndex
+  (process-event [_ app]
+    (-> app
+        (common-controller/update-page-state [] dissoc :add-index)
+        (dissoc :query)
+        common-controller/refresh-page))
+
+  UpdateAddIndexForm
+  (process-event [{form-data :form-data} app]
+    (common-controller/update-page-state app [:add-index] merge form-data))
+
+  SaveIndexResponse
+  (process-event [_ app]
+    (-> app
+        (common-controller/update-page-state [] dissoc :add-index)
+        (dissoc :query)
+        common-controller/refresh-page))
+
+  SaveIndex
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :index/add-index
+           :success-message (tr [:admin :index-added-successfully])
+           :payload (get-in app [:route :admin-indexes :add-index])
+           :result-event ->SaveIndexResponse}))
+
+  EditIndexForm
+  (process-event [_ app]
+    (common-controller/assoc-page-state app [:edit-index] {:form-open true}))
+
+  UpdateEditIndexForm
+  (process-event [{form-data :form-data} app]
+    (common-controller/update-page-state app [:edit-index] merge form-data {:index-id (get-in app [:params :id])}))
+
+  CancelEditIndex
+  (process-event [_ app]
+    (common-controller/update-page-state app [] dissoc :edit-index))
+
+  DeleteIndex
+  (process-event [{index-id :index-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :index/delete-index
+           :success-message (tr [:admin :index-deleted-successfully])
+           :payload {:index-id (common-controller/->long index-id)}
+           :result-event ->DeleteIndexResponse}))
+
+  DeleteIndexResponse
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :admin-indexes}
+          common-controller/refresh-fx))
+
+  EditIndex
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :index/edit-index
+           :success-message (tr [:admin :index-edited-successfully])
+           :payload (get-in app [:route :admin-index-page :edit-index])
+           :result-event common-controller/->Refresh}))
+
+  EditIndexValues
+  (process-event [_ app]
+    (common-controller/assoc-page-state app [:edit-index-values] {:form-open true}))
+
+  CancelIndexValues
+  (process-event [_ app]
+    (common-controller/update-page-state app [] dissoc :edit-index-values))
+
+  UpdateIndexValues
+  (process-event [{form-data :form-data} app]
+    (common-controller/update-page-state app [:edit-index-values] merge form-data {:index-id (get-in app [:params :id])}))
+
+  SaveIndexValuesResponse
+  (process-event [_ app]
+    (-> app
+        (common-controller/update-page-state [] dissoc :edit-index-values)
+        common-controller/refresh-page))
+
+  SaveIndexValues
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :index/edit-index-values
+           :success-message (tr [:admin :index-edited-successfully])
+           :payload (get-in app [:route :admin-index-page :edit-index-values])
+           :result-event ->SaveIndexValuesResponse}))
+
+  )

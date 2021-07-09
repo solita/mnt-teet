@@ -416,7 +416,7 @@
 
 (defn- arrow-navigation
   "Arrow navigation key handler for select-search results"
-  [state on-change e]
+  [state on-change on-backspace e]
   (let [{:keys [results open? highlight]} @state
         hl-idx (and (seq results) highlight
                     (cu/find-idx #(= highlight %) results))]
@@ -452,6 +452,10 @@
         (swap! state assoc :open? false)
         (.stopPropagation e))
 
+      "Backspace"
+      (when on-backspace
+        (on-backspace e))
+
       nil)))
 
 (defn select-search
@@ -471,7 +475,7 @@
            show-label? after-results-action
            query placeholder no-results clear-value
            start-icon input-button-icon input-element
-           query-threshold data-cy autofocus?]
+           query-threshold data-cy autofocus? on-backspace]
     :or {show-label? true
          autofocus? false
          query-threshold 2
@@ -488,10 +492,24 @@
                input-ref (atom nil)
                set-ref! #(do
                            (reset! input-ref %)
-                           (when (and % autofocus?) (.focus %)))
-               on-key-down (partial arrow-navigation state on-change)]
+                           (when (and % autofocus?) (.focus %)))]
     (let [{:keys [loading? results open? input highlight]} @state
           current-input-ref (or (:input-ref opts) @input-ref)
+          on-key-down (partial
+                       arrow-navigation state on-change
+                       (fn backspace-handler [e]
+                         (if on-backspace
+                           ;; If backspace handler given, call it with
+                           ;; event and the input text
+                           (on-backspace e input)
+                           ;; When input contains the current selected value and user presses
+                           ;; backspace, remove the selected value and clear input.
+                           (when (and value current-input-ref
+                                      (= (format-result value) (.-value current-input-ref)))
+                             (on-change clear-value)
+                             (swap! state assoc :input "")
+                             (.preventDefault e)
+                             (.stopPropagation e)))))
           load! (fn [text]
                   (let [result-fn-or-query-map (query text)]
                     (if (fn? result-fn-or-query-map)
@@ -523,6 +541,7 @@
                 :error error
                 :placeholder placeholder
                 :on-key-down on-key-down
+
                 :on-blur #(js/setTimeout
                            ;; Delay closing because we might be blurring
                            ;; because user clicked one of the options
@@ -669,7 +688,13 @@
                :input-ref @input-ref
                :show-label? false
                :value nil
-               :on-change #(on-change (conj (or value #{}) %))}
+               :on-change #(on-change (conj (or value #{}) %))
+               :on-backspace (fn select-search-multiple-backspace
+                               [_e text]
+                               (when (and (seq value)
+                                          (zero? (count text)))
+                                 ;; remove last value when backspacing
+                                 (on-change (disj value (last value)))))}
               (when checkbox?
                 {:format-result (partial search-result-with-checkbox opts)
                  :on-change #(on-change (cu/toggle value %))}))]]

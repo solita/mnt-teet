@@ -77,10 +77,10 @@
                           (reduce max (map first logs))
                           (or since-timestamp 0))}))))
 
-(defn print-logs [lines]
+(defn print-logs [project-name lines]
   (doseq [line lines]
     ;; Move to beginning of line and clear the line... then print the message
-    (print "\u001b[1000D\u001b[2K" line))
+    (print "\u001b[1000D\u001b[2K" (str "[" project-name "] ") line))
   (flush))
 
 (defn wait-for-completion [project-name version build-id]
@@ -92,7 +92,7 @@
                (let [logs (tail-build-logs log-info last-timestamp)
                      info (get-build-info build-id)]
                  (when (seq logs)
-                   (print-logs logs))
+                   (print-logs project-name logs))
                  (assoc info :last-log-timestamp (or (-> logs meta :last-timestamp)
                                                      last-timestamp))))]
     (loop [{:keys [buildComplete currentPhase last-log-timestamp] :as build-info}

@@ -21,7 +21,9 @@
             [teet.ui.common :as common-ui]
             [teet.ui.context :as context]
             [teet.user.user-model :as user-model]
-            [teet.util.date :as date]))
+            [teet.util.date :as date]
+            [teet.admin.indexes-view :as indexes-view]
+            [teet.admin.admin-ui :as admin-ui]))
 
 (defn user-save-form-button
   [invalid-attributes {:keys [validate]}]
@@ -336,15 +338,24 @@
     [:div {:style {:min-width "300px"
                    :background-color theme-colors/gray-dark
                    :color theme-colors/white}}
-     [:div {:style {:padding "1rem"}}
+      [:div {:style {:padding "1rem"}}
       [search-shortcuts (:user-group @filtering-atom) change-group]
       [search-inputs e! @filtering-atom input-change]]]))
 
-(defn admin-page [e! {admin :admin
-                      route :route}]
+
+(defn admin-indexes-page
+  [e! app route]
+  [:div
+   [indexes-view/indexes-page e! app route]])
+
+(defn admin-users-page
+  [e! {admin :admin
+       route :route}]
   (r/with-let [filtering-atom (r/atom {:user-group nil})]
     (let [user-form (:create-user admin)]
-      [:div {:style {:padding "1.875rem 1.5rem"
+      [:div
+       [admin-ui/admin-context-menu]
+       [:div {:style {:padding "1.875rem 1.5rem"
                      :display :flex
                      :height "calc(100vh - 220px)"
                      :flex-direction :column
@@ -374,7 +385,12 @@
            :args {:payload @filtering-atom
                   :refresh (:admin-refresh route)}
            :simple-view [user-list e! admin]}
-          500]]]])))
+          500]]]]]))
+  )
+
+(defn admin-page [e! {admin :admin
+                      route :route}]
+    [admin-ui/admin-context-menu])
 
 (defn- inspector-value [db link? value]
   (if link?

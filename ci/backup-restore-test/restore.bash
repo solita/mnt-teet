@@ -23,7 +23,7 @@ fi
 
 echo "Backup file name " $BACKUP_FILE_NAME
 
-aws lambda invoke --function-name teet-datomic-Compute-restore --payload "{
+aws lambda invoke --cli-binary-format raw-in-base64-out --function-name teet-datomic-Compute-restore --payload "{
   \"bucket\":\"$S3_BUCKET\",
   \"file-key\":\"$BACKUP_FILE_NAME\",
   \"create-database\":\"$RESTORE_DB_NAME\",
@@ -52,6 +52,3 @@ else
   bash ./notify.bash "Backup-Restore build from $BACKUP_FILE_NAME failed.\n $err" ":blob-fail:"
   exit 1
 fi
-
-
-
