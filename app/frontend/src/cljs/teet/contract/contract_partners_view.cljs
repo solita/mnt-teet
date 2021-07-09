@@ -378,7 +378,7 @@
       (tr [:contract :add-company])]]]])
 
 (defn employee-table
-  [employees active?]
+  [e! {:keys [params query] :as app} employees active?]
   [:div {:class (<class contract-style/personnel-table-style)}
    [:h4 (str (if active?
                (tr [:contract :partner :active-persons])
@@ -401,7 +401,18 @@
                       :href "#"}                            ;TODO add activation/deactivation functionality
          (if active? (tr [:admin :deactivate]) (tr [:admin :activate]))]]
        [[buttons/small-button-secondary
-         {:href "#"}                                        ;TODO add view-more-info functionality
+         {:href (routes/url-for {:page :contract-partners
+                                 :params (merge
+                                           params
+                                           {:employee employee})
+                                 :query (merge
+                                          query
+                                          {:page :edit-personnel
+                                           :given-name (get-in employee [:company-contract-employee/user :user/given-name])
+                                           :family-name (get-in employee [:company-contract-employee/user :user/family-name])
+                                           :person-id (get-in employee [:company-contract-employee/user :user/person-id])
+                                           :email (get-in employee [:company-contract-employee/user :user/email])
+                                           :phone-number (get-in employee [:company-contract-employee/use :user/phone-number])})})}
          (tr [:common :view-more-info])]]])]])
 
 (defn personnel-section
@@ -418,10 +429,10 @@
                                                                 query
                                                                 {:page :add-personnel})})}
       (tr [:contract :add-person])]]]
-   [employee-table (filterv #(:company-contract-employee/active? %)
+   [employee-table e! app (filterv #(:company-contract-employee/active? %)
                      (:company-contract/employees selected-partner))
     true]
-   [employee-table (filterv #(not (:company-contract-employee/active? %))
+   [employee-table e! app (filterv #(not (:company-contract-employee/active? %))
                      (:company-contract/employees selected-partner))
     false]])
 
@@ -561,22 +572,27 @@
 
 (defn edit-personnel-form
   [e! {:keys [query] :as app} selected-partner selected-person]
-  (r/with-let
-    [form-atom (r/atom {:user/person-id "person-id"
-                        :user/email "email"
-                        :user/phone-number "phone-number"
-                        :user/given-name "given-name"
-                        :user/family-name "family-name"})]
-    [Grid {:container true}
-     [Grid {:itme true :xs 12 :md 6}]]
-    [form/form2 {:e! e!
-                 :value @form-atom
-                 :on-change-event (cljs.pprint/pprint "on-change-event")
-                 :cancel-even #(cljs.pprint/pprint "cancel-event")
-                 :save-event #(cljs.pprint/pprint "save-event")}
-     [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
-      (tr [:contract :edit-person])]
-     [new-person-form-fields e! (:form-value @form-atom)]]))
+  (let [person-id (:person-id query)
+        email (:email query)
+        phone-number (:phone-number query)
+        given-name (:given-name query)
+        family-name (:family-name query)]
+    (r/with-let
+      [form-atom (r/atom {:user/person-id person-id
+                          :user/email email
+                          :user/phone-number phone-number
+                          :user/given-name given-name
+                          :user/family-name family-name})]
+      [Grid {:container true}
+       [Grid {:itme true :xs 12 :md 6}]]
+      [form/form2 {:e! e!
+                   :value @form-atom
+                   :on-change-event (cljs.pprint/pprint "on-change-event")
+                   :cancel-even #(cljs.pprint/pprint "cancel-event")
+                   :save-event #(cljs.pprint/pprint "save-event")}
+       [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
+        (tr [:contract :edit-person])]
+       [new-person-form-fields e! (:form-value @form-atom)]])))
 
 (defn partner-info-header
   [partner params]
