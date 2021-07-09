@@ -92,7 +92,12 @@
                    5 :material/stone
                    ;; For unmapped values, don't create any material
                    nil)
-        with-material (fn [id component]
+        head-material (case trotsad
+                        2 :material/concrete
+                        3 :material/stone
+                        ;;4 :material/geogrid
+                        nil)
+        with-material (fn [id material component]
                         (merge component
                                (when material
                                  {:component/materials [{:db/id (str id "-m0")
@@ -121,21 +126,22 @@
                  :let [id (str id "-pipe" i)]]
              (cu/without-nils
               (with-material
-                id
+                id material
                 {:component/ctype :ctype/culvertpipe
                  :road-registry/id id
                  :db/id id
                  :culvertpipe/culvertpipediameter (from-wfs wfs-feature :ms:trava #(some-> % ->bigdec (* 1000M)))
                  :culvertpipe/culvertpipelenght len
+                 :culvertpipe/culvertpipenumberadder true
                  :component/quantity len}))))
 
          (when (= 1 trotsad)
            (list
             ;; If otsad_trotsad_xv = 1, create 2 culverthead components
-            (with-material (str id "-head1")
+            (with-material (str id "-head1") head-material
               {:component/ctype :ctype/culverthead
                :road-registry/id (str id "-head" 1)})
-            (with-material (str id "-head2")
+            (with-material (str id "-head2") head-material
               {:component/ctype :ctype/culverthead
                :road-registry/id (str id "-head" 2)})))
 
@@ -143,11 +149,11 @@
            (list
             ;; If otsad_trotsad_xv > 1, create 2 culvertprotection components
             (with-material
-              (str id "-prot1")
+              (str id "-prot1") head-material
               {:component/ctype :ctype/culvertprotection
                :road-registry/id (str id "-prot1")})
             (with-material
-              (str id "-prot2")
+              (str id "-prot2") head-material
               {:component/ctype :ctype/culvertprotection
                :road-registry/id (str id "-prot2")})))))}))))
 
