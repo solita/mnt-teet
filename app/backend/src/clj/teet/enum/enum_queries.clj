@@ -11,9 +11,7 @@
    :context {db :db}
    :args {:keys [attribute database]}
    :spec (s/keys :req-un [::attribute])
-
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
 
   {:query '{:find [(pull ?e [*])]
             :in [$ ?attr]

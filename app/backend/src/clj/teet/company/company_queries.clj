@@ -12,16 +12,14 @@
    :context {db :db user :user}
    :args {contract-eid :contract-eid
           search-term :search-term :as payload}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (company-db/company-search db search-term contract-eid))
 
 (defquery :company/business-registry-search
   {:doc "Fetch information about a given business registry code"
    :context {:keys [db user]}
    :args {:keys [business-id]}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
             xroad-subsystem [:xroad :kr-subsystem-id]}}

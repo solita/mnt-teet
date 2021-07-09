@@ -101,8 +101,7 @@
   {:doc "Delete an attachment"
    :context {:keys [user db]}
    :payload {:keys [file-id attached-to]}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    ;; this command has modal behaviour depending on whether attached-to tuple is supplied, or nil.
    ;; if it is supplied, permission check and delete-attachment call go to the multimethod that
    ;; will do a permission check depending on the attachment type.
@@ -120,8 +119,7 @@
    :pre [(file-db/own-file? db user id)]
    ;; No need to check extra authorization again, as we check pre condition that this
    ;; is the user's own uploaded file
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [previous-version (:file/previous-version (du/entity db id))
         previous-links (when previous-version
                          (map first (d/q '[:find ?l

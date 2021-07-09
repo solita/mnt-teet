@@ -7,7 +7,6 @@
   {:doc "Undo recent entity deletion by the user"
    :context {:keys [db user]}
    :payload {id :db/id}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    :pre [(meta-query/can-undo-delete? db id user)]
    :transact [[:db/retract id :meta/deleted? true]]})

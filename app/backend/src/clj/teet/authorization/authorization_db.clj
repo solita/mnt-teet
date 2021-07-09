@@ -55,3 +55,20 @@
             project-id)
        (mapv first)
        set))
+
+(defn user-roles-for-contract
+  [db user contract-id]
+  (->> (d/q '[:find ?role
+              :in $ ?user ?contract
+              :where
+              [?cce :company-contract-employee/user ?user]
+              [?cce :company-contract-employee/active? true]
+              [?cc :company-contract/employees ?cce]
+              [?cc :company-contract/contract ?contract]
+              [?cce :company-contract-employee/role ?r]
+              [?r :db/ident ?role]]
+            db
+            user
+            contract-id)
+       (mapv first)
+       set))

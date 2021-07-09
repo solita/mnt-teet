@@ -43,8 +43,7 @@
    :context _
    :args {:keys [road carriageway start-m end-m]}
    :pre [(every? number? [road carriageway start-m end-m])]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (road-query/fetch-road-geometry (tr-config)
                                   road carriageway start-m end-m))
 
@@ -52,8 +51,7 @@
   {:doc "Fetch road geometries for addresses as GeoJSON"
    :context _
    :args {addr :road-address}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [c (tr-config)]
     ^{:format :raw}
     {:status 200
@@ -73,8 +71,7 @@
    :context _
    :args {:keys [road carriageway start-m end-m]}
    :pre [(every? number? [road carriageway start-m end-m])]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [config (tr-config)]
     {:geometry (road-query/fetch-road-geometry config road carriageway start-m end-m)
      :road-info (road-query/fetch-road-info config road carriageway)}))
@@ -85,8 +82,7 @@
    :args {:keys [coordinate distance]}
    :pre [(number? distance)
          (geo/point? coordinate)]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (road-query/fetch-road-parts-by-coordinate (tr-config) coordinate distance))
 
 (defn- closest-road-part-for-coordinate [config coordinate]
@@ -102,8 +98,7 @@
    :context _
    :args {:keys [coordinate]}
    :pre [(geo/point? coordinate)]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (closest-road-part-for-coordinate (tr-config) coordinate))
 
 (defn road-properties [coordinate]
@@ -116,8 +111,7 @@
    :context _
    :args {:keys [coordinate]}
    :pre [(geo/point? coordinate)]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (road-properties coordinate))
 
 (def ^:private fetch-wms-layers*
@@ -132,8 +126,7 @@
   {:doc "Fetch the Teeregister WMS layers that can be shown"
    :context _
    :args _
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [config (tr-config)]
     {:wms-url (:wms-url config)
      :layers (fetch-wms-layers* config)}))
@@ -142,8 +135,7 @@
   {:doc "Fetch the Teeregister WFS feature types that can be queried"
    :context _
    :args _
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [config (tr-config)]
     {:wfs-url (:wfs-url config)
      :feature-types (fetch-wfs-feature-types* config)}))
@@ -153,9 +145,8 @@
   {:doc "Fetch the EELIS WMS layers"
    :context _
    :args _
-   :project-id nil
-   :config {wms-url [:eelis :wms-url]}
-   :authorization {}}
+   :allowed-for-all-users? true
+   :config {wms-url [:eelis :wms-url]}}
   {:wms-url wms-url
    :layers (fetch-wms-layers* {:wms-url wms-url})})
 
@@ -197,8 +188,7 @@
    :spec (s/keys :req-un [::start ::end ::distance])
    :config {client [:road-registry :api]}
    :args {:keys [start end distance]}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [road (->> (teeregister-api/road-by-2-geopoints
                    (teeregister-api/create-client client)
                    distance start end)
@@ -224,8 +214,7 @@
    :spec (s/keys :req-un [::point ::distance])
    :config {client [:road-registry :api]}
    :args {:keys [point distance]}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [road (first
               (teeregister-api/road-by-geopoint (teeregister-api/create-client client)
                                                 distance point))
@@ -240,8 +229,7 @@
   {:doc "Fetch line geometry based on road address from Teeregister API."
    :config {client [:road-registry :api]}
    :args {:keys [road-nr carriageway start-km end-km start-offset-m end-offset-m]}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [line (teeregister-api/line-by-road
               (teeregister-api/create-client client)
               (->long road-nr) (->long carriageway)
@@ -259,8 +247,7 @@
   {:doc "Fetch point geometry baed on road address from Teeregister API."
    :config {client [:road-registry :api]}
    :args {:keys [road-nr carriageway start-km]}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (teeregister-api/point-by-road (teeregister-api/create-client client)
                                  road-nr carriageway
                                  (-> start-km ->bigdec road-model/km->m)))
@@ -269,8 +256,7 @@
   {:doc "Autocomplete road input by name or number (from Teeregister API)"
    :config {client [:road-registry :api]}
    :args {:keys [text]}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (teeregister-api/road-search (teeregister-api/create-client client)
                                text))
 
