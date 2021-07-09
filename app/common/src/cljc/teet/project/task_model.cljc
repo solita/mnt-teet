@@ -90,10 +90,10 @@
 (defn any-task-part-waiting-for-review?
   "Checks if any task parts under the task are in waiting for review status"
   [task-parts]
-      (seq (filterv (fn [x]
+      (some (fn [x]
                       (= :file.part.status/waiting-for-review
                          (:db/ident (:file.part/status x))))
-                    (:file.part/_task task-parts))))
+                    (:file.part/_task task-parts)))
 
 (defn task-assignee
   "Fetch task assignee based on task-id.

@@ -98,12 +98,12 @@
 (defn waiting-for-review-parts-tx
   "Creates the tx records to update task part(s) from waiting for review to reviewing"
   [task-parts]
-  (concat (map (fn [part]
+  (map (fn [part]
                  {:db/id (:db/id part)
                   :file.part/status :file.part.status/reviewing})
                (filter
                  (fn [x] (= :file.part.status/waiting-for-review (:db/ident (:file.part/status x))))
-                 (:file.part/_task task-parts)))))
+                 (:file.part/_task task-parts))))
 
 (defcommand :task/update
   {:doc "Update basic task information for existing task."

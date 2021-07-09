@@ -130,16 +130,16 @@
 
   StartReview
   (process-event [_ {params :params :as app}]
-    (t/fx (assoc app :task-review-started? true)
+    (t/fx app
           {:tuck.effect/type :command!
            :command :task/start-review
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->RefreshReview}))
+           :result-event common-controller/->Refresh}))
 
   Review
   (process-event [{result :result} {params :params :as app}]
-    (t/fx (dissoc app :task-review-started?)
+    (t/fx app
           {:tuck.effect/type :command!
            :command :task/review
            :payload {:task-id (common-controller/->long (:task params))
