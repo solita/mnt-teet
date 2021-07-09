@@ -62,10 +62,21 @@
 
 (declare recursive-convert)
 
-(defn from-wfs [wfs-feature wfs-field convert-fn]
-  (some-> wfs-feature (get wfs-field) convert-fn))
+(defn- try-convert [value convert-fn attribute convert-fn-name]
+  (try
+    (convert-fn value)
+    (catch Throwable t
+      (log/info "Failed to convert " (pr-str attribute)
+                " value " (pr-str value)
+                " with " convert-fn-name)
+      nil)))
 
-(defn from-point-to-perpendicular-line [ctx wfs-feature width-field]
+(defmacro from-wfs [wfs-feature wfs-field convert-fn]
+  (let [name (str convert-fn)]
+    `(some-> ~wfs-feature (get ~wfs-field)
+             (try-convert ~convert-fn ~wfs-field ~name))))
+
+(defn- from-point-to-perpendicular-line [ctx wfs-feature width-field]
   (let [road-nr (some-> wfs-feature :ms:tee_number ->long)
         carriageway (some-> wfs-feature :ms:soidutee_nr ->long)
         meters (some-> wfs-feature :ms:km ->bigdec road-model/km->m)
