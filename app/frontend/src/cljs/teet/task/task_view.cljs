@@ -285,21 +285,6 @@
              :button-text (tr [:task-part :reopen])}]]
           [:<>])]])))
 
-(defn- start-task-part-review [e! task-id task-part-id]
-  (e! (task-controller/->StartTaskPartReview task-id task-part-id))
-  (fn [_]
-    [:span]))
-
-(defn task-part-button-area
-  [e! task file-part]
-  (let [task-part-status (:db/ident (:file.part/status file-part))]
-    [:<>
-     (when (du/enum= task-part-status :file.part.status/waiting-for-review)
-       [when-authorized :task/review-task-part task
-        [start-task-part-review e! (:db/id task) (:db/id file-part)]])
-     [when-authorized :task/submit task
-      [task-part-buttons e! task file-part]]]))
-
 (defn task-part-heading
   [e! {heading :heading
        number :number} file-part opts]
@@ -360,7 +345,8 @@
                             :sort-by-value sort-by-value
                             :download? true
                             :land-acquisition? land-acquisition?} files]
-      [task-part-button-area e! task file-part]]
+      [when-authorized :task/submit task
+       [task-part-buttons e! task file-part]]]
      [file-view/no-files])])
 
 (defn task-file-heading
@@ -613,7 +599,9 @@
 (defn- task-page-content
   [e! app activity {status :task/status :as task} pm? files-form]
   [:div.task-page {:class (<class common-styles/margin-bottom 2)}
-   (when (and pm? (du/enum= status :task.status/waiting-for-review))
+   (when (and pm? (or
+                    (du/enum= status :task.status/waiting-for-review)
+                    (task-model/any-task-part-waiting-for-review? task)))
      [when-authorized :task/start-review task
       [start-review e!]])
    [task-header e! activity task]
