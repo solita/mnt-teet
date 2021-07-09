@@ -27,10 +27,10 @@
     (if (request-success? (:status response))
       parsed-response
       (do
-        (log/error "Vektorio error: " response)
+        (log/error "Vektorio error: " (assoc-in response [:opts :headers vektorio-api-key-header-name] "this is a secret 👀"))
         (throw (ex-info "Vektorio error"
                         {:msg "Vektorio error"
-                         :vektorio-response response}))))))
+                         :vektorio-response (assoc-in response [:opts :headers vektorio-api-key-header-name] "this is a secret 👀")}))))))
 
 (defn vektor-post!
   [{:keys [config api-key]} {:keys [endpoint payload headers]}]
