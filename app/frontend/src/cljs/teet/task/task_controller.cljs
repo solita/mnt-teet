@@ -53,7 +53,6 @@
 (defrecord SubmitTaskPartResults [task-id taskpart-id]) ; submit task part for review
 (defrecord ReviewTaskPart [task-id taskpart-id result])
 (defrecord ReopenTaskPart [task-id taskpart-id])
-(defrecord StartTaskPartReview [task-id taskpart-id])
 
 (defrecord ExportFiles [task-id])
 
@@ -131,30 +130,16 @@
 
   StartReview
   (process-event [_ {params :params :as app}]
-    (t/fx (assoc app :task-review-started? true)
+    (t/fx app
           {:tuck.effect/type :command!
            :command :task/start-review
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :start-review-success])
-           :result-event common-controller/->RefreshReview}))
-
-  StartTaskPartReview
-  (process-event [{task-id :task-id
-                   taskpart-id :taskpart-id} app]
-       (if
-         (get app :task-review-started?)
-         app
-         (t/fx app
-               {:tuck.effect/type :command!
-                :command :task/start-task-part-review
-                :payload {:taskpart-id (common-controller/->long taskpart-id)
-                          :task-id (common-controller/->long task-id)}
-                :success-message (tr [:task :start-review-success])
-                :result-event common-controller/->Refresh})))
+           :result-event common-controller/->Refresh}))
 
   Review
   (process-event [{result :result} {params :params :as app}]
-    (t/fx (dissoc app :task-review-started?)
+    (t/fx app
           {:tuck.effect/type :command!
            :command :task/review
            :payload {:task-id (common-controller/->long (:task params))

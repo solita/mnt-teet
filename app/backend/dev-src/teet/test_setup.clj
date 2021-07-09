@@ -28,12 +28,13 @@
         start (java.util.Date. (- now one-day-ms))
         end (java.util.Date. (+ now (* 100 one-day-ms)))
         {:keys [project-id project-name project-cadastral-units
-                road activity group task]
+                road activity group task manager]
          :or {project-id (str now)
               project-name (str "testproject " now)
               activity "pre-design"
               group "study"
               task "feasibility-study"
+              manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]
               road [1 1 100 15000]}} payload
         [road-nr carriageway start-m end-m] road]
     (merge
@@ -58,6 +59,7 @@
           :activity/name (keyword "activity.name" activity)
           :activity/estimated-start-date start
           :activity/estimated-end-date end
+          :activity/manager manager
           :activity/tasks
           [{:db/id "task"
             :task/group (keyword "task.group" group)

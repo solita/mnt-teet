@@ -216,7 +216,7 @@
         "File part has been submitted"))
 
   (testing "Setting task part as in review"
-    (tu/local-command :task/start-task-part-review
+    (tu/local-command :task/start-review
                       {:taskpart-id (tu/get-data :original-part-id)
                        :task-id (tu/get-data :task-id)})
 
