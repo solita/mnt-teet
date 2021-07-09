@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export TEET_TESTBUILD=1
+
 npm install
 
 clojure -A:testbuild
@@ -10,4 +12,3 @@ else
   cat /tmp/*.edn
   exit 1
 fi
-
