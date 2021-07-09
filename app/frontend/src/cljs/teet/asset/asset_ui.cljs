@@ -99,6 +99,7 @@
           :format-result format-fg-and-fc-with-components
           :show-empty-selection? true
           :clear-value [nil nil]
+          :data-cy :select-fgroup-and-fclass
           :query (fn [text]
                    #(asset-type-library/search-fclass
                      atl @localization/selected-language text))}]]])))
@@ -275,9 +276,11 @@
         ^{:key (str ident)}
         [container/collapsible-container
          {:on-toggle (r/partial toggle-open! ident)
+          :container-attrs {:data-cy (str "navigation-fgroup-" (-> fgroup :db/ident name))}
           :open? (contains? @open ident)}
          (if fgroup-link-fn
-           [Link {:href (fgroup-link-fn fgroup)} label]
+           [Link {:href (fgroup-link-fn fgroup)}
+            label]
            label)
          [:div.cost-items-by-fclass {:data-fgroup (str ident)
                                      :style {:margin-left "0.5rem"}}
@@ -286,10 +289,12 @@
                  :let [label (str/upper-case (tr* fclass))]]
              ^{:key (str ident)}
              [:div {:style {:margin-top "1rem"
-                            :margin-left "1rem"}}
+                            :margin-left "1rem"}
+                    :data-cy (str "navigation-fclass-" (-> fclass :db/ident name))}
               [typography/Text2Bold
                (if fclass-link-fn
-                 [Link {:href (fclass-link-fn fclass)} label]
+                 [Link {:href (fclass-link-fn fclass)}
+                  label]
                  label)]
               (when list-features?
                 [:div.cost-items {:style {:margin-left "1rem"}}
@@ -297,7 +302,9 @@
                    ^{:key oid}
                    [:div
                     [url/Link {:page :cost-item
-                               :params {:id oid}} oid]])])]))]]))]))
+                               :params {:id oid}
+                               :data-cy (str "navigation-cost-item-" oid)}
+                     oid]])])]))]]))]))
 
 (defn- save-boq-version-dialog [{:keys [e! on-close]} last-locked-version]
   (r/with-let [current-type (-> last-locked-version

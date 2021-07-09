@@ -406,16 +406,19 @@
      (if (> (count allowed-components) 3)
        [common/context-menu
         {:label menu-label
+         :data-cy :component-menu-button
          :icon [icons/content-add-circle-outline]
          :items (for [c allowed-components]
                   {:label (label c)
                    :icon [icons/content-add]
-                   :on-click (r/partial add-component! (:db/ident c))})}]
+                   :on-click (r/partial add-component! (:db/ident c))
+                   :data-cy (str "add-" (-> c :db/ident name))})}]
        (doall
         (for [c allowed-components]
           ^{:key (str (:db/ident c))}
           [Grid {:item true :xs 12 :md 4}
            [buttons/button-secondary {:size :small
+                                      :data-cy (str "add-" (-> c :db/ident name))
                                       :on-click (r/partial add-component! (:db/ident c))
                                       :start-icon (r/as-element [icons/content-add])}
             (label c)]])))]))
@@ -558,7 +561,7 @@
                           (asset-type-library/item-by-ident atl fclass))]
       [:<>
        (when-let [oid (:asset/oid form-data)]
-         [typography/Heading2 oid])
+         [typography/Heading2 {:data-cy :cost-item-oid} oid])
        [form/form2
         {:e! e!
          :on-change-event cost-items-controller/->UpdateForm
@@ -746,6 +749,7 @@
     (let [add? (= "new" (get-in app [:params :id]))
           project (get-in app [:params :project])]
       [buttons/button-secondary {:element "a"
+                                 :data-cy :add-cost-item
                                  :href (url/cost-item project "new")
                                  :disabled add?
                                  :start-icon (r/as-element

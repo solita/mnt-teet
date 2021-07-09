@@ -475,7 +475,7 @@
            show-label? after-results-action
            query placeholder no-results clear-value
            start-icon input-button-icon input-element
-           query-threshold autofocus? on-backspace]
+           query-threshold data-cy autofocus? on-backspace]
     :or {show-label? true
          autofocus? false
          query-threshold 2
@@ -584,7 +584,9 @@
                (when input-button-icon
                  {:input-button-icon input-button-icon})
                (when-let [ic (:input-class opts)]
-                 {:class ic}))]
+                 {:class ic})
+               (when data-cy
+                 {:data-cy data-cy}))]
        (when open?
          [Popper {:open true
                   :anchorEl current-input-ref

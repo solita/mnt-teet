@@ -586,7 +586,7 @@
   `:body` and `:icon` instead of having those as main level keys.
 
   Option `force-open?` can be used to show the popup even if not hovering."
-  [{:keys [title body variant icon class hidden? tabIndex multi force-open?] :as msg
+  [{:keys [title body variant icon class hidden? tabIndex multi force-open? data-cy] :as msg
     :or {variant :error
          tabIndex 0
          force-open? false}}
@@ -610,10 +610,12 @@
              :tabIndex tabIndex
              :class container-class}
        component
-       [Popper {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
-                :open (or @hover? force-open?)
-                :anchor-el @anchor-el
-                :placement "bottom-start"}
+       [Popper (merge {:style {:z-index 1600}                      ;; z-index is not specified for poppers so they by default appear under modals
+                       :open (or @hover? force-open?)
+                       :anchor-el @anchor-el
+                       :placement "bottom-start"}
+                      (when data-cy
+                        {:data-cy data-cy}))
         (when-not hidden?
           [popper-tooltip-content (if multi
                                     {:variant variant
@@ -639,7 +641,7 @@
      (fn portal-to []
        [:div {:ref #(reset! elt %)}])]))
 
-(defn- context-menu-item [toggle-menu! {:keys [icon label on-click link id]}]
+(defn- context-menu-item [toggle-menu! {:keys [icon label on-click link id data-cy]}]
   (let [label (if (fn? label)
                 (label)
                 label)]
@@ -649,6 +651,7 @@
                    (toggle-menu!)
                    (when on-click
                      (on-click)))}
+      (when data-cy {:data-cy data-cy})
       (when id {:id id}))
      [ListItemIcon icon]
      (if link
@@ -667,7 +670,7 @@
   Optional keys:
   :menu-placement controls where the Popper component is placed
                   in relation to the button (detaults to bottom-end)"
-  [{:keys [label icon items menu-placement id class]
+  [{:keys [label icon items menu-placement id class data-cy]
     :or {menu-placement "bottom-end"}}]
   (r/with-let [open? (r/atom false)
                toggle! #(swap! open? not)
@@ -681,6 +684,7 @@
         :on-click toggle!
         :ref set-anchor!}
        (when id {:id id})
+       (when data-cy {:data-cy data-cy})
        (when class
          {:class class}))
       label]

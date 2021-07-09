@@ -5,7 +5,6 @@
             [teet.util.datomic :as du]
             [teet.asset.asset-model :as asset-model]
             [datomic.client.api :as d]
-            [teet.meta.meta-model :as meta-model]
             [clojure.walk :as walk]))
 
 (def ^:const bigdec-scale
@@ -62,7 +61,7 @@
   [db parent-oid {id :db/id
                   type :material/type
                   :as material}]
-  (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
+    (when-not (asset-db/leaf-component? db [:asset/oid parent-oid])
     (throw (ex-info "Not a leaf component OID"
                     {:parent-oid parent-oid})))
   (let [existing-material-ids

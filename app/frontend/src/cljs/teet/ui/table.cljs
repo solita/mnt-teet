@@ -49,6 +49,7 @@
           ^{:key (name column)}
           [TableCell
            (merge {:style {:vertical-align :top}
+                   :data-cy (str "table-header-column-" (name column))
                    :sortDirection (if (= sort-column column)
                                     (name sort-direction)
                                     false)}
@@ -105,20 +106,22 @@
   [TableBody {}
    (doall
     (for [row rows]
-      ^{:key (key row)}
-      [TableRow (merge
-                 {:class (<class row-style (boolean on-row-click))}
-                 (when on-row-click
-                   {:on-click (r/partial on-row-click row)})
-                 (when on-row-hover
-                   {:on-mouse-over (r/partial on-row-hover row)}))
-       (doall
-        (for [column columns]
-          ^{:key (name column)}
-          [TableCell (if-let [a (get column-align column)]
-                       {:align a}
-                       {})
-           (format-column column (get-column row column) row)]))]))])
+      (let [row-key (key row)]
+        ^{:key row-key}
+        [TableRow (merge
+                   {:class (<class row-style (boolean on-row-click))
+                    :data-cy (str "row-" row-key)}
+                   (when on-row-click
+                     {:on-click (r/partial on-row-click row)})
+                   (when on-row-hover
+                     {:on-mouse-over (r/partial on-row-hover row)}))
+         (doall
+          (for [column columns]
+            ^{:key (name column)}
+            [TableCell (merge {:data-cy (str "table-body-column-" (name column))}
+                              (when-let [a (get column-align column)]
+                                {:align a}))
+             (format-column column (get-column row column) row)]))])))])
 
 
 
