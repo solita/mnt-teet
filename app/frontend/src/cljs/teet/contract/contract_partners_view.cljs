@@ -392,7 +392,7 @@
     (for [employee employees]
       [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
              (get-in employee [:company-contract-employee/user :user/given-name]))]
-       [(tr [(get-in employee [:company-contract-employee/role])])]
+       [(tr-enum (:company-contract-employee/role employee))]
        [] ;TODO implement key person functionality
        [[common/Link {:class (<class contract-style/personnel-activation-link-style active?)
                       :href "#"}                            ;TODO add activation/deactivation functionality
