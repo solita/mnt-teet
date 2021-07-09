@@ -5,7 +5,7 @@ echo "Backup started"
 S3_BUCKET=$(aws ssm get-parameters --names "/teet/s3/backup-bucket" --query "Parameters[0].Value" | tr -d '"')
 BACKUP_FILE_NAME="teet-dev2-backup-"$(date +%Y-%m-%d)".edn.zip"
 
-aws lambda invoke --function-name teet-datomic-Compute-backup --payload '{"key": "value"}' out
+aws lambda invoke --cli-binary-format raw-in-base64-out --function-name teet-datomic-Compute-backup --payload '{"key": "value"}' out
 
 echo "New backup file name " $BACKUP_FILE_NAME
 

@@ -44,7 +44,7 @@ if [ "$STATUS" = "200" ]; then
   echo $MSG_ASSET_DB_IS_SWITCHED
 
     # Cleanup both old DB-s
-  aws lambda invoke --function-name teet-datomic-Compute-delete-db --payload "{
+  aws lambda invoke --cli-binary-format raw-in-base64-out --function-name teet-datomic-Compute-delete-db --payload "{
     \"db-name\":\"$CURRENT_DB\",
     \"asset-db-name\":\"$CURRENT_ASSET_DB\"}" out
 
