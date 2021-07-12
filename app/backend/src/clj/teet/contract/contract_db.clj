@@ -136,7 +136,7 @@
                              :company-contract/employees
                              [~'*
                               {:company-contract-employee/user
-                               [:user/given-name :user/family-name :user/id :user/person-id :user/email]}]}]}]]
+                               [:user/given-name :user/family-name :user/id :user/person-id :user/email :user/phone-number]}]}]}]]
     pull-attributes))
 
 (defn get-contract-with-partners

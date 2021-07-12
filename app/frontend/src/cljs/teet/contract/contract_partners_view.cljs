@@ -91,6 +91,25 @@
                        :title info-box-title
                        :content [common/basic-information-column info-column-data]}]]))
 
+(defn user-employee-info-column
+  [display-data info-box-title info-box-variant]
+  (let [info-column-data (mapv (fn [{label-key :label-key data :data}]
+                                 {:label [typography/Text2Bold (tr label-key)]
+                                  :data data})
+                               display-data)]
+    [:div {:class (<class common-styles/margin-bottom 1.5)}
+     [common/info-box {:variant info-box-variant
+                       :title info-box-title
+                       :content [common/basic-information-column info-column-data]}]]))
+
+(defn user-info
+  [{:user/keys [person-id email phone-number ]} roles]
+  (let [display-data [{:label-key [:fields :user/global-role] :data (str/join ", " (mapv #(tr-enum %) roles))}
+                      {:label-key [:fields :user/person-id] :data person-id}
+                      {:label-key [:fields :user/email] :data email}
+                      {:label-key [:fields :user/phone-number] :data phone-number}]]
+    [user-employee-info-column display-data "" :simple]))
+
 (defmulti company-info (fn [company key] key))
 
 (defmethod company-info :edit
@@ -407,12 +426,8 @@
                                            {:employee employee})
                                  :query (merge
                                           query
-                                          {:page :edit-personnel
-                                           :given-name (get-in employee [:company-contract-employee/user :user/given-name])
-                                           :family-name (get-in employee [:company-contract-employee/user :user/family-name])
-                                           :person-id (get-in employee [:company-contract-employee/user :user/person-id])
-                                           :email (get-in employee [:company-contract-employee/user :user/email])
-                                           :phone-number (get-in employee [:company-contract-employee/use :user/phone-number])})})}
+                                          {:page :personnel-info
+                                           :user-id (get-in employee [:company-contract-employee/user :user/id])})})}
          (tr [:common :view-more-info])]]])]])
 
 (defn personnel-section
@@ -572,11 +587,12 @@
 
 (defn edit-personnel-form
   [e! {:keys [query] :as app} selected-partner selected-person]
-  (let [person-id (:person-id query)
-        email (:email query)
-        phone-number (:phone-number query)
-        given-name (:given-name query)
-        family-name (:family-name query)]
+  (let [user (:company-contract-employee/user selected-person)
+        person-id (:user/person-id user)
+        email (:user/email user)
+        phone-number (:user/phone-number user)
+        given-name (:user/given-name user)
+        family-name (:user/family-name user) ]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
                           :user/email email
@@ -612,6 +628,26 @@
                                        :partner teet-id}})}
        (tr [:buttons :edit])]]]))
 
+(defn employee-info-header
+  [employee params selected-partner]
+  (let [employee-name (str (get-in employee [:company-contract-employee/user :user/given-name]) " "
+                           (get-in employee [:company-contract-employee/user :user/family-name]))
+        teet-id (:teet/id selected-partner)
+        user-id (get-in employee [:company-contract-employee/user :user/id])]
+    [:div {:class (<class contract-style/partner-info-header)}
+     [:h1 employee-name]
+     [authorization-check/when-authorized
+      :thk.contract/edit-contract-partner-company employee
+      [buttons/button-secondary
+       {:href (routes/url-for {:page :contract-partners
+                               :params (merge
+                                         params
+                                         {:employee employee})
+                               :query {:page :edit-personnel
+                                       :partner teet-id
+                                       :user-id user-id}})}
+       (tr [:buttons :edit])]]]))
+
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
@@ -620,16 +656,29 @@
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
+(defn employee-info
+  [e! {:keys [params] :as app} selected-partner employee]
+  [:div
+   [employee-info-header employee params selected-partner]
+   [user-info (:company-contract-employee/user employee) (:company-contract-employee/role employee)]
+   [Divider {:class (<class common-styles/margin 1 0)}]
+   [personnel-section e! app selected-partner]])
+
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
   (let [selected-partner-id (:partner query)
+        _ (cljs.pprint/pprint (str "partner-page-router page: " (:page query) " partner-id: " selected-partner-id))
         selected-partner (->> (:company-contract/_contract contract)
                            (filter
                              (fn [partner]
                                (= (str (:teet/id partner)) selected-partner-id)))
                            first)
-        selected-person "some person"                       ;;TODO: @implement
-        ]
+
+        selected-person-id (:user-id query)
+        employee (->> (:company-contract/employees selected-partner)
+                      (filter (fn [employee]
+                                (= (str (:user/id (:company-contract-employee/user employee))) selected-person-id)))
+                      first)]
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
@@ -641,10 +690,12 @@
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
        [add-personnel-form e! app selected-partner]]
+      :personnel-info
+      [employee-info e! app selected-partner employee]
       :edit-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
-       [edit-personnel-form e! app selected-partner selected-person]]
+       [edit-personnel-form e! app selected-partner employee]]
       [partners-default-view params contract])))
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
