@@ -587,28 +587,45 @@
 
 (defn edit-personnel-form
   [e! {:keys [query] :as app} selected-partner selected-person]
-  (let [user (:company-contract-employee/user selected-person)
+  (let [_ (cljs.pprint/pprint selected-person)
+        user (:company-contract-employee/user selected-person)
         person-id (:user/person-id user)
         email (:user/email user)
         phone-number (:user/phone-number user)
         given-name (:user/given-name user)
-        family-name (:user/family-name user) ]
+        family-name (:user/family-name user)
+        user-id (:user/id user)]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
                           :user/email email
                           :user/phone-number phone-number
                           :user/given-name given-name
-                          :user/family-name family-name})]
+                          :user/family-name family-name
+                          :user/id user-id})]
       [Grid {:container true}
        [Grid {:itme true :xs 12 :md 6}]]
       [form/form2 {:e! e!
                    :value @form-atom
-                   :on-change-event (cljs.pprint/pprint "on-change-event")
+                   :on-change-event (form/update-atom-event form-atom (fn [old new]
+                                                                        (if (= {:company-contract-employee/role #{}} new)
+                                                                          (dissoc old :company-contract-employee/role)
+                                                                          (merge old new))))
                    :cancel-even #(cljs.pprint/pprint "cancel-event")
-                   :save-event #(cljs.pprint/pprint "save-event")}
+                   :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
+                                  {:form-value @form-atom
+                                   :company-contract-eid (:db/id selected-partner)}
+                                  (fn [_response]
+                                    (fn [e!]
+                                      (e! (common-controller/->Refresh))
+                                      (e! (common-controller/map->NavigateWithExistingAsDefault
+                                            {:query (merge
+                                                      query
+                                                      {:page :partner-info})}))))
+                                  (tr [:contract :employee-updated]))}
        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
-        (tr [:contract :edit-person])]
-       [new-person-form-fields e! (:form-value @form-atom)]])))
+        (tr [:contract :partner :edit-person])]
+       [new-person-form-fields e! (:form-value @form-atom)]
+       [form/footer2 (partial contract-personnel-form-footer @form-atom)]])))
 
 (defn partner-info-header
   [partner params]

@@ -58,7 +58,6 @@
   :deactivated-successfully "User deactivated successfully",
   :reactivate-user-btn "Reactivate user",
   :search-shortcuts "Search shortcuts",
-  :activate "Activate",
   :current-permissions "Current permissions"},
  :asset
  {:unlock-contract-boq-warning
@@ -278,7 +277,8 @@
   :partner
   {:active-persons "Active persons",
    :deactive-persons "Deactive persons",
-   :key-person "Key person"},
+   :key-person "Key person",
+   :edit-person "Edit person"},
   :person-name "Person name",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",
@@ -900,7 +900,7 @@
   :thk.project/manager "Project manager",
   :location/end-km "End km",
   :thk.project/project-name "Name",
-  :thk.contract/external-link "Contract link",
+  :thk.contract/external-link "Contract link (DMS)",
   :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
@@ -984,7 +984,7 @@
   :location/start-offset-m "Start offset",
   :land-owner-opinion/respondent-connection-to-land
   "Respondents connection to the land",
-  :thk.contract/warranty-period "Warranty period",
+  :thk.contract/warranty-period "Warranty period in months",
   :land-acquisition/pos-number "POS#",
   :company/country "Country of registration",
   :meeting.agenda/responsible "Responsible person",
@@ -1516,7 +1516,7 @@
   :reopen-task "Reopen task",
   :add-part-modal-title "Add task part",
   :part-deleted-successfully "Task part deleted successfully",
-  :submit-results "Submit results",
+  :submit-results "Submit task results",
   :submit-results-success "Results submitted successfully",
   :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
   :confirm-delete-task-sent-to-thk
@@ -1534,7 +1534,7 @@
   "Are you sure you wish to reopen this task part and all associated files?",
   :submit-for-approval "Submit task part for review",
   :reject-part "Send back",
-  :submit-results "Submit results",
+  :submit-results "Submit task part results",
   :reject "Send back",
   :approve-part "Approve results",
   :submit-results-confirm

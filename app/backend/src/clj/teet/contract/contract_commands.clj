@@ -185,3 +185,31 @@
                                       {:db/id company-contract-eid
                                        :company-contract/employees "new-company-contract-employee"}])]))]
     tempids))
+
+(defcommand :thk.contract/edit-contract-employee
+            {:doc "Update existing contract employee"
+             :payload {form-value :form-value
+                       company-contract-eid :company-contract-eid}
+             :context {:keys [user db]}
+             :project-id nil
+             :authorization {:contracts/contract-editing {}}}
+            (let [_ (clojure.pprint/pprint form-value)
+                  employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
+                                                               :user/email :user/phone-number :db/id
+                                                               :user/id]))
+                  user-person-id (user-model/normalize-person-id (:user/person-id form-value))
+                  updated-user (merge
+                             {:user/person-id user-person-id}
+                             employee-fields
+                             (meta-model/modification-meta user))
+                  tempids (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
+                                               (:user/email form-value)
+                                               [updated-user
+                                                (merge
+                                                  {:company-contract-employee/active? true ;; employees are active by default
+                                                   :company-contract-employee/user [:user/id (:user/id employee-fields)]
+                                                   :company-contract-employee/role (mapv
+                                                                                     :db/id
+                                                                                     (:company-contract-employee/role form-value))}
+                                                  (meta-model/modification-meta user))])]))]
+              tempids))
