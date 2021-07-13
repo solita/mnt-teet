@@ -623,8 +623,9 @@
                                       (e! (common-controller/map->NavigateWithExistingAsDefault
                                             {:query (merge
                                                       query
-                                                      {:page :partner-info})}))))
-                                  (tr [:contract :employee-updated]))}
+                                                      {:page :personnel-info
+                                                       :user-id user-id})}))))
+                                  (tr [:contract :partner :person-updated]))}
        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
         (tr [:contract :partner :edit-person])]
        [new-person-form-fields e! (:form-value @form-atom)]
