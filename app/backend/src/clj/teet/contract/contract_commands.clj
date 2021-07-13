@@ -206,7 +206,7 @@
                                                (:user/email form-value)
                                                [updated-user
                                                 (merge
-                                                  {:company-contract-employee/active? true ;; employees are active by default
+                                                  {:company-contract-employee/active? true
                                                    :company-contract-employee/user [:user/id (:user/id employee-fields)]
                                                    :company-contract-employee/role (mapv
                                                                                      :db/id

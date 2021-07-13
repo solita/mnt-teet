@@ -495,11 +495,11 @@
   []
   [:div
    ^{:key "person-id"}
-   [form/field :user/person-id
-    [TextField {}]]
    [form/field :user/given-name
     [TextField {}]]
    [form/field :user/family-name
+    [TextField {}]]
+   [form/field :user/person-id
     [TextField {}]]
    [form/field {:attribute :user/email
                 :validate validation/validate-email-optional}
@@ -610,7 +610,10 @@
                                                                         (if (= {:company-contract-employee/role #{}} new)
                                                                           (dissoc old :company-contract-employee/role)
                                                                           (merge old new))))
-                   :cancel-even #(cljs.pprint/pprint "cancel-event")
+                   :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
+                                    {:query (merge query
+                                                   {:page :personnel-info
+                                                    :user-id user-id})})
                    :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
                                   {:form-value @form-atom
                                    :company-contract-eid (:db/id selected-partner)}
