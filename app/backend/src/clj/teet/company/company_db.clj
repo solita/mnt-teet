@@ -69,3 +69,16 @@
                                        ffirst)
         _ (clojure.pprint/pprint (str "company-contract-employee" company-contract-employee))]
     company-contract-employee))
+
+(defn employee-roles [db user-id company-contract]
+  (let [roles (->> (d/q '[:find ?roles
+                             :where
+                             [?cce :company-contract-employee/user ?u]
+                             [?cc :company-contract/employees ?cce]
+                             [?cce :company-contract-employee/role ?roles]
+                             :in $ ?u ?cc]
+                           db user-id company-contract)
+                      (mapv first))
+        _ (clojure.pprint/pprint (str "employee-roles" roles))]
+    roles))
+

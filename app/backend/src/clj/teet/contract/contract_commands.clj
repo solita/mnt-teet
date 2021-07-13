@@ -197,23 +197,31 @@
                                  :db/id
                                  (:company-contract-employee/role form-value))
                   _ (clojure.pprint/pprint roles-update)
+                  old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
                   employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                                :user/email :user/phone-number :db/id
                                                                :user/id]))
                   user-person-id (user-model/normalize-person-id (:user/person-id form-value))
                   updated-user (merge
-                             {:user/person-id user-person-id}
-                             employee-fields
-                             (meta-model/modification-meta user))
+                                 {:user/person-id user-person-id}
+                                 employee-fields
+                                 (meta-model/modification-meta user))
                   company-contract-employee (company-db/find-company-contract-employee
                                               db [:user/id (:user/id employee-fields)] company-contract-eid)
-                  tempids (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
-                                               (:user/email form-value)
-                                               [updated-user
-                                                (merge
-                                                  {:db/id company-contract-employee
-                                                   :company-contract-employee/active? true
-                                                   :company-contract-employee/user [:user/id (:user/id employee-fields)]
-                                                   :company-contract-employee/role roles-update}
-                                                  (meta-model/modification-meta user))])]))]
+                  tx-data (vec
+                            (concat
+                              [(list 'teet.user.user-tx/ensure-unique-email
+                                     (:user/email form-value)
+                                     [updated-user
+                                      (merge
+                                        {:db/id company-contract-employee
+                                         :company-contract-employee/active? true
+                                         :company-contract-employee/user [:user/id (:user/id employee-fields)]
+                                         :company-contract-employee/role roles-update}
+                                        (meta-model/modification-meta user))])]
+                              (for
+                                [v old-roles
+                                 :when (not (contains? roles-update v))]
+                                [:db/retract company-contract-employee :company-contract-employee/role v])))
+                  tempids (:tempids (tx tx-data))]
               tempids))
