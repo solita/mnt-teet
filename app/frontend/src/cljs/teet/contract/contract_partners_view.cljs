@@ -513,8 +513,7 @@
       :placeholder (tr [:contract :select-user-roles])
       :no-results (tr [:contract :no-matching-roles])
       :show-empty-selection? true
-      :clear-value [nil nil]}]]
-   ])
+      :clear-value [nil nil]}]]])
 
 (defn add-personnel-form
   [e! {:keys [query] :as app} selected-partner]
@@ -587,21 +586,22 @@
 
 (defn edit-personnel-form
   [e! {:keys [query] :as app} selected-partner selected-person]
-  (let [_ (cljs.pprint/pprint selected-person)
-        user (:company-contract-employee/user selected-person)
+  (let [user (:company-contract-employee/user selected-person)
         person-id (:user/person-id user)
         email (:user/email user)
         phone-number (:user/phone-number user)
         given-name (:user/given-name user)
         family-name (:user/family-name user)
-        user-id (:user/id user)]
+        user-id (:user/id user)
+        roles (set (:company-contract-employee/role selected-person))]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
                           :user/email email
                           :user/phone-number phone-number
                           :user/given-name given-name
                           :user/family-name family-name
-                          :user/id user-id})]
+                          :user/id user-id
+                          :company-contract-employee/role roles})]
       [Grid {:container true}
        [Grid {:itme true :xs 12 :md 6}]]
       [form/form2 {:e! e!

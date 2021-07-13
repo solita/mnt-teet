@@ -193,7 +193,10 @@
              :context {:keys [user db]}
              :project-id nil
              :authorization {:contracts/contract-editing {}}}
-            (let [_ (clojure.pprint/pprint form-value)
+            (let [roles-update (mapv
+                                 :db/id
+                                 (:company-contract-employee/role form-value))
+                  _ (clojure.pprint/pprint roles-update)
                   employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                                :user/email :user/phone-number :db/id
                                                                :user/id]))
@@ -202,14 +205,15 @@
                              {:user/person-id user-person-id}
                              employee-fields
                              (meta-model/modification-meta user))
+                  company-contract-employee (company-db/find-company-contract-employee
+                                              db [:user/id (:user/id employee-fields)] company-contract-eid)
                   tempids (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
                                                (:user/email form-value)
                                                [updated-user
                                                 (merge
-                                                  {:company-contract-employee/active? true
+                                                  {:db/id company-contract-employee
+                                                   :company-contract-employee/active? true
                                                    :company-contract-employee/user [:user/id (:user/id employee-fields)]
-                                                   :company-contract-employee/role (mapv
-                                                                                     :db/id
-                                                                                     (:company-contract-employee/role form-value))}
+                                                   :company-contract-employee/role roles-update}
                                                   (meta-model/modification-meta user))])]))]
               tempids))

@@ -58,3 +58,14 @@
            company-id)
       not-empty
       boolean))
+
+(defn find-company-contract-employee [db user-id company-contract]
+  (let [company-contract-employee (->> (d/q '[:find ?cce
+                                              :where
+                                              [?cce :company-contract-employee/user ?u]
+                                              [?cc :company-contract/employees ?cce]
+                                              :in $ ?u ?cc]
+                                            db user-id company-contract)
+                                       ffirst)
+        _ (clojure.pprint/pprint (str "company-contract-employee" company-contract-employee))]
+    company-contract-employee))
