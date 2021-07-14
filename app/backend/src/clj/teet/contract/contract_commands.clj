@@ -194,9 +194,10 @@
              :project-id nil
              :authorization {:contracts/contract-editing {}}}
             (let [roles-update (mapv
-                                 :db/id
+                                 #(if (not (:db/id %))
+                                    (:db/id (company-db/get-employee-role db %))
+                                    (:db/id %))
                                  (:company-contract-employee/role form-value))
-                  _ (clojure.pprint/pprint roles-update)
                   old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
                   employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                                :user/email :user/phone-number :db/id

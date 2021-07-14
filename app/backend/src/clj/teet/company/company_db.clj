@@ -73,14 +73,17 @@
 (defn employee-roles
   "Return current roles of employees"
   [db user-id company-contract]
-  (let [roles (->> (d/q '[:find ?roles
-                          :where
-                          [?cce :company-contract-employee/user ?u]
-                          [?cc :company-contract/employees ?cce]
-                          [?cce :company-contract-employee/role ?roles]
-                          :in $ ?u ?cc]
-                        db user-id company-contract)
-                   (mapv first))
-        _ (clojure.pprint/pprint (str "ROLES: " roles))]
-    roles))
+  (->> (d/q '[:find ?roles
+              :where
+              [?cce :company-contract-employee/user ?u]
+              [?cc :company-contract/employees ?cce]
+              [?cce :company-contract-employee/role ?roles]
+              :in $ ?u ?cc]
+            db user-id company-contract)
+       (mapv first)))
+
+(defn get-employee-role
+  "Pull employee role"
+  [db role-id]
+  (d/pull db '[*] role-id))
 
