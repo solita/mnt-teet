@@ -123,12 +123,13 @@
   (assoc contract :thk.contract/status status))
 
 (defn get-task-manager [db task]
-  (:activity/manager
-    (ffirst (d/q
-              '[:find (pull ?a [:activity/manager])
-                :where
-                [?a :activity/tasks ?tx]
-                :in $ ?tx] db task))))
+  (when (not (nil? task))
+        (:activity/manager
+          (ffirst (d/q
+                    '[:find (pull ?a [:activity/manager])
+                      :where
+                      [?a :activity/tasks ?tx]
+                      :in $ ?tx] db task)))))
 
 (defn contract-with-manager
   "Used after queries that return contracts with targets are Tasks]"
