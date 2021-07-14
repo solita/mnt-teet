@@ -3,7 +3,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.company.company-model :as company-model]
-            [teet.user.user-queries :as user-queries])
+            [teet.user.user-queries :as user-queries]
+            [teet.user.user-db :as user-db])
   (:import (java.util Date)))
 
 (def contract-query-rules
@@ -120,6 +121,29 @@
   "Used after datomic query which returns [contract contract-status]"
   [[contract status]]
   (assoc contract :thk.contract/status status))
+
+(defn get-task-manager [db task]
+  (:activity/manager
+    (ffirst (d/q
+              '[:find (pull ?a [:activity/manager])
+                :where
+                [?a :activity/tasks ?tx]
+                :in $ ?tx] db task))))
+
+(defn contract-with-manager
+  "Used after queries that return contracts with targets are Tasks]"
+  [db contract]
+  (let [target (first (:thk.contract/targets contract))]
+    (if (nil? (:activity/manager target))
+          (let [task-manager (get-task-manager db (:db/id target))]
+            (if (nil? task-manager)
+              contract
+              (let [ta-info (user-db/user-display-info db task-manager)
+                    targets (:thk.contract/targets contract)
+                    ext-targets (map #(assoc % :activity/manager ta-info) targets)
+                    ext-contract (assoc contract :thk.contract/targets ext-targets)]
+                ext-contract)))
+          contract)))
 
 (def contract-partner-attributes
   (let [company-with-meta-keys (into []
