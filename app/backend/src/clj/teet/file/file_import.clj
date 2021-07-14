@@ -124,7 +124,7 @@
             (log/info "Upload errored on file" file-eid (str "(name:" file-name ")") "with exception: " (pr-str e))))))
     (log/info "Scheduled vektorio import finished. Found in total"(count files) "files without model-id. Ignored"
               @skipped-ext "due to non-vektor file extension,"@skipped-nontask "due to non-task file type (such as attachment)."
-              @failed "files were not uploaded because of an exception. Successfully uploaded" @uploaded "files.")))
+              @failed "files were not uploaded because of a problem. Successfully uploaded" @uploaded "files.")))
 
 
 ;; entry point for scheduled batch import job used for the initial import and retrying up any failed imports

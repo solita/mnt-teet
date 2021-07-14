@@ -26,7 +26,8 @@
             [teet.ui.url :as url]
             [cljs-time.core :as t]
             [teet.util.coerce :as uc]
-            [teet.admin.admin-ui :as admin-ui]))
+            [teet.admin.admin-ui :as admin-ui]
+            [teet.util.date :as tud]))
 
 (defn- by-month [start-date]
   (iterate #(t/plus % (t/months 1)) start-date))
@@ -168,11 +169,12 @@
   [e! form-data index values]
   (let
     [index-start (t/date-time (:cost-index/valid-from index))
-     month-objects (if (<= index-start t/now)(take
-                     (t/in-months
-                       (t/interval
-                         index-start
-                         (t/now)))
+     month-objects (when (tud/date-before-today? index-start)
+                     (take
+                       (t/in-months
+                         (t/interval
+                           index-start
+                           (t/now)))
                      (by-month index-start)))
      last-month (t/minus (t/now) (t/months 1))]
     (mapv (fn [x]
@@ -192,7 +194,7 @@
                       {(keyword (str "index-value-" (t/year x) "-" (t/month x))) field-value}))))) month-objects))
   (fn [e! form-data index values]
     (let [index-start (t/date-time (:cost-index/valid-from index))
-          month-objects (if (<= index-start t/now)
+          month-objects (when (tud/date-before-today? index-start)
                           (take
                             (t/in-months
                               (t/interval

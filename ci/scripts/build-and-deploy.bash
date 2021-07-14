@@ -31,8 +31,23 @@ if [ -z "$LATEST_COMMIT" ]; then
    exit 1;
 fi
 
+function check_child {
+    echo "waiting for child"
+    wait $1
+    if [ $? -ne 0 ]; then
+        echo "child build failed!"
+        exit 1;
+    fi
+}
+
 echo "Building and deploying version $VERSION that has latest commit in GitHub $LATEST_COMMIT"
 
-AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 $DIR/codebuild teet-datomic-ion $VERSION
-$DIR/codebuild teet-frontend $VERSION
+AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 $DIR/codebuild teet-datomic-ion $VERSION &
+PID1=$!
+$DIR/codebuild teet-frontend $VERSION &
+PID2=$!
+
+check_child $PID1
+check_child $PID2
+
 $DIR/codebuild teet-deploy $VERSION
