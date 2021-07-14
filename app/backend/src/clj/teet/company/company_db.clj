@@ -59,26 +59,28 @@
       not-empty
       boolean))
 
-(defn find-company-contract-employee [db user-id company-contract]
-  (let [company-contract-employee (->> (d/q '[:find ?cce
-                                              :where
-                                              [?cce :company-contract-employee/user ?u]
-                                              [?cc :company-contract/employees ?cce]
-                                              :in $ ?u ?cc]
-                                            db user-id company-contract)
-                                       ffirst)
-        _ (clojure.pprint/pprint (str "company-contract-employee" company-contract-employee))]
-    company-contract-employee))
+(defn find-company-contract-employee
+  "Find company-contract-employee by User and Contract"
+  [db user-id company-contract]
+  (->> (d/q '[:find ?cce
+              :where
+              [?cce :company-contract-employee/user ?u]
+              [?cc :company-contract/employees ?cce]
+              :in $ ?u ?cc]
+            db user-id company-contract)
+       ffirst))
 
-(defn employee-roles [db user-id company-contract]
+(defn employee-roles
+  "Return current roles of employees"
+  [db user-id company-contract]
   (let [roles (->> (d/q '[:find ?roles
-                             :where
-                             [?cce :company-contract-employee/user ?u]
-                             [?cc :company-contract/employees ?cce]
-                             [?cce :company-contract-employee/role ?roles]
-                             :in $ ?u ?cc]
-                           db user-id company-contract)
-                      (mapv first))
-        _ (clojure.pprint/pprint (str "employee-roles" roles))]
+                          :where
+                          [?cce :company-contract-employee/user ?u]
+                          [?cc :company-contract/employees ?cce]
+                          [?cce :company-contract-employee/role ?roles]
+                          :in $ ?u ?cc]
+                        db user-id company-contract)
+                   (mapv first))
+        _ (clojure.pprint/pprint (str "ROLES: " roles))]
     roles))
 

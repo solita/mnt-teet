@@ -220,8 +220,8 @@
                                          :company-contract-employee/role roles-update}
                                         (meta-model/modification-meta user))])]
                               (for
-                                [v old-roles
-                                 :when (not (contains? roles-update v))]
-                                [:db/retract company-contract-employee :company-contract-employee/role v])))
+                                [old-role old-roles
+                                 :when (not (some #(= old-role %) roles-update))]
+                                [:db/retract company-contract-employee :company-contract-employee/role old-role])))
                   tempids (:tempids (tx tx-data))]
               tempids))
