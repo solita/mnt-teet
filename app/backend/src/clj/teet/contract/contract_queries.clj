@@ -12,12 +12,13 @@
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         contract-targets (contract-db/contract-target-information db contract-eid)
-        project-id (get-in contract-targets [:project :thk.project/id])
+        project-id (get-in (first contract-targets) [:project :thk.project/id])
+        related-contracts (contract-db/project-related-contracts db [:thk.project/id project-id])
         result (-> (contract-db/get-contract
                      db
                      contract-eid)
                    (assoc :thk.contract/targets contract-targets)
-                   (assoc :related-contracts (contract-db/project-related-contracts db project-id))
+                   (assoc :related-contracts related-contracts)
                    contract-model/db-values->frontend)]
      result))
 
