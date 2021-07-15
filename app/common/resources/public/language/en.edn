@@ -290,9 +290,11 @@
   :add-company "Add Company",
   :status "Status",
   :table-heading
-  {:activity "Activity",
+  {:related-contracts "Related contracts",
+   :activity "Activity",
    :project "Project",
    :project-manager "Project manager",
+   :name "Name",
    :task "Task"},
   :select-user-roles "Choose roles",
   :contract-related-entities "Contract related entities",
