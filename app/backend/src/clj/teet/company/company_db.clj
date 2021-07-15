@@ -58,3 +58,32 @@
            company-id)
       not-empty
       boolean))
+
+(defn find-company-contract-employee
+  "Find company-contract-employee by User and Contract"
+  [db user-id company-contract]
+  (->> (d/q '[:find ?cce
+              :where
+              [?cce :company-contract-employee/user ?u]
+              [?cc :company-contract/employees ?cce]
+              :in $ ?u ?cc]
+            db user-id company-contract)
+       ffirst))
+
+(defn employee-roles
+  "Return current roles of employees"
+  [db user-id company-contract]
+  (->> (d/q '[:find ?roles
+              :where
+              [?cce :company-contract-employee/user ?u]
+              [?cc :company-contract/employees ?cce]
+              [?cce :company-contract-employee/role ?roles]
+              :in $ ?u ?cc]
+            db user-id company-contract)
+       (mapv first)))
+
+(defn get-employee-role
+  "Pull employee role"
+  [db role-id]
+  (d/pull db '[*] role-id))
+

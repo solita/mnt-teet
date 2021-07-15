@@ -21,7 +21,9 @@
             [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.table :as table]
+            [clojure.string :as str]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -88,6 +90,25 @@
      [common/info-box {:variant info-box-variant
                        :title info-box-title
                        :content [common/basic-information-column info-column-data]}]]))
+
+(defn user-employee-info-column
+  [display-data info-box-title info-box-variant]
+  (let [info-column-data (mapv (fn [{label-key :label-key data :data}]
+                                 {:label [typography/Text2Bold (tr label-key)]
+                                  :data data})
+                               display-data)]
+    [:div {:class (<class common-styles/margin-bottom 1.5)}
+     [common/info-box {:variant info-box-variant
+                       :title info-box-title
+                       :content [common/basic-information-column info-column-data]}]]))
+
+(defn user-info
+  [{:user/keys [person-id email phone-number ]} roles]
+  (let [display-data [{:label-key [:fields :user/global-role] :data (str/join ", " (mapv #(tr-enum %) roles))}
+                      {:label-key [:fields :user/person-id] :data person-id}
+                      {:label-key [:fields :user/email] :data email}
+                      {:label-key [:fields :user/phone-number] :data phone-number}]]
+    [user-employee-info-column display-data "" :simple]))
 
 (defmulti company-info (fn [company key] key))
 
@@ -375,21 +396,60 @@
                               :query {:page :add-partner}})}
       (tr [:contract :add-company])]]]])
 
+(defn employee-table
+  [e! {:keys [params query] :as app} employees active?]
+  [:div {:class (<class contract-style/personnel-table-style)}
+   [:h4 (str (if active?
+               (tr [:contract :partner :active-persons])
+               (tr [:contract :partner :deactive-persons]))
+          " (" (count employees) ")")]
+   [table/simple-table
+    [[(tr [:common :name])]
+     [(tr [:user :role])]
+     [(tr [:contract :partner :key-person])]
+     []
+     []]
+    (for [employee employees]
+      [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
+             (get-in employee [:company-contract-employee/user :user/given-name]))]
+       (if (not-empty (:company-contract-employee/role employee))
+         [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
+         [])
+       [] ;TODO implement key person functionality
+       [[common/Link {:class (<class contract-style/personnel-activation-link-style active?)
+                      :href "#"}                            ;TODO add activation/deactivation functionality
+         (if active? (tr [:admin :deactivate]) (tr [:admin :activate]))]]
+       [[buttons/small-button-secondary
+         {:href (routes/url-for {:page :contract-partners
+                                 :params (merge
+                                           params
+                                           {:employee employee})
+                                 :query (merge
+                                          query
+                                          {:page :personnel-info
+                                           :user-id (get-in employee [:company-contract-employee/user :user/id])})})}
+         (tr [:common :view-more-info])]]])]])
+
 (defn personnel-section
   [e! {:keys [params query] :as app} selected-partner]
-  [:div {:style {:display :flex
-                 :justify-content :space-between
-                 :align-items :center}}
-   [typography/Heading2 (tr [:contract :persons])]
-   [authorization-check/when-authorized
-    :thk.contract/add-contract-employee selected-partner
-    [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                               :href (routes/url-for {:page :contract-partners
-                                                      :params params
-                                                      :query (merge
-                                                               query
-                                                               {:page :add-personnel})})}
-     (tr [:contract :add-person])]]])
+  [:div {:class (<class contract-style/personnel-section-style)}
+   [:div {:class (<class contract-style/personnel-section-header-style)}
+    [typography/Heading2 (tr [:contract :persons])]
+    [authorization-check/when-authorized
+     :thk.contract/add-contract-employee selected-partner
+     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                                :href (routes/url-for {:page :contract-partners
+                                                       :params params
+                                                       :query (merge
+                                                                query
+                                                                {:page :add-personnel})})}
+      (tr [:contract :add-person])]]]
+   [employee-table e! app (filterv #(:company-contract-employee/active? %)
+                     (:company-contract/employees selected-partner))
+    true]
+   [employee-table e! app (filterv #(not (:company-contract-employee/active? %))
+                     (:company-contract/employees selected-partner))
+    false]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -435,11 +495,11 @@
   []
   [:div
    ^{:key "person-id"}
-   [form/field :user/person-id
-    [TextField {}]]
    [form/field :user/given-name
     [TextField {}]]
    [form/field :user/family-name
+    [TextField {}]]
+   [form/field :user/person-id
     [TextField {}]]
    [form/field {:attribute :user/email
                 :validate validation/validate-email-optional}
@@ -453,8 +513,7 @@
       :placeholder (tr [:contract :select-user-roles])
       :no-results (tr [:contract :no-matching-roles])
       :show-empty-selection? true
-      :clear-value [nil nil]}]]
-   ])
+      :clear-value [nil nil]}]]])
 
 (defn add-personnel-form
   [e! {:keys [query] :as app} selected-partner]
@@ -499,15 +558,6 @@
          (if selected-user
            [selected-user-information selected-user]
            (cond
-             (true? user-selected?)
-             [form/field {:attribute :company-contract-employee/role}
-              [select/select-user-roles-for-contract
-               {:e! e!
-                :error-text (tr [:contract :role-required])
-                :placeholder (tr [:contract :select-user-roles])
-                :no-results (tr [:contract :no-matching-roles])
-                :show-empty-selection? true
-                :clear-value [nil nil]}]]
              @add-new-person?
              [new-person-form-fields e! (:form-value @form-atom)]
              :else
@@ -523,7 +573,63 @@
                  :after-results-action {:title (tr [:contract :add-person-not-in-teet])
                                         :on-click add-new-person
                                         :icon [icons/content-add]}}]]]))
+         (when user-selected?
+           [form/field {:attribute :company-contract-employee/role}
+            [select/select-user-roles-for-contract
+             {:e! e!
+              :error-text (tr [:contract :role-required])
+              :placeholder (tr [:contract :select-user-roles])
+              :no-results (tr [:contract :no-matching-roles])
+              :show-empty-selection? true
+              :clear-value [nil nil]}]])
          [form/footer2 (partial contract-personnel-form-footer @form-atom)]]]])))
+
+(defn edit-personnel-form
+  [e! {:keys [query] :as app} selected-partner selected-person]
+  (let [user (:company-contract-employee/user selected-person)
+        person-id (:user/person-id user)
+        email (:user/email user)
+        phone-number (:user/phone-number user)
+        given-name (:user/given-name user)
+        family-name (:user/family-name user)
+        user-id (:user/id user)
+        roles (set (:company-contract-employee/role selected-person))]
+    (r/with-let
+      [form-atom (r/atom {:user/person-id person-id
+                          :user/email email
+                          :user/phone-number phone-number
+                          :user/given-name given-name
+                          :user/family-name family-name
+                          :user/id user-id
+                          :company-contract-employee/role roles})]
+      [Grid {:container true}
+       [Grid {:itme true :xs 12 :md 6}]]
+      [form/form2 {:e! e!
+                   :value @form-atom
+                   :on-change-event (form/update-atom-event form-atom (fn [old new]
+                                                                        (if (= {:company-contract-employee/role #{}} new)
+                                                                          (dissoc old :company-contract-employee/role)
+                                                                          (merge old new))))
+                   :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
+                                    {:query (merge query
+                                                   {:page :personnel-info
+                                                    :user-id user-id})})
+                   :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
+                                  {:form-value @form-atom
+                                   :company-contract-eid (:db/id selected-partner)}
+                                  (fn [_response]
+                                    (fn [e!]
+                                      (e! (common-controller/->Refresh))
+                                      (e! (common-controller/map->NavigateWithExistingAsDefault
+                                            {:query (merge
+                                                      query
+                                                      {:page :personnel-info
+                                                       :user-id user-id})}))))
+                                  (tr [:contract :partner :person-updated]))}
+       [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
+        (tr [:contract :partner :edit-person])]
+       [new-person-form-fields e! (:form-value @form-atom)]
+       [form/footer2 (partial contract-personnel-form-footer @form-atom)]])))
 
 (defn partner-info-header
   [partner params]
@@ -543,6 +649,26 @@
                                        :partner teet-id}})}
        (tr [:buttons :edit])]]]))
 
+(defn employee-info-header
+  [employee params selected-partner]
+  (let [employee-name (str (get-in employee [:company-contract-employee/user :user/given-name]) " "
+                           (get-in employee [:company-contract-employee/user :user/family-name]))
+        teet-id (:teet/id selected-partner)
+        user-id (get-in employee [:company-contract-employee/user :user/id])]
+    [:div {:class (<class contract-style/partner-info-header)}
+     [:h1 employee-name]
+     [authorization-check/when-authorized
+      :thk.contract/edit-contract-partner-company employee
+      [buttons/button-secondary
+       {:href (routes/url-for {:page :contract-partners
+                               :params (merge
+                                         params
+                                         {:employee employee})
+                               :query {:page :edit-personnel
+                                       :partner teet-id
+                                       :user-id user-id}})}
+       (tr [:buttons :edit])]]]))
+
 (defn partner-info
   [e! {:keys [params] :as app} selected-partner]
   [:div
@@ -551,14 +677,29 @@
    [Divider {:class (<class common-styles/margin 1 0)}]
    [personnel-section e! app selected-partner]])
 
+(defn employee-info
+  [e! {:keys [params] :as app} selected-partner employee]
+  [:div
+   [employee-info-header employee params selected-partner]
+   [user-info (:company-contract-employee/user employee) (:company-contract-employee/role employee)]
+   [Divider {:class (<class common-styles/margin 1 0)}]
+   [personnel-section e! app selected-partner]])
+
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
   (let [selected-partner-id (:partner query)
+        _ (cljs.pprint/pprint (str "partner-page-router page: " (:page query) " partner-id: " selected-partner-id))
         selected-partner (->> (:company-contract/_contract contract)
-                              (filter
-                                (fn [partner]
-                                  (= (str (:teet/id partner)) selected-partner-id)))
-                              first)]
+                           (filter
+                             (fn [partner]
+                               (= (str (:teet/id partner)) selected-partner-id)))
+                           first)
+
+        selected-person-id (:user-id query)
+        employee (->> (:company-contract/employees selected-partner)
+                      (filter (fn [employee]
+                                (= (str (:user/id (:company-contract-employee/user employee))) selected-person-id)))
+                      first)]
     (case (keyword (:page query))
       :add-partner
       [new-partner-form e! contract (get-in app [:forms :new-partner])]
@@ -570,6 +711,12 @@
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
        [add-personnel-form e! app selected-partner]]
+      :personnel-info
+      [employee-info e! app selected-partner employee]
+      :edit-personnel
+      [authorization-check/when-authorized
+       :thk.contract/add-contract-employee selected-partner
+       [edit-personnel-form e! app selected-partner employee]]
       [partners-default-view params contract])))
 
 ;; navigated to through routes.edn from route /contracts/*****/partners

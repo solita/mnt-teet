@@ -157,7 +157,11 @@
         pull-attributes `[~'*
                           {:company-contract/_contract
                            [~'*
-                            {:company-contract/company ~company-with-meta-keys}]}]]
+                            {:company-contract/company [~'* ~company-with-meta-keys]
+                             :company-contract/employees
+                             [~'*
+                              {:company-contract-employee/user
+                               [:user/given-name :user/family-name :user/id :user/person-id :user/email :user/phone-number]}]}]}]]
     pull-attributes))
 
 (defn get-contract-with-partners

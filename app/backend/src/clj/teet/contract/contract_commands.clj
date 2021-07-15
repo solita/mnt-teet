@@ -154,6 +154,7 @@
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
 
+
 (defcommand :thk.contract/add-new-contract-employee
   {:doc "Add a new contract employee"
    :payload {form-value :form-value
@@ -164,20 +165,64 @@
   (let [employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                      :user/email :user/phone-number]))
         user-person-id (user-model/normalize-person-id (:user/person-id form-value))
-        new-employee-id "new-employee"
-        tempids
-        (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
-                             (:user/email form-value)
-                             [(merge {:db/id new-employee-id
-                                      :user/person-id user-person-id
-                                      :user/id (java.util.UUID/randomUUID)}
-                                     employee-fields
-                                     (meta-model/creation-meta user))
-                              (merge {:db/id "new-company-contract-employee"
-                                      :company-contract-employee/active? true ;; employees are active by default
-                                      :company-contract-employee/user new-employee-id
-                                      :company-contract-employee/role (mapv
-                                                                        :db/id
-                                                                        (:company-contract-employee/role form-value))}
-                                      (meta-model/creation-meta user))])]))]
+        new-user (merge
+                   {:db/id "new-employee-id"
+                    :user/person-id user-person-id
+                    :user/id (java.util.UUID/randomUUID)}
+                   employee-fields
+                   (meta-model/creation-meta user))
+        tempids (:tempids (tx [(list 'teet.user.user-tx/ensure-unique-email
+                                     (:user/email form-value)
+                                     [new-user
+                                      (merge
+                                        {:db/id "new-company-contract-employee"
+                                         :company-contract-employee/active? true ;; employees are active by default
+                                         :company-contract-employee/user "new-employee-id"
+                                         :company-contract-employee/role (mapv
+                                                                           :db/id
+                                                                           (:company-contract-employee/role form-value))}
+                                        (meta-model/creation-meta user))
+                                      {:db/id company-contract-eid
+                                       :company-contract/employees "new-company-contract-employee"}])]))]
     tempids))
+
+(defcommand :thk.contract/edit-contract-employee
+            {:doc "Update existing contract employee"
+             :payload {form-value :form-value
+                       company-contract-eid :company-contract-eid}
+             :context {:keys [user db]}
+             :project-id nil
+             :authorization {:contracts/contract-editing {}}}
+            (let [roles-update (mapv
+                                 #(if (not (:db/id %))
+                                    (:db/id (company-db/get-employee-role db %))
+                                    (:db/id %))
+                                 (:company-contract-employee/role form-value))
+                  old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
+                  employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
+                                                               :user/email :user/phone-number :db/id
+                                                               :user/id]))
+                  user-person-id (user-model/normalize-person-id (:user/person-id form-value))
+                  updated-user (merge
+                                 {:user/person-id user-person-id}
+                                 employee-fields
+                                 (meta-model/modification-meta user))
+                  company-contract-employee (company-db/find-company-contract-employee
+                                              db [:user/id (:user/id employee-fields)] company-contract-eid)
+                  tx-data (vec
+                            (concat
+                              [(list 'teet.user.user-tx/ensure-unique-email
+                                     (:user/email form-value)
+                                     [updated-user
+                                      (merge
+                                        {:db/id company-contract-employee
+                                         :company-contract-employee/active? true
+                                         :company-contract-employee/user [:user/id (:user/id employee-fields)]
+                                         :company-contract-employee/role roles-update}
+                                        (meta-model/modification-meta user))])]
+                              (for
+                                [old-role old-roles
+                                 :when (not (some #(= old-role %) roles-update))]
+                                [:db/retract company-contract-employee :company-contract-employee/role old-role])))
+                  tempids (:tempids (tx tx-data))]
+              tempids))
