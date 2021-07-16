@@ -23,7 +23,8 @@
             [teet.ui.format :as format]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.table :as table]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [re-svg-icons.feather-icons :as fi]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -231,11 +232,12 @@
     (if foreign-company?
       [:div
        [:span
-        {:style {:pointer-events :none}}
+        [:div {:style {:margin-bottom :8px}}
+         [typography/Heading3 (tr [:contract :edit-company])]]
         [TextField {:label (tr [:fields :company/country])
                     :read-only? true
-                    :value (tr [:countries (:company/country form-value)])}]]
-       [foreign-fields]]
+                    :value (tr [:countries (:company/country form-value)])}]
+        [foreign-fields]]]
       [company-info form-value :edit])))
 
 (defn new-company-form-fields
@@ -259,7 +261,7 @@
         (user-model/user-name (get-in selected-company [:company-contract/company :meta/modifier]))))))
 
 (defn edit-partner-form
-  [e! _ selected-company]
+  [e! {:keys [query] :as app} selected-company]
   (e! (contract-partners-controller/->InitializeEditCompanyForm
         (merge
           (:company-contract/company selected-company)
@@ -290,10 +292,12 @@
                                                 (:company-contract/company selected-company)))
                                           (e! (common-controller/map->NavigateWithExistingAsDefault
                                                 {:query {:page :partner-info :partner (:teet/id selected-company)}}))))
-                                      (tr [:contract :partner-saved]))
+                                      (tr [:contract :partner-updated]))
                        :on-change-event on-change
                        :spec :contract-company/edit-company
-                       :cancel-event contract-partners-controller/->CancelAddNewCompany}
+                       :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
+                                        {:query (merge query
+                                                       {:page :partner-info})})}
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}

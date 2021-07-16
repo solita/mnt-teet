@@ -208,7 +208,7 @@
   :comments-for "{file-name} märkused"},
  :common
  {:hide-menu "Peidan menüü",
-  :view-more-info nil,
+  :view-more-info "Vaatan rohkem infot",
   :send-feedback "Saadan tagasisidet",
   :forbidden-explanation "Puuduvad juurdepääsu õigused",
   :select-files "Valin fail(id)",
@@ -221,7 +221,7 @@
   :general "Üldine",
   :unknown "Teadmata",
   :new "uus",
-  :name nil,
+  :name "Nimi",
   :deletion-modal-text
   "Oled sa kindel, et soovid selle üksuse kustutada?",
   :start-time "Algusaeg",
@@ -284,6 +284,7 @@
   :thk.contract.status/deadline-overdue "Tähtaeg ületatud",
   :add-person-not-in-teet "Lisan TEET-u välise isiku",
   :add-company-not-in-teet "Lisan uue ettevõtte",
+  :partner-updated "Lepingu partner on muudetud",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
   :partners {:title nil},
@@ -1381,7 +1382,7 @@
  :page-title {:project-list "{name} projekt"},
  :partner
  {:business-registry-data-successfully-updated
-  "Äriregistri andmeid värskendatud",
+  "Äriregistri andmed on värskendatud",
   :business-registry-search-failed "Päring äriregistrist ebaõnnestus",
   :update-business-registry-data "Värskenda äriregistri andmeid"},
  :people-tab

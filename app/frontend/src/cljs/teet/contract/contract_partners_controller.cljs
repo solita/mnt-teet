@@ -22,7 +22,6 @@
 (defrecord UpdateNewCompanyForm [form-data])
 (defrecord UpdateEditCompanyForm [form-data])
 (defrecord CancelAddNewCompany [])
-(defrecord CancelEditCompany [])
 (defrecord InitializeNewCompanyForm [])
 (defrecord InitializeEditCompanyForm [company])
 (defrecord SearchBusinessRegistry [form-key business-id])
@@ -56,16 +55,6 @@
             (e! (common-controller/map->NavigateWithExistingAsDefault
                   {:page :contract-partners
                    :query {}})))))
-
-  CancelEditCompany
-  (process-event [{company :company} app]
-    (t/fx app
-      (fn [e!]
-        (e! (->InitializeEditCompanyForm company)))
-      (fn [e!]
-        (e! (common-controller/map->NavigateWithExistingAsDefault
-              {:page :contract-partners
-               :query {}})))))
 
   SearchBusinessRegistryResult
   (process-event [{:keys [form-key result]} app]
