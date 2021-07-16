@@ -58,7 +58,7 @@
     [contract-external-links contract]]])
 
 (defn contract-partners-names [contract-partners]
-  (str/join ","
+  (str/join ", "
             (mapv #(get-in % [:company-contract/company :company/name])
                   (get-in contract-partners [:company-contract/_contract]))))
 
