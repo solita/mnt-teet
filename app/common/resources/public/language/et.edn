@@ -291,9 +291,11 @@
   :add-company "Lisan ettevõtte",
   :status "Staatus",
   :table-heading
-  {:activity "Tegevus",
+  {:related-contracts "Seotud lepingud",
+   :activity "Tegevus",
    :project "Projekt",
    :project-manager "Projektijuht",
+   :name "Nimetus",
    :task "Ülesanne"},
   :select-user-roles "Valin rollid",
   :contract-related-entities "Lepinguga seotud üksused",

@@ -20,7 +20,8 @@
             [teet.contract.contract-style :as contract-style]
             [teet.ui.table :as table]
             [teet.contract.contract-common :as contract-common]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.contract.contract-status :as contract-status]))
 
 (defn target-table
   [targets]
@@ -45,6 +46,20 @@
            (tr [:enum (get-in target [:target :activity/name])])]]
          [nil]
          [(get-in target [:activity :activity/manager])]]))]])
+
+(defn related-contracts-table
+  [related-contracts]
+  [:div
+   [table/simple-table
+    [[(tr [:contract :table-heading :name])]
+     [(tr [:contract :status])]]
+    (for [related related-contracts]
+      [[[url/Link {:page :contract
+                   :params {:contract-ids (contract-model/contract-url-id related)}
+                   :component-opts {:data-cy "project-related-contract-link"}}
+         (contract-model/contract-name related)]]
+       [[contract-status/contract-status {:show-label? true :size 17}
+         (:thk.contract/status related)]]])]])
 
 (defn edit-contract-form
   [e! close-event form-atom]
@@ -107,6 +122,15 @@
                                :form-component [edit-contract-form e!]
                                :form-value (select-keys contract contract-model/contract-form-keys)}]]
      [contract-common/contract-information-row contract]]
+    (let [related-contracts (filter
+                              #(not (= (:db/id %) (:db/id contract)))
+                              (:related-contracts contract))]
+      (when
+        (not-empty related-contracts)
+        [:div {:class (<class common-styles/margin-bottom 4)}
+         [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
+          (tr [:contract :table-heading :related-contracts])]
+         [related-contracts-table related-contracts]]))
     [:div
      [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
       (tr [:contract :contract-related-entities])]
