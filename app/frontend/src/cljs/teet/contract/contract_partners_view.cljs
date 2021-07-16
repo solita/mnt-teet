@@ -688,7 +688,6 @@
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
   (let [selected-partner-id (:partner query)
-        _ (cljs.pprint/pprint (str "partner-page-router page: " (:page query) " partner-id: " selected-partner-id))
         selected-partner (->> (:company-contract/_contract contract)
                            (filter
                              (fn [partner]
