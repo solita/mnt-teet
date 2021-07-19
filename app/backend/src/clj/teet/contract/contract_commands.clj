@@ -67,7 +67,7 @@
             {:company-contract-id new-company-contract-id})))
 
 (defcommand :thk.contract/edit-contract-partner-company
-  {:doc "Save a new contract partner"
+  {:doc "Save contract partner"
    :payload {form-data :form-data
              contract :contract}
    :context {:keys [user db]}
@@ -75,33 +75,35 @@
    :authorization {:contracts/contract-editing {}}
    :pre [^{:error :business-registry-code-in-use}
          (company-db/business-registry-code-unique?
-           db
-           (company-model/company-business-registry-id-with-country-code form-data))]}
+           db (company-model/company-business-registry-id-with-country-code form-data))]}
   (let [company-fields (select-keys
-                            form-data [:db/id
-                                       :company/country
-                                       :company/business-registry-code
-                                       :company/name
-                                       :company/email
-                                       :company/phone-number
-                                       :teet/id])
+                         form-data [:db/id
+                                    :company/country
+                                    :company/business-registry-code
+                                    :company/name
+                                    :company/email
+                                    :company/phone-number
+                                    :teet/id])
         company-id (:db/id form-data)
         contract-eid (:db/id contract)
         company-contract-uuid (contract-db/contract-partner-relation-entity-uuid db company-id contract-eid)
         lead-partner? (:company-contract/lead-partner? form-data)
         tempids
         (:tempids (tx [(list 'teet.contract.contract-tx/update-contract-partner
-                         contract-eid
-                         lead-partner?
-                         company-id
-                         [(merge
-                            company-fields
-                            (meta-model/modification-meta user))
-                          (merge
-                            {:teet/id company-contract-uuid}
-                            (when (true? lead-partner?)
-                              {:company-contract/lead-partner? true})
-                            (meta-model/modification-meta user))])]))]
+                             contract-eid
+                             lead-partner?
+                             company-id
+                             (concat [(merge
+                                        company-fields
+                                        (meta-model/modification-meta user))
+                                      (merge
+                                        {:teet/id company-contract-uuid}
+                                        (when (true? lead-partner?)
+                                              {:company-contract/lead-partner? true})
+                                        (meta-model/modification-meta user))]
+                                     (when (not (true? lead-partner?))
+                                           [[:db/retract [:teet/id company-contract-uuid]
+                                             :company-contract/lead-partner? true]])))]))]
     tempids))
 
 (defcommand :thk.contract/add-existing-company-as-partner

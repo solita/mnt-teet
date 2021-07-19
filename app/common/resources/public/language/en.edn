@@ -285,6 +285,7 @@
   :thk.contract.status/deadline-overdue "Deadline overdue",
   :add-person-not-in-teet "Add person not in TEET",
   :add-company-not-in-teet "Add a company not in TEET",
+  :partner-updated "Contract partner updated",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
   :partners {:title "Companies & persons"},

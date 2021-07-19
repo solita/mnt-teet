@@ -147,22 +147,23 @@
           contract)))
 
 (def contract-partner-attributes
-  (let [company-with-meta-keys (into []
-                                 (concat
-                                   company-model/company-keys
-                                   [:meta/created-at
-                                    :meta/modified-at
-                                    {:meta/modifier [:user/id :user/family-name :user/given-name]}
-                                    {:meta/creator [:user/id :user/family-name :user/given-name]}]))
-        pull-attributes `[~'*
-                          {:company-contract/_contract
-                           [~'*
-                            {:company-contract/company [~'* ~company-with-meta-keys]
-                             :company-contract/employees
-                             [~'*
-                              {:company-contract-employee/user
-                               [:user/given-name :user/family-name :user/id :user/person-id :user/email :user/phone-number]}]}]}]]
-    pull-attributes))
+  `[~'*
+    {:company-contract/_contract
+     [~'*
+      {:company-contract/company
+       [~'*
+        :meta/created-at
+        :meta/modified-at
+        {:meta/modifier [:db/id :user/family-name :user/given-name]}
+        {:meta/creator [:db/id :user/family-name :user/given-name]}]
+       :company-contract/employees
+       [~'*
+        {:company-contract-employee/user
+         [:user/given-name
+          :user/family-name
+          :user/id :user/person-id
+          :user/email
+          :user/phone-number]}]}]}])
 
 (defn get-contract-with-partners
   [db contract-eid]
