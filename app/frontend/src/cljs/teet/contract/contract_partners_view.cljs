@@ -306,17 +306,19 @@
                   :direction :column
                   :justify :space-evenly
                   :alignItems :flex-start}
+            [Grid {:item true :xs 6 :style {:margin-bottom :1rem}}
+             (when (true? estonian-company?)
+               [buttons/small-button-secondary
+                {:disabled search-disabled?
+                 :on-click (e! contract-partners-controller/->SearchBusinessRegistry
+                               :edit-partner (subs
+                                               (get-in selected-company
+                                                       [:company-contract/company :company/business-registry-code]) 2))} ; skip 'EE' prefix
+                (tr [:partner :update-business-registry-data])])]
             [Grid {:item true :xs 12}
              [Grid {:container true :direction :row :justify :space-evenly :style {:margin-bottom :1rem}}
               time-icon
-              [typography/SmallGrayText (last-modified selected-company)]]]
-            [Grid {:item true :xs 6} (when (true? estonian-company?)
-                                       [buttons/small-button-secondary
-                                        {:disabled search-disabled?
-                                         :on-click (e! contract-partners-controller/->SearchBusinessRegistry
-                                                     :edit-partner (subs (get-in selected-company
-                                                                           [:company-contract/company :company/business-registry-code]) 2))} ; skip 'EE' prefix
-                                        (tr [:partner :update-business-registry-data])])]]
+              [typography/SmallGrayText (last-modified selected-company)]]]]
            [form/footer2 (r/partial edit-company-footer e! form-state)]]]]))))
 
 (defn new-partner-form
