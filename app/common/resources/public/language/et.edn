@@ -284,7 +284,7 @@
   :thk.contract.status/deadline-overdue "Tähtaeg ületatud",
   :add-person-not-in-teet "Lisan TEET-u välise isiku",
   :add-company-not-in-teet "Lisan uue ettevõtte",
-  :partner-updated "Lepingu partner on muudetud",
+  :partner-updated "Lepingu partner on uuendatud",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
   :partners {:title nil},
@@ -1384,7 +1384,7 @@
  {:business-registry-data-successfully-updated
   "Äriregistri andmed on värskendatud",
   :business-registry-search-failed "Päring äriregistrist ebaõnnestus",
-  :update-business-registry-data "Värskenda äriregistri andmeid"},
+  :update-business-registry-data "Uuenda äriregistri andmeid"},
  :people-tab
  {:active "AKTIIVNE",
   :consultants "Konsultandid",
@@ -1560,6 +1560,7 @@
   :unregistered "Kasutaja"},
  :validation
  {:invalid-business-id "Vale äriregistri kood",
+  :invalid-estonian-person-id "Vale isikukood",
   :invalid-email "Vale emaili aadress"},
  :warning
  {:deploying

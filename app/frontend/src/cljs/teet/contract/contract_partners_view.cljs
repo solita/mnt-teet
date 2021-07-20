@@ -285,7 +285,7 @@
                                       partner-save-command
                                       {:form-data form-state
                                        :contract (select-keys (:company-contract/contract selected-company) [:db/id])}
-                                      (fn [response]
+                                      (fn [_]
                                         (fn [e!]
                                           (e! (common-controller/->Refresh))
                                           (e! (contract-partners-controller/->InitializeEditCompanyForm
@@ -505,10 +505,11 @@
     [TextField {}]]
    [form/field :user/family-name
     [TextField {}]]
-   [form/field :user/person-id
+   [form/field {:attribute :user/person-id
+                :validate validation/validate-person-id}
     [TextField {}]]
    [form/field {:attribute :user/email
-                :validate validation/validate-email-optional}
+                :validate validation/validate-email}
     [TextField {}]]
    [form/field :user/phone-number
     [TextField {}]]
@@ -527,8 +528,7 @@
                add-new-person? (r/atom false)
                add-new-person #(reset! add-new-person? true)]
     (let [selected-user (:company-contract-employee/user @form-atom)
-          user-selected? (boolean
-                           selected-user)]
+          user-selected? (boolean selected-user)]
       [Grid {:container true}
        [Grid {:item true
               :xs 12
@@ -543,6 +543,7 @@
                      :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                       {:query (merge query
                                                      {:page :partner-info})})
+                     :spec :thk.contract/add-contract-employee
                      :save-event #(common-controller/->SaveFormWithConfirmation
                                     (cond
                                       @add-new-person?
@@ -568,7 +569,8 @@
              [new-person-form-fields e! (:form-value @form-atom)]
              :else
              [:div
-              [form/field :company-contract-employee/user
+              [form/field {:attribute :company-contract-employee/user
+                           :validate validation/validate-find-user}
                [select/select-search
                 {:e! e!
                  :query (fn [text]

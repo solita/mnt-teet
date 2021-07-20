@@ -15,6 +15,7 @@
                                                    :company/name]))
 
 (s/def :thk.contract/add-contract-employee
-  (s/keys :req [:company-contract-employee/role
-                :company-contract-employee/user]))
+  (s/keys :req [(or (and :user/email
+                         :user/person-id)
+                    (and :company-contract-employee/user))]))
 
