@@ -506,9 +506,11 @@
    [form/field :user/family-name
     [TextField {}]]
    [form/field {:attribute :user/person-id
+                :required? :true
                 :validate validation/validate-person-id}
     [TextField {}]]
    [form/field {:attribute :user/email
+                :required? :true
                 :validate validation/validate-email}
     [TextField {}]]
    [form/field :user/phone-number
@@ -570,7 +572,7 @@
              :else
              [:div
               [form/field {:attribute :company-contract-employee/user
-                           :validate validation/validate-find-user}
+                           :required? :true}
                [select/select-search
                 {:e! e!
                  :query (fn [text]

@@ -40,11 +40,6 @@
   (when (empty? value)
     (tr [:validation :empty])))
 
-(defn validate-find-user
-  [value]
-  (when (empty? value)
-    (tr [:validation :empty])))
-
 (defn validate-person-id
   [value]
   (when-not (user-spec/estonian-person-id? value)

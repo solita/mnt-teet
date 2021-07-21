@@ -864,18 +864,23 @@
   (when-not (contains? @enum-values :company-contract-employee/role)
     (e! (query-enums-for-attribute! :company-contract-employee/role)))
   (fn [opts]
-    (let [values (@enum-values :company-contract-employee/role)]
+    (let [values (@enum-values :company-contract-employee/role)
+          selected-enum-values (reduce (fn [acc item]
+                                         (if (keyword? item)
+                                           (conj acc (first (filter #(= (:db/ident %) item) values)))
+                                           (conj acc item))) #{} (:value opts))
+          select-options (merge {:query-threshold 0
+                                 :format-result tr-enum
+                                 :checkbox? true
+                                 :value selected-enum-values
+                                 :format-result-chip tr-enum
+                                 :query (fn [text]
+                                          #(vec
+                                             (for [value values
+                                                   :when (string/contains-words?
+                                                           (tr-enum value)
+                                                           text)]
+                                               value)))}
+                                (dissoc opts :value))]
       [:div
-       [select-search-multiple
-        (merge {:query-threshold 0
-                :format-result tr-enum
-                :checkbox? true
-                :format-result-chip tr-enum
-                :query (fn [text]
-                         #(vec
-                            (for [value values
-                                  :when (string/contains-words?
-                                          (tr-enum value)
-                                          text)]
-                              value)))}
-               opts)]])))
+       [select-search-multiple select-options]])))
