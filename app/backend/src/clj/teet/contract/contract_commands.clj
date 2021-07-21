@@ -202,11 +202,14 @@
                                  (:company-contract-employee/role form-value))
                   old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
                   employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
-                                                               :user/email :user/phone-number :db/id
+                                                               :user/email :db/id
                                                                :user/id]))
                   user-person-id (user-model/normalize-person-id (:user/person-id form-value))
                   updated-user (merge
                                  {:user/person-id user-person-id}
+                                 (if (not (nil? (:user/phone-number form-value)))
+                                       {:user/phone-number (:user/phone-number form-value)}
+                                       {:user/phone-number ""})
                                  employee-fields
                                  (meta-model/modification-meta user))
                   company-contract-employee (company-db/find-company-contract-employee

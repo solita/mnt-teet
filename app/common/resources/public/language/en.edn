@@ -1558,6 +1558,7 @@
   :unregistered "User"},
  :validation
  {:invalid-business-id "Invalid business registry id",
+  :invalid-estonian-person-id "Invalid person id",
   :invalid-email "Invalid email address"},
  :warning
  {:deploying
