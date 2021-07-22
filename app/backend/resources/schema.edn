@@ -2177,5 +2177,35 @@
            :db/doc "Not in use"}]]}
 
  {:db/ident :migration/set-company-contract-employees-active
-  :txes [teet.migration.activate-contract-employees/mark-all-contract-company-employees-as-active]}]
+  :txes [teet.migration.activate-contract-employees/mark-all-contract-company-employees-as-active]}
+
+ {:db/ident :migration/add-contract-asset-group-responsibilities
+  :txes [[{:db/ident :contract-responsibility/contract
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to Contract entity"}
+          {:db/ident :contract-responsibility/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to the targeted project in the contract"}
+          {:db/ident :contract-responsibility/asset-group
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "Keyword specifying :db/ident of fgroup in asset db"}
+          {:db/ident :contract-responsibility/task-type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "task type enum ref for task responsibility"}
+          {:db/ident :contract-responsibility/ta-responsible-person
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to User"}
+          {:db/ident :contract-responsibility/supervisor
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to company-contract-employee. Must be employee user with role Supervisor in contract that targets the construction supervision task directly"}
+          {:db/ident :contract-responsibility/company-responsible-person
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to company-contract-employee. Must be employee in this contract"}]]}]
 
