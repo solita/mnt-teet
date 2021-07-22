@@ -506,12 +506,11 @@
    [form/field :user/family-name
     [TextField {}]]
    [form/field {:attribute :user/person-id
-                :required? :true
-                :validate validation/validate-person-id}
+                :required? :true}
     [TextField {}]]
    [form/field {:attribute :user/email
-                :required? :true
-                :validate validation/validate-email}
+                :validate validation/validate-email-optional
+                :required? :true}
     [TextField {}]]
    [form/field :user/phone-number
     [TextField {}]]
@@ -624,6 +623,7 @@
                                     {:query (merge query
                                                    {:page :personnel-info
                                                     :user-id user-id})})
+                   :spec :thk.contract/edit-contract-employee
                    :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
                                   {:form-value @form-atom
                                    :company-contract-eid (:db/id selected-partner)}
