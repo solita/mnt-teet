@@ -147,6 +147,10 @@
              [buttons/delete-button-with-confirm
               {:action delete
                :clear? :true
+               :confirm-button-text (tr [:contract :delete-button-text])
+               :cancel-button-text (tr [:contract :cancel-button-text])
+               :modal-title (tr [:contract :are-you-sure-delete-partner])
+               :modal-text (tr [:contract :confirm-delete-partner-text])
                :trashcan? :false}
               (tr [:buttons :delete])])]
      [:div {:style {:margin-left :auto
@@ -304,10 +308,10 @@
                                                {:query (merge query
                                                               {:page :partner-info})})
                               }
-                             (if (:db/id selected-company)
-                               {:delete (contract-partners-controller/->DeletePartner selected-company)
-                                :print (cljs.pprint/pprint ":delete added to map")}
-                               (cljs.pprint/pprint (str "No db/id for the selected company:" selected-company))))
+                             (when (:db/id selected-company)
+                               {:delete (contract-partners-controller/->DeletePartner
+                                          {:partner selected-company
+                                           :contract (select-keys (:company-contract/contract selected-company) [:db/id])})}))
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}

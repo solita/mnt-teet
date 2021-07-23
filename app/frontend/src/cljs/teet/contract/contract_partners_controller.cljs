@@ -25,6 +25,7 @@
 (defrecord InitializeNewCompanyForm [])
 (defrecord InitializeEditCompanyForm [company])
 (defrecord DeletePartner [company])
+(defrecord DeletePartnerSuccess [])
 (defrecord SearchBusinessRegistry [form-key business-id])
 (defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
@@ -90,7 +91,18 @@
   (process-event [{company :company} app]
     (update-in app [:forms :new-partner] merge company))
 
+  DeletePartnerSuccess
+  (process-event [_ app]
+    (-> app
+        (snackbar-controller/open-snack-bar (tr [:contract :partner-deleted]))))
+
   DeletePartner
   (process-event [{company :company} app]
-    (cljs.pprint/pprint (str "Delete should be here for " company))))
+    (let [_ (cljs.pprint/pprint (str "COMPANY" company))]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :thk.contract/delete-existing-company-from-contract-partners
+             :payload {:company company}
+             :success-message (tr [:notifications :success])
+             :result-event ->DeletePartnerSuccess}))))
 

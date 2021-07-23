@@ -270,6 +270,7 @@
   :company-search-placeholder "Enter company name or business id",
   :partner-saved "Contract partner added",
   :related-contracts "RELATED CONTRACTS",
+  :cancel-button-text "No, go back",
   :thk.contract/type "Type",
   :no-company-found-title "Company not found",
   :contract-information-heading "Contract information",
@@ -285,13 +286,16 @@
   :thk.contract.status/deadline-overdue "Deadline overdue",
   :add-person-not-in-teet "Add person not in TEET",
   :add-company-not-in-teet "Add a company not in TEET",
+  :partner-deleted "Company removed from the contract",
   :partner-updated "Contract partner updated",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
   :partners {:title "Companies & persons"},
   :persons "Persons",
+  :delete-button-text "Yes, remove",
   :add-company "Add Company",
   :status "Status",
+  :are-you-sure-delete-partner "Are you sure you want to remove?",
   :table-heading
   {:related-contracts "Related contracts",
    :activity "Activity",
@@ -322,6 +326,8 @@
   :add-person "Add person",
   :search-companies-business-registry
   "Search for partner information from Estonian business registry",
+  :confirm-delete-partner-text
+  "Company will be removed from the contract and this action cannot be undone",
   :thk.contract.status/in-progress "In progress"},
  :contracts
  {:contracts-list
