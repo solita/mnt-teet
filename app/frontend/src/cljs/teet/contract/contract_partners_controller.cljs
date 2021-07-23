@@ -24,6 +24,7 @@
 (defrecord CancelAddNewCompany [])
 (defrecord InitializeNewCompanyForm [])
 (defrecord InitializeEditCompanyForm [company])
+(defrecord DeletePartner [company])
 (defrecord SearchBusinessRegistry [form-key business-id])
 (defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
@@ -87,4 +88,9 @@
 
   SelectCompany
   (process-event [{company :company} app]
-    (update-in app [:forms :new-partner] merge company)))
+    (update-in app [:forms :new-partner] merge company))
+
+  DeletePartner
+  (process-event [{company :company} app]
+    (cljs.pprint/pprint (str "Delete should be here for " company))))
+
