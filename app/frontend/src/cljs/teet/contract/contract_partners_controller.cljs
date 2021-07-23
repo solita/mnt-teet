@@ -93,16 +93,20 @@
 
   DeletePartnerSuccess
   (process-event [_ app]
-    (-> app
-        (snackbar-controller/open-snack-bar (tr [:contract :partner-deleted]))))
+    (t/fx app
+          (fn [e!]
+            (e! (common-controller/map->NavigateWithExistingAsDefault
+                  {:page :contract-partners
+                   :query {}})))
+          (fn [e!]
+            (common-controller/refresh-fx e!))))
 
   DeletePartner
   (process-event [{company :company} app]
-    (let [_ (cljs.pprint/pprint (str "COMPANY" company))]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :thk.contract/delete-existing-company-from-contract-partners
-             :payload {:company company}
-             :success-message (tr [:notifications :success])
-             :result-event ->DeletePartnerSuccess}))))
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :thk.contract/delete-existing-company-from-contract-partners
+           :payload {:company company}
+           :success-message (tr [:contract :partner-deleted])
+           :result-event ->DeletePartnerSuccess})))
 

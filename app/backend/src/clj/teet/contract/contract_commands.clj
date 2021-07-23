@@ -135,22 +135,23 @@
            {:company-contract-id new-company-contract-id})))
 
 (defcommand :thk.contract/delete-existing-company-from-contract-partners
-            {:doc "Delete given partner company from contract partners list"
+            {:doc "Remove company from contract partners list"
              :payload {company :company
                        :as payload}
              :context {:keys [user db]}
              :project-id nil
              :authorization {:contracts/contract-editing {}}
              :pre [(company-db/is-company? db (:db/id (:company-contract/company (:partner company))))
-                   (not (company-db/company-in-contract? db (:db/id (:company-contract/company (:partner company)))
-                                                         (:db/id (:contract company))))]}
-            (let [company-id [:teet/id (:partner company)]
+                   (company-db/company-in-contract? db (:db/id (:contract company))
+                                                       (:db/id (:company-contract/company (:partner company))))]}
+            (let [company-contract-id (:db/id (:partner company))
                   contract-eid (:db/id (:contract company))
-                  ;;tx-data [[:db/retract contract-company :company-contract/lead-partner? true]]
-                  ;;tempids (:tempids (tx tx-data))
-                  ;; @TODO: implement retraction
-                  ]
-              nil))
+                  company-id (:db/id (:company-contract/company (:partner company)))
+                  tx-data [[:db/retract company-contract-id :company-contract/company company-id]
+                           [:db/retract company-contract-id :company-contract/contract contract-eid]
+                           (meta-model/deletion-tx user company-contract-id)]
+                  tempids (:tempids (tx tx-data))]
+              tempids))
 
 (defcommand :thk.contract/add-contract-employee
   {:doc "Add an existing user as a member in a given contract-company"
