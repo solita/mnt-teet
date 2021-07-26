@@ -101,7 +101,6 @@
 
            (let [err# (str "main-page: Unrecongnized page:" page#)]
              (log/debug err#)
-
              [:div err#]))))))
 
 (def param-name-with-pattern #":([^(]+)(\(.+\))?")
