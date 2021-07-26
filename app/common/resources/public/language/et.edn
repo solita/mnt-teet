@@ -269,6 +269,7 @@
   "Sisesta ettevõtte nimi või äriregistri kood",
   :partner-saved "Lepingu partner on lisatud",
   :related-contracts "SEOTUD LEPINGUD",
+  :cancel-button-text "Ei, tühista",
   :thk.contract/type "Tüüp",
   :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
@@ -278,19 +279,22 @@
    :deactive-persons "Deaktiveeritud kasutajad",
    :key-person "Võtmeisik",
    :edit-person "Muudan isikut",
-   :person-updated "Isiku admed muutunud"},
+   :person-updated "Isiku admed muudetud"},
   :person-name "Isiku nimi",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
   :thk.contract.status/deadline-overdue "Tähtaeg ületatud",
   :add-person-not-in-teet "Lisan TEET-u välise isiku",
   :add-company-not-in-teet "Lisan uue ettevõtte",
+  :partner-deleted "Lepingu partner on kustutatud",
   :partner-updated "Lepingu partner on uuendatud",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
   :partners {:title nil},
   :persons "Isikud",
+  :delete-button-text "Jah, kustuta",
   :add-company "Lisan ettevõtte",
   :status "Staatus",
+  :are-you-sure-delete-partner "Olete kindel et soovite kustutada?",
   :table-heading
   {:related-contracts "Seotud lepingud",
    :activity "Tegevus",
@@ -322,6 +326,8 @@
   :add-person "Lisa isik",
   :search-companies-business-registry
   "Ettevõtte informatsiooni otsing  äriregistrist",
+  :confirm-delete-partner-text
+  "Lepingupartner kustutatakse ja seda ei saa hiljem muuta",
   :thk.contract.status/in-progress "Töös"},
  :contracts
  {:contracts-list
@@ -1561,7 +1567,8 @@
  :validation
  {:invalid-business-id "Vale äriregistri kood",
   :invalid-estonian-person-id "Vale isikukood",
-  :invalid-email "Vale emaili aadress"},
+  :invalid-email "Vale emaili aadress",
+  :invalid-date "Sobimatu kuupäev. Palun vali õige."},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
