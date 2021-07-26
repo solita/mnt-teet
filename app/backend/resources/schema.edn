@@ -2192,10 +2192,10 @@
            :db/valueType :db.type/keyword
            :db/cardinality :db.cardinality/one
            :db/doc "Keyword specifying :db/ident of fgroup in asset db"}
-          {:db/ident :contract-responsibility/task-type
+          {:db/ident :contract-responsibility/task
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "task type enum ref for task responsibility"}
+           :db/doc "task ref for task responsibility"}
           {:db/ident :contract-responsibility/ta-responsible-person
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
