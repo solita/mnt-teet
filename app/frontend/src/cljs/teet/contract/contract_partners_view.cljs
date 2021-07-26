@@ -146,13 +146,12 @@
      [:div (when delete
              [buttons/delete-button-with-confirm
               {:action delete
-               :clear? :true
+               :underlined? :true
                :confirm-button-text (tr [:contract :delete-button-text])
                :cancel-button-text (tr [:contract :cancel-button-text])
                :modal-title (tr [:contract :are-you-sure-delete-partner])
-               :modal-text (tr [:contract :confirm-delete-partner-text])
-               :trashcan? :false}
-              (tr [:buttons :delete])])]
+               :modal-text (tr [:contract :confirm-delete-partner-text])}
+              (tr [:buttons :remove-from-contract])])]
      [:div {:style {:margin-left :auto
                     :text-align :center}}
       (when cancel
