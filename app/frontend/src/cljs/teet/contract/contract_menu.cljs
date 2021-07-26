@@ -27,9 +27,9 @@
              :navigate {:page :contract-partners}
              :href-fn #(str "#/contracts/" % "/partners")
              :hotkey "2"}
-            {:name :persons-responsibilities
+            {:name :contract-responsibilities
              :label [:contract :persons-responsibilities]
-             :navigate {:page :contracts-responsibilities}
+             :navigate {:page :contract-responsibilities}
              :href-fn #(str "#/contracts/" % "/responsibilities")
              :hotkey "3"})
       menu-items)))

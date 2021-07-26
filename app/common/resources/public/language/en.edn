@@ -291,7 +291,7 @@
   :partner-updated "Contract partner updated",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
-  :persons-responsibilities "Rersons responsibilities",
+  :persons-responsibilities "Persons responsibilities",
   :partners {:title "Companies & persons"},
   :persons "Persons",
   :delete-button-text "Yes, remove",
@@ -311,6 +311,7 @@
   :xroad-exception-content
   "Try again in a few minutes or contact system administrator if the issue persists",
   :partners-listing "Partners listing",
+  :responsibilities-listing "Responsibilities listing",
   :thk.contract.status/signed "Signed",
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",

@@ -47,3 +47,19 @@
    :project-id nil
    :authorization {:contracts/contract-editing {}}}
   (contract-db/available-company-contract-employees db company-contract-id search))
+
+(defquery :contract/responsibilities-page
+  {:doc "Returns contracts persons responsibilities"
+   :context {db :db user :user}
+   :args {contract-ids :contract-ids}
+   :project-id nil
+   :authorization {}}
+  (let [[contract-id contract-part-id] contract-ids
+        contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
+        result (-> (contract-db/get-contract-with-partners db contract-eid)
+               (assoc
+                 :thk.contract/responsibilities
+                 (contract-db/contract-target-information db contract-eid))
+               contract-model/db-values->frontend)
+        _ (clojure.pprint/pprint result)]
+    result))

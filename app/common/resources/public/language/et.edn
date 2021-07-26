@@ -311,6 +311,7 @@
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :partners-listing "Partnerite loetelu",
+  :responsibilities-listing "Vastutuste loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Lõpetatud",
