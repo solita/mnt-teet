@@ -19,3 +19,6 @@
                          :user/person-id)
                     (and :company-contract-employee/user))]))
 
+(s/def :thk.contract/edit-contract-employee
+  (s/keys :req [:user/given-name :user/family-name :user/email :user/person-id]))
+
