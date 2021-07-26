@@ -178,6 +178,7 @@
   :send "Send",
   :cancel "Cancel",
   :add "Add",
+  :remove-from-contract "Remove from contract",
   :copy-to-clipboard "Copy all text",
   :upload "Upload"},
  :cadastral-group
@@ -290,6 +291,7 @@
   :partner-updated "Contract partner updated",
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
+  :persons-responsibilities "Rersons responsibilities",
   :partners {:title "Companies & persons"},
   :persons "Persons",
   :delete-button-text "Yes, remove",
