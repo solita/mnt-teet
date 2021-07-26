@@ -104,10 +104,9 @@
      [select/form-select {:format-item #(if % (tr-enum %) (tr [:common :select :empty]))
                           :items (into [nil] (mapv #(:type %) enabled-indexes))}]]]
     [:div {:style {:margin-bottom "1rem"}}
-     [form/field {:attribute :cost-index/valid-from
-                  :validate (fn [v]
-                              (when (nil? v) (tr [:validation :invalid-date])))}
-      [date-picker/date-input {:required true}]]]]
+     [form/field {:attribute :cost-index/valid-from}
+      [date-picker/date-input {:required true
+                               :error-text (tr [:validation :invalid-date])}]]]]
   [:div {:class (<class common-styles/flex-align-end)}
    [index-form-cancel-button*]
    [index-save-form-button*]]])
