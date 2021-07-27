@@ -61,15 +61,17 @@
   (with-meta
     {:display :flex
      :flex-direction :column
-      :top 0
-      :bottom :auto
-      :background-color theme-colors/white
-      :color theme-colors/gray-dark
-      :height theme-spacing/appbar-height
-      :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
-      :transition "all 0.2s ease-in-out"}
-    (responsivity-styles/mobile-only-meta
-      {:height theme-spacing/appbar-height-mobile})))
+     :top 0
+     :bottom :auto
+     :background-color theme-colors/white
+     :border-bottom "1px solid #D2D3D8"
+     :color theme-colors/gray-dark
+     :height theme-spacing/appbar-height
+     :transition "all 0.2s ease-in-out"}
+    (merge (responsivity-styles/mobile-only-meta
+             {:height theme-spacing/appbar-height-mobile})
+           {:pseudo {:last-of-type {:border-bottom "none"
+                                    :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"}}})))
 
 (defn appbar-position [drawer-open?]
   (with-meta
