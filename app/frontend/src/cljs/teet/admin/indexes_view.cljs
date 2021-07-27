@@ -236,6 +236,7 @@
                         [TextField {:e e!
                                     :value field-value
                                     :type :number
+                                    :step "0.01"
                                     :required true
                                     :hide-label? true
                                     :id (str "index-value-" (t/year x) "-" (t/month x))}]]]
