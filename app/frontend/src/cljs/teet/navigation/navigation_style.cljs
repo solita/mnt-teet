@@ -73,13 +73,16 @@
 
 (defn appbar-position [drawer-open?]
   (with-meta
-    {:z-index 10
-     :height theme-spacing/appbar-height-mobile}
-    (responsivity-styles/desktop-only-meta
-      (let [dw (drawer-width drawer-open?)]
-        {:width (str "calc(100% - " dw "px)")
-         :height theme-spacing/appbar-height
-         :margin-left (str dw "px")}))))
+    {:height theme-spacing/appbar-height-mobile}
+    (merge
+      (responsivity-styles/desktop-only-meta
+        (let [dw (drawer-width drawer-open?)]
+          {:width (str "calc(100% - " dw "px)")
+           :height theme-spacing/appbar-height
+           :margin-left (str dw "px")}))
+      ;; Add z-index only to first appbar, so that second appbar will not be on top of quick search
+      ;; or other extra-panels
+      {:pseudo {:first-of-type {:z-index 10}}})))
 
 (defn main-container [drawer-open?]
   (with-meta
