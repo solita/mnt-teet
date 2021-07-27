@@ -290,13 +290,14 @@
 
  :contract-responsibilities
  {:path "/contracts/:contract-ids/responsibilities"
-  :view teet.contract.contract-partners-view/responsibilities-page
+  :view teet.contract.contract-responsibilities-view/responsibilities-page
   :crumb (tr [:contract :responsibilities-listing])
   :title (teet.contract.contract-model/contract-name state)
   :parent :contract
   :state {:query :contract/responsibilities-page
           :args {:contract-ids
                  (clojure.string/split contract-ids #"-")}}}
+
  :assets
  {:path "/assets"
   :view teet.asset.assets-view/assets-page

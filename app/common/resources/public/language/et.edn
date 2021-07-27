@@ -299,11 +299,15 @@
   :are-you-sure-delete-partner "Olete kindel et soovite kustutada?",
   :table-heading
   {:related-contracts "Seotud lepingud",
+   :task-responsibilities "Ülesannete vastutused",
+   :task "Ülesanne",
+   :name "Nimetus",
+   :project-manager "Projektijuht",
+   :tram-reviewers "TRAM esindajad",
    :activity "Tegevus",
    :project "Projekt",
-   :project-manager "Projektijuht",
-   :name "Nimetus",
-   :task "Ülesanne"},
+   :status "Staatus",
+   :company-responsible-person "Firma poolt vastutajad"},
   :select-user-roles "Valin rollid",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
@@ -1255,6 +1259,7 @@
   :search
   {:no-results "Ei leitud ühtki vastet",
    :placeholder "Lisan viite..."},
+  :target-view-activity "Vaata tegevuse",
   :target-deleted "Kustutatud {user} poolt {at}",
   :type-label
   {:appendix "Lisa",

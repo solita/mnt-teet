@@ -44,6 +44,7 @@
             teet.contract.contracts-view
             teet.contract.contract-view
             teet.contract.contract-partners-view
+            teet.contract.contract-responsibilities-view
             teet.asset.assets-view
             teet.ui.vektorio-redirect-view
 

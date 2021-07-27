@@ -746,10 +746,4 @@
                               (<class common-styles/flex-1))}
       [partners-page-router e! app contract]]]]])
 
-(defn responsibilities-page
-  [e! app contract]
-  [:div {:class (<class common-styles/flex-column-1)}
-   [contract-common/contract-heading e! app contract]
-   [:div "Responsibilities will be shown here"]])
-
 

@@ -56,10 +56,9 @@
    :authorization {}}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
-        result (-> (contract-db/get-contract-with-partners db contract-eid)
+        targets (contract-db/contract-target-information db contract-eid)
+        result (-> (contract-db/get-contract db contract-eid)
                (assoc
-                 :thk.contract/responsibilities
-                 (contract-db/contract-target-information db contract-eid))
-               contract-model/db-values->frontend)
-        _ (clojure.pprint/pprint result)]
+                 :thk.contract/targets targets)
+               contract-model/db-values->frontend)]
     result))
