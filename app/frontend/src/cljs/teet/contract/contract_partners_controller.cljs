@@ -24,6 +24,8 @@
 (defrecord CancelAddNewCompany [])
 (defrecord InitializeNewCompanyForm [])
 (defrecord InitializeEditCompanyForm [company])
+(defrecord DeletePartner [company])
+(defrecord DeletePartnerSuccess [])
 (defrecord SearchBusinessRegistry [form-key business-id])
 (defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
@@ -87,4 +89,24 @@
 
   SelectCompany
   (process-event [{company :company} app]
-    (update-in app [:forms :new-partner] merge company)))
+    (update-in app [:forms :new-partner] merge company))
+
+  DeletePartnerSuccess
+  (process-event [_ app]
+    (t/fx app
+          (fn [e!]
+            (e! (common-controller/map->NavigateWithExistingAsDefault
+                  {:page :contract-partners
+                   :query {}})))
+          (fn [e!]
+            (common-controller/refresh-fx e!))))
+
+  DeletePartner
+  (process-event [{company :company} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :thk.contract/delete-existing-company-from-contract-partners
+           :payload {:company company}
+           :success-message (tr [:contract :partner-deleted])
+           :result-event ->DeletePartnerSuccess})))
+

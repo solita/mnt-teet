@@ -182,7 +182,7 @@
 (defn delete-button-with-confirm
   [{:keys [action modal-title modal-text style trashcan? small? clear? icon-position close-on-action?
            id disabled
-           confirm-button-text cancel-button-text]
+           confirm-button-text cancel-button-text underlined?]
     :or {icon-position :end
          confirm-button-text (tr [:buttons :delete])
          cancel-button-text (tr [:buttons :cancel])
@@ -225,6 +225,14 @@
        [IconButton {:on-click open
                     :size :small}
        [icons/content-clear]]
+
+       underlined?
+       [IconButton {:on-click open
+                    :size :small
+                    :style {:color theme-colors/red
+                            :text-decoration :underline}}
+        [icons/content-clear]
+        button-content]
 
        small?
        [button-text-warning (merge {:on-click open

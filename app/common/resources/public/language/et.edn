@@ -176,6 +176,7 @@
   :send "Saadan teavituse",
   :cancel "Tühistan",
   :add "Lisan",
+  :remove-from-contract "Kustutan lepingust",
   :copy-to-clipboard "Kopeeri tekst",
   :upload "Laen üles"},
  :cadastral-group
