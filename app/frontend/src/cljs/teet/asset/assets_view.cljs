@@ -423,6 +423,7 @@
      {:default-show-count 100
       :columns asset-model/assets-listing-columns
       :get-column asset-model/assets-listing-get-column
+      :get-column-compare asset-model/assets-listing-sort-column
       :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
                             (tr [:fields %]))
       :on-row-hover (e! assets-controller/->HighlightResult)
