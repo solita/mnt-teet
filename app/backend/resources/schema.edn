@@ -2192,4 +2192,34 @@
            :db/doc "Description for migration transactions"}]]}
 
  {:db/ident :migration/set-user-last-login
-  :txes [teet.migration.user-login/set-user-last-login]}]
+  :txes [teet.migration.user-login/set-user-last-login]}
+
+ {:db/ident :migration/add-contract-asset-group-responsibilities
+  :txes [[{:db/ident :contract-responsibility/contract
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to Contract entity"}
+          {:db/ident :contract-responsibility/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to the targeted project in the contract"}
+          {:db/ident :contract-responsibility/asset-group
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "Keyword specifying :db/ident of fgroup in asset db"}
+          {:db/ident :contract-responsibility/task
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "task ref for task responsibility"}
+          {:db/ident :contract-responsibility/ta-responsible-person
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to User"}
+          {:db/ident :contract-responsibility/supervisor
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to company-contract-employee. Must be employee user with role Supervisor in contract that targets the construction supervision task directly"}
+          {:db/ident :contract-responsibility/company-responsible-person
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to company-contract-employee. Must be employee in this contract"}]]}]
