@@ -161,6 +161,27 @@
 (defmethod assets-listing-get-column :location/road-address [row _]
   (select-keys row [:location/road-nr :location/carriageway :location/start-km :location/end-km]))
 
+(defmulti assets-listing-sort-column (fn [column] column))
+
+(defn- compare-by [f]
+  (fn [a b]
+    (->> [a b]
+         (map f)
+         (apply compare))))
+
+(defmethod assets-listing-sort-column :default [_]
+  compare)
+
+(defmethod assets-listing-sort-column :asset/fclass [_]
+  (compare-by #(get-in % [:asset/fclass :db/ident])))
+
+(defmethod assets-listing-sort-column :location/road-address [_]
+  (compare-by (juxt :location/road-nr :location/carriageway :location/start-km :location/end-km)))
+
+(defmethod assets-listing-sort-column :common/status [_]
+  (compare-by :db/ident))
+
+
 #?(:clj
    (def ^:private location-km-format
      (doto (java.text.NumberFormat/getNumberInstance)
