@@ -44,26 +44,24 @@
      [?this-contract :thk.contract/targets ?target]
      (or-join [?related-contract ?target]
               (and
-               ;; For contracts that are targeting supervision tasks...
+               ;; For contracts that are targeting tasks...
                [?activity :activity/tasks ?target]
                [?lc :thk.lifecycle/activities ?activity]
                [?project :thk.project/lifecycles ?lc]
-               [?target :task/type :task.type/owners-supervision]
 
                ;; ... related contracts are the contracts that are
                ;; targeting activity of the task.
                [?related-contract :thk.contract/targets ?activity])
 
               (and
-               ;; For contracts that are targeting the construction activity...
+               ;; For contracts that are targeting the activity...
                [?lc :thk.lifecycle/activities ?target]
                [?project :thk.project/lifecycles ?lc]
 
                ;; related contracts are the contracts that are
-               ;; targeting the supervision tasks
+               ;; targeting the tasks of the activity
                [?target :activity/tasks ?supervision-task]
-               [?related-contract :thk.contract/targets ?supervision-task]
-               [?supervision-task :task/type :task.type/owners-supervision]))]
+               [?related-contract :thk.contract/targets ?supervision-task]))]
     [(target-project ?target ?project)
      (or-join [?target ?project]
               (and
@@ -275,10 +273,10 @@
 
 (defn contract-related-contracts
   "Return the related contracts of the given contract.
-   - For contracts that are targeting supervision tasks -> Related contracts are
-     the contracts that are targeting activity of the task.
-   - For contracts that are targeting the construction activity -> related
-     contracts are the contracts that are targeting the supervision tasks"
+   - For contracts that are targeting tasks -> Related contracts are the
+     contracts that are targeting activity of the task.
+   - For contracts that are targeting the activity -> related contracts are the
+     contracts that are targeting the tasks of the activity"
   [db contract-eid project-eid]
   (->> (d/q '[:find (pull ?c [:thk.contract/procurement-id+procurement-part-id :thk.contract/status
                               :thk.contract/name :thk.contract/part-name :db/id]) ?status
