@@ -85,14 +85,14 @@
    :spec (s/keys :req [:user/id :user/given-name :user/family-name :user/email :user/person-id]
                  :opt-un [::site-password])
    :unauthenticated? true}
-  (d/transact conn {:tx-data [{:user/id id
-                               :user/last-login (Date.)}]})
 
   (when-not (environment/feature-enabled? :dummy-login)
     (log/warn "Demo login can only be used in dev environment")
     (throw (ex-info "Demo login not allowed"
                     {:demo-user id})))
 
+  (d/transact conn {:tx-data [{:user/id id
+                               :user/last-login (Date.)}]})
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
