@@ -48,6 +48,7 @@
                [?activity :activity/tasks ?target]
                [?lc :thk.lifecycle/activities ?activity]
                [?project :thk.project/lifecycles ?lc]
+               [?target :task/type :task.type/owners-supervision]
 
                ;; ... related contracts are the contracts that are
                ;; targeting activity of the task.
@@ -61,7 +62,9 @@
                ;; related contracts are the contracts that are
                ;; targeting the tasks of the activity
                [?target :activity/tasks ?supervision-task]
-               [?related-contract :thk.contract/targets ?supervision-task]))]
+               [?related-contract :thk.contract/targets ?supervision-task]
+               [?supervision-task :task/type :task.type/owners-supervision]))]
+
     [(target-project ?target ?project)
      (or-join [?target ?project]
               (and
