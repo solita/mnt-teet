@@ -18,4 +18,7 @@
                          (mapv (fn [u]
                                  {:db/id u
                                   :user/last-login #inst "1970-01-01T00:00:00"})))]
-    (d/transact conn {:tx-data transaction})))
+    (d/transact conn {:tx-data
+                      (into [{:db/id "datomic.tx"
+                              :migration/description (str "TEET-1936: Update user last-login")}]
+                            transaction)})))
