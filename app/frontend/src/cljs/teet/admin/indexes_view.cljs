@@ -104,8 +104,9 @@
      [select/form-select {:format-item #(if % (tr-enum %) (tr [:common :select :empty]))
                           :items (into [nil] (mapv #(:type %) enabled-indexes))}]]]
     [:div {:style {:margin-bottom "1rem"}}
-     [form/field :cost-index/valid-from
-      [date-picker/date-input {}]]]]
+     [form/field {:attribute :cost-index/valid-from}
+      [date-picker/date-input {:required true
+                               :error-text (tr [:validation :invalid-date])}]]]]
   [:div {:class (<class common-styles/flex-align-end)}
    [index-form-cancel-button*]
    [index-save-form-button*]]])
@@ -235,7 +236,7 @@
                         [TextField {:e e!
                                     :value field-value
                                     :type :number
-                                    :step ".01"
+                                    :step "0.01"
                                     :required true
                                     :hide-label? true
                                     :id (str "index-value-" (t/year x) "-" (t/month x))}]]]

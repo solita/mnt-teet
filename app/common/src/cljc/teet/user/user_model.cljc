@@ -12,7 +12,8 @@
   [:db/id
    :user/id
    :user/given-name
-   :user/family-name])
+   :user/family-name
+   :user/last-login])
 
 (def user-info-attributes
   (into user-listing-attributes

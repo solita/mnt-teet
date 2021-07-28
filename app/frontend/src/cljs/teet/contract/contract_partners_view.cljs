@@ -131,33 +131,42 @@
     [company-info-column display-data "" :simple]))
 
 (defmethod company-info :information-found
-  [{:company/keys [name business-registry-code email phone-number] :as info}]
+  [{:company/keys [name country business-registry-code email phone-number] :as info}]
   (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/country] :data (tr [:countries country])}
                       {:label-key [:fields :company/business-registry-code] :data business-registry-code}
                       {:label-key [:fields :company/email] :data email}
                       {:label-key [:fields :company/phone-number] :data phone-number}]]
     [company-info-column display-data (tr [:contract :information-found]) :success]))
 
 (defn edit-company-footer
-  [e! form-value {:keys [cancel validate disabled?]}]
+  [e! form-value {:keys [cancel delete validate disabled?]}]
   (let [search-disabled? (:search-in-progress? form-value)
         estonian-company? (= (:company/country form-value) :ee)]
-    [:div {:class (<class form/form-buttons)}
+    [:div {:class (<class form/form-buttons :flex-end)}
+     [:div (when delete
+             [buttons/delete-button-with-confirm
+              {:action delete
+               :underlined? :true
+               :confirm-button-text (tr [:contract :delete-button-text])
+               :cancel-button-text (tr [:contract :cancel-button-text])
+               :modal-title (tr [:contract :are-you-sure-delete-partner])
+               :modal-text (tr [:contract :confirm-delete-partner-text])}
+              (tr [:buttons :remove-from-contract])])]
      [:div {:style {:margin-left :auto
                     :text-align :center}}
-      [:div {:class (<class common-styles/margin-bottom 1)}
-       (when cancel
-         [buttons/button-secondary {:style {:margin-right "1rem"}
-                                    :disabled disabled?
-                                    :class "cancel"
-                                    :on-click cancel}
-          (tr [:buttons :cancel])])
-       (when validate
-         [buttons/button-primary {:disabled disabled?
-                                  :type :submit
-                                  :class "submit"
-                                  :on-click validate}
-          (tr [:buttons :save])])]]]))
+      (when cancel
+        [buttons/button-secondary {:style {:margin-right "1rem"}
+                                   :disabled disabled?
+                                   :class "cancel"
+                                   :on-click cancel}
+         (tr [:buttons :cancel])])
+      (when validate
+        [buttons/button-primary {:disabled disabled?
+                                 :type :submit
+                                 :class "submit"
+                                 :on-click validate}
+         (tr [:buttons :save])])]]))
 
 (defn new-company-footer
   [e! form-value {:keys [cancel validate disabled?]}]
@@ -279,25 +288,30 @@
          [Grid {:item true
                 :xs 12
                 :md 6}
-          [form/form2 {:e! e!
-                       :value form-state
-                       :save-event #(common-controller/->SaveFormWithConfirmation
-                                      partner-save-command
-                                      {:form-data form-state
-                                       :contract (select-keys (:company-contract/contract selected-company) [:db/id])}
-                                      (fn [_]
-                                        (fn [e!]
-                                          (e! (common-controller/->Refresh))
-                                          (e! (contract-partners-controller/->InitializeEditCompanyForm
-                                                (:company-contract/company selected-company)))
-                                          (e! (common-controller/map->NavigateWithExistingAsDefault
-                                                {:query {:page :partner-info :partner (:teet/id selected-company)}}))))
-                                      (tr [:contract :partner-updated]))
-                       :on-change-event on-change
-                       :spec :contract-company/edit-company
-                       :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
-                                        {:query (merge query
-                                                       {:page :partner-info})})}
+          [form/form2 (merge {:e! e!
+                              :value form-state
+                              :save-event #(common-controller/->SaveFormWithConfirmation
+                                             partner-save-command
+                                             {:form-data form-state
+                                              :contract (select-keys (:company-contract/contract selected-company) [:db/id])}
+                                             (fn [_]
+                                               (fn [e!]
+                                                 (e! (common-controller/->Refresh))
+                                                 (e! (contract-partners-controller/->InitializeEditCompanyForm
+                                                       (:company-contract/company selected-company)))
+                                                 (e! (common-controller/map->NavigateWithExistingAsDefault
+                                                       {:query {:page :partner-info :partner (:teet/id selected-company)}}))))
+                                             (tr [:contract :partner-updated]))
+                              :on-change-event on-change
+                              :spec :contract-company/edit-company
+                              :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
+                                               {:query (merge query
+                                                              {:page :partner-info})})
+                              }
+                             (when (:db/id selected-company)
+                               {:delete (contract-partners-controller/->DeletePartner
+                                          {:partner selected-company
+                                           :contract (select-keys (:company-contract/contract selected-company) [:db/id])})}))
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}

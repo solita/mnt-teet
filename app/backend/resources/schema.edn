@@ -2179,6 +2179,21 @@
  {:db/ident :migration/set-company-contract-employees-active
   :txes [teet.migration.activate-contract-employees/mark-all-contract-company-employees-as-active]}
 
+ {:db/ident :migration/user-last-login
+  :txes [[{:db/ident :user/last-login
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of users' last login to TEET"}]]}
+
+ {:db/ident :migration/migration-description-for-tx
+  :txes [[{:db/ident :migration/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Description for migration transactions"}]]}
+
+ {:db/ident :migration/set-user-last-login
+  :txes [teet.migration.user-login/set-user-last-login]}
+
  {:db/ident :migration/add-contract-asset-group-responsibilities
   :txes [[{:db/ident :contract-responsibility/contract
            :db/valueType :db.type/ref
@@ -2208,4 +2223,3 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Ref to company-contract-employee. Must be employee in this contract"}]]}]
-

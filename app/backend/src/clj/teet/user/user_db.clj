@@ -24,6 +24,14 @@
   [db user]
   (:db/id (du/entity db (user-model/user-ref user))))
 
+(defn user-has-logged-in?
+  "Check whether the user has logged in or not"
+  [db person-id]
+  (-> db
+      (d/pull '[:user/last-login] [:user/person-id person-id])
+      :user/last-login
+      boolean))
+
 (defn user-with-person-id-exists? [db person-id]
   (-> db
       (d/pull '[:db/id] [:user/person-id person-id])

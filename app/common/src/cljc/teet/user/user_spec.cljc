@@ -22,7 +22,13 @@
                     (and (str/starts-with? s "EE")
                          (re-matches estonian-person-id-pattern (subs s 2)))))))
 
+(defn valid-date?
+  [v]
+  (some? v))
+
 (s/def :user/person-id estonian-person-id?)
+
+(s/def :cost-index/valid-from valid-date?)
 
 (s/def :admin/create-user (s/keys :req [:user/person-id :user/email]))
 (s/def :admin/edit-user (s/keys :req [:user/email]))
