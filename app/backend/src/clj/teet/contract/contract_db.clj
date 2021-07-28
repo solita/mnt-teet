@@ -40,7 +40,30 @@
               (and
                 [?lc :thk.lifecycle/activities ?target]
                 [?project :thk.project/lifecycles ?lc]))]
+    [(related-contracts ?this-contract ?related-contract ?project)
+     [?this-contract :thk.contract/targets ?target]
+     (or-join [?related-contract ?target]
+              (and
+               ;; For contracts that are targeting supervision tasks...
+               [?activity :activity/tasks ?target]
+               [?lc :thk.lifecycle/activities ?activity]
+               [?project :thk.project/lifecycles ?lc]
+               [?target :task/type :task.type/owners-supervision]
 
+               ;; ... related contracts are the contracts that are
+               ;; targeting activity of the task.
+               [?related-contract :thk.contract/targets ?activity])
+
+              (and
+               ;; For contracts that are targeting the construction activity...
+               [?lc :thk.lifecycle/activities ?target]
+               [?project :thk.project/lifecycles ?lc]
+
+               ;; related contracts are the contracts that are
+               ;; targeting the supervision tasks
+               [?target :activity/tasks ?supervision-task]
+               [?related-contract :thk.contract/targets ?supervision-task]
+               [?supervision-task :task/type :task.type/owners-supervision]))]
     [(target-project ?target ?project)
      (or-join [?target ?project]
               (and
@@ -246,6 +269,27 @@
             db
             (into contract-query-rules
                   contract-status-rules)
+            project-eid
+            (Date.))
+       (mapv contract-with-status)))
+
+(defn contract-related-contracts
+  "Return the related contracts of the given contract.
+   - For contracts that are targeting supervision tasks -> Related contracts are
+     the contracts that are targeting activity of the task.
+   - For contracts that are targeting the construction activity -> related
+     contracts are the contracts that are targeting the supervision tasks"
+  [db contract-eid project-eid]
+  (->> (d/q '[:find (pull ?c [:thk.contract/procurement-id+procurement-part-id :thk.contract/status
+                              :thk.contract/name :thk.contract/part-name :db/id]) ?status
+              :where
+              (related-contracts ?this-contract ?c ?project)
+              (contract-status ?c ?status ?now)
+              :in $ % ?this-contract ?project ?now]
+            db
+            (into contract-query-rules
+                  contract-status-rules)
+            contract-eid
             project-eid
             (Date.))
        (mapv contract-with-status)))
