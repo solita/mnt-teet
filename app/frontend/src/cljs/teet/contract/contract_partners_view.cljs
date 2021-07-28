@@ -131,8 +131,9 @@
     [company-info-column display-data "" :simple]))
 
 (defmethod company-info :information-found
-  [{:company/keys [name business-registry-code email phone-number] :as info}]
+  [{:company/keys [name country business-registry-code email phone-number] :as info}]
   (let [display-data [{:label-key [:fields :company/name] :data name}
+                      {:label-key [:fields :company/country] :data (tr [:countries country])}
                       {:label-key [:fields :company/business-registry-code] :data business-registry-code}
                       {:label-key [:fields :company/email] :data email}
                       {:label-key [:fields :company/phone-number] :data phone-number}]]
