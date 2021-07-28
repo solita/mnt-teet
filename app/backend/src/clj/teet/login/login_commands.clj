@@ -6,7 +6,8 @@
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.permission.permission-db :as permission-db]
-            [teet.user.user-db :as user-db]))
+            [teet.user.user-db :as user-db])
+  (:import (java.util Date)))
 
 
 (defn- new-user-tx [person-id given-name family-name]
@@ -84,7 +85,8 @@
    :spec (s/keys :req [:user/id :user/given-name :user/family-name :user/email :user/person-id]
                  :opt-un [::site-password])
    :unauthenticated? true}
-  (d/transact conn {:tx-data [{:user/id id}]})
+  (d/transact conn {:tx-data [{:user/id id
+                               :user/last-login (Date.)}]})
 
   (when-not (environment/feature-enabled? :dummy-login)
     (log/warn "Demo login can only be used in dev environment")
@@ -122,6 +124,9 @@
         db (d/db conn)
         deactivated? (user-db/is-user-deactivated? db [:user/id id])
         permissions (permission-db/user-permissions db [:user/id id])
+        update-last-login (when-not (and deactivated? (empty? permissions))
+                                    (d/transact conn {:tx-data [{:user/id id
+                                                                 :user/last-login (Date.)}]}))
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
