@@ -115,8 +115,9 @@
      [:div {:style {:flex 1
                     :margin-right "1rem"}}
       [typography/Heading3 {:style {:margin-bottom 0}}
-       (or (user-model/user-name user)
-           (tr [:admin :user-has-no-name]))]
+       (if (:user/last-login user)
+         (user-model/user-name user)
+         (tr [:admin :user-has-no-name]))]
       [typography/SmallText
        (:user/person-id user)]]
      [:div {:style {:flex 1}}
