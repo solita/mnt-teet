@@ -21,11 +21,9 @@ context("Contracts MM", () => {
         cy.url().should('contain', 'projects/');
     })
 
-    it("find related contracts and shows them in a table on contract view", () => {
+    it("ensure that the contract has no related contracts", () => {
         findContract("TEPPO");
-        cy.get('h4').contains("Related contracts").should('be.visible');
-        cy.get("[data-cy='project-related-contract-link']").click({force: true});
-        cy.url().should('contain', 'contracts');
+        cy.contains("Related contracts").should('not.exist');
     })
 
     function findContract(contractName) {
