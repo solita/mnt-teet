@@ -13,7 +13,7 @@
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         contract-targets (contract-db/contract-target-information db contract-eid)
         project-id (get-in (first contract-targets) [:project :thk.project/id])
-        related-contracts (contract-db/project-related-contracts db [:thk.project/id project-id])
+        related-contracts (contract-db/contract-related-contracts db contract-eid [:thk.project/id project-id])
         result (-> (contract-db/get-contract
                      db
                      contract-eid)
