@@ -101,11 +101,11 @@
            :db/doc "Last time this permission is valid, indefinite if not specified."}]
 
          ;; THK project
-         [{:db/ident :thk.project/id
-           :db/valueType :db.type/string
+         [{:db/ident       :thk.project/id
+           :db/valueType   :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "THK project id"
-           :db/unique :db.unique/identity}
+           :db/doc         "THK project id"
+           :db/unique      :db.unique/identity}
           {:db/ident :thk.project/name
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one}
@@ -136,26 +136,26 @@
            :db/cardinality :db.cardinality/one}
           {:db/ident :thk.project/procurement-id
            :db/valueType :db.type/long
-           :db/doc "Procurement.ID/hanke_id"
+           :db/doc  "Procurement.ID/hanke_id"
            :db/cardinality :db.cardinality/one}
           {:db/ident :thk.project/project-name
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/string
-           :db/doc "Custom name given to project in project initialization"}
+           :db/valueType   :db.type/string
+           :db/doc         "Custom name given to project in project initialization"}
 
-          {:db/ident :thk.project/owner
+          {:db/ident       :thk.project/owner
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/ref
-           :db/doc "User who owns this project"}
+           :db/valueType   :db.type/ref
+           :db/doc         "User who owns this project"}
           {:db/ident :thk.project/lifecycles
            :db/cardinality :db.cardinality/many
            :db/valueType :db.type/ref
            :db/doc "Lifecycles in this project"}
 
-          {:db/ident :thk.project/manager
+          {:db/ident       :thk.project/manager
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/ref
-           :db/doc "User who manages this project"}
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages this project"}
           {:db/ident :thk.project/m-range-change-reason
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one}
@@ -165,14 +165,14 @@
           {:db/ident :thk.project/custom-start-m
            :db/valueType :db.type/long
            :db/cardinality :db.cardinality/one}
-          {:db/ident :thk.project/related-restrictions
-           :db/valueType :db.type/string
+          {:db/ident       :thk.project/related-restrictions
+           :db/valueType   :db.type/string
            :db/cardinality :db.cardinality/many
-           :db/doc "Restrictions related to the THK project"}
-          {:db/ident :thk.project/related-cadastral-units
-           :db/valueType :db.type/string
+           :db/doc         "Restrictions related to the THK project"}
+          {:db/ident       :thk.project/related-cadastral-units
+           :db/valueType   :db.type/string
            :db/cardinality :db.cardinality/many
-           :db/doc "Cadastral units related to the THK project"}
+           :db/doc         "Cadastral units related to the THK project"}
 
           {:db/ident :thk.project/integration-info
            :db/valueType :db.type/string
@@ -188,22 +188,22 @@
            :db/doc "Project repair method as shown in THK csv."}]
 
          ;; THK lifecycle
-         [{:db/ident :thk.lifecycle/estimated-start-date
+         [{:db/ident       :thk.lifecycle/estimated-start-date
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/instant
-           :db/doc "Estimated start date for lifecycle"}
-          {:db/ident :thk.lifecycle/estimated-end-date
+           :db/valueType   :db.type/instant
+           :db/doc         "Estimated start date for lifecycle"}
+          {:db/ident       :thk.lifecycle/estimated-end-date
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/instant
-           :db/doc "Estimated end date for lifecycle"}
-          {:db/ident :thk.lifecycle/activities
+           :db/valueType   :db.type/instant
+           :db/doc         "Estimated end date for lifecycle"}
+          {:db/ident       :thk.lifecycle/activities
            :db/cardinality :db.cardinality/many
-           :db/valueType :db.type/ref
-           :db/doc "Activies performed in this lifecycle"}
-          {:db/ident :thk.lifecycle/type
+           :db/valueType   :db.type/ref
+           :db/doc         "Activies performed in this lifecycle"}
+          {:db/ident       :thk.lifecycle/type
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/ref
-           :db/doc "Type of the lifecycle. f.ex Construction/Design"}
+           :db/valueType   :db.type/ref
+           :db/doc         "Type of the lifecycle. f.ex Construction/Design"}
           {:db/ident :thk.lifecycle/id
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
@@ -214,33 +214,33 @@
            :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]
 
          ;; Activity
-         [{:db/ident :activity/estimated-start-date
-           :db/valueType :db.type/instant
+         [{:db/ident       :activity/estimated-start-date
+           :db/valueType   :db.type/instant
            :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/estimated-end-date
-           :db/valueType :db.type/instant
+          {:db/ident       :activity/estimated-end-date
+           :db/valueType   :db.type/instant
            :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/actual-start-date
-           :db/valueType :db.type/instant
+          {:db/ident       :activity/actual-start-date
+           :db/valueType   :db.type/instant
            :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/actual-end-date
-           :db/valueType :db.type/instant
+          {:db/ident       :activity/actual-end-date
+           :db/valueType   :db.type/instant
            :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/tasks
-           :db/valueType :db.type/ref
+          {:db/ident       :activity/tasks
+           :db/valueType   :db.type/ref
            :db/cardinality :db.cardinality/many}
-          {:db/ident :activity/name
-           :db/valueType :db.type/ref
+          {:db/ident       :activity/name
+           :db/valueType   :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Activity name enum ref"}
-          {:db/ident :activity/status
-           :db/valueType :db.type/ref
+           :db/doc         "Activity name enum ref"}
+          {:db/ident       :activity/status
+           :db/valueType   :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Activity status enum ref"}
+           :db/doc         "Activity status enum ref"}
           {:db/ident :activity/integration-info
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
@@ -444,7 +444,7 @@
           {:db/ident :thk.task-type/building-permit :thk/code "4015"}]
 
          ;; enumeration values
-         [;; lifecycle types
+         [ ;; lifecycle types
           {:db/ident :thk.lifecycle-type/design :enum/attribute :thk.lifecycle/type}
           {:db/ident :thk.lifecycle-type/construction :enum/attribute :thk.lifecycle/type}
           {:db/ident :thk.lifecycle-type/maintenance :enum/attribute :thk.lifecycle/type}
@@ -980,10 +980,10 @@
            :db/unique :db.unique/identity
            :db/doc "Ensure there is only one unit-comments for an unit per project"}]]}
  {:db/ident :migration/add-project-manager-to-activity
-  :txes [[{:db/ident :activity/manager
+  :txes [[{:db/ident       :activity/manager
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/ref
-           :db/doc "User who manages the activity"}]]}
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages the activity"}]]}
 
  {:db/ident :migration/file-upload-status
   :txes [[{:db/ident :file/upload-complete?
@@ -1312,7 +1312,7 @@
           ;; new task types for construction
           {:db/ident :task.type/construction-general-part,
            :enum/attribute :task/type,
-           :enum/valid-for :task.group/design,              ;; This is an error, fixed in a subsequent migration
+           :enum/valid-for :task.group/design, ;; This is an error, fixed in a subsequent migration
            :filename/code "AA"}
           {:db/ident :task.type/construction-road,
            :enum/attribute :task/type,
@@ -1483,7 +1483,7 @@
 
 
  {:db/ident :migration/cooperation
-  :txes [[;; Add new enum values for cooperation option lists
+  :txes [[ ;; Add new enum values for cooperation option lists
           {:db/ident :cooperation.application.type/design-conditions-draft
            :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/design
@@ -2058,35 +2058,35 @@
            :db/cardinality :db.cardinality/many
            :db/doc "CV's, certificates and other job related documents related to the user"}]]}
 
- {:db/ident :migration/additional-file-statuses
-  :txes [[{:db/ident :file.status/submitted :enum/attribute :file/status}
-          {:db/ident :file.status/returned :enum/attribute :file/status}
-          {:db/ident :file.status/valid :enum/attribute :file/status}
-          {:db/ident :file.status/invalid :enum/attribute :file/status}]]}
+{:db/ident :migration/additional-file-statuses
+ :txes [[{:db/ident :file.status/submitted :enum/attribute :file/status}
+         {:db/ident :file.status/returned :enum/attribute :file/status}
+         {:db/ident :file.status/valid :enum/attribute :file/status}
+         {:db/ident :file.status/invalid :enum/attribute :file/status}]]}
 
- {:db/ident :migration/file-part-status
-  :txes [[{:db/ident :file.part/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :file.part.status/not-started :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/in-progress :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/waiting-for-review :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/reviewing :enum/attribute :file.part/status}
-          {:db/ident :file.part.status/completed :enum/attribute :file.part/status}]]}
+{:db/ident :migration/file-part-status
+ :txes [[{:db/ident :file.part/status
+          :db/valueType :db.type/ref
+          :db/cardinality :db.cardinality/one}
+         {:db/ident :file.part.status/not-started :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/in-progress :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/waiting-for-review :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/reviewing :enum/attribute :file.part/status}
+         {:db/ident :file.part.status/completed :enum/attribute :file.part/status}]]}
 
- {:db/ident :migration/copy-status-and-metainfo-from-task-to-part
+{:db/ident :migration/copy-status-and-metainfo-from-task-to-part
   :txes [teet.migration.file-part-statuses/task-status-meta->file-part]}
 
- {:db/ident :migration/file-part-review-notifications
+{:db/ident :migration/file-part-review-notifications
   :txes [[{:db/ident :notification.type/task-part-waiting-for-review :enum/attribute :notification/type}
           {:db/ident :notification.type/task-part-review-accepted :enum/attribute :notification/type}
           {:db/ident :notification.type/task-part-review-rejected :enum/attribute :notification/type}]]}
 
- {:db/ident :migration/file-part-and-task-completion-attributes
+{:db/ident :migration/file-part-and-task-completion-attributes
   :txes [[{:db/ident :file.part/completed-at
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Timestamp of task part completion"}
+            :db/valueType :db.type/instant
+            :db/cardinality :db.cardinality/one
+            :db/doc "Timestamp of task part completion"}
           {:db/ident :file.part/completed-by
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
@@ -2187,3 +2187,4 @@
 
  {:db/ident :migration/set-user-last-login
   :txes [teet.migration.user-login/set-user-last-login]}]
+
