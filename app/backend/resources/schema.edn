@@ -2185,12 +2185,11 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of users' last login to TEET"}]]}
 
- {:db/ident :migration/set-user-last-login
-  :txes [teet.migration.user-login/set-user-last-login]}
-
  {:db/ident :migration/migration-description-for-tx
   :txes [[{:db/ident :migration/description
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Description for migration transactions"}]]}]
+           :db/doc "Description for migration transactions"}]]}
 
+ {:db/ident :migration/set-user-last-login
+  :txes [teet.migration.user-login/set-user-last-login]}]
