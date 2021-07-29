@@ -292,6 +292,8 @@
   :contract-information "Contract information",
   :contract-save-success "Contract saved",
   :partners {:title "Companies & persons"},
+  :cannot-delete-company-with-persons
+  "Cannot remove company with persons",
   :persons "Persons",
   :delete-button-text "Yes, remove",
   :add-company "Add Company",

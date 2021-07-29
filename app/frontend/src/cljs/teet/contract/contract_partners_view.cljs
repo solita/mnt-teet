@@ -140,19 +140,23 @@
     [company-info-column display-data (tr [:contract :information-found]) :success]))
 
 (defn edit-company-footer
-  [e! form-value {:keys [cancel delete validate disabled?]}]
+  [e! form-value {:keys [cancel delete validate disabled? delete-disabled-error-text]}]
   (let [search-disabled? (:search-in-progress? form-value)
         estonian-company? (= (:company/country form-value) :ee)]
     [:div {:class (<class form/form-buttons :flex-end)}
      [:div (when delete
-             [buttons/delete-button-with-confirm
-              {:action delete
-               :underlined? :true
-               :confirm-button-text (tr [:contract :delete-button-text])
-               :cancel-button-text (tr [:contract :cancel-button-text])
-               :modal-title (tr [:contract :are-you-sure-delete-partner])
-               :modal-text (tr [:contract :confirm-delete-partner-text])}
-              (tr [:buttons :remove-from-contract])])]
+             [common/popper-tooltip
+              (when delete-disabled-error-text
+                {:title delete-disabled-error-text})
+              [buttons/delete-button-with-confirm
+               {:action delete
+                :underlined? :true
+                :confirm-button-text (tr [:contract :delete-button-text])
+                :disabled delete-disabled-error-text
+                :cancel-button-text (tr [:contract :cancel-button-text])
+                :modal-title (tr [:contract :are-you-sure-delete-partner])
+                :modal-text (tr [:contract :confirm-delete-partner-text])}
+               (tr [:buttons :remove-from-contract])]])]
      [:div {:style {:margin-left :auto
                     :text-align :center}}
       (when cancel
@@ -269,8 +273,18 @@
       (str (format/date-time (:meta/modified-at selected-company)) " "
         (user-model/user-name (get-in selected-company [:company-contract/company :meta/modifier]))))))
 
+(defn- active-employees [contract selected-company]
+  (when (and selected-company contract)
+    (->> contract
+         :company-contract/_contract
+         (filter (fn [company-contract]
+                   (= selected-company (:db/id (:company-contract/company company-contract)))))
+         first
+         :company-contract/employees
+         (filter :company-contract-employee/active?))))
+
 (defn edit-partner-form
-  [e! {:keys [query] :as app} selected-company]
+  [e! {:keys [query] :as app} contract selected-company]
   (e! (contract-partners-controller/->InitializeEditCompanyForm
         (merge
           (:company-contract/company selected-company)
@@ -283,11 +297,18 @@
             time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
             search-success? (:search-success? form-state)
             search-disabled? (:search-in-progress? form-state)
-            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)]
+            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)
+            ;; NOTE: there is no way to remove company-contract-employees in the current specification.
+            ;; Employees can only be deactivated.
+            ;; Therefore the dev team decided to allow removing company-contract if it has no active
+            ;; employees.
+            delete-disabled? (seq (active-employees contract (:db/id form-state)))]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
                 :md 6}
+          ;; Re-render the form when delete-disabled? changes
+          ^{:key (str "edit-partner-form-" delete-disabled?)}
           [form/form2 (merge {:e! e!
                               :value form-state
                               :save-event #(common-controller/->SaveFormWithConfirmation
@@ -311,7 +332,9 @@
                              (when (:db/id selected-company)
                                {:delete (contract-partners-controller/->DeletePartner
                                           {:partner selected-company
-                                           :contract (select-keys (:company-contract/contract selected-company) [:db/id])})}))
+                                           :contract (select-keys (:company-contract/contract selected-company) [:db/id])})})
+                             (when delete-disabled?
+                               {:delete-disabled-error-text (tr [:contract :cannot-delete-company-with-persons])}))
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}
@@ -729,7 +752,7 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app selected-partner]
+      [edit-partner-form e! app contract selected-partner]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
