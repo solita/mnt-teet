@@ -548,6 +548,9 @@
     [TextField {}]]
    ^{:key "person-id"}
    [form/field {:attribute :user/person-id
+                :validate (fn [value]
+                            (when-not (str/blank? value)
+                              (validation/validate-person-id value)))
                 :required? :true}
     [TextField {}]]
    [form/field {:attribute :user/email
