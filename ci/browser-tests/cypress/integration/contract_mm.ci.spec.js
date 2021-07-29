@@ -23,6 +23,7 @@ context("Contracts MM", () => {
 
     it("ensure that the contract has no related contracts", () => {
         findContract("TEPPO");
+        cy.get("[data-cy='contract-information-heading']"); // Ensure the view is loaded properly
         cy.contains("Related contracts").should('not.exist');
     })
 
