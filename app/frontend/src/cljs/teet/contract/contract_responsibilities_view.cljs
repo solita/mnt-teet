@@ -35,30 +35,33 @@
 (defn targets-responsibilities-table
   [targets]
   [:div
-   [table/simple-table
-    [[]]
-    (for [target targets
-          :let [task? (some? (get-in target [:target :task/type]))
-                groups (group-by :task/group (get-in target [:target :activity/tasks]))]]
-      [[(get-in target [:project :thk.project/name])]
-       [(tr [:enum (get-in target [:target :activity/name])])]
-       [[url/Link
-         (merge (:target-navigation-info target)
-                {:component-opts {:data-cy "target-responsibility-activity-link"}})
-         (tr [:link :target-view-activity])]
-        ]])]])
+   (for [target targets
+         :let [task? (some? (get-in target [:target :task/type]))
+               tasks (get-in target [:activity :activity/tasks])
+               groups (group-by :task/group tasks)
+               _ (cljs.pprint/pprint groups)]]
+     [table/simple-table [[(get-in target [:project :thk.project/name])]
+                          [(tr [:enum (get-in target [:target :activity/name])])]
+                          [[url/Link
+                            (merge (:target-navigation-info target)
+                                   {:component-opts {:data-cy "target-responsibility-activity-link"}})
+                            (tr [:link :target-view-activity])]
+                           ]]
+      (let [grouping-tables (for [group groups
+                                  :let [tasks (second group)
+                                        grouping-title (first group)]]
+                              [[grouping-title] [] []])]
+        grouping-tables)])])
 
 (defn responsibilities-page
   [e! app contract]
   (let [targets (:thk.contract/targets contract)]
     [:div {:class (<class common-styles/flex-column-1)}
      [contract-common/contract-heading e! app contract]
-     [:div
-      [:div
-       (when
-         (not-empty targets)
-         [:div {:class (<class common-styles/margin-bottom 4)}
-          [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
-           (tr [:contract :table-heading :task-responsibilities])]
-          [targets-responsibilities-table targets]])
-       ]]]))
+     [:div {:class (<class contract-style/responsibilities-page-container)}
+      (when
+        (not-empty targets)
+        [:div {:class (<class common-styles/margin-bottom 4)}
+         [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
+          (tr [:contract :table-heading :task-responsibilities])]
+         [targets-responsibilities-table targets]])]]))

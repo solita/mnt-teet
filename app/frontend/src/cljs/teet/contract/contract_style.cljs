@@ -132,6 +132,13 @@
    :flex 1
    :display :flex})
 
+(defn responsibilities-page-container
+  []
+  {:background-color theme-colors/white
+   :flex-direction :column
+   :align-items :stretch
+   :display :flex})
+
 (defn partner-info-header
   []
   ^{:combinators
