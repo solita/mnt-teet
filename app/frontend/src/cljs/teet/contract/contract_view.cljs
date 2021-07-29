@@ -107,7 +107,8 @@
     [:div {:class (<class common-styles/margin-bottom 1)}
      [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                               (<class common-styles/margin-bottom 2))}
-      [typography/Heading1 (tr [:contract :contract-information-heading])]
+      [typography/Heading1 {:data-cy "contract-information-heading"}
+       (tr [:contract :contract-information-heading])]
       [authorization-check/when-authorized :thk.contract/edit-contract-details
        contract
        [form/form-modal-button {:modal-title (tr [:contract :edit-contract])

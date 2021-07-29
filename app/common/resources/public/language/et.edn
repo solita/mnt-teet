@@ -168,7 +168,7 @@
   :delete "Kustutan",
   :save "Salvestan",
   :close "Sulgen",
-  :search "Otsing",
+  :search "Otsin",
   :preview "Eelvaade",
   :edit-index-values "Muudan indeksit",
   :undo "Taastan",
@@ -290,7 +290,10 @@
   :partner-updated "Lepingu partner on uuendatud",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
+  :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
+  :cannot-delete-company-with-persons
+  "Partneri infot on võimalik kustutada ainult siis, kui ühtegi isikut ja alltöövõtjat pole lisatud",
   :persons "Isikud",
   :delete-button-text "Jah, kustuta",
   :add-company "Lisan ettevõtte",
@@ -298,11 +301,15 @@
   :are-you-sure-delete-partner "Olete kindel et soovite kustutada?",
   :table-heading
   {:related-contracts "Seotud lepingud",
+   :task-responsibilities "Ülesannete vastutused",
+   :task "Ülesanne",
+   :name "Nimetus",
+   :project-manager "Projektijuht",
+   :tram-reviewers "TRAM esindajad",
    :activity "Tegevus",
    :project "Projekt",
-   :project-manager "Projektijuht",
-   :name "Nimetus",
-   :task "Ülesanne"},
+   :status "Staatus",
+   :company-responsible-person "Firma poolt vastutajad"},
   :select-user-roles "Valin rollid",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
@@ -310,6 +317,7 @@
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :partners-listing "Partnerite loetelu",
+  :responsibilities-listing "Vastutuste loetelu",
   :thk.contract.status/signed "Allkirjastatud",
   :partner-information "Partnerite info",
   :thk.contract.status/completed "Lõpetatud",
@@ -1253,6 +1261,7 @@
   :search
   {:no-results "Ei leitud ühtki vastet",
    :placeholder "Lisan viite..."},
+  :target-view-activity "Vaata tegevuse",
   :target-deleted "Kustutatud {user} poolt {at}",
   :type-label
   {:appendix "Lisa",
