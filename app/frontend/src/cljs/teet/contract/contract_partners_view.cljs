@@ -537,25 +537,24 @@
                                   :on-click validate}
           (tr [:buttons :save])])]]]))
 
-(defn new-person-form-fields [e! form-value]
-  []
+(defn new-person-form-fields [e! form-value & [personal-info-disabled?]]
   [:div
    [form/field {:attribute :user/given-name
                 :required? true}
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :user/family-name
                 :required? true}
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    ^{:key "person-id"}
    [form/field {:attribute :user/person-id
                 :required? :true}
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :user/email
                 :validate validation/validate-email-optional
                 :required? :true}
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field :user/phone-number
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :company-contract-employee/role}
     [select/select-user-roles-for-contract
      {:e! e!
@@ -644,7 +643,8 @@
         given-name (:user/given-name user)
         family-name (:user/family-name user)
         user-id (:user/id user)
-        roles (set (:company-contract-employee/role selected-person))]
+        roles (set (:company-contract-employee/role selected-person))
+        personal-info-disabled? (:user/last-login user)]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
                           :user/email email
@@ -680,7 +680,7 @@
                                   (tr [:contract :partner :person-updated]))}
        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
         (tr [:contract :partner :edit-person])]
-       [new-person-form-fields e! (:form-value @form-atom)]
+       [new-person-form-fields e! (:form-value @form-atom) personal-info-disabled?]
        [form/footer2 (partial contract-personnel-form-footer @form-atom)]])))
 
 (defn partner-info-header
@@ -787,5 +787,3 @@
             :class (herb/join (<class common-styles/padding 1.5)
                               (<class common-styles/flex-1))}
       [partners-page-router e! app contract]]]]])
-
-
