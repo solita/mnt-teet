@@ -543,6 +543,7 @@
    [form/field {:attribute :user/family-name
                 :required? true}
     [TextField {}]]
+   ^{:key "person-id"}
    [form/field {:attribute :user/person-id
                 :required? :true}
     [TextField {}]]
