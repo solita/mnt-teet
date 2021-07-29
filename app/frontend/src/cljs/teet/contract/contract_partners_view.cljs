@@ -537,10 +537,11 @@
 (defn new-person-form-fields [e! form-value]
   []
   [:div
-   ^{:key "person-id"}
-   [form/field :user/given-name
+   [form/field {:attribute :user/given-name
+                :required? true}
     [TextField {}]]
-   [form/field :user/family-name
+   [form/field {:attribute :user/family-name
+                :required? true}
     [TextField {}]]
    [form/field {:attribute :user/person-id
                 :required? :true}
