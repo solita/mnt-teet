@@ -337,7 +337,8 @@
   "Search for partner information from Estonian business registry",
   :confirm-delete-partner-text
   "Company will be removed from the contract and this action cannot be undone",
-  :thk.contract.status/in-progress "In progress"},
+  :thk.contract.status/in-progress "In progress",
+  :user-not-found-or-already-added "User not found or already added"},
  :contracts
  {:contracts-list
   {:collapse-all "Collapse all",
