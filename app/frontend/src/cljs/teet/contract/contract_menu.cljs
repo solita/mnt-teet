@@ -21,11 +21,17 @@
           :href-fn #(str "#/contracts/" %)
           :hotkey "1"}]]
     (if (common-controller/feature-enabled? :contract-partners)
-      (conj menu-items {:name :contract-partners
-                        :label [:contract :partner-information]
-                        :navigate {:page :contract-partners}
-                        :href-fn #(str "#/contracts/" % "/partners")
-                        :hotkey "2"})
+      (conj menu-items
+            {:name :contract-partners
+             :label [:contract :partner-information]
+             :navigate {:page :contract-partners}
+             :href-fn #(str "#/contracts/" % "/partners")
+             :hotkey "2"}
+            {:name :contract-responsibilities
+             :label [:contract :persons-responsibilities]
+             :navigate {:page :contract-responsibilities}
+             :href-fn #(str "#/contracts/" % "/responsibilities")
+             :hotkey "3"})
       menu-items)))
 
 (defn- contract-menu-item [e! close-menu!
