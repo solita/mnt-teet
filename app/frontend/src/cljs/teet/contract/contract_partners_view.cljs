@@ -256,7 +256,10 @@
 (defn new-company-form-fields
   [form-value]
   (let [foreign-company? (not= :ee (:company/country form-value))
-        business-search-failed? (:no-results? form-value)
+        business-search-failed? (and (:no-results? form-value)
+                                     ;; Clear error after business id is edited
+                                     (= (:business-id-used-in-search form-value)
+                                        (:company/business-registry-code form-value)))
         exception-in-xroad? (:exception-in-xroad? form-value)]
     [:div
      [form/field :company/country

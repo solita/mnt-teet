@@ -80,7 +80,9 @@
 
   SearchBusinessRegistry
   (process-event [{:keys [form-key business-id]} app]
-    (t/fx (assoc-in app [:forms form-key :search-in-progress?] true)
+    (t/fx (-> app
+              (assoc-in [:forms form-key :search-in-progress?] true)
+              (assoc-in [:forms form-key :business-id-used-in-search] business-id))
       {:tuck.effect/type :query
        :query :company/business-registry-search
        :args {:business-id business-id}
