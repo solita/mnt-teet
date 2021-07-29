@@ -34,18 +34,19 @@
 
 (defn targets-responsibilities-table
   [targets]
-  (cljs.pprint/pprint targets)
   [:div
    [table/simple-table
-    [[] [] []]
+    [[]]
     (for [target targets
-          :let [task? (some? (get-in target [:target :task/type]))]]
+          :let [task? (some? (get-in target [:target :task/type]))
+                groups (group-by :task/group (get-in target [:target :activity/tasks]))]]
       [[(get-in target [:project :thk.project/name])]
        [(tr [:enum (get-in target [:target :activity/name])])]
        [[url/Link
          (merge (:target-navigation-info target)
                 {:component-opts {:data-cy "target-responsibility-activity-link"}})
-         (tr [:link :target-view-activity])]]])]])
+         (tr [:link :target-view-activity])]
+        ]])]])
 
 (defn responsibilities-page
   [e! app contract]
