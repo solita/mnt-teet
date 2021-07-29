@@ -292,6 +292,8 @@
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
+  :cannot-delete-company-with-persons
+  "Partneri infot on võimalik kustutada ainult siis, kui ühtegi isikut ja alltöövõtjat pole lisatud",
   :persons "Isikud",
   :delete-button-text "Jah, kustuta",
   :add-company "Lisan ettevõtte",

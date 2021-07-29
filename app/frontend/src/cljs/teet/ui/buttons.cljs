@@ -229,6 +229,7 @@
        underlined?
        [IconButton {:on-click open
                     :size :small
+                    :disabled (boolean disabled)
                     :style {:color theme-colors/red
                             :text-decoration :underline}}
         [icons/content-clear]

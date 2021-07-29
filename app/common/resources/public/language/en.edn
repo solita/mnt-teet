@@ -293,6 +293,8 @@
   :contract-save-success "Contract saved",
   :persons-responsibilities "Persons responsibilities",
   :partners {:title "Companies & persons"},
+  :cannot-delete-company-with-persons
+  "Cannot remove company with persons",
   :persons "Persons",
   :delete-button-text "Yes, remove",
   :add-company "Add Company",
