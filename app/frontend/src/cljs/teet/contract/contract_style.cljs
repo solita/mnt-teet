@@ -134,10 +134,7 @@
 
 (defn responsibilities-page-container
   []
-  {:background-color theme-colors/white
-   :flex-direction :column
-   :align-items :stretch
-   :display :flex})
+  {:background-color theme-colors/white})
 
 (defn partner-info-header
   []
