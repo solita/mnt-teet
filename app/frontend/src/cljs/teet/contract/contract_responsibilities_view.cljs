@@ -132,7 +132,7 @@
 (defn responsibilities-page
   [e! app contract]
   (let [targets (:thk.contract/targets contract)]
-    [:div {:class (<class common-styles/flex-column-1)}
+    [:div {:class (<class contract-style/contract-page-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
       (when
