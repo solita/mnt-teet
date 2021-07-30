@@ -337,7 +337,9 @@
   "Ettevõtte informatsiooni otsing  äriregistrist",
   :confirm-delete-partner-text
   "Lepingupartner kustutatakse ja seda ei saa hiljem muuta",
-  :thk.contract.status/in-progress "Töös"},
+  :thk.contract.status/in-progress "Töös",
+  :user-not-found-or-already-added
+  "Kasutajat ei leitud või on juba lisatud"},
  :contracts
  {:contracts-list
   {:collapse-all "Sulgen kõik",

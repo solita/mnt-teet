@@ -623,6 +623,7 @@
                                   :company-contract-id (:db/id selected-partner)}
                            :query :contract/possible-partner-employees})
                  :format-result select/user-search-select-result
+                 :no-results (tr [:contract :user-not-found-or-already-added])
                  :after-results-action {:title (tr [:contract :add-person-not-in-teet])
                                         :on-click add-new-person
                                         :icon [icons/content-add]}}]]]))
