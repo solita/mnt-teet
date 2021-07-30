@@ -568,7 +568,7 @@
       :clear-value [nil nil]}]]])
 
 (defn add-personnel-form
-  [e! {:keys [query] :as app} selected-partner]
+  [e! query selected-partner]
   (r/with-let [form-atom (r/atom {})
                add-new-person? (r/atom false)
                add-new-person #(reset! add-new-person? true)]
@@ -765,7 +765,7 @@
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
-       [add-personnel-form e! app selected-partner]]
+       [add-personnel-form e! (:query app) selected-partner]]
       :personnel-info
       [employee-info e! app selected-partner employee]
       :edit-personnel

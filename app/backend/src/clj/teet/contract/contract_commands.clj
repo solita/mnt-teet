@@ -162,7 +162,7 @@
    :pre [(not
            (contract-db/is-company-contract-employee?
              db company-contract-eid
-             (get-in form-value [:company-contract-employee/user :db/id])))]
+             [:user/person-id (get-in form-value [:company-contract-employee/user :user/person-id])]))]
    :transact [(merge
                 {:db/id "new-company-contract-employee"
                  :company-contract-employee/active? true    ;; employees are active by default
@@ -174,6 +174,10 @@
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
 
+(defn- form-value->person-id-eid [form-value]
+  [:user/person-id (-> form-value
+                       :user/person-id
+                       user-model/normalize-person-id)])
 
 (defcommand :thk.contract/add-new-contract-employee
   {:doc "Add a new contract employee"
@@ -181,7 +185,14 @@
              company-contract-eid :company-contract-eid}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/contract-editing {}}}
+   :authorization {:contracts/contract-editing {}}
+   :pre [^{:error :existing-teet-user}
+         (not (user-db/user-has-logged-in? db (form-value->person-id-eid form-value)))
+
+         ^{:error :employee-already-added-to-contract}
+         (not (contract-db/is-company-contract-employee? db
+                                                         company-contract-eid
+                                                         (form-value->person-id-eid form-value)))]}
   (let [employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                      :user/email :user/phone-number]))
         user-person-id (user-model/normalize-person-id (:user/person-id form-value))
