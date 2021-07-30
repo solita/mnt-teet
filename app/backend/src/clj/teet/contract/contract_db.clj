@@ -268,7 +268,8 @@
               (pull ?activity [:db/id :activity/name
                                {:thk.lifecycle/_activities [:thk.lifecycle/id]}
                                {:activity/manager [:user/family-name :user/given-name]}
-                               {:activity/tasks [:db/id :task/group :task/type :task/assignee]}])
+                               {:activity/tasks [:db/id :task/group :task/type
+                                                 {:task/assignee [:user/family-name :user/given-name]} :task/status]}])
               :where
               [?c :thk.contract/targets ?target]
               (target-activity ?target ?activity)

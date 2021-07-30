@@ -68,13 +68,13 @@
          :let [title (first task-group)
                tasks (second task-group)
                rows (reduce (fn [acc item]
-                              (conj acc [[(:task/group item)]
-                                         [(:task/type item)]
+                              (conj acc [[(:task/type item)]
+                                         ["Not assigned"]
                                          [(if (nil? (:task/assignee item))
                                             "Not assigned"
-                                            (:task/assignee item))]
-                                         [(:db/id item)]])) [] tasks)
-               _ (cljs.pprint/pprint rows)]]
+                                            (user-model/user-name (:task/assignee item)))]
+                                         [(:task/status item)]])) [] tasks)
+               _ (cljs.pprint/pprint task-group)]]
      [:tbody
       [:tr
        [:th {:colspan 4} title]]
@@ -83,7 +83,7 @@
           [:tr {:class (<class simple-table-row-style)}
            (ui-util/mapc
              (fn [[column {:keys [style class] :as opts}]]
-               (let [_ (cljs.pprint/pprint column)])
+               #_(let [_ (cljs.pprint/pprint column)])
                [:td (merge
                       {:style (merge {} style)
                        :class (herb/join
