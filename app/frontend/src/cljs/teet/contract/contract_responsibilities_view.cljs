@@ -74,11 +74,11 @@
                rows (reduce (fn [acc item]
                               (conj acc [[[url/Link (:navigation-info item)
                                            (tr-enum (:task/type item))]]
-                                         ["Not assigned"]
+                                         [(:owner item)]
                                          [(if (nil? (:task/assignee item))
                                             "Not assigned"
                                             (user-model/user-name (:task/assignee item)))]
-                                         [(:task/status item)]])) [] tasks)]]
+                                         [(tr-enum (:task/status item))]])) [] tasks)]]
      [:tbody
       [:tr
        [:th {:colspan 4
@@ -86,7 +86,7 @@
                      :padding "1rem 0.5rem 1rem 0.5rem"
                      :border-width "0 0 1px 0"
                      :border-style :solid
-                     :border-color theme-colors/gray-lighter}} title]]
+                     :border-color theme-colors/gray-lighter}} (tr-enum title)]]
       (ui-util/mapc
         (fn [row]
           [:tr {:class (<class simple-table-row-style)}
@@ -119,7 +119,10 @@
         (merge (:target-navigation-info target)
                {:component-opts {:data-cy "target-responsibility-activity-link"}})
         (tr [:link :target-view-activity])]]
-      (simple-table-with-many-bodies [["Task"] ["TRAM reviewers"] ["Company responsible"] ["Status"]] groups)])])
+      (simple-table-with-many-bodies [[(tr [:contract :responsible :header :task])]
+                                      [(tr [:contract :responsible :header :tram-reviewer])]
+                                      [(tr [:contract :responsible :header :company-responsible])]
+                                      [(tr [:contract :responsible :header :status])]] groups)])])
 
 (defn responsibilities-page
   [e! app contract]

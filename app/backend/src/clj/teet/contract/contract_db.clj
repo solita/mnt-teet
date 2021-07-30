@@ -240,7 +240,8 @@
                                                             {:page :activity-task
                                                              :params {:project project-id
                                                                       :activity activity-id
-                                                                      :task (str (:db/id task))}}})))
+                                                                      :task (str (:db/id task))}}}
+                                                           {:owner (user-model/user-name (:activity/manager activity))})))
                                         [] (:activity/tasks activity))}
      :project project
      :target-navigation-info (if (:activity/name target)
