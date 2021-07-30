@@ -32,24 +32,28 @@
 
 (defn- simple-table-row-style
   []
-  ^{:pseudo {:first-of-type {:border-top :none}}}
-  {:border-width "1px 0"
+  ^{:pseudo {:first-of-type {:border-top :none
+                             :border-right :none
+                             :border-left :none}}}
+  {:border-width "1px"
    :border-style :solid
    :border-color theme-colors/gray-lighter})
 
 (defn- table-heading-cell-style
   []
-  ^{:pseudo {:first-of-type {:padding-right 0}}}
   {:white-space :nowrap
    :font-weight 500
    :font-size "0.875rem"
    :color theme-colors/gray
-   :padding-right "0.5rem"})
+   :padding"1rem 0.5rem 1rem 0.5rem"
+   :text-align :left})
 
 (defn- simple-table-cell-style
   []
-  ^{:pseudo {:last-of-type {:padding-right 0}}}
-  {:padding "0.5rem 0.5rem 0.5rem 0"})
+  {:padding "1rem 0.5rem 1rem 0.5rem"
+   :border-width "1px"
+   :border-style :solid
+   :border-color theme-colors/gray-lighter})
 
 (defn simple-table-with-many-bodies
   [table-headings groups]
@@ -73,17 +77,21 @@
                                          [(if (nil? (:task/assignee item))
                                             "Not assigned"
                                             (user-model/user-name (:task/assignee item)))]
-                                         [(:task/status item)]])) [] tasks)
-               _ (cljs.pprint/pprint task-group)]]
+                                         [(:task/status item)]])) [] tasks)]]
      [:tbody
       [:tr
-       [:th {:colspan 4} title]]
+       [:th {:colspan 4
+             :style {:text-align :left
+                     :padding "1rem 0.5rem 1rem 0.5rem"
+                     :border-width "0 0 1px 0"
+                     :border-style :solid
+                     :border-color theme-colors/gray-lighter}} title]]
       (ui-util/mapc
         (fn [row]
           [:tr {:class (<class simple-table-row-style)}
            (ui-util/mapc
              (fn [[column {:keys [style class] :as opts}]]
-               #_(let [_ (cljs.pprint/pprint column)])
+               (let [_ (cljs.pprint/pprint column)])
                [:td (merge
                       {:style (merge {} style)
                        :class (herb/join
@@ -102,7 +110,7 @@
          :let [task? (some? (get-in target [:target :task/type]))
                tasks (get-in target [:activity :activity/tasks])
                groups (group-by :task/group tasks)]]
-     [:div
+     [:div {:style {:padding "2rem 0 2rem 0"}}
       [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                                (<class common-styles/margin-bottom 2))}
        [typography/Heading1 (get-in target [:project :thk.project/name])]

@@ -134,7 +134,8 @@
 
 (defn responsibilities-page-container
   []
-  {:background-color theme-colors/white})
+  {:background-color theme-colors/white
+   :padding "0 2rem 0 2rem"})
 
 (defn partner-info-header
   []
