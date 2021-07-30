@@ -8,6 +8,12 @@
    :background-color theme-colors/white
    :flex 1})
 
+(defn contract-responsibilities-container-style
+  []
+  {:padding "1rem 1rem"
+   :background-color theme-colors/white
+   :flex 1})
+
 (defn contract-card-style
   []
   {:padding "0.8rem"
@@ -135,7 +141,7 @@
 (defn responsibilities-page-container
   []
   {:background-color theme-colors/white
-   :padding "0 2rem 0 2rem"})
+   :padding "0 1rem 0 1rem"})
 
 (defn partner-info-header
   []

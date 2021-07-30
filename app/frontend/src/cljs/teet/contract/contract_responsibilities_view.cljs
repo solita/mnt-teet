@@ -119,20 +119,23 @@
       [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                                (<class common-styles/margin-bottom 2))}
        [typography/Heading1 (get-in target [:project :thk.project/name])]
-       [typography/Heading4 (tr [:enum (get-in target [:target :activity/name])])]
+       [typography/Heading4 (if (get-in target [:target :activity/name])
+                              (tr [:enum (get-in target [:target :activity/name])])
+                              "")]
        [url/Link
         (merge (:target-navigation-info target)
                {:component-opts {:data-cy "target-responsibility-activity-link"}})
         (tr [:link :target-view-activity])]]
-      (simple-table-with-many-bodies [[(tr [:contract :responsible :header :task])]
-                                      [(tr [:contract :responsible :header :tram-reviewer])]
-                                      [(tr [:contract :responsible :header :company-responsible])]
-                                      [(tr [:contract :responsible :header :status])]] groups)])])
+      (when (not-empty groups)
+        (simple-table-with-many-bodies [[(tr [:contract :responsible :header :task])]
+                                        [(tr [:contract :responsible :header :tram-reviewer])]
+                                        [(tr [:contract :responsible :header :company-responsible])]
+                                        [(tr [:contract :responsible :header :status])]] groups))])])
 
 (defn responsibilities-page
   [e! app contract]
   (let [targets (:thk.contract/targets contract)]
-    [:div {:class (<class contract-style/contract-page-container-style)}
+    [:div {:class (<class contract-style/contract-responsibilities-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
       (when
