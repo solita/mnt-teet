@@ -86,7 +86,7 @@
                                          [(tr-enum (:task/status item))]])) [] tasks)]]
      [:tbody
       [:tr
-       [:th {:colspan 4
+       [:th {:colSpan 4
              :style {:text-align :left
                      :padding "1rem 0.5rem 1rem 0.5rem"
                      :border-width "0 0 1px 0"
@@ -137,7 +137,7 @@
      [:div {:class (<class contract-style/responsibilities-page-container)}
       (when
         (not-empty targets)
-        [:div {:class (<class common-styles/margin-bottom 4)}
-         [typography/Heading4 {:class (<class common-styles/margin-bottom 2)}
+        [:div {:class (<class common-styles/margin-top 2)}
+         [typography/Heading1 {:class (<class common-styles/margin-top 2)}
           (tr [:contract :table-heading :task-responsibilities])]
          [targets-responsibilities targets]])]]))

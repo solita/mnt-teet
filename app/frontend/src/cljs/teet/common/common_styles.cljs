@@ -328,6 +328,10 @@
    :flex-direction :row
    :justify-content :space-between})
 
+(defn margin-top
+  [rem]
+  {:margin-top (str rem "rem")})
+
 (defn margin-bottom
   [rem]
   {:margin-bottom (str rem "rem")})
