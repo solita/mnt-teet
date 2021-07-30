@@ -2,13 +2,12 @@
   (:require [teet.db-api.core :refer [defcommand tx]]
             [teet.meta.meta-model :as meta-model]
             [teet.contract.contract-model :as contract-model]
+            [teet.user.user-db :as user-db]
+            [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.company.company-db :as company-db]
             [teet.company.company-model :as company-model]
             [teet.contract.contract-db :as contract-db]
-            [teet.authorization.authorization-core :as authorization]
-            [teet.environment :as environment]
-            [clojure.string :as str]
             [teet.user.user-model :as user-model])
   (:import (java.util UUID)))
 
@@ -207,13 +206,28 @@
                                        :company-contract/employees "new-company-contract-employee"}])]))]
     tempids))
 
+(defn- personal-information [user-info]
+  (let [personal-data [:user/given-name :user/family-name :user/email :user/phone-number]]
+    (cu/keep-vals not-empty
+                  (select-keys user-info personal-data))))
+
+(defn- personal-information-edited? [user-from-db form-value]
+  (not= (personal-information user-from-db)
+        (personal-information form-value)))
+
+(defn- either-user-has-not-logged-in-or-no-personal-information-edited? [db form-value]
+  (when-let [edited-user (user-db/user-info db [:user/id (:user/id form-value)])]
+    (or (not (:user/last-login edited-user))
+        (not (personal-information-edited? edited-user form-value)))))
+
 (defcommand :thk.contract/edit-contract-employee
             {:doc "Update existing contract employee"
              :payload {form-value :form-value
                        company-contract-eid :company-contract-eid}
              :context {:keys [user db]}
              :project-id nil
-             :authorization {:contracts/contract-editing {}}}
+             :authorization {:contracts/contract-editing {}}
+             :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]}
             (let [roles-update (mapv
                                  #(if (not (:db/id %))
                                     (:db/id (company-db/get-employee-role db %))

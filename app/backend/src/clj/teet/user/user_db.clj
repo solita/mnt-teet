@@ -8,7 +8,7 @@
   "Fetch user information with current valid permissions."
   [db user-ref]
   (let [{id :db/id :as user} (d/pull db '[:user/id :user/given-name :user/family-name :user/email
-                                          :user/person-id :db/id]
+                                          :user/person-id :db/id :user/last-login]
                                      (user-model/user-ref user-ref))]
     (assoc user :user/permissions
            (when id
@@ -26,9 +26,9 @@
 
 (defn user-has-logged-in?
   "Check whether the user has logged in or not"
-  [db person-id]
+  [db user-ref]
   (-> db
-      (d/pull '[:user/last-login] [:user/person-id person-id])
+      (d/pull '[:user/last-login] (user-model/user-ref user-ref))
       :user/last-login
       boolean))
 

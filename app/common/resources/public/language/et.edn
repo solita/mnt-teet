@@ -292,6 +292,8 @@
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
+  :cannot-delete-company-with-persons
+  "Partneri infot on võimalik kustutada ainult siis, kui ühtegi isikut ja alltöövõtjat pole lisatud",
   :persons "Isikud",
   :delete-button-text "Jah, kustuta",
   :add-company "Lisan ettevõtte",
@@ -335,7 +337,9 @@
   "Ettevõtte informatsiooni otsing  äriregistrist",
   :confirm-delete-partner-text
   "Lepingupartner kustutatakse ja seda ei saa hiljem muuta",
-  :thk.contract.status/in-progress "Töös"},
+  :thk.contract.status/in-progress "Töös",
+  :user-not-found-or-already-added
+  "Kasutajat ei leitud või on juba lisatud"},
  :contracts
  {:contracts-list
   {:collapse-all "Sulgen kõik",
@@ -1575,7 +1579,7 @@
  :validation
  {:invalid-business-id "Vale äriregistri kood",
   :invalid-estonian-person-id "Vale isikukood",
-  :invalid-email "Vale emaili aadress",
+  :invalid-email "Vale e-posti aadress",
   :invalid-date "Sobimatu kuupäev. Palun vali õige."},
  :warning
  {:deploying
