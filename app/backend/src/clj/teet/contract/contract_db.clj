@@ -234,7 +234,14 @@
     {:target target
      :activity {:activity/manager (user-model/user-name (:activity/manager activity))
                 :activity/name (:activity/name activity)
-                :activity/tasks (:activity/tasks activity)}
+                :activity/tasks (reduce (fn [acc task]
+                                          (conj acc (merge task
+                                                           {:navigation-info
+                                                            {:page :activity-task
+                                                             :params {:project project-id
+                                                                      :activity activity-id
+                                                                      :task (str (:db/id task))}}})))
+                                        [] (:activity/tasks activity))}
      :project project
      :target-navigation-info (if (:activity/name target)
                                {:page :activity

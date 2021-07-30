@@ -72,7 +72,8 @@
          :let [title (first task-group)
                tasks (second task-group)
                rows (reduce (fn [acc item]
-                              (conj acc [[(:task/type item)]
+                              (conj acc [[[url/Link (:navigation-info item)
+                                           (tr-enum (:task/type item))]]
                                          ["Not assigned"]
                                          [(if (nil? (:task/assignee item))
                                             "Not assigned"
@@ -91,7 +92,6 @@
           [:tr {:class (<class simple-table-row-style)}
            (ui-util/mapc
              (fn [[column {:keys [style class] :as opts}]]
-               (let [_ (cljs.pprint/pprint column)])
                [:td (merge
                       {:style (merge {} style)
                        :class (herb/join
