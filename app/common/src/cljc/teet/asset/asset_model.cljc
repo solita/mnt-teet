@@ -169,18 +169,13 @@
          (map f)
          (apply compare))))
 
-(defmethod assets-listing-sort-column :default [_]
-  compare)
-
-(defmethod assets-listing-sort-column :asset/fclass [_]
-  (compare-by #(get-in % [:asset/fclass :db/ident])))
-
-(defmethod assets-listing-sort-column :location/road-address [_]
-  (compare-by (juxt :location/road-nr :location/carriageway :location/start-km :location/end-km)))
-
-(defmethod assets-listing-sort-column :common/status [_]
-  (compare-by :db/ident))
-
+(defn assets-listing-sort-column [column-label-fn]
+  (fn [column]
+    (case column
+      :asset/fclass (compare-by column-label-fn)
+      :location/road-address (compare-by (juxt :location/road-nr :location/carriageway :location/start-km :location/end-km))
+      :common/status (compare-by column-label-fn)
+      compare)))
 
 #?(:clj
    (def ^:private location-km-format

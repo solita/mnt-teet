@@ -418,14 +418,16 @@
 
 
 (defn- results-table [{:keys [e! atl results]}]
-  (let [{:keys [assets]} results]
+  (let [{:keys [assets]} results
+        column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                             (tr [:fields %]))]
     [table/listing-table
      {:default-show-count 100
+      :default-sort-column (first asset-model/assets-listing-columns)
       :columns asset-model/assets-listing-columns
       :get-column asset-model/assets-listing-get-column
-      :get-column-compare asset-model/assets-listing-sort-column
-      :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
-                            (tr [:fields %]))
+      :get-column-compare (asset-model/assets-listing-sort-column column-label-fn)
+      :column-label-fn column-label-fn
       :on-row-hover (e! assets-controller/->HighlightResult)
       :on-row-click (e! assets-controller/->ShowDetails)
       :format-column format-assets-column
