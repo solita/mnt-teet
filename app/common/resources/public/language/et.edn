@@ -176,7 +176,7 @@
   :send "Saadan teavituse",
   :cancel "Tühistan",
   :add "Lisan",
-  :remove-from-contract "Kustutan lepingust",
+  :remove-from-contract "Eemaldan lepingust",
   :copy-to-clipboard "Kopeeri tekst",
   :upload "Laen üles"},
  :cadastral-group
@@ -268,7 +268,7 @@
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
-  :partner-saved "Lepingu partner on lisatud",
+  :partner-saved "Lepingupartner on lisatud",
   :related-contracts "SEOTUD LEPINGUD",
   :cancel-button-text "Ei, tühista",
   :thk.contract/type "Tüüp",
@@ -286,19 +286,25 @@
   :thk.contract.status/deadline-overdue "Tähtaeg ületatud",
   :add-person-not-in-teet "Lisan TEET-u välise isiku",
   :add-company-not-in-teet "Lisan uue ettevõtte",
-  :partner-deleted "Lepingu partner on kustutatud",
-  :partner-updated "Lepingu partner on uuendatud",
+  :partner-deleted "Lepingupartner on kustutatud",
+  :partner-updated "Lepingupartner on uuendatud",
   :contract-information "Lepingu info",
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
   :cannot-delete-company-with-persons
-  "Partneri infot on võimalik kustutada ainult siis, kui ühtegi isikut ja alltöövõtjat pole lisatud",
+  "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
+  :responsible
+  {:header
+   {:task "Ülesanne",
+    :tram-reviewer "TRAM esindaja",
+    :company-responsible "Firma vastutavad isik",
+    :status "Olek"}},
   :persons "Isikud",
   :delete-button-text "Jah, kustuta",
   :add-company "Lisan ettevõtte",
   :status "Staatus",
-  :are-you-sure-delete-partner "Olete kindel et soovite kustutada?",
+  :are-you-sure-delete-partner "Olete kindel, et soovite eemaldada?",
   :table-heading
   {:related-contracts "Seotud lepingud",
    :task-responsibilities "Ülesannete vastutused",
@@ -313,7 +319,7 @@
   :select-user-roles "Valin rollid",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
-  "Otsingule vastavaid ettevõtteid ei leitud",
+  "Otsingule vastavaid ettevõtteid ei leitud või on juba lisatud",
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :partners-listing "Partnerite loetelu",
@@ -336,7 +342,7 @@
   :search-companies-business-registry
   "Ettevõtte informatsiooni otsing  äriregistrist",
   :confirm-delete-partner-text
-  "Lepingupartner kustutatakse ja seda ei saa hiljem muuta",
+  "Lepingupartner eemaldatakse ja seda ei saa hiljem muuta",
   :thk.contract.status/in-progress "Töös",
   :user-not-found-or-already-added
   "Kasutajat ei leitud või on juba lisatud"},
@@ -892,6 +898,7 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
+  :existing-teet-user "Kasutaja oli juba sisse loginud",
   :vektorio-request-failed
   "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
@@ -907,7 +914,9 @@
   :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud",
   :email-address-already-in-use "E-posti aadress on juba kasutusel.",
   :no-participants-with-email
-  "Ühelgi teavitataval osalejal pole emaili aadressi"},
+  "Ühelgi teavitataval osalejal pole emaili aadressi",
+  :employee-already-added-to-contract
+  "Kasutaja oli juba lepingule lisatud"},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -944,13 +953,13 @@
   :cooperation.contact/id-code "Reg. nr / isikukood",
   :file.part/name "Ülesande osa nimi",
   :task/group "Ülesande grupp",
-  :company/email "Ettevõtte e-mail",
+  :company/email "Ettevõtte e-post",
   :company/business-registry-code "Äriregistri kood",
   :file/part "Osa",
   :cooperation.3rd-party/name "Kaasatud osapoole nimi",
   :file/version "Versioon",
   :estate-procedure/pos "POS#",
-  :user/global-role "Globaalne roll",
+  :user/global-role "Roll",
   :cooperation.opinion/comment "Märkus",
   :validation-error
   #:file.part{:illegal-characters
