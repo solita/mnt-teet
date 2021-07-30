@@ -1579,7 +1579,7 @@
  :validation
  {:invalid-business-id "Vale äriregistri kood",
   :invalid-estonian-person-id "Vale isikukood",
-  :invalid-email "Vale emaili aadress",
+  :invalid-email "Vale e-posti aadress",
   :invalid-date "Sobimatu kuupäev. Palun vali õige."},
  :warning
  {:deploying
