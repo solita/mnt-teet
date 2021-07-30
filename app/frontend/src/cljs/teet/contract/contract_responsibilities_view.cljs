@@ -59,6 +59,11 @@
   [table-headings groups]
   [:table {:style {:border-collapse :collapse
                    :width "100%"}}
+   [:colgroup
+    [:col {:span "1" :style {:width "35%"}}]
+    [:col {:span "1" :style {:width "25%"}}]
+    [:col {:span "1" :style {:width "25%"}}]
+    [:col {:span "1" :style {:width "15%"}}]]
    [:thead
     [:tr {:class (<class simple-table-row-style)}
      (ui-util/mapc
