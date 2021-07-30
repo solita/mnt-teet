@@ -162,7 +162,7 @@
    :pre [(not
            (contract-db/is-company-contract-employee?
              db company-contract-eid
-             (get-in form-value [:company-contract-employee/user :db/id])))]
+             [:user/person-id (get-in form-value [:company-contract-employee/user :user/person-id])]))]
    :transact [(merge
                 {:db/id "new-company-contract-employee"
                  :company-contract-employee/active? true    ;; employees are active by default
