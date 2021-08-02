@@ -2,58 +2,16 @@
   (:require [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-enum]]
             [herb.core :refer [<class] :as herb]
-            [teet.ui.icons :as icons]
             [teet.ui.text-field :refer [TextField]]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
             [teet.ui.material-ui :refer [Grid Checkbox Divider]]
             [teet.ui.typography :as typography]
-            [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             teet.contract.contract-spec
-            [teet.common.common-controller :as common-controller]
-            [teet.contract.contract-partners-controller :as contract-partners-controller]
-            [teet.routes :as routes]
-            [teet.ui.form :as form]
-            [teet.ui.select :as select]
-            [teet.ui.common :as common]
-            [teet.ui.validation :as validation]
-            [teet.authorization.authorization-check :as authorization-check]
             [teet.user.user-model :as user-model]
-            [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.table :as table]
-            [clojure.string :as str]
-            [re-svg-icons.feather-icons :as fi]
             [teet.ui.url :as url]
-            [teet.contract.contract-model :as contract-model]
-            [teet.contract.contract-status :as contract-status]
             [teet.ui.util :as ui-util]))
-
-(defn- simple-table-row-style
-  []
-  ^{:pseudo {:first-of-type {:border-top :none
-                             :border-right :none
-                             :border-left :none}}}
-  {:border-width "1px"
-   :border-style :solid
-   :border-color theme-colors/gray-lighter})
-
-(defn- table-heading-cell-style
-  []
-  {:white-space :nowrap
-   :font-weight 500
-   :font-size "0.875rem"
-   :color theme-colors/gray
-   :padding"1rem 0.5rem 1rem 0.5rem"
-   :text-align :left})
-
-(defn- simple-table-cell-style
-  []
-  {:padding "1rem 0.5rem 1rem 0.5rem"
-   :border-width "1px"
-   :border-style :solid
-   :border-color theme-colors/gray-lighter})
 
 (defn simple-table-with-many-bodies
   [table-headings groups]
@@ -65,42 +23,44 @@
     [:col {:span "1" :style {:width "25%"}}]
     [:col {:span "1" :style {:width "15%"}}]]
    [:thead
-    [:tr {:class (<class simple-table-row-style)}
+    [:tr {:class (<class contract-style/responsibilities-table-row-style)}
      (ui-util/mapc
        (fn [[heading opts]]
          [:td (merge
-                {:class (<class table-heading-cell-style)}
+                {:class (<class contract-style/responsibilities-table-heading-cell-style)}
                 opts)
           heading])
        table-headings)]]
    (for [task-group groups
          :let [title (first task-group)
                tasks (second task-group)
-               rows (reduce (fn [acc item]
-                              (conj acc [[[url/Link (:navigation-info item)
-                                           (tr-enum (:task/type item))]]
-                                         [(:owner item)]
-                                         [(if (nil? (:task/assignee item))
-                                            "Not assigned"
-                                            (user-model/user-name (:task/assignee item)))]
-                                         [(tr-enum (:task/status item))]])) [] tasks)]]
+               rows (reduce
+                      (fn [acc item]
+                        (conj
+                          acc
+                          [[[url/Link (:navigation-info item)
+                             (tr-enum (:task/type item))]]
+                           [(:owner item)]
+                           [(if (nil? (:task/assignee item))
+                              ""
+                              (user-model/user-name (:task/assignee item)))]
+                           [(tr-enum (:task/status item))]]))
+                      []
+                      tasks)]]
      [:tbody
       [:tr
        [:th {:colSpan 4
-             :style {:text-align :left
-                     :padding "1rem 0.5rem 1rem 0.5rem"
-                     :border-width "0 0 1px 0"
-                     :border-style :solid
-                     :border-color theme-colors/gray-lighter}} (tr-enum title)]]
+             :class (<class contract-style/responsibilities-table-header-style)}
+        (tr-enum title)]]
       (ui-util/mapc
         (fn [row]
-          [:tr {:class (<class simple-table-row-style)}
+          [:tr {:class (<class contract-style/responsibilities-table-row-style)}
            (ui-util/mapc
              (fn [[column {:keys [style class] :as opts}]]
                [:td (merge
                       {:style (merge {} style)
                        :class (herb/join
-                                (<class simple-table-cell-style)
+                                (<class contract-style/responsibilities-table-cell-style)
                                 (when class
                                   class))}
                       (dissoc opts :style :class))
