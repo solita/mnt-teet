@@ -170,6 +170,14 @@
                 ext-contract)))
           contract)))
 
+(def ^:private employee-attributes
+  [:user/given-name
+   :user/family-name
+   :user/id :user/person-id
+   :user/email
+   :user/phone-number
+   :user/last-login])
+
 (def contract-partner-attributes
   `[~'*
     {:company-contract/_contract
@@ -183,11 +191,7 @@
        :company-contract/employees
        [~'*
         {:company-contract-employee/user
-         [:user/given-name
-          :user/family-name
-          :user/id :user/person-id
-          :user/email
-          :user/phone-number]}]}]}])
+         ~employee-attributes}]}]}])
 
 (defn get-contract-with-partners
   [db contract-eid]
@@ -229,7 +233,8 @@
         activity-id (str (:db/id activity))]
     {:target target
      :activity {:activity/manager (user-model/user-name (:activity/manager activity))
-                :activity/name (:activity/name activity)}
+                :activity/name (:activity/name activity)
+                :activity/tasks (:activity/tasks activity)}
      :project project
      :target-navigation-info (if (:activity/name target)
                                {:page :activity
@@ -248,6 +253,26 @@
               (pull ?activity [:db/id :activity/name
                                {:thk.lifecycle/_activities [:thk.lifecycle/id]}
                                {:activity/manager [:user/family-name :user/given-name]}])
+              :where
+              [?c :thk.contract/targets ?target]
+              (target-activity ?target ?activity)
+              (target-project ?target ?project)
+              :in $ % ?c]
+            db
+            contract-query-rules
+            contract-eid)
+       (mapv format-target-information)
+       du/idents->keywords))
+
+(defn contract-responsible-target-entities
+  [db contract-eid]
+  (->> (d/q '[:find
+              (pull ?target [*])
+              (pull ?project [:thk.project/id :thk.project/name :thk.project/project-name])
+              (pull ?activity [:db/id :activity/name
+                               {:thk.lifecycle/_activities [:thk.lifecycle/id]}
+                               {:activity/manager [:user/family-name :user/given-name]}
+                               {:activity/tasks [:db/id :task/group :task/type :task/assignee]}])
               :where
               [?c :thk.contract/targets ?target]
               (target-activity ?target ?activity)
@@ -333,15 +358,16 @@
 
 (defn available-company-contract-employees
   [db company-contract-eid search]
-  (->> (d/q '[:find (pull ?u [:db/id :user/id
-                              :user/given-name :user/family-name
-                              :user/email :user/phone-number :user/person-id])
+  (->> (d/q '[:find (pull ?u employee-attributes)
               :where
               (user-by-name ?u ?search)
               (not-join [?u ?company-contract]
                         [?company-contract :company-contract/employees ?cce]
                         [?cce :company-contract-employee/user ?u])
-              :in $ % ?search ?company-contract]
-            db user-queries/user-query-rules
-            search company-contract-eid)
+              :in $ % ?search ?company-contract employee-attributes]
+            db
+            user-queries/user-query-rules
+            search
+            company-contract-eid
+            employee-attributes)
        (mapv first)))

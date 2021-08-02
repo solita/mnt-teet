@@ -131,15 +131,17 @@
                              :type      :button}))
 
 (defn stand-alone-icon-button
-  [{:keys [id on-click icon class href ref]}]
-  [IconButton {:size :small
-               :class (collection/combine-and-flatten
-                        class
-                        (<class common-styles/stand-alone-icon-button-style))
-               :on-click on-click
-               :href href
-               :ref ref
-               :id id}
+  [{:keys [id on-click icon class href ref data-cy]}]
+  [IconButton (merge {:size :small
+                      :class (collection/combine-and-flatten
+                               class
+                               (<class common-styles/stand-alone-icon-button-style))
+                      :on-click on-click
+                      :href href
+                      :ref ref
+                      :id id}
+                     (when data-cy
+                       {:data-cy data-cy}))
    icon])
 
 (defn link-button-with-icon
@@ -229,6 +231,7 @@
        underlined?
        [IconButton {:on-click open
                     :size :small
+                    :disabled (boolean disabled)
                     :style {:color theme-colors/red
                             :text-decoration :underline}}
         [icons/content-clear]

@@ -140,19 +140,23 @@
     [company-info-column display-data (tr [:contract :information-found]) :success]))
 
 (defn edit-company-footer
-  [e! form-value {:keys [cancel delete validate disabled?]}]
+  [e! form-value {:keys [cancel delete validate disabled? delete-disabled-error-text]}]
   (let [search-disabled? (:search-in-progress? form-value)
         estonian-company? (= (:company/country form-value) :ee)]
     [:div {:class (<class form/form-buttons :flex-end)}
      [:div (when delete
-             [buttons/delete-button-with-confirm
-              {:action delete
-               :underlined? :true
-               :confirm-button-text (tr [:contract :delete-button-text])
-               :cancel-button-text (tr [:contract :cancel-button-text])
-               :modal-title (tr [:contract :are-you-sure-delete-partner])
-               :modal-text (tr [:contract :confirm-delete-partner-text])}
-              (tr [:buttons :remove-from-contract])])]
+             [common/popper-tooltip
+              (when delete-disabled-error-text
+                {:title delete-disabled-error-text})
+              [buttons/delete-button-with-confirm
+               {:action delete
+                :underlined? :true
+                :confirm-button-text (tr [:contract :delete-button-text])
+                :disabled delete-disabled-error-text
+                :cancel-button-text (tr [:contract :cancel-button-text])
+                :modal-title (tr [:contract :are-you-sure-delete-partner])
+                :modal-text (tr [:contract :confirm-delete-partner-text])}
+               (tr [:buttons :remove-from-contract])]])]
      [:div {:style {:margin-left :auto
                     :text-align :center}}
       (when cancel
@@ -252,7 +256,10 @@
 (defn new-company-form-fields
   [form-value]
   (let [foreign-company? (not= :ee (:company/country form-value))
-        business-search-failed? (:no-results? form-value)
+        business-search-failed? (and (:no-results? form-value)
+                                     ;; Clear error after business id is edited
+                                     (= (:business-id-used-in-search form-value)
+                                        (:company/business-registry-code form-value)))
         exception-in-xroad? (:exception-in-xroad? form-value)]
     [:div
      [form/field :company/country
@@ -269,8 +276,18 @@
       (str (format/date-time (:meta/modified-at selected-company)) " "
         (user-model/user-name (get-in selected-company [:company-contract/company :meta/modifier]))))))
 
+(defn- active-employees [contract selected-company]
+  (when (and selected-company contract)
+    (->> contract
+         :company-contract/_contract
+         (filter (fn [company-contract]
+                   (= selected-company (:db/id (:company-contract/company company-contract)))))
+         first
+         :company-contract/employees
+         (filter :company-contract-employee/active?))))
+
 (defn edit-partner-form
-  [e! {:keys [query] :as app} selected-company]
+  [e! {:keys [query] :as app} contract selected-company]
   (e! (contract-partners-controller/->InitializeEditCompanyForm
         (merge
           (:company-contract/company selected-company)
@@ -283,11 +300,18 @@
             time-icon [icons/action-schedule {:style {:color theme-colors/gray-light}}]
             search-success? (:search-success? form-state)
             search-disabled? (:search-in-progress? form-state)
-            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)]
+            estonian-company? (= (get-in selected-company [:company-contract/company :company/country]) :ee)
+            ;; NOTE: there is no way to remove company-contract-employees in the current specification.
+            ;; Employees can only be deactivated.
+            ;; Therefore the dev team decided to allow removing company-contract if it has no active
+            ;; employees.
+            delete-disabled? (seq (active-employees contract (:db/id form-state)))]
         [Grid {:container true}
          [Grid {:item true
                 :xs 12
                 :md 6}
+          ;; Re-render the form when delete-disabled? changes
+          ^{:key (str "edit-partner-form-" delete-disabled?)}
           [form/form2 (merge {:e! e!
                               :value form-state
                               :save-event #(common-controller/->SaveFormWithConfirmation
@@ -311,7 +335,9 @@
                              (when (:db/id selected-company)
                                {:delete (contract-partners-controller/->DeletePartner
                                           {:partner selected-company
-                                           :contract (select-keys (:company-contract/contract selected-company) [:db/id])})}))
+                                           :contract (select-keys (:company-contract/contract selected-company) [:db/id])})})
+                             (when delete-disabled?
+                               {:delete-disabled-error-text (tr [:contract :cannot-delete-company-with-persons])}))
            [edit-company-form-fields form-state]
            (when (or selected-company? search-success?)
              [form/field {:attribute :company-contract/lead-partner?}
@@ -518,23 +544,27 @@
                                   :on-click validate}
           (tr [:buttons :save])])]]]))
 
-(defn new-person-form-fields [e! form-value]
-  []
+(defn new-person-form-fields [e! form-value & [personal-info-disabled?]]
   [:div
+   [form/field {:attribute :user/given-name
+                :required? true}
+    [TextField {:disabled personal-info-disabled?}]]
+   [form/field {:attribute :user/family-name
+                :required? true}
+    [TextField {:disabled personal-info-disabled?}]]
    ^{:key "person-id"}
-   [form/field :user/given-name
-    [TextField {}]]
-   [form/field :user/family-name
-    [TextField {}]]
    [form/field {:attribute :user/person-id
+                :validate (fn [value]
+                            (when-not (str/blank? value)
+                              (validation/validate-person-id value)))
                 :required? :true}
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :user/email
                 :validate validation/validate-email-optional
                 :required? :true}
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field :user/phone-number
-    [TextField {}]]
+    [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :company-contract-employee/role}
     [select/select-user-roles-for-contract
      {:e! e!
@@ -545,7 +575,7 @@
       :clear-value [nil nil]}]]])
 
 (defn add-personnel-form
-  [e! {:keys [query] :as app} selected-partner]
+  [e! query selected-partner]
   (r/with-let [form-atom (r/atom {})
                add-new-person? (r/atom false)
                add-new-person #(reset! add-new-person? true)]
@@ -600,6 +630,7 @@
                                   :company-contract-id (:db/id selected-partner)}
                            :query :contract/possible-partner-employees})
                  :format-result select/user-search-select-result
+                 :no-results (tr [:contract :user-not-found-or-already-added])
                  :after-results-action {:title (tr [:contract :add-person-not-in-teet])
                                         :on-click add-new-person
                                         :icon [icons/content-add]}}]]]))
@@ -623,7 +654,8 @@
         given-name (:user/given-name user)
         family-name (:user/family-name user)
         user-id (:user/id user)
-        roles (set (:company-contract-employee/role selected-person))]
+        roles (set (:company-contract-employee/role selected-person))
+        personal-info-disabled? (:user/last-login user)]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
                           :user/email email
@@ -659,7 +691,7 @@
                                   (tr [:contract :partner :person-updated]))}
        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
         (tr [:contract :partner :edit-person])]
-       [new-person-form-fields e! (:form-value @form-atom)]
+       [new-person-form-fields e! (:form-value @form-atom) personal-info-disabled?]
        [form/footer2 (partial contract-personnel-form-footer @form-atom)]])))
 
 (defn partner-info-header
@@ -736,11 +768,11 @@
       :partner-info
       [partner-info e! app selected-partner]
       :edit-partner
-      [edit-partner-form e! app selected-partner]
+      [edit-partner-form e! app contract selected-partner]
       :add-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
-       [add-personnel-form e! app selected-partner]]
+       [add-personnel-form e! (:query app) selected-partner]]
       :personnel-info
       [employee-info e! app selected-partner employee]
       :edit-personnel
@@ -766,5 +798,3 @@
             :class (herb/join (<class common-styles/padding 1.5)
                               (<class common-styles/flex-1))}
       [partners-page-router e! app contract]]]]])
-
-

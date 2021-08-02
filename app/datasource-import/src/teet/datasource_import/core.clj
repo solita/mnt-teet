@@ -134,7 +134,7 @@
                      2  60000
                      1 120000})
 
-(def retry-statuses #{502 503 504}) ; bad gateway, serv unavailable, gw timeout
+(def retry-statuses #{502 503 504 413}) ; bad gateway, serv unavailable, gw timeout, payload too large
 
 (defn patient-post [url params]
   (loop [tries 5]

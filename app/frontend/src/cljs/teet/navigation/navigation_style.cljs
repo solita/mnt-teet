@@ -61,25 +61,30 @@
   (with-meta
     {:display :flex
      :flex-direction :column
-      :top 0
-      :bottom :auto
-      :background-color theme-colors/white
-      :color theme-colors/gray-dark
-      :height theme-spacing/appbar-height
-      :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
-      :transition "all 0.2s ease-in-out"}
-    (responsivity-styles/mobile-only-meta
-      {:height theme-spacing/appbar-height-mobile})))
+     :top 0
+     :bottom :auto
+     :background-color theme-colors/white
+     :border-bottom "1px solid #D2D3D8"
+     :color theme-colors/gray-dark
+     :height theme-spacing/appbar-height
+     :transition "all 0.2s ease-in-out"}
+    (merge (responsivity-styles/mobile-only-meta
+             {:height theme-spacing/appbar-height-mobile})
+           {:pseudo {:last-of-type {:border-bottom "none"
+                                    :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"}}})))
 
 (defn appbar-position [drawer-open?]
   (with-meta
-    {:z-index 10
-     :height theme-spacing/appbar-height-mobile}
-    (responsivity-styles/desktop-only-meta
-      (let [dw (drawer-width drawer-open?)]
-        {:width (str "calc(100% - " dw "px)")
-         :height theme-spacing/appbar-height
-         :margin-left (str dw "px")}))))
+    {:height theme-spacing/appbar-height-mobile}
+    (merge
+      (responsivity-styles/desktop-only-meta
+        (let [dw (drawer-width drawer-open?)]
+          {:width (str "calc(100% - " dw "px)")
+           :height theme-spacing/appbar-height
+           :margin-left (str dw "px")}))
+      ;; Add z-index only to first appbar, so that second appbar will not be on top of quick search
+      ;; or other extra-panels
+      {:pseudo {:first-of-type {:z-index 10}}})))
 
 (defn main-container [drawer-open?]
   (with-meta
