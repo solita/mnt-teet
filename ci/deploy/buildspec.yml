@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+    GITHUB_COMMIT_URL: "https://github.com/solita/mnt-teet/commit/"
 
 phases:
   install:
@@ -25,7 +26,7 @@ phases:
 
   post_build:
     commands:
-      - NOTIFY_ON_SUCCESS=1 bash $CODEBUILD_SRC_DIR/ci/scripts/slack.bash Deploy $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - NOTIFY_ON_SUCCESS=1 bash $CODEBUILD_SRC_DIR/ci/scripts/slack.bash Deploy $GITHUB_COMMIT_URL$CODEBUILD_RESOLVED_SOURCE_VERSION
 cache:
   paths:
     - '/root/.m2/**/*'
