@@ -8,6 +8,12 @@
    :background-color theme-colors/white
    :flex 1})
 
+(defn contract-responsibilities-container-style
+  []
+  {:padding "1rem 1rem"
+   :background-color theme-colors/white
+   :flex 1})
+
 (defn contract-card-style
   []
   {:padding "0.8rem"
@@ -132,6 +138,11 @@
    :flex 1
    :display :flex})
 
+(defn responsibilities-page-container
+  []
+  {:background-color theme-colors/white
+   :padding "0 1rem 0 1rem"})
+
 (defn partner-info-header
   []
   ^{:combinators
@@ -185,3 +196,36 @@
   []
   {:min-width "15.6rem"
    :border-right (str "1px solid " theme-colors/border-dark)})
+
+(defn responsibilities-table-row-style
+  []
+  ^{:pseudo {:first-of-type {:border-top :none
+                             :border-right :none
+                             :border-left :none}}}
+  {:border-width "1px"
+   :border-style :solid
+   :border-color theme-colors/gray-lighter})
+
+(defn responsibilities-table-heading-cell-style
+  []
+  {:white-space :nowrap
+   :font-weight 500
+   :font-size "0.875rem"
+   :color theme-colors/gray
+   :padding "1rem 0.5rem 1rem 0.5rem"
+   :text-align :left})
+
+(defn responsibilities-table-cell-style
+  []
+  {:padding "1rem 0.5rem 1rem 0.5rem"
+   :border-width "1px"
+   :border-style :solid
+   :border-color theme-colors/gray-lighter})
+
+(defn responsibilities-table-header-style []
+  {:text-align :left
+   :padding "1rem 0.5rem 1rem 0.5rem"
+   :border-width "0 0 1px 0"
+   :border-style :solid
+   :border-color theme-colors/gray-lighter})
+

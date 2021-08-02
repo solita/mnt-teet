@@ -234,7 +234,15 @@
     {:target target
      :activity {:activity/manager (user-model/user-name (:activity/manager activity))
                 :activity/name (:activity/name activity)
-                :activity/tasks (:activity/tasks activity)}
+                :activity/tasks (reduce (fn [acc task]
+                                          (conj acc (merge task
+                                                           {:navigation-info
+                                                            {:page :activity-task
+                                                             :params {:project project-id
+                                                                      :activity activity-id
+                                                                      :task (str (:db/id task))}}}
+                                                           {:owner (user-model/user-name (:activity/manager activity))})))
+                                        [] (:activity/tasks activity))}
      :project project
      :target-navigation-info (if (:activity/name target)
                                {:page :activity
@@ -272,7 +280,8 @@
               (pull ?activity [:db/id :activity/name
                                {:thk.lifecycle/_activities [:thk.lifecycle/id]}
                                {:activity/manager [:user/family-name :user/given-name]}
-                               {:activity/tasks [:db/id :task/group :task/type :task/assignee]}])
+                               {:activity/tasks [:db/id :task/group :task/type
+                                                 {:task/assignee [:user/family-name :user/given-name]} :task/status]}])
               :where
               [?c :thk.contract/targets ?target]
               (target-activity ?target ?activity)
