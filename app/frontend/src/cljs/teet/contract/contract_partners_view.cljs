@@ -257,6 +257,7 @@
   [form-value]
   (let [foreign-company? (not= :ee (:company/country form-value))
         business-search-failed? (and (:no-results? form-value)
+                                     (not (:search-in-progress? form-value))
                                      ;; Clear error after business id is edited
                                      (= (:business-id-used-in-search form-value)
                                         (:company/business-registry-code form-value)))
