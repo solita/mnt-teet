@@ -30,6 +30,7 @@
 (defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
 (defrecord SearchBusinessRegistryResult [form-key result])
+(defrecord ChangePersonnelStatus [user-id active?])
 
 (extend-protocol t/Event
   UpdateNewCompanyForm
