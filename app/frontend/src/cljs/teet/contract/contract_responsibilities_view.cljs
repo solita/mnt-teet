@@ -8,64 +8,80 @@
             [teet.ui.typography :as typography]
             teet.contract.contract-spec
             [teet.user.user-model :as user-model]
+            [teet.ui.common :as ui-common]
             [teet.ui.table :as table]
             [teet.ui.url :as url]
-            [teet.ui.util :as ui-util]))
+            [teet.ui.util :as ui-util]
+            [teet.util.collection :as cu]))
 
 (defn simple-table-with-many-bodies
   [table-headings groups]
   [:table {:style {:border-collapse :collapse
                    :width "100%"}}
    [:colgroup
-    [:col {:span "1" :style {:width "35%"}}]
-    [:col {:span "1" :style {:width "25%"}}]
-    [:col {:span "1" :style {:width "25%"}}]
-    [:col {:span "1" :style {:width "15%"}}]]
+    (for [[_ opts] table-headings]
+      [:col {:span "1"
+             :style (merge {}
+                           (select-keys opts [:width]))}])]
    [:thead
     [:tr {:class (<class contract-style/responsibilities-table-row-style)}
      (ui-util/mapc
        (fn [[heading opts]]
          [:td (merge
                 {:class (<class contract-style/responsibilities-table-heading-cell-style)}
-                opts)
+                (dissoc opts :width))
           heading])
        table-headings)]]
-   (for [task-group groups
-         :let [title (first task-group)
-               tasks (second task-group)
-               rows (reduce
-                      (fn [acc item]
-                        (conj
-                          acc
-                          [[[url/Link (:navigation-info item)
-                             (tr-enum (:task/type item))]]
-                           [(:owner item)]
-                           [(if (nil? (:task/assignee item))
-                              ""
-                              (user-model/user-name (:task/assignee item)))]
-                           [(tr-enum (:task/status item))]]))
-                      []
-                      tasks)]]
-     [:tbody
-      [:tr
-       [:th {:colSpan 4
-             :class (<class contract-style/responsibilities-table-header-style)}
-        (tr-enum title)]]
-      (ui-util/mapc
+   (for [[body-title body-rows] groups]
+     (do
+       (println "body-title" body-title)
+       (println body-rows)
+      [:tbody
+       (when body-title
+         [:tr
+          [:th {:colSpan 4
+                :class (<class contract-style/responsibilities-table-header-style)}
+           body-title]])
+       (ui-util/mapc
         (fn [row]
           [:tr {:class (<class contract-style/responsibilities-table-row-style)}
            (ui-util/mapc
-             (fn [[column {:keys [style class] :as opts}]]
-               [:td (merge
-                      {:style (merge {} style)
-                       :class (herb/join
-                                (<class contract-style/responsibilities-table-cell-style)
-                                (when class
-                                  class))}
-                      (dissoc opts :style :class))
-                column])
-             row)])
-        rows)])])
+            (fn [[column {:keys [style class] :as opts}]]
+              [:td (merge
+                    {:style (merge {} style)
+                     :class (herb/join
+                             (<class contract-style/responsibilities-table-cell-style)
+                             (when class
+                               class))}
+                    (dissoc opts :style :class))
+               column])
+            row)])
+        body-rows)]))])
+
+(defn- representative-info->company-name [representative-info]
+  (-> representative-info :company-contract :company-contract/company :company/name))
+(defn- representative-info->roles [representative-info]
+  (->> representative-info :employee :company-contract-employee/role (map tr-enum) (str/join ", ")))
+(defn- representative-info->name [representative-info]
+  (-> representative-info :employee :company-contract-employee/user user-model/user-name))
+
+(defn- partner-representatives-table [partner-representatives]
+  [simple-table-with-many-bodies
+   [["Company TODO" {:align :left}]
+    ["Company responsible person TODO" {:align :left}]
+    ["Role TODO" {:align :left}]]
+   [[nil ;; no group level heading
+     (into []
+           (for [representative-info (sort-by (juxt representative-info->company-name
+                                                    representative-info->name)
+                                              partner-representatives)]
+             (let [lead-partner? (-> representative-info :company-contract :company-contract/lead-partner?)]
+               [[[:<>
+                  [:span {:class (<class common-styles/margin-right 0.5)}
+                   (representative-info->company-name representative-info)]
+                  (when lead-partner? [ui-common/primary-tag "Lead partner TODO"])] {:align :left}]
+                [(representative-info->name representative-info) {:align :left}]
+                [(representative-info->roles representative-info) {:align :left}]])))]]])
 
 (defn targets-responsibilities
   [targets]
@@ -85,32 +101,25 @@
                {:component-opts {:data-cy "target-responsibility-activity-link"}})
         (tr [:link :target-view-activity])]]
       (when (not-empty groups)
-        (simple-table-with-many-bodies [[(tr [:contract :responsible :header :task])]
-                                        [(tr [:contract :responsible :header :tram-reviewer])]
-                                        [(tr [:contract :responsible :header :company-responsible])]
-                                        [(tr [:contract :responsible :header :status])]] groups))])])
-
-(defn- representative-info->company-name [representative-info]
-  (-> representative-info :company-contract :company-contract/company :company/name))
-(defn- representative-info->roles [representative-info]
-  (->> representative-info :employee :company-contract-employee/role (map tr-enum) (str/join ", ")))
-(defn- representative-info->name [representative-info]
-  (-> representative-info :employee :company-contract-employee/user user-model/user-name))
-
-(defn- partner-representatives-table [partner-representatives]
-  [table/simple-table
-   [["Company TODO" {:align :left}]
-    ["Company responsible person TODO" {:align :left}]
-    ["Role TODO" {:align :left}]]
-   (for [representative-info (sort-by (juxt representative-info->company-name
-                                            representative-info->name)
-                                      partner-representatives)]
-     (let [lead-partner? (-> representative-info :company-contract :company-contract/lead-partner?)]
-       [[(str (representative-info->company-name representative-info)
-              (when lead-partner? " (lead partner)")) {:align :left}]
-        [(representative-info->name representative-info) {:align :left}]
-        [(representative-info->roles representative-info) {:align :left}]]))])
-
+        (let [bodies (->> groups
+                          (mapv (fn [[group items]]
+                                  [(tr-enum group)
+                                   (->> items
+                                        (mapv (fn [item]
+                                                [[[url/Link (:navigation-info item)
+                                                   (tr-enum (:task/type item))]]
+                                                 [(:owner item)]
+                                                 [(if (nil? (:task/assignee item))
+                                                    ""
+                                                    (user-model/user-name (:task/assignee item)))]
+                                                 [(tr-enum (:task/status item))]]))
+                                        sort)]))
+                          (sort-by first))]
+          [simple-table-with-many-bodies [[(tr [:contract :responsible :header :task]) {:width "35%"}]
+                                          [(tr [:contract :responsible :header :tram-reviewer]) {:width "25%"}]
+                                          [(tr [:contract :responsible :header :company-responsible]) {:width "25%"}]
+                                          [(tr [:contract :responsible :header :status]) {:width "15%"}]]
+           bodies]))])])
 
 (defn responsibilities-page
   [e! app contract]
