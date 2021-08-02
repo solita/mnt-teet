@@ -468,7 +468,14 @@
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
        [] ;TODO implement key person functionality
-       [[common/Link {:class (<class contract-style/personnel-activation-link-style active?)
+       [buttons/button-with-confirm
+        {:action (e! contract-partners-controller/ChangePersonnelStatus (:db/id employee) (if active? false true))
+         :modal-title (str "Activate/Deactivate?")
+         :confirm-button-text  (tr [:buttons :confirm])
+         :cancel-button-text  (tr [:buttons :cancel])
+         :modal-text (str "Activate/deactivate?")
+         :close-on-action? true}
+        [common/Link {:class (<class contract-style/personnel-activation-link-style active?)
                       :href "#"}                            ;TODO add activation/deactivation functionality
          (if active? (tr [:admin :deactivate]) (tr [:admin :activate]))]]
        [[buttons/small-button-secondary
