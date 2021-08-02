@@ -450,11 +450,11 @@
                (tr [:contract :partner :deactive-persons]))
           " (" (count employees) ")")]
    [table/simple-table
-    [[(tr [:common :name])]
+    [[(tr [:common :name]) {:width "30%"}]
      [(tr [:user :role])]
-     [(tr [:contract :partner :key-person])]
-     []
-     []]
+     [(tr [:contract :partner :key-person]) {:width "10%"}]
+     ["" {:align :right :width "10%"}]
+     ["" {:align :right :width "10%"}]]
     (for [employee employees]
       [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
              (get-in employee [:company-contract-employee/user :user/given-name]))]
@@ -462,16 +462,17 @@
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
        [] ;TODO implement key person functionality
-       [buttons/button-with-confirm
-        {:action (e! contract-partners-controller/ChangePersonnelStatus (:db/id employee) (if active? false true))
-         :modal-title (str "Activate/Deactivate?")
-         :confirm-button-text  (tr [:buttons :confirm])
-         :cancel-button-text  (tr [:buttons :cancel])
-         :modal-text (str "Activate/deactivate?")
-         :close-on-action? true}
-        [common/Link {:class (<class contract-style/personnel-activation-link-style active?)
-                      :href "#"}                            ;TODO add activation/deactivation functionality
-         (if active? (tr [:admin :deactivate]) (tr [:admin :activate]))]]
+       [[buttons/button-with-confirm
+         {:action (e! contract-partners-controller/->ChangePersonStatus (:db/id employee) (not active?))
+          :modal-title (str (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate])) "?")
+          :modal-text (tr [:contract :partner :change-status-text])
+          :close-on-action? true
+          :confirm-button-text (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))
+          :confirm-button-style (if active? buttons/button-warning buttons/button-green)}
+         [(if active? buttons/button-warning buttons/button-green) {:id (str "person-status-btn-" (:db/id employee))
+                                :size :small
+                                :class (<class contract-style/personnel-activation-link-style active?)}
+          (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))]]]
        [[buttons/small-button-secondary
          {:href (routes/url-for {:page :contract-partners
                                  :params (merge

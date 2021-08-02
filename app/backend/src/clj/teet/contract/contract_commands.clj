@@ -174,6 +174,16 @@
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
 
+(defcommand :thk.contract/change-person-status
+  {:doc "Activate/Deactivate contract person"
+   :payload {user-id :user-id
+             active? :active?}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :transact [{:db/id user-id
+               :company-contract-employee/active? active?}]})
+
 (defn- form-value->person-id-eid [form-value]
   [:user/person-id (-> form-value
                        :user/person-id
