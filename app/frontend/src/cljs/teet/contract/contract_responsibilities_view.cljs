@@ -1,15 +1,14 @@
 (ns teet.contract.contract-responsibilities-view
-  (:require [teet.common.common-styles :as common-styles]
+  (:require [clojure.string :as str]
+            [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-enum]]
             [herb.core :refer [<class] :as herb]
-            [teet.ui.text-field :refer [TextField]]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
-            [teet.ui.material-ui :refer [Grid Checkbox Divider]]
             [teet.ui.typography :as typography]
-            [reagent.core :as r]
             teet.contract.contract-spec
             [teet.user.user-model :as user-model]
+            [teet.ui.table :as table]
             [teet.ui.url :as url]
             [teet.ui.util :as ui-util]))
 
@@ -72,8 +71,7 @@
   [targets]
   [:div
    (for [target targets
-         :let [task? (some? (get-in target [:target :task/type]))
-               tasks (get-in target [:activity :activity/tasks])
+         :let [tasks (get-in target [:activity :activity/tasks])
                groups (group-by :task/group tasks)]]
      [:div {:style {:padding "2rem 0 2rem 0"}}
       [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
@@ -92,14 +90,41 @@
                                         [(tr [:contract :responsible :header :company-responsible])]
                                         [(tr [:contract :responsible :header :status])]] groups))])])
 
+(defn- representative-info->company-name [representative-info]
+  (-> representative-info :company-contract :company-contract/company :company/name))
+(defn- representative-info->roles [representative-info]
+  (->> representative-info :employee :company-contract-employee/role (map tr-enum) (str/join ", ")))
+(defn- representative-info->name [representative-info]
+  (-> representative-info :employee :company-contract-employee/user user-model/user-name))
+
+(defn- partner-representatives-table [partner-representatives]
+  [table/simple-table
+   [["Company TODO" {:align :left}]
+    ["Company responsible person TODO" {:align :left}]
+    ["Role TODO" {:align :left}]]
+   (for [representative-info (sort-by (juxt representative-info->company-name
+                                            representative-info->name)
+                                      partner-representatives)]
+     (let [lead-partner? (-> representative-info :company-contract :company-contract/lead-partner?)]
+       [[(str (representative-info->company-name representative-info)
+              (when lead-partner? " (lead partner)")) {:align :left}]
+        [(representative-info->name representative-info) {:align :left}]
+        [(representative-info->roles representative-info) {:align :left}]]))])
+
+
 (defn responsibilities-page
   [e! app contract]
-  (let [targets (:thk.contract/targets contract)]
+  (let [targets (:thk.contract/targets contract)
+        partner-representatives (:partner-representatives contract)]
     [:div {:class (<class contract-style/contract-responsibilities-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
-      (when
-        (not-empty targets)
+      (when (not-empty partner-representatives)
+        [:div {:class (<class common-styles/margin-top 2)}
+         [typography/Heading1 {:class (<class common-styles/margin-top 2)}
+          "Partner representatives TODO"]
+         [partner-representatives-table partner-representatives]])
+      (when (not-empty targets)
         [:div {:class (<class common-styles/margin-top 2)}
          [typography/Heading1 {:class (<class common-styles/margin-top 2)}
           (tr [:contract :table-heading :task-responsibilities])]

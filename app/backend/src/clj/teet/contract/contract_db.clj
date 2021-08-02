@@ -380,3 +380,23 @@
             company-contract-eid
             employee-attributes)
        (mapv first)))
+
+(defn get-partner-representatives
+  "Partner representatives of a contract are "
+  [db contract-eid]
+  (->> (d/q '[:find
+              (pull ?employee [*
+                               {:company-contract-employee/user [*]}
+                               {:company-contract-employee/role [*]}])
+              (pull ?cc [{:company-contract/company [:company/name]}
+                         :company-contract/lead-partner?])
+              :where
+              [?cc :company-contract/contract ?contract]
+              [?cc :company-contract/company ?company]
+              [?cc :company-contract/employees ?employee]
+              [?employee :company-contract-employee/role :company-contract-employee.role/company-representative]
+              :in $ ?contract]
+            db contract-eid)
+       (mapv (fn [[employee company-contract]]
+               {:employee employee
+                :company-contract company-contract}))))
