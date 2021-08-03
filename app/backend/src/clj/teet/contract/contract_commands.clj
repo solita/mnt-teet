@@ -184,6 +184,16 @@
    :transact [{:db/id employee-id
                :company-contract-employee/active? active?}]})
 
+(defcommand :thk.contract/assign-key-person
+            {:doc "Assign / un-assign key person status"
+             :payload {employee-id :employee-id
+                       key-person? :key-person?}
+             :context {:keys [user db]}
+             :project-id nil
+             :authorization {:contracts/contract-editing {}}
+             :transact [{:db/id employee-id
+                         :company-contract-employee/key-person? key-person?}]})
+
 (defn- form-value->person-id-eid [form-value]
   [:user/person-id (-> form-value
                        :user/person-id

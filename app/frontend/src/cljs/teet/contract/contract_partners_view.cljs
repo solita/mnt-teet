@@ -513,7 +513,7 @@
     false]])
 
 (defn info-personnel-section
-  [e! {:keys [params query] :as app} selected-partner]
+  [e! {:keys [params query] :as app} selected-partner employee]
   [:div {:class (<class contract-style/personnel-section-style)}
    [:div {:class (<class contract-style/personnel-section-header-style)}
     [authorization-check/when-authorized
@@ -523,8 +523,19 @@
                                                        :params params
                                                        :query (merge
                                                                 query
-                                                                {:page :add-personnel})})}
+                                                                {:page :assign-key-person})})}
       (tr [:buttons :assign-as-key-person])]]]])
+
+(defn key-person-assignment-section
+  [e! {:keys [params query] :as app} selected-partner employee]
+  [:div {:class (<class contract-style/personnel-section-style)}
+   [:div {:class (<class contract-style/personnel-section-header-style)}
+    [authorization-check/when-authorized
+     :thk.contract/add-contract-employee selected-partner
+     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                                :type :submit
+                                :on-click (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) (false? nil))}
+      (tr [:buttons :remove-key-person-assignment])]]]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -768,7 +779,15 @@
    [employee-info-header employee params selected-partner]
    [user-info (:company-contract-employee/user employee) (:company-contract-employee/role employee)]
    [Divider {:class (<class common-styles/margin 1 0)}]
-   [info-personnel-section e! app selected-partner]])
+   [info-personnel-section e! app selected-partner employee]])
+
+(defn key-employee-info
+  [e! {:keys [params] :as app} selected-partner employee]
+  [:div
+   [employee-info-header employee params selected-partner]
+   [user-info (:company-contract-employee/user employee) (:company-contract-employee/role employee)]
+   [Divider {:class (<class common-styles/margin 1 0)}]
+   [key-person-assignment-section e! app selected-partner employee]])
 
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]
@@ -797,6 +816,8 @@
        [add-personnel-form e! (:query app) selected-partner]]
       :personnel-info
       [employee-info e! app selected-partner employee]
+      :assign-key-person
+      [key-employee-info e! app selected-partner employee]
       :edit-personnel
       [authorization-check/when-authorized
        :thk.contract/add-contract-employee selected-partner
