@@ -356,14 +356,16 @@
 (defn is-company-contract-employee?
   "Given user id and company-contract check if the user is an employee"
   [db company-contract-eid user-eid]
-  (->> (d/q '[:find ?cce
-              :in $ ?cc ?user
-              :where
-              [?cc :company-contract/employees ?cce]
-              [?cce :company-contract-employee/user ?user]]
-            db company-contract-eid user-eid)
-       ffirst
-       boolean))
+  (if (:db/id (d/pull db '[*] user-eid))
+    (->> (d/q '[:find ?cce
+                :in $ ?cc ?user
+                :where
+                [?cc :company-contract/employees ?cce]
+                [?cce :company-contract-employee/user ?user]]
+              db company-contract-eid user-eid)
+         ffirst
+         boolean)
+    false))
 
 (defn available-company-contract-employees
   [db company-contract-eid search]
