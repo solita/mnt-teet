@@ -30,7 +30,7 @@
 (defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
 (defrecord SearchBusinessRegistryResult [form-key result])
-(defrecord ChangePersonStatus [user-id active?])
+(defrecord ChangePersonStatus [employee-id active?])
 (defrecord PersonStatusChangeSuccess [])
 
 (extend-protocol t/Event
@@ -45,12 +45,12 @@
             (common-controller/refresh-fx e!))))
 
   ChangePersonStatus
-  (process-event [{user-id :user-id
+  (process-event [{employee-id :employee-id
                    active? :active?} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :thk.contract/change-person-status
-           :payload {:user-id user-id
+           :payload {:employee-id employee-id
                      :active? active?}
            :success-message (if active?
                               (tr [:contract :partner :person-activated])

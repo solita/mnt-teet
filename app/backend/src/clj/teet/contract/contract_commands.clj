@@ -176,12 +176,12 @@
 
 (defcommand :thk.contract/change-person-status
   {:doc "Activate/Deactivate contract person"
-   :payload {user-id :user-id
+   :payload {employee-id :employee-id
              active? :active?}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :transact [{:db/id user-id
+   :transact [{:db/id employee-id
                :company-contract-employee/active? active?}]})
 
 (defn- form-value->person-id-eid [form-value]
