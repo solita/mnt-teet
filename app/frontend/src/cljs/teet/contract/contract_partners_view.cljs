@@ -475,9 +475,10 @@
           :close-on-action? true
           :confirm-button-text (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))
           :confirm-button-style (if active? buttons/button-warning buttons/button-green)}
-         [(if active? buttons/button-warning buttons/button-green) {:id (str "person-status-btn-" (:db/id employee))
-                                :size :small
-                                :class (<class contract-style/personnel-activation-link-style active?)}
+         [(if active? buttons/button-warning buttons/button-green)
+          {:id (str "person-status-btn-" (:db/id employee))
+           :size :small
+           :class (<class contract-style/personnel-activation-link-style active?)}
           (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))]]]
        [[buttons/small-button-secondary
          {:href (routes/url-for {:page :contract-partners
