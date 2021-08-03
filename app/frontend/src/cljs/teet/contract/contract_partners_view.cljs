@@ -443,6 +443,11 @@
                               :query {:page :add-partner}})}
       (tr [:contract :add-company])]]]])
 
+(defn key-person-approvals-panel
+  [e! {:keys [params query] :as app} employees active?]
+  [:div {:class (<class contract-style/personnel-table-style)}
+   [:h4 (str "Approvals")]])
+
 (defn employee-table
   [e! {:keys [params query] :as app} employees active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -497,6 +502,20 @@
    [employee-table e! app (filterv #(not (:company-contract-employee/active? %))
                      (:company-contract/employees selected-partner))
     false]])
+
+(defn info-personnel-section
+  [e! {:keys [params query] :as app} selected-partner]
+  [:div {:class (<class contract-style/personnel-section-style)}
+   [:div {:class (<class contract-style/personnel-section-header-style)}
+    [authorization-check/when-authorized
+     :thk.contract/add-contract-employee selected-partner
+     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                                :href (routes/url-for {:page :contract-partners
+                                                       :params params
+                                                       :query (merge
+                                                                query
+                                                                {:page :add-personnel})})}
+      (tr [:buttons :assign-as-key-person])]]]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -740,7 +759,7 @@
    [employee-info-header employee params selected-partner]
    [user-info (:company-contract-employee/user employee) (:company-contract-employee/role employee)]
    [Divider {:class (<class common-styles/margin 1 0)}]
-   [personnel-section e! app selected-partner]])
+   [info-personnel-section e! app selected-partner]])
 
 (defn partners-page-router
   [e! {:keys [query params] :as app} contract]

@@ -175,6 +175,7 @@
   :back "Tagasi",
   :send "Saadan teavituse",
   :cancel "Tühistan",
+  :assign-as-key-person "Määra võtmeisikuks",
   :add "Lisan",
   :remove-from-contract "Eemaldan lepingust",
   :copy-to-clipboard "Kopeeri tekst",
@@ -276,11 +277,17 @@
   :contract-information-heading "Lepingu info",
   :thk.contract.status/warranty "Garantii",
   :partner
-  {:active-persons "Aktiveeritud kasutajad",
-   :deactive-persons "Deaktiveeritud kasutajad",
-   :key-person "Võtmeisik",
+  {:key-person "Võtmeisik",
+   :person-deactivated "Isik deaktiveeritud",
+   :person-activated "Isik aktiveeritud",
+   :person-updated "Isiku admed muudetud",
+   :deactive-persons "Deaktiveeritud isikud",
+   :active-persons "Aktiivsed isikud",
+   :deactivate "Deaktiveeri",
+   :change-status-title "Muuda isiku staatust",
+   :change-status-text "Oled kindel, et soovid isiku staatust muuta?",
    :edit-person "Muudan isikut",
-   :person-updated "Isiku admed muudetud"},
+   :activate "Aktiveeri"},
   :person-name "Isiku nimi",
   :thk.contract/warranty-end-date "Garantii lõppkuupäev",
   :thk.contract.status/deadline-overdue "Tähtaeg ületatud",
@@ -898,7 +905,8 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :conflicting-tasks
   "Lisatavad ülesanded on konfliktis olemasoelvate ülesannetega",
-  :existing-teet-user "Kasutaja oli juba sisse loginud",
+  :existing-teet-user
+  "Kasutaja on juba lisatud ettevõtte alla ja on sisse loginud.",
   :vektorio-request-failed
   "Päring ebaõnnestus Vektor.io vea tõttu. Palun proovi mõne aja pärast uuesti.",
   :invalid-task-status
@@ -916,7 +924,7 @@
   :no-participants-with-email
   "Ühelgi teavitataval osalejal pole emaili aadressi",
   :employee-already-added-to-contract
-  "Kasutaja oli juba lepingule lisatud"},
+  "Kasutaja on juba lisatud ettevõtte alla."},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
