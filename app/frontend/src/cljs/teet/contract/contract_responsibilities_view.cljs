@@ -73,14 +73,18 @@
     [(tr [:contract :representatives :header :role]) {:align :left}]]
    [[nil ;; no group level heading
      (into []
-           (for [representative-info (sort-by (juxt (complement representative-info->lead-partner?)
-                                                    representative-info->company-name
-                                                    representative-info->name)
-                                              partner-representatives)]
+           (for [representative-info
+                 ;; Lead partner representatives first, the rest of the companies in alphabetical order
+                 (sort-by (juxt (complement representative-info->lead-partner?)
+                                representative-info->company-name
+                                representative-info->name)
+                          partner-representatives)]
              [[[:<>
                 [:span {:class (<class common-styles/margin-right 0.5)}
                  (representative-info->company-name representative-info)]
-                (when (representative-info->lead-partner? representative-info) [ui-common/primary-tag (tr [:contract :lead-partner])])] {:align :left}]
+                (when (representative-info->lead-partner? representative-info)
+                  [ui-common/primary-tag (tr [:contract :lead-partner])])]
+               {:align :left}]
               [(representative-info->name representative-info) {:align :left}]
               [(representative-info->roles representative-info) {:align :left}]]))]]])
 
