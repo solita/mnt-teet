@@ -410,9 +410,12 @@
         ccs-without-representatives (remove (comp (->> ccs-and-representatives (map first) set)
                                                   :db/id)
                                             company-contracts)]
-    (concat (->> ccs-and-representatives
-                 (mapv (fn [[cc employee]]
-                         {:company-contract (cc-id->cc cc)
-                          :employee employee})))
-            (mapv (fn [cc] {:company-contract cc})
+    (concat
+     ;; Include entry for each representative ...
+     (mapv (fn [[cc employee]]
+                    {:company-contract (cc-id->cc cc)
+                     :employee employee})
+           ccs-and-representatives)
+     ;; ... and each company with no representatives
+     (mapv (fn [cc] {:company-contract cc})
                   ccs-without-representatives))))
