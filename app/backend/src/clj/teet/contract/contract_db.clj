@@ -381,8 +381,9 @@
             employee-attributes)
        (mapv first)))
 
-(defn get-partner-representatives
-  "Partner representatives of a contract are "
+(defn contract-partner-representatives
+  "Partner representatives of a contract are employees assigned to the
+  contract with the 'company representative' role"
   [db contract-eid]
   (->> (d/q '[:find
               (pull ?employee [*

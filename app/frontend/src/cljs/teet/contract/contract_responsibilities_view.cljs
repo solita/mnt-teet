@@ -33,30 +33,27 @@
           heading])
        table-headings)]]
    (for [[body-title body-rows] groups]
-     (do
-       (println "body-title" body-title)
-       (println body-rows)
-      [:tbody
-       (when body-title
-         [:tr
-          [:th {:colSpan 4
-                :class (<class contract-style/responsibilities-table-header-style)}
-           body-title]])
-       (ui-util/mapc
-        (fn [row]
-          [:tr {:class (<class contract-style/responsibilities-table-row-style)}
-           (ui-util/mapc
-            (fn [[column {:keys [style class] :as opts}]]
-              [:td (merge
-                    {:style (merge {} style)
-                     :class (herb/join
-                             (<class contract-style/responsibilities-table-cell-style)
-                             (when class
-                               class))}
-                    (dissoc opts :style :class))
-               column])
-            row)])
-        body-rows)]))])
+     [:tbody
+      (when body-title
+        [:tr
+         [:th {:colSpan 4
+               :class (<class contract-style/responsibilities-table-header-style)}
+          body-title]])
+      (ui-util/mapc
+       (fn [row]
+         [:tr {:class (<class contract-style/responsibilities-table-row-style)}
+          (ui-util/mapc
+           (fn [[column {:keys [style class] :as opts}]]
+             [:td (merge
+                   {:style (merge {} style)
+                    :class (herb/join
+                            (<class contract-style/responsibilities-table-cell-style)
+                            (when class
+                              class))}
+                   (dissoc opts :style :class))
+              column])
+           row)])
+       body-rows)])])
 
 (defn- representative-info->company-name [representative-info]
   (-> representative-info :company-contract :company-contract/company :company/name))
