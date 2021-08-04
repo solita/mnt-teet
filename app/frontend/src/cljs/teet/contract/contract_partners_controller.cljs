@@ -32,6 +32,8 @@
 (defrecord SearchBusinessRegistryResult [form-key result])
 (defrecord ChangePersonStatus [employee-id active?])
 (defrecord PersonStatusChangeSuccess [])
+(defrecord AssignKeyPerson [employee-id key-person?])
+(defrecord AssignKeyPersonSuccess [])
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
@@ -56,6 +58,34 @@
                               (tr [:contract :partner :person-activated])
                               (tr [:contract :partner :person-deactivated]))
            :result-event ->PersonStatusChangeSuccess}))
+
+  AssignKeyPersonSuccess
+  (process-event [{:employee-id employee-id
+                   :key-person? key-person?} app]
+    (t/fx app
+          (fn [e!]
+            (if key-person?
+              (e! (common-controller/map->NavigateWithExistingAsDefault
+                    {:page :contract-partners
+                     :query (:query app)}))
+              (e! (common-controller/map->NavigateWithExistingAsDefault
+                    {:page :contract-partners
+                     :query {:page :personnel-info}}))))
+          (fn [e!]
+            (common-controller/refresh-fx e!))))
+
+  AssignKeyPerson
+  (process-event [{employee-id :employee-id
+                   key-person? :key-person?} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :thk.contract/assign-key-person
+           :payload {:employee-id employee-id
+                     :key-person? key-person?}
+           :success-message (if key-person?
+                              (tr [:contract :partner :key-person-assigned])
+                              (tr [:contract :partner :key-person-unassigned]))
+           :result-event ->AssignKeyPersonSuccess}))
 
   UpdateNewCompanyForm
   (process-event [{form-data :form-data} app]

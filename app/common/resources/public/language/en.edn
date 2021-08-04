@@ -288,6 +288,7 @@
   {:key-person "Key person",
    :person-deactivated "Person deactivated",
    :person-activated "Person activated",
+   :key-person-unassigned "Key person unassigned.",
    :person-updated "Person's data updated",
    :deactive-persons "Deactivated persons",
    :active-persons "Active persons",

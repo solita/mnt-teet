@@ -287,6 +287,7 @@
   {:key-person "Võtmeisik",
    :person-deactivated "Isik deaktiveeritud",
    :person-activated "Isik aktiveeritud",
+   :key-person-unassigned "Võtmeisiku määramine kustutatud.",
    :person-updated "Isiku admed muudetud",
    :deactive-persons "Deaktiveeritud isikud",
    :active-persons "Aktiivsed isikud",
