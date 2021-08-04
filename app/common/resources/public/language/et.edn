@@ -175,10 +175,12 @@
   :back "Tagasi",
   :send "Saadan teavituse",
   :cancel "Tühistan",
+  :assign-as-key-person "Määra võtmeisikuks",
   :add "Lisan",
   :remove-from-contract "Eemaldan lepingust",
   :copy-to-clipboard "Kopeeri tekst",
-  :upload "Laen üles"},
+  :upload "Laen üles",
+  :remove-key-person-assignment "Kustuta võtmeisiku määrärmine"},
  :cadastral-group
  {"" "Määratlemata",
   "Avalik-õiguslik omand" "Avalik-õiguslik omand",
@@ -266,6 +268,12 @@
   :partner-information-text
   "Valige või lisage vasakust menüüst uus ettevõtte, alltöövõtja või isik.",
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
+  :representatives
+  {:heading "Partnereite vastutavad isik",
+   :header
+   {:company "Firma",
+    :responsible "Firma vastutav isik",
+    :role "Roll"}},
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
   :partner-saved "Lepingupartner on lisatud",
@@ -300,6 +308,8 @@
   :partners {:title nil},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
+  :confirm-remove-key-person-text
+  "Kui on kustutatud siis see ei ole võimalik tagasi taastada.",
   :responsible
   {:header
    {:task "Ülesanne",
@@ -328,6 +338,8 @@
   "Otsingule vastavaid ettevõtteid ei leitud või on juba lisatud",
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
+  :are-you-sure-remove-key-person-assignment
+  "Kas oled  kindel, et tahad kustutada võtmeisiku määramine?",
   :partners-listing "Partnerite loetelu",
   :responsibilities-listing "Vastutuste loetelu",
   :thk.contract.status/signed "Allkirjastatud",

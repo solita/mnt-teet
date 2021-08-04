@@ -57,8 +57,10 @@
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         targets (contract-db/contract-responsible-target-entities db contract-eid)
+        partner-representatives (contract-db/contract-partner-representatives db contract-eid)
         result (-> (contract-db/get-contract db contract-eid)
                (assoc
-                 :thk.contract/targets targets)
+                :thk.contract/targets targets
+                :partner-representatives partner-representatives)
                contract-model/db-values->frontend)]
     result))
