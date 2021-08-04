@@ -60,12 +60,17 @@
            :result-event ->PersonStatusChangeSuccess}))
 
   AssignKeyPersonSuccess
-  (process-event [_ app]
+  (process-event [{:employee-id employee-id
+                   :key-person? key-person?} app]
     (t/fx app
           (fn [e!]
-            (e! (common-controller/map->NavigateWithExistingAsDefault
-                  {:page :contract-partners
-                   :query (:query app)})))
+            (if key-person?
+              (e! (common-controller/map->NavigateWithExistingAsDefault
+                    {:page :contract-partners
+                     :query (:query app)}))
+              (e! (common-controller/map->NavigateWithExistingAsDefault
+                    {:page :contract-partners
+                     :query {:page :personnel-info}}))))
           (fn [e!]
             (common-controller/refresh-fx e!))))
 

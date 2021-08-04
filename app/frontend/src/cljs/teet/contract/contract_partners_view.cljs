@@ -533,7 +533,7 @@
     [authorization-check/when-authorized
      :thk.contract/add-contract-employee selected-partner
       [buttons/delete-button-with-confirm
-       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) (false? nil))
+       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
         :underlined? :true
         :confirm-button-text (tr [:contract :delete-button-text])
         :cancel-button-text (tr [:contract :cancel-button-text])
