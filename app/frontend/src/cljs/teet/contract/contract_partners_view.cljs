@@ -532,9 +532,13 @@
    [:div {:class (<class contract-style/personnel-section-header-style)}
     [authorization-check/when-authorized
      :thk.contract/add-contract-employee selected-partner
-     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                                :type :submit
-                                :on-click (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) (false? nil))}
+      [buttons/delete-button-with-confirm
+       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) (false? nil))
+        :underlined? :true
+        :confirm-button-text (tr [:contract :delete-button-text])
+        :cancel-button-text (tr [:contract :cancel-button-text])
+        :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+        :modal-text (tr [:contract :confirm-remove-key-person-text])}
       (tr [:buttons :remove-key-person-assignment])]]]])
 
 (defn user-info-column

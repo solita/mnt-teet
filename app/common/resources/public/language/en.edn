@@ -181,7 +181,8 @@
   :add "Add",
   :remove-from-contract "Remove from the contract",
   :copy-to-clipboard "Copy all text",
-  :upload "Upload"},
+  :upload "Upload",
+  :remove-key-person-assignment "Remove key person assignment"},
  :cadastral-group
  {"" "Undefined",
   "Avalik-õiguslik omand" "Public property",
@@ -269,6 +270,12 @@
   :partner-information-text
   "Please select or add new company, subcontractor or person from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
+  :representatives
+  {:heading "Partner representatives",
+   :header
+   {:company "Company",
+    :responsible "Company responsible person",
+    :role "Roles"}},
   :company-search-placeholder "Enter company name or business id",
   :partner-saved "Contract partner added",
   :related-contracts "RELATED CONTRACTS",
@@ -281,6 +288,7 @@
   {:key-person "Key person",
    :person-deactivated "Person deactivated",
    :person-activated "Person activated",
+   :key-person-unassigned "Key person unassigned.",
    :person-updated "Person's data updated",
    :deactive-persons "Deactivated persons",
    :active-persons "Active persons",
@@ -303,6 +311,7 @@
   :partners {:title "Companies & persons"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active person and subcontractor added",
+  :confirm-remove-key-person-text "If removed it can not be undone.",
   :responsible
   {:header
    {:task "Task",
@@ -331,6 +340,8 @@
   "No companies, matching the search, were found or is already added",
   :xroad-exception-content
   "Try again in a few minutes or contact system administrator if the issue persists",
+  :are-you-sure-remove-key-person-assignment
+  "Are you sure you want to remove key person assignment?",
   :partners-listing "Partners listing",
   :responsibilities-listing "Responsibilities listing",
   :thk.contract.status/signed "Signed",
