@@ -448,6 +448,12 @@
   [:div {:class (<class contract-style/personnel-table-style)}
    [:h4 (str "Approvals")]])
 
+(defn- get-personnel-info-page [employee]
+  (let [key-person? (get-in employee [:company-contract-employee/key-person?])]
+    (if (true? key-person?)
+      :assign-key-person
+      :personnel-info)))
+
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -461,13 +467,16 @@
      [(tr [:contract :partner :key-person]) {:width "10%"}]
      ["" {:align :right :width "10%"}]
      ["" {:align :right :width "10%"}]]
-    (for [employee employees]
+    (for [employee employees
+          :let [key-person? (get-in employee [:company-contract-employee/key-person?])]]
       [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
              (get-in employee [:company-contract-employee/user :user/given-name]))]
        (if (not-empty (:company-contract-employee/role employee))
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
-       [] ;TODO implement key person functionality
+       [(if (true? key-person?)
+          [:icon (icons/key-person {:status :assigned})]
+          [:span])] ;TODO implement key person assignment statuses - :approved :rejected
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
          [buttons/button-with-confirm
@@ -489,7 +498,7 @@
                                            {:employee employee})
                                  :query (merge
                                           query
-                                          {:page :personnel-info
+                                          {:page (get-personnel-info-page employee)
                                            :user-id (get-in employee [:company-contract-employee/user :user/id])})})}
          (tr [:common :view-more-info])]]])]])
 
@@ -521,11 +530,10 @@
     [authorization-check/when-authorized
      :thk.contract/add-contract-employee selected-partner
      [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                                :href (routes/url-for {:page :contract-partners
-                                                       :params params
-                                                       :query (merge
-                                                                query
-                                                                {:page :assign-key-person})})}
+                                :on-click  (e!
+                                             contract-partners-controller/->AssignKeyPerson
+                                             (:db/id employee)
+                                             true)}
       (tr [:buttons :assign-as-key-person])]]]])
 
 (defn key-person-assignment-section

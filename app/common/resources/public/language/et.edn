@@ -269,11 +269,11 @@
   "Valige või lisage vasakust menüüst uus ettevõtte, alltöövõtja või isik.",
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :representatives
-  {:heading "Partnereite vastutavad isik",
+  {:heading "Partnerite esindajad",
    :header
-   {:company "Firma",
-    :responsible "Firma vastutav isik",
-    :role "Roll"}},
+   {:company "Ettevõte",
+    :responsible "Ettevõtte vastutav isik",
+    :role "Rollid"}},
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
   :partner-saved "Lepingupartner on lisatud",
@@ -293,6 +293,7 @@
    :active-persons "Aktiivsed isikud",
    :deactivate "Deaktiveeri",
    :change-status-title "Muuda isiku staatust",
+   :key-person-assigned "Võtmeisik määratud.",
    :change-status-text "Oled kindel, et soovid isiku staatust muuta?",
    :edit-person "Muudan isikut",
    :activate "Aktiveeri"},
@@ -315,7 +316,7 @@
   {:header
    {:task "Ülesanne",
     :tram-reviewer "TRAM esindaja",
-    :company-responsible "Firma vastutavad isik",
+    :company-responsible "Ettevõtte vastutav isik",
     :status "Olek"}},
   :persons "Isikud",
   :delete-button-text "Jah, kustuta",

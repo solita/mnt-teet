@@ -33,7 +33,7 @@
 (defrecord ChangePersonStatus [employee-id active?])
 (defrecord PersonStatusChangeSuccess [])
 (defrecord AssignKeyPerson [employee-id key-person?])
-(defrecord AssignKeyPersonSuccess [])
+(defrecord AssignKeyPersonSuccess [key-person? result])
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
@@ -60,23 +60,25 @@
            :result-event ->PersonStatusChangeSuccess}))
 
   AssignKeyPersonSuccess
-  (process-event [{:employee-id employee-id
-                   :key-person? key-person?} app]
+  (process-event [{:keys [key-person? _]} app]
     (t/fx app
           (fn [e!]
-            (if key-person?
-              (e! (common-controller/map->NavigateWithExistingAsDefault
-                    {:page :contract-partners
-                     :query (:query app)}))
-              (e! (common-controller/map->NavigateWithExistingAsDefault
-                    {:page :contract-partners
-                     :query {:page :personnel-info}}))))
+            (common-controller/refresh-fx e!))
           (fn [e!]
-            (common-controller/refresh-fx e!))))
+            (if (true? key-person?)
+              (e! (common-controller/map->NavigateWithExistingAsDefault
+                    {:page :contract-partners
+                     :query (merge
+                              (:query app)
+                              {:page :assign-key-person})}))
+              (e! (common-controller/map->NavigateWithExistingAsDefault
+                    {:page :contract-partners
+                     :query (merge
+                              (:query app)
+                              {:page :personnel-info})}))))))
 
   AssignKeyPerson
-  (process-event [{employee-id :employee-id
-                   key-person? :key-person?} app]
+  (process-event [{:keys [employee-id key-person?]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :thk.contract/assign-key-person
@@ -85,7 +87,7 @@
            :success-message (if key-person?
                               (tr [:contract :partner :key-person-assigned])
                               (tr [:contract :partner :key-person-unassigned]))
-           :result-event ->AssignKeyPersonSuccess}))
+           :result-event (partial ->AssignKeyPersonSuccess key-person?)}))
 
   UpdateNewCompanyForm
   (process-event [{form-data :form-data} app]
