@@ -410,7 +410,6 @@
         ccs-without-representatives (remove (comp (->> ccs-and-representatives (map first) set)
                                                   :db/id)
                                             company-contracts)]
-    (clojure.pprint/pprint ccs-and-representatives)
     (concat (->> ccs-and-representatives
                  (mapv (fn [[cc employee]]
                          {:company-contract (cc-id->cc cc)
