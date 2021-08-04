@@ -404,7 +404,7 @@
                                        [?cc :company-contract/employees ?employee]
                                        [?employee :company-contract-employee/active? true]
                                        (or [?employee :company-contract-employee/role :company-contract-employee.role/company-representative]
-                                           [?employee :company-contract-employee/role :company-contract-employee.role/company-project-manager
+                                           [?employee :company-contract-employee/role :company-contract-employee.role/company-project-manager])
                                        :in $ [?cc ...]]
                                      db (map :db/id company-contracts))
         ccs-without-representatives (remove (comp (->> ccs-and-representatives (map first) set)
