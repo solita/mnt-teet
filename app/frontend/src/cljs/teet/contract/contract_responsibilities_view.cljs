@@ -58,9 +58,13 @@
 (defn- representative-info->company-name [representative-info]
   (-> representative-info :company-contract :company-contract/company :company/name))
 (defn- representative-info->roles [representative-info]
-  (->> representative-info :employee :company-contract-employee/role (map tr-enum) (str/join ", ")))
+  (or (some->> representative-info :employee :company-contract-employee/role (map tr-enum) (str/join ", "))
+      "..."))
 (defn- representative-info->name [representative-info]
-  (-> representative-info :employee :company-contract-employee/user user-model/user-name))
+  (or (some-> representative-info :employee :company-contract-employee/user user-model/user-name)
+      "..."))
+(defn- representative-info->lead-partner? [representative-info]
+  (-> representative-info :company-contract :company-contract/lead-partner?))
 
 (defn- partner-representatives-table [partner-representatives]
   [simple-table-with-many-bodies
@@ -69,16 +73,16 @@
     [(tr [:contract :representatives :header :role]) {:align :left}]]
    [[nil ;; no group level heading
      (into []
-           (for [representative-info (sort-by (juxt representative-info->company-name
+           (for [representative-info (sort-by (juxt (complement representative-info->lead-partner?)
+                                                    representative-info->company-name
                                                     representative-info->name)
                                               partner-representatives)]
-             (let [lead-partner? (-> representative-info :company-contract :company-contract/lead-partner?)]
-               [[[:<>
-                  [:span {:class (<class common-styles/margin-right 0.5)}
-                   (representative-info->company-name representative-info)]
-                  (when lead-partner? [ui-common/primary-tag (tr [:contract :lead-partner])])] {:align :left}]
-                [(representative-info->name representative-info) {:align :left}]
-                [(representative-info->roles representative-info) {:align :left}]])))]]])
+             [[[:<>
+                [:span {:class (<class common-styles/margin-right 0.5)}
+                 (representative-info->company-name representative-info)]
+                (when (representative-info->lead-partner? representative-info) [ui-common/primary-tag (tr [:contract :lead-partner])])] {:align :left}]
+              [(representative-info->name representative-info) {:align :left}]
+              [(representative-info->roles representative-info) {:align :left}]]))]]])
 
 (defn targets-responsibilities
   [targets]
