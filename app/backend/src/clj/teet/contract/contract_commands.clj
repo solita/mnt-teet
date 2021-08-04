@@ -178,7 +178,6 @@
   {:doc "Activate/Deactivate contract person"
    :payload {employee-id :employee-id
              active? :active?}
-   :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :transact [{:db/id employee-id
