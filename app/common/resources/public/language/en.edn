@@ -277,11 +277,18 @@
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
   :partner
-  {:active-persons "Active persons",
-   :deactive-persons "Deactive persons",
-   :key-person "Key person",
+  {:key-person "Key person",
+   :person-deactivated "Person deactivated",
+   :person-activated "Person activated",
+   :person-updated "Person's data updated",
+   :deactive-persons "Deactivated persons",
+   :active-persons "Active persons",
+   :deactivate "Deactivate",
+   :change-status-title "Change personnel status",
+   :change-status-text
+   "Are you sure you wish to change persons status?",
    :edit-person "Edit person",
-   :person-updated "Person's data updated"},
+   :activate "Activate"},
   :person-name "Person name",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",
@@ -320,7 +327,7 @@
   :select-user-roles "Choose roles",
   :contract-related-entities "Contract related entities",
   :no-companies-matching-search
-  "No companies, matching the search, were found  or is already added",
+  "No companies, matching the search, were found or is already added",
   :xroad-exception-content
   "Try again in a few minutes or contact system administrator if the issue persists",
   :partners-listing "Partners listing",
@@ -903,7 +910,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
-  :existing-teet-user "User has already logged in",
+  :existing-teet-user
+  "User has already been added to the company and has logged in.",
   :vektorio-request-failed
   "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
@@ -923,7 +931,7 @@
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address.",
   :employee-already-added-to-contract
-  "User has already been added to contract"},
+  "User has already been added to the company."},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",

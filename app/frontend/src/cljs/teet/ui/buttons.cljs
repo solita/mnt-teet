@@ -152,7 +152,7 @@
    label])
 
 (defn button-with-confirm
-  [{:keys [action modal-title modal-text confirm-button-text cancel-button-text close-on-action? id]}
+  [{:keys [action modal-title modal-text confirm-button-text confirm-button-style cancel-button-text close-on-action? id]}
    button-comp]
   (r/with-let [open-atom (r/atom false)
                open #(reset! open-atom true)
@@ -167,7 +167,7 @@
                                {:on-click close
                                 :id (str "confirmation-cancel")}
                                (or cancel-button-text (tr [:buttons :cancel]))]
-                              [button-warning
+                              [(or confirm-button-style button-warning)
                                {:id (str "confirmation-confirm")
                                 :on-click (if close-on-action?
                                             #(do (action)

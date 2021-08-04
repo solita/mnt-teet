@@ -30,8 +30,33 @@
 (defrecord SearchBusinessRegistryError [form-key error])
 (defrecord SelectCompany [company])
 (defrecord SearchBusinessRegistryResult [form-key result])
+(defrecord ChangePersonStatus [employee-id active?])
+(defrecord PersonStatusChangeSuccess [])
 
 (extend-protocol t/Event
+  PersonStatusChangeSuccess
+  (process-event [_ app]
+    (t/fx app
+          (fn [e!]
+            (e! (common-controller/map->NavigateWithExistingAsDefault
+                  {:page :contract-partners
+                   :query (:query app)})))
+          (fn [e!]
+            (common-controller/refresh-fx e!))))
+
+  ChangePersonStatus
+  (process-event [{employee-id :employee-id
+                   active? :active?} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :thk.contract/change-person-status
+           :payload {:employee-id employee-id
+                     :active? active?}
+           :success-message (if active?
+                              (tr [:contract :partner :person-activated])
+                              (tr [:contract :partner :person-deactivated]))
+           :result-event ->PersonStatusChangeSuccess}))
+
   UpdateNewCompanyForm
   (process-event [{form-data :form-data} app]
     (update-in app [:forms :new-partner] merge form-data))
