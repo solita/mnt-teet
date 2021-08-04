@@ -385,19 +385,35 @@
   "Partner representatives of a contract are employees assigned to the
   contract with the 'company representative' role"
   [db contract-eid]
-  (->> (d/q '[:find
-              (pull ?employee [*
-                               {:company-contract-employee/user [*]}
-                               {:company-contract-employee/role [*]}])
-              (pull ?cc [{:company-contract/company [:company/name]}
-                         :company-contract/lead-partner?])
-              :where
-              [?cc :company-contract/contract ?contract]
-              [?cc :company-contract/company ?company]
-              [?cc :company-contract/employees ?employee]
-              [?employee :company-contract-employee/role :company-contract-employee.role/company-representative]
-              :in $ ?contract]
-            db contract-eid)
-       (mapv (fn [[employee company-contract]]
-               {:employee employee
-                :company-contract company-contract}))))
+  (let [company-contracts (->> (d/q '[:find (pull ?cc [:db/id
+                                                       {:company-contract/company [:company/name]}
+                                                       :company-contract/lead-partner?])
+                                      :where
+                                      [?cc :company-contract/contract ?contract]
+                                      [?cc :company-contract/company ?company]
+                                      :in $ ?contract]
+                                    db contract-eid)
+                               (map first))
+        cc-id->cc (->> company-contracts (map (juxt :db/id identity)) (into {}))
+        ccs-and-representatives (d/q '[:find
+                                       ?cc
+                                       (pull ?employee [*
+                                                        {:company-contract-employee/user [*]}
+                                                        {:company-contract-employee/role [*]}])
+                                       :where
+                                       [?cc :company-contract/employees ?employee]
+                                       [?employee :company-contract-employee/active? true]
+                                       (or [?employee :company-contract-employee/role :company-contract-employee.role/company-representative]
+                                           [?employee :company-contract-employee/role :company-contract-employee.role/company-project-manager
+                                       :in $ [?cc ...]]
+                                     db (map :db/id company-contracts))
+        ccs-without-representatives (remove (comp (->> ccs-and-representatives (map first) set)
+                                                  :db/id)
+                                            company-contracts)]
+    (clojure.pprint/pprint ccs-and-representatives)
+    (concat (->> ccs-and-representatives
+                 (mapv (fn [[cc employee]]
+                         {:company-contract (cc-id->cc cc)
+                          :employee employee})))
+            (mapv (fn [cc] {:company-contract cc})
+                  ccs-without-representatives))))

@@ -64,9 +64,9 @@
 
 (defn- partner-representatives-table [partner-representatives]
   [simple-table-with-many-bodies
-   [["Company TODO" {:align :left}]
-    ["Company responsible person TODO" {:align :left}]
-    ["Role TODO" {:align :left}]]
+   [[(tr [:contract :representatives :header :company]) {:align :left}]
+    [(tr [:contract :representatives :header :responsible]) {:align :left}]
+    [(tr [:contract :representatives :header :role]) {:align :left}]]
    [[nil ;; no group level heading
      (into []
            (for [representative-info (sort-by (juxt representative-info->company-name
@@ -76,7 +76,7 @@
                [[[:<>
                   [:span {:class (<class common-styles/margin-right 0.5)}
                    (representative-info->company-name representative-info)]
-                  (when lead-partner? [ui-common/primary-tag "Lead partner TODO"])] {:align :left}]
+                  (when lead-partner? [ui-common/primary-tag (tr [:contract :lead-partner])])] {:align :left}]
                 [(representative-info->name representative-info) {:align :left}]
                 [(representative-info->roles representative-info) {:align :left}]])))]]])
 
@@ -128,7 +128,7 @@
       (when (not-empty partner-representatives)
         [:div {:class (<class common-styles/margin-top 2)}
          [typography/Heading1 {:class (<class common-styles/margin-top 2)}
-          "Partner representatives TODO"]
+          (tr [:contract :representatives :heading])]
          [partner-representatives-table partner-representatives]])
       (when (not-empty targets)
         [:div {:class (<class common-styles/margin-top 2)}

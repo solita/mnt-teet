@@ -177,10 +177,12 @@
   :back "Back",
   :send "Send",
   :cancel "Cancel",
+  :assign-as-key-person "Assign as a key person",
   :add "Add",
   :remove-from-contract "Remove from the contract",
   :copy-to-clipboard "Copy all text",
-  :upload "Upload"},
+  :upload "Upload",
+  :remove-key-person-assignment "Remove key person assignment"},
  :cadastral-group
  {"" "Undefined",
   "Avalik-õiguslik omand" "Public property",
@@ -268,6 +270,12 @@
   :partner-information-text
   "Please select or add new company, subcontractor or person from the left menu.",
   :thk.contract.status/deadline-approaching "Deadline approaching",
+  :representatives
+  {:heading "Partner representatives",
+   :header
+   {:company "Company",
+    :responsible "Company responsible person",
+    :role "Roles"}},
   :company-search-placeholder "Enter company name or business id",
   :partner-saved "Contract partner added",
   :related-contracts "RELATED CONTRACTS",
@@ -277,11 +285,18 @@
   :contract-information-heading "Contract information",
   :thk.contract.status/warranty "Warranty",
   :partner
-  {:active-persons "Active persons",
-   :deactive-persons "Deactive persons",
-   :key-person "Key person",
+  {:key-person "Key person",
+   :person-deactivated "Person deactivated",
+   :person-activated "Person activated",
+   :person-updated "Person's data updated",
+   :deactive-persons "Deactivated persons",
+   :active-persons "Active persons",
+   :deactivate "Deactivate",
+   :change-status-title "Change personnel status",
+   :change-status-text
+   "Are you sure you wish to change persons status?",
    :edit-person "Edit person",
-   :person-updated "Person's data updated"},
+   :activate "Activate"},
   :person-name "Person name",
   :thk.contract/warranty-end-date "Warranty end date",
   :thk.contract.status/deadline-overdue "Deadline overdue",
@@ -295,6 +310,7 @@
   :partners {:title "Companies & persons"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active person and subcontractor added",
+  :confirm-remove-key-person-text "If removed it can not be undone.",
   :responsible
   {:header
    {:task "Task",
@@ -320,9 +336,11 @@
   :select-user-roles "Choose roles",
   :contract-related-entities "Contract related entities",
   :no-companies-matching-search
-  "No companies, matching the search, were found  or is already added",
+  "No companies, matching the search, were found or is already added",
   :xroad-exception-content
   "Try again in a few minutes or contact system administrator if the issue persists",
+  :are-you-sure-remove-key-person-assignment
+  "Are you sure you want to remove key person assignment?",
   :partners-listing "Partners listing",
   :responsibilities-listing "Responsibilities listing",
   :thk.contract.status/signed "Signed",
@@ -903,7 +921,8 @@
   :request-timeout "The server did not respond.",
   :conflicting-tasks
   "The tasks you are trying to create conflict with existing tasks.",
-  :existing-teet-user "User has already logged in",
+  :existing-teet-user
+  "User has already been added to the company and has logged in.",
   :vektorio-request-failed
   "Request failed due to error on Vektor.io service. Please try again in few moments.",
   :invalid-task-status
@@ -923,7 +942,7 @@
   :no-participants-with-email
   "None of the participants who should receive the notification have a valid email address.",
   :employee-already-added-to-contract
-  "User has already been added to contract"},
+  "User has already been added to the company."},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
