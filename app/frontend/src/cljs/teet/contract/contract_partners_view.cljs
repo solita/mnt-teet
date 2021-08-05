@@ -475,7 +475,7 @@
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
        [(if (true? key-person?)
-          [:icon (icons/key-person {:status :assigned})]
+          [:icon (icons/key-person)]
           [:span])] ;TODO implement key person assignment statuses - :approved :rejected
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
