@@ -166,7 +166,7 @@
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
-                          attachment? attach-to
+                          attachment? user-attachment? attach-to
                           file-results linked-from]
                    :as event} app]
     (log/info "FILES: " files)
@@ -187,6 +187,9 @@
                           (get-in file [:metadata :file-id])
                           :file/replace
 
+                          user-attachment?
+                          :file/upload-user-attachment
+
                           :else
                           :file/upload)
                :payload (merge {:file (merge (file-model/file-info (:file-object file))
@@ -197,10 +200,12 @@
                                                                 :file/part]))}
                                (when-let [prev-file-id (get-in file [:metadata :file-id])]
                                  {:previous-version-id prev-file-id})
-                               (if attachment?
+                               (if user-attachment?
+                                 {:employee-id attach-to}
+                                (if attachment?
                                  {:project-id project-id
-                                  :attach-to attach-to}
-                                 {:task-id task-id}))
+                                    :attach-to attach-to}
+                                 {:task-id task-id})))
                :error-event ->FileUploadError
                :result-event (fn [result]
                                (map->UploadFileUrlReceived
