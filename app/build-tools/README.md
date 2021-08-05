@@ -29,6 +29,19 @@ clj -A:authorizations <path-to-downloaded-sheet>
 in this directory. This will update the `authorization.edn` in
 `app/backend/resources`.
 
+## Contract authorizations
+
+The contract authorization is similar to the "regular" authorization matrix in that it's a page from the same sharepoint
+
+To update the contract matrix, run:
+
+```shell
+clj -A:contract-authorizations <path-to-the-downloaded-sheet>
+```
+
+In this directory. This will update the `contract-authorization.edn` in the `app/backend/resources`
+
+
 ## Asset database schema
 
 Asset database schema is taken from `TEET_ROTL.xlsx` file in Sharepoint.
