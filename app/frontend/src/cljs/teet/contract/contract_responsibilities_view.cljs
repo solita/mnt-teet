@@ -76,7 +76,7 @@
            (for [representative-info
                  ;; Lead partner representatives first, the rest of the companies in alphabetical order
                  (sort-by (juxt (complement representative-info->lead-partner?)
-                                representative-info->company-name
+                                (comp str/lower-case representative-info->company-name)
                                 representative-info->name)
                           partner-representatives)]
              [[[:<>

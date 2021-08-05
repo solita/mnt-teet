@@ -289,6 +289,7 @@
    :person-deactivated "Person deactivated",
    :person-activated "Person activated",
    :key-person-unassigned "Key person unassigned.",
+   :file-link-removed "Key person document link has been removed.",
    :person-updated "Person's data updated",
    :deactive-persons "Deactivated persons",
    :active-persons "Active persons",
@@ -297,6 +298,7 @@
    :key-person-assigned "Key person assigned.",
    :change-status-text
    "Are you sure you want to change the person's status?",
+   :key-person-files "Certificates and documents",
    :edit-person "Edit person",
    :activate "Activate"},
   :person-name "Person name",
@@ -1495,6 +1497,7 @@
    :km-range "Km range",
    :procurement-number "Procurement number",
    :repair-method "Method",
+   :region-name "Region",
    :road-number "Road number"},
   :add-tasks "Add tasks",
   :activities "Project activities",
