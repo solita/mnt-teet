@@ -96,10 +96,12 @@
 
 (defrecord DebounceEffect [effect])
 (defrecord RPC [rpc-effect-params])
+(defrecord AuthorizationResult [cache-key result])
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
 (defrecord NavigateWithExistingAsDefault [page params query])
 (defrecord NavigateWithSameParams [page])
+(defrecord QueryUserAccess [action entity result-event])
 (defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
 (defrecord ResponseError [err]) ; handle errors in HTTP response
 (defrecord ModalFormResult [close-event response])          ; Handle the submit result of form-modal-button
@@ -205,6 +207,30 @@
            :page page
            :params params
            :query {}}))
+
+  QueryUserAccess
+  (process-event [{action :action
+                   entity :entity
+                   result-event :result-event} app]
+    (let [entity-type (cond                                 ;; TODO need to figure out entity type better somehow
+                        (get-in app [:query :partner])
+                        :company
+                        (get-in app [:params :contract-ids])
+                        :contract
+                        :else
+                        nil)]
+      (t/fx app
+            {:tuck.effect/type :query
+             :query :authorization/user-is-permitted?
+             :args (merge {:action action}
+                          (when entity-type
+                            {entity-type (:db/id entity)}))
+             :result-event result-event})))
+
+  AuthorizationResult
+  (process-event [{cache-key :cache-key
+                   result :result} app]
+    (update app :authorization/contract-permissions assoc cache-key result))
 
   SetQueryParam
   (process-event [{:keys [param value]} {:keys [page params query] :as app}]

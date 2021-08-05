@@ -18,6 +18,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contracts/edit-contract-metadata}
    :transact
    (let [contract-data (-> form-data
                            contract-model/form-values->db-values
@@ -31,6 +32,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contracts/manage-contract-companies}
    :pre [^{:error :business-registry-code-in-use}
          (company-db/business-registry-code-unique?
            db
@@ -114,6 +116,7 @@
              :as payload}
    :context {:keys [user db]}
    :project-id nil
+   :contract-authorization {:action :contracts/add-existing-teet-users-to-contract}
    :authorization {:contracts/contract-editing {}}
    :pre [(company-db/is-company? db (:db/id form-data))
          (not (company-db/company-in-contract? db (:db/id form-data) (:db/id contract)))]}
