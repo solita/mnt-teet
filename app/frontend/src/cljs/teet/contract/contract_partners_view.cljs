@@ -469,7 +469,6 @@
            [:icon (icons/grey-dot)]
            [:icon (icons/key-person)]]))
 
-
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -780,9 +779,17 @@
   (let [employee-name (str (get-in employee [:company-contract-employee/user :user/given-name]) " "
                            (get-in employee [:company-contract-employee/user :user/family-name]))
         teet-id (:teet/id selected-partner)
-        user-id (get-in employee [:company-contract-employee/user :user/id])]
+        user-id (get-in employee [:company-contract-employee/user :user/id])
+        key-person? (get-in employee [:company-contract-employee/key-person?])]
     [:div {:class (<class contract-style/partner-info-header)}
-     [:h1 employee-name]
+     [Grid
+      {:container true :direction :row :justify-content :flex-start :align-items :center}
+      [Grid {:style {:padding-right :1em}}
+       [:h1 employee-name]]
+      [Grid
+       (if (true? key-person?)
+              [key-person-icon :grey]                       ;Add approval status then ready
+              [:span])]]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
       [buttons/button-secondary
