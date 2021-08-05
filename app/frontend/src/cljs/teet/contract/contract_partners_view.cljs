@@ -454,20 +454,29 @@
       :assign-key-person
       :personnel-info)))
 
-(defn key-person-icon [color]
-  (case color
-    :red [Grid
-          {:container true :direction :row :justify-content :flex-start :align-items :center}
-          [:icon [icons/red-rejected]]
-          [:icon [icons/key-person teet.theme.theme-colors/red]]]
-    :green [Grid
+(defn key-person-icon
+  ([color] (key-person-icon color nil))
+  ([color text]
+   [Grid {:align-items :center
+          :style {:background-color
+                  (case color
+                    :red :#FCEEEE
+                    :green :#ECF4EF
+                    :gray :#D2D3D8
+                    :yellow :#)}}
+    (case color
+      :red [Grid
             {:container true :direction :row :justify-content :flex-start :align-items :center}
-            [:icon [icons/green-check]]
-            [:icon [icons/key-person teet.theme.theme-colors/green]]]
-    :gray [Grid
-           {:container true :direction :row :justify-content :flex-start :align-items :center}
-           [:icon [icons/grey-dot]]
-           [:icon [icons/key-person]]]))
+            [:icon [icons/red-rejected]]
+            [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
+      :green [Grid
+              {:container true :direction :row :justify-content :flex-start :align-items :center}
+              [:icon [icons/green-check]]
+              [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
+      :gray [Grid
+             {:container true :direction :row :justify-content :flex-start :align-items :center}
+             [:icon [icons/key-person]]
+             [:span {:style {:color :gray}} (if (not (nil? text)) text "")]])]))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -786,10 +795,13 @@
       {:container true :direction :row :justify-content :flex-start :align-items :center}
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
-      [Grid
-       (if key-person?
-         [key-person-icon :gray]                       ;Add approval status then ready
-         [:span])]]
+      ; grey background #D2D3D8
+      ; green background #ECF4EF
+      ; red background #FCEEEE
+      ; orange background
+      (if key-person?
+        [key-person-icon :gray "Key person"]
+        [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
       [buttons/button-secondary
