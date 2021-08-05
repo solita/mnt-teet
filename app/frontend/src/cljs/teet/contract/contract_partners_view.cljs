@@ -454,6 +454,22 @@
       :assign-key-person
       :personnel-info)))
 
+(defn key-person-icon [color]
+  (case color
+    :red [Grid
+          {:container true :direction :row :justify-content :flex-start :align-items :center}
+          [:icon (icons/red-rejected)]
+          [:icon (icons/key-person teet.theme.theme-colors/red)]]
+    :green [Grid
+            {:container true :direction :row :justify-content :flex-start :align-items :center}
+            [:icon (icons/green-check)]
+            [:icon (icons/key-person teet.theme.theme-colors/green)]]
+    :grey [Grid
+           {:container true :direction :row :justify-content :flex-start :align-items :center}
+           [:icon (icons/grey-dot)]
+           [:icon (icons/key-person)]]))
+
+
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -475,8 +491,8 @@
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
        [(if (true? key-person?)
-          [:icon (icons/key-person)]
-          [:span])] ;TODO implement key person assignment statuses - :approved :rejected
+          [key-person-icon :grey]
+          [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
          [buttons/button-with-confirm
