@@ -448,6 +448,39 @@
   [:div {:class (<class contract-style/personnel-table-style)}
    [:h4 (str "Approvals")]])
 
+(defn- get-personnel-info-page [employee]
+  (let [key-person? (get-in employee [:company-contract-employee/key-person?])]
+    (if (true? key-person?)
+      :assign-key-person
+      :personnel-info)))
+
+(defn key-person-icon
+  ([color] (key-person-icon color nil))
+  ([color text]
+   (let [bg-color (case color
+                    :red :#FCEEEE
+                    :green :#ECF4EF
+                    :gray :#D2D3D8
+                    :yellow :#)]
+     (case color
+       :red [Grid
+             {:container true :direction :row :justify-content :flex-start :align-items :center}
+             [:icon [icons/red-rejected]]
+             [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
+       :green [Grid
+               {:container true :direction :row :justify-content :flex-start :align-items :center}
+               [:icon [icons/green-check]]
+               [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
+       :gray [:div {:style {:display :flex
+                            :justify-content :center
+                            :align-items :center
+                            :background-color bg-color
+                            :border-radius "100px 0 0 100px"
+                            :padding-right "0.5rem"}}
+              [:icon {:style {:line-height 0}}
+               [icons/key-person]]
+              [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]))))
+
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -461,13 +494,17 @@
      [(tr [:contract :partner :key-person]) {:width "10%"}]
      ["" {:align :right :width "10%"}]
      ["" {:align :right :width "10%"}]]
-    (for [employee employees]
+    (for [employee employees
+          :let [key-person? (get-in employee [:company-contract-employee/key-person?])]]
       [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
              (get-in employee [:company-contract-employee/user :user/given-name]))]
        (if (not-empty (:company-contract-employee/role employee))
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
-       [] ;TODO implement key person functionality
+       [(if (true? key-person?)
+          [:div {:style {:display :flex}}
+           [key-person-icon :gray]]
+          [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
          [buttons/button-with-confirm
@@ -489,7 +526,7 @@
                                            {:employee employee})
                                  :query (merge
                                           query
-                                          {:page :personnel-info
+                                          {:page (get-personnel-info-page employee)
                                            :user-id (get-in employee [:company-contract-employee/user :user/id])})})}
          (tr [:common :view-more-info])]]])]])
 
@@ -521,11 +558,10 @@
     [authorization-check/when-authorized
      :thk.contract/add-contract-employee selected-partner
      [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                                :href (routes/url-for {:page :contract-partners
-                                                       :params params
-                                                       :query (merge
-                                                                query
-                                                                {:page :assign-key-person})})}
+                                :on-click  (e!
+                                             contract-partners-controller/->AssignKeyPerson
+                                             (:db/id employee)
+                                             true)}
       (tr [:buttons :assign-as-key-person])]]]])
 
 (defn key-person-assignment-section
@@ -756,9 +792,16 @@
   (let [employee-name (str (get-in employee [:company-contract-employee/user :user/given-name]) " "
                            (get-in employee [:company-contract-employee/user :user/family-name]))
         teet-id (:teet/id selected-partner)
-        user-id (get-in employee [:company-contract-employee/user :user/id])]
+        user-id (get-in employee [:company-contract-employee/user :user/id])
+        key-person? (get-in employee [:company-contract-employee/key-person?])]
     [:div {:class (<class contract-style/partner-info-header)}
-     [:h1 employee-name]
+     [Grid
+      {:container true :direction :row :justify-content :flex-start :align-items :center}
+      [Grid {:style {:padding-right :1em}}
+       [:h1 employee-name]]
+      (if key-person?
+        [key-person-icon :gray "Key person"]
+        [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
       [buttons/button-secondary
