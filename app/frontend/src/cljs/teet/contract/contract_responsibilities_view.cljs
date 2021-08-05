@@ -110,6 +110,7 @@
                           (mapv (fn [[group items]]
                                   [(tr-enum group)
                                    (->> items
+                                        (sort-by #(tr-enum (:task/type %)))
                                         (mapv (fn [item]
                                                 [[[url/Link (:navigation-info item)
                                                    (tr-enum (:task/type item))]]
@@ -117,8 +118,7 @@
                                                  [(if (nil? (:task/assignee item))
                                                     ""
                                                     (user-model/user-name (:task/assignee item)))]
-                                                 [(tr-enum (:task/status item))]]))
-                                        sort)]))
+                                                 [(tr-enum (:task/status item))]])))]))
                           (sort-by first))]
           [simple-table-with-many-bodies [[(tr [:contract :responsible :header :task]) {:width "35%"}]
                                           [(tr [:contract :responsible :header :tram-reviewer]) {:width "25%"}]
