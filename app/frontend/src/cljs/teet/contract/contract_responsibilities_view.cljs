@@ -91,9 +91,9 @@
 (defn project-and-target-heading [target navigation-info]
   [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                            (<class common-styles/margin-bottom 2))}
-   [typography/Heading1 (get-in target [:project :thk.project/name])]
-   [typography/Heading4 (if (get-in target [:target :activity/name])
-                          (tr [:enum (get-in target [:target :activity/name])])
+   [typography/Heading2 (get-in target [:project :thk.project/name])]
+   [typography/Heading4 (if (get-in target [:activity :activity/name])
+                          (tr [:enum (get-in target [:activity :activity/name])])
                           "")]
    [url/Link
     navigation-info
@@ -101,22 +101,26 @@
 
 (defn responsible-persons [entries]
   [:div
-   (for [{:keys [project target responsible-persons] :as entry} entries]
+   (for [{:keys [project activity] :as entry} (->> entries
+                                                   (cu/distinct-by (comp :db/id :activity))
+                                                   (sort-by (comp :thk.project/name :project)))]
      [:<>
       [project-and-target-heading
        entry
        {:page :activity
         :params {:project (-> project :thk.project/id)
-                 :activity (-> target :db/id)}}]
+                 :activity (-> activity :db/id)}}]
       [simple-table-with-many-bodies
        [[(tr [:contract :responsible-persons :header :responsible-person]) {:align :left}]
-        [(tr [:contract :representatives :header :role]) {:align :left}]]
+        [(tr [:contract :responsible-persons :header :role]) {:align :left}]]
        [[nil
-         [(let [owner (:thk.project/owner responsible-persons)]
-            [[(:user/name owner) {:align :left}]
+         [(let [owner (:thk.project/owner project)]
+            [[(if owner (user-model/user-name owner) "...")
+              {:align :left}]
              [(tr [:contract :responsible-persons :responsible]) {:align :left}]])
-          (let [manager (:activity/manager responsible-persons)]
-            [[(:user/name manager) {:align :left}]
+          (let [manager (:activity/manager activity)]
+            [[(or manager "...")
+              {:align :left}]
              [(tr [:fields :activity/manager]) {:align :left}]])]]]]])])
 
 (defn targets-responsibilities
@@ -159,11 +163,11 @@
     [:div {:class (<class contract-style/contract-responsibilities-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
-      (when (not-empty responsibles)
+      (when (not-empty targets)
         [:div {:class (<class common-styles/margin-top 2)}
          [typography/Heading1 {:class (<class common-styles/margin-top 2)}
           (tr [:contract :responsible-persons :heading])]
-         [responsible-persons responsibles]])
+         [responsible-persons targets]])
       (when (not-empty partner-representatives)
         [:div {:class (<class common-styles/margin-top 2)}
          [typography/Heading1 {:class (<class common-styles/margin-top 2)}

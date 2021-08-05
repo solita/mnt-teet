@@ -326,3 +326,13 @@
   [to from]
   (->> (into [to] [from])
        flatten))
+
+
+(defn distinct-by [f xs]
+  (second (reduce (fn [[encountered acc-xs] x]
+                    (let [fx (f x)]
+                      (if (encountered fx)
+                        [encountered acc-xs]
+                        [(conj encountered fx) (conj acc-xs x)])))
+                  [#{} []]
+                  xs)))
