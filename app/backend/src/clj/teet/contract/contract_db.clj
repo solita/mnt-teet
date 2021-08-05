@@ -425,3 +425,16 @@
      ;; ... and each company with no representatives
      (mapv (fn [cc] {:company-contract cc})
                   ccs-without-representatives))))
+
+(defn contract-responsible-persons [db contract-eid]
+  [{:project {:thk.project/id "18913"
+              :thk.project/name "Kose - Ardu"}
+    :target {:db/id 92358976750970
+             :activity/name :activity.name/construction}
+    :responsible-persons {:thk.project/owner {:user/name "John Random"}
+                          :activity/manager {:user/name "Jane Random"}}}
+   {:project {:thk.project/name "Ardu - Võõbu"}
+    :target {:db/id 92358976750970
+               :activity/name :activity.name/construction}
+    :responsible-persons {:thk.project/owner {:user/name "Jane Random"}
+                          :activity/manager {:user/name "John Random"}}}])

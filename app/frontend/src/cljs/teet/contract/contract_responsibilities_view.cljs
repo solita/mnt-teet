@@ -88,6 +88,37 @@
               [(representative-info->name representative-info) {:align :left}]
               [(representative-info->roles representative-info) {:align :left}]]))]]])
 
+(defn project-and-target-heading [target navigation-info]
+  [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
+                           (<class common-styles/margin-bottom 2))}
+   [typography/Heading1 (get-in target [:project :thk.project/name])]
+   [typography/Heading4 (if (get-in target [:target :activity/name])
+                          (tr [:enum (get-in target [:target :activity/name])])
+                          "")]
+   [url/Link
+    navigation-info
+    (tr [:link :target-view-activity])]])
+
+(defn responsible-persons [entries]
+  [:div
+   (for [{:keys [project target responsible-persons] :as entry} entries]
+     [:<>
+      [project-and-target-heading
+       entry
+       {:page :activity
+        :params {:project (-> project :thk.project/id)
+                 :activity (-> target :db/id)}}]
+      [simple-table-with-many-bodies
+       [[(tr [:contract :responsible-persons :header :responsible-person]) {:align :left}]
+        [(tr [:contract :representatives :header :role]) {:align :left}]]
+       [[nil
+         [(let [owner (:thk.project/owner responsible-persons)]
+            [[(:user/name owner) {:align :left}]
+             [(tr [:contract :responsible-persons :responsible]) {:align :left}]])
+          (let [manager (:activity/manager responsible-persons)]
+            [[(:user/name manager) {:align :left}]
+             [(tr [:fields :activity/manager]) {:align :left}]])]]]]])])
+
 (defn targets-responsibilities
   [targets]
   [:div
@@ -95,16 +126,10 @@
          :let [tasks (get-in target [:activity :activity/tasks])
                groups (group-by :task/group tasks)]]
      [:div {:style {:padding "2rem 0 2rem 0"}}
-      [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
-                               (<class common-styles/margin-bottom 2))}
-       [typography/Heading1 (get-in target [:project :thk.project/name])]
-       [typography/Heading4 (if (get-in target [:target :activity/name])
-                              (tr [:enum (get-in target [:target :activity/name])])
-                              "")]
-       [url/Link
-        (merge (:target-navigation-info target)
-               {:component-opts {:data-cy "target-responsibility-activity-link"}})
-        (tr [:link :target-view-activity])]]
+      [project-and-target-heading
+       target
+       (merge (:target-navigation-info target)
+              {:component-opts {:data-cy "target-responsibility-activity-link"}})]
       (when (not-empty groups)
         (let [bodies (->> groups
                           (mapv (fn [[group items]]
@@ -129,10 +154,16 @@
 (defn responsibilities-page
   [e! app contract]
   (let [targets (:thk.contract/targets contract)
-        partner-representatives (:partner-representatives contract)]
+        partner-representatives (:partner-representatives contract)
+        responsibles (:responsible-persons contract)]
     [:div {:class (<class contract-style/contract-responsibilities-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
+      (when (not-empty responsibles)
+        [:div {:class (<class common-styles/margin-top 2)}
+         [typography/Heading1 {:class (<class common-styles/margin-top 2)}
+          (tr [:contract :responsible-persons :heading])]
+         [responsible-persons responsibles]])
       (when (not-empty partner-representatives)
         [:div {:class (<class common-styles/margin-top 2)}
          [typography/Heading1 {:class (<class common-styles/margin-top 2)}
