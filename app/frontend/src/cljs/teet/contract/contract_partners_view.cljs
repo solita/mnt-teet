@@ -799,10 +799,6 @@
       {:container true :direction :row :justify-content :flex-start :align-items :center}
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
-      ; grey background #D2D3D8
-      ; green background #ECF4EF
-      ; red background #FCEEEE
-      ; orange background
       (if key-person?
         [key-person-icon :gray "Key person"]
         [:span])]
