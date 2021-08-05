@@ -580,18 +580,19 @@
                                                                    (:db/id employee)
                                                                    (:db/id file))))} file])
           (:company-contract-employee/attached-files employee))]
-   [file-upload/FileUploadButton
-    {:id "keyperson-files-field"
-     :drag-container-id (str "key-person-" (:db/id employee))
-     :color :secondary
-     :button-attributes {:size :small :margin-top "1rem" :margin-bottom "1rem"}
-     :on-drop #(e! (file-controller/map->UploadFiles
-                     {:files %
-                      :project-id nil
-                      :user-attachment? true
-                      :attach-to (:db/id employee)
-                      :on-success common-controller/->Refresh}))}
-    (str "+ " (tr [:buttons :upload]))]])
+   [:div {:class (<class common-styles/margin 1 0 1 0)}
+    [file-upload/FileUploadButton
+     {:id "keyperson-files-field"
+      :drag-container-id (str "key-person-" (:db/id employee))
+      :color :secondary
+      :button-attributes {:size :small}
+      :on-drop #(e! (file-controller/map->UploadFiles
+                      {:files %
+                       :project-id nil
+                       :user-attachment? true
+                       :attach-to (:db/id employee)
+                       :on-success common-controller/->Refresh}))}
+     (str "+ " (tr [:buttons :upload]))]]])
 
 (defn key-person-assignment-section
   [e! {:keys [params query] :as app} selected-partner employee]
