@@ -20,6 +20,8 @@
             teet.enum.enum-queries
             teet.admin.admin-queries
             teet.admin.admin-commands
+            teet.admin.index-queries
+            teet.admin.index-commands
             teet.user.user-queries
             teet.account.account-commands
             teet.account.account-queries
@@ -191,9 +193,12 @@
      (log/debug "  " command " result => " result)
 
      (if-let [error (:error result)]
-       (with-meta
-         error
-         {:format :raw})
+       (try
+         (with-meta
+           error
+           {:format :raw})
+         (catch java.lang.ClassCastException e
+           (throw (ex-info "Bad :error value incompatible with object metadata" {:value error}))))
        result))))
 
 (def command-handler

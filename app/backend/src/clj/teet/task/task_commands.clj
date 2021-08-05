@@ -95,6 +95,16 @@
             {:db/id (first pid)
              :file.part/status part-status})))
 
+(defn waiting-for-review-parts-tx
+  "Creates the tx records to update task part(s) from waiting for review to reviewing"
+  [task-parts]
+  (map (fn [part]
+                 {:db/id (:db/id part)
+                  :file.part/status :file.part.status/reviewing})
+               (filter
+                 (fn [x] (= :file.part.status/waiting-for-review (:db/ident (:file.part/status x))))
+                 (:file.part/_task task-parts))))
+
 (defcommand :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
@@ -248,28 +258,21 @@
                     part-id user)]})
 
 (defcommand :task/start-review
-  {:doc "Start review for task, sets status."
+  {:doc "Start review for task and/or task part, sets status to 'in review'."
    :context {:keys [db user]}
    :payload {task-id :task-id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
-   :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))]
-   :transact (into
-               [{:db/id task-id
-                 :task/status :task.status/reviewing}]
-               (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/reviewing))})
-
-(defcommand :task/start-task-part-review
-  {:doc "Start review for task part."
-   :context {:keys [db user]}
-   :payload {task-id :task-id
-             task-part-id :taskpart-id}
-   :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/review {:id task-id}}
-   :pre [(task-model/part-waiting-for-review? (d/pull db [:file.part/status] task-part-id))]
-   :transact (into
-               [{:db/id task-part-id
-                 :file.part/status :file.part.status/reviewing}])})
+   :transact (if (or
+                   (task-model/waiting-for-review? (d/pull db [:task/status] task-id))
+                   (task-model/any-task-part-waiting-for-review? (task-db/task-file-parts db task-id)))
+               (into
+                 [(if (task-model/waiting-for-review? (d/pull db [:task/status] task-id))
+                    {:db/id task-id
+                     :task/status :task.status/reviewing}
+                    {})]
+                 (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/reviewing))
+               (into [] (waiting-for-review-parts-tx (task-db/task-file-parts db task-id))))})
 
 (s/def ::task-id integer?)
 (s/def ::result #{:accept :reject})

@@ -35,6 +35,16 @@
   (when-not (user-spec/email? value)
     (tr [:validation :invalid-email])))
 
+(defn validate-role
+  [value]
+  (when (empty? value)
+    (tr [:validation :empty])))
+
+(defn validate-person-id
+  [value]
+  (when-not (user-spec/estonian-person-id? value)
+    (tr [:validation :invalid-estonian-person-id])))
+
 (defn validate-email-optional
   [value]
   (if (empty-value? value)

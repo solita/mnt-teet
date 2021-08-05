@@ -47,4 +47,16 @@ note right of entity
         map UI.
 end note
 
+entity asset {
+  * oid : text
+  --
+  geometry : geometry
+}
+
+note bottom of asset
+        Asset stores the geometry of asset (or component)
+        in the asset database. The geometry is stored in GIS
+        to enable fast spatial index searches of assets.
+end note
+
 @enduml

@@ -131,15 +131,17 @@
                              :type      :button}))
 
 (defn stand-alone-icon-button
-  [{:keys [id on-click icon class href ref]}]
-  [IconButton {:size :small
-               :class (collection/combine-and-flatten
-                        class
-                        (<class common-styles/stand-alone-icon-button-style))
-               :on-click on-click
-               :href href
-               :ref ref
-               :id id}
+  [{:keys [id on-click icon class href ref data-cy]}]
+  [IconButton (merge {:size :small
+                      :class (collection/combine-and-flatten
+                               class
+                               (<class common-styles/stand-alone-icon-button-style))
+                      :on-click on-click
+                      :href href
+                      :ref ref
+                      :id id}
+                     (when data-cy
+                       {:data-cy data-cy}))
    icon])
 
 (defn link-button-with-icon
@@ -150,7 +152,7 @@
    label])
 
 (defn button-with-confirm
-  [{:keys [action modal-title modal-text confirm-button-text cancel-button-text close-on-action? id]}
+  [{:keys [action modal-title modal-text confirm-button-text confirm-button-style cancel-button-text close-on-action? id]}
    button-comp]
   (r/with-let [open-atom (r/atom false)
                open #(reset! open-atom true)
@@ -165,7 +167,7 @@
                                {:on-click close
                                 :id (str "confirmation-cancel")}
                                (or cancel-button-text (tr [:buttons :cancel]))]
-                              [button-warning
+                              [(or confirm-button-style button-warning)
                                {:id (str "confirmation-confirm")
                                 :on-click (if close-on-action?
                                             #(do (action)
@@ -182,7 +184,7 @@
 (defn delete-button-with-confirm
   [{:keys [action modal-title modal-text style trashcan? small? clear? icon-position close-on-action?
            id disabled
-           confirm-button-text cancel-button-text]
+           confirm-button-text cancel-button-text underlined?]
     :or {icon-position :end
          confirm-button-text (tr [:buttons :delete])
          cancel-button-text (tr [:buttons :cancel])
@@ -225,6 +227,15 @@
        [IconButton {:on-click open
                     :size :small}
        [icons/content-clear]]
+
+       underlined?
+       [IconButton {:on-click open
+                    :size :small
+                    :disabled (boolean disabled)
+                    :style {:color theme-colors/red
+                            :text-decoration :underline}}
+        [icons/content-clear]
+        button-content]
 
        small?
        [button-text-warning (merge {:on-click open

@@ -27,7 +27,7 @@ describe("Task view", function() {
         cy.get("div[role=dialog] button[type=submit]").should("not.exist")
 
         // wait for snackbar message
-        cy.get(".MuiSnackbar-root")
+        cy.get("[data-cy='snackbar-success']");
 
       // File added to file list, open file view
         cy.get(`[data-cy=task-file-list] [data-file-description=${this.filename}] a`).contains(this.filename).click()

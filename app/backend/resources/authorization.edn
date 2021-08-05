@@ -5,7 +5,6 @@
   :internal-consultant :link,
   :external-consultant :link},
  :task/review {:admin :full, :manager :full},
- :task/reopen {:admin :full, :manager :full},
  :task/task-information
  {:admin :full,
   :manager :full,
@@ -120,6 +119,7 @@
  :cooperation/edit-opinion
  {:admin :full, :manager :full, :internal-consultant :full},
  :land/create-land-acquisition {:admin :full, :manager :full},
+ :task/reopen {:admin :full, :manager :full},
  :project/edit-permissions
  {:admin :full, :manager :full, :external-consultant :link},
  :project/project-setup {:admin :full, :manager :full},
@@ -255,6 +255,7 @@
   :internal-consultant :link,
   :external-consultant :link},
  :admin/inspector {:admin :full},
+ :admin/manage-indexes {:admin :full},
  :land/initiate-official-message-sending-to-land-owner
  {:admin :full, :manager :full, :internal-consultant :full},
  :document/delete-document
@@ -287,6 +288,7 @@
   :external-consultant :link,
   :authenticated-guest :link,
   :guest :link},
+ :contracts/edit-partners {:admin :full, :manager :full},
  :maintenance/asset-filtering
  {:admin :full,
   :manager :full,

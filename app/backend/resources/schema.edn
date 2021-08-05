@@ -2107,6 +2107,45 @@
   :txes [[{:db/ident :company/business-registry-code
            :db/unique :db.unique/identity}]]}
 
+ {:db/ident :migration/cost-indexes
+  :txes [[{:db/ident :cost-index/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Cost index name"}
+          {:db/ident :cost-index/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to cost index type"}
+          {:db/ident :cost-index/valid-from
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Valid from date"}
+          {:db/ident :cost-index/unit
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Unit of measurement for the index"}
+          {:db/ident :cost-index/values
+           :db/valueType :db.type/ref
+           :db/isComponent true
+           :db/cardinality :db.cardinality/many
+           :db/doc "References to cost index values"}
+
+          {:db/ident :index-value/month
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Index value month"}
+          {:db/ident :index-value/year
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Index value year"}
+          {:db/ident :index-value/value
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one
+           :db/doc "Index value"}
+
+          {:db/ident :cost-index.type/bitumen-index :enum/attribute :cost-index/type}
+          {:db/ident :cost-index.type/consumer-price-index :enum/attribute :cost-index/type}]]}
+
  ;; TEET-1671 Import owners supervision and audit tasks and contracts from thk-teet csv to teet
  {:db/ident :migration/import-owner-supervision-and-audit-tasks
   :txes [[{:db/ident :task.type/owners-supervision,
@@ -2135,5 +2174,52 @@
           {:db/ident :company/emails
            :db/doc "Not in use"}
           {:db/ident :company/phone-numbers
-           :db/doc "Not in use"}]]}]
+           :db/doc "Not in use"}]]}
 
+ {:db/ident :migration/set-company-contract-employees-active
+  :txes [teet.migration.activate-contract-employees/mark-all-contract-company-employees-as-active]}
+
+ {:db/ident :migration/user-last-login
+  :txes [[{:db/ident :user/last-login
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of users' last login to TEET"}]]}
+
+ {:db/ident :migration/migration-description-for-tx
+  :txes [[{:db/ident :migration/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Description for migration transactions"}]]}
+
+ {:db/ident :migration/set-user-last-login
+  :txes [teet.migration.user-login/set-user-last-login]}
+
+ {:db/ident :migration/add-contract-asset-group-responsibilities
+  :txes [[{:db/ident :contract-responsibility/contract
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to Contract entity"}
+          {:db/ident :contract-responsibility/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to the targeted project in the contract"}
+          {:db/ident :contract-responsibility/asset-group
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "Keyword specifying :db/ident of fgroup in asset db"}
+          {:db/ident :contract-responsibility/task
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "task ref for task responsibility"}
+          {:db/ident :contract-responsibility/ta-responsible-person
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to User"}
+          {:db/ident :contract-responsibility/supervisor
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to company-contract-employee. Must be employee user with role Supervisor in contract that targets the construction supervision task directly"}
+          {:db/ident :contract-responsibility/company-responsible-person
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to company-contract-employee. Must be employee in this contract"}]]}]

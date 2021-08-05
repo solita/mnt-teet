@@ -142,6 +142,7 @@
   [:div
    [select/select-search-multiple
     {:e! e!
+     :no-results (tr [:link :search :no-results])
      :query-threshold 0
      :value (:region criteria)
      :query (fn [text]
@@ -309,7 +310,10 @@
         (tr [:asset :manager :back-to-result-listing])]
 
        [typography/Heading2 oid]
-       [asset-ui/asset-breadcrumbs {:atl atl :path (asset-model/find-component-path asset oid)
+       [asset-ui/asset-breadcrumbs {:atl atl
+                                    :path (if (asset-model/asset-oid? oid)
+                                            [asset]
+                                            (asset-model/find-component-path asset oid))
                                     :link-opts-fn (fn [oid]
                                                     {:page :assets
                                                      :query {:details oid}})}]
@@ -414,13 +418,16 @@
 
 
 (defn- results-table [{:keys [e! atl results]}]
-  (let [{:keys [assets]} results]
+  (let [{:keys [assets]} results
+        column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
+                             (tr [:fields %]))]
     [table/listing-table
      {:default-show-count 100
+      :default-sort-column (first asset-model/assets-listing-columns)
       :columns asset-model/assets-listing-columns
       :get-column asset-model/assets-listing-get-column
-      :column-label-fn #(or (some->> % (asset-type-library/item-by-ident atl) asset-ui/label)
-                            (tr [:fields %]))
+      :get-column-compare (asset-model/assets-listing-sort-column column-label-fn)
+      :column-label-fn column-label-fn
       :on-row-hover (e! assets-controller/->HighlightResult)
       :on-row-click (e! assets-controller/->ShowDetails)
       :format-column format-assets-column

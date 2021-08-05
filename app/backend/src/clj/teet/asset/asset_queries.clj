@@ -337,6 +337,8 @@
              nil
              criteria-map))
 
+
+
 (defquery :assets/search
   {:doc "Search assets based on multiple criteria. Returns assets as listing and a GeoJSON feature collection."
    :spec (s/keys :opt-un [:assets-search/fclass])
@@ -431,7 +433,6 @@ the parent asset and sibling components on the map when creating a new component
                language :et}}
    :context {adb :asset-db}
    :allowed-for-all-users? true}
-  (println "fetching " oid)
   (let [oid (if (asset-model/component-oid? oid)
               (asset-model/component-asset-oid oid)
               oid)
@@ -479,7 +480,8 @@ the parent asset and sibling components on the map when creating a new component
    :args _
    :context {c :sql-conn}
    :allowed-for-all-users? true}
-  (let [areas (fetch-regions c)
+  (let [region-ds (map :id (fetch-region-ds c))
+        areas (fetch-regions c {:ds region-ds})
         counties (into []
                        (filter (complement :okood))
                        (sort-by :label areas))

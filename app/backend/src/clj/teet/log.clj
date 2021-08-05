@@ -115,10 +115,11 @@
 
 (defn progress-fn
   "Return a function to be called during iteration. It will log progress
-  of the process every 500 entries with the given message."
-  [message]
-  (let [prg (atom 0)]
-    (fn []
-      (let [p (swap! prg inc)]
-        (when (zero? (mod p 500))
-          (info p message))))))
+  of the process every `n` (default 500) entries with the given `message`."
+  ([message] (progress-fn 500 message))
+  ([n message]
+   (let [prg (atom 0)]
+     (fn []
+       (let [p (swap! prg inc)]
+         (when (zero? (mod p n))
+           (info p message)))))))

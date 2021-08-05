@@ -3,6 +3,7 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.company.company-model :as company-model]
+            [teet.user.user-queries :as user-queries]
             [teet.user.user-db :as user-db])
   (:import (java.util Date)))
 
@@ -39,6 +40,30 @@
               (and
                 [?lc :thk.lifecycle/activities ?target]
                 [?project :thk.project/lifecycles ?lc]))]
+    [(related-contracts ?this-contract ?related-contract ?project)
+     [?this-contract :thk.contract/targets ?target]
+     (or-join [?related-contract ?target]
+              (and
+               ;; For contracts that are targeting tasks...
+               [?activity :activity/tasks ?target]
+               [?lc :thk.lifecycle/activities ?activity]
+               [?project :thk.project/lifecycles ?lc]
+               [?target :task/type :task.type/owners-supervision]
+
+               ;; ... related contracts are the contracts that are
+               ;; targeting activity of the task.
+               [?related-contract :thk.contract/targets ?activity])
+
+              (and
+               ;; For contracts that are targeting the activity...
+               [?lc :thk.lifecycle/activities ?target]
+               [?project :thk.project/lifecycles ?lc]
+
+               ;; related contracts are the contracts that are
+               ;; targeting the tasks of the activity
+               [?target :activity/tasks ?supervision-task]
+               [?related-contract :thk.contract/targets ?supervision-task]
+               [?supervision-task :task/type :task.type/owners-supervision]))]
 
     [(target-project ?target ?project)
      (or-join [?target ?project]
@@ -121,19 +146,52 @@
   [[contract status]]
   (assoc contract :thk.contract/status status))
 
+(defn get-task-manager [db task]
+  (when (not (nil? task))
+        (:activity/manager
+          (ffirst (d/q
+                    '[:find (pull ?a [:activity/manager])
+                      :where
+                      [?a :activity/tasks ?tx]
+                      :in $ ?tx] db task)))))
+
+(defn contract-with-manager
+  "Used after queries that return contracts with targets are Tasks]"
+  [db contract]
+  (let [target (first (:thk.contract/targets contract))]
+    (if (nil? (:activity/manager target))
+          (let [task-manager (get-task-manager db (:db/id target))]
+            (if (nil? task-manager)
+              contract
+              (let [ta-info (user-db/user-display-info db task-manager)
+                    targets (:thk.contract/targets contract)
+                    ext-targets (map #(assoc % :activity/manager ta-info) targets)
+                    ext-contract (assoc contract :thk.contract/targets ext-targets)]
+                ext-contract)))
+          contract)))
+
+(def ^:private employee-attributes
+  [:user/given-name
+   :user/family-name
+   :user/id :user/person-id
+   :user/email
+   :user/phone-number
+   :user/last-login])
+
 (def contract-partner-attributes
-  (let [company-with-meta-keys (into []
-                                 (concat
-                                   company-model/company-keys
-                                   [:meta/created-at
-                                    :meta/modified-at
-                                    {:meta/modifier [:user/id :user/family-name :user/given-name]}
-                                    {:meta/creator [:user/id :user/family-name :user/given-name]}]))
-        pull-attributes `[~'*
-                          {:company-contract/_contract
-                           [~'*
-                            {:company-contract/company ~company-with-meta-keys}]}]]
-    pull-attributes))
+  `[~'*
+    {:company-contract/_contract
+     [~'*
+      {:company-contract/company
+       [~'*
+        :meta/created-at
+        :meta/modified-at
+        {:meta/modifier [:db/id :user/family-name :user/given-name]}
+        {:meta/creator [:db/id :user/family-name :user/given-name]}]
+       :company-contract/employees
+       [~'*
+        {:company-contract-employee/user
+         ~employee-attributes}]}]}])
 
 (defn get-contract-with-partners
   [db contract-eid]
@@ -175,7 +233,16 @@
         activity-id (str (:db/id activity))]
     {:target target
      :activity {:activity/manager (user-model/user-name (:activity/manager activity))
-                :activity/name (:activity/name activity)}
+                :activity/name (:activity/name activity)
+                :activity/tasks (reduce (fn [acc task]
+                                          (conj acc (merge task
+                                                           {:navigation-info
+                                                            {:page :activity-task
+                                                             :params {:project project-id
+                                                                      :activity activity-id
+                                                                      :task (str (:db/id task))}}}
+                                                           {:owner (user-model/user-name (:activity/manager activity))})))
+                                        [] (:activity/tasks activity))}
      :project project
      :target-navigation-info (if (:activity/name target)
                                {:page :activity
@@ -205,6 +272,27 @@
        (mapv format-target-information)
        du/idents->keywords))
 
+(defn contract-responsible-target-entities
+  [db contract-eid]
+  (->> (d/q '[:find
+              (pull ?target [*])
+              (pull ?project [:thk.project/id :thk.project/name :thk.project/project-name])
+              (pull ?activity [:db/id :activity/name
+                               {:thk.lifecycle/_activities [:thk.lifecycle/id]}
+                               {:activity/manager [:user/family-name :user/given-name]}
+                               {:activity/tasks [:db/id :task/group :task/type
+                                                 {:task/assignee [:user/family-name :user/given-name]} :task/status]}])
+              :where
+              [?c :thk.contract/targets ?target]
+              (target-activity ?target ?activity)
+              (target-project ?target ?project)
+              :in $ % ?c]
+            db
+            contract-query-rules
+            contract-eid)
+       (mapv format-target-information)
+       du/idents->keywords))
+
 (defn project-related-contracts
   [db project-eid]
   (->> (d/q '[:find (pull ?c [:thk.contract/procurement-id+procurement-part-id :thk.contract/status
@@ -216,6 +304,27 @@
             db
             (into contract-query-rules
                   contract-status-rules)
+            project-eid
+            (Date.))
+       (mapv contract-with-status)))
+
+(defn contract-related-contracts
+  "Return the related contracts of the given contract.
+   - For contracts that are targeting tasks -> Related contracts are the
+     contracts that are targeting activity of the task.
+   - For contracts that are targeting the activity -> related contracts are the
+     contracts that are targeting the tasks of the activity"
+  [db contract-eid project-eid]
+  (->> (d/q '[:find (pull ?c [:thk.contract/procurement-id+procurement-part-id :thk.contract/status
+                              :thk.contract/name :thk.contract/part-name :db/id]) ?status
+              :where
+              (related-contracts ?this-contract ?c ?project)
+              (contract-status ?c ?status ?now)
+              :in $ % ?this-contract ?project ?now]
+            db
+            (into contract-query-rules
+                  contract-status-rules)
+            contract-eid
             project-eid
             (Date.))
        (mapv contract-with-status)))
@@ -247,24 +356,72 @@
 (defn is-company-contract-employee?
   "Given user id and company-contract check if the user is an employee"
   [db company-contract-eid user-eid]
-  (->> (d/q '[:find ?cce
-              :in $ ?cc ?user
-              :where
-              [?cc :company-contract/employees ?cce]
-              [?cce :company-contract-employee/user ?user]]
-            db company-contract-eid user-eid)
-       ffirst
-       boolean))
+  (if (:db/id (d/pull db '[*] user-eid))
+    (->> (d/q '[:find ?cce
+                :in $ ?cc ?user
+                :where
+                [?cc :company-contract/employees ?cce]
+                [?cce :company-contract-employee/user ?user]]
+              db company-contract-eid user-eid)
+         ffirst
+         boolean)
+    false))
 
 (defn available-company-contract-employees
   [db company-contract-eid search]
-  (->> (d/q '[:find (pull ?u [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
+  (->> (d/q '[:find (pull ?u employee-attributes)
               :where
               (user-by-name ?u ?search)
               (not-join [?u ?company-contract]
                         [?company-contract :company-contract/employees ?cce]
                         [?cce :company-contract-employee/user ?u])
-              :in $ % ?search ?company-contract]
-            db user-db/user-query-rules
-            search company-contract-eid)
+              :in $ % ?search ?company-contract employee-attributes]
+            db
+            user-queries/user-query-rules
+            search
+            company-contract-eid
+            employee-attributes)
        (mapv first)))
+
+(defn company-contract-infos
+  "Returns the company-contract entities for the contract"
+  [db contract-eid]
+  (->> (d/q '[:find (pull ?cc [:db/id
+                               {:company-contract/company [:company/name]}
+                               :company-contract/lead-partner?])
+              :where
+              [?cc :company-contract/contract ?contract]
+              :in $ ?contract]
+            db contract-eid)
+       (map first)))
+
+(defn contract-partner-representatives
+  "Partner representatives of a contract are employees assigned to the
+  contract with the 'company representative' role"
+  [db contract-eid]
+  (let [company-contracts (company-contract-infos db contract-eid)
+        cc-id->cc (->> company-contracts (map (juxt :db/id identity)) (into {}))
+        ccs-and-responsible-employees (d/q '[:find
+                                             ?cc
+                                             (pull ?employee [*
+                                                              {:company-contract-employee/user [*]}
+                                                              {:company-contract-employee/role [*]}])
+                                             :where
+                                             [?cc :company-contract/employees ?employee]
+                                             [?employee :company-contract-employee/active? true]
+                                             (or [?employee :company-contract-employee/role :company-contract-employee.role/company-representative]
+                                                 [?employee :company-contract-employee/role :company-contract-employee.role/company-project-manager])
+                                             :in $ [?cc ...]]
+                                           db (map :db/id company-contracts))
+        ccs-without-representatives (remove (comp (->> ccs-and-responsible-employees (map first) set)
+                                                  :db/id)
+                                            company-contracts)]
+    (concat
+     ;; Include entry for each representative ...
+     (mapv (fn [[cc employee]]
+                    {:company-contract (cc-id->cc cc)
+                     :employee employee})
+           ccs-and-responsible-employees)
+     ;; ... and each company with no representatives
+     (mapv (fn [cc] {:company-contract cc})
+                  ccs-without-representatives))))
