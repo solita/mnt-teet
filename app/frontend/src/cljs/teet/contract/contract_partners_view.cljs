@@ -458,16 +458,16 @@
   (case color
     :red [Grid
           {:container true :direction :row :justify-content :flex-start :align-items :center}
-          [:icon (icons/red-rejected)]
-          [:icon (icons/key-person teet.theme.theme-colors/red)]]
+          [:icon [icons/red-rejected]]
+          [:icon [icons/key-person teet.theme.theme-colors/red]]]
     :green [Grid
             {:container true :direction :row :justify-content :flex-start :align-items :center}
-            [:icon (icons/green-check)]
-            [:icon (icons/key-person teet.theme.theme-colors/green)]]
-    :grey [Grid
+            [:icon [icons/green-check]]
+            [:icon [icons/key-person teet.theme.theme-colors/green]]]
+    :gray [Grid
            {:container true :direction :row :justify-content :flex-start :align-items :center}
-           [:icon (icons/grey-dot)]
-           [:icon (icons/key-person)]]))
+           [:icon [icons/grey-dot]]
+           [:icon [icons/key-person]]]))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -490,7 +490,7 @@
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
        [(if (true? key-person?)
-          [key-person-icon :grey]
+          [key-person-icon :gray]
           [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
@@ -787,9 +787,9 @@
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
       [Grid
-       (if (true? key-person?)
-              [key-person-icon :grey]                       ;Add approval status then ready
-              [:span])]]
+       (if key-person?
+         [key-person-icon :gray]                       ;Add approval status then ready
+         [:span])]]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
       [buttons/button-secondary

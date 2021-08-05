@@ -65,17 +65,13 @@
           (fn [e!]
             (common-controller/refresh-fx e!))
           (fn [e!]
-            (if (true? key-person?)
-              (e! (common-controller/map->NavigateWithExistingAsDefault
-                    {:page :contract-partners
-                     :query (merge
-                              (:query app)
-                              {:page :assign-key-person})}))
-              (e! (common-controller/map->NavigateWithExistingAsDefault
-                    {:page :contract-partners
-                     :query (merge
-                              (:query app)
-                              {:page :personnel-info})}))))))
+            (e! (common-controller/map->NavigateWithExistingAsDefault
+                  {:page :contract-partners
+                   :query (merge
+                            (:query app)
+                            {:page (if key-person?
+                                     :assign-key-person
+                                     :personnel-info)})})))))
 
   AssignKeyPerson
   (process-event [{:keys [employee-id key-person?]} app]
