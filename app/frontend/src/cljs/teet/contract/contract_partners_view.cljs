@@ -457,26 +457,29 @@
 (defn key-person-icon
   ([color] (key-person-icon color nil))
   ([color text]
-   [Grid {:align-items :center
-          :style {:background-color
-                  (case color
+   (let [bg-color (case color
                     :red :#FCEEEE
                     :green :#ECF4EF
                     :gray :#D2D3D8
-                    :yellow :#)}}
-    (case color
-      :red [Grid
-            {:container true :direction :row :justify-content :flex-start :align-items :center}
-            [:icon [icons/red-rejected]]
-            [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
-      :green [Grid
-              {:container true :direction :row :justify-content :flex-start :align-items :center}
-              [:icon [icons/green-check]]
-              [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
-      :gray [Grid
+                    :yellow :#)]
+     (case color
+       :red [Grid
              {:container true :direction :row :justify-content :flex-start :align-items :center}
-             [:icon [icons/key-person]]
-             [:span {:style {:color :gray}} (if (not (nil? text)) text "")]])]))
+             [:icon [icons/red-rejected]]
+             [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
+       :green [Grid
+               {:container true :direction :row :justify-content :flex-start :align-items :center}
+               [:icon [icons/green-check]]
+               [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
+       :gray [:div {:style {:display :flex
+                            :justify-content :center
+                            :align-items :center
+                            :background-color bg-color
+                            :border-radius "100px 0 0 100px"
+                            :padding-right "0.5rem"}}
+              [:icon {:style {:line-height 0}}
+               [icons/key-person]]
+              [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]))))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -499,7 +502,8 @@
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
        [(if (true? key-person?)
-          [key-person-icon :gray]
+          [:div {:style {:display :flex}}
+           [key-person-icon :gray]]
           [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
