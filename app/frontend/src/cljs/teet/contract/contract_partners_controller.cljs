@@ -33,7 +33,7 @@
 (defrecord ChangePersonStatus [employee-id active?])
 (defrecord PersonStatusChangeSuccess [])
 (defrecord AssignKeyPerson [employee-id key-person?])
-(defrecord AssignKeyPersonSuccess [key-person?])
+(defrecord AssignKeyPersonSuccess [key-person? result])
 (defrecord RemoveFileLink [employee-id file-id])
 
 (extend-protocol t/Event
@@ -61,22 +61,21 @@
            :result-event ->PersonStatusChangeSuccess}))
 
   AssignKeyPersonSuccess
-  (process-event [{key-person? :key-person? } app]
+  (process-event [{:keys [key-person? _]} app]
     (t/fx app
           (fn [e!]
-            (if key-person?
-              (e! (common-controller/map->NavigateWithExistingAsDefault
-                    {:page :contract-partners
-                     :query (:query app)}))
-              (e! (common-controller/map->NavigateWithExistingAsDefault
-                    {:page :contract-partners
-                     :query {:page :personnel-info}}))))
+            (common-controller/refresh-fx e!))
           (fn [e!]
-            (common-controller/refresh-fx e!))))
+            (e! (common-controller/map->NavigateWithExistingAsDefault
+                  {:page :contract-partners
+                   :query (merge
+                            (:query app)
+                            {:page (if key-person?
+                                     :assign-key-person
+                                     :personnel-info)})})))))
 
   AssignKeyPerson
-  (process-event [{employee-id :employee-id
-                   key-person? :key-person?} app]
+  (process-event [{:keys [employee-id key-person?]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :thk.contract/assign-key-person

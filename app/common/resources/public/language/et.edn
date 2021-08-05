@@ -1495,6 +1495,7 @@
    :km-range "Km ulatus",
    :procurement-number "Hanke number",
    :repair-method "Meede",
+   :region-name "Piirkond",
    :road-number "Tee number"},
   :add-tasks "Lisan ülesandeid",
   :activities "Projekti tegevused",
