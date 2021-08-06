@@ -319,7 +319,9 @@
   :partners {:title "Companies & persons"},
   :employee
   {:key-person "Key person",
-   :key-person-approvals "Key person approvals"},
+   :key-person-approvals "Key person approvals",
+   :key-person-is-waiting-approvals
+   "Key persong is waiting for approval"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active person and subcontractor added",
   :confirm-remove-key-person-text "If removed it can not be undone.",

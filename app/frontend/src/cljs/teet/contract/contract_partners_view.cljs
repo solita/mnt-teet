@@ -466,22 +466,17 @@
                     :gray :#D2D3D8
                     :yellow :#)]
      (case color
-       :red [Grid
-             {:container true :direction :row :justify-content :flex-start :align-items :center}
-             [:icon [icons/red-rejected]]
+       :red [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+             [:icon {:style {:line-height 0}}
+              [icons/red-rejected]]
              [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
-       :green [Grid
-               {:container true :direction :row :justify-content :flex-start :align-items :center}
-               [:icon [icons/green-check]]
+       :green [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+               [:icon {:style {:line-height 0}}
+                [icons/green-check]]
                [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
-       :gray [common/popper-tooltip {:title "Key person is waiting for approval"
+       :gray [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
                                      :variant :info}
-              [:div {:style {:display :flex
-                             :justify-content :center
-                             :align-items :center
-                             :background-color bg-color
-                             :border-radius "100px 0 0 100px"
-                             :padding-right "0.5rem"}}
+              [:div {:class (<class contract-style/key-person-icon-style bg-color)}
                [:icon {:style {:line-height 0}}
                 [icons/key-person]]
                [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]))))
