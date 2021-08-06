@@ -280,6 +280,11 @@
   :partner-saved "Contract partner added",
   :related-contracts "RELATED CONTRACTS",
   :cancel-button-text "No, go back",
+  :responsible-persons
+  {:heading "Transport administration",
+   :header
+   {:responsible-person "TRAM responsible person", :role "Role"},
+   :responsible "Responsible person"},
   :thk.contract/type "Type",
   :no-company-found-title "Company not found",
   :contract-information-heading "Contract information",
@@ -312,6 +317,9 @@
   :contract-save-success "Contract saved",
   :persons-responsibilities "Persons responsibilities",
   :partners {:title "Companies & persons"},
+  :employee
+  {:key-person "Key person",
+   :key-person-approvals "Key person approvals"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active person and subcontractor added",
   :confirm-remove-key-person-text "If removed it can not be undone.",
