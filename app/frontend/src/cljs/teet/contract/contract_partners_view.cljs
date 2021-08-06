@@ -584,7 +584,8 @@
                                                                (fn [file]
                                                                  (e! (contract-partners-controller/->RemoveFileLink
                                                                        (:db/id employee)
-                                                                       (:db/id file)))))} file])
+                                                                       (:db/id file)))))}
+               file])
             (:company-contract-employee/attached-files employee))]
      [:div {:class (<class common-styles/margin 1 0 1 0)}
       [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
