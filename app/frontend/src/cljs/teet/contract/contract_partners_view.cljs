@@ -466,23 +466,20 @@
                     :gray :#D2D3D8
                     :yellow :#)]
      (case color
-       :red [Grid
-             {:container true :direction :row :justify-content :flex-start :align-items :center}
-             [:icon [icons/red-rejected]]
+       :red [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+             [:icon {:style {:line-height 0}}
+              [icons/red-rejected]]
              [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
-       :green [Grid
-               {:container true :direction :row :justify-content :flex-start :align-items :center}
-               [:icon [icons/green-check]]
+       :green [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+               [:icon {:style {:line-height 0}}
+                [icons/green-check]]
                [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
-       :gray [:div {:style {:display :flex
-                            :justify-content :center
-                            :align-items :center
-                            :background-color bg-color
-                            :border-radius "100px 0 0 100px"
-                            :padding-right "0.5rem"}}
-              [:icon {:style {:line-height 0}}
-               [icons/key-person]]
-              [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]))))
+       :gray [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
+                                     :variant :info}
+              [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+               [:icon {:style {:line-height 0}}
+                [icons/key-person]]
+               [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]))))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -579,7 +576,8 @@
                                                           selected-partner)]
     [:div {:id (str "key-person-" (:db/id employee))}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h3 (tr [:contract :partner :key-person-files])]]
+      [:h3 {:class (<class contract-style/key-person-files-header)}
+       (tr [:contract :partner :key-person-files])]]
      [:div
       (mapc (fn [file]
               [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
