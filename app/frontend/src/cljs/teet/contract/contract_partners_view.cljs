@@ -573,35 +573,43 @@
 
 (defn key-person-files
   "Displays the file list for the key person"
-  [e! employee]
-  [:div {:id (str "key-person-" (:db/id employee))}
-   [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-    [:h1 (tr [:contract :partner :key-person-files])]]
-   [:div
-    (mapc (fn [file]
-            [teet.file.file-view/file-row2 {:delete-action (fn [file]
-                                                             (e! (contract-partners-controller/->RemoveFileLink
-                                                                   (:db/id employee)
-                                                                   (:db/id file))))} file])
-          (:company-contract-employee/attached-files employee))]
-   [:div {:class (<class common-styles/margin 1 0 1 0)}
-    [file-upload/FileUploadButton
-     {:id "keyperson-files-field"
-      :drag-container-id (str "key-person-" (:db/id employee))
-      :color :secondary
-      :button-attributes {:size :small}
-      :on-drop #(e! (file-controller/map->UploadFiles
-                      {:files %
-                       :project-id nil
-                       :user-attachment? true
-                       :attach-to (:db/id employee)
-                       :on-success common-controller/->Refresh}))}
-     (str "+ " (tr [:buttons :upload]))]]])
+  [e! employee selected-partner]
+  (let [can-manage-files (authorization-check/authorized? @teet.app-state/user
+                                                          :contracts/contract-editing
+                                                          selected-partner)]
+    [:div {:id (str "key-person-" (:db/id employee))}
+     [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+      [:h1 (tr [:contract :partner :key-person-files])]]
+     [:div
+      (mapc (fn [file]
+              [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
+                                              :title-downloads? true
+                                              :delete-action (when can-manage-files
+                                                               (fn [file]
+                                                                 (e! (contract-partners-controller/->RemoveFileLink
+                                                                       (:db/id employee)
+                                                                       (:db/id file)))))}
+               file])
+            (:company-contract-employee/attached-files employee))]
+     [:div {:class (<class common-styles/margin 1 0 1 0)}
+      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+        [file-upload/FileUploadButton
+         {:id "keyperson-files-field"
+          :drag-container-id (str "key-person-" (:db/id employee))
+          :color :secondary
+          :button-attributes {:size :small}
+          :on-drop #(e! (file-controller/map->UploadFiles
+                          {:files %
+                           :project-id nil
+                           :user-attachment? true
+                           :attach-to (:db/id employee)
+                           :on-success common-controller/->Refresh}))}
+         (str "+ " (tr [:buttons :upload]))]]]]))
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
-  [:div {:class (<class contract-style/key-person-assignment-header)}
-   [:div {:class (<class contract-style/personnel-section-style)}
+  [:div {:class (<class contract-style/personnel-files-section-style)}
+   [:div {:class (<class contract-style/personnel-files-section-header-style)}
     [key-person-files e! employee]
     [:div {:class (<class contract-style/personnel-files-section-header-style)}]] ;; TODO: Licenses section here
    [authorization-check/when-authorized

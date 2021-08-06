@@ -86,9 +86,10 @@
   [increase-show-count show-count all-contracts? contracts]
   ;; appease cypress test
   (r/with-let [open-contracts (r/atom #{})
-               expand-contracts #((reset! open-contracts (->> contracts
-                                                              (mapv :db/id)
-                                                              set)))
+               expand-contracts-fn (fn [contracts]
+                                     (reset! open-contracts (->> contracts
+                                                                 (mapv :db/id)
+                                                                 set)))
                collapse-contracts #(reset! open-contracts #{})
                toggle-card (fn [contract-id]
                              (if (@open-contracts contract-id)
@@ -97,13 +98,13 @@
     [:div {:class (<class contract-style/contracts-list-style)}
      [contacts-list-header {:all-contracts? all-contracts?
                             :contracts-count (count contracts)
-                            :expand-contracts expand-contracts
+                            :expand-contracts #(expand-contracts-fn contracts)
                             :collapse-contracts collapse-contracts}]
      (doall
-      (for [contract (take show-count contracts)
-            :let [open? (@open-contracts (:db/id contract))]]
-        ^{:key (str (:db/id contract))}
-        [contract-card contract #(toggle-card (:db/id contract)) open?]))
+       (for [contract (take show-count contracts)
+             :let [open? (@open-contracts (:db/id contract))]]
+         ^{:key (str (:db/id contract))}
+         [contract-card contract #(toggle-card (:db/id contract)) open?]))
      [common-ui/scroll-sensor increase-show-count]]))
 
 (def filter-options
