@@ -584,7 +584,7 @@
   (let [can-manage-files (authorization-check/authorized? @teet.app-state/user
                                                           :contracts/contract-editing
                                                           selected-partner)]
-    [:div {:id (str "key-person-" (:db/id employee)) :class (<class common-styles/margin-top 2)}
+    [:div {:id (str "key-person-" (:db/id employee))}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
       [:h3 {:class (<class contract-style/key-person-files-header)}
        (tr [:contract :partner :key-person-files])]]
