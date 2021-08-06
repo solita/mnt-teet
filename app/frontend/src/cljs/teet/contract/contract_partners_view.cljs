@@ -483,7 +483,16 @@
                             :padding-right "0.5rem"}}
               [:icon {:style {:line-height 0}}
                [icons/key-person]]
-              [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]))))
+              [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]
+       :yellow [:div {:style {:display :flex
+                            :justify-content :center
+                            :align-items :center
+                            :background-color :lightyellow
+                            :border-radius "100px 0 0 100px"
+                            :padding-right "0.5rem"}}
+              [:icon {:style {:line-height 0}}
+               [icons/key-person :orange]]
+              [:span {:style {:color :orange}} (if (not (nil? text)) text "")]]))))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -578,7 +587,7 @@
   (let [can-manage-files (authorization-check/authorized? @teet.app-state/user
                                                           :contracts/contract-editing
                                                           selected-partner)]
-    [:div {:id (str "key-person-" (:db/id employee))}
+    [:div {:id (str "key-person-" (:db/id employee)) :class (<class common-styles/margin-top 2)}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
       [:h3 (tr [:contract :partner :key-person-files])]]
      [:div
@@ -614,7 +623,19 @@
     [:div {:class (<class contract-style/personnel-files-column-style)}
      [:h2 (tr [:contract :employee :key-person-approvals])]
      [key-person-files e! employee]
-     [:div {:class (<class contract-style/personnel-files-section-header-style)}]]] ;; TODO: Licenses section here
+     [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
+    [:div
+     [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+      [:div
+       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]]
+       [buttons/button-secondary
+        {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
+         :underlined? :true
+         :confirm-button-text (tr [:contract :delete-button-text])
+         :cancel-button-text (tr [:contract :cancel-button-text])
+         :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+         :modal-text (tr [:contract :confirm-remove-key-person-text])}
+        (tr [:buttons :submit-key-person])]]]]]]
    [authorization-check/when-authorized
     :thk.contract/add-contract-employee selected-partner
     [buttons/delete-button-with-confirm
