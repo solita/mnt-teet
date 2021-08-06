@@ -474,15 +474,17 @@
                {:container true :direction :row :justify-content :flex-start :align-items :center}
                [:icon [icons/green-check]]
                [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
-       :gray [:div {:style {:display :flex
-                            :justify-content :center
-                            :align-items :center
-                            :background-color bg-color
-                            :border-radius "100px 0 0 100px"
-                            :padding-right "0.5rem"}}
-              [:icon {:style {:line-height 0}}
-               [icons/key-person]]
-              [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]))))
+       :gray [common/popper-tooltip {:title "Key person is waiting for approval"
+                                     :variant :info}
+              [:div {:style {:display :flex
+                             :justify-content :center
+                             :align-items :center
+                             :background-color bg-color
+                             :border-radius "100px 0 0 100px"
+                             :padding-right "0.5rem"}}
+               [:icon {:style {:line-height 0}}
+                [icons/key-person]]
+               [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]))))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
