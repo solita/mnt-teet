@@ -316,11 +316,12 @@
   :partners {:title nil},
   :employee
   {:key-person "Võtmeisik",
-   :key-person-approvals "Võtmeisiku kinnitused"},
+   :key-person-approvals "Võtmeisiku kinnitused",
+   :key-person-is-waiting-approvals "Võtmeisik ootab kinnitust"},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
   :confirm-remove-key-person-text
-  "Kui on kustutatud siis see ei ole võimalik tagasi taastada.",
+  "Kui on kustutatud, siis seda ei ole võimalik tagasi taastada.",
   :responsible
   {:header
    {:task "Ülesanne",
@@ -350,7 +351,7 @@
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :are-you-sure-remove-key-person-assignment
-  "Kas oled  kindel, et tahad kustutada võtmeisiku määramine?",
+  "Kas olete kindel, et soovite võtmeisiku ülesande kustutada?",
   :partners-listing "Partnerite loetelu",
   :responsibilities-listing "Vastutuste loetelu",
   :thk.contract.status/signed "Allkirjastatud",

@@ -546,6 +546,7 @@
                    :success [icons/action-check-circle-outline]
                    :warning [icons/alert-warning-outlined]
                    :error [icons/alert-error-outline]
+                   :info [icons/action-info-outlined]
                    :no-icon nil
                    [fi/info]))]
     [:div {:class (<class common-styles/popper-tooltip variant)}

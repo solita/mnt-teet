@@ -201,6 +201,19 @@
   {:display :flex
    :flex-direction :column})
 
+(defn key-person-files-header
+  []
+  {:padding-top :3rem})
+
+(defn key-person-icon-style
+  [bg-color]
+  {:display :flex
+   :justify-content :center
+   :align-items :center
+   :background-color bg-color
+   :border-radius "100px 0 0 100px"
+   :padding-right "0.5rem"})
+
 (defn personnel-table-style
   []
   ^{:combinators
