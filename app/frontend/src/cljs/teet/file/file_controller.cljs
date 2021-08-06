@@ -188,7 +188,7 @@
                           :file/replace
 
                           user-attachment?
-                          :file/upload-user-attachment
+                          :file/upload-key-person-file
 
                           :else
                           :file/upload)
@@ -202,10 +202,10 @@
                                  {:previous-version-id prev-file-id})
                                (if user-attachment?
                                  {:employee-id attach-to}
-                                (if attachment?
-                                 {:project-id project-id
+                                 (if attachment?
+                                   {:project-id project-id
                                     :attach-to attach-to}
-                                 {:task-id task-id})))
+                                   {:task-id task-id})))
                :error-event ->FileUploadError
                :result-event (fn [result]
                                (map->UploadFileUrlReceived

@@ -86,8 +86,8 @@
     {:url (file-storage/upload-url key)
      :file (d/pull (:db-after res) '[*] file-id)}))
 
-(defcommand :file/upload-user-attachment
-  {:doc "Upload attachment file and optionally attach it to entity."
+(defcommand :file/upload-key-person-file
+  {:doc "Upload a file, attach it to the user and contract key person "
    :context {:keys [conn user db]}
    :payload {:keys [file employee-id]}
    :project-id nil
@@ -99,12 +99,12 @@
         res (tx [(merge (select-keys file file-keys)
                           {:db/id "new-file"
                            :file/s3-key key}
-                          (creation-meta user))])
-        file-id (get-in res [:tempids "new-file"])
-        _ (tx [{:db/id (contract-db/get-user-for-company-contract-employee db employee-id)
-                :user/files file-id}
-               {:db/id employee-id
-                :company-contract-employee/attached-files file-id}])]
+                          (creation-meta user))
+                 {:db/id (contract-db/get-user-for-company-contract-employee db employee-id)
+                  :user/files "new-file"}
+                 {:db/id employee-id
+                  :company-contract-employee/attached-files "new-file"}])
+        file-id (get-in res [:tempids "new-file"])]
     {:url (file-storage/upload-url key)
      :file (d/pull (:db-after res) '[*] file-id)}))
 
