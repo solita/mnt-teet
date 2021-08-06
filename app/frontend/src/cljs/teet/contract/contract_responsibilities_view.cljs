@@ -1,23 +1,24 @@
 (ns teet.contract.contract-responsibilities-view
   (:require [clojure.string :as str]
-            [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr tr-enum]]
             [herb.core :refer [<class] :as herb]
+            [teet.common.common-styles :as common-styles]
             [teet.contract.contract-common :as contract-common]
-            [teet.contract.contract-style :as contract-style]
-            [teet.ui.typography :as typography]
             teet.contract.contract-spec
-            [teet.user.user-model :as user-model]
+            [teet.contract.contract-style :as contract-style]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.common :as ui-common]
-            [teet.ui.table :as table]
+            [teet.ui.material-ui :refer [Divider]]
+            [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :as ui-util]
+            [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]))
 
 (defn simple-table-with-many-bodies
-  [table-headings groups]
-  [:table {:style {:border-collapse :collapse
-                   :width "100%"}}
+  [{:keys [width] :or {width "100%"}} table-headings groups]
+  [:table {:style (merge {:border-collapse :collapse}
+                         (when width
+                           {:width width}))}
    [:colgroup
     (for [[_ opts] table-headings]
       [:col {:span "1"
@@ -67,7 +68,7 @@
   (-> representative-info :company-contract :company-contract/lead-partner?))
 
 (defn- partner-representatives-table [partner-representatives]
-  [simple-table-with-many-bodies
+  [simple-table-with-many-bodies {}
    [[(tr [:contract :representatives :header :company]) {:align :left}]
     [(tr [:contract :representatives :header :responsible]) {:align :left}]
     [(tr [:contract :representatives :header :role]) {:align :left}]]
@@ -88,7 +89,7 @@
               [(representative-info->name representative-info) {:align :left}]
               [(representative-info->roles representative-info) {:align :left}]]))]]])
 
-(defn project-and-target-heading [target navigation-info]
+(defn- project-and-target-heading [target navigation-info]
   [:div {:class (herb/join (<class common-styles/flex-row-w100-space-between-center)
                            (<class common-styles/margin-bottom 2))}
    [typography/Heading2 (get-in target [:project :thk.project/name])]
@@ -99,29 +100,49 @@
     navigation-info
     (tr [:link :target-view-activity])]])
 
+(defn- responsible-persons-heading-style []
+  {:margin-bottom "2rem"
+   :display :flex
+   :flex-direction :row
+   :justify-content :flex-start
+   :align-items :flex-end})
+
+(defn- responsible-persons-heading [target navigation-info]
+  [:div {:class (<class responsible-persons-heading-style)}
+   [typography/Heading2 {:class (<class common-styles/margin-right 1)}
+    (get-in target [:project :thk.project/name])]
+   [url/Link
+    navigation-info
+    (tr [:enum (get-in target [:activity :activity/name])])]])
+
+
 (defn responsible-persons [entries]
   [:div
    (for [{:keys [project activity] :as entry} (->> entries
                                                    (cu/distinct-by (comp :db/id :activity))
                                                    (sort-by (comp :thk.project/name :project)))]
      [:<>
-      [project-and-target-heading
-       entry
-       {:page :activity
-        :params {:project (-> project :thk.project/id)
-                 :activity (-> activity :db/id)}}]
-      [simple-table-with-many-bodies
-       [[(tr [:contract :responsible-persons :header :responsible-person]) {:align :left}]
-        [(tr [:contract :responsible-persons :header :role]) {:align :left}]]
-       [[nil
-         [(let [owner (:thk.project/owner project)]
-            [[(if owner (user-model/user-name owner) "...")
-              {:align :left}]
-             [(tr [:contract :responsible-persons :responsible]) {:align :left}]])
-          (let [manager (:activity/manager activity)]
-            [[(or manager "...")
-              {:align :left}]
-             [(tr [:fields :activity/manager]) {:align :left}]])]]]]])])
+      [Divider]
+      [:div {:class (<class common-styles/margin 2 0)}
+       [responsible-persons-heading
+        entry
+        {:page :activity
+         :params {:project (-> project :thk.project/id)
+                  :activity (-> activity :db/id)}}]
+       [simple-table-with-many-bodies {:width nil}
+        [[(tr [:contract :responsible-persons :header :responsible-person]) {:align :left
+                                                                             :width "30%"}]
+         [(tr [:contract :responsible-persons :header :role]) {:align :left
+                                                               :width "30%"}]]
+        [[nil
+          [(let [owner (:thk.project/owner project)]
+             [[(if owner (user-model/user-name owner) "...")
+               {:align :left}]
+              [(tr [:contract :responsible-persons :responsible]) {:align :left}]])
+           (let [manager (:activity/manager activity)]
+             [[(or manager "...")
+               {:align :left}]
+              [(tr [:fields :activity/manager]) {:align :left}]])]]]]]])])
 
 (defn targets-responsibilities
   [targets]
@@ -149,10 +170,11 @@
                                                  [(tr-enum (:task/status item))]]))
                                         sort)]))
                           (sort-by first))]
-          [simple-table-with-many-bodies [[(tr [:contract :responsible :header :task]) {:width "35%"}]
-                                          [(tr [:contract :responsible :header :tram-reviewer]) {:width "25%"}]
-                                          [(tr [:contract :responsible :header :company-responsible]) {:width "25%"}]
-                                          [(tr [:contract :responsible :header :status]) {:width "15%"}]]
+          [simple-table-with-many-bodies {}
+           [[(tr [:contract :responsible :header :task]) {:width "35%"}]
+            [(tr [:contract :responsible :header :tram-reviewer]) {:width "25%"}]
+            [(tr [:contract :responsible :header :company-responsible]) {:width "25%"}]
+            [(tr [:contract :responsible :header :status]) {:width "15%"}]]
            bodies]))])])
 
 (defn responsibilities-page
