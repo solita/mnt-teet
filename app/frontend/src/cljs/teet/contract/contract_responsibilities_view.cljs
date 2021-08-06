@@ -1,6 +1,7 @@
 (ns teet.contract.contract-responsibilities-view
   (:require [clojure.string :as str]
             [herb.core :refer [<class] :as herb]
+            [teet.common.common-controller :refer [when-feature]]
             [teet.common.common-styles :as common-styles]
             [teet.contract.contract-common :as contract-common]
             teet.contract.contract-spec
@@ -185,11 +186,12 @@
     [:div {:class (<class contract-style/contract-responsibilities-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
-      (when (not-empty targets)
-        [:div {:class (<class common-styles/margin-top 2)}
-         [typography/Heading1 {:class (<class common-styles/margin-top 2)}
-          (tr [:contract :responsible-persons :heading])]
-         [responsible-persons targets]])
+      (when-feature :contract-partners
+        (when (not-empty targets)
+          [:div {:class (<class common-styles/margin-top 2)}
+           [typography/Heading1 {:class (<class common-styles/margin-top 2)}
+            (tr [:contract :responsible-persons :heading])]
+           [responsible-persons targets]]))
       (when (not-empty partner-representatives)
         [:div {:class (<class common-styles/margin-top 2)}
          [typography/Heading1 {:class (<class common-styles/margin-top 2)}
