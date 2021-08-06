@@ -279,6 +279,10 @@
   :partner-saved "Lepingupartner on lisatud",
   :related-contracts "SEOTUD LEPINGUD",
   :cancel-button-text "Ei, tühista",
+  :responsible-persons
+  {:heading "Transpordiamet",
+   :header {:responsible-person "TRAM vastutav isik", :role "Roll"},
+   :responsible "Vastutav isik"},
   :thk.contract/type "Tüüp",
   :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
@@ -310,6 +314,7 @@
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
+  :employee {:key-person "Võtmeisik"},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
   :confirm-remove-key-person-text

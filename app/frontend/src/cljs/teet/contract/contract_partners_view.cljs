@@ -838,7 +838,7 @@
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
       (if key-person?
-        [key-person-icon :gray "Key person"]
+        [key-person-icon :gray (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
