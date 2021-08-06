@@ -159,6 +159,12 @@
   {:display :flex
    :flex-direction :column})
 
+(defn key-person-assignment-header
+  []
+  {:display :flex
+   :align-items :baseline
+   :justify-content :space-between})
+
 (defn personnel-section-header-style
   []
   ^{:combinators
