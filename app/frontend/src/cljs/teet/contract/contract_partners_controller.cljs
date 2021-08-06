@@ -34,6 +34,7 @@
 (defrecord PersonStatusChangeSuccess [])
 (defrecord AssignKeyPerson [employee-id key-person?])
 (defrecord AssignKeyPersonSuccess [key-person? result])
+(defrecord RemoveFileLink [employee-id file-id])
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
@@ -163,5 +164,15 @@
            :command :thk.contract/delete-existing-company-from-contract-partners
            :payload {:company company}
            :success-message (tr [:contract :partner-deleted])
-           :result-event ->DeletePartnerSuccess})))
+           :result-event ->DeletePartnerSuccess}))
 
+  RemoveFileLink
+  (process-event [{employee-id :employee-id
+                   file-id :file-id} app]
+    (t/fx app
+      {:tuck.effect/type :command!
+       :command :thk.contract/remove-file-link
+       :payload {:employee-id employee-id
+                 :file-id file-id}
+       :success-message (tr [:contract :partner :file-link-removed])
+       :result-event common-controller/->Refresh})))

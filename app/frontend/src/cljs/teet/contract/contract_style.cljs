@@ -172,6 +172,24 @@
    :width "100%"
    :margin-top "1.562rem"})
 
+(defn personnel-files-section-style
+  []
+  {:display :flex
+   :flex-direction :column})
+
+(defn personnel-files-section-header-style
+  []
+  ^{:combinators
+    {[:> :h2] {:margin-right "1rem"
+               :line-height "2.6rem"
+               :font-size "1.75rem"
+               :font-weight "400"}
+     [:> :a] {:margin-left :auto}}}
+  {:display :flex
+   :align-items :center
+   :width "100%"
+   :margin-top "1.562rem"})
+
 (defn personnel-table-style
   []
   ^{:combinators

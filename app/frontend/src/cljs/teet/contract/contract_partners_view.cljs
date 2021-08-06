@@ -15,6 +15,7 @@
             [teet.contract.contract-partners-controller :as contract-partners-controller]
             [teet.routes :as routes]
             [teet.ui.form :as form]
+            [teet.ui.util :refer [mapc]]
             [teet.ui.select :as select]
             [teet.ui.common :as common]
             [teet.ui.validation :as validation]
@@ -23,8 +24,10 @@
             [teet.ui.format :as format]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.table :as table]
+            [teet.ui.file-upload :as file-upload]
             [clojure.string :as str]
-            [re-svg-icons.feather-icons :as fi]))
+            [re-svg-icons.feather-icons :as fi]
+            [teet.file.file-controller :as file-controller]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -564,19 +567,49 @@
                                              true)}
       (tr [:buttons :assign-as-key-person])]]]])
 
+(defn key-person-files
+  "Displays the file list for the key person"
+  [e! employee]
+  [:div {:id (str "key-person-" (:db/id employee))}
+   [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+    [:h1 (tr [:contract :partner :key-person-files])]]
+   [:div
+    (mapc (fn [file]
+            [teet.file.file-view/file-row2 {:delete-action (fn [file]
+                                                             (e! (contract-partners-controller/->RemoveFileLink
+                                                                   (:db/id employee)
+                                                                   (:db/id file))))} file])
+          (:company-contract-employee/attached-files employee))]
+   [:div {:class (<class common-styles/margin 1 0 1 0)}
+    [file-upload/FileUploadButton
+     {:id "keyperson-files-field"
+      :drag-container-id (str "key-person-" (:db/id employee))
+      :color :secondary
+      :button-attributes {:size :small}
+      :on-drop #(e! (file-controller/map->UploadFiles
+                      {:files %
+                       :project-id nil
+                       :user-attachment? true
+                       :attach-to (:db/id employee)
+                       :on-success common-controller/->Refresh}))}
+     (str "+ " (tr [:buttons :upload]))]]])
+
 (defn key-person-assignment-section
   [e! {:keys [params query] :as app} selected-partner employee]
-  [:div {:class (<class contract-style/personnel-section-style)}
-   [:div {:class (<class contract-style/personnel-section-header-style)}
+  [:div {:class (<class contract-style/personnel-files-section-style)}
+   [:div {:class (<class contract-style/personnel-files-section-header-style)}
+    [key-person-files e! employee]]
+   [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
+   [:div
     [authorization-check/when-authorized
      :thk.contract/add-contract-employee selected-partner
-      [buttons/delete-button-with-confirm
-       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
-        :underlined? :true
-        :confirm-button-text (tr [:contract :delete-button-text])
-        :cancel-button-text (tr [:contract :cancel-button-text])
-        :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
-        :modal-text (tr [:contract :confirm-remove-key-person-text])}
+     [buttons/delete-button-with-confirm
+      {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
+       :underlined? :true
+       :confirm-button-text (tr [:contract :delete-button-text])
+       :cancel-button-text (tr [:contract :cancel-button-text])
+       :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+       :modal-text (tr [:contract :confirm-remove-key-person-text])}
       (tr [:buttons :remove-key-person-assignment])]]]])
 
 (defn user-info-column
