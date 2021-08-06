@@ -27,7 +27,8 @@
             [teet.ui.file-upload :as file-upload]
             [clojure.string :as str]
             [re-svg-icons.feather-icons :as fi]
-            [teet.file.file-controller :as file-controller]))
+            [teet.file.file-controller :as file-controller]
+            [teet.util.datomic :as du]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -464,7 +465,7 @@
                     :red :#FCEEEE
                     :green :#ECF4EF
                     :gray :#D2D3D8
-                    :yellow :#)]
+                    :yellow :#F2C94C)]
      (case color
        :red [Grid
              {:container true :direction :row :justify-content :flex-start :align-items :center}
@@ -572,7 +573,7 @@
   [e! employee]
   [:div {:id (str "key-person-" (:db/id employee))}
    [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-    [:h1 (tr [:contract :partner :key-person-files])]]
+    [:h4 (tr [:contract :partner :key-person-files])]]
    [:div
     (mapc (fn [file]
             [teet.file.file-view/file-row2 {:delete-action (fn [file]
@@ -610,7 +611,19 @@
        :cancel-button-text (tr [:contract :cancel-button-text])
        :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
        :modal-text (tr [:contract :confirm-remove-key-person-text])}
-      (tr [:buttons :remove-key-person-assignment])]]]])
+      (tr [:buttons :remove-key-person-assignment])]]]
+   [:div
+    [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+     [:div
+      [:div {:class (<class common-styles/margin 1 0 1 0)} [:h4 "Approvals"]]
+      [buttons/button-secondary
+           {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
+            :underlined? :true
+            :confirm-button-text (tr [:contract :delete-button-text])
+            :cancel-button-text (tr [:contract :cancel-button-text])
+            :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+            :modal-text (tr [:contract :confirm-remove-key-person-text])}
+           (tr [:buttons :submit-key-person])]]]]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -831,14 +844,17 @@
                            (get-in employee [:company-contract-employee/user :user/family-name]))
         teet-id (:teet/id selected-partner)
         user-id (get-in employee [:company-contract-employee/user :user/id])
-        key-person? (get-in employee [:company-contract-employee/key-person?])]
+        key-person? (get-in employee [:company-contract-employee/key-person?])
+        key-person-status (get-in employee [:company-contract-employee/key-person-status])]
     [:div {:class (<class contract-style/partner-info-header)}
      [Grid
       {:container true :direction :row :justify-content :flex-start :align-items :center}
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
       (if key-person?
-        [key-person-icon :gray "Key person"]
+        [key-person-icon (cond
+                           (du/enum= key-person-status :key-person.status/approval-requested) :yellow
+                           :else :gray) "Key person"]
         [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
