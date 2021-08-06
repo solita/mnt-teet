@@ -201,6 +201,10 @@
   {:display :flex
    :flex-direction :column})
 
+(defn key-person-files-header
+  []
+  {:padding-top :3rem})
+
 (defn personnel-table-style
   []
   ^{:combinators

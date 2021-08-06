@@ -579,7 +579,8 @@
                                                           selected-partner)]
     [:div {:id (str "key-person-" (:db/id employee))}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h3 (tr [:contract :partner :key-person-files])]]
+      [:h3 {:class (<class contract-style/key-person-files-header)}
+       (tr [:contract :partner :key-person-files])]]
      [:div
       (mapc (fn [file]
               [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
