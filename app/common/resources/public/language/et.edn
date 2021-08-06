@@ -178,9 +178,10 @@
   :assign-as-key-person "Määra võtmeisikuks",
   :add "Lisan",
   :remove-from-contract "Eemaldan lepingust",
+  :submit-key-person "Esita võtmeisik kinnitamiseks",
   :copy-to-clipboard "Kopeeri tekst",
   :upload "Laen üles",
-  :remove-key-person-assignment "Kustuta võtmeisiku määrärmine"},
+  :remove-key-person-assignment "Kustuta võtmeisiku määramine"},
  :cadastral-group
  {"" "Määratlemata",
   "Avalik-õiguslik omand" "Avalik-õiguslik omand",
@@ -300,6 +301,7 @@
    :change-status-title "Muuda isiku staatust",
    :key-person-assigned "Võtmeisik määratud.",
    :change-status-text "Oled kindel, et soovid isiku staatust muuta?",
+   :key-person-submitted "Võtmeisik on kinnitamisele saadetud",
    :key-person-files "Sertifikaadid ja dokumendid",
    :edit-person "Muudan isikut",
    :activate "Aktiveeri"},
@@ -317,7 +319,11 @@
   :employee
   {:key-person "Võtmeisik",
    :key-person-approvals "Võtmeisiku kinnitused",
-   :key-person-is-waiting-approvals "Võtmeisik ootab kinnitust"},
+   :key-person-is-waiting-approvals "Võtmeisik ootab kinnitust",
+   :approvals "Kinnitused",
+   :key-person-not-submitted "Võtmeisik pole kinnitamisele saadetud",
+   :key-person-rejected "Võtmeisik tagasi lükatud",
+   :key-person-approved "Võtmeisik kinnitatud"},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
   :confirm-remove-key-person-text
