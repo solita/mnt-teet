@@ -314,7 +314,9 @@
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
-  :employee {:key-person "Võtmeisik"},
+  :employee
+  {:key-person "Võtmeisik",
+   :key-person-approvals "Võtmeisiku kinnitused"},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
   :confirm-remove-key-person-text

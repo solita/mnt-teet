@@ -196,6 +196,11 @@
    :align-items :center
    :margin-top "1.562rem"})
 
+(defn personnel-files-column-style
+  []
+  {:display :flex
+   :flex-direction :column})
+
 (defn personnel-table-style
   []
   ^{:combinators

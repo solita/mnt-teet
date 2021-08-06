@@ -579,7 +579,7 @@
                                                           selected-partner)]
     [:div {:id (str "key-person-" (:db/id employee))}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h1 (tr [:contract :partner :key-person-files])]]
+      [:h3 (tr [:contract :partner :key-person-files])]]
      [:div
       (mapc (fn [file]
               [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
@@ -610,8 +610,10 @@
   [e! _ selected-partner employee]
   [:div {:class (<class contract-style/personnel-files-section-style)}
    [:div {:class (<class contract-style/personnel-files-section-header-style)}
-    [key-person-files e! employee]
-    [:div {:class (<class contract-style/personnel-files-section-header-style)}]] ;; TODO: Licenses section here
+    [:div {:class (<class contract-style/personnel-files-column-style)}
+     [:h2 (tr [:contract :employee :key-person-approvals])]
+     [key-person-files e! employee]
+     [:div {:class (<class contract-style/personnel-files-section-header-style)}]]] ;; TODO: Licenses section here
    [authorization-check/when-authorized
     :thk.contract/add-contract-employee selected-partner
     [buttons/delete-button-with-confirm
