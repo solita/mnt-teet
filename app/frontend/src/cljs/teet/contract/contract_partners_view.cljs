@@ -453,7 +453,7 @@
 
 (defn- get-personnel-info-page [employee]
   (let [key-person? (get-in employee [:company-contract-employee/key-person?])]
-    (if (true? key-person?)
+    (if key-person?
       :assign-key-person
       :personnel-info)))
 
@@ -763,6 +763,7 @@
         family-name (:user/family-name user)
         user-id (:user/id user)
         roles (set (:company-contract-employee/role selected-person))
+        key-person? (:company-contract-employee/key-person? selected-person)
         personal-info-disabled? (:user/last-login user)]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
@@ -782,7 +783,9 @@
                                                                           (merge old new))))
                    :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                     {:query (merge query
-                                                   {:page :personnel-info
+                                                   {:page (if key-person?
+                                                            :assign-key-person
+                                                            :personnel-info)
                                                     :user-id user-id})})
                    :spec :thk.contract/edit-contract-employee
                    :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
@@ -794,7 +797,9 @@
                                       (e! (common-controller/map->NavigateWithExistingAsDefault
                                             {:query (merge
                                                       query
-                                                      {:page :personnel-info
+                                                      {:page (if key-person?
+                                                               :assign-key-person
+                                                               :personnel-info)
                                                        :user-id user-id})}))))
                                   (tr [:contract :partner :person-updated]))}
        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
