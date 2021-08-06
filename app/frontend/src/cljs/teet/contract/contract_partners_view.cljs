@@ -557,15 +557,19 @@
 (defn info-personnel-section
   [e! {:keys [params query] :as app} selected-partner employee]
   [:div {:class (<class contract-style/personnel-section-style)}
-   [:div {:class (<class contract-style/personnel-section-header-style)}
-    [authorization-check/when-authorized
-     :thk.contract/add-contract-employee selected-partner
-     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                                :on-click  (e!
+   [Grid {:container :true
+          :direction :row-reverse
+          :justify-content :flex-start
+          :align-items :center}
+    [:span {:style {:padding-top :1rem}}
+     [authorization-check/when-authorized
+      :thk.contract/add-contract-employee selected-partner
+      [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                                 :on-click (e!
                                              contract-partners-controller/->AssignKeyPerson
                                              (:db/id employee)
                                              true)}
-      (tr [:buttons :assign-as-key-person])]]]])
+       (tr [:buttons :assign-as-key-person])]]]]])
 
 (defn key-person-files
   "Displays the file list for the key person"
@@ -575,7 +579,7 @@
                                                           selected-partner)]
     [:div {:id (str "key-person-" (:db/id employee))}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h1 (tr [:contract :partner :key-person-files])]]
+      [:h3 (tr [:contract :partner :key-person-files])]]
      [:div
       (mapc (fn [file]
               [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
@@ -603,22 +607,23 @@
          (str "+ " (tr [:buttons :upload]))]]]]))
 
 (defn key-person-assignment-section
-  [e! {:keys [params query] :as app} selected-partner employee]
+  [e! _ selected-partner employee]
   [:div {:class (<class contract-style/personnel-files-section-style)}
    [:div {:class (<class contract-style/personnel-files-section-header-style)}
-    [key-person-files e! employee selected-partner]]
-   [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
-   [:div
-    [authorization-check/when-authorized
-     :thk.contract/add-contract-employee selected-partner
-     [buttons/delete-button-with-confirm
-      {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
-       :underlined? :true
-       :confirm-button-text (tr [:contract :delete-button-text])
-       :cancel-button-text (tr [:contract :cancel-button-text])
-       :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
-       :modal-text (tr [:contract :confirm-remove-key-person-text])}
-      (tr [:buttons :remove-key-person-assignment])]]]])
+    [:div {:class (<class contract-style/personnel-files-column-style)}
+     [:h2 (tr [:contract :employee :key-person-approvals])]
+     [key-person-files e! employee]
+     [:div {:class (<class contract-style/personnel-files-section-header-style)}]]] ;; TODO: Licenses section here
+   [authorization-check/when-authorized
+    :thk.contract/add-contract-employee selected-partner
+    [buttons/delete-button-with-confirm
+     {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
+      :underlined? :true
+      :confirm-button-text (tr [:contract :delete-button-text])
+      :cancel-button-text (tr [:contract :cancel-button-text])
+      :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+      :modal-text (tr [:contract :confirm-remove-key-person-text])}
+     (tr [:buttons :remove-key-person-assignment])]]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -846,7 +851,7 @@
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
       (if key-person?
-        [key-person-icon :gray "Key person"]
+        [key-person-icon :gray (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee

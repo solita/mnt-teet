@@ -159,6 +159,12 @@
   {:display :flex
    :flex-direction :column})
 
+(defn key-person-assignment-header
+  []
+  {:display :flex
+   :align-items :baseline
+   :justify-content :space-between})
+
 (defn personnel-section-header-style
   []
   ^{:combinators
@@ -175,7 +181,8 @@
 (defn personnel-files-section-style
   []
   {:display :flex
-   :flex-direction :column})
+   :align-items :baseline
+   :justify-content :space-between})
 
 (defn personnel-files-section-header-style
   []
@@ -187,8 +194,12 @@
      [:> :a] {:margin-left :auto}}}
   {:display :flex
    :align-items :center
-   :width "100%"
    :margin-top "1.562rem"})
+
+(defn personnel-files-column-style
+  []
+  {:display :flex
+   :flex-direction :column})
 
 (defn personnel-table-style
   []
