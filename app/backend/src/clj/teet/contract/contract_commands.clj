@@ -242,13 +242,13 @@
     tempids))
 
 (defn- personal-information [user-info]
-  (let [personal-data [:user/given-name :user/family-name :user/email :user/phone-number]]
+  (let [personal-data [:user/given-name :user/family-name :user/person-id :user/email :user/phone-number]]
     (cu/keep-vals not-empty
                   (select-keys user-info personal-data))))
 
 (defn- personal-information-edited? [user-from-db form-value]
   (not= (personal-information user-from-db)
-        (personal-information form-value)))
+        (personal-information (update form-value :user/person-id user-model/normalize-person-id))))
 
 (defn- either-user-has-not-logged-in-or-no-personal-information-edited? [db form-value]
   (when-let [edited-user (user-db/user-info db [:user/id (:user/id form-value)])]
