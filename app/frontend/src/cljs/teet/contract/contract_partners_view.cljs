@@ -28,7 +28,8 @@
             [clojure.string :as str]
             [re-svg-icons.feather-icons :as fi]
             [teet.file.file-controller :as file-controller]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.date-picker :as date-picker]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -621,6 +622,44 @@
                            :on-success common-controller/->Refresh}))}
          (str "+ " (tr [:buttons :upload]))]]]]))
 
+(defn- edit-license-form [e! employee-id close-event form-atom]
+  (def *ce close-event)
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :save-event #(contract-partners-controller/->SaveLicense
+                            employee-id @form-atom (close-event))
+              :cancel-event close-event}
+   ^{:attribute :user-license/name}
+   [TextField {}]
+
+   ^{:attribute :user-license/expiration-date}
+   [date-picker/date-input {}]
+
+   ^{:attribute :user-license/link}
+   [TextField {}]])
+
+(defn- key-person-licenses [e! {licenses :company-contract-employee/attached-licenses :as employee}]
+
+  [:div
+   [:h3 (tr [:contract :partner :key-person-licenses])]
+   [:div
+    (mapc
+     (fn [{:user-license/keys [name expiration-date link] :as license}]
+       [:div {:id (str "user-license-" (:db/id license))
+              :class (<class common-styles/flex-row-space-between)}
+        [:div {:class (<class common-styles/flex-table-column-style 33)}
+         name]
+        [:div {:class (<class common-styles/flex-table-column-style 33)}
+         (format/date expiration-date)]
+        [:div {:class (<class common-styles/flex-table-column-style 33)}
+         link]]) licenses)]
+   [form/form-modal-button
+    {:form-component [edit-license-form e! (:db/id employee)]
+     :modal-title (tr [:contract :partners :add-license-title])
+     :button-component [buttons/button-primary {}
+                        (tr [:contract :partners :add-license])]}]])
+
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
   [:div {:class (<class contract-style/personnel-files-section-style)}
@@ -628,6 +667,7 @@
     [:div {:class (<class contract-style/personnel-files-column-style)}
      [:h2 (tr [:contract :employee :key-person-approvals])]
      [key-person-files e! employee]
+     [key-person-licenses e! employee]
      [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
     [:div
      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
