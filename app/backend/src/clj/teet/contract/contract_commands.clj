@@ -243,7 +243,7 @@
     tempids))
 
 (defn- personal-information [user-info]
-  (let [personal-data [:user/given-name :user/family-name :user/person-id  :user/email :user/phone-number]]
+  (let [personal-data [:user/given-name :user/family-name :user/person-id :user/email :user/phone-number]]
     (cu/keep-vals not-empty
                   (select-keys user-info personal-data))))
 
