@@ -55,8 +55,7 @@
   {:doc "Returns contracts persons responsibilities"
    :context {db :db user :user}
    :args {contract-ids :contract-ids}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         targets (contract-db/contract-responsible-target-entities db contract-eid)
