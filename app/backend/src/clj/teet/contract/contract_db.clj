@@ -196,7 +196,12 @@
                                                     :file/name
                                                     :file/s3-key
                                                     :meta/created-at
-                                                    {:meta/creator [:db/id :user/family-name :user/given-name]}]}]}]}])
+                                                    {:meta/creator [:db/id :user/family-name :user/given-name]}]}
+        {:company-contract-employee/attached-licenses
+         [:db/id
+          :user-license/name
+          :user-license/expiration-date
+          :user-license/link]}]}]}])
 
 (defn get-contract-with-partners
   [db contract-eid]
@@ -237,17 +242,17 @@
   (let [project-id (:thk.project/id project)
         activity-id (str (:db/id activity))]
     {:target target
-     :activity {:activity/manager (user-model/user-name (:activity/manager activity))
+     :activity {:db/id (:db/id activity)
+                :activity/manager (user-model/user-name (:activity/manager activity))
                 :activity/name (:activity/name activity)
-                :activity/tasks (reduce (fn [acc task]
-                                          (conj acc (merge task
-                                                           {:navigation-info
-                                                            {:page :activity-task
-                                                             :params {:project project-id
-                                                                      :activity activity-id
-                                                                      :task (str (:db/id task))}}}
-                                                           {:owner (user-model/user-name (:activity/manager activity))})))
-                                        [] (:activity/tasks activity))}
+                :activity/tasks (mapv #(merge %
+                                              {:navigation-info
+                                               {:page :activity-task
+                                                :params {:project project-id
+                                                         :activity activity-id
+                                                         :task (str (:db/id %))}}}
+                                              {:owner (user-model/user-name (:activity/manager activity))})
+                                      (:activity/tasks activity))}
      :project project
      :target-navigation-info (if (:activity/name target)
                                {:page :activity
@@ -277,11 +282,15 @@
        (mapv format-target-information)
        du/idents->keywords))
 
+(def ^:private contract-responsible-target-project-attributes
+  [:thk.project/id :thk.project/name :thk.project/project-name
+   {:thk.project/owner user-model/user-listing-attributes}])
+
 (defn contract-responsible-target-entities
   [db contract-eid]
   (->> (d/q '[:find
               (pull ?target [*])
-              (pull ?project [:thk.project/id :thk.project/name :thk.project/project-name])
+              (pull ?project project-listing-attributes)
               (pull ?activity [:db/id :activity/name
                                {:thk.lifecycle/_activities [:thk.lifecycle/id]}
                                {:activity/manager [:user/family-name :user/given-name]}
@@ -291,10 +300,11 @@
               [?c :thk.contract/targets ?target]
               (target-activity ?target ?activity)
               (target-project ?target ?project)
-              :in $ % ?c]
+              :in $ % ?c project-listing-attributes]
             db
             contract-query-rules
-            contract-eid)
+            contract-eid
+            contract-responsible-target-project-attributes)
        (mapv format-target-information)
        du/idents->keywords))
 

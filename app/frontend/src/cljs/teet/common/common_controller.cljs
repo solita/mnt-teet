@@ -217,6 +217,10 @@
                         :company
                         (get-in app [:params :contract-ids])
                         :contract
+                        (get-in app [:params :task])
+                        :target
+                        (get-in app [:params :activity])
+                        :target
                         :else
                         nil)]
       (t/fx app

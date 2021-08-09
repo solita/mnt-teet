@@ -200,13 +200,18 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :transact [(merge {:db/id employee-id
-                      :company-contract-employee/key-person? key-person?
-                      :company-contract-employee/key-person-status :key-person.status/assigned}
-                     (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
-                           user-files (:user/files (d/pull db '[:user/files] user-id))]
-                       (when (and key-person? (seq user-files))
-                             {:company-contract-employee/attached-files (mapv (fn [x] (:db/id x)) user-files)})))]})
+   :transact
+   (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
+         {user-files :user/files
+          user-licenses :user/licenses} (d/pull db '[:user/files :user/licenses] user-id)]
+
+     [(merge {:db/id employee-id
+              :company-contract-employee/key-person? key-person?
+              :company-contract-employee/key-person-status :key-person.status/assigned}
+             (when (and key-person? (seq user-files))
+               {:company-contract-employee/attached-files (mapv :db/id user-files)})
+             (when (and key-person? (seq user-licenses))
+               {:company-contract-employee/attached-licenses (mapv :db/id user-licenses)}))])})
 
 (defn- form-value->person-id-eid [form-value]
   [:user/person-id (-> form-value
@@ -317,6 +322,35 @@
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :transact [[:db/retract employee-id :company-contract-employee/attached-files file-id]]})
+
+(defcommand :thk.contract/save-license
+  {:doc "Save a license"
+   :payload {:keys [employee-id license]}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [;; Check license is new or belongs to user when editing
+         (or (not (contains? license :db/id))
+             (some #(= (:db/id license)
+                       (:db/id %))
+                   (:user/licenses
+                    (du/entity
+                     db
+                     (contract-db/get-user-for-company-contract-employee db employee-id)))))]
+   :transact
+   (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
+         license-id (:db/id license "new-license")]
+     [{:db/id user-id
+       :user/licenses license-id}
+      {:db/id employee-id
+       :company-contract-employee/attached-licenses license-id}
+      (meta-model/with-creation-or-modification-meta
+        user
+        (merge (select-keys license
+                            [:user-license/name
+                             :user-license/expiration-date
+                             :user-license/link])
+               {:db/id license-id}))])})
 
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"
