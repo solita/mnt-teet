@@ -269,16 +269,20 @@
   "Valige või lisage vasakust menüüst uus ettevõtte, alltöövõtja või isik.",
   :thk.contract.status/deadline-approaching "Tähtaeg läheneb",
   :representatives
-  {:heading "Partnereite vastutavad isik",
+  {:heading "Partnerite esindajad",
    :header
-   {:company "Firma",
-    :responsible "Firma vastutav isik",
-    :role "Roll"}},
+   {:company "Ettevõte",
+    :responsible "Ettevõtte vastutav isik",
+    :role "Rollid"}},
   :company-search-placeholder
   "Sisesta ettevõtte nimi või äriregistri kood",
   :partner-saved "Lepingupartner on lisatud",
   :related-contracts "SEOTUD LEPINGUD",
   :cancel-button-text "Ei, tühista",
+  :responsible-persons
+  {:heading "Transpordiamet",
+   :header {:responsible-person "TRAM vastutav isik", :role "Roll"},
+   :responsible "Vastutav isik"},
   :thk.contract/type "Tüüp",
   :no-company-found-title "Ettevõtet ei leitud",
   :contract-information-heading "Lepingu info",
@@ -288,12 +292,15 @@
    :person-deactivated "Isik deaktiveeritud",
    :person-activated "Isik aktiveeritud",
    :key-person-unassigned "Võtmeisiku määramine kustutatud.",
+   :file-link-removed "Võtmeisiku dokumendi viide kustutatud.",
    :person-updated "Isiku admed muudetud",
    :deactive-persons "Deaktiveeritud isikud",
    :active-persons "Aktiivsed isikud",
    :deactivate "Deaktiveeri",
    :change-status-title "Muuda isiku staatust",
+   :key-person-assigned "Võtmeisik määratud.",
    :change-status-text "Oled kindel, et soovid isiku staatust muuta?",
+   :key-person-files "Sertifikaadid ja dokumendid",
    :edit-person "Muudan isikut",
    :activate "Aktiveeri"},
   :person-name "Isiku nimi",
@@ -307,15 +314,19 @@
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
+  :employee
+  {:key-person "Võtmeisik",
+   :key-person-approvals "Võtmeisiku kinnitused",
+   :key-person-is-waiting-approvals "Võtmeisik ootab kinnitust"},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
   :confirm-remove-key-person-text
-  "Kui on kustutatud siis see ei ole võimalik tagasi taastada.",
+  "Kui on kustutatud, siis seda ei ole võimalik tagasi taastada.",
   :responsible
   {:header
    {:task "Ülesanne",
     :tram-reviewer "TRAM esindaja",
-    :company-responsible "Firma vastutavad isik",
+    :company-responsible "Ettevõtte vastutav isik",
     :status "Olek"}},
   :persons "Isikud",
   :delete-button-text "Jah, kustuta",
@@ -340,7 +351,7 @@
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :are-you-sure-remove-key-person-assignment
-  "Kas oled  kindel, et tahad kustutada võtmeisiku määramine?",
+  "Kas olete kindel, et soovite võtmeisiku ülesande kustutada?",
   :partners-listing "Partnerite loetelu",
   :responsibilities-listing "Vastutuste loetelu",
   :thk.contract.status/signed "Allkirjastatud",
@@ -1492,6 +1503,7 @@
    :km-range "Km ulatus",
    :procurement-number "Hanke number",
    :repair-method "Meede",
+   :region-name "Piirkond",
    :road-number "Tee number"},
   :add-tasks "Lisan ülesandeid",
   :activities "Projekti tegevused",

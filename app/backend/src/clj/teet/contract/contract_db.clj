@@ -175,7 +175,8 @@
    :user/id :user/person-id
    :user/email
    :user/phone-number
-   :user/last-login])
+   :user/last-login
+   :user/files])
 
 (def contract-partner-attributes
   `[~'*
@@ -190,7 +191,12 @@
        :company-contract/employees
        [~'*
         {:company-contract-employee/user
-         ~employee-attributes}]}]}])
+         ~employee-attributes}
+        {:company-contract-employee/attached-files [:db/id
+                                                    :file/name
+                                                    :file/s3-key
+                                                    :meta/created-at
+                                                    {:meta/creator [:db/id :user/family-name :user/given-name]}]}]}]}])
 
 (defn get-contract-with-partners
   [db contract-eid]
@@ -365,6 +371,13 @@
          ffirst
          boolean)
     false))
+
+(defn get-user-for-company-contract-employee
+  ""
+  [db cce-id]
+  (->> (d/pull db '[:company-contract-employee/user] cce-id)
+       :company-contract-employee/user
+       :db/id))
 
 (defn available-company-contract-employees
   [db company-contract-eid search]

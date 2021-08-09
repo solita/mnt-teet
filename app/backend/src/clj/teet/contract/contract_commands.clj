@@ -8,7 +8,8 @@
             [teet.company.company-db :as company-db]
             [teet.company.company-model :as company-model]
             [teet.contract.contract-db :as contract-db]
-            [teet.user.user-model :as user-model])
+            [teet.user.user-model :as user-model]
+            [datomic.client.api :as d])
   (:import (java.util UUID)))
 
 
@@ -193,14 +194,18 @@
                :company-contract-employee/active? active?}]})
 
 (defcommand :thk.contract/assign-key-person
-            {:doc "Assign / un-assign key person status"
-             :payload {employee-id :employee-id
-                       key-person? :key-person?}
-             :context {:keys [user db]}
-             :project-id nil
-             :authorization {:contracts/contract-editing {}}
-             :transact [{:db/id employee-id
-                         :company-contract-employee/key-person? key-person?}]})
+  {:doc "Assign / un-assign key person status"
+   :payload {employee-id :employee-id
+             key-person? :key-person?}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :transact [(merge {:db/id employee-id
+                      :company-contract-employee/key-person? key-person?}
+                     (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
+                           user-files (:user/files (d/pull db '[:user/files] user-id))]
+                       (when (and key-person? (seq user-files))
+                             {:company-contract-employee/attached-files (mapv (fn [x] (:db/id x)) user-files)})))]})
 
 (defn- form-value->person-id-eid [form-value]
   [:user/person-id (-> form-value
@@ -246,13 +251,13 @@
     tempids))
 
 (defn- personal-information [user-info]
-  (let [personal-data [:user/given-name :user/family-name :user/email :user/phone-number]]
+  (let [personal-data [:user/given-name :user/family-name :user/person-id :user/email :user/phone-number]]
     (cu/keep-vals not-empty
                   (select-keys user-info personal-data))))
 
 (defn- personal-information-edited? [user-from-db form-value]
   (not= (personal-information user-from-db)
-        (personal-information form-value)))
+        (personal-information (update form-value :user/person-id user-model/normalize-person-id))))
 
 (defn- either-user-has-not-logged-in-or-no-personal-information-edited? [db form-value]
   (when-let [edited-user (user-db/user-info db [:user/id (:user/id form-value)])]
@@ -303,3 +308,11 @@
                                 [:db/retract company-contract-employee :company-contract-employee/role old-role])))
                   tempids (:tempids (tx tx-data))]
               tempids))
+
+(defcommand :thk.contract/remove-file-link
+  {:doc "Remove a file link between user file and employee"
+   :payload {employee-id :employee-id
+             file-id :file-id}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :transact [[:db/retract employee-id :company-contract-employee/attached-files file-id]]})

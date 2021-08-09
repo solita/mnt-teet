@@ -15,6 +15,7 @@
             [teet.contract.contract-partners-controller :as contract-partners-controller]
             [teet.routes :as routes]
             [teet.ui.form :as form]
+            [teet.ui.util :refer [mapc]]
             [teet.ui.select :as select]
             [teet.ui.common :as common]
             [teet.ui.validation :as validation]
@@ -23,8 +24,10 @@
             [teet.ui.format :as format]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.table :as table]
+            [teet.ui.file-upload :as file-upload]
             [clojure.string :as str]
-            [re-svg-icons.feather-icons :as fi]))
+            [re-svg-icons.feather-icons :as fi]
+            [teet.file.file-controller :as file-controller]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -448,6 +451,36 @@
   [:div {:class (<class contract-style/personnel-table-style)}
    [:h4 (str "Approvals")]])
 
+(defn- get-personnel-info-page [employee]
+  (let [key-person? (get-in employee [:company-contract-employee/key-person?])]
+    (if key-person?
+      :assign-key-person
+      :personnel-info)))
+
+(defn key-person-icon
+  ([color] (key-person-icon color nil))
+  ([color text]
+   (let [bg-color (case color
+                    :red :#FCEEEE
+                    :green :#ECF4EF
+                    :gray :#D2D3D8
+                    :yellow :#)]
+     (case color
+       :red [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+             [:icon {:style {:line-height 0}}
+              [icons/red-rejected]]
+             [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
+       :green [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+               [:icon {:style {:line-height 0}}
+                [icons/green-check]]
+               [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
+       :gray [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
+                                     :variant :info}
+              [:div {:class (<class contract-style/key-person-icon-style bg-color)}
+               [:icon {:style {:line-height 0}}
+                [icons/key-person]]
+               [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]))))
+
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -461,13 +494,17 @@
      [(tr [:contract :partner :key-person]) {:width "10%"}]
      ["" {:align :right :width "10%"}]
      ["" {:align :right :width "10%"}]]
-    (for [employee employees]
+    (for [employee employees
+          :let [key-person? (get-in employee [:company-contract-employee/key-person?])]]
       [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
              (get-in employee [:company-contract-employee/user :user/given-name]))]
        (if (not-empty (:company-contract-employee/role employee))
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
-       [] ;TODO implement key person functionality
+       [(if (true? key-person?)
+          [:div {:style {:display :flex}}
+           [key-person-icon :gray]]
+          [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
          [buttons/button-with-confirm
@@ -489,7 +526,7 @@
                                            {:employee employee})
                                  :query (merge
                                           query
-                                          {:page :personnel-info
+                                          {:page (get-personnel-info-page employee)
                                            :user-id (get-in employee [:company-contract-employee/user :user/id])})})}
          (tr [:common :view-more-info])]]])]])
 
@@ -517,31 +554,74 @@
 (defn info-personnel-section
   [e! {:keys [params query] :as app} selected-partner employee]
   [:div {:class (<class contract-style/personnel-section-style)}
-   [:div {:class (<class contract-style/personnel-section-header-style)}
-    [authorization-check/when-authorized
-     :thk.contract/add-contract-employee selected-partner
-     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                                :href (routes/url-for {:page :contract-partners
-                                                       :params params
-                                                       :query (merge
-                                                                query
-                                                                {:page :assign-key-person})})}
-      (tr [:buttons :assign-as-key-person])]]]])
+   [Grid {:container :true
+          :direction :row-reverse
+          :justify-content :flex-start
+          :align-items :center}
+    [:span {:style {:padding-top :1rem}}
+     [authorization-check/when-authorized
+      :thk.contract/add-contract-employee selected-partner
+      [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                                 :on-click (e!
+                                             contract-partners-controller/->AssignKeyPerson
+                                             (:db/id employee)
+                                             true)}
+       (tr [:buttons :assign-as-key-person])]]]]])
+
+(defn key-person-files
+  "Displays the file list for the key person"
+  [e! employee selected-partner]
+  (let [can-manage-files (authorization-check/authorized? @teet.app-state/user
+                                                          :contracts/contract-editing
+                                                          selected-partner)]
+    [:div {:id (str "key-person-" (:db/id employee))}
+     [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+      [:h3 {:class (<class contract-style/key-person-files-header)}
+       (tr [:contract :partner :key-person-files])]]
+     [:div
+      (mapc (fn [file]
+              [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
+                                              :title-downloads? true
+                                              :delete-action (when can-manage-files
+                                                               (fn [file]
+                                                                 (e! (contract-partners-controller/->RemoveFileLink
+                                                                       (:db/id employee)
+                                                                       (:db/id file)))))}
+               file])
+            (:company-contract-employee/attached-files employee))]
+     [:div {:class (<class common-styles/margin 1 0 1 0)}
+      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+        [file-upload/FileUploadButton
+         {:id "keyperson-files-field"
+          :drag-container-id (str "key-person-" (:db/id employee))
+          :color :secondary
+          :button-attributes {:size :small}
+          :on-drop #(e! (file-controller/map->UploadFiles
+                          {:files %
+                           :project-id nil
+                           :user-attachment? true
+                           :attach-to (:db/id employee)
+                           :on-success common-controller/->Refresh}))}
+         (str "+ " (tr [:buttons :upload]))]]]]))
 
 (defn key-person-assignment-section
-  [e! {:keys [params query] :as app} selected-partner employee]
-  [:div {:class (<class contract-style/personnel-section-style)}
-   [:div {:class (<class contract-style/personnel-section-header-style)}
-    [authorization-check/when-authorized
-     :thk.contract/add-contract-employee selected-partner
-      [buttons/delete-button-with-confirm
-       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
-        :underlined? :true
-        :confirm-button-text (tr [:contract :delete-button-text])
-        :cancel-button-text (tr [:contract :cancel-button-text])
-        :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
-        :modal-text (tr [:contract :confirm-remove-key-person-text])}
-      (tr [:buttons :remove-key-person-assignment])]]]])
+  [e! _ selected-partner employee]
+  [:div {:class (<class contract-style/personnel-files-section-style)}
+   [:div {:class (<class contract-style/personnel-files-section-header-style)}
+    [:div {:class (<class contract-style/personnel-files-column-style)}
+     [:h2 (tr [:contract :employee :key-person-approvals])]
+     [key-person-files e! employee]
+     [:div {:class (<class contract-style/personnel-files-section-header-style)}]]] ;; TODO: Licenses section here
+   [authorization-check/when-authorized
+    :thk.contract/add-contract-employee selected-partner
+    [buttons/delete-button-with-confirm
+     {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
+      :underlined? :true
+      :confirm-button-text (tr [:contract :delete-button-text])
+      :cancel-button-text (tr [:contract :cancel-button-text])
+      :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+      :modal-text (tr [:contract :confirm-remove-key-person-text])}
+     (tr [:buttons :remove-key-person-assignment])]]])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -694,6 +774,7 @@
         family-name (:user/family-name user)
         user-id (:user/id user)
         roles (set (:company-contract-employee/role selected-person))
+        key-person? (:company-contract-employee/key-person? selected-person)
         personal-info-disabled? (:user/last-login user)]
     (r/with-let
       [form-atom (r/atom {:user/person-id person-id
@@ -713,7 +794,9 @@
                                                                           (merge old new))))
                    :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
                                     {:query (merge query
-                                                   {:page :personnel-info
+                                                   {:page (if key-person?
+                                                            :assign-key-person
+                                                            :personnel-info)
                                                     :user-id user-id})})
                    :spec :thk.contract/edit-contract-employee
                    :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
@@ -725,7 +808,9 @@
                                       (e! (common-controller/map->NavigateWithExistingAsDefault
                                             {:query (merge
                                                       query
-                                                      {:page :personnel-info
+                                                      {:page (if key-person?
+                                                               :assign-key-person
+                                                               :personnel-info)
                                                        :user-id user-id})}))))
                                   (tr [:contract :partner :person-updated]))}
        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
@@ -757,9 +842,16 @@
   (let [employee-name (str (get-in employee [:company-contract-employee/user :user/given-name]) " "
                            (get-in employee [:company-contract-employee/user :user/family-name]))
         teet-id (:teet/id selected-partner)
-        user-id (get-in employee [:company-contract-employee/user :user/id])]
+        user-id (get-in employee [:company-contract-employee/user :user/id])
+        key-person? (get-in employee [:company-contract-employee/key-person?])]
     [:div {:class (<class contract-style/partner-info-header)}
-     [:h1 employee-name]
+     [Grid
+      {:container true :direction :row :justify-content :flex-start :align-items :center}
+      [Grid {:style {:padding-right :1em}}
+       [:h1 employee-name]]
+      (if key-person?
+        [key-person-icon :gray (tr [:contract :employee :key-person])]
+        [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
       [buttons/button-secondary

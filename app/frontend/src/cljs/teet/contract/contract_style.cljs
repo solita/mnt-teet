@@ -159,6 +159,12 @@
   {:display :flex
    :flex-direction :column})
 
+(defn key-person-assignment-header
+  []
+  {:display :flex
+   :align-items :baseline
+   :justify-content :space-between})
+
 (defn personnel-section-header-style
   []
   ^{:combinators
@@ -171,6 +177,42 @@
    :align-items :center
    :width "100%"
    :margin-top "1.562rem"})
+
+(defn personnel-files-section-style
+  []
+  {:display :flex
+   :align-items :baseline
+   :justify-content :space-between})
+
+(defn personnel-files-section-header-style
+  []
+  ^{:combinators
+    {[:> :h2] {:margin-right "1rem"
+               :line-height "2.6rem"
+               :font-size "1.75rem"
+               :font-weight "400"}
+     [:> :a] {:margin-left :auto}}}
+  {:display :flex
+   :align-items :center
+   :margin-top "1.562rem"})
+
+(defn personnel-files-column-style
+  []
+  {:display :flex
+   :flex-direction :column})
+
+(defn key-person-files-header
+  []
+  {:padding-top :3rem})
+
+(defn key-person-icon-style
+  [bg-color]
+  {:display :flex
+   :justify-content :center
+   :align-items :center
+   :background-color bg-color
+   :border-radius "100px 0 0 100px"
+   :padding-right "0.5rem"})
 
 (defn personnel-table-style
   []

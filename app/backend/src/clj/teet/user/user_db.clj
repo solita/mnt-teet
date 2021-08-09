@@ -9,7 +9,7 @@
   "Fetch user information with current valid permissions."
   [db user-ref]
   (let [{id :db/id :as user} (d/pull db '[:user/id :user/given-name :user/family-name :user/email
-                                          :user/person-id :db/id :user/last-login]
+                                          :user/person-id :db/id :user/last-login :user/phone-number]
                                      (user-model/user-ref user-ref))]
     (assoc user :user/permissions
            (when id
