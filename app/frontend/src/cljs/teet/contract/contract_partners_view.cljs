@@ -631,7 +631,7 @@
               :save-event #(contract-partners-controller/->SaveLicense
                             employee-id @form-atom (close-event))
               :cancel-event close-event}
-   ^{:attribute :user-license/name}
+   ^{:attribute :user-license/name :required? true}
    [TextField {}]
 
    ^{:attribute :user-license/expiration-date}
@@ -705,7 +705,7 @@
 
    [key-person-files e! employee]
    [key-person-licenses e! employee]
-   [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
+   [:div {:class (<class contract-style/personnel-files-section-header-style)}]
     [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
      [:div
       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]]
