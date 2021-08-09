@@ -305,8 +305,7 @@
        action-comp)]]
    [:div {:class [(<class common-styles/margin-right 2)
                   (<class common-styles/margin-bottom 1)]}
-    (tr-enum (:file.part/status file-part))]
-   ])
+    (tr-enum (:file.part/status file-part))]])
 
 (defn file-section-view
   [{:keys [e! upload! sort-by-value allow-replacement-opts
@@ -319,7 +318,7 @@
                           :file-count (count files)} file-part
     {:action (when (and (task-model/can-submit? task) (task-model/can-submit-part? file-part))
                [when-authorized
-                :task/create-part task
+                :task/edit-part task
                 [:div {:class (<class common-styles/flex-row)}
                  [form/form-modal-button
                   {:form-component [file-part-form e! (:db/id task)]
