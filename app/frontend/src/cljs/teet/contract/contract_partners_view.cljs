@@ -459,6 +459,7 @@
       :personnel-info)))
 
 (defn key-person-icon
+  "Displays the key-person icon based on the status"
   ([key-person-status] (key-person-icon key-person-status nil))
   ([key-person-status text]
    (case key-person-status
