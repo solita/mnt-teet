@@ -224,7 +224,6 @@
                                                                           :user ~-user})))
                              ~(when (and (= request-type :query)
                                          (nil? contract-authorization)
-                                         (nil? authorization)
                                          (some? project-id))
                                 `(authorization/project-read-access? ~-db ~-user ~project-id))))
                        (log/warn "Failed to authorize " ~request-name " for user " ~-user)
