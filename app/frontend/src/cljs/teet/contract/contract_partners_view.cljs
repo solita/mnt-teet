@@ -670,8 +670,9 @@
             (sort-by :user-license/name)
             (remove (if @show-history?
                       (constantly false)
-                      (comp date/date-before-today?
-                            :user-license/expiration-date)))))]
+                      (fn [{exp :user-license/expiration-date}]
+                        (and (some? exp)
+                             (date/date-before-today? exp)))))))]
      [:div {:class (<class common-styles/flex-row-end)
             :style {:display :flex :flex-direction :row
                     :justify-content "flex-end"}}
