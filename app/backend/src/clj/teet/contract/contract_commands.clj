@@ -333,7 +333,10 @@
          (or (not (contains? license :db/id))
              (some #(= (:db/id license)
                        (:db/id %))
-                   (:user/licenses (du/entity db (:db/id user)))))]
+                   (:user/licenses
+                    (du/entity
+                     db
+                     (contract-db/get-user-for-company-contract-employee db employee-id)))))]
    :transact
    (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
          license-id (:db/id license "new-license")]
