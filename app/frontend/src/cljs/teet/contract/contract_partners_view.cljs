@@ -29,7 +29,8 @@
             [re-svg-icons.feather-icons :as fi]
             [teet.file.file-controller :as file-controller]
             [teet.util.datomic :as du]
-            [teet.ui.date-picker :as date-picker]))
+            [teet.ui.date-picker :as date-picker]
+            [teet.util.date :as date]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -624,7 +625,6 @@
          (str "+ " (tr [:buttons :upload]))]]]]))
 
 (defn- edit-license-form [e! employee-id close-event form-atom]
-  (def *ce close-event)
   [form/form {:e! e!
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
@@ -641,32 +641,50 @@
    [TextField {}]])
 
 (defn- key-person-licenses [e! {licenses :company-contract-employee/attached-licenses :as employee}]
-  [:div {:class (<class common-styles/margin-bottom 1)}
-   [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
-    (tr [:contract :partner :key-person-licenses])]
-   [:div {:class (<class common-styles/margin-bottom 1)}
-    (mapc
-     (fn [{:user-license/keys [name expiration-date link] :as license}]
-       [:div {:id (str "user-license-" (:db/id license))
-              :class (<class common-styles/flex-row-space-between)}
-        [:div {:class (<class common-styles/flex-table-column-style 30)}
-         name]
-        [:div {:class (<class common-styles/flex-table-column-style 30)}
-         (format/date expiration-date)]
-        [:div {:class (<class common-styles/flex-table-column-style 30)}
-         link]
-        [:div {:class (<class common-styles/flex-table-column-style 10)}
-         [form/form-modal-button
-          {:form-component [edit-license-form e! (:db/id employee)]
-           :form-value license
-           :modal-title (tr [:contract :partners :edit-license-title])
-           :button-component [buttons/link-button {}
-                              (tr [:buttons :edit])]}]]]) licenses)]
-   [form/form-modal-button
-    {:form-component [edit-license-form e! (:db/id employee)]
-     :modal-title (tr [:contract :partners :add-license-title])
-     :button-component [buttons/button-primary {}
-                        (tr [:contract :partners :add-license])]}]])
+  (r/with-let [show-history? (r/atom false)]
+    [:div {:class (<class common-styles/margin-bottom 1)}
+     [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+      (tr [:contract :partner :key-person-licenses])]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      (mapc
+       (fn [{:user-license/keys [name expiration-date link] :as license}]
+         [:div {:id (str "user-license-" (:db/id license))
+                :class (<class common-styles/flex-row-space-between)}
+          [:div {:class (<class common-styles/flex-table-column-style 30)}
+           name]
+          [:div {:class (<class common-styles/flex-table-column-style 30)}
+           (format/date expiration-date)]
+          [:div {:class (<class common-styles/flex-table-column-style 30)}
+           link]
+          [:div {:class (<class common-styles/flex-table-column-style 10)}
+           [form/form-modal-button
+            {:form-component [edit-license-form e! (:db/id employee)]
+             :form-value license
+             :modal-title (tr [:contract :partners :edit-license-title])
+             :button-component [buttons/link-button {}
+                                (tr [:buttons :edit])]}]]])
+
+       ;; Show licenses in alphabetical order, removing expired if not
+       ;; showing history
+       (->> licenses
+            (sort-by :user-license/name)
+            (remove (if @show-history?
+                      (constantly false)
+                      (comp date/date-before-today?
+                            :user-license/expiration-date)))))]
+     [:div {:class (<class common-styles/flex-row-end)
+            :style {:display :flex :flex-direction :row
+                    :justify-content "flex-end"}}
+      [buttons/button-secondary {:on-click #(swap! show-history? not) :size :small
+                                 :style {:margin-right "1em"}}
+       (tr [:contract :partners (if @show-history?
+                                  :hide-license-history
+                                  :view-license-history)])]
+      [form/form-modal-button
+       {:form-component [edit-license-form e! (:db/id employee)]
+        :modal-title (tr [:contract :partners :add-license-title])
+        :button-component [buttons/button-secondary {:size :small}
+                           (tr [:contract :partners :add-license])]}]]]))
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
