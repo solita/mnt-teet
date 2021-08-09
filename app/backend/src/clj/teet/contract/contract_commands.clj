@@ -325,3 +325,25 @@
    :authorization {:contracts/contract-editing {}}
    :transact [{:db/id employee-id
                :company-contract-employee/key-person-status :key-person.status/approval-requested}]})
+
+(defn- assigned-for-key-person-approval? [cce]
+  (= (:company-contract-employee/key-person-status cce)
+     :key-person.status/assigned))
+
+(defcommand :thk.contract/approve-key-person
+  {:doc "Approve key person being reviewed"
+   :payload {company-contract-employee-id :employee-id}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [(assigned-for-key-person-approval? (du/entity company-contract-employee-id))]
+   :transact [{:db/id company-contract-employee-id
+               :company-contract-employee/key-person-status :key-person.status/approved}]})
+
+(defcommand :thk.contract/reject-key-person
+  {:doc "Reject key person for review"
+   :payload {company-contract-employee-id :employee-id}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [(assigned-for-key-person-approval? (du/entity company-contract-employee-id))]
+   :transact [{:db/id company-contract-employee-id
+               :company-contract-employee/key-person-status :key-person.status/rejected}]})
