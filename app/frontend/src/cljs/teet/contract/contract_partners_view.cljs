@@ -622,6 +622,34 @@
                            :on-success common-controller/->Refresh}))}
          (str "+ " (tr [:buttons :upload]))]]]]))
 
+(defn approval-form
+  [e! employee-eid close-event form-atom]
+  [:<>
+   [form/form {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom merge)
+               :cancel-event close-event
+               :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
+               :save-event #(contract-partners-controller/->ApproveOrReject
+                             employee-eid
+                             @form-atom
+                             close-event)}
+    ^{:attribute :review/comment}
+    [TextField {:multiline true}]]])
+
+(defn approval-actions
+  [e! employee]
+  [:div {:class (<class common-styles/padding-bottom 2)}
+   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
+                            :form-value {:review/decision :review.decision/approved}
+                            :modal-title (tr [:contract :partner :approve-person-modal-title])
+                            :button-component [buttons/button-green {:style {:margin-right "1rem"}}
+                                               (tr [:contract :partner :approve-person-button])]}]
+   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
+                            :form-value {:review/decision :review.decision/rejected}
+                            :modal-title (tr [:contract :partner :reject-person-modal-title])
+                            :button-component [buttons/button-warning {}
+                                               (tr [:contract :partner :reject-person-button])]}]])
 
 (defn key-person-approvals-status [status comment]
   [:div
@@ -653,7 +681,9 @@
         [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
          [:div
           [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
-           [key-person-approvals-status status comment]]
+           [key-person-approvals-status status comment]
+           [approval-actions employee]]
+
           (if (= status :key-person.status/assigned)
             [buttons/button-secondary
              {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
