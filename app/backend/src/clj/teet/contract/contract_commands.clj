@@ -318,6 +318,31 @@
    :authorization {:contracts/contract-editing {}}
    :transact [[:db/retract employee-id :company-contract-employee/attached-files file-id]]})
 
+(defcommand :thk.contract/save-license
+  {:doc "Save a license"
+   :payload {:keys [employee-id license]}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [;; Check license is new or belongs to user when editing
+         (or (not (contains? license :db/id))
+             (some #(= (:db/id license)
+                       (:db/id %))
+                   (:user/licenses (du/entity db (:db/id user)))))]
+   :transact
+   (let [license-id (:db/id license "new-license")]
+     [{:db/id (:db/id user)
+       :user/licenses license-id}
+      {:db/id employee-id
+       :company-contract-employee/attached-licenses license-id}
+      (meta-model/with-creation-or-modification-meta
+        user
+        (merge (select-keys license
+                            [:user-license/name
+                             :user-license/expiration-date
+                             :user-license/link])
+               {:db/id license-id}))])})
+
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"
    :payload {employee-id :employee-id}
