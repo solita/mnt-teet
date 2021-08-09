@@ -459,38 +459,42 @@
       :personnel-info)))
 
 (defn key-person-icon
-  ([color] (key-person-icon color nil))
-  ([color text]
-   (let [bg-color (case color
-                    :red :#FCEEEE
-                    :green :#ECF4EF
-                    :gray :#D2D3D8
-                    :yellow :lightyellow)]
-     (case color
-       :red [common/popper-tooltip {:title (tr [:contract :employee :key-person-rejected])
-                                    :variant :info}
-             [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-              [:icon {:style {:line-height 0}}
-              [icons/red-rejected]]
-             [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]]
-       :green [common/popper-tooltip {:title (tr [:contract :employee :key-person-approved])
-                                      :variant :info}
-               [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-                [:icon {:style {:line-height 0}}
-                [icons/green-check]]
-               [:span {:style {:color :green}} (if (not (nil? text)) text "")]]]
-       :gray [common/popper-tooltip {:title (tr [:contract :employee :key-person-not-submitted])
-                                     :variant :info}
-              [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-               [:icon {:style {:line-height 0}}
-                [icons/key-person]]
-               [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]
-       :yellow [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
-                                       :variant :info}
-                [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-                 [:icon {:style {:line-height 0}}
-                  [icons/key-person :orange]]
-                 [:span {:style {:color :orange}} (if (not (nil? text)) text "")]]]))))
+  ([key-person-status] (key-person-icon key-person-status nil))
+  ([key-person-status text]
+   (case key-person-status
+     :key-person.status/rejected
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-rejected])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :#FCEEEE)}
+       [:icon {:style {:line-height 0}}
+        [icons/red-rejected]]
+       [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]]
+
+     :key-person.status/approved
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-approved])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :#ECF4EF)}
+       [:icon {:style {:line-height 0}}
+        [icons/green-check]]
+       [:span {:style {:color :green}} (if (not (nil? text)) text "")]]]
+
+     :key-person.status/assigned
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-not-submitted])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :#D2D3D8)}
+       [:icon {:style {:line-height 0}}
+        [icons/key-person]]
+       [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]
+
+     :key-person.status/approval-requested
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :lightyellow)}
+       [:icon {:style {:line-height 0}}
+        [icons/key-person :orange]]
+       [:span {:style {:color :orange}} (if (not (nil? text)) text "")]]]
+
+     [:span])))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -515,11 +519,7 @@
          [])
        [(if (true? key-person?)
           [:div {:style {:display :flex}}
-           [key-person-icon (cond
-                              (du/enum= key-person-status :key-person.status/approval-requested) :yellow
-                              (du/enum= key-person-status :key-person.status/approved) :green
-                              (du/enum= key-person-status :key-person.status/rejected) :red
-                              :else :gray)]]
+           [key-person-icon key-person-status]]
           [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
@@ -880,12 +880,7 @@
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
       (if key-person?
-        [key-person-icon (cond
-                           (du/enum= key-person-status :key-person.status/approval-requested) :yellow
-                           (du/enum= key-person-status :key-person.status/approved) :green
-                           (du/enum= key-person-status :key-person.status/rejected) :red
-                           :else :gray)
-         (tr [:contract :employee :key-person])]
+        [key-person-icon key-person-status (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee
