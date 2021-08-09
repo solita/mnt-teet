@@ -129,6 +129,5 @@
   {:doc "Get a dashboard for the current user"
    :context {:keys [user db]}
    :args _
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (user-dashboard db user))

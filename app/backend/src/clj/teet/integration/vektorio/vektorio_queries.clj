@@ -12,9 +12,9 @@
     (empty?
       (d/q '[:find ?pid :where [?u :vektorio/granted-projects ?pid] :in $ ?u ?pid]
            (d/db conn) (user-model/user-ref user) vektorio-project-id))
-    (do (vektorio-client/add-user-to-project! conn user config vektorio-project-id user-id)
-        (d/transact conn {:tx-data [{:db/id (:db/id user)
-                                :vektorio/granted-projects vektorio-project-id}]}))))
+    (vektorio-client/add-user-to-project! conn user config vektorio-project-id user-id)
+    (d/transact conn {:tx-data [{:db/id (:db/id user)
+                                 :vektorio/granted-projects vektorio-project-id}]})))
 
 (defn- url-for-bim-viewer [conn user vektorio-project-id]
   (let [config (environment/config-value :vektorio)
@@ -34,7 +34,5 @@
   {:doc "Get instant login hash for the default user id to access BIM viewer"
    :context {db :db user :user conn :conn}
    :args {vektorio-project-id :vektorio/project-id project-id :db/id}
-   :project-id project-id
-   :vektorio-project-id vektorio-project-id
-   :authorization {}}
+   :project-id project-id}
   (url-for-bim-viewer conn user vektorio-project-id))

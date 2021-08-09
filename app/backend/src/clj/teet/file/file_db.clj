@@ -103,6 +103,14 @@
            :in $ ?f ?c]
          db file-id comment-id))))
 
+(defn is-key-user-file? [db file-id employee-id]
+  (boolean
+    (ffirst
+      (d/q '[:find ?f
+             :where [?e :company-contract-employee/attached-files ?f]
+             :in $ ?f ?e]
+           db file-id employee-id))))
+
 (defn files-seen-at
   "Return mapping of file-id to timestamp when the given user has seen a given
   file. If the user has not seen a file, the file-id will not have a mapping."

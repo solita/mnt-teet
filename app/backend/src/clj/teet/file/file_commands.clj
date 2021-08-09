@@ -7,6 +7,7 @@
             [teet.file.file-model :as file-model]
             [teet.project.project-db :as project-db]
             [teet.file.file-db :as file-db]
+            [teet.contract.contract-db :as contract-db]
             [teet.log :as log]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
@@ -85,6 +86,28 @@
     {:url (file-storage/upload-url key)
      :file (d/pull (:db-after res) '[*] file-id)}))
 
+(defcommand :file/upload-key-person-file
+  {:doc "Upload a file, attach it to the user and contract key person "
+   :context {:keys [conn user db]}
+   :payload {:keys [file employee-id]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre {}}
+  (log/debug "upload-user-attachment: employee " employee-id)
+
+  (let [key (new-file-key file)
+        res (tx [(merge (select-keys file file-keys)
+                          {:db/id "new-file"
+                           :file/s3-key key}
+                          (creation-meta user))
+                 {:db/id (contract-db/get-user-for-company-contract-employee db employee-id)
+                  :user/files "new-file"}
+                 {:db/id employee-id
+                  :company-contract-employee/attached-files "new-file"}])
+        file-id (get-in res [:tempids "new-file"])]
+    {:url (file-storage/upload-url key)
+     :file (d/pull (:db-after res) '[*] file-id)}))
+
 (defn maybe-vektorio-delete! [db file-eid]
   (let [vektorio-enabled? (environment/feature-enabled? :vektorio)
         vektorio-config (environment/config-value :vektorio)
@@ -101,8 +124,7 @@
   {:doc "Delete an attachment"
    :context {:keys [user db]}
    :payload {:keys [file-id attached-to]}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    ;; this command has modal behaviour depending on whether attached-to tuple is supplied, or nil.
    ;; if it is supplied, permission check and delete-attachment call go to the multimethod that
    ;; will do a permission check depending on the attachment type.
@@ -120,8 +142,7 @@
    :pre [(file-db/own-file? db user id)]
    ;; No need to check extra authorization again, as we check pre condition that this
    ;; is the user's own uploaded file
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (let [previous-version (:file/previous-version (du/entity db id))
         previous-links (when previous-version
                          (map first (d/q '[:find ?l

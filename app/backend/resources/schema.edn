@@ -2222,4 +2222,24 @@
           {:db/ident :contract-responsibility/company-responsible-person
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Ref to company-contract-employee. Must be employee in this contract"}]]}]
+           :db/doc "Ref to company-contract-employee. Must be employee in this contract"}]]}
+
+ {:db/ident :migration/key-person-files
+  :txes [[{:db/ident :company-contract-employee/attached-files
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Reference to user/files that are linked to this key person"}
+          {:db/ident :user/files
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Files that have been uploaded for this user via key person assignment"}]]}
+
+ {:db/ident :migration/key-person-status
+  :txes [[{:db/ident :company-contract-employee/key-person-status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to key person status"}
+          {:db/ident :key-person.status/assigned :enum/attribute :company-contract-employee/key-person-status}
+          {:db/ident :key-person.status/approval-requested :enum/attribute :company-contract-employee/key-person-status}
+          {:db/ident :key-person.status/approved :enum/attribute :company-contract-employee/key-person-status}
+          {:db/ident :key-person.status/rejected :enum/attribute :company-contract-employee/key-person-status}]]}]

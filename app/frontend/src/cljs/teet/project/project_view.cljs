@@ -93,9 +93,8 @@
         :simple-view [project-contract-listing]}]]]))
 
 (defn project-details
-  [e! {:thk.project/keys [road-nr carriageway repair-method] :as project}]
-  (let [project-name (project-model/get-column project :thk.project/project-name)
-        [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
+  [e! {:thk.project/keys [road-nr carriageway repair-method region-name] :as project}]
+  (let [[start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div.project-details-tab {:class (<class common-styles/margin 1)}
      [:div [:span (tr [:project :information :road-number]) ": " road-nr]]
      [:div [:span (tr [:project :information :km-range]) ": "
@@ -104,6 +103,8 @@
      [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]
      (when repair-method
        [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])
+     (when region-name
+       [:div [:span (tr [:project :information :region-name]) ": " region-name]])
      (common-controller/when-feature
        :contracts
        [:<>

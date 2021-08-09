@@ -93,17 +93,17 @@
            (and attached-to
              (file-db/allow-download-attachments? db user attached-to)
              (file-db/file-is-attached-to? db file-id attached-to))
+           (and attached-to
+                (file-db/is-key-user-file? db file-id (second attached-to)))
            (file-db/own-file? db user file-id))]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (url-for-file db file-id false))
 
 (defquery :file/resolve-metadata
   {:doc "Resolve file metadata"
    :context {:keys [db]}
    :args {name :file/name}
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (try
     (->> name
          filename-metadata/filename->metadata

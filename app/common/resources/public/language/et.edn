@@ -178,9 +178,10 @@
   :assign-as-key-person "Määra võtmeisikuks",
   :add "Lisan",
   :remove-from-contract "Eemaldan lepingust",
+  :submit-key-person "Esita võtmeisik kinnitamiseks",
   :copy-to-clipboard "Kopeeri tekst",
   :upload "Laen üles",
-  :remove-key-person-assignment "Kustuta võtmeisiku määrärmine"},
+  :remove-key-person-assignment "Kustuta võtmeisiku määramine"},
  :cadastral-group
  {"" "Määratlemata",
   "Avalik-õiguslik omand" "Avalik-õiguslik omand",
@@ -300,6 +301,7 @@
    :change-status-title "Muuda isiku staatust",
    :key-person-assigned "Võtmeisik määratud.",
    :change-status-text "Oled kindel, et soovid isiku staatust muuta?",
+   :key-person-submitted "Võtmeisik on kinnitamisele saadetud",
    :key-person-files "Sertifikaadid ja dokumendid",
    :edit-person "Muudan isikut",
    :activate "Aktiveeri"},
@@ -314,10 +316,18 @@
   :contract-save-success "Leping salvestatud",
   :persons-responsibilities "Isikute vastutused",
   :partners {:title nil},
+  :employee
+  {:key-person "Võtmeisik",
+   :key-person-approvals "Võtmeisiku kinnitused",
+   :key-person-is-waiting-approvals "Võtmeisik ootab kinnitust",
+   :approvals "Kinnitused",
+   :key-person-not-submitted "Võtmeisik pole kinnitamisele saadetud",
+   :key-person-rejected "Võtmeisik tagasi lükatud",
+   :key-person-approved "Võtmeisik kinnitatud"},
   :cannot-delete-company-with-persons
   "Partneri on võimalik eemaldada lepingust ainult siis, kui ühtegi aktiivset isikut ja alltöövõtjat pole lisatud",
   :confirm-remove-key-person-text
-  "Kui on kustutatud siis see ei ole võimalik tagasi taastada.",
+  "Kui on kustutatud, siis seda ei ole võimalik tagasi taastada.",
   :responsible
   {:header
    {:task "Ülesanne",
@@ -347,7 +357,7 @@
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :are-you-sure-remove-key-person-assignment
-  "Kas oled  kindel, et tahad kustutada võtmeisiku määramine?",
+  "Kas olete kindel, et soovite võtmeisiku ülesande kustutada?",
   :partners-listing "Partnerite loetelu",
   :responsibilities-listing "Vastutuste loetelu",
   :thk.contract.status/signed "Allkirjastatud",

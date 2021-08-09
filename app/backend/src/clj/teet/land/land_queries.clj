@@ -36,8 +36,7 @@
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
    :context {db :db}
    :args {project-id :project-id}
-   :project-id [:thk.project/id project-id]
-   :authorization {}}
+   :project-id [:thk.project/id project-id]}
   (let [land-acquisitions (mapv first (d/q '[:find (pull ?e [*])
                                        :in $ ?project-id
                                        :where [?e :land-acquisition/project ?project-id]]

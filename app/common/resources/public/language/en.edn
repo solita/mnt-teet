@@ -180,6 +180,7 @@
   :assign-as-key-person "Assign as a key person",
   :add "Add",
   :remove-from-contract "Remove from the contract",
+  :submit-key-person "Submit key person",
   :copy-to-clipboard "Copy all text",
   :upload "Upload",
   :remove-key-person-assignment "Remove key person assignment"},
@@ -303,6 +304,7 @@
    :key-person-assigned "Key person assigned.",
    :change-status-text
    "Are you sure you want to change the person's status?",
+   :key-person-submitted "Key person has been submitted for approval",
    :key-person-files "Certificates and documents",
    :edit-person "Edit person",
    :activate "Activate"},
@@ -317,6 +319,15 @@
   :contract-save-success "Contract saved",
   :persons-responsibilities "Persons responsibilities",
   :partners {:title "Companies & persons"},
+  :employee
+  {:key-person "Key person",
+   :key-person-approvals "Key person approvals",
+   :key-person-is-waiting-approvals
+   "Key person is waiting for approval",
+   :approvals "Approvals",
+   :key-person-not-submitted "Key person not submitted",
+   :key-person-rejected "Key person rejected",
+   :key-person-approved "Key person approved"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active person and subcontractor added",
   :confirm-remove-key-person-text "If removed it can not be undone.",

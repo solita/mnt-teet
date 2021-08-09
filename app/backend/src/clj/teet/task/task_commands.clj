@@ -239,8 +239,9 @@
              part-name :part-name
              part-id :part-id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:document/upload-document {:db/id task-id
-                                              :link :task/assignee}}
+   :authorization {:document/upload-document {:db/id task-id :link :task/assignee}}
+   :contract-authorization {:action :file-management/edit-task-part
+                            :target task-id}
    :transact [(merge
                 (meta-model/modification-meta user)
                 {:db/id part-id                             ;; todo check that this is actually a part
