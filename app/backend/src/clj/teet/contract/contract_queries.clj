@@ -1,5 +1,6 @@
 (ns teet.contract.contract-queries
   (:require [teet.db-api.core :refer [defquery]]
+            [teet.environment :as environment]
             [teet.contract.contract-db :as contract-db]
             [teet.contract.contract-model :as contract-model]
             [teet.util.datomic :as du]))
@@ -61,8 +62,8 @@
         targets (contract-db/contract-responsible-target-entities db contract-eid)
         partner-representatives (contract-db/contract-partner-representatives db contract-eid)
         result (-> (contract-db/get-contract db contract-eid)
-               (assoc
-                :thk.contract/targets targets
-                :partner-representatives partner-representatives)
-               contract-model/db-values->frontend)]
+                   (assoc
+                    :thk.contract/targets targets
+                    :partner-representatives partner-representatives)
+                   contract-model/db-values->frontend)]
     result))
