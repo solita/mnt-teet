@@ -196,7 +196,12 @@
                                                     :file/name
                                                     :file/s3-key
                                                     :meta/created-at
-                                                    {:meta/creator [:db/id :user/family-name :user/given-name]}]}]}]}])
+                                                    {:meta/creator [:db/id :user/family-name :user/given-name]}]}
+        {:company-contract-employee/attached-licenses
+         [:db/id
+          :user-license/name
+          :user-license/expiration-date
+          :user-license/link]}]}]}])
 
 (defn get-contract-with-partners
   [db contract-eid]

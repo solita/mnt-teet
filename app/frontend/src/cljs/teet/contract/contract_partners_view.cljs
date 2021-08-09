@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [herb.core :refer [<class] :as herb]
             [reagent.core :as r]
+            [taoensso.timbre :as log]
             [teet.app-state :as app-state]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.common.common-controller :as common-controller]
@@ -17,6 +18,7 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
+            [teet.ui.date-picker :as date-picker]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.form :as form]
             [teet.ui.format :as format]
@@ -29,6 +31,7 @@
             [teet.ui.util :refer [mapc]]
             [teet.ui.validation :as validation]
             [teet.user.user-model :as user-model]
+            [teet.util.date :as date]
             [teet.util.datomic :as du]))
 
 (defn partner-listing
@@ -592,7 +595,8 @@
   (let [can-manage-files (authorization-check/authorized? @app-state/user
                                                           :contracts/contract-editing
                                                           selected-partner)]
-    [:div {:id (str "key-person-" (:db/id employee))}
+    [:div {:id (str "key-person-" (:db/id employee))
+           :style {:max-width "800px"}}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
       [:h3 {:class (<class contract-style/key-person-files-header)}
        (tr [:contract :partner :key-person-files])]]
@@ -622,29 +626,156 @@
                            :on-success common-controller/->Refresh}))}
          (str "+ " (tr [:buttons :upload]))]]]]))
 
+(defn approval-form
+  [e! employee-eid close-event form-atom]
+  [:<>
+   [form/form {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom merge)
+               :cancel-event close-event
+               :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
+               :save-event #(contract-partners-controller/->ApproveOrReject
+                             employee-eid
+                             @form-atom
+                             close-event)}
+    ^{:attribute :review/comment}
+    [TextField {:multiline true}]]])
+
+(defn approval-actions
+  [e! employee]
+  [:div {:class (<class common-styles/padding-bottom 2)}
+   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
+                            :form-value {:review/decision :review.decision/approved}
+                            :modal-title (tr [:contract :partner :approve-person-modal-title])
+                            :button-component [buttons/button-green {:style {:margin-right "1rem"}}
+                                               (tr [:contract :partner :approve-person-button])]}]
+   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
+                            :form-value {:review/decision :review.decision/rejected}
+                            :modal-title (tr [:contract :partner :reject-person-modal-title])
+                            :button-component [buttons/button-warning {}
+                                               (tr [:contract :partner :reject-person-button])]}]])
+
+(defn key-person-approvals-status [status comment]
+  [:div
+   [:div.person-appproval {:class (<class common-styles/flex-row)}
+    [:div.person-appproval-approver {:class (<class common-styles/flex-table-column-style 30)}
+
+     [:span {:style {:margin-left "0.2rem"}}
+      [tr [:contract :partner :tram-approver]]]]
+    [:div.person-appproval-status {:class (<class common-styles/flex-table-column-style 70 :space-between)}
+     [key-person-icon status]
+     (tr-enum status)]]
+   (when comment
+       [:div.person-appproval-comment {:class (<class common-styles/flex-table-column-style 100 :space-between)} comment])])
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
-  [:div {:class (<class contract-style/personnel-files-section-style)}
-   [:div {:class (<class contract-style/personnel-files-section-header-style)}
-    [:div {:class (<class contract-style/personnel-files-column-style)}
-     [:h2 (tr [:contract :employee :key-person-approvals])]
-     [key-person-files e! employee]
-     [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
-    [:div
-     [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
-      [:div
-       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]]
-       (if (du/enum= (:company-contract-employee/key-person-status employee) :key-person.status/assigned)
-         [buttons/button-secondary
-        {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
-         :underlined? :true
-         :confirm-button-text (tr [:contract :delete-button-text])
-         :cancel-button-text (tr [:contract :cancel-button-text])
-         :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
-         :modal-text (tr [:contract :confirm-remove-key-person-text])}
-        (tr [:buttons :submit-key-person])]
-         [:div "Key person assignment submitted for approval. (TODO: replaced in TEET-1955)"])]]]]]
+  (let [status (du/enum->kw
+                (:company-contract-employee/key-person-status employee))
+        comment "test comment"
+        ;;comment (:company-contract-employee/key-person-status-comment employee)
+        ]
+    [:div {:class (<class contract-style/personnel-files-section-style)}
+     [:div {:class (<class contract-style/personnel-files-section-header-style)}
+      [:div {:class (<class contract-style/personnel-files-column-style)}
+       [:h2 (tr [:contract :employee :key-person-approvals])]
+       [key-person-files e! employee]
+       [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
+       [:div
+        [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+         [:div
+          [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
+           [key-person-approvals-status status comment]
+           [approval-actions employee]]
+
+          (if (= status :key-person.status/assigned)
+            [buttons/button-secondary
+             {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
+              :underlined? :true
+              :confirm-button-text (tr [:contract :delete-button-text])
+              :cancel-button-text (tr [:contract :cancel-button-text])
+              :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+              :modal-text (tr [:contract :confirm-remove-key-person-text])}
+             (tr [:buttons :submit-key-person])])]]]]]
+     [authorization-check/when-authorized
+      :thk.contract/add-contract-employee selected-partner
+      [buttons/delete-button-with-confirm
+       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
+        :underlined? :true
+        :confirm-button-text (tr [:contract :delete-button-text])
+        :cancel-button-text (tr [:contract :cancel-button-text])
+        :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+        :modal-text (tr [:contract :confirm-remove-key-person-text])}
+       (tr [:buttons :remove-key-person-assignment])]]]))
+
+(defn- edit-license-form [e! employee-id close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :save-event #(contract-partners-controller/->SaveLicense
+                            employee-id @form-atom (close-event))
+              :cancel-event close-event}
+   ^{:attribute :user-license/name :required? true}
+   [TextField {}]
+
+   ^{:attribute :user-license/expiration-date}
+   [date-picker/date-input {}]
+
+   ^{:attribute :user-license/link}
+   [TextField {}]])
+
+(defn- key-person-licenses [e! {licenses :company-contract-employee/attached-licenses :as employee}]
+  (r/with-let [show-history? (r/atom false)]
+    [:div {:class (<class common-styles/margin-bottom 1)}
+     [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+      (tr [:contract :partner :key-person-licenses])]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      (mapc
+       (fn [{:user-license/keys [name expiration-date link] :as license}]
+         [:div {:id (str "user-license-" (:db/id license))
+                :class (<class common-styles/flex-row-space-between)}
+          [:div {:class (<class common-styles/flex-table-column-style 30)}
+           name]
+          [:div {:class (<class common-styles/flex-table-column-style 30)}
+           (format/date expiration-date)]
+          [:div {:class (<class common-styles/flex-table-column-style 30)}
+           link]
+          [:div {:class (<class common-styles/flex-table-column-style 10)}
+           [form/form-modal-button
+            {:form-component [edit-license-form e! (:db/id employee)]
+             :form-value license
+             :modal-title (tr [:contract :partner :edit-license-title])
+             :button-component [buttons/link-button {}
+                                (tr [:buttons :edit])]}]]])
+
+       ;; Show licenses in alphabetical order, removing expired if not
+       ;; showing history
+       (->> licenses
+            (sort-by :user-license/name)
+            (remove (if @show-history?
+                      (constantly false)
+                      (fn [{exp :user-license/expiration-date}]
+                        (and (some? exp)
+                             (date/date-before-today? exp)))))))]
+     [:div {:class (<class common-styles/flex-row-end)
+            :style {:display :flex :flex-direction :row
+                    :justify-content "flex-end"}}
+      [buttons/button-secondary {:on-click #(swap! show-history? not) :size :small
+                                 :style {:margin-right "1em"}}
+       (tr [:contract :partner (if @show-history?
+                                 :hide-license-history
+                                 :view-license-history)])]
+      [form/form-modal-button
+       {:form-component [edit-license-form e! (:db/id employee)]
+        :modal-title (tr [:contract :partner :add-license-title])
+        :button-component [buttons/button-secondary {:size :small}
+                           (tr [:contract :partner :add-license])]}]]]))
+
+(defn key-person-assignment-section
+  [e! _ selected-partner employee]
+  [:div
+   [:div {:class (<class common-styles/flex-row-space-between)}
+    [:h2 (tr [:contract :employee :key-person-approvals])]
    [authorization-check/when-authorized
     :thk.contract/add-contract-employee selected-partner
     [buttons/delete-button-with-confirm
@@ -654,7 +785,25 @@
       :cancel-button-text (tr [:contract :cancel-button-text])
       :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
       :modal-text (tr [:contract :confirm-remove-key-person-text])}
-     (tr [:buttons :remove-key-person-assignment])]]])
+     (tr [:buttons :remove-key-person-assignment])]]]
+
+   [key-person-files e! employee]
+   [key-person-licenses e! employee]
+   [:div {:class (<class contract-style/personnel-files-section-header-style)}]
+    [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+     [:div
+      [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]]
+      (if (du/enum= (:company-contract-employee/key-person-status employee) :key-person.status/assigned)
+        [buttons/button-secondary
+         {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
+          :underlined? :true
+          :confirm-button-text (tr [:contract :delete-button-text])
+          :cancel-button-text (tr [:contract :cancel-button-text])
+          :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+          :modal-text (tr [:contract :confirm-remove-key-person-text])}
+         (tr [:buttons :submit-key-person])]
+        [:div "Key person assignment submitted for approval. (TODO: replaced in TEET-1955)"])]]
+   ])
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
