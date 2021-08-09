@@ -1,33 +1,34 @@
 (ns teet.contract.contract-partners-view
-  (:require [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr tr-enum]]
+  (:require [clojure.string :as str]
             [herb.core :refer [<class] :as herb]
-            [teet.ui.icons :as icons]
-            [teet.ui.text-field :refer [TextField]]
-            [teet.contract.contract-common :as contract-common]
-            [teet.contract.contract-style :as contract-style]
-            [teet.ui.material-ui :refer [Grid Checkbox Divider]]
-            [teet.ui.typography :as typography]
-            [teet.ui.buttons :as buttons]
             [reagent.core :as r]
-            teet.contract.contract-spec
-            [teet.common.common-controller :as common-controller]
-            [teet.contract.contract-partners-controller :as contract-partners-controller]
-            [teet.routes :as routes]
-            [teet.ui.form :as form]
-            [teet.ui.util :refer [mapc]]
-            [teet.ui.select :as select]
-            [teet.ui.common :as common]
-            [teet.ui.validation :as validation]
+            [teet.app-state :as app-state]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.user.user-model :as user-model]
-            [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.table :as table]
-            [teet.ui.file-upload :as file-upload]
-            [clojure.string :as str]
-            [re-svg-icons.feather-icons :as fi]
+            [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]
+            [teet.contract.contract-common :as contract-common]
+            [teet.contract.contract-partners-controller :as contract-partners-controller]
+            teet.contract.contract-spec
+            [teet.contract.contract-style :as contract-style]
             [teet.file.file-controller :as file-controller]
+            [teet.file.file-view :as file-view]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.routes :as routes]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.file-upload :as file-upload]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Grid Divider]]
+            [teet.ui.select :as select]
+            [teet.ui.table :as table]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.typography :as typography]
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.validation :as validation]
+            [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]))
 
 (defn partner-listing
@@ -588,7 +589,7 @@
 (defn key-person-files
   "Displays the file list for the key person"
   [e! employee selected-partner]
-  (let [can-manage-files (authorization-check/authorized? @teet.app-state/user
+  (let [can-manage-files (authorization-check/authorized? @app-state/user
                                                           :contracts/contract-editing
                                                           selected-partner)]
     [:div {:id (str "key-person-" (:db/id employee))}
@@ -597,13 +598,13 @@
        (tr [:contract :partner :key-person-files])]]
      [:div
       (mapc (fn [file]
-              [teet.file.file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
-                                              :title-downloads? true
-                                              :delete-action (when can-manage-files
-                                                               (fn [file]
-                                                                 (e! (contract-partners-controller/->RemoveFileLink
-                                                                       (:db/id employee)
-                                                                       (:db/id file)))))}
+              [file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
+                                    :title-downloads? true
+                                    :delete-action (when can-manage-files
+                                                     (fn [file]
+                                                       (e! (contract-partners-controller/->RemoveFileLink
+                                                            (:db/id employee)
+                                                            (:db/id file)))))}
                file])
             (:company-contract-employee/attached-files employee))]
      [:div {:class (<class common-styles/margin 1 0 1 0)}
@@ -620,6 +621,7 @@
                            :attach-to (:db/id employee)
                            :on-success common-controller/->Refresh}))}
          (str "+ " (tr [:buttons :upload]))]]]]))
+
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
@@ -954,6 +956,7 @@
        :thk.contract/add-contract-employee selected-partner
        [edit-personnel-form e! app selected-partner employee]]
       [partners-default-view params contract])))
+
 
 ;; navigated to through routes.edn from route /contracts/*****/partners
 (defn partners-page

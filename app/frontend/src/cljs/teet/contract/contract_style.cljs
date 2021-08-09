@@ -1,6 +1,5 @@
 (ns teet.contract.contract-style
-  (:require [teet.theme.theme-colors :as theme-colors]
-            [teet.common.responsivity-styles :as responsivity-styles]))
+  (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn contract-page-container-style
   []
@@ -270,4 +269,3 @@
    :border-width "0 0 1px 0"
    :border-style :solid
    :border-color theme-colors/gray-lighter})
-
