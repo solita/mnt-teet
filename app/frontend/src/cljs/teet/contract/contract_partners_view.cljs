@@ -660,7 +660,7 @@
            [form/form-modal-button
             {:form-component [edit-license-form e! (:db/id employee)]
              :form-value license
-             :modal-title (tr [:contract :partners :edit-license-title])
+             :modal-title (tr [:contract :partner :edit-license-title])
              :button-component [buttons/link-button {}
                                 (tr [:buttons :edit])]}]]])
 
@@ -678,14 +678,14 @@
                     :justify-content "flex-end"}}
       [buttons/button-secondary {:on-click #(swap! show-history? not) :size :small
                                  :style {:margin-right "1em"}}
-       (tr [:contract :partners (if @show-history?
-                                  :hide-license-history
-                                  :view-license-history)])]
+       (tr [:contract :partner (if @show-history?
+                                 :hide-license-history
+                                 :view-license-history)])]
       [form/form-modal-button
        {:form-component [edit-license-form e! (:db/id employee)]
-        :modal-title (tr [:contract :partners :add-license-title])
+        :modal-title (tr [:contract :partner :add-license-title])
         :button-component [buttons/button-secondary {:size :small}
-                           (tr [:contract :partners :add-license])]}]]]))
+                           (tr [:contract :partner :add-license])]}]]]))
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
