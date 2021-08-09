@@ -27,7 +27,8 @@
             [teet.ui.file-upload :as file-upload]
             [clojure.string :as str]
             [re-svg-icons.feather-icons :as fi]
-            [teet.file.file-controller :as file-controller]))
+            [teet.file.file-controller :as file-controller]
+            [teet.util.datomic :as du]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -458,28 +459,43 @@
       :personnel-info)))
 
 (defn key-person-icon
-  ([color] (key-person-icon color nil))
-  ([color text]
-   (let [bg-color (case color
-                    :red :#FCEEEE
-                    :green :#ECF4EF
-                    :gray :#D2D3D8
-                    :yellow :#)]
-     (case color
-       :red [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-             [:icon {:style {:line-height 0}}
-              [icons/red-rejected]]
-             [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]
-       :green [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-               [:icon {:style {:line-height 0}}
-                [icons/green-check]]
-               [:span {:style {:color :green}} (if (not (nil? text)) text "")]]
-       :gray [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
-                                     :variant :info}
-              [:div {:class (<class contract-style/key-person-icon-style bg-color)}
-               [:icon {:style {:line-height 0}}
-                [icons/key-person]]
-               [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]))))
+  "Displays the key-person icon based on the status"
+  ([key-person-status] (key-person-icon key-person-status nil))
+  ([key-person-status text]
+   (case key-person-status
+     :key-person.status/rejected
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-rejected])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :#FCEEEE)}
+       [:icon {:style {:line-height 0}}
+        [icons/red-rejected]]
+       [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]]
+
+     :key-person.status/approved
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-approved])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :#ECF4EF)}
+       [:icon {:style {:line-height 0}}
+        [icons/green-check]]
+       [:span {:style {:color :green}} (if (not (nil? text)) text "")]]]
+
+     :key-person.status/assigned
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-not-submitted])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :#D2D3D8)}
+       [:icon {:style {:line-height 0}}
+        [icons/key-person]]
+       [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]
+
+     :key-person.status/approval-requested
+     [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
+                             :variant :info}
+      [:div {:class (<class contract-style/key-person-icon-style :lightyellow)}
+       [:icon {:style {:line-height 0}}
+        [icons/key-person :orange]]
+       [:span {:style {:color :orange}} (if (not (nil? text)) text "")]]]
+
+     [:span])))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -495,7 +511,8 @@
      ["" {:align :right :width "10%"}]
      ["" {:align :right :width "10%"}]]
     (for [employee employees
-          :let [key-person? (get-in employee [:company-contract-employee/key-person?])]]
+          :let [key-person? (get-in employee [:company-contract-employee/key-person?])
+                key-person-status (get-in employee [:company-contract-employee/key-person-status])]]
       [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
              (get-in employee [:company-contract-employee/user :user/given-name]))]
        (if (not-empty (:company-contract-employee/role employee))
@@ -503,7 +520,7 @@
          [])
        [(if (true? key-person?)
           [:div {:style {:display :flex}}
-           [key-person-icon :gray]]
+           [key-person-icon key-person-status]]
           [:span])]
        [[authorization-check/when-authorized
          :thk.contract/add-contract-employee selected-partner
@@ -611,7 +628,21 @@
     [:div {:class (<class contract-style/personnel-files-column-style)}
      [:h2 (tr [:contract :employee :key-person-approvals])]
      [key-person-files e! employee]
-     [:div {:class (<class contract-style/personnel-files-section-header-style)}]]] ;; TODO: Licenses section here
+     [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
+    [:div
+     [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+      [:div
+       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]]
+       (if (du/enum= (:company-contract-employee/key-person-status employee) :key-person.status/assigned)
+         [buttons/button-secondary
+        {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
+         :underlined? :true
+         :confirm-button-text (tr [:contract :delete-button-text])
+         :cancel-button-text (tr [:contract :cancel-button-text])
+         :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
+         :modal-text (tr [:contract :confirm-remove-key-person-text])}
+        (tr [:buttons :submit-key-person])]
+         [:div "Key person assignment submitted for approval. (TODO: replaced in TEET-1955)"])]]]]]
    [authorization-check/when-authorized
     :thk.contract/add-contract-employee selected-partner
     [buttons/delete-button-with-confirm
@@ -842,14 +873,15 @@
                            (get-in employee [:company-contract-employee/user :user/family-name]))
         teet-id (:teet/id selected-partner)
         user-id (get-in employee [:company-contract-employee/user :user/id])
-        key-person? (get-in employee [:company-contract-employee/key-person?])]
+        key-person? (get-in employee [:company-contract-employee/key-person?])
+        key-person-status (get-in employee [:company-contract-employee/key-person-status])]
     [:div {:class (<class contract-style/partner-info-header)}
      [Grid
       {:container true :direction :row :justify-content :flex-start :align-items :center}
       [Grid {:style {:padding-right :1em}}
        [:h1 employee-name]]
       (if key-person?
-        [key-person-icon :gray (tr [:contract :employee :key-person])]
+        [key-person-icon key-person-status (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
       :thk.contract/edit-contract-partner-company employee

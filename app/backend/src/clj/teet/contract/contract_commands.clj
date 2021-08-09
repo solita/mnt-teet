@@ -198,7 +198,8 @@
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :transact [(merge {:db/id employee-id
-                      :company-contract-employee/key-person? key-person?}
+                      :company-contract-employee/key-person? key-person?
+                      :company-contract-employee/key-person-status :key-person.status/assigned}
                      (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
                            user-files (:user/files (d/pull db '[:user/files] user-id))]
                        (when (and key-person? (seq user-files))
@@ -313,3 +314,11 @@
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :transact [[:db/retract employee-id :company-contract-employee/attached-files file-id]]})
+
+(defcommand :thk.contract/submit-key-person
+  {:doc "Submit key person for review"
+   :payload {employee-id :employee-id}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :transact [{:db/id employee-id
+               :company-contract-employee/key-person-status :key-person.status/approval-requested}]})
