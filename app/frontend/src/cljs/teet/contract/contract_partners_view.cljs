@@ -462,44 +462,36 @@
       :assign-key-person
       :personnel-info)))
 
+(def ^:private key-person-status->icon-data
+  {:key-person.status/rejected {:i18n-key [:contract :employee :key-person-rejected]
+                                :icon [icons/red-rejected]
+                                :color theme-colors/red
+                                :bg-color theme-colors/red-lightest}
+   :key-person.status/approved {:i18n-key [:contract :employee :key-person-approved]
+                                :icon [icons/green-check]
+                                :color theme-colors/green
+                                :bg-color theme-colors/mint-cream}
+   :key-person.status/assigned {:i18n-key [:contract :employee :key-person-not-submitted]
+                                :icon [icons/key-person]
+                                :color theme-colors/gray
+                                :bg-color theme-colors/black-coral-1}
+   :key-person.status/approval-requested {:i18n-key [:contract :employee :key-person-is-waiting-approvals]
+                                          :icon [icons/key-person theme-colors/orange]
+                                          :color theme-colors/orange
+                                          ;; TODO what theme color?
+                                          :bg-color :lightyellow}})
+
 (defn key-person-icon
   "Displays the key-person icon based on the status"
   ([key-person-status] (key-person-icon key-person-status nil))
   ([key-person-status text]
-   (case key-person-status
-     :key-person.status/rejected
-     [common/popper-tooltip {:title (tr [:contract :employee :key-person-rejected])
+   (let [{:keys [i18n-key icon color bg-color]} (key-person-status->icon-data key-person-status)]
+     [common/popper-tooltip {:title (tr i18n-key)
                              :variant :info}
-      [:div {:class (<class contract-style/key-person-icon-style :#FCEEEE)}
+      [:div {:class (<class contract-style/key-person-icon-style bg-color)}
        [:icon {:style {:line-height 0}}
-        [icons/red-rejected]]
-       [:span {:style {:color :#D73E3E}} (if (not (nil? text)) text "")]]]
-
-     :key-person.status/approved
-     [common/popper-tooltip {:title (tr [:contract :employee :key-person-approved])
-                             :variant :info}
-      [:div {:class (<class contract-style/key-person-icon-style :#ECF4EF)}
-       [:icon {:style {:line-height 0}}
-        [icons/green-check]]
-       [:span {:style {:color :green}} (if (not (nil? text)) text "")]]]
-
-     :key-person.status/assigned
-     [common/popper-tooltip {:title (tr [:contract :employee :key-person-not-submitted])
-                             :variant :info}
-      [:div {:class (<class contract-style/key-person-icon-style :#D2D3D8)}
-       [:icon {:style {:line-height 0}}
-        [icons/key-person]]
-       [:span {:style {:color :gray}} (if (not (nil? text)) text "")]]]
-
-     :key-person.status/approval-requested
-     [common/popper-tooltip {:title (tr [:contract :employee :key-person-is-waiting-approvals])
-                             :variant :info}
-      [:div {:class (<class contract-style/key-person-icon-style :lightyellow)}
-       [:icon {:style {:line-height 0}}
-        [icons/key-person :orange]]
-       [:span {:style {:color :orange}} (if (not (nil? text)) text "")]]]
-
-     [:span])))
+        icon]
+       [:span {:style {:color color}} (or text "")]]])))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -598,7 +590,7 @@
     [:div {:id (str "key-person-" (:db/id employee))
            :style {:max-width "800px"}}
      [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h3 {:class (<class contract-style/key-person-files-header)}
+      [:h3 {:class (<class common-styles/margin-top 3)}
        (tr [:contract :partner :key-person-files])]]
      [:div
       (mapc (fn [file]
@@ -643,7 +635,7 @@
 
 (defn approval-actions
   [e! employee]
-  [:div {:class (<class common-styles/padding-bottom 2)}
+  [:div {:class (<class contract-style/approval-actions-container-style)}
    [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
                             :form-value {:review/decision :review.decision/approved}
                             :modal-title (tr [:contract :partner :approve-person-modal-title])
@@ -770,10 +762,10 @@
       [:div
        [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
         [key-person-approvals-status status comment]
-        [approval-actions employee]]
-
-       (when (= status :key-person.status/assigned)
-         [submit-key-person-button e! employee])]]]))
+        [:div {:class (<class contract-style/key-person-assignment-header)}
+         (when (= status :key-person.status/assigned)
+           [submit-key-person-button e! employee])
+         [approval-actions employee]]]]]]))
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
