@@ -38,6 +38,7 @@
 (defrecord SubmitKeyPerson [employee-id])
 (defrecord SaveLicense [employee-id license close-event])
 (defrecord SaveLicenseResult [close-event result])
+(defrecord ApproveOrReject [employee-eid form close-event])
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
