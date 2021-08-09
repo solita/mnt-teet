@@ -853,13 +853,14 @@
   [partner params]
   (let [partner-name (get-in partner [:company-contract/company :company/name])
         lead-partner? (:company-contract/lead-partner? partner)
-        teet-id (:teet/id partner)]
+        teet-id (:teet/id partner)
+        company (:company-contract/company partner)]
     [:div {:class (<class contract-style/partner-info-header)}
      [:h1 partner-name]
      (when lead-partner?
        [common/primary-tag (tr [:contract :lead-partner])])
      [authorization-check/when-authorized
-      :thk.contract/edit-contract-partner-company partner
+      :thk.contract/edit-contract-partner-company company
       [buttons/button-secondary
        {:href (routes/url-for {:page :contract-partners
                                :params params
