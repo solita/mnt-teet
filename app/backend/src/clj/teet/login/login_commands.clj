@@ -165,8 +165,7 @@
                       [:user/id :user/given-name :user/family-name :user/person-id]))]
    :spec empty?
    :payload _
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
                                   {:given-name given-name
                                    :family-name family-name

@@ -3,7 +3,6 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.company.company-model :as company-model]
-            [teet.user.user-queries :as user-queries]
             [teet.user.user-db :as user-db])
   (:import (java.util Date)))
 
@@ -390,7 +389,7 @@
                         [?cce :company-contract-employee/user ?u])
               :in $ % ?search ?company-contract employee-attributes]
             db
-            user-queries/user-query-rules
+            user-db/user-query-rules
             search
             company-contract-eid
             employee-attributes)

@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [teet.permission.permission-db :as permission-db]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [clojure.string :as str]))
 
 (defn user-info
   "Fetch user information with current valid permissions."
@@ -58,3 +59,30 @@
              [(missing? $ ?p :permission/valid-until)]]
            db user-id)
       (mapv first)))
+
+(def user-query-rules
+  '[[(user-by-name ?u ?search)
+     [?u :user/id _]
+     [?u :user/given-name ?given]
+     [(missing? $ ?u :user/deactivated?)]
+     [?u :user/family-name ?family]
+     [(str ?given " " ?family) ?full-name]
+     [(.toLowerCase ?full-name) ?full-name-lower]
+     [(.contains ^String ?full-name-lower ?search)]]])
+
+(defn find-user-by-name [db name]
+  (d/q '[:find (pull ?u [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
+         :where
+         (user-by-name ?u ?name)
+         :in $ % ?name]
+       db
+       user-query-rules
+       (str/lower-case name)))
+
+(defn find-all-users [db]
+  (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
+         :where
+         [(missing? $ ?e :user/deactivated?)]
+         [?e :user/id _]
+         [?e :user/family-name _]]
+       db))

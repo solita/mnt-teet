@@ -8,8 +8,7 @@
   {:doc "Add link from one entity to another"
    :context {:keys [db user]}
    :payload {:keys [from to external-id type] :as p}
-   :project-id nil
-   :authorization {}
+   :allowed-for-all-users? true
    :pre [(link-model/valid-from? from)]}
   (if-let [{wrap-tx :wrap-tx} (link-db/link-from db user from type to)]
     (select-keys
@@ -40,8 +39,7 @@
    :payload {:keys [from to type]
              id :db/id}
    :pre [(link-db/is-link? db id from to type)]
-   :project-id nil
-   :authorization {}}
+   :allowed-for-all-users? true}
   (when-let [{wrap-tx :wrap-tx} (link-db/delete-link-from db user from type to)]
     (tx ((or wrap-tx identity)
          [[:db/retractEntity id]]))

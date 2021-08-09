@@ -73,6 +73,8 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contracts/edit-contract-metadata
+                            :company (:db/id form-data)}
    :pre [^{:error :business-registry-code-in-use}
          (company-db/business-registry-code-unique?
            db (company-model/company-business-registry-id-with-country-code form-data))]}
@@ -160,6 +162,10 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contracts/add-existing-teet-users-to-contract
+                            :company (get-in
+                                       (du/entity db company-contract-eid)
+                                       [:company-contract/company :db/id])}
    :pre [(not
            (contract-db/is-company-contract-employee?
              db company-contract-eid
