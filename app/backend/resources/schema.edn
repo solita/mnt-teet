@@ -2242,4 +2242,28 @@
           {:db/ident :key-person.status/assigned :enum/attribute :company-contract-employee/key-person-status}
           {:db/ident :key-person.status/approval-requested :enum/attribute :company-contract-employee/key-person-status}
           {:db/ident :key-person.status/approved :enum/attribute :company-contract-employee/key-person-status}
-          {:db/ident :key-person.status/rejected :enum/attribute :company-contract-employee/key-person-status}]]}]
+          {:db/ident :key-person.status/rejected :enum/attribute :company-contract-employee/key-person-status}]]}
+
+ {:db/ident :migration/key-person-licenses
+  :txes [[{:db/ident :user-license/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "License name"}
+          {:db/ident :user-license/expiration-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "License expiration date"}
+          {:db/ident :user-license/link
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "URL or other reference to license information"}
+
+          {:db/ident :user/licenses
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "User's licenses"}
+
+          {:db/ident :company-contract-employee/attached-licenses
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Licenses attached to a cce"}]]}]

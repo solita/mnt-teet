@@ -36,6 +36,8 @@
 (defrecord AssignKeyPersonSuccess [key-person? result])
 (defrecord RemoveFileLink [employee-id file-id])
 (defrecord SubmitKeyPerson [employee-id])
+(defrecord SaveLicense [employee-id license close-event])
+(defrecord SaveLicenseResult [close-event result])
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
@@ -185,4 +187,23 @@
        :command :thk.contract/submit-key-person
        :payload {:employee-id employee-id}
        :success-message (tr [:contract :partner :key-person-submitted])
-       :result-event common-controller/->Refresh})))
+       :result-event common-controller/->Refresh}))
+
+  SaveLicense
+  (process-event [{:keys [employee-id license close-event]} app]
+    (log/info "empl: " employee-id ", license: " license)
+    (t/fx
+     app
+     {:tuck.effect/type :command!
+      :command :thk.contract/save-license
+      :payload {:employee-id employee-id
+                :license license}
+      :success-message (tr [:contract :partner :license-saved])
+      :result-event (partial ->SaveLicenseResult close-event)}))
+
+  SaveLicenseResult
+  (process-event [{:keys [close-event result]} app]
+    (t/fx app
+          (fn [e!]
+            (e! close-event))
+          common-controller/refresh-fx)))
