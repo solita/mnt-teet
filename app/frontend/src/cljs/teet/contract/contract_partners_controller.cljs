@@ -38,7 +38,21 @@
 (defrecord SubmitKeyPerson [employee-id])
 (defrecord SaveLicense [employee-id license close-event])
 (defrecord SaveLicenseResult [close-event result])
-(defrecord ApproveOrReject [employee-eid form close-event])
+(defrecord ApproveOrReject [employee-eid form close-event command success-message])
+(defrecord ApproveOrRejectResult [close-event result])
+
+(defn approve-key-person [employee-eid close-event form-atom]
+  #(->ApproveOrReject employee-eid @form-atom
+                      close-event
+                      :thk.contract/approve-key-person
+                      "Yay! Approved key person"))
+
+(defn reject-key-person [employee-eid close-event form-atom]
+  #(->ApproveOrReject employee-eid
+                      @form-atom
+                      close-event
+                      :thk.contract/reject-key-person
+                      "Rejected! Too bad..."))
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
@@ -207,4 +221,23 @@
     (t/fx app
           (fn [e!]
             (e! close-event))
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  ApproveOrReject
+  (process-event [{:keys [employee-eid form close-event command success-message]} app]
+    (println form)
+    (t/fx
+     app
+     {:tuck.effect/type :command!
+      :command command
+      :payload {}
+      :success-message success-message
+      :result-event (partial ->ApproveOrRejectResult close-event)}))
+
+  ApproveOrRejectResult
+  (process-event [{:keys [close-event]} app]
+    (t/fx
+     app
+     (fn [e!]
+       (e! close-event))
+     common-controller/refresh-fx)))

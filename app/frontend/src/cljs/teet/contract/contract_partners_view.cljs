@@ -618,28 +618,27 @@
          (str "+ " (tr [:buttons :upload]))]]]]))
 
 (defn- approval-form
-  [e! employee-eid close-event form-atom]
+  [e! employee-eid save-event close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom #(do (println %1 %2) (merge %1 %2)))
               ;; :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
               :cancel close-event
-              :save-event #(contract-partners-controller/->ApproveOrReject
-                            employee-eid
-                            @form-atom
-                            close-event)}
+              :save-event (save-event employee-eid close-event form-atom)}
    ^{:attribute :review/comment}
    [TextField {:multiline true}]])
 
 (defn approval-actions
   [e! employee]
   [:div {:class (<class contract-style/approval-actions-container-style)}
-   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
+   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
+                                             contract-partners-controller/approve-key-person]
                             :form-value {:review/decision :review.decision/approved}
                             :modal-title (tr [:contract :partner :approve-person-modal-title])
                             :button-component [buttons/button-green {:style {:margin-right "1rem"}}
                                                (tr [:contract :partner :approve-person-button])]}]
-   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)]
+   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
+                                             contract-partners-controller/reject-key-person]
                             :form-value {:review/decision :review.decision/rejected}
                             :modal-title (tr [:contract :partner :reject-person-modal-title])
                             :button-component [buttons/button-warning {}
