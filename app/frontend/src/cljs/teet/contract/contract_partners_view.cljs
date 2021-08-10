@@ -473,13 +473,12 @@
                                 :bg-color theme-colors/mint-cream}
    :key-person.status/assigned {:i18n-key [:contract :employee :key-person-not-submitted]
                                 :icon [icons/key-person]
-                                :color theme-colors/gray
+                                :color theme-colors/text-disabled
                                 :bg-color theme-colors/black-coral-1}
    :key-person.status/approval-requested {:i18n-key [:contract :employee :key-person-is-waiting-approvals]
                                           :icon [icons/key-person theme-colors/orange]
                                           :color theme-colors/orange
-                                          ;; TODO what theme color?
-                                          :bg-color :lightyellow}})
+                                          :bg-color theme-colors/dark-tangerine-1}})
 
 (defn key-person-icon
   "Displays the key-person icon based on the status"
@@ -491,7 +490,8 @@
       [:div {:class (<class contract-style/key-person-icon-style bg-color)}
        [:icon {:style {:line-height 0}}
         icon]
-       [:span {:style {:color color}} (or text "")]]])))
+       (when text
+         [:span {:style {:color color}} text])]])))
 
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
@@ -507,14 +507,13 @@
      ["" {:align :right :width "10%"}]
      ["" {:align :right :width "10%"}]]
     (for [employee employees
-          :let [key-person? (get-in employee [:company-contract-employee/key-person?])
-                key-person-status (get-in employee [:company-contract-employee/key-person-status])]]
-      [[(str (get-in employee [:company-contract-employee/user :user/family-name]) " "
-             (get-in employee [:company-contract-employee/user :user/given-name]))]
+          :let [key-person? (:company-contract-employee/key-person? employee)
+                key-person-status (:company-contract-employee/key-person-status employee)]]
+      [[(-> employee :company-contract-employee/user user-model/user-name)]
        (if (not-empty (:company-contract-employee/role employee))
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
          [])
-       [(if (true? key-person?)
+       [(if key-person?
           [:div {:style {:display :flex}}
            [key-person-icon key-person-status]]
           [:span])]
