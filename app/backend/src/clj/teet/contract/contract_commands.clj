@@ -206,8 +206,8 @@
           user-licenses :user/licenses} (d/pull db '[:user/files :user/licenses] user-id)]
 
      [(merge {:db/id employee-id
-              :company-contract-employee/key-person? key-person?
-              :company-contract-employee/key-person-status :key-person.status/assigned}
+              :company-contract-employee/key-person-status {:key-person/status :key-person.status/assigned}
+              :company-contract-employee/key-person? key-person?}
              (when (and key-person? (seq user-files))
                {:company-contract-employee/attached-files (mapv :db/id user-files)})
              (when (and key-person? (seq user-licenses))
@@ -358,7 +358,7 @@
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :transact [{:db/id employee-id
-               :company-contract-employee/key-person-status :key-person.status/approval-requested}]})
+               :company-contract-employee/key-person-status {:key-person/status :key-person.status/approval-requested}}]})
 
 (defcommand :thk.contract/approve-key-person
   {:doc "Approve key person being reviewed"
