@@ -1,3 +1,4 @@
+[{:db/ident :migration/baseline-2020
   :txes [
          ;; Transaction metadata
          [{:db/ident :tx/author
