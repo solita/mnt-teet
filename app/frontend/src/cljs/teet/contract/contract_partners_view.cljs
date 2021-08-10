@@ -617,20 +617,19 @@
                            :on-success common-controller/->Refresh}))}
          (str "+ " (tr [:buttons :upload]))]]]]))
 
-(defn approval-form
+(defn- approval-form
   [e! employee-eid close-event form-atom]
-  [:<>
-   [form/form {:e! e!
-               :value @form-atom
-               :on-change-event (form/update-atom-event form-atom merge)
-               :cancel-event close-event
-               :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
-               :save-event #(contract-partners-controller/->ApproveOrReject
-                             employee-eid
-                             @form-atom
-                             close-event)}
-    ^{:attribute :review/comment}
-    [TextField {:multiline true}]]])
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom #(do (println %1 %2) (merge %1 %2)))
+              ;; :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
+              :cancel close-event
+              :save-event #(contract-partners-controller/->ApproveOrReject
+                            employee-eid
+                            @form-atom
+                            close-event)}
+   ^{:attribute :review/comment}
+   [TextField {:multiline true}]])
 
 (defn approval-actions
   [e! employee]
@@ -764,7 +763,7 @@
         [:div {:class (<class contract-style/key-person-assignment-header)}
          (when (= status :key-person.status/assigned)
            [submit-key-person-button e! employee])
-         [approval-actions employee]]]]]]))
+         [approval-actions e! employee]]]]]]))
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
