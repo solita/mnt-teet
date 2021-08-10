@@ -654,6 +654,7 @@
   :task.group/warranty "Warranty",
   :task.group/design-approval "Design approval",
   :task.type/construction-landscaping "Landscaping",
+  :key-person.status/rejected "Rejected",
   :task.type/geological-study "Geological study",
   :task.type/measurements "Measurement",
   :cooperation.application.type/building-permit-draft
@@ -703,6 +704,7 @@
   :task.status/waiting-for-review "Waiting for review",
   :notification.type/task-part-waiting-for-review
   "Task part {task-part-name} is waiting for your review.",
+  :key-person.status/assigned "Assigned",
   :cooperation.application.type/waste-permit "Waste permit",
   :thk.lifecycle-type/design "Design",
   :task.type/acceptance "Acceptance",
@@ -719,6 +721,7 @@
   :task.group/design-reports "Design reports",
   :activity.name/land-acquisition "Land acquisition",
   :land-acquisition.impact/undecided "Undecided",
+  :key-person.status/approval-requested "Approval requested",
   :notification.type/comment-resolved "Comment resolved",
   :task.type/terms-of-reference "Terms of reference",
   :task.type/instructions "Instructions",
@@ -743,6 +746,7 @@
   :activity.status/archived "Archived",
   :activity.status/valid "Valid",
   :boq-version.type/tender "Tender",
+  :key-person.status/approved "Approved",
   :comment.visibility/all "Public",
   :comment.visibility/internal "Visible internally",
   :task.type/construction-railroad "Railroad",

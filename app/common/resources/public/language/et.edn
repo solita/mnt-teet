@@ -651,6 +651,7 @@
   :task.group/warranty "Garantii",
   :task.group/design-approval "Projekti heakskiitmine",
   :task.type/construction-landscaping "Maastik",
+  :key-person.status/rejected nil,
   :task.type/geological-study "Geoloogiline uuring",
   :task.type/measurements "Kontrollmõõdistused",
   :cooperation.application.type/building-permit-draft
@@ -700,6 +701,7 @@
   :task.status/waiting-for-review "Ootab ülevaatamist",
   :notification.type/task-part-waiting-for-review
   "Ülesande osa {task-part-name} ootab ülevaatamist",
+  :key-person.status/assigned nil,
   :cooperation.application.type/waste-permit "Jäätmeluba",
   :thk.lifecycle-type/design "Projekteerimine",
   :task.type/acceptance "Vastuvõtmine",
@@ -716,6 +718,7 @@
   :task.group/design-reports "Projekti väljundid",
   :activity.name/land-acquisition "Maade omandamine",
   :land-acquisition.impact/undecided "Otsus puudub",
+  :key-person.status/approval-requested nil,
   :notification.type/comment-resolved "Lahendatud",
   :task.type/terms-of-reference "Lähteülesanne",
   :task.type/instructions "Juhised",
@@ -740,6 +743,7 @@
   :activity.status/archived "Arhiveeritud",
   :activity.status/valid "Kehtiv",
   :boq-version.type/tender "Hange",
+  :key-person.status/approved nil,
   :comment.visibility/all "Avalik",
   :comment.visibility/internal "Sisemine",
   :task.type/construction-railroad "Raudtee",
