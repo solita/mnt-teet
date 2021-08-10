@@ -630,18 +630,20 @@
 (defn approval-actions
   [e! employee]
   [:div {:class (<class contract-style/approval-actions-container-style)}
-   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
-                                             contract-partners-controller/approve-key-person]
-                            :form-value {:employee-id (:db/id employee)}
-                            :modal-title (tr [:contract :partner :approve-person-modal-title])
-                            :button-component [buttons/button-green {:style {:margin-right "1rem"}}
-                                               (tr [:contract :partner :approve-person-button])]}]
-   [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
-                                             contract-partners-controller/reject-key-person]
-                            :form-value {:employee-id (:db/id employee)}
-                            :modal-title (tr [:contract :partner :reject-person-modal-title])
-                            :button-component [buttons/button-warning {}
-                                               (tr [:contract :partner :reject-person-button])]}]])
+   (when-not (contract-partners-controller/contract-employee-approved? employee)
+     [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
+                                               contract-partners-controller/approve-key-person]
+                              :form-value {:employee-id (:db/id employee)}
+                              :modal-title (tr [:contract :partner :approve-person-modal-title])
+                              :button-component [buttons/button-green {:style {:margin-right "1rem"}}
+                                                 (tr [:contract :partner :approve-person-button])]}])
+   (when-not (contract-partners-controller/contract-employee-rejected? employee)
+     [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
+                                               contract-partners-controller/reject-key-person]
+                              :form-value {:employee-id (:db/id employee)}
+                              :modal-title (tr [:contract :partner :reject-person-modal-title])
+                              :button-component [buttons/button-warning {}
+                                                 (tr [:contract :partner :reject-person-button])]}])])
 
 (defn key-person-approvals-status [status comment]
   [:div
@@ -654,7 +656,7 @@
      [key-person-icon status]
      (tr-enum status)]]
    (when comment
-       [:div.person-appproval-comment {:class (<class common-styles/flex-table-column-style 100 :space-between)} comment])])
+     [:div.person-appproval-comment {:class (<class common-styles/flex-table-column-style 100 :space-between)} comment])])
 
 (defn- edit-license-form [e! employee-id close-event form-atom]
   [form/form {:e! e!
@@ -752,6 +754,7 @@
       [remove-key-person-assignment-button e! selected-partner employee]]
      [key-person-files e! employee]
      [key-person-licenses e! employee]
+
      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
       [:div
        [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
