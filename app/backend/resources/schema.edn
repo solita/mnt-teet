@@ -1,4 +1,3 @@
-[{:db/ident :migration/baseline-2020
   :txes [
          ;; Transaction metadata
          [{:db/ident :tx/author
@@ -2267,8 +2266,18 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
            :db/doc "Licenses attached to a cce"}]]}
- {:db/ident :migration/key-person-comment
-  :txes [[{:db/ident :company-contract-employee/key-person-comment
+ {:db/ident :migration/key-person-approval-v2
+  :txes [[{:db/ident :company-contract-employee/key-person-status
+           :db/isComponent true}
+          {:db/ident :key-person/approval-comment
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Comment explaining the approval or rejection of a key person"}]]}]
+           :db/doc "Comment explaining the approval or rejection of a key person"}
+          {:db/ident :key-person/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to key person status enum"}]
+         [{:db/ident :key-person.status/assigned :enum/attribute :key-person/status}
+          {:db/ident :key-person.status/approval-requested :enum/attribute :key-person/status}
+          {:db/ident :key-person.status/approved :enum/attribute :key-person/status}
+          {:db/ident :key-person.status/rejected :enum/attribute :key-person/status}]]}]

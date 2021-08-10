@@ -360,10 +360,6 @@
    :transact [{:db/id employee-id
                :company-contract-employee/key-person-status :key-person.status/approval-requested}]})
 
-(defn- assigned-for-key-person-approval? [cce]
-  (let [status (some-> cce :company-contract-employee/key-person-status :db/ident)]
-    (#{:key-person.status/assigned :key-person.status/approval-requested} status))
-
 (defcommand :thk.contract/approve-key-person
   {:doc "Approve key person being reviewed"
    :payload {company-contract-employee-id :employee-id
@@ -371,10 +367,10 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre [(assigned-for-key-person-approval? (du/entity db company-contract-employee-id))]
+   :pre []
    :transact [{:db/id company-contract-employee-id
-               :company-contract-employee/key-person-comment comment
-               :company-contract-employee/key-person-status :key-person.status/approved}]})
+               :company-contract-employee/key-person-status {:key-person/status :key-person.status/approved
+                                                             :key-person/approval-comment comment}}]})
 
 (defcommand :thk.contract/reject-key-person
   {:doc "Reject key person for review"
@@ -383,7 +379,8 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre [(assigned-for-key-person-approval? (du/entity db company-contract-employee-id))]
+   :pre []
    :transact [{:db/id company-contract-employee-id
-               :company-contract-employee/key-person-comment comment
-               :company-contract-employee/key-person-status :key-person.status/rejected}]})
+
+               :company-contract-employee/key-person-status {:key-person/status :key-person.status/rejected
+                                                             :key-person/approval-comment comment}}]})

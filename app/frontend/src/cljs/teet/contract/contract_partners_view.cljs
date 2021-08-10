@@ -508,7 +508,7 @@
      ["" {:align :right :width "10%"}]]
     (for [employee employees
           :let [key-person? (:company-contract-employee/key-person? employee)
-                key-person-status (:company-contract-employee/key-person-status employee)]]
+                key-person-status (-> employee :company-contract-employee/key-person-status :key-person/status)]]
       [[(-> employee :company-contract-employee/user user-model/user-name)]
        (if (not-empty (:company-contract-employee/role employee))
          [(str/join ", " (mapv #(tr-enum %) (:company-contract-employee/role employee)))]
@@ -743,9 +743,9 @@
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
-  (let [status (du/enum->kw
-                (:company-contract-employee/key-person-status employee))
-        comment (:company-contract-employee/key-person-comment employee)]
+  (let [status-entity (:company-contract-employee/key-person-status employee)
+        status (du/enum->kw (:key-person/status status-entity))
+        comment (:key-person/approval-comment status-entity)]
     [:div {:class ""}
      [:div {:class (<class contract-style/key-person-assignment-header)}
       [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
@@ -982,7 +982,7 @@
         teet-id (:teet/id selected-partner)
         user-id (get-in employee [:company-contract-employee/user :user/id])
         key-person? (get-in employee [:company-contract-employee/key-person?])
-        key-person-status (get-in employee [:company-contract-employee/key-person-status])]
+        key-person-status (get-in employee [:company-contract-employee/key-person-status :key-person/status])]
     [:div {:class (<class contract-style/partner-info-header)}
      [Grid
       {:container true :direction :row :justify-content :flex-start :align-items :center}
