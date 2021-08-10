@@ -2266,4 +2266,9 @@
           {:db/ident :company-contract-employee/attached-licenses
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Licenses attached to a cce"}]]}]
+           :db/doc "Licenses attached to a cce"}]]}
+ {:db/ident :migration/key-person-comment
+  :txes [[{:db/ident :company-contract-employee/key-person-comment
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Comment explaining the approval or rejection of a key person"}]]}]

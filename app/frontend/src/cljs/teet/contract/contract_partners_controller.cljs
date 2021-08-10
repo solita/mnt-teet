@@ -230,7 +230,7 @@
      app
      {:tuck.effect/type :command!
       :command command
-      :payload {}
+      :payload form
       :success-message success-message
       :result-event (partial ->ApproveOrRejectResult close-event)}))
 

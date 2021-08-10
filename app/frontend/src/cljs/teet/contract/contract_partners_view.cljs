@@ -621,11 +621,10 @@
   [e! employee-eid save-event close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
-              :on-change-event (form/update-atom-event form-atom #(do (println %1 %2) (merge %1 %2)))
-              ;; :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
+              :on-change-event (form/update-atom-event form-atom merge)
               :cancel close-event
               :save-event (save-event employee-eid close-event form-atom)}
-   ^{:attribute :review/comment}
+   ^{:attribute :company-contract-employee/key-person-comment}
    [TextField {:multiline true}]])
 
 (defn approval-actions
@@ -633,13 +632,13 @@
   [:div {:class (<class contract-style/approval-actions-container-style)}
    [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
                                              contract-partners-controller/approve-key-person]
-                            :form-value {:review/decision :review.decision/approved}
+                            :form-value {:employee-id (:db/id employee)}
                             :modal-title (tr [:contract :partner :approve-person-modal-title])
                             :button-component [buttons/button-green {:style {:margin-right "1rem"}}
                                                (tr [:contract :partner :approve-person-button])]}]
    [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
                                              contract-partners-controller/reject-key-person]
-                            :form-value {:review/decision :review.decision/rejected}
+                            :form-value {:employee-id (:db/id employee)}
                             :modal-title (tr [:contract :partner :reject-person-modal-title])
                             :button-component [buttons/button-warning {}
                                                (tr [:contract :partner :reject-person-button])]}]])
@@ -746,9 +745,7 @@
   [e! _ selected-partner employee]
   (let [status (du/enum->kw
                 (:company-contract-employee/key-person-status employee))
-        comment "test comment"
-        ;;comment (:company-contract-employee/key-person-status-comment employee)
-        ]
+        comment (:company-contract-employee/key-person-comment employee)]
     [:div {:class ""}
      [:div {:class (<class contract-style/key-person-assignment-header)}
       [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
