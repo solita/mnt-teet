@@ -681,7 +681,8 @@
    ^{:attribute :user-license/link}
    [TextField {}]])
 
-(defn- key-person-licenses [e! {licenses :company-contract-employee/attached-licenses :as employee}]
+(defn- key-person-licenses [e! {licenses :company-contract-employee/attached-licenses :as employee}
+                            selected-partner]
   (r/with-let [show-history? (r/atom false)]
     [:div {:class (<class common-styles/margin-bottom 1)}
      [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
@@ -705,12 +706,13 @@
           [:div {:class (<class common-styles/flex-table-column-style 30)}
            (format/date expiration-date)]
           [:div {:class (<class common-styles/flex-table-column-style 10)}
-           [form/form-modal-button
-            {:form-component [edit-license-form e! (:db/id employee)]
-             :form-value license
-             :modal-title (tr [:contract :partner :edit-license-title])
-             :button-component [buttons/link-button-with-icon {:icon [icons/content-create]}
-                                (tr [:buttons :edit])]}]]])
+           [authorization-check/when-authorized :thk.contract/save-license selected-partner
+            [form/form-modal-button
+             {:form-component [edit-license-form e! (:db/id employee)]
+              :form-value license
+              :modal-title (tr [:contract :partner :edit-license-title])
+              :button-component [buttons/link-button-with-icon {:icon [icons/content-create]}
+                                 (tr [:buttons :edit])]}]]]])
 
        ;; Show licenses in alphabetical order, removing expired if not
        ;; showing history
@@ -729,11 +731,12 @@
        (tr [:contract :partner (if @show-history?
                                  :hide-license-history
                                  :view-license-history)])]
-      [form/form-modal-button
-       {:form-component [edit-license-form e! (:db/id employee)]
-        :modal-title (tr [:contract :partner :add-license-title])
-        :button-component [buttons/button-secondary {:size :small}
-                           (tr [:contract :partner :add-license])]}]]]))
+      [authorization-check/when-authorized :thk.contract/save-license selected-partner
+       [form/form-modal-button
+        {:form-component [edit-license-form e! (:db/id employee)]
+         :modal-title (tr [:contract :partner :add-license-title])
+         :button-component [buttons/button-secondary {:size :small}
+                            (tr [:contract :partner :add-license])]}]]]]))
 
 (defn- remove-key-person-assignment-button [e! selected-partner employee]
   [authorization-check/when-authorized
@@ -767,8 +770,7 @@
       [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
       [remove-key-person-assignment-button e! selected-partner employee]]
      [key-person-files e! employee]
-     [key-person-licenses e! employee]
-
+     [key-person-licenses e! employee selected-partner]
      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
        [key-person-approvals-status status comment modification-meta]
