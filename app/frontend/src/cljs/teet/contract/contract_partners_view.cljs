@@ -1,6 +1,13 @@
 (ns teet.contract.contract-partners-view
   (:require [clojure.string :as str]
             [herb.core :refer [<class] :as herb]
+            [teet.ui.icons :as icons]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.contract.contract-common :as contract-common]
+            [teet.contract.contract-style :as contract-style]
+            [teet.ui.material-ui :refer [Grid Divider]]
+            [teet.ui.typography :as typography]
+            [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [taoensso.timbre :as log]
             [teet.app-state :as app-state]
@@ -31,8 +38,17 @@
             [teet.ui.util :refer [mapc]]
             [teet.ui.validation :as validation]
             [teet.user.user-model :as user-model]
-            [teet.util.date :as date]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.format :as format]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.table :as table]
+            [teet.ui.file-upload :as file-upload]
+            [clojure.string :as str]
+            [teet.file.file-controller :as file-controller]
+            [teet.util.datomic :as du]
+            [taoensso.timbre :as log]
+            [teet.ui.date-picker :as date-picker]
+            [teet.util.date :as date]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
@@ -686,29 +702,36 @@
     [:div {:class (<class common-styles/margin-bottom 1)}
      [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
       (tr [:contract :partner :key-person-licenses])]
+
      [:div {:class (<class common-styles/margin-bottom 1)}
+
+      [:div {:class (<class common-styles/flex-row-space-between)}
+       [:div {:class (<class common-styles/flex-table-column-style 60 :flex-start 0 nil)}
+        [typography/BoldGrayText (tr [:fields :user-license/name])]]
+       [:div {:class (<class common-styles/flex-table-column-style 30 :flex-start 0 nil)}
+        [typography/BoldGrayText (tr [:fields :user-license/expiration-date])]]
+       [:div {:class (<class common-styles/flex-table-column-style 10 :flex-start 0 nil)}]]
+
       (mapc
        (fn [{:user-license/keys [name expiration-date link] :as license}]
          [:div {:id (str "user-license-" (:db/id license))
                 :class (<class common-styles/flex-row-space-between)}
-          [:div {:class (<class common-styles/flex-table-column-style 30)}
-           name]
+          [:div {:class (<class common-styles/flex-table-column-style 60)}
+           [common/Link {:href link} name]]
           [:div {:class (<class common-styles/flex-table-column-style 30)}
            (format/date expiration-date)]
-          [:div {:class (<class common-styles/flex-table-column-style 30)}
-           link]
           [:div {:class (<class common-styles/flex-table-column-style 10)}
            [form/form-modal-button
             {:form-component [edit-license-form e! (:db/id employee)]
              :form-value license
              :modal-title (tr [:contract :partner :edit-license-title])
-             :button-component [buttons/link-button {}
+             :button-component [buttons/link-button-with-icon {:icon [icons/content-create]}
                                 (tr [:buttons :edit])]}]]])
 
        ;; Show licenses in alphabetical order, removing expired if not
        ;; showing history
        (->> licenses
-            (sort-by :user-license/name)
+            (sort-by (comp str/lower-case :user-license/name))
             (remove (if @show-history?
                       (constantly false)
                       (fn [{exp :user-license/expiration-date}]
