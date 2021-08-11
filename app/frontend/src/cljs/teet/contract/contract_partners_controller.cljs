@@ -71,17 +71,14 @@
    :key-person.status/approved))
 
 (defn status-modified-string-maybe [status modification-meta]
-  (if-not (= :key-person.status/approval-requested status)
-    (log/debug "msm: not returning mod info")
-    (do
-      (log/debug "msm: returning mod info string")
-      (let [[time user] modification-meta]
-        [:span
-         " - "
-         (tr [:contract :partner :approval-requested-by]) " "
-         (user-model/user-name user) " "
-         (tr [:contract :partner :on]) " "
-         (format/date-time-with-seconds time)]))))
+  (when (= :key-person.status/approval-requested status)
+    (let [[time user] modification-meta]
+      [:span
+       " - "
+       (tr [:contract :partner :approval-requested-by]) " "
+       (user-model/user-name user) " "
+       (tr [:contract :partner :on]) " "
+       (format/date-time-with-seconds time)])))
 
 
 (extend-protocol t/Event
@@ -255,7 +252,6 @@
 
   ApproveOrReject
   (process-event [{:keys [employee-eid form close-event command success-message]} app]
-    (println form)
     (t/fx
      app
      {:tuck.effect/type :command!
