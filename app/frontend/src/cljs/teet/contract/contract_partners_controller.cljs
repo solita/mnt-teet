@@ -79,11 +79,9 @@
         [:span
          " - "
          (tr [:contract :partner :approval-requested-by]) " "
-         (user-model/user-name user)
-         (format/date-time-with-seconds time) " "
+         (user-model/user-name user) " "
          (tr [:contract :partner :on]) " "
-
-         ]))))
+         (format/date-time-with-seconds time)]))))
 
 
 (extend-protocol t/Event
