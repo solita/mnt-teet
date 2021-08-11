@@ -387,6 +387,17 @@
          boolean)
     false))
 
+(defn company-contract-employee-eid?
+  "Is the eid a company-contract-employee eid?"
+  [db eid]
+  (->> (d/q '[:find ?cce
+              :in $ ?cce
+              :where
+              [?cce :company-contract-employee/user]]
+            db eid)
+       ffirst
+       boolean))
+
 (defn get-user-for-company-contract-employee
   ""
   [db cce-id]

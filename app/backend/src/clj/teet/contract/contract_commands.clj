@@ -356,11 +356,12 @@
 
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"
-   :payload {employee-id :employee-id}
+   :payload {company-contract-employee-id :employee-id}
    :project-id nil
    :context {:keys [user db]}
    :authorization {:contracts/contract-editing {}}
-   :transact [{:db/id employee-id
+   :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
+   :transact [{:db/id company-contract-employee-id
                :company-contract-employee/key-person-status
                (merge {:key-person/status :key-person.status/approval-requested}
                       (meta-model/modification-meta user))}]})
@@ -372,7 +373,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre []
+   :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
                :company-contract-employee/key-person-status
                (merge {:key-person/status :key-person.status/approved}
@@ -387,7 +388,8 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre [(not-empty comment)]
+   :pre [(not-empty comment)
+         (contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
 
                :company-contract-employee/key-person-status
