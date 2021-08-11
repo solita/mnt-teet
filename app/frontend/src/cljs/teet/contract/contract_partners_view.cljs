@@ -1,13 +1,6 @@
 (ns teet.contract.contract-partners-view
   (:require [clojure.string :as str]
             [herb.core :refer [<class] :as herb]
-            [teet.ui.icons :as icons]
-            [teet.ui.text-field :refer [TextField]]
-            [teet.contract.contract-common :as contract-common]
-            [teet.contract.contract-style :as contract-style]
-            [teet.ui.material-ui :refer [Grid Divider]]
-            [teet.ui.typography :as typography]
-            [teet.ui.buttons :as buttons]
             [reagent.core :as r]
             [taoensso.timbre :as log]
             [teet.app-state :as app-state]
@@ -38,17 +31,8 @@
             [teet.ui.util :refer [mapc]]
             [teet.ui.validation :as validation]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]
-            [teet.ui.format :as format]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.table :as table]
-            [teet.ui.file-upload :as file-upload]
-            [clojure.string :as str]
-            [teet.file.file-controller :as file-controller]
-            [teet.util.datomic :as du]
-            [taoensso.timbre :as log]
-            [teet.ui.date-picker :as date-picker]
-            [teet.util.date :as date]))
+            [teet.util.date :as date]
+            [teet.util.datomic :as du]))
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
