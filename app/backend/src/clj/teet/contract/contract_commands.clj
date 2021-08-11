@@ -329,6 +329,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/manage-company-employees}
    :pre [;; Check license is new or belongs to user when editing
          (or (not (contains? license :db/id))
              (some #(= (:db/id license)
