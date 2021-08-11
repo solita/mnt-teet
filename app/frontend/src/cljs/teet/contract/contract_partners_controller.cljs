@@ -4,6 +4,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
             [teet.localization :refer [tr tr-enum]]
+            [teet.util.datomic :as du]
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defn- is-first-partner? [app]
@@ -53,6 +54,20 @@
                       close-event
                       :thk.contract/reject-key-person
                       "Rejected! Too bad..."))
+
+(defn contract-employee-status-matches? [emp status]
+  (=
+   (du/enum->kw (:key-person/status (:company-contract-employee/key-person-status emp)))
+   status))
+
+(defn contract-employee-rejected? [emp]
+  (contract-employee-status-matches? emp
+                                     :key-person.status/rejected))
+
+(defn contract-employee-approved? [emp]
+  (contract-employee-status-matches? emp
+   :key-person.status/approved))
+
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
