@@ -732,11 +732,12 @@
        (tr [:contract :partner (if @show-history?
                                  :hide-license-history
                                  :view-license-history)])]
-      [form/form-modal-button
-       {:form-component [edit-license-form e! (:db/id employee)]
-        :modal-title (tr [:contract :partner :add-license-title])
-        :button-component [buttons/button-secondary {:size :small}
-                           (tr [:contract :partner :add-license])]}]]]))
+      [authorization-check/when-authorized :thk.contract/save-license selected-partner
+       [form/form-modal-button
+        {:form-component [edit-license-form e! (:db/id employee)]
+         :modal-title (tr [:contract :partner :add-license-title])
+         :button-component [buttons/button-secondary {:size :small}
+                            (tr [:contract :partner :add-license])]}]]]]))
 
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
