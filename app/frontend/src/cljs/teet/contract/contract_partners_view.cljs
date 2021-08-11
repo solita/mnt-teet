@@ -691,24 +691,20 @@
      [:div {:class (<class common-styles/margin-bottom 1)}
 
       [:div {:class (<class common-styles/flex-row-space-between)}
-       [:div {:class (<class common-styles/flex-table-column-style 30 :flex-start 0 nil)}
+       [:div {:class (<class common-styles/flex-table-column-style 60 :flex-start 0 nil)}
         [typography/BoldGrayText (tr [:fields :user-license/name])]]
        [:div {:class (<class common-styles/flex-table-column-style 30 :flex-start 0 nil)}
         [typography/BoldGrayText (tr [:fields :user-license/expiration-date])]]
-       [:div {:class (<class common-styles/flex-table-column-style 30 :flex-start 0 nil)}
-        [typography/BoldGrayText (tr [:fields :user-license/link])]]
        [:div {:class (<class common-styles/flex-table-column-style 10 :flex-start 0 nil)}]]
 
       (mapc
        (fn [{:user-license/keys [name expiration-date link] :as license}]
          [:div {:id (str "user-license-" (:db/id license))
                 :class (<class common-styles/flex-row-space-between)}
-          [:div {:class (<class common-styles/flex-table-column-style 30)}
-           name]
+          [:div {:class (<class common-styles/flex-table-column-style 60)}
+           [common/Link {:href link} name]]
           [:div {:class (<class common-styles/flex-table-column-style 30)}
            (format/date expiration-date)]
-          [:div {:class (<class common-styles/flex-table-column-style 30)}
-           link]
           [:div {:class (<class common-styles/flex-table-column-style 10)}
            [form/form-modal-button
             {:form-component [edit-license-form e! (:db/id employee)]
