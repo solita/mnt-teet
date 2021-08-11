@@ -714,7 +714,7 @@
             {:form-component [edit-license-form e! (:db/id employee)]
              :form-value license
              :modal-title (tr [:contract :partner :edit-license-title])
-             :button-component [buttons/link-button {}
+             :button-component [buttons/link-button-with-icon {:icon [icons/content-create]}
                                 (tr [:buttons :edit])]}]]])
 
        ;; Show licenses in alphabetical order, removing expired if not
