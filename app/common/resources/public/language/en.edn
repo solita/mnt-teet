@@ -314,9 +314,11 @@
    :key-person-assigned "Key person assigned.",
    :add-license-title "Add license",
    :reject-person-button "Reject",
+   :approval-requested-by "Approval requested by",
    :change-status-text
    "Are you sure you want to change the person's status?",
    :key-person-submitted "Key person has been submitted for approval",
+   :on "on",
    :key-person-files "Certificates and documents",
    :edit-person "Edit person",
    :activate "Activate"},

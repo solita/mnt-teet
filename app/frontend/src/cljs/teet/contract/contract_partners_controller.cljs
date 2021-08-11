@@ -78,10 +78,12 @@
       (let [[time user] modification-meta]
         [:span
          " - "
-         (tr [:contract :partner :approval-requested-on]) " "
+         (tr [:contract :partner :approval-requested-by]) " "
+         (user-model/user-name user)
          (format/date-time-with-seconds time) " "
-         (tr [:contract :partner :by-user]) " "
-         (user-model/user-name user)]))))
+         (tr [:contract :partner :on]) " "
+
+         ]))))
 
 
 (extend-protocol t/Event
