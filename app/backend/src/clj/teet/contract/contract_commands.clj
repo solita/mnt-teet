@@ -379,7 +379,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre []
+   :pre [(not-empty comment)]
    :transact [{:db/id company-contract-employee-id
 
                :company-contract-employee/key-person-status {:key-person/status :key-person.status/rejected
