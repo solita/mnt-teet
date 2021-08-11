@@ -368,25 +368,26 @@
 (defcommand :thk.contract/approve-key-person
   {:doc "Approve key person being reviewed"
    :payload {company-contract-employee-id :employee-id
-             comment :company-contract-employee/key-person-comment}
+             comment :key-person/approval-comment}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :pre []
    :transact [{:db/id company-contract-employee-id
                :company-contract-employee/key-person-status
-               (merge{:key-person/status :key-person.status/approved
-                      :key-person/approval-comment comment}
+               (merge {:key-person/status :key-person.status/approved}
+                      (when (not-empty comment)
+                        {:key-person/approval-comment comment})
                      (meta-model/modification-meta user))}]})
 
 (defcommand :thk.contract/reject-key-person
   {:doc "Reject key person for review"
    :payload {company-contract-employee-id :employee-id
-             comment :company-contract-employee/key-person-comment}
+             comment :key-person/approval-comment}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :pre []
+   :pre [(not-empty comment)]
    :transact [{:db/id company-contract-employee-id
 
                :company-contract-employee/key-person-status

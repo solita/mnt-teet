@@ -48,14 +48,14 @@
   #(->ApproveOrReject employee-eid @form-atom
                       close-event
                       :thk.contract/approve-key-person
-                      "Yay! Approved key person"))
+                      (tr [:contract :employee :key-person-approved])))
 
 (defn reject-key-person [employee-eid close-event form-atom]
   #(->ApproveOrReject employee-eid
                       @form-atom
                       close-event
                       :thk.contract/reject-key-person
-                      "Rejected! Too bad..."))
+                      (tr [:contract :employee :key-person-rejected])))
 
 (defn contract-employee-status-matches? [emp status]
   (=

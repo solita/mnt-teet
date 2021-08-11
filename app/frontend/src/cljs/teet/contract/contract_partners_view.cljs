@@ -618,13 +618,14 @@
          (str "+ " (tr [:buttons :upload]))]]]]))
 
 (defn- approval-form
-  [e! employee-eid save-event close-event form-atom]
+  [e! employee-eid save-event required? close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
               :cancel close-event
               :save-event (save-event employee-eid close-event form-atom)}
-   ^{:attribute :company-contract-employee/key-person-comment}
+   ^{:attribute :key-person/approval-comment
+     :required? required?}
    [TextField {:multiline true}]])
 
 (defn approval-actions
@@ -632,14 +633,18 @@
   [:div {:class (<class contract-style/approval-actions-container-style)}
    (when-not (contract-partners-controller/contract-employee-approved? employee)
      [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
-                                               contract-partners-controller/approve-key-person]
+                                               contract-partners-controller/approve-key-person
+                                               false ;; comment not required
+                                               ]
                               :form-value {:employee-id (:db/id employee)}
                               :modal-title (tr [:contract :partner :approve-person-modal-title])
                               :button-component [buttons/button-green {:style {:margin-right "1rem"}}
                                                  (tr [:contract :partner :approve-person-button])]}])
    (when-not (contract-partners-controller/contract-employee-rejected? employee)
      [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
-                                               contract-partners-controller/reject-key-person]
+                                               contract-partners-controller/reject-key-person
+                                               true ;; comment required
+                                               ]
                               :form-value {:employee-id (:db/id employee)}
                               :modal-title (tr [:contract :partner :reject-person-modal-title])
                               :button-component [buttons/button-warning {}
