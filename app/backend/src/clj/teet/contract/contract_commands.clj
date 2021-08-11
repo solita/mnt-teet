@@ -346,10 +346,11 @@
        :company-contract-employee/attached-licenses license-id}
       (meta-model/with-creation-or-modification-meta
         user
-        (merge (select-keys license
-                            [:user-license/name
-                             :user-license/expiration-date
-                             :user-license/link])
+        (merge (cu/without-nils
+                (select-keys license
+                             [:user-license/name
+                              :user-license/expiration-date
+                              :user-license/link]))
                {:db/id license-id}))])})
 
 (defcommand :thk.contract/submit-key-person
