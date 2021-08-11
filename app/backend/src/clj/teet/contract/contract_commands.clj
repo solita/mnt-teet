@@ -177,9 +177,7 @@
                 {:db/id "new-company-contract-employee"
                  :company-contract-employee/active? true    ;; employees are active by default
                  :company-contract-employee/user (:company-contract-employee/user form-value)
-                 :company-contract-employee/role (mapv
-                                                   :db/id
-                                                   (:company-contract-employee/role form-value))}
+                 :company-contract-employee/role (mapv :db/ident (:company-contract-employee/role form-value))}
                 (meta-model/creation-meta user))
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
@@ -248,9 +246,7 @@
                                         {:db/id "new-company-contract-employee"
                                          :company-contract-employee/active? true ;; employees are active by default
                                          :company-contract-employee/user "new-employee-id"
-                                         :company-contract-employee/role (mapv
-                                                                           :db/id
-                                                                           (:company-contract-employee/role form-value))}
+                                         :company-contract-employee/role (mapv :db/ident (:company-contract-employee/role form-value))}
                                         (meta-model/creation-meta user))
                                       {:db/id company-contract-eid
                                        :company-contract/employees "new-company-contract-employee"}])]))]
@@ -271,49 +267,47 @@
         (not (personal-information-edited? edited-user form-value)))))
 
 (defcommand :thk.contract/edit-contract-employee
-            {:doc "Update existing contract employee"
-             :payload {form-value :form-value
-                       company-contract-eid :company-contract-eid}
-             :context {:keys [user db]}
-             :project-id nil
-             :authorization {:contracts/contract-editing {}}
-             :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]}
-            (let [roles-update (mapv
-                                 #(if (not (:db/id %))
-                                    (:db/id (company-db/get-employee-role db %))
-                                    (:db/id %))
-                                 (:company-contract-employee/role form-value))
-                  old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
-                  employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
-                                                               :user/email :db/id
-                                                               :user/id]))
-                  user-person-id (user-model/normalize-person-id (:user/person-id form-value))
-                  updated-user (merge
-                                 {:user/person-id user-person-id}
-                                 (if (not (nil? (:user/phone-number form-value)))
-                                       {:user/phone-number (:user/phone-number form-value)}
-                                       {:user/phone-number ""})
-                                 employee-fields
-                                 (meta-model/modification-meta user))
-                  company-contract-employee (company-db/find-company-contract-employee
-                                              db [:user/id (:user/id employee-fields)] company-contract-eid)
-                  tx-data (vec
-                            (concat
-                              [(list 'teet.user.user-tx/ensure-unique-email
-                                     (:user/email form-value)
-                                     [updated-user
-                                      (merge
-                                        {:db/id company-contract-employee
-                                         :company-contract-employee/active? true
-                                         :company-contract-employee/user [:user/id (:user/id employee-fields)]
-                                         :company-contract-employee/role roles-update}
-                                        (meta-model/modification-meta user))])]
-                              (for
-                                [old-role old-roles
-                                 :when (not (some #(= old-role %) roles-update))]
-                                [:db/retract company-contract-employee :company-contract-employee/role old-role])))
-                  tempids (:tempids (tx tx-data))]
-              tempids))
+  {:doc "Update existing contract employee"
+   :payload {form-value :form-value
+             company-contract-eid :company-contract-eid}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]}
+  (let [roles-update (mapv first
+                           (d/q '[:find ?id :where [?id :db/ident ?ident] :in $ [?ident ...]]
+                                db (mapv :db/ident (:company-contract-employee/role form-value))))
+        old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
+        employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
+                                                     :user/email :db/id
+                                                     :user/id]))
+        user-person-id (user-model/normalize-person-id (:user/person-id form-value))
+        updated-user (merge
+                      {:user/person-id user-person-id}
+                      (if (not (nil? (:user/phone-number form-value)))
+                        {:user/phone-number (:user/phone-number form-value)}
+                        {:user/phone-number ""})
+                      employee-fields
+                      (meta-model/modification-meta user))
+        company-contract-employee (company-db/find-company-contract-employee
+                                   db [:user/id (:user/id employee-fields)] company-contract-eid)
+        tx-data (vec
+                 (concat
+                  [(list 'teet.user.user-tx/ensure-unique-email
+                         (:user/email form-value)
+                         [updated-user
+                          (merge
+                           {:db/id company-contract-employee
+                            :company-contract-employee/active? true
+                            :company-contract-employee/user [:user/id (:user/id employee-fields)]
+                            :company-contract-employee/role roles-update}
+                           (meta-model/modification-meta user))])]
+                  (for
+                      [old-role old-roles
+                       :when (not (some #(= old-role %) roles-update))]
+                      [:db/retract company-contract-employee :company-contract-employee/role old-role])))
+        tempids (:tempids (tx tx-data))]
+    tempids))
 
 (defcommand :thk.contract/remove-file-link
   {:doc "Remove a file link between user file and employee"
