@@ -50,6 +50,10 @@
   ;; contracts
   :thk.contract/procurement-id+procurement-part-id {:name "contracts"
                                                     :include [:thk.contract/*]}
+
+  :company-contract/company {:name "company_contract"}
+  :company-contract-employee/user {:name "company_contract_employee"}
+
   }
 
  ;; Joins are not needed, but make the tables "wide" for
