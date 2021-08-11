@@ -720,7 +720,7 @@
        ;; Show licenses in alphabetical order, removing expired if not
        ;; showing history
        (->> licenses
-            (sort-by :user-license/name)
+            (sort-by (comp str/lower-case :user-license/name))
             (remove (if @show-history?
                       (constantly false)
                       (fn [{exp :user-license/expiration-date}]
