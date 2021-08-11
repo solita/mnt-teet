@@ -6,7 +6,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.contract.contract-common :as contract-common]
             [teet.contract.contract-style :as contract-style]
-            [teet.ui.material-ui :refer [Grid Checkbox Divider]]
+            [teet.ui.material-ui :refer [Grid Divider]]
             [teet.ui.typography :as typography]
             [teet.ui.buttons :as buttons]
             [reagent.core :as r]
@@ -26,7 +26,6 @@
             [teet.ui.table :as table]
             [teet.ui.file-upload :as file-upload]
             [clojure.string :as str]
-            [re-svg-icons.feather-icons :as fi]
             [teet.file.file-controller :as file-controller]
             [teet.util.datomic :as du]
             [taoensso.timbre :as log]
@@ -633,7 +632,7 @@
                :on-change-event (form/update-atom-event form-atom merge)
                :cancel-event close-event
                :spec :meeting/review-form ;; we can reuse the meeting review form spec for now
-               :save-event #(contract-partners-controller/->ApproveOrReject
+               :save-event :FIXME #_(contract-partners-controller/->ApproveOrReject
                              employee-eid
                              @form-atom
                              close-event)}
@@ -667,46 +666,6 @@
    (when comment
        [:div.person-appproval-comment {:class (<class common-styles/flex-table-column-style 100 :space-between)} comment])])
 
-(defn key-person-assignment-section
-  [e! _ selected-partner employee]
-  (let [status (du/enum->kw
-                (:company-contract-employee/key-person-status employee))
-        comment "test comment"
-        ;;comment (:company-contract-employee/key-person-status-comment employee)
-        ]
-    [:div {:class (<class contract-style/personnel-files-section-style)}
-     [:div {:class (<class contract-style/personnel-files-section-header-style)}
-      [:div {:class (<class contract-style/personnel-files-column-style)}
-       [:h2 (tr [:contract :employee :key-person-approvals])]
-       [key-person-files e! employee]
-       [:div {:class (<class contract-style/personnel-files-section-header-style)}] ;; TODO: Licenses section here
-       [:div
-        [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
-         [:div
-          [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
-           [key-person-approvals-status status comment]
-           [approval-actions employee]]
-
-          (if (= status :key-person.status/assigned)
-            [buttons/button-secondary
-             {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
-              :underlined? :true
-              :confirm-button-text (tr [:contract :delete-button-text])
-              :cancel-button-text (tr [:contract :cancel-button-text])
-              :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
-              :modal-text (tr [:contract :confirm-remove-key-person-text])}
-             (tr [:buttons :submit-key-person])])]]]]]
-     [authorization-check/when-authorized
-      :thk.contract/add-contract-employee selected-partner
-      [buttons/delete-button-with-confirm
-       {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
-        :underlined? :true
-        :confirm-button-text (tr [:contract :delete-button-text])
-        :cancel-button-text (tr [:contract :cancel-button-text])
-        :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
-        :modal-text (tr [:contract :confirm-remove-key-person-text])}
-       (tr [:buttons :remove-key-person-assignment])]]]))
-
 (defn- edit-license-form [e! employee-id close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
@@ -728,29 +687,36 @@
     [:div {:class (<class common-styles/margin-bottom 1)}
      [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
       (tr [:contract :partner :key-person-licenses])]
+
      [:div {:class (<class common-styles/margin-bottom 1)}
+
+      [:div {:class (<class common-styles/flex-row-space-between)}
+       [:div {:class (<class common-styles/flex-table-column-style 60 :flex-start 0 nil)}
+        [typography/BoldGrayText (tr [:fields :user-license/name])]]
+       [:div {:class (<class common-styles/flex-table-column-style 30 :flex-start 0 nil)}
+        [typography/BoldGrayText (tr [:fields :user-license/expiration-date])]]
+       [:div {:class (<class common-styles/flex-table-column-style 10 :flex-start 0 nil)}]]
+
       (mapc
        (fn [{:user-license/keys [name expiration-date link] :as license}]
          [:div {:id (str "user-license-" (:db/id license))
                 :class (<class common-styles/flex-row-space-between)}
-          [:div {:class (<class common-styles/flex-table-column-style 30)}
-           name]
+          [:div {:class (<class common-styles/flex-table-column-style 60)}
+           [common/Link {:href link} name]]
           [:div {:class (<class common-styles/flex-table-column-style 30)}
            (format/date expiration-date)]
-          [:div {:class (<class common-styles/flex-table-column-style 30)}
-           link]
           [:div {:class (<class common-styles/flex-table-column-style 10)}
            [form/form-modal-button
             {:form-component [edit-license-form e! (:db/id employee)]
              :form-value license
              :modal-title (tr [:contract :partner :edit-license-title])
-             :button-component [buttons/link-button {}
+             :button-component [buttons/link-button-with-icon {:icon [icons/content-create]}
                                 (tr [:buttons :edit])]}]]])
 
        ;; Show licenses in alphabetical order, removing expired if not
        ;; showing history
        (->> licenses
-            (sort-by :user-license/name)
+            (sort-by (comp str/lower-case :user-license/name))
             (remove (if @show-history?
                       (constantly false)
                       (fn [{exp :user-license/expiration-date}]
