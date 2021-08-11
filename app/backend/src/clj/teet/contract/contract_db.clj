@@ -197,6 +197,11 @@
                                                     :file/s3-key
                                                     :meta/created-at
                                                     {:meta/creator [:db/id :user/family-name :user/given-name]}]}
+        {:company-contract-employee/key-person-status [:db/id
+                                                       :key-person/status
+                                                       :key-person/approval-comment
+                                                       :meta/modified-at
+                                                       {:meta/modifier [:db/id :user/family-name :user/given-name]}]}
         {:company-contract-employee/attached-licenses
          [:db/id
           :user-license/name
