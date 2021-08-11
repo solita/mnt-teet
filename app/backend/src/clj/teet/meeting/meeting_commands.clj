@@ -109,7 +109,6 @@
    :payload {:keys [activity-eid]
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
-   :authorization {:meeting/add-meeting {}}
    :transact [(list 'teet.meeting.meeting-tx/create-meeting
                     activity-eid
                     (merge (select-keys form-data [:meeting/title :meeting/location

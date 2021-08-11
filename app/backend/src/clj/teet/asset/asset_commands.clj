@@ -21,7 +21,6 @@
    :payload {project-id :project-id asset :asset}
    :config {owner-code [:asset :default-owner-code]}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}
    :pre [^{:error :asset-does-not-belong-to-project}
          (or (string? (:db/id asset))
              (= project-id (:asset/project (du/entity adb (:db/id asset)))))
@@ -44,12 +43,11 @@
     (asset-geometry/update-asset! db-after sql-conn (:asset/oid asset))
     asset))
 
-(defcommand :asset/delete-component
+(defcommand  :asset/delete-component
   {:doc "Delete a component in an existing asset."
    :context {adb :asset-db}
    :payload {project-id :project-id component-id :db/id}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/delete-cost-items {}}
    :pre [(= project-id (asset-db/component-project adb component-id))
          ^{:error :boq-is-locked}
          (boq-unlocked? adb project-id)]
@@ -63,7 +61,6 @@
              sql-conn :sql-conn}
    :payload {:keys [project-id parent-id component]}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}
    :pre [(or (string? (:db/id component))
              (= project-id (asset-db/component-project adb (:db/id component))))
          ^{:error :boq-is-locked}
@@ -90,7 +87,6 @@
    :context {adb :asset-db}
    :payload {:keys [project-id parent-id material]}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}
    :pre [(or (string? (:db/id material))
              (= project-id (asset-db/material-project adb (:db/id material))))
          ^{:error :boq-is-locked}
@@ -114,7 +110,6 @@
    :context {adb :asset-db}
    :payload {project-id :project-id material-id :db/id}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/delete-cost-items {}}
    :pre [(= project-id (asset-db/material-project adb material-id))
          ^{:error :boq-is-locked}
          (boq-unlocked? adb project-id)]
@@ -136,7 +131,6 @@
    :context {adb :asset-db}
    :payload {:keys [project-id cost-group price]}
    :project-id [:thk.project/id project-id]
-   :authorization {:cost-items/edit-cost-items {}}
    :pre [^{:error :cost-group-price-does-not-belong-to-project}
          (or (nil? (:db/id cost-group))
              (= project-id

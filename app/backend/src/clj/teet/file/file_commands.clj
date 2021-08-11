@@ -21,7 +21,8 @@
             [teet.integration.integration-s3 :as integration-s3]
             [teet.integration.integration-email :as integration-email]
             [teet.localization :refer [tr tr-enum with-language]]
-            [teet.util.url :as url-util])
+            [teet.util.url :as url-util]
+            [teet.authorization.authorization-core :refer [special-authorization]])
   (:import (java.util UUID)))
 
 (defn- new-file-key [{name :file/name}]
@@ -59,7 +60,6 @@
    ;; TODO: Pass project id to check project authz
    :payload {:keys [file project-id attach-to]}
    :project-id project-id
-   :authorization {:project/upload-comment-attachment {}}
    :pre [^{:error :comment-attachment-image-only}
          (or attach-to
              (file-model/image? file))
@@ -92,9 +92,12 @@
    :payload {:keys [file employee-id]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/manage-company-employees
+                            :company (get-in
+                                       (du/entity db employee-id)
+                                       [:company-contract/_employees :company-contract/company :db/id])}
    :pre {}}
   (log/debug "upload-user-attachment: employee " employee-id)
-
   (let [key (new-file-key file)
         res (tx [(merge (select-keys file file-keys)
                           {:db/id "new-file"
@@ -179,9 +182,7 @@
    :pre [^{:error :invalid-previous-file}
          (file-belong-to-task? db task-id previous-version-id)
          ^{:error :replaced-file-not-latest}
-         (= (latest-file-version-id db previous-version-id) previous-version-id)]
-   :authorization {:document/upload-document {:db/id task-id
-                                              :link :task/assignee}}}
+         (= (latest-file-version-id db previous-version-id) previous-version-id)]}
   (let [{description :description} (filename-metadata/name->description-and-extension (:file/name (du/entity db previous-version-id)))]
     (if-let [error (file-model/validate-file (merge file
                                                     {:file/description description}))]
@@ -233,9 +234,7 @@
          (or (nil? previous-version-id)
              (file-belong-to-task? db task-id previous-version-id))
          ^{:error :invalid-task-status}
-         (task-model/can-submit? (d/pull db [:task/status] task-id))]
-   :authorization {:document/upload-document {:db/id task-id
-                                              :link :task/assignee}}}
+         (task-model/can-submit? (d/pull db [:task/status] task-id))]}
   (if-let [error (file-model/validate-file file)]
     (throw (ex-info "invalid file"
                     error))
@@ -278,15 +277,28 @@
           (log/warn e "Unable to create S3 presigned URL")
           (throw e))))))
 
+(defn file-author
+  [db user entity-id]
+  (= (get-in (d/pull db [:meta/creator] entity-id)
+             [:meta/creator :db/id])
+     (:db/id user)))
+
+(defmethod special-authorization :file/delete [{:keys [db user entity-id]}]
+  (file-author db user entity-id))
+
 (defcommand :file/delete
   {:doc "Delete file and all its versions."
    :context {:keys [user db]}
    :payload {:keys [file-id]}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
+   :contract-authorization {:action :document/delete-files
+                            :target (get-in
+                                      (du/entity db file-id)
+                                      [:task/_files :db/id])}
    :transact (let [file-delete-tx (vec
-                              (for [version-id (file-db/file-versions db file-id)]
-                                (deletion-tx user version-id)))]
+                                    (for [version-id (file-db/file-versions db file-id)]
+                                      (deletion-tx user version-id)))]
                (maybe-vektorio-delete! db file-id)
                file-delete-tx)})
 
@@ -295,7 +307,6 @@
    :context {:keys [user db]}
    :payload {:keys [file-id]}
    :project-id (project-db/file-project-id db file-id)
-   :authorization {:document/view-document {:db/id file-id}}
    :transact [(let [user-id (->> user user-model/user-ref (du/entity db) :db/id)]
                 {:db/id "file-seen"
                  :file-seen/file file-id
@@ -315,7 +326,6 @@
    :context {:keys [conn user db]}
    :payload {id :db/id :as file}
    :project-id (project-db/file-project-id db id)
-   :authorization {:document/overwrite-document {:db/id id}}
    :pre [^{:error :description-too-long}
          (-> file
              :file/name
@@ -368,7 +378,6 @@
    :context {:keys [user db]}
    :payload {:keys [task-id language]}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:project/read-info {}}
    :config {export-bucket [:document-storage :export-bucket-name]}
    :pre [^{:error :configuration-missing}
          (some? export-bucket)]}
@@ -386,7 +395,6 @@
    :context {:keys [user db]}
    :payload {:keys [activity-id language]}
    :project-id (project-db/activity-project-id db activity-id)
-   :authorization {:project/read-info {}}
    :config {export-bucket [:document-storage :export-bucket-name]}
    :pre [^{:error :configuration-missing}
          (some? export-bucket)]}

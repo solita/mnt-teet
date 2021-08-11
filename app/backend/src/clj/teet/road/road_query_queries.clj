@@ -154,9 +154,7 @@
   {:doc "Fetch all road objects intersecting with project search area"
    :context {db :db}
    :args {:thk.project/keys [id]}
-   :project-id [:thk.project/id id]
-   :authorization {:project/read-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner}}}
+   :project-id [:thk.project/id id]}
   (let [integration-id (:integration/id (du/entity db [:thk.project/id id]))
         ctx (environment/config-map {:api-url [:api-url]
                                      :api-secret [:auth :jwt-secret]

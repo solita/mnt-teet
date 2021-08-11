@@ -46,7 +46,7 @@
           search :search}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contracts/add-existing-teet-users-to-contract
+   :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
                                        (du/entity db company-contract-eid)
                                        [:company-contract/company :db/id])}}

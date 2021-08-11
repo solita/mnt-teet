@@ -222,10 +222,10 @@
                                                                          ~contract-authorization
                                                                          {:db ~-db
                                                                           :user ~-user})))
-                             ~(when (and (= request-type :query)
-                                         (nil? contract-authorization)
+                             ~(when (and (nil? contract-authorization)
+                                         (nil? authorization)
                                          (some? project-id))
-                                `(authorization/project-read-access? ~-db ~-user ~project-id))))
+                                `(authorization/general-project-access? ~-db ~-user ~project-id))))
                        (log/warn "Failed to authorize " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
                                        {:status 403

@@ -16,8 +16,7 @@
    :args {project-id :thk.project/id
           filters :filters
           :as args}
-   :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/view-cooperation-page {}}}
+   :project-id [:thk.project/id project-id]}
   (let [p [:thk.project/id project-id]]
     (meta-query/without-deleted
      db
@@ -30,8 +29,7 @@
    :context {:keys [db user]}
    :args {project-id :thk.project/id
           teet-id :teet/id :as args}
-   :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/view-cooperation-page {}}}
+   :project-id [:thk.project/id project-id]}
   (let [p [:thk.project/id project-id]
         tp-id (cooperation-db/third-party-by-teet-id db teet-id)]
     (meta-query/without-deleted
@@ -48,8 +46,7 @@
    :args {project-id :thk.project/id
           third-party-teet-id :third-party-teet-id
           application-teet-id :application-teet-id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/view-cooperation-page {}}}
+   :project-id [:thk.project/id project-id]}
   (let [p [:thk.project/id project-id]
         tp-id (cooperation-db/third-party-by-teet-id db third-party-teet-id)
         app-id (cooperation-db/application-by-teet-id db application-teet-id)]
@@ -72,8 +69,7 @@
   {:doc "Fetch summary table as HTML"
    :context {:keys [db user]}
    :args {:cooperation.application/keys [activity type] :as args}
-   :project-id (project-db/activity-project-id db activity)
-   :authorization {:cooperation/view-cooperation-page {}}}
+   :project-id (project-db/activity-project-id db activity)}
   ^{:format :raw}
   {:status 200
    :headers {"Content-Type" "text/html; charset=UTF-8"}

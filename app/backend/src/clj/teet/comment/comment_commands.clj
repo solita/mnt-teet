@@ -12,7 +12,8 @@
             [teet.permission.permission-db :as permission-db]
             [teet.notification.notification-db :as notification-db]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du])
+            [teet.util.datomic :as du]
+            [teet.authorization.authorization-core :refer [special-authorization]])
   (:import (java.util Date)))
 
 (defn- validate-files
@@ -168,7 +169,6 @@
    :context {:keys [db user]}
    :payload {:keys [entity-id entity-type comment files visibility track?] :as payload}
    :project-id (project-db/entity-project-id db entity-type entity-id)
-   :authorization {:project/write-comments {:db/id entity-id}}
    :pre [(valid-visibility-for-user? user
                                      (project-db/entity-project-id db entity-type entity-id)                                                                  {:meta/creator {:db/id (:db/id user)}}
                                      visibility)]
@@ -251,6 +251,15 @@
                     [:db/add
                      comment-id :comment/files id-to-add])))))
 
+(defn comment-author?
+  [db user entity-id]
+  (= (get-in (d/pull db [:meta/creator] entity-id)
+             [:meta/creator :db/id])
+     (:db/id user)))
+
+(defmethod special-authorization :comment/update [{:keys [db user entity-id]}]
+  (comment-author? db user entity-id))
+
 (defcommand :comment/update
   {:doc "Update existing comment"
    :context {:keys [db user]}
@@ -258,10 +267,11 @@
              visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
-   :pre [(valid-visibility-for-user? user               ;; TODO fix for owner estate and unit comments
-                                     (project-db/comment-project-id db comment-id)
-                                     (du/entity db comment-id)
-                                     visibility)]
+   :pre [(valid-visibility-for-user?
+           user
+           (project-db/comment-project-id db comment-id)
+           (du/entity db comment-id)
+           visibility)]
    :transact
    (let [incoming-mentions (user-uuids->ids db (extract-mentions comment))
          old-mentions (into #{}
@@ -287,6 +297,9 @@
                         new-mentions)
                    (for [removed-mention un-mentioned]
                      [:db/retract comment-id :comment/mentions removed-mention]))))})
+
+(defmethod special-authorization :comment/delete-comment [{:keys [db user entity-id]}]
+  (comment-author? db user entity-id))
 
 (defcommand :comment/delete-comment
   {:doc "Delete existing comment"
@@ -333,7 +346,6 @@
    :payload {entity-id :eid
              entity-type :for}
    :project-id (project-db/entity-project-id db entity-type entity-id)
-   :authorization {:project/read-comments {:db/id (project-db/entity-project-id db entity-type entity-id)}}
    :transact
    (let [resolved-entity (:db/id (du/entity db entity-id))
          user-ref (user-model/user-ref user)]

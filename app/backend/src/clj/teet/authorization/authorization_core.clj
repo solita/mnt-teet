@@ -14,7 +14,7 @@
                    slurp
                    read-string)))
 
-(defn project-read-access?
+(defn general-project-access?
   [db user project-id]
   (let [user-ref (user-model/user-ref user)
         user-global-roles (user-db/users-valid-global-permissions db user-ref)
@@ -23,32 +23,42 @@
         seq
         boolean)))
 
+(defmulti special-authorization
+  :action)
+
+(defmethod special-authorization
+  :default
+  [_]
+  false)
+
 (defn authorized-for-action?
-  "Check rights either based on the target or company or contract
+  "Check rights either based on the target, company or contract
   Given either company or a target find if the user has the right.
-  If neither is given only checks for global permissions"
-  [{:keys [db user action target company contract] :as opts}]
+  If neither is given only checks for global permissions
+  Entity option is only checked in the special-authorization multimethod"
+  [{:keys [db user action target company contract _entity-id] :as opts}]
   {:pre [(and db (keyword? action) (action @authorization-matrix))
          (<= (count (select-keys opts [target company contract]))
              1)]}
   (if-not (environment/feature-enabled? :contract-partners)
     false
-    (let [authorized-roles (action @authorization-matrix)
-          user-ref (user-model/user-ref user)
-          user-global-roles (->> (user-db/users-valid-global-permissions db user-ref)
-                                 (mapv :permission/role)
-                                 set)
-          specific-roles
-          (cond target
-                (authorization-db/user-roles-for-target db user-ref target)
-                company
-                (authorization-db/user-roles-for-company db user-ref company)
-                contract
-                (authorization-db/user-roles-for-contract db user-ref contract)
-                :else
-                nil)
-          roles (set/union user-global-roles specific-roles)]
-      (-> (set/intersection authorized-roles roles)
-          seq
-          boolean))))
+    (or (special-authorization opts)
+        (let [authorized-roles (action @authorization-matrix)
+              user-ref (user-model/user-ref user)
+              user-global-roles (->> (user-db/users-valid-global-permissions db user-ref)
+                                     (mapv :permission/role)
+                                     set)
+              specific-roles
+              (cond target
+                    (authorization-db/user-roles-for-target db user-ref target)
+                    company
+                    (authorization-db/user-roles-for-company db user-ref company)
+                    contract
+                    (authorization-db/user-roles-for-contract db user-ref contract)
+                    :else
+                    nil)
+              roles (set/union user-global-roles specific-roles)]
+          (-> (set/intersection authorized-roles roles)
+              seq
+              boolean)))))
 

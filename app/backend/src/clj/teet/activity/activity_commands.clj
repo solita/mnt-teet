@@ -128,6 +128,8 @@
    :project-id (project-db/activity-project-id db id)
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id id}}
+   :contract-authorization {:action :activity/edit-activity
+                            :target id}
    :pre [^{:error :invalid-tasks}
          (let [activity-name (-> (du/entity db id) :activity/name :db/ident)]
            (task-db/valid-tasks? db activity-name tasks-to-add))
@@ -170,6 +172,8 @@
    :payload {:keys [activity]}
    :project-id (project-db/activity-project-id db (:db/id activity))
    :authorization {:activity/edit-activity {:db/id (:db/id activity)}}
+   :contract-authorization {:action :activity/edit-activity
+                            :target (:db/id activity)}
    :pre [^{:error :invalid-activity-dates}
          (valid-activity-dates? db
                                 (activity-db/lifecycle-id-for-activity-id db (:db/id activity))
@@ -200,6 +204,7 @@
    :payload {activity-id :db/id}
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
+   :contract-authorization {:action :activity/delete-activity}
    :transact [(list 'teet.activity.activity-tx/delete-activity user activity-id)]})
 
 
@@ -216,6 +221,7 @@
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:task/submit-results {:eid activity-id
                                          :link :activity/manager}}
+   :contract-authorization {:action :activity/review-activity}
    :pre [(check-tasks-are-complete db activity-id)]
    :transact [(merge
                 {:db/id activity-id

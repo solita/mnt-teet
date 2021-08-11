@@ -24,6 +24,7 @@
              land-unit-id :land-unit-id}
    :project-id project-id
    :authorization {:land/save-land-owner-opinions {}}
+   :contract-authorization {:action :land/manage-land-owner-opinions}
    :pre [(linked-activity-belongs-to-project db (get-in form-data [:land-owner-opinion/activity :db/id]) project-id)]
    :transact
    (db-api-large-text/store-large-text!
@@ -47,4 +48,5 @@
    :payload {opinion-id :db/id}
    :project-id (owner-opinion-db/get-project-id db opinion-id)
    :authorization {:land/delete-land-owner-opinions {}}
+   :contract-authorization {:action :land/manage-land-owner-opinions}
    :transact [(meta-model/deletion-tx user opinion-id)]})

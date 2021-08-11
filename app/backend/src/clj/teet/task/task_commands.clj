@@ -227,8 +227,6 @@
    :payload {task-id :task-id
              part-name :part-name}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:document/upload-document {:db/id task-id
-                                              :link :task/assignee}}
    :transact [(list 'teet.file.file-tx/create-task-file-part
                     user task-id part-name)]})
 
