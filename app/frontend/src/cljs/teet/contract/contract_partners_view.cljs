@@ -750,7 +750,6 @@
 (defn- submit-key-person-button [e! employee]
   [buttons/button-secondary
    {:onClick (e! contract-partners-controller/->SubmitKeyPerson (:db/id employee))
-    :underlined? :true
     :confirm-button-text (tr [:contract :delete-button-text])
     :cancel-button-text (tr [:contract :cancel-button-text])
     :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
@@ -771,13 +770,12 @@
      [key-person-licenses e! employee]
 
      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
-      [:div
-       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
-        [key-person-approvals-status status comment modification-meta]
-        [:div {:class (<class contract-style/key-person-assignment-header)}
-         (when (= status :key-person.status/assigned)
-           [submit-key-person-button e! employee])
-         [approval-actions e! employee]]]]]]))
+      [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
+       [key-person-approvals-status status comment modification-meta]
+       [:div {:class (<class contract-style/key-person-assignment-header)}
+        (when (#{:key-person.status/assigned :key-person.status/rejected} status)
+          [submit-key-person-button e! employee])
+        [approval-actions e! employee]]]]]))
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
