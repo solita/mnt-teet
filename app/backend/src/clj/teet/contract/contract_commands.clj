@@ -206,7 +206,9 @@
           user-licenses :user/licenses} (d/pull db '[:user/files :user/licenses] user-id)]
 
      [(merge {:db/id employee-id
-              :company-contract-employee/key-person-status {:key-person/status :key-person.status/assigned}
+              :company-contract-employee/key-person-status
+              (merge {:key-person/status :key-person.status/assigned}
+                     (meta-model/modification-meta user))
               :company-contract-employee/key-person? key-person?}
              (when (and key-person? (seq user-files))
                {:company-contract-employee/attached-files (mapv :db/id user-files)})
@@ -356,9 +358,12 @@
   {:doc "Submit key person for review"
    :payload {employee-id :employee-id}
    :project-id nil
+   :context {:keys [user db]}
    :authorization {:contracts/contract-editing {}}
    :transact [{:db/id employee-id
-               :company-contract-employee/key-person-status {:key-person/status :key-person.status/approval-requested}}]})
+               :company-contract-employee/key-person-status
+               (merge {:key-person/status :key-person.status/approval-requested}
+                      (meta-model/modification-meta user))}]})
 
 (defcommand :thk.contract/approve-key-person
   {:doc "Approve key person being reviewed"
@@ -369,8 +374,10 @@
    :authorization {:contracts/contract-editing {}}
    :pre []
    :transact [{:db/id company-contract-employee-id
-               :company-contract-employee/key-person-status {:key-person/status :key-person.status/approved
-                                                             :key-person/approval-comment comment}}]})
+               :company-contract-employee/key-person-status
+               (merge{:key-person/status :key-person.status/approved
+                      :key-person/approval-comment comment}
+                     (meta-model/modification-meta user))}]})
 
 (defcommand :thk.contract/reject-key-person
   {:doc "Reject key person for review"
@@ -382,5 +389,8 @@
    :pre []
    :transact [{:db/id company-contract-employee-id
 
-               :company-contract-employee/key-person-status {:key-person/status :key-person.status/rejected
-                                                             :key-person/approval-comment comment}}]})
+               :company-contract-employee/key-person-status
+               (merge
+                {:key-person/status :key-person.status/rejected
+                 :key-person/approval-comment comment}
+                (meta-model/modification-meta user))}]})

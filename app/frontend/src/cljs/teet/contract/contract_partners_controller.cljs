@@ -3,6 +3,8 @@
             tuck.effect
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
+            [teet.user.user-model :as user-model]
+            [teet.ui.format :as format]
             [teet.localization :refer [tr tr-enum]]
             [teet.util.datomic :as du]
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
@@ -67,6 +69,19 @@
 (defn contract-employee-approved? [emp]
   (contract-employee-status-matches? emp
    :key-person.status/approved))
+
+(defn status-modified-string-maybe [status modification-meta]
+  (if-not (= :key-person.status/approval-requested status)
+    (log/debug "msm: not returning mod info")
+    (do
+      (log/debug "msm: returning mod info string")
+      (let [[time user] modification-meta]
+        [:span
+         " - "
+         (tr [:contract :partner :approval-requested-on]) " "
+         (format/date-time-with-seconds time) " "
+         (tr [:contract :partner :by-user]) " "
+         (user-model/user-name user)]))))
 
 
 (extend-protocol t/Event

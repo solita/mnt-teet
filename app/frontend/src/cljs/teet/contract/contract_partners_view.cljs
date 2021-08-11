@@ -645,7 +645,7 @@
                               :button-component [buttons/button-warning {}
                                                  (tr [:contract :partner :reject-person-button])]}])])
 
-(defn key-person-approvals-status [status comment]
+(defn key-person-approvals-status [status comment modification-meta]
   [:div
    [:div.person-appproval {:class (<class common-styles/flex-row)}
     [:div.person-appproval-approver {:class (<class common-styles/flex-table-column-style 30)}
@@ -654,7 +654,9 @@
       [tr [:contract :partner :tram-approver]]]]
     [:div.person-appproval-status {:class (<class common-styles/flex-table-column-style 70 :space-between)}
      [key-person-icon status]
-     (tr-enum status)]]
+     (tr-enum status)
+     ;; modification time shown when status is approval-requested
+     (contract-partners-controller/status-modified-string-maybe status modification-meta)]]
    (when comment
      [:div.person-appproval-comment {:class (<class common-styles/flex-table-column-style 100 :space-between)} comment])])
 
@@ -747,7 +749,8 @@
   [e! _ selected-partner employee]
   (let [status-entity (:company-contract-employee/key-person-status employee)
         status (du/enum->kw (:key-person/status status-entity))
-        comment (:key-person/approval-comment status-entity)]
+        comment (:key-person/approval-comment status-entity)
+        modification-meta [(:meta/modified-at status-entity) (:meta/modifier status-entity)]]
     [:div {:class ""}
      [:div {:class (<class contract-style/key-person-assignment-header)}
       [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
@@ -758,7 +761,7 @@
      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
       [:div
        [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
-        [key-person-approvals-status status comment]
+        [key-person-approvals-status status comment modification-meta]
         [:div {:class (<class contract-style/key-person-assignment-header)}
          (when (= status :key-person.status/assigned)
            [submit-key-person-button e! employee])
