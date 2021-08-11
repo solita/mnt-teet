@@ -718,8 +718,8 @@
       [form/footer2]]]))
 
 (defn some-submittable-task?
-  [task]
   "Check if the given task is not empty and doesn't have :error-message"
+  [task]
   (and (some? task)
     (empty? (:error-message task))))
 
