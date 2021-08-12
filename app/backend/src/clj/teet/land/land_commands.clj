@@ -23,6 +23,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:land/create-land-acquisition {:eid [:thk.project/id project-id]
                                                   :link :thk.project/owner}} ;; TODO needs discussion
+   :contract-authorization {:action :land/manage-land-acquisitions}
    :transact
    [(cu/without-nils
       (merge {:db/id "new land-purchase"
@@ -63,6 +64,7 @@
    :pre [(land-acquisition-belongs-to-project? db [:thk.project/id project-id] id)]
    :authorization {:land/create-land-acquisition {:eid [:thk.project/id project-id]
                                                   :link :thk.project/owner}}
+   :contract-authorization {:action :land/manage-land-acquisitions}
    :transact
    [(cu/without-nils
       (merge {:db/id id
@@ -165,6 +167,7 @@
    :spec :land/estate-procedure
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
+   :contract-authorization {:action :land/manage-land-acquisitions}
    :pre [(empty? (du/db-ids payload))
          (nil? (:estate-procedure/removed-ids payload))]
    :transact (estate-procedure-tx payload user)})
@@ -186,6 +189,7 @@
    :spec :land/estate-procedure
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
+   :contract-authorization {:action :land/manage-land-acquisitions}
    :pre [(procedure-contains-ids? db [:thk.project/id id] procedure-id removed-ids)
          (du/no-new-db-ids?
            (land-db/project-estate-procedure-by-id
@@ -200,6 +204,7 @@
    :project-id [:thk.project/id id]
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
+   :contract-authorization {:action :land/manage-land-acquisitions}
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
             xroad-subsystem [:xroad :kr-subsystem-id]

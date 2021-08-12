@@ -85,9 +85,7 @@ Then it will query X-road for the estate information."
             xroad-url [:xroad :query-url]
             xroad-subsystem [:xroad :kr-subsystem-id]
             api-url [:api-url]
-            api-secret [:auth :jwt-secret]}
-   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
-                                              :link :thk.project/owner}}}
+            api-secret [:auth :jwt-secret]}}
   (let [units (project-cadastral-units db api-url api-secret id)
         estates (into #{}
                       (map :KINNISTU)
@@ -114,9 +112,7 @@ Then it will query X-road for the estate information."
 and the compensation info as the value."
    :context {:keys [db user]}
    :args {:thk.project/keys [id]}
-   :project-id [:thk.project/id id]
-   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
-                                              :link :thk.project/owner}}}
+   :project-id [:thk.project/id id]}
   (datomic->form
     (into {}
           (comp
@@ -131,8 +127,6 @@ and the compensation info as the value."
    :args {id :thk.project/id
           :keys [business-id person-id]}
    :project-id [:thk.project/id id]
-   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
-                                              :link :thk.project/owner}}
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
             xroad-subsystem [:xroad :kr-subsystem-id]}}
@@ -153,9 +147,7 @@ and the compensation info as the value."
    :context {:keys [db user]}
    :args {id :thk.project/id
           sequence-number :file/sequence-number}
-   :project-id [:thk.project/id id]
-   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
-                                              :link :thk.project/owner}}}
+   :project-id [:thk.project/id id]}
   (file-db/land-files-by-project-and-sequence-number
    db user [:thk.project/id id] sequence-number))
 
@@ -165,8 +157,6 @@ and the compensation info as the value."
    :args {id :thk.project/id
           sequence-number :file/sequence-number}
    :project-id [:thk.project/id id]
-   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
-                                              :link :thk.project/owner}}
    :pre [(some? sequence-number)]}
   (count (file-db/land-files-by-project-and-sequence-number
           db user [:thk.project/id id] sequence-number)))

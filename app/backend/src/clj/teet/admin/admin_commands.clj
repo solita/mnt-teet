@@ -50,6 +50,7 @@
          ^{:error :user-already-exists}
          (nil? (user-db/resolve-user db user-data))]
    :authorization {:admin/add-user {}}
+   :contract-authorization {:action :admin/add-user}
    :audit? true
    :transact (let [user-person-id (user-model/normalize-person-id (:user/person-id user-data))
                    global-role (:user/global-role user-data)]
@@ -72,6 +73,7 @@
    :project-id nil
    :pre [(:user/person-id form-value)]
    :authorization {:admin/add-user {}}
+   :contract-authorization {:action :admin/edit-users}
    :audit? true
    :transact (let [user-values (select-keys form-value [:user/email :user/company :user/phone-number
                                                         :user/person-id])]
@@ -94,6 +96,7 @@
          ]
    :audit? true
    :authorization {:admin/remove-user {}}
+   :contract-authorization {:action :admin/remove-user}
    :transact [(let [deactivated-user (d/pull db [:db/id] (user-model/user-ref user-to-deactivate))]
                 (merge
                   {:db/id (:db/id deactivated-user)
@@ -109,6 +112,7 @@
          ]
    :audit? true
    :authorization {:admin/add-user {}}
+   :contract-authorization {:action :admin/add-user}
    :transact (let [deactivated-user (d/pull db [:db/id] (user-model/user-ref user-to-reactivate))]
                [(merge
                   {:db/id (:db/id deactivated-user)}

@@ -30,6 +30,7 @@
         #(get-in % [:participation/participant :user/given-name])
         #(get-in % [:participation/participant :user/family-name])))
 
+
 (defmethod authorization-check/check-user-link :meeting/organizer-or-reviewer [user meeting _link]
   (log/info "user is meeting org or reviewer"
             ", user:  " user

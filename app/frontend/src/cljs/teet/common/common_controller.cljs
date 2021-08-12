@@ -226,7 +226,8 @@
       (t/fx app
             {:tuck.effect/type :query
              :query :authorization/user-is-permitted?
-             :args (merge {:action action}
+             :args (merge {:entity-id (:db/id entity)
+                           :action action}
                           (when entity-type
                             {entity-type (:db/id entity)}))
              :result-event result-event})))

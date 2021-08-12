@@ -61,6 +61,7 @@
    :project-id nil
    :audit? true
    :authorization {:admin/manage-indexes {}}
+   :contract-authorization {:action :admin/manage-indexes}
    :transact [(merge {:cost-index/name (:cost-index/name index-data)
                       :cost-index/type (:cost-index/type index-data)
                       :cost-index/valid-from (dt/->date (t/year (c/from-date (:cost-index/valid-from index-data)))
@@ -75,6 +76,7 @@
    :project-id nil
    :audit? true
    :authorization {:admin/manage-indexes {}}
+   :contract-authorization {:action :admin/manage-indexes}
    :transact (let [index-id (cc/->long (:index-id index-data))]
                [{:db/id index-id
                  :cost-index/name (:cost-index/name index-data)}])})
@@ -86,6 +88,7 @@
    :project-id nil
    :audit? true
    :authorization {:admin/manage-indexes {}}
+   :contract-authorization {:action :admin/manage-indexes}
    :transact (let [index-id (cc/->long (:index-id index-data))]
                [[:db/retractEntity index-id]])})
 
@@ -96,5 +99,6 @@
    :project-id nil
    :audit? true
    :authorization {:admin/manage-indexes {}}
+   :contract-authorization {:action :admin/manage-indexes}
    :transact (let [index-id (cc/->long (:index-id index-data))]
                [(edit-index-values-tx db index-id index-data)])})

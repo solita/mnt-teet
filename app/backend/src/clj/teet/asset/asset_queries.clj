@@ -62,8 +62,7 @@
   {:doc "Query project's relevant roads"
    :context {:keys [db]}
    :args {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/read-info {}}}
+   :project-id [:thk.project/id project-id]}
   ;; Fetch relevant roads for cost items of project, meaning the
   ;; project road along with roads intersecting project geometry
   ;; with a buffer of 50 meters.
@@ -87,9 +86,7 @@
           cost-totals :cost-totals
           materials-and-products :materials-and-products
           road :road}
-   :project-id [:thk.project/id project-id]
-   ;; fixme: cost items authz
-   :authorization {:project/read-info {}}}
+   :project-id [:thk.project/id project-id]}
   (let [atl (asset-db/asset-type-library adb)]
     (transit/with-write-options
       euro/transit-type-handlers
@@ -147,8 +144,7 @@
    :context {:keys [db] adb :asset-db}
    :args {project-id :thk.project/id
           :boq-export/keys [version unit-prices? language]}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/read-info {}}}
+   :project-id [:thk.project/id project-id]}
   (with-language language
     (let [version-info (when version
                          (d/pull adb '[*] version))
@@ -190,8 +186,7 @@
    :spec (s/keys :req [:thk.project/id])
    :context {adb :asset-db}
    :args {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/read-info {}}}
+   :project-id [:thk.project/id project-id]}
   (asset-db/project-boq-version-history adb project-id))
 
 

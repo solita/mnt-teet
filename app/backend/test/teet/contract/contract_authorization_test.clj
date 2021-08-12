@@ -93,6 +93,6 @@
              #{:company-contract-employee.role/company-representative})))
 
     (testing "Contract under a project grants read access to the project"
-      (is (true? (authorization/project-read-access?
+      (is (true? (authorization/general-project-access?
                (tu/db) tu/mock-user-edna-consultant
                (tu/->db-id "p1")))))))

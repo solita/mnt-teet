@@ -231,10 +231,7 @@
    :context {db :db
              user :user}
    :args {:thk.project/keys [id]}
-   :project-id [:thk.project/id id]
-   :authorization {:project/read-info {:eid [:thk.project/id id]
-                                       :link :thk.project/owner
-                                       :access :read}}}
+   :project-id [:thk.project/id id]}
   (meta-query/without-deleted
     db
     (fetch-project-meetings db [:thk.project/id id])))
@@ -288,10 +285,7 @@
   {:doc "Fetch a single meeting info and project info"
    :context {:keys [db user]}
    :args {:keys [activity-id meeting-id]}
-   :project-id (project-db/activity-project-id db activity-id)
-   :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
-                                       :link :thk.project/owner
-                                       :access :read}}}
+   :project-id (project-db/activity-project-id db activity-id)}
   (meeting-db/without-incomplete-uploads
    (db-api-large-text/with-large-text
      meeting-model/rich-text-fields
@@ -314,8 +308,7 @@
   {:doc "Fetch past meetings for an activity"
    :context {:keys [db user]}
    :args {:keys [activity-id]}
-   :project-id (project-db/activity-project-id db activity-id)
-   :authorization {}}
+   :project-id (project-db/activity-project-id db activity-id)}
   (activity-past-meetings db activity-id))
 
 (defquery :meeting/activity-decision-history
@@ -323,8 +316,7 @@
    :context {:keys [db user]}
    :args {:keys [activity-id
                  search-term]}
-   :project-id (project-db/activity-project-id db activity-id)
-   :authorization {}}
+   :project-id (project-db/activity-project-id db activity-id)}
   (activity-decisions db user activity-id search-term))
 
 
@@ -332,8 +324,7 @@
   {:doc "Fetch all the meetings from the history of the project"
    :context {:keys [db user]}
    :args {:keys [project-id]}
-   :project-id project-id
-   :authorization {}}
+   :project-id project-id}
   (project-past-meetings db project-id))
 
 (defquery :meeting/project-decision-history
@@ -341,8 +332,7 @@
    :context {:keys [db user]}
    :args {:keys [project-id
                  search-term]}
-   :project-id project-id
-   :authorization {}}
+   :project-id project-id}
   (project-decisions db user project-id search-term))
 
 (defquery :meeting/download-pdf
@@ -350,9 +340,7 @@
    :context {:keys [db user]}
    :args {id :db/id
           language :language}
-   :project-id (project-db/meeting-project-id db id)
-   :authorization {:meeting/download-attachment {:db/id id
-                                                 :link :meeting/organizer-or-reviewer}}}
+   :project-id (project-db/meeting-project-id db id)}
   ^{:format :raw}
   {:status 200
    :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title (fetch-meeting-title db id)) ".pdf")

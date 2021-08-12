@@ -40,7 +40,8 @@
    :payload {id :thk.project/id :as project-form}
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
-                                         :link :thk.project/owner}}}
+                                         :link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}}
   (try
     (if (some? (maybe-update-vektorio-project-name? db [:thk.project/id id] (:thk.project/project-name project-form)))
       (let [{db-before :db-before
@@ -84,6 +85,7 @@
    :payload {:keys [permission-id]}                         ; bindings from payload
    :project-id (project-db/permission-project-id db permission-id)
    :authorization {:project/edit-permissions {:link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}
    :transact [(merge {:db/id permission-id
                       :permission/valid-until (Date.)}
                      (modification-meta user))]})
@@ -114,6 +116,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/update-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}
    :transact (update-related-entities-tx db [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
 
 (defcommand :thk.project/update-cadastral-units
@@ -123,6 +126,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/update-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
             xroad-subsystem [:xroad :kr-subsystem-id]
@@ -162,6 +166,7 @@
    :pre [(:user/person-id user)
          (user-spec/estonian-person-id? (:user/person-id user))]
    :authorization {:project/edit-permissions {:link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}
    :audit? true}
   (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
   (let [user-person-id (-> user
@@ -206,6 +211,7 @@
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}
    :pre [(string? id)]}
   (when-let [entity-id (project-db/thk-id->integration-id-number db id)]
     (let [config (environment/config-map {:api-url [:api-url]
@@ -227,6 +233,7 @@
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
+   :contract-authorization {:action :project/edit-project}
    :pre [(string? id)
          (string? geometry-id)]}
   (when-let [entity-id (project-db/thk-id->integration-id-number db id)]
