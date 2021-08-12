@@ -197,6 +197,11 @@
                                                     :file/s3-key
                                                     :meta/created-at
                                                     {:meta/creator [:db/id :user/family-name :user/given-name]}]}
+        {:company-contract-employee/key-person-status [:db/id
+                                                       :key-person/status
+                                                       :key-person/approval-comment
+                                                       :meta/modified-at
+                                                       {:meta/modifier [:db/id :user/family-name :user/given-name]}]}
         {:company-contract-employee/attached-licenses
          [:db/id
           :user-license/name
@@ -381,6 +386,17 @@
          ffirst
          boolean)
     false))
+
+(defn company-contract-employee-eid?
+  "Is the eid a company-contract-employee eid?"
+  [db eid]
+  (->> (d/q '[:find ?cce
+              :in $ ?cce
+              :where
+              [?cce :company-contract-employee/user]]
+            db eid)
+       ffirst
+       boolean))
 
 (defn get-user-for-company-contract-employee
   ""

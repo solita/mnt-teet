@@ -175,7 +175,7 @@
   "Forces all migrations to rerun." ;; TODO: reload schema from environment to reload schema.edn
   []
   (environment/load-local-config!)
-  (environment/migrate (db-connection) true))
+  (environment/migrate (db-connection) @environment/schema true))
 
 ;; TODO: Add function for importing projects to Datomic
 ;; See teet.thk.thk-import
