@@ -300,11 +300,11 @@
    :approve-person-button "Approve",
    :license-saved "License saved",
    :edit-license-title "Edit license",
-   :view-license-history "View license history",
+   :view-license-history "Show expired licenses",
    :file-link-removed "Key person document link has been removed.",
    :person-updated "Person's data updated",
    :tram-approver "Transport Administration",
-   :hide-license-history "Hide license history",
+   :hide-license-history "Hide expired licenses",
    :deactive-persons "Deactivated persons",
    :add-license "+ Add license",
    :reject-person-modal-title "Reject key person?",
@@ -335,15 +335,15 @@
   :partners {:title "Companies & persons"},
   :employee
   {:key-person "Key person",
-   :key-person-approvals "Key person approvals",
+   :key-person-approvals "Key person details",
    :key-person-is-waiting-approvals
    "Key person is waiting for approval",
-   :approvals "Approvals",
+   :approvals "Approval",
    :key-person-not-submitted "Key person approval not requested",
    :key-person-rejected "Key person rejected",
    :key-person-approved "Key person approved"},
   :cannot-delete-company-with-persons
-  "You can remove partner from the contract only if it does not have any active person and subcontractor added",
+  "You can remove partner from the contract only if it does not have any active persons",
   :confirm-remove-key-person-text "If removed it can not be undone.",
   :responsible
   {:header
@@ -375,8 +375,8 @@
   "Try again in a few minutes or contact system administrator if the issue persists",
   :are-you-sure-remove-key-person-assignment
   "Are you sure you want to remove key person assignment?",
-  :partners-listing "Partners listing",
-  :responsibilities-listing "Responsibilities listing",
+  :partners-listing "Partner information",
+  :responsibilities-listing "Persons responsibilities",
   :thk.contract.status/signed "Signed",
   :partner-information "Partner information",
   :thk.contract.status/completed "Completed",
@@ -1141,7 +1141,7 @@
   :thk.contract/start-of-work "Start of work",
   :land-owner-opinion/date "Date of reponse",
   :file/description "Description",
-  :cooperation.contact/name "Name",
+  :cooperation.contact/name "Contact person name",
   :company/phone-number "Company phone number",
   :boq-export/unit-prices? "Include unit prices?",
   :file/document-group "Group",
@@ -1560,8 +1560,8 @@
  {:authenticated-guest "Authenticated guest",
   :external-consultant "External consultant",
   :guest "Guest",
-  :internal-consultant "Internal consultant",
-  :manager "Project manager",
+  :ta-consultant "Internal consultant",
+  :ta-project-manager "Project manager",
   :owner "Owner"},
  :search {:clear-filters "Clear filters", :quick-search "Search"},
  :search-area
