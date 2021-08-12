@@ -240,7 +240,7 @@
              part-id :part-id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:document/upload-document {:db/id task-id :link :task/assignee}}
-   :contract-authorization {:action :file-management/edit-task-part
+   :contract-authorization {:action :task/edit-task-part
                             :target task-id}
    :transact [(merge
                 (meta-model/modification-meta user)
