@@ -671,7 +671,8 @@
               :on-change-event (form/update-atom-event form-atom merge)
               :save-event #(contract-partners-controller/->SaveLicense
                             employee-id @form-atom (close-event))
-              :cancel-event close-event}
+              :cancel-event close-event
+              :delete (contract-partners-controller/->DeleteLicense employee-id @form-atom close-event)}
    ^{:attribute :user-license/name :required? true}
    [TextField {}]
 

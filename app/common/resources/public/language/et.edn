@@ -291,6 +291,7 @@
   :partner
   {:approve-person-modal-title "Kinnitan võtmeisiku?",
    :key-person-licenses "Võtmeisiku litsentsid",
+   :license-deleted "Litsents eemaldatud",
    :key-person "Võtmeisik",
    :person-deactivated "Isik deaktiveeritud",
    :person-activated "Isik aktiveeritud",

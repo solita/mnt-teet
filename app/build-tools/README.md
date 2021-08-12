@@ -14,7 +14,7 @@ clj -A:localizations <path-to-downloaded-sheet>
 ```
 
 in this directory. This will update the localization `.edn` files in
-`app/frontend/resources/public/language`.
+`app/common/resources/public/language`.
 
 ## Authorizations
 

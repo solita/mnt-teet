@@ -293,6 +293,7 @@
   :partner
   {:approve-person-modal-title "Approve key person?",
    :key-person-licenses "Key person licenses",
+   :license-deleted "License deleted",
    :key-person "Key person",
    :person-deactivated "Person deactivated",
    :person-activated "Person activated",
