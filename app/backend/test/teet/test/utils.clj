@@ -49,7 +49,7 @@
     :user/family-name "Boss"
     :user/email "benjamin.boss@example.com"
     :user/permissions [{:db/id "boss-permission"
-                        :permission/role :manager
+                        :permission/role :ta-project-manager
                         :permission/valid-from (java.util.Date.)}]
     }
 
