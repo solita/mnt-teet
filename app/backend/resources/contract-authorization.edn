@@ -1,133 +1,174 @@
-{:file-management/edit-files
- #{:admin
+{:meeting/send-notifications
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :land/update-cadastral-units
+ #{:internal-consultant
+   :admin
+   :ta-project-manager
+   :ta-responsible-person},
+ :cost-items/add-cost-items
+ #{:internal-consultant
+   :admin
    :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/subcontractor
-   :company-contract-employee.role/supervisor
    :company-contract-employee.role/team-member
    :ta-project-manager
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
- :contracts/manage-ta-user-privileges
+ :meeting/create-decision
  #{:admin :ta-project-manager :ta-responsible-person},
- :file-management/edit-task
+ :comments/delete-other-people-comments #{:admin},
+ :contract/approve-key-persons
  #{:admin :ta-project-manager :ta-responsible-person},
- :contracts/edit-contract-metadata
- #{:admin :ta-project-manager :ta-responsible-person},
- :file-management/reopen-task
- #{:admin :ta-project-manager :ta-responsible-person},
- :file-management/submit-activity
+ :contract/submit-key-person-for-approval
  #{:admin
+   :company-contract-employee.role/company-project-manager
    :ta-project-manager
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
- :materials/review-and-approve-materials
- #{:admin
-   :company-contract-employee.role/supervisor
+ :activity/review-activity #{:admin :ta-responsible-person},
+ :meeting/delete-agenda
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :task/edit-task-part
+ #{:internal-consultant
+   :admin
+   :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/team-member
    :ta-project-manager
-   :ta-responsible-person},
+   :ta-responsible-person
+   :company-contract-employee.role/company-representative},
+ :task/approve-task-part
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :cost-items/edit-cost-items
+ #{:internal-consultant
+   :admin
+   :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/team-member
+   :ta-project-manager
+   :ta-responsible-person
+   :company-contract-employee.role/company-representative},
+ :meeting/update #{:admin :ta-project-manager :ta-responsible-person},
+ :meeting/change-participation-absence
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :activity/delete-activity #{:admin},
  :comments/read-and-write-internal-comments
  #{:internal-consultant
    :admin
    :ta-project-manager
    :ta-responsible-person},
- :file-management/reopen-task-part
- #{:admin
-   :company-contract-employee.role/supervisor
-   :ta-project-manager
-   :ta-responsible-person},
- :file-management/review-activity #{:admin :ta-responsible-person},
- :admin/remove-internal-users-from-the-system #{:admin},
- :project-list&dashboard/see-all-projects-in-teet
+ :land/manage-land-owner-opinions
  #{:internal-consultant
    :admin
    :ta-project-manager
    :ta-responsible-person},
- :file-management/review-task-and-task-part
- #{:internal-consultant
-   :admin
-   :ta-project-manager
-   :ta-responsible-person},
- :file-management/edit-activity
+ :project/edit-project
  #{:admin :ta-project-manager :ta-responsible-person},
- :contracts/add-existing-teet-users-to-contract
- #{:admin
+ :task/approve-task
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :document/upload-files
+ #{:internal-consultant
+   :admin
    :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/team-member
    :ta-project-manager
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
- :contracts/manage-contract-companies
+ :comment/update #{:admin},
+ :comments/edit-all-comments #{:admin},
+ :document/edit-files
+ #{:internal-consultant
+   :admin
+   :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/team-member
+   :ta-project-manager
+   :ta-responsible-person
+   :company-contract-employee.role/company-representative},
+ :cost-items/locking-unlocking-and-versioning
  #{:admin :ta-project-manager :ta-responsible-person},
- :materials/submit-materials
+ :task/reopen-task
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :meeting/delete-decision
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :document/delete-files
  #{:admin
    :company-contract-employee.role/company-project-manager
    :company-contract-employee.role/team-member
-   :company-contract-employee.role/company-representative},
- :file-management/submit-tasks-and-task-parts
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/supervisor
    :ta-project-manager
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
- :file-management/approve-task-part
+ :admin/remove-user #{:admin},
+ :admin/add-user #{:admin},
+ :meeting/delete-meeting
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :admin/edit-users #{:admin},
+ :contract/edit-contract-metadata
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :task/edit-task #{:admin :ta-project-manager :ta-responsible-person},
+ :meeting/add-participation
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :contract/edit-company-information
  #{:admin
-   :company-contract-employee.role/supervisor
    :ta-project-manager
-   :ta-responsible-person},
+   :ta-responsible-person
+   :company-contract-employee.role/company-representative},
+ :task/submit-task-and-task-parts
+ #{:admin
+   :company-contract-employee.role/company-project-manager
+   :company-contract-employee.role/team-member
+   :ta-project-manager
+   :ta-responsible-person
+   :company-contract-employee.role/company-representative},
  :comments/track-comment-status
  #{:internal-consultant
    :admin
    :ta-project-manager
    :ta-responsible-person},
- :contracts/add-external-users-to-teet-via-contract
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-project-manager
-   :ta-responsible-person
-   :company-contract-employee.role/company-representative},
- :contracts/manage-team-member-user-privileges
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-project-manager
-   :ta-responsible-person
-   :company-contract-employee.role/company-representative},
- :cooperation/add&edit-opinion-of-competent-authoroty
- #{:internal-consultant
-   :admin
-   :ta-project-manager
-   :ta-responsible-person},
- :admin/edit-users-information #{:admin},
- :company-profile/view-own-company-info-and-manage-related-teet-users
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/company-representative},
- :file-management/edit-task-part
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/supervisor
-   :ta-project-manager
-   :ta-responsible-person},
- :project-list&dashboard/see-projects-covered-by-contract
- #{:internal-consultant
-   :admin
-   :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/subcontractor
-   :company-contract-employee.role/supervisor
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
-   :company-contract-employee.role/company-representative},
- :admin/manage-indexes #{:admin},
- :file-management/approve-task
+ :meeting/create-meeting
  #{:admin :ta-project-manager :ta-responsible-person},
- :personal-profile/edit-data-on-own-personal-profile
+ :activity/create-activity
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :land/manage-land-acquisitions
+ #{:internal-consultant
+   :admin
+   :ta-project-manager
+   :ta-responsible-person},
+ :contract/manage-company-employees
+ #{:admin
+   :company-contract-employee.role/company-project-manager
+   :ta-project-manager
+   :ta-responsible-person
+   :company-contract-employee.role/company-representative},
+ :meeting/review #{:admin :ta-project-manager :ta-responsible-person},
+ :activity/edit-activity
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :meeting/remove-participation
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :cost-items/delete-cost-items
  #{:internal-consultant
    :admin
    :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/subcontractor
-   :company-contract-employee.role/supervisor
    :company-contract-employee.role/team-member
    :ta-project-manager
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
- :file-management/approve-activity #{:admin :ta-responsible-person}}
+ :admin/inspector #{:admin},
+ :meeting/update-agenda
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :admin/manage-indexes #{:admin},
+ :task/reopen-task-part
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :cooperation/manage-opinions-of-competent-authority
+ #{:internal-consultant
+   :admin
+   :ta-project-manager
+   :ta-responsible-person},
+ :activity/submit-activity
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :meeting/cancel #{:admin :ta-project-manager :ta-responsible-person},
+ :meeting/update-decision
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :contract/manage-contract-companies
+ #{:admin :ta-project-manager :ta-responsible-person},
+ :task/review-task-and-task-parts
+ #{:internal-consultant
+   :admin
+   :ta-project-manager
+   :ta-responsible-person}}

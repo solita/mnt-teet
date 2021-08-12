@@ -267,6 +267,7 @@
              visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
+   :contract-authorization {:action :comment/update}
    :pre [(valid-visibility-for-user?
            user
            (project-db/comment-project-id db comment-id)
@@ -345,7 +346,7 @@
    :context {:keys [db user]}
    :payload {entity-id :eid
              entity-type :for}
-   :project-id (project-db/entity-project-id db entity-type entity-id)
+   :allowed-for-all-users? true
    :transact
    (let [resolved-entity (:db/id (du/entity db entity-id))
          user-ref (user-model/user-ref user)]
@@ -363,6 +364,7 @@
    :payload {comment-id :db/id status :comment/status}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/track-comment-status {:db/id comment-id}}
+   :contract-authorization {:action :comments/track-comment-status}
    :transact (get-comment-status-update-txs db user comment-id status)})
 
 (defcommand :comment/resolve-comments-of-entity
@@ -370,6 +372,7 @@
    :context {:keys [db user]}
    :payload {:keys [entity-id entity-type]}
    :project-id (project-db/entity-project-id db entity-type entity-id)
+   :contract-authorization {:action :comments/track-comment-status}
    :authorization {:project/track-comment-status {}}
    :transact (into []
                    (->> (comment-db/comments-of-entity db

@@ -148,6 +148,17 @@
                            ", user: " user)
                 nil))))])))
 
+#?(:clj
+   (def contract-authorization-rules
+     (delay (some-> "contract-authorization.edn"
+                    io/resource
+                    slurp
+                    read-string))))
+
+#?(:clj
+   (defn contract-authorization-rule-names []
+     (into #{} (keys @contract-authorization-rules))))
+
 #?(:cljs
    (defn with-authorization-check
      "Call component (hiccup vector) with the result of an authorization

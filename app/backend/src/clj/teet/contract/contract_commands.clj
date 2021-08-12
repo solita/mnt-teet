@@ -166,7 +166,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contract/manage-contract-employees
+   :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
                                        (du/entity db company-contract-eid)
                                        [:company-contract/company :db/id])}
@@ -189,6 +189,7 @@
   {:doc "Activate/Deactivate contract person"
    :payload {employee-id :employee-id
              active? :active?}
+   :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
@@ -204,7 +205,7 @@
              key-person? :key-person?}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/manage-company-emplyees {}}
+   :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
                                        (du/entity db employee-id)
@@ -336,6 +337,7 @@
   {:doc "Remove a file link between user file and employee"
    :payload {employee-id :employee-id
              file-id :file-id}
+   :context {:keys [db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
@@ -351,6 +353,10 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/manage-company-employees
+                            :company (get-in
+                                       (du/entity db employee-id)
+                                       [:company-contract/_employees :company-contract/company :db/id])}
    :pre [;; Check license is new or belongs to user when editing
          (or (not (contains? license :db/id))
              (some #(= (:db/id license)
@@ -377,9 +383,10 @@
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"
    :payload {employee-id :employee-id}
+   :context {:keys [db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:contract/submit-key-person-for-approval
+   :contract-authorization {:action :contract/submit-key-person-for-approval
                             :company (get-in
                                        (du/entity db employee-id)
                                        [:company-contract/_employees :company-contract/company :db/id])}

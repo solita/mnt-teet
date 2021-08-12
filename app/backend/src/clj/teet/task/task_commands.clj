@@ -32,6 +32,7 @@
    :payload {task-id :db/id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/delete-task {}}
+   :contract-authorization {:action :task/edit-task}
    :pre [(allow-delete? db user task-id)]
    :transact [(list 'teet.task.task-tx/delete-task user task-id)]})
 
@@ -115,6 +116,7 @@
          (not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
+   :contract-authorization {:action :task/edit-task}
    :transact
    (db-api-large-text/store-large-text!
     #{:task/description}
@@ -146,6 +148,8 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/submit-results {:eid task-id
                                          :link :task/assignee}} ;; TODO add pre check to check that the task being submitted contains files
+   :contract-authorization {:action :task/submit-task-and-task-parts
+                            :target task-id}
    :transact (into
                [{:db/id task-id
                  :task/status :task.status/waiting-for-review}
@@ -153,7 +157,7 @@
                (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/waiting-for-review))})
 
 (defcommand :task/review-task-part
-  {:doc "Submit task part for review and approve/reject."
+  {:doc "review task part"
    :context {:keys [db user]}
    :payload {task-id :task-id
              taskpart-id :taskpart-id
@@ -161,6 +165,8 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:eid task-id
                                  :link :task/assignee}}
+   :contract-authorization {:action :task/review-task-and-task-parts
+                            :target task-id}
    :transact
    (case result
      :accept (into
@@ -183,6 +189,8 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/submit-results {:eid task-id
                                  :link :task/assignee}}
+   :contract-authorization {:action :task/submit-task-and-task-parts
+                            :target task-id}
    :transact (into
                [{:db/id taskpart-id
                  :file.part/status :file.part.status/waiting-for-review}
@@ -197,6 +205,7 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
+   :contract-authorization {:action :task/reopen-task-part}
    :pre [(task-model/part-completed? (d/pull db [:file.part/status] taskpart-id))]
    :transact (into
                [{:db/id taskpart-id
@@ -213,6 +222,7 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/reopen {:eid task-id
                                  :link :task/assignee}}
+   :contract-authorization {:action :task/reopen-task}
    :pre [(and
            (activity-model/in-progress? (d/pull db [:activity/status] (task-db/activity-for-task-id db task-id)))
            (task-model/completed? (d/pull db [:task/status] task-id)))]
@@ -238,7 +248,7 @@
              part-id :part-id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:document/upload-document {:db/id task-id :link :task/assignee}}
-   :contract-authorization {:action :file-management/edit-task-part
+   :contract-authorization {:action :task/edit-task-part
                             :target task-id}
    :transact [(merge
                 (meta-model/modification-meta user)
@@ -252,6 +262,10 @@
    :project-id (project-db/file-part-project-id db part-id)
    :authorization {:task/task-information {:db/id (project-db/file-part-project-id db part-id)
                                            :link :task/assignee}}
+   :contract-authorization {:action :task/edit-task-part
+                            :target (get-in
+                                      (du/entity db part-id)
+                                      [:file.part/task :db/id])}
    :transact [(list 'teet.file.file-tx/remove-task-file-part
                     part-id user)]})
 
@@ -261,6 +275,7 @@
    :payload {task-id :task-id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
+   :contract-authorization {:action :task/review-task-and-task-parts}
    :transact (if (or
                    (task-model/waiting-for-review? (d/pull db [:task/status] task-id))
                    (task-model/any-task-part-waiting-for-review? (task-db/task-file-parts db task-id)))
@@ -283,6 +298,7 @@
              result :result}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
+   :contract-authorization {:action :task/review-task-and-task-parts}
    :pre [(task-model/reviewing? (d/pull db [:task/status] task-id))]
    :transact
    (case result

@@ -30,7 +30,7 @@
         role->column (common/role->column-mapping sheet 7 2)]
     (into
       {}
-      (for [row (drop 5 (sheet/row-seq sheet))
+      (for [row (drop 4 (sheet/row-seq sheet))
             :when (-> row
                       (sheet/cell-seq)
                       (first)

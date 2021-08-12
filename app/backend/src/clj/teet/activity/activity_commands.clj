@@ -68,6 +68,7 @@
    :context {:keys [db user conn]}
    :payload {:keys [activity lifecycle-id tasks]}
    :project-id (project-db/lifecycle-project-id db lifecycle-id)
+   :contract-authorization {:action :activity/create-activity}
    :authorization {:activity/create-activity {}}
    :pre [^{:error :invalid-activity-name}
          (valid-activity-name? db activity lifecycle-id)
@@ -221,7 +222,7 @@
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:task/submit-results {:eid activity-id
                                          :link :activity/manager}}
-   :contract-authorization {:action :activity/review-activity}
+   :contract-authorization {:action :activity/submit-activity}
    :pre [(check-tasks-are-complete db activity-id)]
    :transact [(merge
                 {:db/id activity-id
@@ -254,6 +255,7 @@
    :authorization {:activity/change-activity-status
                    {:id (project-db/activity-project-id db activity-id)
                     :link :thk.project/owner}}
+   :contract-authorization {:action :activity/review-activity}
    :pre [^{:error :invalid-activity-status}
          (= :activity.status/in-review
             (get-in (du/entity db activity-id)

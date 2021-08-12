@@ -172,6 +172,7 @@
    :payload lock-version
    :project-id [:thk.project/id (:boq-version/project lock-version)]
    :authorization {:cost-items/locking-unlocking-and-versioning {}}
+   :contract-authorization {:action :cost-items/locking-unlocking-and-versioning}
    :pre [^{:error :boq-is-locked}
          (boq-unlocked? adb (:boq-version/project lock-version))]
    :transact
@@ -184,6 +185,7 @@
    :payload {project-id :boq-version/project}
    :project-id [:thk.project/id project-id]
    :authorization {:cost-items/locking-unlocking-and-versioning {}}
+   :contract-authorization {:action :cost-items/locking-unlocking-and-versioning}
    :pre [^{:error :boq-is-unlocked}
          (not (boq-unlocked? adb project-id))]
    :transact
