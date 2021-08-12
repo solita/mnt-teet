@@ -178,9 +178,7 @@
                 {:db/id "new-company-contract-employee"
                  :company-contract-employee/active? true    ;; employees are active by default
                  :company-contract-employee/user (:company-contract-employee/user form-value)
-                 :company-contract-employee/role (mapv
-                                                   :db/id
-                                                   (:company-contract-employee/role form-value))}
+                 :company-contract-employee/role (mapv :db/ident (:company-contract-employee/role form-value))}
                 (meta-model/creation-meta user))
               {:db/id company-contract-eid
                :company-contract/employees "new-company-contract-employee"}]})
@@ -216,8 +214,10 @@
           user-licenses :user/licenses} (d/pull db '[:user/files :user/licenses] user-id)]
 
      [(merge {:db/id employee-id
-              :company-contract-employee/key-person? key-person?
-              :company-contract-employee/key-person-status :key-person.status/assigned}
+              :company-contract-employee/key-person-status
+              (merge {:key-person/status :key-person.status/assigned}
+                     (meta-model/modification-meta user))
+              :company-contract-employee/key-person? key-person?}
              (when (and key-person? (seq user-files))
                {:company-contract-employee/attached-files (mapv :db/id user-files)})
              (when (and key-person? (seq user-licenses))
@@ -262,9 +262,7 @@
                                         {:db/id "new-company-contract-employee"
                                          :company-contract-employee/active? true ;; employees are active by default
                                          :company-contract-employee/user "new-employee-id"
-                                         :company-contract-employee/role (mapv
-                                                                           :db/id
-                                                                           (:company-contract-employee/role form-value))}
+                                         :company-contract-employee/role (mapv :db/ident (:company-contract-employee/role form-value))}
                                         (meta-model/creation-meta user))
                                       {:db/id company-contract-eid
                                        :company-contract/employees "new-company-contract-employee"}])]))]
@@ -291,42 +289,40 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]
    :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
                                        (du/entity db company-contract-eid)
-                                       [:company-contract/company :db/id])}
-   :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]}
-  (let [roles-update (mapv
-                       #(if (not (:db/id %))
-                          (:db/id (company-db/get-employee-role db %))
-                          (:db/id %))
-                       (:company-contract-employee/role form-value))
+                                       [:company-contract/company :db/id])}}
+  (let [roles-update (mapv first
+                           (d/q '[:find ?id :where [?id :db/ident ?ident] :in $ [?ident ...]]
+                                db (mapv :db/ident (:company-contract-employee/role form-value))))
         old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
         employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                      :user/email :db/id
                                                      :user/id]))
         user-person-id (user-model/normalize-person-id (:user/person-id form-value))
         updated-user (merge
-                       {:user/person-id user-person-id}
-                       (if (not (nil? (:user/phone-number form-value)))
-                         {:user/phone-number (:user/phone-number form-value)}
-                         {:user/phone-number ""})
-                       employee-fields
-                       (meta-model/modification-meta user))
+                      {:user/person-id user-person-id}
+                      (if (not (nil? (:user/phone-number form-value)))
+                        {:user/phone-number (:user/phone-number form-value)}
+                        {:user/phone-number ""})
+                      employee-fields
+                      (meta-model/modification-meta user))
         company-contract-employee (company-db/find-company-contract-employee
-                                    db [:user/id (:user/id employee-fields)] company-contract-eid)
+                                   db [:user/id (:user/id employee-fields)] company-contract-eid)
         tx-data (vec
-                  (concat
-                    [(list 'teet.user.user-tx/ensure-unique-email
-                           (:user/email form-value)
-                           [updated-user
-                            (merge
-                              {:db/id company-contract-employee
-                               :company-contract-employee/active? true
-                               :company-contract-employee/user [:user/id (:user/id employee-fields)]
-                               :company-contract-employee/role roles-update}
-                              (meta-model/modification-meta user))])]
-                    (for
+                 (concat
+                  [(list 'teet.user.user-tx/ensure-unique-email
+                         (:user/email form-value)
+                         [updated-user
+                          (merge
+                           {:db/id company-contract-employee
+                            :company-contract-employee/active? true
+                            :company-contract-employee/user [:user/id (:user/id employee-fields)]
+                            :company-contract-employee/role roles-update}
+                           (meta-model/modification-meta user))])]
+                  (for
                       [old-role old-roles
                        :when (not (some #(= old-role %) roles-update))]
                       [:db/retract company-contract-employee :company-contract-employee/role old-role])))
@@ -374,21 +370,59 @@
        :company-contract-employee/attached-licenses license-id}
       (meta-model/with-creation-or-modification-meta
         user
-        (merge (select-keys license
-                            [:user-license/name
-                             :user-license/expiration-date
-                             :user-license/link])
+        (merge (cu/without-nils
+                (select-keys license
+                             [:user-license/name
+                              :user-license/expiration-date
+                              :user-license/link]))
                {:db/id license-id}))])})
 
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"
-   :payload {employee-id :employee-id}
-   :context {:keys [db]}
+   :payload {company-contract-employee-id :employee-id}
    :project-id nil
+   :context {:keys [user db]}
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/submit-key-person-for-approval
                             :company (get-in
                                        (du/entity db employee-id)
                                        [:company-contract/_employees :company-contract/company :db/id])}
-   :transact [{:db/id employee-id
-               :company-contract-employee/key-person-status :key-person.status/approval-requested}]})
+   :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
+   :transact [{:db/id company-contract-employee-id
+               :company-contract-employee/key-person-status
+               (merge {:key-person/status :key-person.status/approval-requested}
+                      (meta-model/modification-meta user))}]})
+
+(defcommand :thk.contract/approve-key-person
+  {:doc "Approve key person being reviewed"
+   :payload {company-contract-employee-id :employee-id
+             comment :key-person/approval-comment}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/approve-key-persons}
+   :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
+   :transact [{:db/id company-contract-employee-id
+               :company-contract-employee/key-person-status
+               (merge {:key-person/status :key-person.status/approved}
+                      (when (not-empty comment)
+                        {:key-person/approval-comment comment})
+                     (meta-model/modification-meta user))}]})
+
+(defcommand :thk.contract/reject-key-person
+  {:doc "Reject key person for review"
+   :payload {company-contract-employee-id :employee-id
+             comment :key-person/approval-comment}
+   :context {:keys [user db]}
+   :project-id nil
+   :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/approve-key-persons}
+   :pre [(not-empty comment)
+         (contract-db/company-contract-employee-eid? db company-contract-employee-id)]
+   :transact [{:db/id company-contract-employee-id
+
+               :company-contract-employee/key-person-status
+               (merge
+                {:key-person/status :key-person.status/rejected
+                 :key-person/approval-comment comment}
+                (meta-model/modification-meta user))}]})

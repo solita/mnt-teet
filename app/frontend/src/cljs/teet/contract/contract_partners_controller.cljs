@@ -3,7 +3,10 @@
             tuck.effect
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
+            [teet.user.user-model :as user-model]
+            [teet.ui.format :as format]
             [teet.localization :refer [tr tr-enum]]
+            [teet.util.datomic :as du]
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defn- is-first-partner? [app]
@@ -38,6 +41,45 @@
 (defrecord SubmitKeyPerson [employee-id])
 (defrecord SaveLicense [employee-id license close-event])
 (defrecord SaveLicenseResult [close-event result])
+(defrecord ApproveOrReject [employee-eid form close-event command success-message])
+(defrecord ApproveOrRejectResult [close-event result])
+
+(defn approve-key-person [employee-eid close-event form-atom]
+  #(->ApproveOrReject employee-eid @form-atom
+                      close-event
+                      :thk.contract/approve-key-person
+                      (tr [:contract :employee :key-person-approved])))
+
+(defn reject-key-person [employee-eid close-event form-atom]
+  #(->ApproveOrReject employee-eid
+                      @form-atom
+                      close-event
+                      :thk.contract/reject-key-person
+                      (tr [:contract :employee :key-person-rejected])))
+
+(defn contract-employee-status-matches? [emp status]
+  (=
+   (du/enum->kw (:key-person/status (:company-contract-employee/key-person-status emp)))
+   status))
+
+(defn contract-employee-rejected? [emp]
+  (contract-employee-status-matches? emp
+                                     :key-person.status/rejected))
+
+(defn contract-employee-approved? [emp]
+  (contract-employee-status-matches? emp
+   :key-person.status/approved))
+
+(defn status-modified-string-maybe [status modification-meta]
+  (when (= :key-person.status/approval-requested status)
+    (let [[time user] modification-meta]
+      [:span
+       " - "
+       (tr [:contract :partner :approval-requested-by]) " "
+       (user-model/user-name user) " "
+       (tr [:contract :partner :on]) " "
+       (format/date-time-with-seconds time)])))
+
 
 (extend-protocol t/Event
   PersonStatusChangeSuccess
@@ -206,4 +248,22 @@
     (t/fx app
           (fn [e!]
             (e! close-event))
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  ApproveOrReject
+  (process-event [{:keys [employee-eid form close-event command success-message]} app]
+    (t/fx
+     app
+     {:tuck.effect/type :command!
+      :command command
+      :payload form
+      :success-message success-message
+      :result-event (partial ->ApproveOrRejectResult close-event)}))
+
+  ApproveOrRejectResult
+  (process-event [{:keys [close-event]} app]
+    (t/fx
+     app
+     (fn [e!]
+       (e! close-event))
+     common-controller/refresh-fx)))

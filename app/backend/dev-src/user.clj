@@ -175,7 +175,7 @@
   "Forces all migrations to rerun." ;; TODO: reload schema from environment to reload schema.edn
   []
   (environment/load-local-config!)
-  (environment/migrate (db-connection) true))
+  (environment/migrate (db-connection) @environment/schema true))
 
 ;; TODO: Add function for importing projects to Datomic
 ;; See teet.thk.thk-import
@@ -214,7 +214,7 @@
   (defn output-datomic-entity-diagram []
     (let [include-entities #{"thk.project" "thk.lifecycle" "activity"
                              "task" "file" "comment" "permission"
-                             "user" "meta"
+                             "user" "meta" "user-license"
                              "meeting" "meeting.agenda" "meeting.decision"
                              "participation" "land-acquisition" "notification"
                              "estate-procedure" "estate-compensation"
@@ -248,6 +248,7 @@
                  :activity/status "enum activity status"
                  :thk.lifecycle/type "enum lifecycle type"
                  :user/permissions "List<permission>"
+                 :user/licenses "List<user-license>"
                  :meta/creator "user"
                  :meta/modifier "user"
                  :comment/author "user"
@@ -273,6 +274,8 @@
                  :thk.contract/type "enum contract type"
                  :company-contract-employee/user "user"
                  :company-contract-employee/role "enum role"
+                 :company-contract-employee/attached-licenses "List<user-license>"
+                 :company-contract-employee/attached-files "List<file>"
                  :company-contract/employees "List<company-contract-employee>"
                  :company-contract/contract "thk.contract"
                  :company-contract/company "company"
@@ -308,6 +311,7 @@
            "meta --> user\n"
            "thk.project -r-> user\n"
            "user ||--o{ permission\n"
+           "user ||--o{ \"user-license\"\n"
            "comment ||--o{ file\n"
            "task ||--o{ comment\n"
            "activity ||--o{ meeting\n"
@@ -333,7 +337,7 @@
            "\"company-contract\" --> company\n"
            "\"company-contract\" --> thk.contract\n"
            "\"company-contract\" ||--o{ \"company-contract\"\n"
-
+           "\"company-contract-employee\" ||--o{ \"user-license\"\n"
            "review --> meeting\n"
            "review --> \"company-contract-employee\"\n"
            "review --> user\n"
