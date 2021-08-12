@@ -338,8 +338,7 @@
    (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
          license-id (:db/id license "new-license")]
      (if delete?
-       ;; todo - should only retract the link, since same license of the user can be used in different contracts
-       [[:db/retractEntity license-id]]
+       [[:db/retract employee-id :company-contract-employee/attached-licenses license-id]]
        ;; else - not delete, normal save:
        [{:db/id user-id
          :user/licenses license-id}
