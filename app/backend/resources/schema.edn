@@ -2281,4 +2281,8 @@
          [{:db/ident :key-person.status/assigned :enum/attribute :key-person/status}
           {:db/ident :key-person.status/approval-requested :enum/attribute :key-person/status}
           {:db/ident :key-person.status/approved :enum/attribute :key-person/status}
-          {:db/ident :key-person.status/rejected :enum/attribute :key-person/status}]]}]
+          {:db/ident :key-person.status/rejected :enum/attribute :key-person/status}]]}
+
+ {:db/ident :migration/new-roles-for-contract-auth
+  :txes [teet.migration.contract-authorization/migrate-roles]}
+ ]
