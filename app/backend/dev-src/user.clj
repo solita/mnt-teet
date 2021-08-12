@@ -88,7 +88,7 @@
   [user-eid]
   (tx {:db/id            user-eid
        :user/permissions [{:db/id                 "new-permission"
-                           :permission/role       :manager
+                           :permission/role       :ta-manager
                            :permission/valid-from (Date.)}]}))
 
 (defn give-external-consultant-permission
@@ -102,7 +102,7 @@
   [user-eid]
   (tx {:db/id            user-eid
        :user/permissions [{:db/id                 "new-permission"
-                           :permission/role       :internal-consultant
+                           :permission/role       :ta-consultant
                            :permission/valid-from (Date.)}]}))
 
 (defn remove-permission [user-uuid permission-eid]

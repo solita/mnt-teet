@@ -27,7 +27,7 @@
                     {:project-id (tu/->db-id "p1")
                      ;; Carla Consultant
                      :user {:user/person-id "EE33445566770"}
-                     :role :internal-consultant})
+                     :role :ta-consultant})
 
   (let [task-id (tu/create-task {:user tu/mock-user-manager :activity (act1-id)
                                  :task {:task/type :task.type/third-party-review
@@ -281,7 +281,7 @@
         (let [permissions (d/q '[:find (pull ?p [:permission/valid-from])
                                  :where
                                  [?user :user/permissions ?p]
-                                 [?p :permission/role :manager]
+                                 [?p :permission/role :ta-manager]
                                  [?p :permission/projects ?project]
                                  [?p :permission/valid-from ?valid-from]
                                  [(.before ?valid-from ?now)]

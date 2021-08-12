@@ -77,8 +77,8 @@
       [form/field :user/global-role
        [select/form-select {:format-item #(if % (name %) (str "- " (tr [:admin :user-no-global-role]) " -"))
                             :items [nil
-                                    :admin :manager
-                                    :internal-consultant
+                                    :admin :ta-project-manager
+                                    :ta-consultant
                                     :external-consultant]}]]]
 
      [:div {:style {:margin-bottom "1rem"}}
@@ -166,8 +166,8 @@
          [form/field :user/global-role
           [select/form-select {:format-item #(if % (name %) (str "- " (tr [:admin :user-no-global-role]) " -"))
                                :items [nil
-                                       :admin :manager
-                                       :internal-consultant
+                                       :admin :ta-manager
+                                       :ta-consultant
                                        :external-consultant]}]]]
         [:div {:style {:margin-bottom "1rem"}}
          [form/field :user/email
@@ -292,9 +292,9 @@
 
 (def searchable-user-groups
   {nil [:admin :all-users]
-   :manager [:admin :managers]
+   :ta-manager [:admin :managers]
    :admin [:admin :admins]
-   :internal-consultant [:admin :internal-consultants]
+   :ta-consultant [:admin :ta-consultants]
    :external-consultant [:admin :external-consultants]
    :deactivated [:admin :deactivated]})
 
