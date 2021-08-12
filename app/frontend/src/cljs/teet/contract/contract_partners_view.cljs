@@ -1010,7 +1010,7 @@
         [key-person-icon key-person-status (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
-      :thk.contract/edit-contract-partner-company employee
+      :thk.contract/edit-contract-employee employee
       [buttons/button-secondary
        {:href (routes/url-for {:page :contract-partners
                                :params (merge
