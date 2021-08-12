@@ -321,7 +321,7 @@
 
 (defcommand :thk.contract/save-license
   {:doc "Save a license"
-   :payload {:keys [employee-id license]}
+   :payload {:keys [employee-id license delete?]}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
@@ -337,18 +337,22 @@
    :transact
    (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
          license-id (:db/id license "new-license")]
-     [{:db/id user-id
-       :user/licenses license-id}
-      {:db/id employee-id
-       :company-contract-employee/attached-licenses license-id}
-      (meta-model/with-creation-or-modification-meta
-        user
-        (merge (cu/without-nils
-                (select-keys license
-                             [:user-license/name
-                              :user-license/expiration-date
-                              :user-license/link]))
-               {:db/id license-id}))])})
+     (if delete?
+       ;; todo - should only retract the link, since same license of the user can be used in different contracts
+       [[:db/retractEntity license-id]]
+       ;; else - not delete, normal save:
+       [{:db/id user-id
+         :user/licenses license-id}
+        {:db/id employee-id
+         :company-contract-employee/attached-licenses license-id}
+        (meta-model/with-creation-or-modification-meta
+          user
+          (merge (cu/without-nils
+                  (select-keys license
+                               [:user-license/name
+                                :user-license/expiration-date
+                                :user-license/link]))
+                 {:db/id license-id}))]))})
 
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"

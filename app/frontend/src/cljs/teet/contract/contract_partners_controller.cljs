@@ -41,6 +41,7 @@
 (defrecord SubmitKeyPerson [employee-id])
 (defrecord SaveLicense [employee-id license close-event])
 (defrecord SaveLicenseResult [close-event result])
+(defrecord DeleteLicense [employee-id license close-event])
 (defrecord ApproveOrReject [employee-eid form close-event command success-message])
 (defrecord ApproveOrRejectResult [close-event result])
 
@@ -239,7 +240,8 @@
      {:tuck.effect/type :command!
       :command :thk.contract/save-license
       :payload {:employee-id employee-id
-                :license license}
+                :license license
+                :delete? false}
       :success-message (tr [:contract :partner :license-saved])
       :result-event (partial ->SaveLicenseResult close-event)}))
 
@@ -249,6 +251,20 @@
           (fn [e!]
             (e! close-event))
           common-controller/refresh-fx))
+
+  DeleteLicense
+  (process-event [{:keys [employee-id license close-event]} app]
+    (log/info "delete license - empl: " employee-id ", license: " license)
+    (t/fx
+     app
+     {:tuck.effect/type :command!
+      :command :thk.contract/save-license
+      :payload {:employee-id employee-id
+                :license license
+                :delete? true}
+      :success-message (tr [:contract :partner :license-saved])
+      :result-event (partial ->SaveLicenseResult close-event)}))
+
 
   ApproveOrReject
   (process-event [{:keys [employee-eid form close-event command success-message]} app]
