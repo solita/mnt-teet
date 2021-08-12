@@ -864,7 +864,9 @@
   (when-not (contains? @enum-values :company-contract-employee/role)
     (e! (query-enums-for-attribute! :company-contract-employee/role)))
   (fn [opts]
-    (let [values (@enum-values :company-contract-employee/role)
+    (let [values (remove                                    ;;Supervisor role is no longer needed so just remove it from options instead of retracting from db
+                   #(= :company-contract-employee.role/supervisor (:db/ident %))
+                   (@enum-values :company-contract-employee/role))
           selected-enum-values (reduce (fn [acc item]
                                          (if (keyword? item)
                                            (conj acc (first (filter #(= (:db/ident %) item) values)))
