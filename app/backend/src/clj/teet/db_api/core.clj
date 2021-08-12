@@ -113,7 +113,6 @@
                      (contains? options :contract-authorization))
                  (contains? options :project-id))
             (and (not unauthenticated?)
-                 (= request-type :query)
                  (nil? authorization)
                  (nil? contract-authorization)
                  (some? project-id)))
@@ -144,6 +143,11 @@
     (doseq [[k _] authorization]
       (assert (authz-rule-names k)
               (str "Unknown authorization rule: " k))))
+  (when contract-authorization
+    (let [contract-authz-rule-names (authorization-check/contract-authorization-rule-names)
+          action (:action contract-authorization)]
+      (assert (contract-authz-rule-names action)
+              (str "Unknown contract authorization rule in " request-name ": " action))))
 
 
   (let [-ctx (gensym "CTX")
@@ -222,10 +226,10 @@
                                                                          ~contract-authorization
                                                                          {:db ~-db
                                                                           :user ~-user})))
-                             ~(when (and (= request-type :query)
-                                         (nil? contract-authorization)
+                             ~(when (and (nil? contract-authorization)
+                                         (nil? authorization)
                                          (some? project-id))
-                                `(authorization/project-read-access? ~-db ~-user ~project-id))))
+                                `(authorization/general-project-access? ~-db ~-user ~project-id))))
                        (log/warn "Failed to authorize " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
                                        {:status 403

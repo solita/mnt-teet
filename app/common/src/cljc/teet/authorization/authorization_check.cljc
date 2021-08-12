@@ -18,6 +18,13 @@
                           slurp
                           read-string))))
 
+#?(:clj
+   (def contract-authorization-rules
+     (delay (some-> "contract-authorization.edn"
+                    io/resource
+                    slurp
+                    read-string))))
+
 (defonce
   ^{:doc "Delayed set of all role names"}
   all-roles
@@ -164,3 +171,7 @@ check as the last argument (true/false)."
                                            :entity entity})))))))]))
 (defn authorization-rule-names []
   (into #{} (keys @authorization-rules)))
+
+#?(:clj
+   (defn contract-authorization-rule-names []
+     (into #{} (keys @contract-authorization-rules))))

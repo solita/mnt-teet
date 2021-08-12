@@ -27,7 +27,7 @@
 (defn get-authorizations-from-sheet [sheet-path]
   (let [sheet (->> (sheet/load-workbook sheet-path)
                    (sheet/select-sheet "Contract authorization"))
-        role->column (common/role->column-mapping sheet 9 2)]
+        role->column (common/role->column-mapping sheet 7 2)]
     (into
       {}
       (for [row (drop 5 (sheet/row-seq sheet))

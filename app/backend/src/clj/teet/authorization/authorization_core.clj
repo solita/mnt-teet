@@ -14,7 +14,7 @@
                    slurp
                    read-string)))
 
-(defn project-read-access?
+(defn general-project-access?
   [db user project-id]
   (let [user-ref (user-model/user-ref user)
         user-global-roles (user-db/users-valid-global-permissions db user-ref)
@@ -28,7 +28,11 @@
   Given either company or a target find if the user has the right.
   If neither is given only checks for global permissions"
   [{:keys [db user action target company contract] :as opts}]
-  {:pre [(and db (keyword? action) (action @authorization-matrix))
+  {:pre [(some? db)
+         (keyword? action)
+         (do (println action)
+             (clojure.pprint/pprint @authorization-matrix)
+             (action @authorization-matrix))
          (<= (count (select-keys opts [target company contract]))
              1)]}
   (if-not (environment/feature-enabled? :contract-partners)
@@ -51,4 +55,3 @@
       (-> (set/intersection authorized-roles roles)
           seq
           boolean))))
-

@@ -19,7 +19,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contracts/edit-contract-metadata}
+   :contract-authorization {:action :contract/edit-contract-metadata}
    :transact
    (let [contract-data (-> form-data
                            contract-model/form-values->db-values
@@ -33,7 +33,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contracts/manage-contract-companies}
+   :contract-authorization {:action :contract/manage-contract-companies}
    :pre [^{:error :business-registry-code-in-use}
          (company-db/business-registry-code-unique?
            db
@@ -197,7 +197,8 @@
              key-person? :key-person?}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/:submit-key-person-for-approval
+                            :company (contract-db/get-company-for-company-contract-employee db employee-id)}
    :transact
    (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
          {user-files :user/files
@@ -355,7 +356,8 @@
    :payload {company-contract-employee-id :employee-id}
    :project-id nil
    :context {:keys [user db]}
-   :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/submit-key-person-for-approval
+                            :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
                :company-contract-employee/key-person-status
@@ -368,7 +370,10 @@
              comment :key-person/approval-comment}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/contract-editing {}}
+   :authorization {:contracts/edit-partners {}}
+   :contract-authorization {:action :contract/approve-key-persons
+                            ;; :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)
+                            }
    :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
                :company-contract-employee/key-person-status
@@ -383,7 +388,8 @@
              comment :key-person/approval-comment}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/approve-key-persons
+                            :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :pre [(not-empty comment)
          (contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
