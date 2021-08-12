@@ -52,7 +52,7 @@
    :user/permissions [(merge
                        {:db/id "new-manager-permission"
                         :permission/valid-from (java.util.Date.)
-                        :permission/role :ta-manager
+                        :permission/role :ta-project-manager
                         :permission/projects [project-eid]}
                        (meta-model/creation-meta user))]})
 
@@ -60,7 +60,7 @@
   "Check if given manager has the manager permission for the project and add it if missing.
   Returns tx data map to transact the permission or nil."
   [db project-eid user manager]
-  (when-not (permission-db/has-permission? db manager project-eid :ta-manager)
+  (when-not (permission-db/has-permission? db manager project-eid :ta-project-manager)
     (manager-permission-tx project-eid user manager)))
 
 (defcommand :activity/create

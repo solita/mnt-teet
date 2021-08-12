@@ -88,7 +88,7 @@
   [user-eid]
   (tx {:db/id            user-eid
        :user/permissions [{:db/id                 "new-permission"
-                           :permission/role       :ta-manager
+                           :permission/role       :ta-project-manager
                            :permission/valid-from (Date.)}]}))
 
 (defn give-external-consultant-permission

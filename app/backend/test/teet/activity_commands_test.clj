@@ -281,7 +281,7 @@
         (let [permissions (d/q '[:find (pull ?p [:permission/valid-from])
                                  :where
                                  [?user :user/permissions ?p]
-                                 [?p :permission/role :ta-manager]
+                                 [?p :permission/role :ta-project-manager]
                                  [?p :permission/projects ?project]
                                  [?p :permission/valid-from ?valid-from]
                                  [(.before ?valid-from ?now)]

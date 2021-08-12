@@ -338,7 +338,7 @@
         :let [[start end] period
               now (js/Date.)]]
     {:primary-text (user-model/user-name manager)
-     :secondary-text (tr [:roles :ta-manager])
+     :secondary-text (tr [:roles :ta-project-manager])
      :tertiary-text [:span (tr-enum name)
                      (if (and (or (nil? start) (<= start now))
                               (or (nil? end) (>= end now)))
@@ -388,7 +388,7 @@
        (fn [activity]
          {:id (:db/id activity)
           :primary-text [:span (tr [:common :unassigned])]
-          :secondary-text [:span (tr [:roles :ta-manager])]
+          :secondary-text [:span (tr [:roles :ta-project-manager])]
           :tertiary-text [:span (tr-enum (:activity/name activity))]})
        activities-missing-manager))])
 

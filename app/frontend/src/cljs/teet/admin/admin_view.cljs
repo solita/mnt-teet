@@ -166,7 +166,7 @@
          [form/field :user/global-role
           [select/form-select {:format-item #(if % (name %) (str "- " (tr [:admin :user-no-global-role]) " -"))
                                :items [nil
-                                       :admin :ta-manager
+                                       :admin :ta-project-manager
                                        :ta-consultant
                                        :external-consultant]}]]]
         [:div {:style {:margin-bottom "1rem"}}
@@ -292,7 +292,7 @@
 
 (def searchable-user-groups
   {nil [:admin :all-users]
-   :ta-manager [:admin :managers]
+   :ta-project-manager [:admin :managers]
    :admin [:admin :admins]
    :ta-consultant [:admin :ta-consultants]
    :external-consultant [:admin :external-consultants]

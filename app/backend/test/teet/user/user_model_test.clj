@@ -62,7 +62,7 @@
         "Returns no projects for global permissions"))
 
   (let [timestamp (Date.)
-        permissions [{:permission/role :ta-manager
+        permissions [{:permission/role :ta-project-manager
                       :permission/valid-from timestamp
                       :permission/valid-until timestamp
                       :permission/projects [{:db/id 1}
@@ -78,8 +78,8 @@
         "Returns a map for each role-project pair")
 
     (is (= (set projects)
-           #{{:db/id 1 :permission/role :ta-manager}
-             {:db/id 2 :permission/role :ta-manager}
+           #{{:db/id 1 :permission/role :ta-project-manager}
+             {:db/id 2 :permission/role :ta-project-manager}
              {:db/id 2 :permission/role :admin}
              {:db/id 3 :permission/role :admin}})
         "For each pair returns both the db id and related role")))

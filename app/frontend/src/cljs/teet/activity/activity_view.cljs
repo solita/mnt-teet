@@ -127,7 +127,7 @@
     [typography/SectionHeading (tr [:roles :owner])]
     [:span (user-model/user-name owner)]]
    [:div {:style {:margin-right "3rem"}}
-    [typography/SectionHeading (tr [:roles :ta-manager])]
+    [typography/SectionHeading (tr [:roles :ta-project-manager])]
     [:span (user-model/user-name manager)]]
    [:div
     [typography/SectionHeading (tr [:activity :status])]
