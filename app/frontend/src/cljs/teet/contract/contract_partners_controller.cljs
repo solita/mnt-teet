@@ -262,7 +262,7 @@
       :payload {:employee-id employee-id
                 :license license
                 :delete? true}
-      :success-message (tr [:contract :partner :license-saved])
+      :success-message (tr [:contract :partner :license-deleted])
       :result-event (partial ->SaveLicenseResult close-event)}))
 
 
