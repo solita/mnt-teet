@@ -5,7 +5,8 @@
             [clojure.set :as set]
             [teet.user.user-model :as user-model]
             [teet.user.user-db :as user-db]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [teet.permission.permission-db :as permission-db]))
 
 (defonce authorization-matrix
          (delay
@@ -17,9 +18,12 @@
 (defn general-project-access?
   [db user project-id]
   (let [user-ref (user-model/user-ref user)
-        user-global-roles (user-db/users-valid-global-permissions db user-ref)
-        user-roles-for-project (authorization-db/user-roles-for-project db user-ref project-id)]
-    (-> (set/union user-global-roles user-roles-for-project)
+        user-roles-for-project (authorization-db/user-roles-for-project db user-ref project-id)
+        user-permissions-in-project (into #{}
+                                         (map
+                                           :permission/role)
+                                          (permission-db/user-permissions-in-project db user project-id))]
+    (-> (set/union user-permissions-in-project user-roles-for-project)
         seq
         boolean)))
 
