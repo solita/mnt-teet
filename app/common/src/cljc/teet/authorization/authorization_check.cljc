@@ -28,7 +28,7 @@
 
 (def ^{:doc "Roles that cannot be currently granted from user interface."
        :private true}
-  ungrantable-roles #{:admin :guest :authenticated-guest :manager})
+  ungrantable-roles #{:admin :guest :authenticated-guest})
 
 (defn role-can-be-granted? [role]
   (not (ungrantable-roles role)))

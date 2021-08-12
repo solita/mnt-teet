@@ -49,7 +49,7 @@
     :user/family-name "Boss"
     :user/email "benjamin.boss@example.com"
     :user/permissions [{:db/id "boss-permission"
-                        :permission/role :manager
+                        :permission/role :ta-project-manager
                         :permission/valid-from (java.util.Date.)}]
     }
 
@@ -66,7 +66,7 @@
     :user/family-name "Consultant"
     :user/email "irma.i.consultant@example.com"
     ;; :user/permissions [{:db/id "irma-permission"
-    ;;                     :permission/role :internal-consultant
+    ;;                     :permission/role :ta-consultant
     ;;                     :permission/valid-from (java.util.Date.)}]
     ;; :user/organization "Maanteeamet"
                   }])

@@ -191,7 +191,7 @@
                       ;; Danny D. Manager
                       {:user/person-id "EE12345678900"
                        :user/email "required@test.com"
-                       :user/global-role :manager})
+                       :user/global-role :ta-project-manager})
 
     ;; He can now grant the permission
     (is (tu/local-command tu/mock-user-manager
