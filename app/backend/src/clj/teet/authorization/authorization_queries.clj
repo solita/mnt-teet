@@ -22,4 +22,5 @@
     (authorization/authorized-for-action? (merge {:user user :db db :action authorization-for-action}
                                                  (select-keys args [:company
                                                                     :target
-                                                                    :contract])))))
+                                                                    :contract
+                                                                    :entity-id])))))
