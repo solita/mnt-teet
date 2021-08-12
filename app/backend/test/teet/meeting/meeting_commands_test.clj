@@ -118,7 +118,7 @@
                                 :permission/valid-from now}]}
            {:user/id tu/internal-consultant-id
             :user/permissions [{:db/id "new-permission-edna"
-                                :permission/role :internal-consultant
+                                :permission/role :ta-consultant
                                 :permission/valid-from now}]}))
 
   (let [activity (tu/->db-id "p1-lc1-act1")

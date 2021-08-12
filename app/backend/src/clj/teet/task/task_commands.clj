@@ -69,7 +69,7 @@
   [db from role target type task-id]
   (if-let [to (case role
                 :assignee (task-db/get-task-assignee-by-id db task-id)
-                :manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id)))]
+                :ta-project-manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id)))]
     (notification-db/notification-tx
       db
       {:from from
@@ -149,7 +149,7 @@
    :transact (into
                [{:db/id task-id
                  :task/status :task.status/waiting-for-review}
-                (review-notification-tx db user :manager task-id :notification.type/task-waiting-for-review task-id)]
+                (review-notification-tx db user :ta-project-manager task-id :notification.type/task-waiting-for-review task-id)]
                (not-reviewed-files-and-parts-tx db user task-id :file.status/submitted :file.part.status/waiting-for-review))})
 
 (defcommand :task/review-task-part
@@ -186,7 +186,7 @@
    :transact (into
                [{:db/id taskpart-id
                  :file.part/status :file.part.status/waiting-for-review}
-                (review-notification-tx db user :manager taskpart-id :notification.type/task-part-waiting-for-review task-id)]
+                (review-notification-tx db user :ta-project-manager taskpart-id :notification.type/task-part-waiting-for-review task-id)]
                (taskpart-file-tx db user taskpart-id :file.status/submitted))})
 
 (defcommand :task/reopen-task-part

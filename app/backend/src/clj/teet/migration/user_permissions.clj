@@ -9,8 +9,8 @@
 
 (def permission-importance
   {:admin 1
-   :manager 2
-   :internal-consultant 3
+   :ta-project-manager 2
+   :ta-consultant 3
    :external-consultant 4})
 
 (defn remove-overlapping-global-rights
