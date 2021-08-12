@@ -17,8 +17,11 @@
 (s/def :thk.contract/add-contract-employee
   (s/keys :req [(or (and :user/email
                          :user/person-id)
-                    (and :company-contract-employee/user))]))
+                    (and :company-contract-employee/user))
+                :company-contract-employee/role]))
 
 (s/def :thk.contract/edit-contract-employee
-  (s/keys :req [:user/given-name :user/family-name :user/email :user/person-id]))
+  (s/keys :req [:user/given-name :user/family-name
+                :user/person-id :user/email
+                :company-contract-employee/role]))
 

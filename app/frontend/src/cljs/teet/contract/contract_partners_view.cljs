@@ -158,7 +158,7 @@
                 {:title delete-disabled-error-text})
               [buttons/delete-button-with-confirm
                {:action delete
-                :underlined? :true
+                :underlined? true
                 :confirm-button-text (tr [:contract :delete-button-text])
                 :disabled delete-disabled-error-text
                 :cancel-button-text (tr [:contract :cancel-button-text])
@@ -566,7 +566,7 @@
 (defn info-personnel-section
   [e! {:keys [params query] :as app} selected-partner employee]
   [:div {:class (<class contract-style/personnel-section-style)}
-   [Grid {:container :true
+   [Grid {:container true
           :direction :row-reverse
           :justify-content :flex-start
           :align-items :center}
@@ -744,7 +744,7 @@
    :thk.contract/add-contract-employee selected-partner
    [buttons/delete-button-with-confirm
     {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
-     :underlined? :true
+     :underlined? true
      :confirm-button-text (tr [:contract :delete-button-text])
      :cancel-button-text (tr [:contract :cancel-button-text])
      :modal-title (tr [:contract :are-you-sure-remove-key-person-assignment])
@@ -833,18 +833,19 @@
                 :validate (fn [value]
                             (when-not (str/blank? value)
                               (validation/validate-person-id value)))
-                :required? :true}
+                :required? true}
     [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :user/email
-                :validate validation/validate-email-optional
-                :required? :true}
+                :validate validation/validate-email-optional}
     [TextField {:disabled personal-info-disabled?}]]
    [form/field :user/phone-number
     [TextField {:disabled personal-info-disabled?}]]
-   [form/field {:attribute :company-contract-employee/role}
+   [form/field {:attribute :company-contract-employee/role
+                :required? true}
     [select/select-user-roles-for-contract
      {:e! e!
       :error-text (tr [:contract :role-required])
+      :required true
       :placeholder (tr [:contract :select-user-roles])
       :no-results (tr [:contract :no-matching-roles])
       :show-empty-selection? true
@@ -898,7 +899,7 @@
              :else
              [:div
               [form/field {:attribute :company-contract-employee/user
-                           :required? :true}
+                           :required? true}
                [select/select-search
                 {:e! e!
                  :query (fn [text]
@@ -914,6 +915,7 @@
            [form/field {:attribute :company-contract-employee/role}
             [select/select-user-roles-for-contract
              {:e! e!
+              :required true
               :error-text (tr [:contract :role-required])
               :placeholder (tr [:contract :select-user-roles])
               :no-results (tr [:contract :no-matching-roles])
@@ -930,50 +932,53 @@
         given-name (:user/given-name user)
         family-name (:user/family-name user)
         user-id (:user/id user)
-        roles (set (:company-contract-employee/role selected-person))
+        roles (when-let [roles (:company-contract-employee/role selected-person)]
+                (set roles))
         key-person? (:company-contract-employee/key-person? selected-person)
         personal-info-disabled? (:user/last-login user)]
     (r/with-let
-      [form-atom (r/atom {:user/person-id person-id
-                          :user/email email
-                          :user/phone-number phone-number
-                          :user/given-name given-name
-                          :user/family-name family-name
-                          :user/id user-id
-                          :company-contract-employee/role roles})]
+      [form-atom (r/atom (merge {:user/person-id person-id
+                                 :user/email email
+                                 :user/phone-number phone-number
+                                 :user/given-name given-name
+                                 :user/family-name family-name
+                                 :user/id user-id}
+                                (when roles
+                                  {:company-contract-employee/role roles})))]
       [Grid {:container true}
-       [Grid {:itme true :xs 12 :md 6}]]
-      [form/form2 {:e! e!
-                   :value @form-atom
-                   :on-change-event (form/update-atom-event form-atom (fn [old new]
-                                                                        (if (= {:company-contract-employee/role #{}} new)
-                                                                          (dissoc old :company-contract-employee/role)
-                                                                          (merge old new))))
-                   :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
-                                    {:query (merge query
-                                                   {:page (if key-person?
-                                                            :assign-key-person
-                                                            :personnel-info)
-                                                    :user-id user-id})})
-                   :spec :thk.contract/edit-contract-employee
-                   :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
-                                  {:form-value @form-atom
-                                   :company-contract-eid (:db/id selected-partner)}
-                                  (fn [_response]
-                                    (fn [e!]
-                                      (e! (common-controller/->Refresh))
-                                      (e! (common-controller/map->NavigateWithExistingAsDefault
-                                            {:query (merge
-                                                      query
-                                                      {:page (if key-person?
-                                                               :assign-key-person
-                                                               :personnel-info)
-                                                       :user-id user-id})}))))
-                                  (tr [:contract :partner :person-updated]))}
-       [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
-        (tr [:contract :partner :edit-person])]
-       [new-person-form-fields e! (:form-value @form-atom) personal-info-disabled?]
-       [form/footer2 (partial contract-personnel-form-footer @form-atom)]])))
+       [Grid {:itme true :xs 12 :md 6}]
+       [:span (pr-str @form-atom)]
+       [form/form2 {:e! e!
+                    :value @form-atom
+                    :on-change-event (form/update-atom-event form-atom (fn [old new]
+                                                                         (if (= {:company-contract-employee/role #{}} new)
+                                                                           (dissoc old :company-contract-employee/role)
+                                                                           (merge old new))))
+                    :cancel-event #(common-controller/map->NavigateWithExistingAsDefault
+                                     {:query (merge query
+                                                    {:page (if key-person?
+                                                             :assign-key-person
+                                                             :personnel-info)
+                                                     :user-id user-id})})
+                    :spec :thk.contract/edit-contract-employee
+                    :save-event #(common-controller/->SaveFormWithConfirmation :thk.contract/edit-contract-employee
+                                                                               {:form-value @form-atom
+                                                                                :company-contract-eid (:db/id selected-partner)}
+                                                                               (fn [_response]
+                                                                                 (fn [e!]
+                                                                                   (e! (common-controller/->Refresh))
+                                                                                   (e! (common-controller/map->NavigateWithExistingAsDefault
+                                                                                         {:query (merge
+                                                                                                   query
+                                                                                                   {:page (if key-person?
+                                                                                                            :assign-key-person
+                                                                                                            :personnel-info)
+                                                                                                    :user-id user-id})}))))
+                                                                               (tr [:contract :partner :person-updated]))}
+        [typography/Heading1 {:class (<class common-styles/margin-bottom 1.5)}
+         (tr [:contract :partner :edit-person])]
+        [new-person-form-fields e! (:form-value @form-atom) personal-info-disabled?]
+        [form/footer2 (partial contract-personnel-form-footer @form-atom)]]])))
 
 (defn partner-info-header
   [partner params]
