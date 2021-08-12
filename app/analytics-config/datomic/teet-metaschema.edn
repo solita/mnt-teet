@@ -54,6 +54,8 @@
   :company-contract/company {:name "company_contract"}
   :company-contract-employee/user {:name "company_contract_employee"}
 
+  :user-license/name {:name "userlicense"
+                      :include [:user-license/*]}
   }
 
  ;; Joins are not needed, but make the tables "wide" for
