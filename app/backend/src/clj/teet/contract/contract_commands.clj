@@ -385,7 +385,7 @@
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/submit-key-person-for-approval
                             :company (get-in
-                                       (du/entity db employee-id)
+                                       (du/entity db company-contract-employee-id)
                                        [:company-contract/_employees :company-contract/company :db/id])}
    :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
