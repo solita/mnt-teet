@@ -168,7 +168,7 @@
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
    :payload {:keys [entity-id entity-type comment files visibility track?] :as payload}
-   :project-id (project-db/entity-project-id db entity-type entity-id)
+   :allowed-for-all-users? true
    :pre [(valid-visibility-for-user? user
                                      (project-db/entity-project-id db entity-type entity-id)                                                                  {:meta/creator {:db/id (:db/id user)}}
                                      visibility)]
