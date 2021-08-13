@@ -486,6 +486,24 @@
        (when text
          [:span {:style {:color color}} text])]])))
 
+(defn- toggle-employee-active-button [e! partner-company employee active?]
+  (let [action-text (tr [:contract :partner (if active? :deactivate :activate)])]
+    [authorization-check/when-authorized
+     :thk.contract/add-contract-employee partner-company
+     [buttons/button-with-confirm
+      {:action (e! contract-partners-controller/->ChangePersonStatus
+                   (:db/id employee) (not active?))
+       :modal-title (str action-text "?")
+       :modal-text (tr [:contract :partner :change-status-text])
+       :close-on-action? true
+       :confirm-button-text action-text
+       :confirm-button-style (if active? buttons/button-warning buttons/button-green)}
+      [(if active? buttons/button-warning buttons/button-green)
+       {:id (str "person-status-btn-" (:db/id employee))
+       :size :small
+       :class (<class contract-style/personnel-activation-link-style active?)}
+      (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))]]]))
+
 (defn employee-table
   [e! {:keys [params query] :as app} employees selected-partner active?]
   [:div {:class (<class contract-style/personnel-table-style)}
@@ -510,20 +528,7 @@
           [:div {:style {:display :flex}}
            [key-person-icon key-person-status]]
           [:span])]
-       [[authorization-check/when-authorized
-         :thk.contract/add-contract-employee selected-partner
-         [buttons/button-with-confirm
-          {:action (e! contract-partners-controller/->ChangePersonStatus (:db/id employee) (not active?))
-           :modal-title (str (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate])) "?")
-           :modal-text (tr [:contract :partner :change-status-text])
-           :close-on-action? true
-           :confirm-button-text (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))
-           :confirm-button-style (if active? buttons/button-warning buttons/button-green)}
-          [(if active? buttons/button-warning buttons/button-green)
-           {:id (str "person-status-btn-" (:db/id employee))
-            :size :small
-            :class (<class contract-style/personnel-activation-link-style active?)}
-           (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate]))]]]]
+       [[toggle-employee-active-button e! selected-partner employee active?]]
        [[buttons/small-button-secondary
          {:href (routes/url-for {:page :contract-partners
                                  :params (merge
@@ -535,20 +540,24 @@
                                            :user-id (get-in employee [:company-contract-employee/user :user/id])})})}
          (tr [:common :view-more-info])]]])]])
 
+(defn add-contract-employee-button
+  [partner-company params query]
+  [authorization-check/when-authorized
+   :thk.contract/add-contract-employee partner-company
+   [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
+                              :href (routes/url-for {:page :contract-partners
+                                                     :params params
+                                                     :query (merge
+                                                             query
+                                                             {:page :add-personnel})})}
+    (tr [:contract :add-person])]])
+
 (defn personnel-section
   [e! {:keys [params query] :as app} selected-partner]
   [:div {:class (<class contract-style/personnel-section-style)}
    [:div {:class (<class contract-style/personnel-section-header-style)}
     [typography/Heading2 (tr [:contract :persons])]
-    [authorization-check/when-authorized
-     :thk.contract/add-contract-employee selected-partner
-     [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
-                                :href (routes/url-for {:page :contract-partners
-                                                       :params params
-                                                       :query (merge
-                                                                query
-                                                                {:page :add-personnel})})}
-      (tr [:contract :add-person])]]]
+    [add-contract-employee-button selected-partner params query]]
    [employee-table e! app (filterv #(:company-contract-employee/active? %)
                                    (:company-contract/employees selected-partner))
     selected-partner true]
