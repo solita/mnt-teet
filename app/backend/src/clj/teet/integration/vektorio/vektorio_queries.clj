@@ -34,5 +34,5 @@
   {:doc "Get instant login hash for the default user id to access BIM viewer"
    :context {db :db user :user conn :conn}
    :args {vektorio-project-id :vektorio/project-id project-id :db/id}
-   :project-id project-id}
+   :allowed-for-all-users? true}
   (url-for-bim-viewer conn user vektorio-project-id))

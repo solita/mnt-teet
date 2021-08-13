@@ -37,8 +37,7 @@
   {:doc "Get a download link to the given file"
    :context {db :db}
    :args {file-id :file-id}
-   :project-id (project-db/file-project-id db file-id)
-   :authorization {:document/view-document {:db/id file-id}}}
+   :project-id (project-db/file-project-id db file-id)}
   (url-for-file db file-id true))
 
 (defquery :file/thumbnail
@@ -47,7 +46,6 @@
    :args {file-id :file-id
           thumbnail-size :size}
    :project-id (project-db/file-project-id db file-id)
-   :authorization {:document/view-document {:db/id file-id}}
    :pre [(file-model/image? (d/pull db [:file/name] file-id))
          (<= 32 thumbnail-size 256)]}
   (let [bucket (file-storage/storage-bucket)

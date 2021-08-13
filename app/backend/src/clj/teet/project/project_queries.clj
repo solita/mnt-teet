@@ -117,10 +117,7 @@
   {:doc "Fetch project information"
    :context {:keys [db user]}
    :args {id :thk.project/id :as args}
-   :project-id [:thk.project/id id]
-   :authorization {:project/read-info {:eid [:thk.project/id id]
-                                       :link :thk.project/owner
-                                       :access :read}}}
+   :project-id [:thk.project/id id]}
   (fetch-project db user args))
 
 (defquery :thk.project/fetch-project-file
@@ -129,12 +126,7 @@
    :args {id :file/id}
    :project-id (project-db/file-project-id
                 db
-                (file-db/file-by-uuid db id))
-   :authorization {:project/read-info {:db/id (project-db/file-project-id
-                                               db
-                                               (file-db/file-by-uuid db id))
-                                       :link :thk.project/owner
-                                       :access :read}}}
+                (file-db/file-by-uuid db id))}
   (let [{file-id :file :as navigation} (file-db/file-navigation-info-by-uuid db id)
         project-id (project-db/file-project-id db file-id)
         project-thk-id (:thk.project/id (du/entity db project-id))]
@@ -174,10 +166,7 @@
   {:doc "Fetch assignees by activity"
    :context {db :db}
    :args {:thk.project/keys [id]}
-   :project-id [:thk.project/id id]
-   :authorization {:project/read-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner
-                                          :access :read}}}
+   :project-id [:thk.project/id id]}
   (assignees-by-activity db [:thk.project/id id]))
 
 (defn- maps->sheet [maps]
@@ -209,9 +198,7 @@
   {:doc "Download restrictions and cadastral units data as Excel."
    :context {db :db}
    :args {:thk.project/keys [id]}
-   :project-id [:thk.project/id id]
-   :authorization {:project/read-info {:eid [:thk.project/id id]
-                                       :link :thk.project/owner}}}
+   :project-id [:thk.project/id id]}
   ^{:format :raw}
   {:status 200
    :headers {"Content-Disposition" (str "attachment; filename=THK" id "-related.xlsx")}

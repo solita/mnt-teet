@@ -19,7 +19,8 @@
             [teet.entity.entity-db :as entity-db]
             [clojure.spec.alpha :as s]
             [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.authorization.authorization-check :as authorization-check])
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.authorization.authorization-core :refer [special-authorization]])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -109,13 +110,16 @@
    :payload {:keys [activity-eid]
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
-   :authorization {:meeting/add-meeting {}}
    :transact [(list 'teet.meeting.meeting-tx/create-meeting
                     activity-eid
                     (merge (select-keys form-data [:meeting/title :meeting/location
                                                    :meeting/start :meeting/end
                                                    :meeting/organizer])
                            (meta-model/creation-meta user)))]})
+
+(defmethod special-authorization :meeting/update
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/update
   {:doc "Update existing meeting"
@@ -125,6 +129,7 @@
    :project-id (project-db/activity-project-id db activity-eid)
    :authorization {:meeting/edit-meeting {:db/id (:db/id form-data)
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/update}
    :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
    :transact (update-meeting-tx
                user
@@ -159,6 +164,10 @@
         existing-ids (meeting-db/meeting-agenda-ids db meeting-id)]
     (every? existing-ids ids-to-update)))
 
+(defmethod special-authorization :meeting/update-agenda
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/update-agenda
   {:doc "Add/update agenda item(s) in a meeting"
    :context {:keys [db user]}
@@ -168,6 +177,7 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/update-agenda}
    :pre [(agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
    :transact
    (db-api-large-text/store-large-text!
@@ -185,6 +195,10 @@
                                 :meeting.agenda/responsible]))
              agenda)}]))})
 
+(defmethod special-authorization :meeting/delete-agenda
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/delete-agenda
   {:doc "Mark given agenda topic as deleted"
    :context {:keys [db user]}
@@ -192,10 +206,15 @@
    :project-id (project-db/agenda-project-id db agenda-id)
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/agenda-meeting-id db agenda-id)
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/delete-agenda}
    :transact (update-meeting-tx
                user
                (meeting-db/agenda-meeting-id db agenda-id)
                [(meta-model/deletion-tx user agenda-id)])})
+
+(defmethod special-authorization :meeting/remove-participation
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/remove-participation
   {:doc "Remove a participation."
@@ -206,10 +225,15 @@
                  (get-in (du/entity db id) [:participation/in :db/id]))
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db id) [:participation/in :db/id])
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/remove-participation}
    :transact (update-meeting-tx
                user
                (get-in (du/entity db id) [:participation/in :db/id])
                [(meta-model/deletion-tx user id)])})
+
+(defmethod special-authorization :meeting/add-participation
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/add-participation
   {:doc "Remove a participation."
@@ -219,6 +243,7 @@
    :project-id (project-db/meeting-project-id db meeting)
    :authorization {:meeting/edit-meeting {:db/id meeting
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/add-participation}
    :transact [(list 'teet.meeting.meeting-tx/add-participation
                     user
                     (-> participation
@@ -237,6 +262,10 @@
                                                     :user/email})
                                    %))))]})
 
+(defmethod special-authorization :meeting/change-participation-absence
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/change-participation-absence
   {:doc "Change the status of participation to absent or not absent"
    :context {:keys [db user]}
@@ -247,6 +276,7 @@
                  (get-in (du/entity db participation-id) [:participation/in :db/id]))
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db participation-id) [:participation/in :db/id])
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/change-participation-absence}
    :transact (update-meeting-tx
                user
                (get-in (du/entity db participation-id) [:participation/in :db/id])
@@ -311,6 +341,10 @@
     (tx-ret [{:db/id meeting-eid
               :meeting/notifications-sent-at (Date.)}])))
 
+(defmethod special-authorization :meeting/send-notifications
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/send-notifications
   {:doc "Send email / in-app notifications to organizer and participants."
    :context {:keys [db conn user]}
@@ -318,6 +352,7 @@
    :project-id (project-db/meeting-project-id db meeting-eid)
    :authorization {:meeting/send-notifications {:db/id meeting-eid
                                                 :link :meeting/organizer-or-reviewer}}}
+  :contract-authorization {:action :meeting/send-notifications}
   (let [project-eid (project-db/meeting-project-id db meeting-eid)
         all-to (meeting-db/participants db meeting-eid)
         to (->> (remove #(= (:db/id user) (:db/id %)) all-to) ;; don't send emails to current user
@@ -349,6 +384,9 @@
                               project-eid)
         (send-meeting-email! db meeting project-eid meeting-link to meeting-eid)))))
 
+(defmethod special-authorization :meeting/cancel
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/cancel
   {:doc "Delete existing meeting"
@@ -357,6 +395,7 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/cancel}
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]}
   (tx-ret (update-meeting-tx
             user
@@ -365,14 +404,20 @@
             [{:db/id meeting-id
               :meta/deleted? true}])))
 
+(defmethod special-authorization :meeting/create-decision
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/create-decision
   {:doc "Create a new decision under a topic"
    :context {:keys [db user]}
    :payload {:keys [agenda-eid form-data]}
    :project-id (project-db/agenda-project-id db agenda-eid)
+   :contract-authorization {:action :meeting/create-decision}
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db agenda-eid)
                                                          [:meeting/_agenda :db/id])
                                           :link :meeting/organizer-or-reviewer}}
+
    :transact
    (db-api-large-text/store-large-text!
     meeting-model/rich-text-fields
@@ -385,11 +430,16 @@
                                           :meeting.decision/number (meeting-db/next-decision-number db agenda-eid)}
                                          (meta-model/creation-meta user))]}]))})
 
+(defmethod special-authorization :meeting/update-decision
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/update-decision
   {:doc "Create a new decision under a topic"
    :context {:keys [db user]}
    :payload {:keys [form-data]}
    :project-id (project-db/decision-project-id db (:db/id form-data))
+   :contract-authorization {:action :meeting/update-decision}
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db (:db/id form-data))
                                           :link :meeting/organizer-or-reviewer}}
    :transact
@@ -401,6 +451,10 @@
      [(merge (select-keys form-data [:meeting.decision/body :db/id])
              (meta-model/modification-meta user))]))})
 
+(defmethod special-authorization :meeting/delete-decision
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
+
 (defcommand :meeting/delete-decision
   {:doc "Mark a given decision as deleted"
    :context {:keys [db user]}
@@ -408,10 +462,15 @@
    :project-id (project-db/decision-project-id db decision-id)
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db decision-id)
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/delete-decision}
    :transact (update-meeting-tx
                user
                (meeting-db/decision-meeting-id db decision-id)
                [(meta-model/deletion-tx user decision-id)])})
+
+(defmethod special-authorization :meeting/review
+  [{:keys [db user entity-id]}]
+  (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/review
   {:doc "Either approve or reject the meeting"
@@ -420,6 +479,7 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
+   :contract-authorizaion {:action :meeting/review}
    :pre [(meeting-db/user-can-review? db user meeting-id)]
    :transact [(list 'teet.meeting.meeting-tx/review-meeting
                     user
@@ -432,7 +492,6 @@
    :payload {id :db/id
              :meeting/keys [title location organizer start end]}
    :project-id (project-db/meeting-project-id db id)
-   :authorization {:meeting/add-meeting {}}
    :transact
    (let [{:meeting/keys [agenda] :as old-meeting}
          (meeting-db/duplicate-info db id)]
@@ -473,5 +532,4 @@
    :spec (s/keys :req [:db/id])
    :context {:keys [db user]}
    :project-id (project-db/meeting-project-id db id)
-   :authorization {:project/read-info {:eid (project-db/meeting-project-id db id)}}
    :transact [(entity-db/entity-seen-tx db user id)]})

@@ -41,7 +41,6 @@
    :payload {project-id :thk.project/id
              third-party :third-party}
    :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-3rd-party {}}
    :pre [(third-party-is-new-or-belongs-to-project? db [:thk.project/id project-id] third-party)]
    :transact
    [(list 'teet.cooperation.cooperation-tx/save-3rd-party
@@ -65,7 +64,6 @@
              third-party-teet-id :third-party-teet-id
              application :application}
    :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-application {}}
    :pre [^{:error :application-outside-activities}
          (cooperation-db/application-matched-activity-id db project-id application)
 
@@ -104,7 +102,6 @@
    :spec (s/keys :req [:thk.project/id]
                  :req-un [::application])
    :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-application {}}
    :pre [^{:error :application-date-cannot-be-changed}
          (cooperation-db/application-has-same-date-as-db? db project-id application)
          (application-belongs-to-project? db (:db/id application) project-id)]
@@ -117,7 +114,6 @@
              application-id :db/id}
    :spec (s/keys :req [:thk.project/id :db/id])
    :project-id [:thk.project/id project-id]
-   :authorization {:cooperation/edit-application {}}
    :pre [(application-belongs-to-project? db application-id project-id)]
    :transact [(list 'teet.cooperation.cooperation-tx/delete-application user application-id)]})
 
@@ -143,7 +139,6 @@
              application-id :application-id
              response-payload :form-data}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/edit-application {}}
    :pre [(response-id-matches db application-id (:db/id response-payload))]
    :transact
    (db-api-large-text/store-large-text!
@@ -176,7 +171,6 @@
    :context {:keys [user db]}
    :payload {application-id :application-id}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/edit-application {}}
    :pre [^{:error :application-has-opinion}
          (nil? (:cooperation.application/opinion (du/entity db application-id)))]
    :transact
@@ -209,6 +203,7 @@
    :payload {:keys [application-id opinion-form]}
    :project-id (cooperation-db/application-project-id db application-id)
    :authorization {:cooperation/edit-opinion {}}
+   :contract-authorization {:action :cooperation/manage-opinions-of-competent-authority}
    :pre [(opinion-id-matches db application-id (:db/id opinion-form))]
    :transact
    (db-api-large-text/store-large-text!
@@ -241,7 +236,6 @@
    :context {:keys [user db]}
    :payload {:keys [application-id contact-form]}
    :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
-   :authorization {:cooperation/edit-application {}}
    :pre [(contact-id-matches db application-id (:db/id contact-form))]
    :transact [{:db/id application-id
                :cooperation.application/contact
@@ -262,7 +256,6 @@
    :context {:keys [user db]}
    :payload {:keys [application-id]}
    :project-id (cooperation-db/application-project-id db application-id)
-   :authorization {:cooperation/edit-application {}}
    :transact (if-let [contact-id (:db/id
                                    (:cooperation.application/contact
                                      (du/entity db application-id)))]
@@ -278,7 +271,6 @@
    :context {:keys [user db]}
    :payload {id :db/id}
    :project-id (cooperation-db/third-party-project-id db id)
-   :authorization {:cooperation/edit-3rd-party {:entity-id id}}
    :pre [(not (cooperation-db/has-applications? db id))]
    :transact [(meta-model/deletion-tx user id)]})
 
@@ -289,4 +281,5 @@
    :payload {:keys [application-id opinion-id]}
    :project-id (cooperation-db/application-project-id db application-id)
    :authorization {:cooperation/edit-opinion {}}
+   :contract-authorization {:action :cooperation/manage-opinions-of-competent-authority}
    :transact [[:db/retractEntity opinion-id]]})

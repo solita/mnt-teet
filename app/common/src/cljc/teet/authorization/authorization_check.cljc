@@ -35,7 +35,7 @@
 
 (def ^{:doc "Roles that cannot be currently granted from user interface."
        :private true}
-  ungrantable-roles #{:admin :guest :authenticated-guest :manager})
+  ungrantable-roles #{:admin :guest :authenticated-guest})
 
 (defn role-can-be-granted? [role]
   (not (ungrantable-roles role)))
@@ -154,6 +154,17 @@
                            ", action-permissions: " action-permissions
                            ", user: " user)
                 nil))))])))
+
+#?(:clj
+   (def contract-authorization-rules
+     (delay (some-> "contract-authorization.edn"
+                    io/resource
+                    slurp
+                    read-string))))
+
+#?(:clj
+   (defn contract-authorization-rule-names []
+     (into #{} (keys @contract-authorization-rules))))
 
 #?(:cljs
    (defn with-authorization-check

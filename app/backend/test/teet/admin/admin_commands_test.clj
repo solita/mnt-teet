@@ -120,12 +120,12 @@
                       :admin/edit-user
                       {:user/person-id "EE55667788990"
                        :user/email "test@test.com"
-                       :user/global-role :internal-consultant})
+                       :user/global-role :ta-consultant})
     (let [existing-user-permissions (user-db/users-valid-global-permissions
                                       (tu/db)
                                       (:db/id (du/entity (tu/db) [:user/person-id "EE55667788990"])))
           ]
       (is (= (count existing-user-permissions) 1) "Can't add multiple global roles")
       (is (= (->> existing-user-permissions (map :permission/role) set)
-             #{:internal-consultant})
+             #{:ta-consultant})
           "The latest global role stays as the only valid role"))))

@@ -75,7 +75,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contract/edit-contract-metadata
+   :contract-authorization {:action :contract/edit-company-information
                             :company (:db/id form-data)}
    :pre [^{:error :business-registry-code-in-use}
          (company-db/business-registry-code-unique?
@@ -117,7 +117,7 @@
              :as payload}
    :context {:keys [user db]}
    :project-id nil
-   :contract-authorization {:action :contract/manage-contract-companies}
+   :contract-authorization {:action :contract/edit-contract-metadata}
    :authorization {:contracts/contract-editing {}}
    :pre [(company-db/is-company? db (:db/id form-data))
          (not (company-db/company-in-contract? db (:db/id form-data) (:db/id contract)))]}
@@ -140,23 +140,24 @@
            {:company-contract-id new-company-contract-id})))
 
 (defcommand :thk.contract/delete-existing-company-from-contract-partners
-            {:doc "Remove company from contract partners list"
-             :payload {company :company
-                       :as payload}
-             :context {:keys [user db]}
-             :project-id nil
-             :authorization {:contracts/contract-editing {}}
-             :pre [(company-db/is-company? db (:db/id (:company-contract/company (:partner company))))
-                   (company-db/company-in-contract? db (:db/id (:contract company))
-                                                       (:db/id (:company-contract/company (:partner company))))]}
-            (let [company-contract-id (:db/id (:partner company))
-                  contract-eid (:db/id (:contract company))
-                  company-id (:db/id (:company-contract/company (:partner company)))
-                  tx-data [[:db/retract company-contract-id :company-contract/company company-id]
-                           [:db/retract company-contract-id :company-contract/contract contract-eid]
-                           (meta-model/deletion-tx user company-contract-id)]
-                  tempids (:tempids (tx tx-data))]
-              tempids))
+  {:doc "Remove company from contract partners list"
+   :payload {company :company
+             :as payload}
+   :context {:keys [user db]}
+   :project-id nil
+   :contract-authorization {:action :contract/edit-contract-metadata}
+   :authorization {:contracts/contract-editing {}}
+   :pre [(company-db/is-company? db (:db/id (:company-contract/company (:partner company))))
+         (company-db/company-in-contract? db (:db/id (:contract company))
+                                          (:db/id (:company-contract/company (:partner company))))]}
+  (let [company-contract-id (:db/id (:partner company))
+        contract-eid (:db/id (:contract company))
+        company-id (:db/id (:company-contract/company (:partner company)))
+        tx-data [[:db/retract company-contract-id :company-contract/company company-id]
+                 [:db/retract company-contract-id :company-contract/contract contract-eid]
+                 (meta-model/deletion-tx user company-contract-id)]
+        tempids (:tempids (tx tx-data))]
+    tempids))
 
 (defcommand :thk.contract/add-contract-employee
   {:doc "Add an existing user as a member in a given contract-company"
@@ -186,8 +187,13 @@
   {:doc "Activate/Deactivate contract person"
    :payload {employee-id :employee-id
              active? :active?}
+   :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+   :contract-authorization {:action :contract/manage-company-employees
+                            :company (get-in
+                                       (du/entity db employee-id)
+                                       [:company-contract/_employees :company-contract/company :db/id])}
    :transact [{:db/id employee-id
                :company-contract-employee/active? active?}]})
 
@@ -280,11 +286,12 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+
+   :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]
    :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
-                                      (du/entity db company-contract-eid)
-                                      [:company-contract/company :db/id])}
-   :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]}
+                                       (du/entity db company-contract-eid)
+                                       [:company-contract/company :db/id])}}
   (let [roles-update (mapv first
                            (d/q '[:find ?id :where [?id :db/ident ?ident] :in $ [?ident ...]]
                                 db (mapv :db/ident (:company-contract-employee/role form-value))))
@@ -327,17 +334,17 @@
    :context {:keys [db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contract/submit-key-person-for-approval
+   :contract-authorization {:action :contract/manage-company-employees
                             :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :transact [[:db/retract company-contract-employee-id :company-contract-employee/attached-files file-id]]})
 
 (defcommand :thk.contract/save-license
   {:doc "Save a license"
-   :payload {:keys [company-contract-employee-id license]}
+   :payload {:keys [company-contract-employee-id license delete?]}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contract/submit-key-person-for-approval
+   :contract-authorization {:action :contract/manage-company-employees
                             :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :pre [;; Check license is new or belongs to user when editing
          (or (not (contains? license :db/id))
@@ -350,24 +357,28 @@
    :transact
    (let [user-id (contract-db/get-user-for-company-contract-employee db company-contract-employee-id)
          license-id (:db/id license "new-license")]
-     [{:db/id user-id
-       :user/licenses license-id}
-      {:db/id company-contract-employee-id
-       :company-contract-employee/attached-licenses license-id}
-      (meta-model/with-creation-or-modification-meta
-        user
-        (merge (cu/without-nils
-                (select-keys license
-                             [:user-license/name
-                              :user-license/expiration-date
-                              :user-license/link]))
-               {:db/id license-id}))])})
+     (if delete?
+       [[:db/retract company-contract-employee-id :company-contract-employee/attached-licenses license-id]]
+       ;; else - not delete, normal save:
+       [{:db/id user-id
+         :user/licenses license-id}
+        {:db/id company-contract-employee-id
+         :company-contract-employee/attached-licenses license-id}
+        (meta-model/with-creation-or-modification-meta
+          user
+          (merge (cu/without-nils
+                  (select-keys license
+                               [:user-license/name
+                                :user-license/expiration-date
+                                :user-license/link]))
+                 {:db/id license-id}))]))})
 
 (defcommand :thk.contract/submit-key-person
   {:doc "Submit key person for review"
    :payload {company-contract-employee-id :employee-id}
    :project-id nil
    :context {:keys [user db]}
+   :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/submit-key-person-for-approval
                             :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
@@ -382,7 +393,7 @@
              comment :key-person/approval-comment}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/edit-partners {}}
+   :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/approve-key-persons}
    :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
@@ -398,6 +409,7 @@
              comment :key-person/approval-comment}
    :context {:keys [user db]}
    :project-id nil
+   :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/approve-key-persons}
    :pre [(not-empty comment)
          (contract-db/company-contract-employee-eid? db company-contract-employee-id)]

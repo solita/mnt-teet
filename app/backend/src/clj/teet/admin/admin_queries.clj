@@ -118,7 +118,8 @@
    :context {db :db user :user}
    :args {payload :payload}
    :project-id nil
-   :authorization {:admin/add-user {}}}
+   :authorization {:admin/add-user {}}
+   :contract-authorization {:action :admin/add-user}}
   (user-list-query db payload))
 
 (defn- ref-attrs [db data]

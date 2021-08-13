@@ -139,6 +139,11 @@
   (assert (or (not (contains? options :audit?))
               (boolean? audit?))
           ":audit? must be boolean")
+  (when contract-authorization
+    (let [contract-authz-rule-names (authorization-check/contract-authorization-rule-names)
+          action (:action contract-authorization)]
+      (assert (contract-authz-rule-names action)
+              (str "Unknown contract authorization rule in " request-name ": " action))))
   (let [authz-rule-names (authorization-check/authorization-rule-names)]
     (doseq [[k _] authorization]
       (assert (authz-rule-names k)

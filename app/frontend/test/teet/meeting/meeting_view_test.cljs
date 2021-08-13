@@ -12,7 +12,7 @@
 (def user-id2 4444444)
 (def test-user
   {:user/permissions
-   [#:permission{:role :internal-consultant,
+   [#:permission{:role :ta-consultant,
                  :projects [#:db{:id project-eid}],
                  :valid-from #inst "2020-08-24T09:30:34.141-00:00"}],
    :user/family-name "Consultant",
@@ -25,7 +25,7 @@
 
 (def test-user-no-edit-rights
   {:user/permissions
-   [#:permission{:role :internal-consultant,
+   [#:permission{:role :ta-consultant,
                  :projects [#:db{:id project-eid}],
                  :valid-from #inst "2020-08-24T09:30:34.141-00:00"}],
    :user/family-name "Consultant",
@@ -107,5 +107,3 @@
 
   (step :expect-no "That there is no add agenda button for meeting because user is not a reviewer or an organizer"
         :selector "#add-agenda"))
-
-

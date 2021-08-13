@@ -14,7 +14,7 @@
    :admin :admin
    :ta-responsible-person :ta-responsible-person
    :ta-project-manager :ta-project-manager
-   :ta-consultant :internal-consultant
+   :ta-consultant :ta-consultant ; old:  :internal-consultant
 
    :company-representative :company-contract-employee.role/company-representative
    :company-project-manager :company-contract-employee.role/company-project-manager
@@ -30,7 +30,7 @@
         role->column (common/role->column-mapping sheet 7 2)]
     (into
       {}
-      (for [row (drop 5 (sheet/row-seq sheet))
+      (for [row (drop 4 (sheet/row-seq sheet))
             :when (-> row
                       (sheet/cell-seq)
                       (first)

@@ -15,8 +15,7 @@
   {:doc "Fetch comments for any :db/id and entity type. Returns comments newest first."
    :context {user :user db :db}
    :args {eid :eid entity-type :for}
-   :project-id (project-db/entity-project-id db entity-type eid)
-   :authorization {:project/read-comments {:db/id eid}}}
+   :project-id (project-db/entity-project-id db entity-type eid)}
   (->> (comment-db/comments-of-entity db eid entity-type
                                       (comment-visibility
                                        user
@@ -29,6 +28,5 @@
   {:doc "Fetch the amount of comments for entity."
    :context {user :user db :db}
    :args {eid :eid entity-type :for}
-   :project-id (project-db/entity-project-id db entity-type eid)
-   :authorization {:project/read-comments {:db/id eid}}}
+   :project-id (project-db/entity-project-id db entity-type eid)}
   (comment-db/comment-count-of-entity-by-status db user eid entity-type))
