@@ -741,7 +741,7 @@
 
 (defn- remove-key-person-assignment-button [e! selected-partner employee]
   [authorization-check/when-authorized
-   :thk.contract/add-contract-employee selected-partner
+   :thk.contract/assign-key-person (:company-contract/company selected-partner)
    [buttons/delete-button-with-confirm
     {:action (e! contract-partners-controller/->AssignKeyPerson (:db/id employee) false)
      :underlined? true
