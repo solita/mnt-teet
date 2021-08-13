@@ -295,7 +295,7 @@
   {nil [:admin :all-users]
    :ta-project-manager [:admin :managers]
    :admin [:admin :admins]
-   :ta-consultant [:admin :ta-consultants]
+   :ta-consultant [:admin :ta-consultant]
    :ta-responsible-person [:admin :ta-responsible-person]
    :external-consultant [:admin :external-consultants]
    :deactivated [:admin :deactivated]})
