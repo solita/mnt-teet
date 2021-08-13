@@ -341,37 +341,37 @@
 
 (defcommand :thk.contract/save-license
   {:doc "Save a license"
-   :payload {:keys [company-contract-employee-id license delete?]}
+   :payload {:keys [employee-id license delete?]}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
-                            :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
+                            :company (contract-db/get-company-for-company-contract-employee db employee-id)}
    :pre [;; Check license is new or belongs to user when editing
          (or (not (contains? license :db/id))
              (some #(= (:db/id license)
                        (:db/id %))
                    (:user/licenses
-                    (du/entity
-                     db
-                     (contract-db/get-user-for-company-contract-employee db company-contract-employee-id)))))]
+                     (du/entity
+                       db
+                       (contract-db/get-user-for-company-contract-employee db employee-id)))))]
    :transact
-   (let [user-id (contract-db/get-user-for-company-contract-employee db company-contract-employee-id)
+   (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
          license-id (:db/id license "new-license")]
      (if delete?
-       [[:db/retract company-contract-employee-id :company-contract-employee/attached-licenses license-id]]
+       [[:db/retract employee-id :company-contract-employee/attached-licenses license-id]]
        ;; else - not delete, normal save:
        [{:db/id user-id
          :user/licenses license-id}
-        {:db/id company-contract-employee-id
+        {:db/id employee-id
          :company-contract-employee/attached-licenses license-id}
         (meta-model/with-creation-or-modification-meta
           user
           (merge (cu/without-nils
-                  (select-keys license
-                               [:user-license/name
-                                :user-license/expiration-date
-                                :user-license/link]))
+                   (select-keys license
+                                [:user-license/name
+                                 :user-license/expiration-date
+                                 :user-license/link]))
                  {:db/id license-id}))]))})
 
 (defcommand :thk.contract/submit-key-person
