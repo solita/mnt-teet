@@ -78,7 +78,7 @@
        [select/form-select {:format-item #(if % (name %) (str "- " (tr [:admin :user-no-global-role]) " -"))
                             :items [nil
                                     :admin :ta-project-manager
-                                    :ta-consultant
+                                    :ta-consultant :ta-responsible-person
                                     :external-consultant]}]]]
 
      [:div {:style {:margin-bottom "1rem"}}
@@ -167,6 +167,7 @@
           [select/form-select {:format-item #(if % (name %) (str "- " (tr [:admin :user-no-global-role]) " -"))
                                :items [nil
                                        :admin :ta-project-manager
+                                       :ta-responsible-person
                                        :ta-consultant
                                        :external-consultant]}]]]
         [:div {:style {:margin-bottom "1rem"}}
@@ -295,6 +296,7 @@
    :ta-project-manager [:admin :managers]
    :admin [:admin :admins]
    :ta-consultant [:admin :ta-consultants]
+   :ta-responsible-person [:admin :ta-responsible-person]
    :external-consultant [:admin :external-consultants]
    :deactivated [:admin :deactivated]})
 
@@ -386,8 +388,7 @@
            :args {:payload @filtering-atom
                   :refresh (:admin-refresh route)}
            :simple-view [user-list e! admin]}
-          500]]]]]))
-  )
+          500]]]]])))
 
 (defn admin-page [e! {admin :admin
                       route :route}]
