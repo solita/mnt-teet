@@ -296,7 +296,8 @@
                                        [:company-contract/company :db/id])}}
   (let [roles-update (mapv first
                            (d/q '[:find ?id :where [?id :db/ident ?ident] :in $ [?ident ...]]
-                                db (mapv :db/ident (:company-contract-employee/role form-value))))
+                                db
+                                (mapv #(if (keyword? %) % (:db/ident %)) (:company-contract-employee/role form-value))))
         old-roles (company-db/employee-roles db [:user/id (:user/id form-value)] company-contract-eid)
         employee-fields (-> (select-keys form-value [:user/given-name :user/family-name
                                                      :user/email :db/id
