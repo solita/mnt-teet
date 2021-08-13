@@ -518,7 +518,7 @@
            [key-person-icon key-person-status]]
           [:span])]
        [[authorization-check/when-authorized
-         :thk.contract/add-contract-employee selected-partner
+         :thk.contract/add-contract-employee (:company-contract/company selected-partner)
          [buttons/button-with-confirm
           {:action (e! contract-partners-controller/->ChangePersonStatus (:db/id employee) (not active?))
            :modal-title (str (if active? (tr [:contract :partner :deactivate]) (tr [:contract :partner :activate])) "?")
@@ -1073,7 +1073,7 @@
       [edit-partner-form e! app contract selected-partner]
       :add-personnel
       [authorization-check/when-authorized
-       :thk.contract/add-contract-employee selected-partner
+       :thk.contract/add-contract-employee (:company-contract/company selected-partner)
        [add-personnel-form e! (:query app) selected-partner]]
       :personnel-info
       [employee-info e! app selected-partner employee]
