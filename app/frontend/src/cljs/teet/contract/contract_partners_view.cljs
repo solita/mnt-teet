@@ -947,7 +947,6 @@
                                   {:company-contract-employee/role roles})))]
       [Grid {:container true}
        [Grid {:itme true :xs 12 :md 6}]
-       [:span (pr-str @form-atom)]
        [form/form2 {:e! e!
                     :value @form-atom
                     :on-change-event (form/update-atom-event form-atom (fn [old new]
