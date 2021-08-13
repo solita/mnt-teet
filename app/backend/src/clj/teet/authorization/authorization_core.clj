@@ -65,4 +65,3 @@
           (-> (set/intersection authorized-roles roles)
               seq
               boolean)))))
-

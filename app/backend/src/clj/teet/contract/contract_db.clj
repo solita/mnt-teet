@@ -398,6 +398,16 @@
        ffirst
        boolean))
 
+(defn get-company-for-company-contract-employee
+  [db cce-eid]
+  (->> (d/q '[:find ?c
+              :in $ ?cce
+              :where
+              [?cc :company-contract/employees ?cce]
+              [?cc :company-contract/company ?c]]
+            db cce-eid)
+       ffirst))
+
 (defn get-user-for-company-contract-employee
   ""
   [db cce-id]
