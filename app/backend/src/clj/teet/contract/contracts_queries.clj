@@ -18,10 +18,18 @@
     {:where '[]}
     :my-contracts
     {:where '[[?c :thk.contract/targets ?target]
-              (or-join [?target ?current-user]
+              (or-join [?c ?target ?current-user]
+                       ;; Manager of activity
                        [?target :activity/manager ?current-user]
+
+                       ;; Manager of activity when targeting a task
                        (and [?a :activity/tasks ?target]
-                            [?a :activity/manager ?current-user]))]
+                            [?a :activity/manager ?current-user])
+
+                       ;; Employee linked to contract
+                       (and [?cc :company-contract/contract ?c]
+                            [?cc :company-contract/employees ?cce]
+                            [?cce :company-contract-employee/user ?current-user]))]
      :in {'?current-user (:db/id user)}}
     :unassigned
     {:where '[(contract-target-activity ?c ?activity)
