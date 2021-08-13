@@ -139,7 +139,7 @@
   {:doc "Return a list of contracts related to the given project"
    :context {db :db}
    :args {project-id :thk.project/id}
-   :project-id project-id}
+   :project-id [:thk.project/id project-id]}
   (->> (contract-db/project-related-contracts db [:thk.project/id project-id])
        (sort-by
          (comp contract-model/contract-status-order :thk.contract/status))
