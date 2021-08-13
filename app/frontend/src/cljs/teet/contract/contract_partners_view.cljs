@@ -1015,7 +1015,7 @@
         [key-person-icon key-person-status (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
-      :thk.contract/edit-contract-partner-company employee
+      :thk.contract/edit-contract-partner-company (:company-contract/company selected-partner)
       [buttons/button-secondary
        {:href (routes/url-for {:page :contract-partners
                                :params (merge
@@ -1081,7 +1081,7 @@
       [key-employee-info e! app selected-partner employee]
       :edit-personnel
       [authorization-check/when-authorized
-       :thk.contract/add-contract-employee selected-partner
+       :thk.contract/add-contract-employee (:company-contract/company selected-partner)
        [edit-personnel-form e! app selected-partner employee]]
       [partners-default-view params contract])))
 
