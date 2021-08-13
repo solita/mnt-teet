@@ -416,7 +416,9 @@
    :context {:keys [db user]}
    :payload {:keys [agenda-eid form-data]}
    :project-id (project-db/agenda-project-id db agenda-eid)
-   :contract-authorization {:action :meeting/create-decision}
+   :contract-authorization {:action :meeting/create-decision
+                            :entity-id (get-in (du/entity db agenda-eid)
+                                               [:meeting/_agenda :db/id])}
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db agenda-eid)
                                                          [:meeting/_agenda :db/id])
                                           :link :meeting/organizer-or-reviewer}}
@@ -482,7 +484,8 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorizaion {:action :meeting/review}
+   :contract-authorization {:action :meeting/review
+                            :entity-id meeting-id}
    :pre [(meeting-db/user-can-review? db user meeting-id)]
    :transact [(list 'teet.meeting.meeting-tx/review-meeting
                     user
