@@ -772,14 +772,15 @@
       [remove-key-person-assignment-button e! selected-partner employee]]
      [key-person-files e! employee]
      [key-person-licenses e! employee selected-partner]
-     [authorization-check/when-authorized :thk.contract/approve-key-person
-      (:company-contract/company selected-partner)
-      [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
-       [key-person-approvals-status status comment modification-meta]
+     [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
+      [key-person-approvals-status status comment modification-meta]
+      [authorization-check/when-authorized :thk.contract/submit-key-person (:company-contract/company selected-partner)
        [:div {:class (<class contract-style/key-person-assignment-header)}
         (when (#{:key-person.status/assigned :key-person.status/rejected} status)
-          [submit-key-person-button e! employee])
-        [approval-actions e! employee]]]]]))
+          [submit-key-person-button e! employee])]]
+
+      [authorization-check/when-authorized :thk.contract/approve-key-person (:company-contract/company selected-partner)
+       [approval-actions e! employee]]]]))
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
