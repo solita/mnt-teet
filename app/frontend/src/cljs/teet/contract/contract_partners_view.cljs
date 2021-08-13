@@ -707,7 +707,7 @@
           [:div {:class (<class common-styles/flex-table-column-style 30)}
            (format/date expiration-date)]
           [:div {:class (<class common-styles/flex-table-column-style 10)}
-           [authorization-check/when-authorized :thk.contract/save-license selected-partner
+           [authorization-check/when-authorized :thk.contract/save-license (:company-contract/company selected-partner)
             [form/form-modal-button
              {:form-component [edit-license-form e! (:db/id employee)]
               :form-value license
@@ -732,7 +732,7 @@
        (tr [:contract :partner (if @show-history?
                                  :hide-license-history
                                  :view-license-history)])]
-      [authorization-check/when-authorized :thk.contract/save-license selected-partner
+      [authorization-check/when-authorized :thk.contract/save-license (:company-contract/company selected-partner)
        [form/form-modal-button
         {:form-component [edit-license-form e! (:db/id employee)]
          :modal-title (tr [:contract :partner :add-license-title])
