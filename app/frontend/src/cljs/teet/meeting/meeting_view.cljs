@@ -125,22 +125,25 @@
           files]])
 
       [authorization-context/when-authorized :edit-meeting
-       [file-upload/FileUpload
-        {:id (str drag-container-id "-upload")
-         :drag-container-id drag-container-id
-         :drop-message drop-message
-         :on-drop #(e! (file-controller/map->UploadFiles
-                         {:files %
-                          :project-id project-id
-                          :attachment? true
-                          :attach-to attach-to
-                          :on-success common-controller/->Refresh}))}
-        [buttons/button-secondary
-         {:end-icon (r/as-element [icons/file-cloud-upload])
-          :component :span
-          :size :small
-          :style {:margin "0.5rem 0"}}
-         (tr [:task :upload-files])]]]])])
+       [context/consume :meeting
+        (fn [meeting]
+          [authorization-check/when-authorized :meeting/update meeting
+           [file-upload/FileUpload
+            {:id (str drag-container-id "-upload")
+             :drag-container-id drag-container-id
+             :drop-message drop-message
+             :on-drop #(e! (file-controller/map->UploadFiles
+                            {:files %
+                             :project-id project-id
+                             :attachment? true
+                             :attach-to attach-to
+                             :on-success common-controller/->Refresh}))}
+            [buttons/button-secondary
+             {:end-icon (r/as-element [icons/file-cloud-upload])
+              :component :span
+              :size :small
+              :style {:margin "0.5rem 0"}}
+             (tr [:task :upload-files])]]])]]])])
 
 (defn- links-content [e! from links editable?]
   [link-view/links {:e! e!
@@ -1075,27 +1078,28 @@
   (r/with-let [[pfrom pto] (common/portal)]
     (let [edit-rights? (get rights :edit-meeting)
           review-rights? (get rights :review-meeting)]
-      [:div {:data-cy "meeting-details"}
-       [meeting-details-info meeting]
-       [:div {:class (<class common-styles/heading-and-action-style)
-              :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0"
-                      :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
-        [typography/Heading2 (tr [:fields :meeting/agenda])]
-        (when edit-rights?
-          [meeting-details-add-agenda e! user meeting pfrom])]
-       [pto]
-       [:div {:style {:margin-bottom "1rem"}}
-        (doall
-         (for [{id :db/id :as agenda-topic} agenda]
-           ^{:key id}
-           [meeting-agenda-topic
-            e! {:edit-rights? edit-rights?
-                :review-rights? review-rights?}
-            agenda-topic meeting]))]
+      [context/provide :meeting meeting
+       [:div {:data-cy "meeting-details"}
+        [meeting-details-info meeting]
+        [:div {:class (<class common-styles/heading-and-action-style)
+               :style {:margin-bottom "1rem" :padding "1rem 0 1rem 0"
+                       :border-bottom (str "1px solid " theme-colors/gray-lighter)}}
+         [typography/Heading2 (tr [:fields :meeting/agenda])]
+         (when edit-rights?
+           [meeting-details-add-agenda e! user meeting pfrom])]
+        [pto]
+        [:div {:style {:margin-bottom "1rem"}}
+         (doall
+          (for [{id :db/id :as agenda-topic} agenda]
+            ^{:key id}
+            [meeting-agenda-topic
+             e! {:edit-rights? edit-rights?
+                 :review-rights? review-rights?}
+             agenda-topic meeting]))]
 
-       [reviews meeting]
-       (when review-rights?
-         [review-actions e! meeting])])))
+        [reviews meeting]
+        (when review-rights?
+          [review-actions e! meeting])]])))
 
 (defn meeting-details [e! user meeting]
   [authorization-context/consume
@@ -1128,12 +1132,13 @@
                    title (when number (str " #" number)) (when locked? [icons/action-lock])]
                   [:div {:class (<class common-styles/flex-align-end)}
                    [authorization-context/when-authorized :edit-meeting
-                    [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
-                                             :form-value meeting
-                                             :modal-title (tr [:meeting :edit-meeting-modal-title])
-                                             :id "edit-meeting"
-                                             :button-component
-                                             [buttons/button-secondary {:on-click meeting} (tr [:buttons :edit])]}]]
+                    [authorization-check/when-authorized :meeting/update meeting
+                     [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
+                                              :form-value meeting
+                                              :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                              :id "edit-meeting"
+                                              :button-component
+                                              [buttons/button-secondary {:on-click meeting} (tr [:buttons :edit])]}]]]
                    [buttons/button-secondary {:style    {:margin-left "0.25rem"}
                                               :on-click open-duplicate!
                                               :title (tr [:buttons :duplicate])
@@ -1176,7 +1181,7 @@
 (defn meeting-page [e! _ {m :meeting}]
   (maybe-mark-meeting-as-seen! e! m)
   (fn [e! {:keys [user] :as app} {:keys [project meeting]}]
-    (let [edit-rights? (and (authorization-check/authorized?
+    (let [edit-rights? (and #_(authorization-check/authorized?
                              user :meeting/edit-meeting
                              {:entity meeting
                               :link :meeting/organizer-or-reviewer

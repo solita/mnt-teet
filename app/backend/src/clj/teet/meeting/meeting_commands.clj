@@ -31,11 +31,12 @@
          tx-data)])
 
 (defn- edit-authorized? [db user meeting-id]
-  (authorization-check/authorized?
-   user :meeting/edit-meeting
-   {:entity (du/entity db meeting-id)
-    :link :meeting/organizer-or-reviewer
-    :project-id (project-db/meeting-project-id db meeting-id)}))
+  (or (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      (authorization-check/authorized?
+       user :meeting/edit-meeting
+       {:entity (du/entity db meeting-id)
+        :link :meeting/organizer-or-reviewer
+        :project-id (project-db/meeting-project-id db meeting-id)})))
 
 (defmethod file-db/attach-to :meeting-agenda
   [db user _file [_ meeting-agenda-id]]
@@ -129,7 +130,8 @@
    :project-id (project-db/activity-project-id db activity-eid)
    :authorization {:meeting/edit-meeting {:db/id (:db/id form-data)
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/update}
+   :contract-authorization {:action :meeting/update
+                            :entity-id (:db/id form-data)}
    :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
    :transact (update-meeting-tx
                user
@@ -177,7 +179,8 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/update-agenda}
+   :contract-authorization {:action :meeting/update-agenda
+                            :entity-id meeting-id}
    :pre [(agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
    :transact
    (db-api-large-text/store-large-text!
