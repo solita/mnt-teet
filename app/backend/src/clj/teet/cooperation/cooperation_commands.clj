@@ -235,7 +235,7 @@
                           ::contact-form])
    :context {:keys [user db]}
    :payload {:keys [application-id contact-form]}
-   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :project-id (cooperation-db/application-project-id db application-id)
    :pre [(contact-id-matches db application-id (:db/id contact-form))]
    :transact [{:db/id application-id
                :cooperation.application/contact

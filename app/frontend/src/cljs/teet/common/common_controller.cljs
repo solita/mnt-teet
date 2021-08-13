@@ -227,6 +227,7 @@
             {:tuck.effect/type :query
              :query :authorization/user-is-permitted?
              :args (merge {:entity-id (:db/id entity)
+                           :project-id (get-in app [:params :project-id])
                            :action action}
                           (when entity-type
                             {entity-type (:db/id entity)}))

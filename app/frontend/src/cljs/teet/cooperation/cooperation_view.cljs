@@ -734,17 +734,18 @@
        [:div {:class [(<class common-styles/flex-row-space-between)
                       (<class common-styles/margin-bottom 1)]}
         [typography/Heading2 (tr [:cooperation :response])]
-        [authorization-context/when-authorized :edit-response
-         [form/form-modal-button
-          {:max-width "sm"
-           :form-value response
-           :modal-title (tr [:cooperation :edit-response-title])
-           :form-component [application-response-form {:e! e!
-                                                       :project-id (:thk.project/id project)
-                                                       :application-id (:db/id application)}]
-           :button-component [buttons/button-secondary {:class "edit-response"
-                                                        :size :small}
-                              (tr [:buttons :edit])]}]]]
+        [authorization-context/when-authorized :response-editable
+         [authorization-check/when-authorized :cooperation/save-application-response project
+          [form/form-modal-button
+           {:max-width "sm"
+            :form-value response
+            :modal-title (tr [:cooperation :edit-response-title])
+            :form-component [application-response-form {:e! e!
+                                                        :project-id (:thk.project/id project)
+                                                        :application-id (:db/id application)}]
+            :button-component [buttons/button-secondary {:class "edit-response"
+                                                         :size :small}
+                               (tr [:buttons :edit])]}]]]]
        [:div {:class (<class common-styles/margin-bottom 1)}
         [rich-text-editor/display-markdown
          (:cooperation.response/content response)]]
@@ -842,7 +843,7 @@
      [rich-text-editor/rich-text-field {}]]))
 
 (defn- edit-opinion [e! application button-component]
-  [authorization-context/when-authorized :save-opinion
+  [authorization-check/when-authorized :cooperation/save-opinion application
    [form/form-modal-button
     {:max-width "sm"
      :modal-title (tr [:cooperation :create-opinion-title])
@@ -996,44 +997,29 @@
 ;; entrypoint from route /projects/:project/cooperation/:third-party/:application
 (defn application-page [e! app {:keys [project overview third-party related-task files-form]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])
-        project-db-id (:db/id project)]
+        application-editable? (cooperation-model/application-editable? application)
+        response-editable? (cooperation-model/application-response-editable? application)]
     [authorization-context/with
-     {:edit-application (and (authorization-check/authorized?
-                               {:functionality :cooperation/edit-application
-                                :entity application
-                                :project-id project-db-id})
-                             (cooperation-model/application-editable? application))
-      :edit-response (and (authorization-check/authorized?
-                           {:functionality :cooperation/edit-application
-                            :entity application
-                            :project-id project-db-id})
-                          (cooperation-model/application-response-editable? application))
-      :edit-application-right (authorization-check/authorized?
-                                {:functionality :cooperation/edit-application
-                                 :entity application
-                                 :project-id project-db-id})
-      :response-uploads-allowed (cooperation-model/application-response-editable? application)
-      :save-opinion (authorization-check/authorized?
-                      {:functionality :cooperation/edit-opinion
-                       :entity application
-                       :project-id project-db-id})}
+     {:response-editable (cooperation-model/application-response-editable? application)
+      :response-uploads-allowed (cooperation-model/application-response-editable? application)}
      [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
       [cooperation-page-structure
        e! app project overview
        [:<>
         [:div {:class (<class common-styles/margin-bottom 1)}
          [common/header-with-actions (:cooperation.3rd-party/name third-party)
-          [authorization-context/when-authorized :edit-application
-           [form/form-modal-button
-            {:max-width "sm"
-             :form-component [edit-application-form {:e! e!
-                                                     :project-id (:thk.project/id project)}]
-             :form-value (select-keys application
-                                      (conj cooperation-model/editable-application-attributes
-                                            :db/id))
-             :modal-title (tr [:cooperation :edit-application-title])
-             :button-component [buttons/button-secondary {:data-cy "edit-application"}
-                                (tr [:buttons :edit])]}]]]
+          [authorization-check/when-authorized :cooperation/edit-application project
+           (when application-editable?
+             [form/form-modal-button
+              {:max-width "sm"
+               :form-component [edit-application-form {:e! e!
+                                                       :project-id (:thk.project/id project)}]
+               :form-value (select-keys application
+                                        (conj cooperation-model/editable-application-attributes
+                                              :db/id))
+               :modal-title (tr [:cooperation :edit-application-title])
+               :button-component [buttons/button-secondary {:data-cy "edit-application"}
+                                  (tr [:buttons :edit])]}])]]
          [typography/Heading2
           (tr-enum (:cooperation.application/type application)) " / "
           (tr-enum (:cooperation.application/response-type application))]
@@ -1046,15 +1032,16 @@
           [:<>
            [application-response e! (:new-document app) files-form application project related-task]
            [application-conclusion e! application project]]
-          [authorization-context/when-authorized :edit-response
-           [form/form-modal-button
-            {:max-width "sm"
-             :modal-title (tr [:cooperation :add-application-response])
-             :form-component [application-response-form {:e! e!
-                                                         :project-id (:thk.project/id project)
-                                                         :application-id (:db/id application)}]
-             :button-component [buttons/button-primary {:class "enter-response"}
-                                (tr [:cooperation :enter-response])]}]])]
+          [authorization-check/when-authorized :cooperation/save-application-response project
+           (when response-editable?
+             [form/form-modal-button
+              {:max-width "sm"
+               :modal-title (tr [:cooperation :add-application-response])
+               :form-component [application-response-form {:e! e!
+                                                           :project-id (:thk.project/id project)
+                                                           :application-id (:db/id application)}]
+               :button-component [buttons/button-primary {:class "enter-response"}
+                                  (tr [:cooperation :enter-response])]}])])]
 
        ;; The people panel
        [application-people-panel e! application]]]]))
