@@ -548,7 +548,7 @@
    [:div {:class (<class contract-style/personnel-section-header-style)}
     [typography/Heading2 (tr [:contract :persons])]
     [authorization-check/when-authorized
-     :thk.contract/add-contract-employee selected-partner
+     :thk.contract/add-contract-employee (:company-contract/company selected-partner)
      [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
                                 :href (routes/url-for {:page :contract-partners
                                                        :params params
@@ -572,7 +572,7 @@
           :align-items :center}
     [:span {:style {:padding-top :1rem}}
      [authorization-check/when-authorized
-      :thk.contract/add-contract-employee selected-partner
+      :thk.contract/add-contract-employee (:company-contract/company selected-partner)
       [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
                                  :on-click (e!
                                              contract-partners-controller/->AssignKeyPerson
@@ -772,7 +772,8 @@
       [remove-key-person-assignment-button e! selected-partner employee]]
      [key-person-files e! employee]
      [key-person-licenses e! employee selected-partner]
-     [authorization-check/when-authorized :thk.contract/approve-key-person (:company-contract/company selected-partner)
+     [authorization-check/when-authorized :thk.contract/approve-key-person
+      (:company-contract/company selected-partner)
       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
        [key-person-approvals-status status comment modification-meta]
        [:div {:class (<class contract-style/key-person-assignment-header)}
