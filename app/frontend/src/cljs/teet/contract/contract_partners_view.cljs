@@ -36,7 +36,7 @@
 
 (defn partner-listing
   [{:keys [params query]} contract-partners]
-  [:div
+  [:div {:class (<class common-styles/margin-top 2)}
    (doall
      (for [partner contract-partners
            :let [company-name (get-in partner [:company-contract/company :company/name])
@@ -61,23 +61,23 @@
         (when lead-partner?
           [common/primary-tag (tr [:contract :lead-partner])])]))])
 
+(defn- add-company-button [button-component params contract]
+  [authorization-check/when-authorized
+   :thk.contract/add-new-contract-partner-company contract
+   [button-component
+    {:start-icon (r/as-element [icons/content-add])
+     :href (routes/url-for {:page :contract-partners
+                            :params params
+                            :query {:page :add-partner}})}
+    (tr [:contract :add-company])]])
+
 (defn partner-right-panel
   [e! {:keys [params] :as app} contract]
   [:div
    [typography/Heading2
     {:class (<class common-styles/margin-bottom 2)}
     (tr [:contract :partner-information])]
-
-   [authorization-check/when-authorized
-    :thk.contract/add-new-contract-partner-company contract
-    [buttons/small-button-secondary
-     {:class (<class common-styles/margin-bottom 2)
-      :start-icon (r/as-element [icons/content-add])
-      :href (routes/url-for {:page :contract-partners
-                             :params params
-                             :query {:page :add-partner}})}
-     (tr [:contract :add-company])]]
-
+   [add-company-button buttons/small-button-secondary params contract]
    [partner-listing app (:company-contract/_contract contract)]])
 
 (defn partner-search-result
@@ -442,14 +442,7 @@
      (tr [:contract :partner-information])]
     [typography/Text {:class (<class common-styles/margin-bottom 2)}
      (tr [:contract :partner-information-text])]
-    [authorization-check/when-authorized
-     :thk.contract/add-new-contract-partner-company contract
-     [buttons/button-primary
-      {:start-icon (r/as-element [icons/content-add])
-       :href (routes/url-for {:page :contract-partners
-                              :params params
-                              :query {:page :add-partner}})}
-      (tr [:contract :add-company])]]]])
+    [add-company-button buttons/button-primary params contract]]])
 
 (defn key-person-approvals-panel
   [e! {:keys [params query] :as app} employees active?]
