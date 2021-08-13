@@ -34,8 +34,6 @@
    :ta-project-manager
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
- :task/approve-task-part
- #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :cost-items/edit-cost-items
  #{:admin
    :company-contract-employee.role/company-project-manager
@@ -54,8 +52,6 @@
  #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :project/edit-project
  #{:admin :ta-project-manager :ta-responsible-person},
- :task/approve-task
- #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :document/upload-files
  #{:admin
    :company-contract-employee.role/company-project-manager
