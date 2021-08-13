@@ -148,6 +148,11 @@
     (doseq [[k _] authorization]
       (assert (authz-rule-names k)
               (str "Unknown authorization rule: " k))))
+  (when contract-authorization
+    (let [contract-authz-rule-names (authorization-check/contract-authorization-rule-names)
+          action (:action contract-authorization)]
+      (assert (contract-authz-rule-names action)
+              (str "Unknown contract authorization rule in " request-name ": " action))))
 
 
   (let [-ctx (gensym "CTX")

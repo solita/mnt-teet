@@ -203,11 +203,8 @@
              key-person? :key-person?}
    :context {:keys [user db]}
    :project-id nil
-   :authorization {:contracts/contract-editing {}}
-   :contract-authorization {:action :contract/manage-company-employees
-                            :company (get-in
-                                       (du/entity db employee-id)
-                                       [:company-contract/_employees :company-contract/company :db/id])}
+   :contract-authorization {:action :contract/submit-key-person-for-approval
+                            :company (contract-db/get-company-for-company-contract-employee db employee-id)}
    :transact
    (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
          {user-files :user/files
@@ -237,8 +234,8 @@
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
-                                       (du/entity db company-contract-eid)
-                                       [:company-contract/company :db/id])}
+                                      (du/entity db company-contract-eid)
+                                      [:company-contract/company :db/id])}
    :pre [^{:error :existing-teet-user}
          (not (user-db/user-has-logged-in? db (form-value->person-id-eid form-value)))
 
@@ -289,6 +286,7 @@
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
+
    :pre [(either-user-has-not-logged-in-or-no-personal-information-edited? db form-value)]
    :contract-authorization {:action :contract/manage-company-employees
                             :company (get-in
@@ -332,28 +330,23 @@
 
 (defcommand :thk.contract/remove-file-link
   {:doc "Remove a file link between user file and employee"
-   :payload {employee-id :employee-id
+   :payload {company-contract-employee-id :employee-id
              file-id :file-id}
    :context {:keys [db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
-                            :company {:action :contract/manage-company-employees
-                                      :company (get-in
-                                                 (du/entity db employee-id)
-                                                 [:company-contract/_employees :company-contract/company :db/id])}}
-   :transact [[:db/retract employee-id :company-contract-employee/attached-files file-id]]})
+                            :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
+   :transact [[:db/retract company-contract-employee-id :company-contract-employee/attached-files file-id]]})
 
 (defcommand :thk.contract/save-license
   {:doc "Save a license"
-   :payload {:keys [employee-id license delete?]}
+   :payload {:keys [company-contract-employee-id license delete?]}
    :context {:keys [user db]}
    :project-id nil
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/manage-company-employees
-                            :company (get-in
-                                       (du/entity db employee-id)
-                                       [:company-contract/_employees :company-contract/company :db/id])}
+                            :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :pre [;; Check license is new or belongs to user when editing
          (or (not (contains? license :db/id))
              (some #(= (:db/id license)
@@ -361,16 +354,16 @@
                    (:user/licenses
                     (du/entity
                      db
-                     (contract-db/get-user-for-company-contract-employee db employee-id)))))]
+                     (contract-db/get-user-for-company-contract-employee db company-contract-employee-id)))))]
    :transact
-   (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)
+   (let [user-id (contract-db/get-user-for-company-contract-employee db company-contract-employee-id)
          license-id (:db/id license "new-license")]
      (if delete?
-       [[:db/retract employee-id :company-contract-employee/attached-licenses license-id]]
+       [[:db/retract company-contract-employee-id :company-contract-employee/attached-licenses license-id]]
        ;; else - not delete, normal save:
        [{:db/id user-id
          :user/licenses license-id}
-        {:db/id employee-id
+        {:db/id company-contract-employee-id
          :company-contract-employee/attached-licenses license-id}
         (meta-model/with-creation-or-modification-meta
           user
@@ -388,9 +381,7 @@
    :context {:keys [user db]}
    :authorization {:contracts/contract-editing {}}
    :contract-authorization {:action :contract/submit-key-person-for-approval
-                            :company (get-in
-                                       (du/entity db company-contract-employee-id)
-                                       [:company-contract/_employees :company-contract/company :db/id])}
+                            :company (contract-db/get-company-for-company-contract-employee db company-contract-employee-id)}
    :pre [(contract-db/company-contract-employee-eid? db company-contract-employee-id)]
    :transact [{:db/id company-contract-employee-id
                :company-contract-employee/key-person-status
