@@ -772,7 +772,7 @@
       [remove-key-person-assignment-button e! selected-partner employee]]
      [key-person-files e! employee]
      [key-person-licenses e! employee selected-partner]
-     [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
+     [authorization-check/when-authorized :thk.contract/approve-key-person (:company-contract/company selected-partner)
       [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
        [key-person-approvals-status status comment modification-meta]
        [:div {:class (<class contract-style/key-person-assignment-header)}
