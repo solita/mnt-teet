@@ -73,7 +73,6 @@
     :navigate {:page :cost-items}
     :hotkey "8"
     :feature-flag :cost-items
-    :authorization :cost-items/cost-items
     :match-pages #{:cost-item :cost-items :cost-items-totals :materials-and-products}}
    {:name :cooperation
     :label [:project :tabs :cooperation]
