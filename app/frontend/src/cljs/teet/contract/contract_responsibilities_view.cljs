@@ -186,19 +186,20 @@
     [:div {:class (<class contract-style/contract-responsibilities-container-style)}
      [contract-common/contract-heading e! app contract]
      [:div {:class (<class contract-style/responsibilities-page-container)}
+      [typography/Heading1 (tr [:contract :persons-responsibilities])]
       (when-feature :contract-partners
         (when (not-empty targets)
           [:div {:class (<class common-styles/margin-top 2)}
-           [typography/Heading1 {:class (<class common-styles/margin-top 2)}
+           [typography/Heading2 {:class (<class common-styles/margin-top 2)}
             (tr [:contract :responsible-persons :heading])]
            [responsible-persons targets]]))
       (when (not-empty partner-representatives)
         [:div {:class (<class common-styles/margin-top 2)}
-         [typography/Heading1 {:class (<class common-styles/margin-top 2)}
+         [typography/Heading2 {:class (<class common-styles/margin-top 2)}
           (tr [:contract :representatives :heading])]
          [partner-representatives-table partner-representatives]])
       (when (not-empty targets)
         [:div {:class (<class common-styles/margin-top 2)}
-         [typography/Heading1 {:class (<class common-styles/margin-top 2)}
+         [typography/Heading2 {:class (<class common-styles/margin-top 2)}
           (tr [:contract :table-heading :task-responsibilities])]
          [targets-responsibilities targets]])]]))
