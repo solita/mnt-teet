@@ -203,7 +203,7 @@
              key-person? :key-person?}
    :context {:keys [user db]}
    :project-id nil
-   :contract-authorization {:action :contract/submit-key-person-for-approval
+   :contract-authorization {:action :contract/manage-company-employees
                             :company (contract-db/get-company-for-company-contract-employee db employee-id)}
    :transact
    (let [user-id (contract-db/get-user-for-company-contract-employee db employee-id)

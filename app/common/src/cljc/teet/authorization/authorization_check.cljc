@@ -129,16 +129,18 @@
                 contract-permissions @app-state/contract-permissions
                 user @app-state/user
                 action-permissions (action permissions)
-                has-contract-auth? (:contract-authorization-rule action-permissions)]
+                has-contract-auth? (:contract-authorization-rule action-permissions)
+                action-permissions-without-contract-auth (dissoc
+                                                           action-permissions
+                                                           :contract-authorization-rule)]
             (if (and permissions user action-permissions)
-              (if (every? (fn [[permission {:keys [link]}]]
-                            (authorized? @app-state/user permission
-                                         (merge {:project-id project-id
-                                                 :entity entity}
-                                                (when link {:link link}))))
-                          (dissoc
-                            (action permissions)
-                            :contract-authorization-rule)) ;; don't consider contract-auth in this old check.
+              (if (and (seq action-permissions-without-contract-auth)
+                       (every? (fn [[permission {:keys [link]}]]
+                                 (authorized? @app-state/user permission
+                                              (merge {:project-id project-id
+                                                      :entity entity}
+                                                     (when link {:link link}))))
+                               action-permissions-without-contract-auth)) ;; don't consider contract-auth in this old check.
                 (do
                   (log/debug "Action " action " authorized for " user)
                   component)
