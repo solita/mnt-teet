@@ -666,16 +666,19 @@
       (tr-enum status)]
      ;; modification time shown when status is approval-requested
      (contract-partners-controller/status-modified-string-maybe status modification-meta)]]
-   (when comment
-     [:div.person-appproval-comment {:class (<class common-styles/margin-bottom 1)}
-      [:strong (tr [:comment :comment]) ":"]
-      [:p {:style {:margin-bottom "0.5rem"}}
-       comment]
+
+   [:div.person-appproval-comment {:class (<class common-styles/margin-bottom 1)}
+    (when comment
+      [:<>
+       [:strong (tr [:comment :comment]) ":"]
+       [:p {:style {:margin-bottom "0.5rem"}}
+        comment]])
+    (when (#{:key-person.status/rejected :key-person.status/approved} status)
       (let [[time user] modification-meta]
         [typography/SmallGrayText
          (user-model/user-name user) " "
          (tr [:contract :partner :on]) " "
-         (format/date-time-with-seconds time)])])])
+         (format/date-time-with-seconds time)]))]])
 
 (defn- edit-license-form [e! employee-id close-event form-atom]
   [form/form {:e! e!
