@@ -714,7 +714,9 @@
          [:div {:id (str "user-license-" (:db/id license))
                 :class (<class common-styles/flex-row-space-between)}
           [:div {:class (<class common-styles/flex-table-column-style 60)}
-           [common/Link {:href link} name]]
+           (if (str/blank? link)
+             name
+             [common/Link {:href link} name])]
           [:div {:class (<class common-styles/flex-table-column-style 30)}
            (format/date expiration-date)]
           [:div {:class (<class common-styles/flex-table-column-style 10)}
