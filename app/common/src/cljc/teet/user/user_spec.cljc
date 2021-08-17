@@ -63,3 +63,5 @@
 (s/def :user/email email?)
 
 (s/def :account/update (s/keys :req [:user/email]))
+
+(s/def :user-license/name non-empty-string?)
