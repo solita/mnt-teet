@@ -585,39 +585,40 @@
 (defn key-person-files
   "Displays the file list for the key person"
   [e! employee selected-partner]
-  (let [can-manage-files (authorization-check/authorized? @app-state/user
-                                                          :contracts/contract-editing
-                                                          selected-partner)]
-    [:div {:id (str "key-person-" (:db/id employee))
-           :style {:max-width "800px"}}
-     [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h3 {:class (<class common-styles/margin-top 3)}
-       (tr [:contract :partner :key-person-files])]]
-     [:div
-      (mapc (fn [file]
-              [file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
-                                    :title-downloads? true
-                                    :delete-action (when can-manage-files
-                                                     (fn [file]
-                                                       (e! (contract-partners-controller/->RemoveFileLink
-                                                            (:db/id employee)
-                                                            (:db/id file)))))}
-               file])
-            (:company-contract-employee/attached-files employee))]
-     [:div {:class (<class common-styles/margin 1 0 1 0)}
-      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
-        [file-upload/FileUploadButton
-         {:id "keyperson-files-field"
-          :drag-container-id (str "key-person-" (:db/id employee))
-          :color :secondary
-          :button-attributes {:size :small}
-          :on-drop #(e! (file-controller/map->UploadFiles
-                          {:files %
-                           :project-id nil
-                           :user-attachment? true
-                           :attach-to (:db/id employee)
-                           :on-success common-controller/->Refresh}))}
-         (str "+ " (tr [:buttons :upload]))]]]]))
+  [:div {:id (str "key-person-" (:db/id employee))
+         :style {:max-width "800px"}}
+   [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+    [:h3 {:class (<class common-styles/margin-top 3)}
+     (tr [:contract :partner :key-person-files])]]
+   [:div
+    (mapc (fn [file]
+            [file-view/file-row2
+             {:attached-to [:company-contract-employee (:db/id employee)]
+              :title-downloads? true
+              :delete-when-authorized-wrapper (r/partial
+                                                authorization-check/when-authorized
+                                                :thk.contract/add-contract-employee
+                                                (:company-contract/company selected-partner))
+              :delete-action (fn [file]
+                               (e! (contract-partners-controller/->RemoveFileLink
+                                     (:db/id employee)
+                                     (:db/id file))))}
+             file])
+          (:company-contract-employee/attached-files employee))]
+   [:div {:class (<class common-styles/margin 1 0 1 0)}
+    [authorization-check/when-authorized :thk.contract/add-contract-employee (:company-contract/company selected-partner)
+     [file-upload/FileUploadButton
+      {:id "keyperson-files-field"
+       :drag-container-id (str "key-person-" (:db/id employee))
+       :color :secondary
+       :button-attributes {:size :small}
+       :on-drop #(e! (file-controller/map->UploadFiles
+                       {:files %
+                        :project-id nil
+                        :user-attachment? true
+                        :attach-to (:db/id employee)
+                        :on-success common-controller/->Refresh}))}
+      (str "+ " (tr [:buttons :upload]))]]]])
 
 (defn- approval-form
   [e! employee-eid save-event required? close-event form-atom]
@@ -783,7 +784,7 @@
      [:div {:class (<class contract-style/key-person-assignment-header)}
       [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
       [remove-key-person-assignment-button e! selected-partner employee]]
-     [key-person-files e! employee]
+     [key-person-files e! employee selected-partner]
      [key-person-licenses e! employee selected-partner]
      [:div {:class (<class common-styles/margin 1 0 1 0)
             :style {:max-width "800px"}}

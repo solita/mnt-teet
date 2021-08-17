@@ -322,7 +322,7 @@
            allow-replacement-opts delete-action
            attached-to land-acquisition?
            comments-link? actions? title-downloads?
-           link-icon? column-widths]
+           link-icon? column-widths delete-when-authorized-wrapper]
     :or {comments-link? true
          actions? true
          column-widths [10 1]}}
@@ -406,10 +406,15 @@
                    (when attached-to
                      {:attached-to attached-to})))}
           [icons/file-cloud-download-outlined {:style {:color theme-colors/primary}}]]
-         (when delete-action
-           [buttons/delete-button-with-confirm
-            {:action #(delete-action file)
-             :trashcan? true}])]])]))
+         (if (and delete-when-authorized-wrapper delete-action)
+           [delete-when-authorized-wrapper
+            [buttons/delete-button-with-confirm
+             {:action #(delete-action file)
+              :trashcan? true}]]
+           (when delete-action
+             [buttons/delete-button-with-confirm
+              {:action #(delete-action file)
+               :trashcan? true}]))]])]))
 
 (defn document-group-heading
   [group-key]
