@@ -852,6 +852,7 @@
                 :required? true}
     [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :user/email
+                :required? true
                 :validate validation/validate-email-optional}
     [TextField {:disabled personal-info-disabled?}]]
    [form/field :user/phone-number
