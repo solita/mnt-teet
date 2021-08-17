@@ -566,15 +566,15 @@
     selected-partner false]])
 
 (defn info-personnel-section
-  [e! {:keys [params query] :as app} selected-partner employee]
+  [e! _app selected-partner employee]
   [:div {:class (<class contract-style/personnel-section-style)}
    [Grid {:container true
           :direction :row-reverse
           :justify-content :flex-start
           :align-items :center}
-    [:span {:style {:padding-top :1rem}}
+    [:div {:style {:padding-top :1rem}}
      [authorization-check/when-authorized
-      :thk.contract/add-contract-employee (:company-contract/company selected-partner)
+      :thk.contract/assign-key-person (:company-contract/company selected-partner)
       [buttons/button-secondary {:start-icon (r/as-element [icons/content-add])
                                  :on-click (e!
                                              contract-partners-controller/->AssignKeyPerson
@@ -1034,7 +1034,7 @@
         [key-person-icon key-person-status (tr [:contract :employee :key-person])]
         [:span])]
      [authorization-check/when-authorized
-      :thk.contract/edit-contract-partner-company (:company-contract/company selected-partner)
+      :thk.contract/edit-contract-employee (:company-contract/company selected-partner)
       [buttons/button-secondary
        {:href (routes/url-for {:page :contract-partners
                                :params (merge
