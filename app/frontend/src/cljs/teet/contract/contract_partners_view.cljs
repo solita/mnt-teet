@@ -632,7 +632,7 @@
 
 (defn approval-actions
   [e! employee]
-  [:div {:class (<class contract-style/approval-actions-container-style)}
+  [:div
    (when-not (contract-partners-controller/contract-employee-approved? employee)
      [form/form-modal-button {:form-component [approval-form e! (:db/id employee)
                                                contract-partners-controller/approve-key-person
@@ -661,11 +661,20 @@
       [tr [:contract :partner :tram-approver]]]]
     [:div.person-appproval-status {:class (<class common-styles/flex-table-column-style 70 :space-between)}
      [key-person-icon status]
-     (tr-enum status)
+     [:span {:style {:margin "0 0.4rem"}}
+      (tr-enum status)]
      ;; modification time shown when status is approval-requested
      (contract-partners-controller/status-modified-string-maybe status modification-meta)]]
    (when comment
-     [:div.person-appproval-comment {:class (<class common-styles/flex-table-column-style 100 :space-between)} comment])])
+     [:div.person-appproval-comment {:class (<class common-styles/margin-bottom 1)}
+      [:strong (tr [:comment :comment]) ":"]
+      [:p {:style {:margin-bottom "0.5rem"}}
+       comment]
+      (let [[time user] modification-meta]
+        [typography/SmallGrayText
+         (user-model/user-name user) " "
+         (tr [:contract :partner :on]) " "
+         (format/date-time-with-seconds time)])])])
 
 (defn- edit-license-form [e! employee-id close-event form-atom]
   [form/form {:e! e!
@@ -774,15 +783,18 @@
       [remove-key-person-assignment-button e! selected-partner employee]]
      [key-person-files e! employee]
      [key-person-licenses e! employee selected-partner]
-     [:div {:class (<class common-styles/margin 1 0 1 0)} [:h3 (tr [:contract :employee :approvals])]
+     [:div {:class (<class common-styles/margin 1 0 1 0)
+            :style {:max-width "800px"}}
+      [:h3 (tr [:contract :employee :approvals])]
       [key-person-approvals-status status comment modification-meta]
-      [authorization-check/when-authorized :thk.contract/submit-key-person (:company-contract/company selected-partner)
-       [:div {:class (<class contract-style/key-person-assignment-header)}
-        (when (#{:key-person.status/assigned :key-person.status/rejected} status)
-          [submit-key-person-button e! employee])]]
-
-      [authorization-check/when-authorized :thk.contract/approve-key-person (:company-contract/company selected-partner)
-       [approval-actions e! employee]]]]))
+      [:div {:class (<class common-styles/flex-row-space-between) }
+       [authorization-check/when-authorized :thk.contract/submit-key-person (:company-contract/company selected-partner)
+        [:div {:class (<class contract-style/key-person-assignment-header)}
+         (when (#{:key-person.status/assigned :key-person.status/rejected} status)
+           [submit-key-person-button e! employee])]]
+       (when (#{:key-person.status/approval-requested :key-person.status/rejected :key-person.status/approved} status)
+         [authorization-check/when-authorized :thk.contract/approve-key-person (:company-contract/company selected-partner)
+          [approval-actions e! employee]])]]]))
 
 (defn user-info-column
   [{:user/keys [person-id email phone-number] :as user}]
@@ -840,6 +852,7 @@
                 :required? true}
     [TextField {:disabled personal-info-disabled?}]]
    [form/field {:attribute :user/email
+                :required? true
                 :validate validation/validate-email-optional}
     [TextField {:disabled personal-info-disabled?}]]
    [form/field :user/phone-number
