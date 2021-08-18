@@ -349,7 +349,7 @@
               :meeting/notifications-sent-at (Date.)}])))
 
 (defmethod special-authorization :meeting/send-notifications
-  [{:keys [db user entity-id]}]
+  [{:keys [db user entity-id] :as opts}]
   (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/send-notifications
@@ -358,9 +358,9 @@
    :payload {meeting-eid :db/id}
    :project-id (project-db/meeting-project-id db meeting-eid)
    :authorization {:meeting/send-notifications {:db/id meeting-eid
-                                                :link :meeting/organizer-or-reviewer
-                                                :entity-id meeting-eid}}}
-  :contract-authorization {:action :meeting/send-notifications}
+                                                :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/send-notifications
+                            :entity-id meeting-eid}}
   (let [project-eid (project-db/meeting-project-id db meeting-eid)
         all-to (meeting-db/participants db meeting-eid)
         to (->> (remove #(= (:db/id user) (:db/id %)) all-to) ;; don't send emails to current user
