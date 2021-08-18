@@ -732,10 +732,17 @@
               :button-component [buttons/link-button-with-icon {:icon [icons/content-create]}
                                  (tr [:buttons :edit])]}]]]])
 
-       ;; Show licenses in alphabetical order, removing expired if not
-       ;; showing history
+       ;; Show licenses in chronological order, latest expiration first,
+       ;; removing expired if not showing history
        (->> licenses
-            (sort-by (comp str/lower-case :user-license/name))
+            (sort-by :user-license/expiration-date
+                     (fn [a b]
+                       (cond
+                         (nil? a) -1
+                         (nil? b) 1
+                         (> (.getTime a) (.getTime b)) -1
+                         (< (.getTime a) (.getTime b)) 1
+                         :else 0)))
             (remove (if @show-history?
                       (constantly false)
                       (fn [{exp :user-license/expiration-date}]
