@@ -221,13 +221,10 @@
                               :in $ ?e]
                             (d/history db) id))]
     (into []
-          (comp (map (fn [[t kps-id]]
-                       (let [db (d/as-of db t)]
-                         (d/pull db '[*
-                                      {:meta/modifier [:user/given-name :user/family-name]}] kps-id))))
-                (filter #(or (du/enum= :key-person.status/approval-requested
-                                       (:key-person/status %))
-                             (contains? % :key-person/approval-comment))))
+          (map (fn [[t kps-id]]
+                 (let [db (d/as-of db t)]
+                   (d/pull db '[*
+                                {:meta/modifier [:user/given-name :user/family-name]}] kps-id))))
           times)))
 
 (defn with-key-person-status-history [db contract]
