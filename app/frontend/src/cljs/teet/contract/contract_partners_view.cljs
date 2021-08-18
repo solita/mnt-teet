@@ -776,9 +776,7 @@
 (defn key-person-assignment-section
   [e! _ selected-partner employee]
   (let [status-entity (:company-contract-employee/key-person-status employee)
-        status (du/enum->kw (:key-person/status status-entity))
-        comment (:key-person/approval-comment status-entity)
-        modification-meta [(:meta/modified-at status-entity) (:meta/modifier status-entity)]]
+        status (du/enum->kw (:key-person/status status-entity))]
     [:div {:class ""}
      [:div {:class (<class contract-style/key-person-assignment-header)}
       [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
@@ -788,7 +786,13 @@
      [:div {:class (<class common-styles/margin 1 0 1 0)
             :style {:max-width "800px"}}
       [:h3 (tr [:contract :employee :approvals])]
-      [key-person-approvals-status status comment modification-meta]
+      (mapc
+       (fn [status-entity]
+         (let [status (du/enum->kw (:key-person/status status-entity))
+               comment (:key-person/approval-comment status-entity)
+               modification-meta [(:meta/modified-at status-entity) (:meta/modifier status-entity)]]
+           [key-person-approvals-status status comment modification-meta]))
+       (:company-contract-employee/key-person-status-history employee))
       [:div {:class (<class common-styles/flex-row-space-between) }
        [authorization-check/when-authorized :thk.contract/submit-key-person (:company-contract/company selected-partner)
         [:div {:class (<class contract-style/key-person-assignment-header)}

@@ -3,7 +3,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.company.company-model :as company-model]
-            [teet.user.user-db :as user-db])
+            [teet.user.user-db :as user-db]
+            [clojure.walk :as walk])
   (:import (java.util Date)))
 
 (def contract-query-rules
@@ -197,30 +198,64 @@
                                                     :file/s3-key
                                                     :meta/created-at
                                                     {:meta/creator [:db/id :user/family-name :user/given-name]}]}
-        {:company-contract-employee/key-person-status [:db/id
-                                                       :key-person/status
-                                                       :key-person/approval-comment
-                                                       :meta/modified-at
-                                                       {:meta/modifier [:db/id :user/family-name :user/given-name]}]}
+        {:company-contract-employee/key-person-status
+         [:db/id
+          :key-person/status
+          :key-person/approval-comment
+          :meta/modified-at
+          {:meta/modifier [:db/id :user/family-name :user/given-name]}]}
         {:company-contract-employee/attached-licenses
          [:db/id
           :user-license/name
           :user-license/expiration-date
           :user-license/link]}]}]}])
 
+(defn fetch-key-person-status-history
+  "Fetch history for kps entity."
+  [db id]
+  (let [times (sort-by first
+                       (d/q '[:find ?txi ?id
+                              :where
+                              [?e :company-contract-employee/key-person-status ?id ?tx true]
+                              [?tx :db/txInstant ?txi]
+                              :in $ ?e]
+                            (d/history db) id))]
+    (into []
+          (comp (map (fn [[t kps-id]]
+                       (let [db (d/as-of db t)]
+                         (d/pull db '[*
+                                      {:meta/modifier [:user/given-name :user/family-name]}] kps-id))))
+                (filter #(or (du/enum= :key-person.status/approval-requested
+                                       (:key-person/status %))
+                             (contains? % :key-person/approval-comment))))
+          times)))
+
+(defn with-key-person-status-history [db contract]
+  (walk/prewalk
+   (fn [x]
+     (if-let [id (and (map? x)
+                      (:company-contract-employee/key-person-status x)
+                      (:db/id x))]
+       (assoc x :company-contract-employee/key-person-status-history
+              (fetch-key-person-status-history db id))
+       x))
+   contract))
+
 (defn get-contract-with-partners
   [db contract-eid]
-  (-> (d/q '[:find (pull ?c contract-partners-attributes) ?status
-             :where
-             (contract-status ?c ?status ?now)
-             :in $ % ?c ?now contract-partners-attributes]
+  (->>
+   (d/q '[:find (pull ?c contract-partners-attributes) ?status
+          :where
+          (contract-status ?c ?status ?now)
+          :in $ % ?c ?now contract-partners-attributes]
         db
         contract-status-rules
         contract-eid
         (Date.)
         contract-partner-attributes)
-    first
-    contract-with-status))
+   first
+   contract-with-status
+   (with-key-person-status-history db)))
 
 (defn contract-query
   [db contract-eid]
