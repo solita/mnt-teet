@@ -134,7 +134,8 @@
                                                            action-permissions
                                                            :contract-authorization-rule)]
             (if (and permissions user action-permissions)
-              (if (and (seq action-permissions-without-contract-auth)
+              (if (and (not (and has-contract-auth?
+                                 (empty? action-permissions-without-contract-auth)))
                        (every? (fn [[permission {:keys [link]}]]
                                  (authorized? @app-state/user permission
                                               (merge {:project-id project-id

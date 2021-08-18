@@ -585,39 +585,40 @@
 (defn key-person-files
   "Displays the file list for the key person"
   [e! employee selected-partner]
-  (let [can-manage-files (authorization-check/authorized? @app-state/user
-                                                          :contracts/contract-editing
-                                                          selected-partner)]
-    [:div {:id (str "key-person-" (:db/id employee))
-           :style {:max-width "800px"}}
-     [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
-      [:h3 {:class (<class common-styles/margin-top 3)}
-       (tr [:contract :partner :key-person-files])]]
-     [:div
-      (mapc (fn [file]
-              [file-view/file-row2 {:attached-to [:company-contract-employee (:db/id employee)]
-                                    :title-downloads? true
-                                    :delete-action (when can-manage-files
-                                                     (fn [file]
-                                                       (e! (contract-partners-controller/->RemoveFileLink
-                                                            (:db/id employee)
-                                                            (:db/id file)))))}
-               file])
-            (:company-contract-employee/attached-files employee))]
-     [:div {:class (<class common-styles/margin 1 0 1 0)}
-      [authorization-check/when-authorized :thk.contract/add-contract-employee selected-partner
-        [file-upload/FileUploadButton
-         {:id "keyperson-files-field"
-          :drag-container-id (str "key-person-" (:db/id employee))
-          :color :secondary
-          :button-attributes {:size :small}
-          :on-drop #(e! (file-controller/map->UploadFiles
-                          {:files %
-                           :project-id nil
-                           :user-attachment? true
-                           :attach-to (:db/id employee)
-                           :on-success common-controller/->Refresh}))}
-         (str "+ " (tr [:buttons :upload]))]]]]))
+  [:div {:id (str "key-person-" (:db/id employee))
+         :style {:max-width "800px"}}
+   [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+    [:h3 {:class (<class common-styles/margin-top 3)}
+     (tr [:contract :partner :key-person-files])]]
+   [:div
+    (mapc (fn [file]
+            [file-view/file-row2
+             {:attached-to [:company-contract-employee (:db/id employee)]
+              :title-downloads? true
+              :delete-when-authorized-wrapper (r/partial
+                                                authorization-check/when-authorized
+                                                :thk.contract/add-contract-employee
+                                                (:company-contract/company selected-partner))
+              :delete-action (fn [file]
+                               (e! (contract-partners-controller/->RemoveFileLink
+                                     (:db/id employee)
+                                     (:db/id file))))}
+             file])
+          (:company-contract-employee/attached-files employee))]
+   [:div {:class (<class common-styles/margin 1 0 1 0)}
+    [authorization-check/when-authorized :thk.contract/add-contract-employee (:company-contract/company selected-partner)
+     [file-upload/FileUploadButton
+      {:id "keyperson-files-field"
+       :drag-container-id (str "key-person-" (:db/id employee))
+       :color :secondary
+       :button-attributes {:size :small}
+       :on-drop #(e! (file-controller/map->UploadFiles
+                       {:files %
+                        :project-id nil
+                        :user-attachment? true
+                        :attach-to (:db/id employee)
+                        :on-success common-controller/->Refresh}))}
+      (str "+ " (tr [:buttons :upload]))]]]])
 
 (defn- approval-form
   [e! employee-eid save-event required? close-event form-atom]
@@ -665,16 +666,19 @@
       (tr-enum status)]
      ;; modification time shown when status is approval-requested
      (contract-partners-controller/status-modified-string-maybe status modification-meta)]]
-   (when comment
-     [:div.person-appproval-comment {:class (<class common-styles/margin-bottom 1)}
-      [:strong (tr [:comment :comment]) ":"]
-      [:p {:style {:margin-bottom "0.5rem"}}
-       comment]
+
+   [:div.person-appproval-comment {:class (<class common-styles/margin-bottom 1)}
+    (when comment
+      [:<>
+       [:strong (tr [:comment :comment]) ":"]
+       [:p {:style {:margin-bottom "0.5rem"}}
+        comment]])
+    (when (#{:key-person.status/rejected :key-person.status/approved} status)
       (let [[time user] modification-meta]
         [typography/SmallGrayText
          (user-model/user-name user) " "
          (tr [:contract :partner :on]) " "
-         (format/date-time-with-seconds time)])])])
+         (format/date-time-with-seconds time)]))]])
 
 (defn- edit-license-form [e! employee-id close-event form-atom]
   [form/form {:e! e!
