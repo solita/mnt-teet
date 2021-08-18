@@ -349,7 +349,7 @@
               :meeting/notifications-sent-at (Date.)}])))
 
 (defmethod special-authorization :meeting/send-notifications
-  [{:keys [db user entity-id] :as opts}]
+  [{:keys [db user entity-id]}]
   (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/send-notifications
