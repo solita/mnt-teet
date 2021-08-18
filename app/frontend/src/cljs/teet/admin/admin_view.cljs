@@ -78,8 +78,7 @@
        [select/form-select {:format-item #(if % (name %) (str "- " (tr [:admin :user-no-global-role]) " -"))
                             :items [nil
                                     :admin :ta-project-manager
-                                    :ta-consultant :ta-responsible-person
-                                    :external-consultant]}]]]
+                                    :ta-consultant :ta-responsible-person]}]]]
 
      [:div {:style {:margin-bottom "1rem"}}
       [form/field :user/company
