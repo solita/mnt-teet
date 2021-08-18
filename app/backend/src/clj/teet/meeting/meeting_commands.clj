@@ -209,7 +209,8 @@
    :project-id (project-db/agenda-project-id db agenda-id)
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/agenda-meeting-id db agenda-id)
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/delete-agenda}
+   :contract-authorization {:action :meeting/delete-agenda
+                            :entity-id (meeting-db/agenda-meeting-id db agenda-id)}
    :transact (update-meeting-tx
                user
                (meeting-db/agenda-meeting-id db agenda-id)
@@ -228,7 +229,8 @@
                  (get-in (du/entity db id) [:participation/in :db/id]))
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db id) [:participation/in :db/id])
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/remove-participation}
+   :contract-authorization {:action :meeting/remove-participation
+                            :entity-id (get-in (du/entity db id) [:participation/in :db/id])}
    :transact (update-meeting-tx
                user
                (get-in (du/entity db id) [:participation/in :db/id])
@@ -246,7 +248,8 @@
    :project-id (project-db/meeting-project-id db meeting)
    :authorization {:meeting/edit-meeting {:db/id meeting
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/add-participation}
+   :contract-authorization {:action :meeting/add-participation
+                            :entity-id meeting}
    :transact [(list 'teet.meeting.meeting-tx/add-participation
                     user
                     (-> participation
@@ -279,7 +282,8 @@
                  (get-in (du/entity db participation-id) [:participation/in :db/id]))
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db participation-id) [:participation/in :db/id])
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/change-participation-absence}
+   :contract-authorization {:action :meeting/change-participation-absence
+                            :entity-id (get-in (du/entity db participation-id) [:participation/in :db/id])}
    :transact (update-meeting-tx
                user
                (get-in (du/entity db participation-id) [:participation/in :db/id])
@@ -354,8 +358,9 @@
    :payload {meeting-eid :db/id}
    :project-id (project-db/meeting-project-id db meeting-eid)
    :authorization {:meeting/send-notifications {:db/id meeting-eid
-                                                :link :meeting/organizer-or-reviewer}}}
-  :contract-authorization {:action :meeting/send-notifications}
+                                                :link :meeting/organizer-or-reviewer}}
+   :contract-authorization {:action :meeting/send-notifications
+                            :entity-id meeting-eid}}
   (let [project-eid (project-db/meeting-project-id db meeting-eid)
         all-to (meeting-db/participants db meeting-eid)
         to (->> (remove #(= (:db/id user) (:db/id %)) all-to) ;; don't send emails to current user
@@ -398,7 +403,8 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/cancel}
+   :contract-authorization {:action :meeting/cancel
+                            :entity-id meeting-id}
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]}
   (tx-ret (update-meeting-tx
             user
@@ -444,7 +450,8 @@
    :context {:keys [db user]}
    :payload {:keys [form-data]}
    :project-id (project-db/decision-project-id db (:db/id form-data))
-   :contract-authorization {:action :meeting/update-decision}
+   :contract-authorization {:action :meeting/update-decision
+                            :entity-id (meeting-db/decision-meeting-id db (:db/id form-data))}
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db (:db/id form-data))
                                           :link :meeting/organizer-or-reviewer}}
    :transact
@@ -467,7 +474,8 @@
    :project-id (project-db/decision-project-id db decision-id)
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db decision-id)
                                           :link :meeting/organizer-or-reviewer}}
-   :contract-authorization {:action :meeting/delete-decision}
+   :contract-authorization {:action :meeting/delete-decision
+                            :entity-id (meeting-db/decision-meeting-id db decision-id)}
    :transact (update-meeting-tx
                user
                (meeting-db/decision-meeting-id db decision-id)
