@@ -167,8 +167,7 @@
                                :items [nil
                                        :admin :ta-project-manager
                                        :ta-responsible-person
-                                       :ta-consultant
-                                       :external-consultant]}]]]
+                                       :ta-consultant]}]]]
         [:div {:style {:margin-bottom "1rem"}}
          [form/field :user/email
           [TextField {}]]]]
