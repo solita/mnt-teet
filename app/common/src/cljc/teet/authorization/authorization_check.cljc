@@ -146,7 +146,9 @@
                   (log/debug "Action " action " authorized for " user)
                   component)
                 (if has-contract-auth?
-                   [authorized-query user action entity contract-permissions component]
+                  (do
+                    (println "has contract auth: " action " action permission: " action-permissions)
+                    [authorized-query user action entity contract-permissions component])
                   (do
                     (log/debug "Action " action " NOT authorized for " user)
                     nil)))

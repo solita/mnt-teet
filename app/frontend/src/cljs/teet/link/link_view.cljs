@@ -167,7 +167,7 @@
 
   If editable? is true, links can be removed and added.
   Otherwise the view is read-only."
-  [{:keys [e! links from editable? link-entity-opts]}]
+  [{:keys [e! editing-when-authorized-wrapper links from editable? link-entity-opts]}]
   (r/with-let [in-progress (r/atom false)
                selected-type (r/atom (first type-options))
                change-search-value #(reset! selected-type %)
@@ -190,31 +190,32 @@
                       link-entity-opts)
            links)
      (when (and editable? (not @in-progress))
-       [:div {:style {:display :flex}}
-        [:div {:style {:flex-grow 1}}
-         ^{:key (name @selected-type)}                      ; force remount if type changes
-         [select/select-search
-          {:e! e!
-           :placeholder (tr [:link :search :placeholder])
-           :no-results (tr [:link :search :no-results])
-           :query (fn [text]
-                    {:args {:lang @localization/selected-language
-                            :text text
-                            :from from
-                            :types #{@selected-type}}
-                     :query :link/search})
-           :on-change add-link!
+       [editing-when-authorized-wrapper
+        [:div {:style {:display :flex}}
+         [:div {:style {:flex-grow 1}}
+          ^{:key (name @selected-type)}                     ; force remount if type changes
+          [select/select-search
+           {:e! e!
+            :placeholder (tr [:link :search :placeholder])
+            :no-results (tr [:link :search :no-results])
+            :query (fn [text]
+                     {:args {:lang @localization/selected-language
+                             :text text
+                             :from from
+                             :types #{@selected-type}}
+                      :query :link/search})
+            :on-change add-link!
 
-           :format-result display-result}]]
-        [:div {:style {:background-color :white
-                       :max-width "150px"}}
-         [select/form-select {:value {:value @selected-type
-                                      :label (tr [:link :type-label @selected-type])}
-                              :items (doall
-                                       (mapv
-                                         (fn [opt]
-                                           {:value opt :label (tr [:link :type-label opt])})
-                                         type-options))
-                              :on-change (fn [val]
-                                           (change-search-value (:value val)))
-                              :data-item? true}]]])]))
+            :format-result display-result}]]
+         [:div {:style {:background-color :white
+                        :max-width "150px"}}
+          [select/form-select {:value {:value @selected-type
+                                       :label (tr [:link :type-label @selected-type])}
+                               :items (doall
+                                        (mapv
+                                          (fn [opt]
+                                            {:value opt :label (tr [:link :type-label opt])})
+                                          type-options))
+                               :on-change (fn [val]
+                                            (change-search-value (:value val)))
+                               :data-item? true}]]]])]))
