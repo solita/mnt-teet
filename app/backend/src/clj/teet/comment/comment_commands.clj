@@ -267,7 +267,8 @@
              visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
-   :contract-authorization {:action :comment/update}
+   :contract-authorization {:action :comment/update
+                            :entity-id comment-id}
    :pre [(valid-visibility-for-user?
            user
            (project-db/comment-project-id db comment-id)
