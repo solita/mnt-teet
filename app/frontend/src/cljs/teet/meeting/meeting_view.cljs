@@ -1179,23 +1179,35 @@
         (e! (meeting-controller/->MarkMeetingAsSeen))))))
 
 (defn meeting-page [e! _ {m :meeting}]
-  (maybe-mark-meeting-as-seen! e! m)
-  (fn [e! {:keys [user] :as app} {:keys [project meeting]}]
-    (let [edit-rights? (and #_(authorization-check/authorized?
-                             user :meeting/edit-meeting
-                             {:entity meeting
-                              :link :meeting/organizer-or-reviewer
-                              :project-id (:db/id project)})
-                            (not (:meeting/locked? meeting)))
-          review-rights? (and (meeting-model/user-can-review? user meeting)
-                              (not (:meeting/locked? meeting)))]
-      [authorization-context/with
-       (set/union
-        (when edit-rights?
-          #{:edit-meeting})
-        (when review-rights?
-          #{:review-meeting}))
-       [context/provide :reviews? (seq (:review/_of meeting))
-        [meeting-page-structure e! app project
-         [meeting-main-content e! app meeting]
-         [meeting-participants e! meeting edit-rights?]]]])))
+  (let [allowed-atom (r/atom false)]
+    (r/create-class
+      {:component-did-mount
+       (fn [_]
+         (maybe-mark-meeting-as-seen! e! m)
+         (e! (common-controller/map->QueryUserAccess {:action :meeting/update
+                                                      :entity m
+                                                      :result-event (form/update-atom-event allowed-atom)})))
+       :component-did-update
+       (fn [this [_ _ _ {prev-meeting :meeting}]]
+         (let [[_ _ _ {new-meet :meeting}] (r/argv this)]
+           (when-not (= (:db/id new-meet) (:db/id prev-meeting))
+             (maybe-mark-meeting-as-seen! e! (:db/id new-meet))
+             (e! (common-controller/map->QueryUserAccess {:action :meeting/update
+                                                          :entity new-meet
+                                                          :result-event (form/update-atom-event allowed-atom)})))))
+       :reagent-render
+       (fn [e! {:keys [user] :as app} {:keys [project meeting]}]
+         (let [edit-rights? (and @allowed-atom
+                                 (not (:meeting/locked? meeting)))
+               review-rights? (and (meeting-model/user-can-review? user meeting)
+                                   (not (:meeting/locked? meeting)))]
+           [authorization-context/with
+            (set/union
+              (when edit-rights?
+                #{:edit-meeting})
+              (when review-rights?
+                #{:review-meeting}))
+            [context/provide :reviews? (seq (:review/_of meeting))
+             [meeting-page-structure e! app project
+              [meeting-main-content e! app meeting]
+              [meeting-participants e! meeting edit-rights?]]]]))})))
