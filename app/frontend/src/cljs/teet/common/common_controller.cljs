@@ -221,6 +221,8 @@
                         :target
                         (get-in app [:params :activity])
                         :target
+                        (get-in app [:params :project])     ;;
+                        :target
                         :else
                         nil)]
       (t/fx app

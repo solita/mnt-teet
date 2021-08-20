@@ -17,7 +17,7 @@
    :context {db :db}
    :args {project-id :project-id
           land-unit-id :land-unit-id}
-   :project-id [:thk.project/id project-id]}
+   :project-id project-id}
   (pull-large-texts (owner-opinion-db/owner-opinions db project-id land-unit-id)))
 
 
@@ -26,7 +26,7 @@
    :context {db :db}
    :args {project-id :project-id
           land-unit-id :land-unit-id}
-   :project-id [:thk.project/id project-id]}
+   :project-id project-id}
   (count (owner-opinion-db/owner-opinions db project-id land-unit-id)))
 
 (defquery :land-owner-opinion/export-opinions
