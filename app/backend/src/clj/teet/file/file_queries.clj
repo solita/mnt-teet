@@ -12,7 +12,8 @@
             [ring.util.io :as ring-io]
             [teet.integration.integration-s3 :as integration-s3]
             [teet.log :as log]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.authorization.authorization-core :as authorization])
   (:import (java.net URLEncoder)
            (net.coobird.thumbnailator Thumbnailator)
            (java.util UUID)))
@@ -84,13 +85,14 @@
    :args {:keys [file-id attached-to comment-id]}
    :pre [(or
            (and comment-id
-               (file-db/file-is-attached-to-comment? db file-id comment-id)
-               (authorization-check/authorized? user :document/view-document
-                 (merge (url-for-file db file-id false)
-                   {:project-id (when comment-id (project-db/comment-project-id db comment-id))})))
+                (file-db/file-is-attached-to-comment? db file-id comment-id)
+                (or (authorization-check/authorized? user :document/view-document
+                                                     (merge (url-for-file db file-id false)
+                                                            {:project-id (project-db/comment-project-id db comment-id)}))
+                    (authorization/general-project-access? db user (project-db/comment-project-id db comment-id))))
            (and attached-to
-             (file-db/allow-download-attachments? db user attached-to)
-             (file-db/file-is-attached-to? db file-id attached-to))
+                (file-db/allow-download-attachments? db user attached-to)
+                (file-db/file-is-attached-to? db file-id attached-to))
            (and attached-to
                 (file-db/is-key-user-file? db file-id (second attached-to)))
            (file-db/own-file? db user file-id))]

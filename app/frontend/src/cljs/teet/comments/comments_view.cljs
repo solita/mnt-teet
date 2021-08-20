@@ -448,11 +448,12 @@
            after-comment-list-rendered-event]
     :or {show-comment-form? true}}
    proj-map]
-  (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
-                                                                    :projects/set-comment-visibility
-                                                                    {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
-                                                                     :project-id (:db/id proj-map)
-                                                                     :debug? true})
+  (r/with-let [can-set-visibility? (or (authorization-check/authorized? @app-state/user
+                                                                        :projects/set-comment-visibility
+                                                                        {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
+                                                                         :project-id (:db/id proj-map)
+                                                                         :debug? true})
+                                       (authorization-check/is-tram-personnel? @app-state/user))
                ;; _ (log/debug "keys in page-state map:" (keys (common-controller/page-state @app-state/app)))
                initial-comment-form (comment-form-defaults entity-type
                                                            can-set-visibility?)

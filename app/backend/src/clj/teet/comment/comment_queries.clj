@@ -6,9 +6,10 @@
 
 (defn- comment-visibility [user project-id]
   (when-not
-      (ac/authorized? user
-                      :project/view-internal-comments
-                      {:project-id project-id})
+    (or (ac/authorized? user
+                        :project/view-internal-comments
+                        {:project-id project-id})
+        (ac/is-tram-personnel? user))
     :comment.visibility/all))
 
 (defquery :comment/fetch-comments

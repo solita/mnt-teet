@@ -24,6 +24,7 @@
    :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :activity/review-activity #{:admin :ta-responsible-person},
+ :comment/delete-comment #{:admin},
  :meeting/delete-agenda
  #{:admin :ta-project-manager :ta-responsible-person},
  :task/edit-task-part
@@ -149,7 +150,7 @@
  :task/reopen-task-part
  #{:admin :ta-project-manager :ta-responsible-person},
  :cooperation/manage-opinions-of-competent-authority
- #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
+ #{:admin :ta-project-manager :ta-responsible-person},
  :activity/submit-activity
  #{:admin :ta-project-manager :ta-responsible-person},
  :meeting/cancel #{:admin :ta-project-manager :ta-responsible-person},

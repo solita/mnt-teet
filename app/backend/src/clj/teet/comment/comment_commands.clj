@@ -158,10 +158,11 @@
 
 (defn- valid-visibility-for-user? [user project-id comment-entity visibility]
   (or (du/enum= visibility :comment.visibility/all)
-      (authorization-check/authorized? user
-                                       :projects/set-comment-visibility
-                                       {:project-id project-id
-                                        :entity comment-entity})))
+      (or (authorization-check/authorized? user
+                                           :projects/set-comment-visibility
+                                           {:project-id project-id
+                                            :entity comment-entity})
+          (authorization-check/is-tram-personnel? user))))
 
 
 (defcommand :comment/create
@@ -309,6 +310,8 @@
    :payload {:keys [comment-id]}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/delete-comments {:db/id comment-id}}
+   :contract-authorization {:action :comment/delete-comment
+                            :entity-id comment-id}
    :transact [(deletion-tx user comment-id)]})
 
 (defn- comment-status-tx [user id status]
