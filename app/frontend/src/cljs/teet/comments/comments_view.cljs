@@ -312,14 +312,13 @@
    (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})
    [buttons/link-button {:on-click #(e! (comments-controller/->FocusOnComment (-> unresolved-comments first :db/id)))}
     (tr [:comment :open-latest-unresolved])]
-   [when-authorized :comment/resolve-comments-of-entity
-    {}
-    [buttons/button-text {:color :primary
-                          :end-icon (r/as-element [icons/action-check-circle-outline])
-                          :on-click #(e! (comments-controller/->ResolveCommentsOfEntity
-                                          (:eid commented-entity)
-                                          (:for commented-entity)))}
-     (tr [:comment :resolve-all])]]])
+   (when (authorization-check/is-tram-personnel? @app-state/user)
+     [buttons/button-text {:color :primary
+                           :end-icon (r/as-element [icons/action-check-circle-outline])
+                           :on-click #(e! (comments-controller/->ResolveCommentsOfEntity
+                                            (:eid commented-entity)
+                                            (:for commented-entity)))}
+      (tr [:comment :resolve-all])])])
 
 (defn comment-list
   [{:keys [e! commented-entity after-comment-list-rendered-event]} comments]
