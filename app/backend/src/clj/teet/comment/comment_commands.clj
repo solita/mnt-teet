@@ -97,8 +97,11 @@
       participants)))
 
 (defn- comment-status
-  [user _project-id track?]
-  (if (authorization-check/is-tram-personnel? user)
+  [user project-id track?]
+  (if (or (authorization-check/is-tram-personnel? user)
+          (authorization-check/authorized? user
+                                           :project/track-comment-status
+                                           {:project-id project-id}))
     (if track?
       :comment.status/unresolved
       :comment.status/untracked)
