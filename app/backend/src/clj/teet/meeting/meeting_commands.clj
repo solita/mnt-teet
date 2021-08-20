@@ -20,7 +20,7 @@
             [clojure.spec.alpha :as s]
             [teet.db-api.db-api-large-text :as db-api-large-text]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.authorization.authorization-core :refer [special-authorization]])
+            [teet.authorization.authorization-core :refer [special-authorization] :as authorization])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -47,8 +47,9 @@
 
 (defmethod file-db/allow-download-attachments? :meeting-agenda
   [db user [_ meeting-agenda-id]]
-  (meeting-db/user-is-participating?
-   db user (meeting-db/agenda-meeting-id db meeting-agenda-id)))
+  (or (meeting-db/user-is-participating?
+        db user (meeting-db/agenda-meeting-id db meeting-agenda-id))
+      (authorization/general-project-access? db user (project-db/agenda-project-id db meeting-agenda-id))))
 
 (defmethod file-db/delete-attachment :meeting-agenda
   [db user file-id [_ meeting-agenda-id]]
@@ -67,9 +68,10 @@
 
 (defmethod file-db/allow-download-attachments? :meeting-decision
   [db user [_ meeting-decision-id]]
-  (meeting-db/user-is-participating?
-   db user
-   (meeting-db/decision-meeting-id db meeting-decision-id)))
+  (or (meeting-db/user-is-participating?
+        db user
+        (meeting-db/decision-meeting-id db meeting-decision-id))
+      (authorization/general-project-access? db user (project-db/decision-project-id db meeting-decision-id))))
 
 (defmethod file-db/delete-attachment :meeting-decision
   [db user file-id [_ meeting-decision-id]]

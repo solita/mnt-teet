@@ -42,7 +42,7 @@
   Entity option is only checked in the special-authorization multimethod"
   [{:keys [db user action target company contract _entity-id] :as opts}]
   {:pre [(and db (keyword? action) (action @authorization-matrix))
-         (<= (count (select-keys opts [target company contract]))
+         (<= (count (select-keys opts [:target :company :contract]))
              1)]}
   (if-not (environment/feature-enabled? :contract-partners)
     false

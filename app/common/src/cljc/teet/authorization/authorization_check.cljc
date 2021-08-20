@@ -55,6 +55,22 @@
   (= (get-in entity [link :db/id])
      (:db/id user)))
 
+(def tram-roles
+  #{:admin :ta-project-manager
+    :ta-responsible-person
+    :ta-consultant})
+
+(defn is-tram-personnel?
+  [{:user/keys [permissions] :as _user}]
+  (->> permissions
+       (filter
+         (fn [perm]
+           (and (nil? (:permission/projects perm))
+                (nil? (:permission/valid-until perm))
+                (tram-roles (:permission/role perm)))))
+       not-empty
+       boolean))
+
 (defn authorized?
   #?(:cljs
      ([{:keys [user functionality] :as opts}]

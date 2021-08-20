@@ -1197,7 +1197,12 @@
                                                           :result-event (form/update-atom-event allowed-atom)})))))
        :reagent-render
        (fn [e! {:keys [user] :as app} {:keys [project meeting]}]
-         (let [edit-rights? (and @allowed-atom
+         (let [edit-rights? (and (or (authorization-check/authorized?
+                                       user :meeting/edit-meeting
+                                       {:entity meeting
+                                        :link :meeting/organizer-or-reviewer
+                                        :project-id (:db/id project)})
+                                     @allowed-atom)
                                  (not (:meeting/locked? meeting)))
                review-rights? (and (meeting-model/user-can-review? user meeting)
                                    (not (:meeting/locked? meeting)))]
