@@ -97,10 +97,8 @@
       participants)))
 
 (defn- comment-status
-  [user project-id track?]
-  (if (authorization-check/authorized? user
-                                       :project/track-comment-status
-                                       {:project-id project-id})
+  [user _project-id track?]
+  (if (authorization-check/is-tram-personnel? user)
     (if track?
       :comment.status/unresolved
       :comment.status/untracked)
@@ -171,7 +169,7 @@
    :payload {:keys [entity-id entity-type comment files visibility track?] :as payload}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :pre [(valid-visibility-for-user? user
-                                     (project-db/entity-project-id db entity-type entity-id)                                                                  {:meta/creator {:db/id (:db/id user)}}
+                                     (project-db/entity-project-id db entity-type entity-id) {:meta/creator {:db/id (:db/id user)}}
                                      visibility)]
    :transact
    (let [mentioned-ids (user-uuids->ids db (extract-mentions comment))

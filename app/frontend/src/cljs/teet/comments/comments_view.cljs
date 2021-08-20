@@ -519,9 +519,7 @@
                                      :on-success-event ->UpdateCommentForm}]]]
 
            ;; TODO: when-authorized doesn't play well with form
-           (when (authorization-check/authorized? @app-state/user
-                                                  :project/track-comment-status
-                                                  {})
+           (when (authorization-check/is-tram-personnel? @app-state/user)
              [:div {:style {:text-align :right}}
               [form/field :comment/track?
                [select/checkbox {:label-placement :start}]]])
