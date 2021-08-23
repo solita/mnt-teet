@@ -23,7 +23,8 @@
             [teet.util.datomic :as du]
             [teet.ui.panels :as panels]
             [teet.ui.format :as format]
-            [teet.ui.authorization-context :as authorization-context]))
+            [teet.ui.authorization-context :as authorization-context]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 (defn add-opinion-heading-style
   []
@@ -426,15 +427,16 @@
                   [typography/SmallText (tr [:land-owner-opinion :edit-opinion])])
        :open? false
        :edit-atom edit-open-atom
-       :heading-button [form/form-container-button
-                        {:form-component [owner-opinion-edit-form e! form-data
-                                          close-form-and-refresh project target]
-                         :container pfrom
-                         :open-atom edit-open-atom
-                         :id (str "edit-opinion-" id)
-                         :form-value form-data
-                         :button-component [buttons/button-secondary {:size :small}
-                                            (tr [:buttons :edit])]}]
+       :heading-button [authorization-check/when-authorized :land/manage-land-owner-opinions project
+                        [form/form-container-button
+                         {:form-component [owner-opinion-edit-form e! form-data
+                                           close-form-and-refresh project target]
+                          :container pfrom
+                          :open-atom edit-open-atom
+                          :id (str "edit-opinion-" id)
+                          :form-value form-data
+                          :button-component [buttons/button-secondary {:size :small}
+                                             (tr [:buttons :edit])]}]]
        :content
        [:<>
         [pto]
@@ -453,10 +455,11 @@
   (let [l-address (:L_AADRESS unit)
         purpose (:SIHT1 unit)]
     [:div
-     [buttons/button-primary {:class (<class common-styles/margin-bottom 3)
-                              :on-click #(e! (opinion-controller/->OpinionFormOpen))
-                              :start-icon (r/as-element [icons/content-add])}
-      (tr [:unit-modal-page :add-new-owner-opinion])]
+     [authorization-check/when-authorized :land/manage-land-owner-opinions project
+      [buttons/button-primary {:class (<class common-styles/margin-bottom 3)
+                               :on-click #(e! (opinion-controller/->OpinionFormOpen))
+                               :start-icon (r/as-element [icons/content-add])}
+       (tr [:unit-modal-page :add-new-owner-opinion])]]
      [:div
       [:div {:class (<class common-styles/padding-bottom 1)}
        [typography/TextBold {:style {:display :inline}}

@@ -221,7 +221,7 @@
                         :target
                         (get-in app [:params :activity])
                         :target
-                        (get-in app [:params :project])     ;;
+                        (get-in app [:params :project])
                         :target
                         :else
                         nil)]
@@ -229,7 +229,7 @@
             {:tuck.effect/type :query
              :query :authorization/user-is-permitted?
              :args (merge {:entity-id (:db/id entity)
-                           :project-id (get-in app [:params :project-id])
+                           :project-id (get-in app [:params :project])
                            :action action}
                           (when entity-type
                             {entity-type (:db/id entity)}))

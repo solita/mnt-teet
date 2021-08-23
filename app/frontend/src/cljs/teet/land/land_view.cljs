@@ -658,7 +658,6 @@
                                   (select-keys owner [:isiku_tyyp :nimi]))))
                              (into #{}))))
                     units)]
-      ;; (def *u units)
       [:div
        (mapc
         (fn [group]
