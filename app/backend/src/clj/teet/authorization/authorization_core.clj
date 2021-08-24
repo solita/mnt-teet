@@ -6,7 +6,8 @@
             [teet.user.user-model :as user-model]
             [teet.user.user-db :as user-db]
             [teet.environment :as environment]
-            [teet.permission.permission-db :as permission-db]))
+            [teet.permission.permission-db :as permission-db]
+            [datomic.client.api :as d]))
 
 (defonce authorization-matrix
          (delay
@@ -35,14 +36,22 @@
   [_]
   false)
 
+(defn file-task-id
+  [db file-id]
+  (ffirst (d/q '[:find ?task
+                 :in $ ?file
+                 :where
+                 [?task :task/files ?file]]
+               db file-id)))
+
 (defn authorized-for-action?
   "Check rights either based on the target, company or contract
   Given either company or a target find if the user has the right.
   If neither is given only checks for global permissions
   Entity option is only checked in the special-authorization multimethod"
-  [{:keys [db user action target company contract _entity-id] :as opts}]
+  [{:keys [db user action target company file contract _entity-id] :as opts}]
   {:pre [(and db (keyword? action) (action @authorization-matrix))
-         (<= (count (select-keys opts [:target :company :contract]))
+         (<= (count (select-keys opts [:target :company :contract :file]))
              1)]}
   (if-not (environment/feature-enabled? :contract-partners)
     false
@@ -59,6 +68,8 @@
                     (authorization-db/user-roles-for-company db user-ref company)
                     contract
                     (authorization-db/user-roles-for-contract db user-ref contract)
+                    file
+                    (authorization-db/user-roles-for-target db user-ref (file-task-id db file))
                     :else
                     nil)
               roles (set/union user-global-roles specific-roles)]

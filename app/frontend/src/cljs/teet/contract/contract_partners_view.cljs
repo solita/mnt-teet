@@ -606,7 +606,8 @@
              file])
           (:company-contract-employee/attached-files employee))]
    [:div {:class (<class common-styles/margin 1 0 1 0)}
-    [authorization-check/when-authorized :thk.contract/add-contract-employee (:company-contract/company selected-partner)
+    [authorization-check/when-authorized :thk.contract/edit-contract-employee
+     (:company-contract/company selected-partner)
      [file-upload/FileUploadButton
       {:id "keyperson-files-field"
        :drag-container-id (str "key-person-" (:db/id employee))
@@ -756,7 +757,8 @@
        (tr [:contract :partner (if @show-history?
                                  :hide-license-history
                                  :view-license-history)])]
-      [authorization-check/when-authorized :thk.contract/save-license (:company-contract/company selected-partner)
+      [authorization-check/when-authorized :thk.contract/save-license
+       (:company-contract/company selected-partner)
        [form/form-modal-button
         {:form-component [edit-license-form e! (:db/id employee)]
          :modal-title (tr [:contract :partner :add-license-title])
@@ -795,7 +797,7 @@
        [:div {:class (<class contract-style/key-person-assignment-header)}
         [typography/Heading1 (tr [:contract :employee :key-person-approvals])]
         [remove-key-person-assignment-button e! selected-partner employee]]
-       [key-person-files e! employee]
+       [key-person-files e! employee selected-partner]
        [key-person-licenses e! employee selected-partner]
        [:div {:class (<class common-styles/margin 1 0 1 0)
               :style {:max-width "800px"}}

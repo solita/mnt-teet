@@ -293,9 +293,7 @@
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
    :contract-authorization {:action :document/delete-files
-                            :target (get-in
-                                      (du/entity db file-id)
-                                      [:task/_files :db/id])}
+                            :target (file-db/file-task-id db file-id)}
    :transact (let [file-delete-tx (vec
                                     (for [version-id (file-db/file-versions db file-id)]
                                       (deletion-tx user version-id)))]
