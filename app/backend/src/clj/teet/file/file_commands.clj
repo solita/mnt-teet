@@ -22,7 +22,7 @@
             [teet.integration.integration-email :as integration-email]
             [teet.localization :refer [tr tr-enum with-language]]
             [teet.util.url :as url-util]
-            [teet.authorization.authorization-core :refer [special-authorization]])
+            [teet.authorization.authorization-core :as authorization :refer [special-authorization]])
   (:import (java.util UUID)))
 
 (defn- new-file-key [{name :file/name}]
@@ -293,7 +293,7 @@
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
    :contract-authorization {:action :document/delete-files
-                            :target (file-db/file-task-id db file-id)}
+                            :target (authorization/file-task-id db file-id)}
    :transact (let [file-delete-tx (vec
                                     (for [version-id (file-db/file-versions db file-id)]
                                       (deletion-tx user version-id)))]
