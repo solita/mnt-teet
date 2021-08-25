@@ -126,7 +126,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/update-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
-   :contract-authorization {:action :project/edit-project}
+   :contract-authorization {:action :land/manage-land-acquisitions}
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
             xroad-subsystem [:xroad :kr-subsystem-id]

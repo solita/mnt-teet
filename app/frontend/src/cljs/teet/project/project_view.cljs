@@ -593,7 +593,7 @@
 
 (defmethod project-menu/project-tab-action :land
   [_  _e! _app project]
-  [when-authorized :thk.project/update
+  [when-authorized :thk.project/update-cadastral-units
    project
    [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
     (tr [:buttons :edit])]])
