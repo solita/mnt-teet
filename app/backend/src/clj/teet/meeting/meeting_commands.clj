@@ -124,8 +124,7 @@
                            (meta-model/creation-meta user)))]})
 
 (defmethod special-authorization :meeting/update
-  [{:keys [db user entity-id] :as args}]
-  (def args* args)
+  [{:keys [db user entity-id]}]
   (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/update
