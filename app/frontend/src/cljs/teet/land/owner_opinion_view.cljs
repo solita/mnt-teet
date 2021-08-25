@@ -455,7 +455,7 @@
   (let [l-address (:L_AADRESS unit)
         purpose (:SIHT1 unit)]
     [:div
-     [authorization-check/when-authorized :land/manage-land-owner-opinions project
+     [authorization-check/when-authorized :land-owner-opinion/save-opinion project
       [buttons/button-primary {:class (<class common-styles/margin-bottom 3)
                                :on-click #(e! (opinion-controller/->OpinionFormOpen))
                                :start-icon (r/as-element [icons/content-add])}
