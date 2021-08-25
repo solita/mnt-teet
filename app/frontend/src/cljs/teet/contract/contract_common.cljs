@@ -13,7 +13,9 @@
             [teet.ui.format :as format]
             [teet.util.euro :as euro]
             [teet.user.user-model :as user-model]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.ui.form :as form]
+            [teet.common.common-controller :as common-controller]))
 
 (defn contract-procurement-link
   [{:thk.contract/keys [procurement-number]}]
@@ -46,16 +48,22 @@
    [contract-external-link contract]
    [contract-thk-link contract]])
 
+
 (defn contract-heading
-  [e! app contract]
-  [:div {:class (<class common-styles/margin 0 1 1 1)}
-   [:div {:class (<class common-styles/flex-row-space-between)}
-    [:div {:class (<class common-styles/flex-row-center)}
-     [contract-menu/contract-menu e! app contract]
-     [typography/TextBold {:style {:text-transform :uppercase}
-                           :class (<class common-styles/margin-left 0.5)}
-      (contract-model/contract-name contract)]]
-    [contract-external-links contract]]])
+  [e! _app contract]
+  (let [allowed-to-contract-partners? (r/atom false)]
+    (e! (common-controller/map->QueryUserAccess {:action :contract/partner-page
+                                                 :entity contract
+                                                 :result-event (form/update-atom-event allowed-to-contract-partners?)}))
+    (fn [e! app contract]
+      [:div {:class (<class common-styles/margin 0 1 1 1)}
+       [:div {:class (<class common-styles/flex-row-space-between)}
+        [:div {:class (<class common-styles/flex-row-center)}
+         [contract-menu/contract-menu e! app contract @allowed-to-contract-partners?]
+         [typography/TextBold {:style {:text-transform :uppercase}
+                               :class (<class common-styles/margin-left 0.5)}
+          (contract-model/contract-name contract)]]
+        [contract-external-links contract]]])))
 
 (defn contract-partners-names [contract-partners]
   (str/join ", "

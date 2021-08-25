@@ -3,7 +3,8 @@
             [teet.environment :as environment]
             [teet.contract.contract-db :as contract-db]
             [teet.contract.contract-model :as contract-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.authorization.authorization-core :refer [special-authorization]]))
 
 (defquery :contract/contract-page
   {:doc "Return the single contracts information"
@@ -23,11 +24,20 @@
                    contract-model/db-values->frontend)]
      result))
 
+(defmethod special-authorization :contract/view-partner-information
+  [{:keys [db user entity-id]}]
+  (contract-db/is-part-of-contract-employees? db entity-id (:db/id user)))
+
 (defquery :contract/partner-page
   {:doc "Return contract partners information"
    :context {db :db user :user}
    :args {contract-ids :contract-ids}
-   :allowed-for-all-users? true}
+   :project-id nil
+   :contract-authorization {:action :contract/view-partner-information
+                            :contract [:thk.contract/procurement-id+procurement-part-id
+                                       [(first contract-ids) (second contract-ids)]]
+                            :entity-id [:thk.contract/procurement-id+procurement-part-id
+                                        [(first contract-ids) (second contract-ids)]]}}
   (let [[contract-id contract-part-id] contract-ids
         contract-eid [:thk.contract/procurement-id+procurement-part-id [contract-id contract-part-id]]
         result (-> (contract-db/get-contract-with-partners

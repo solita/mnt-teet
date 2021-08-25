@@ -419,6 +419,19 @@
          boolean)
     false))
 
+(defn is-part-of-contract-employees?
+  "Given the user id and the contract id check if the user is in any of the companies assigned to this contract"
+  [db contract-eid user-eid]
+  (->> (d/q '[:find ?cce
+              :in $ ?c ?user
+              :where
+              [?cc :company-contract/contract ?c]
+              [?cc :company-contract/employees ?cce]
+              [?cce :company-contract-employee/user ?user]]
+            db contract-eid user-eid)
+       ffirst
+       boolean))
+
 (defn company-contract-employee-eid?
   "Is the eid a company-contract-employee eid?"
   [db eid]

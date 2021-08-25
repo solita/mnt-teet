@@ -13,14 +13,15 @@
             [teet.common.common-controller :as common-controller]
             [teet.contract.contract-model :as contract-model]))
 
-(defn contract-pages []
+(defn contract-pages [allowed-to-contract-partners?]
   (let [menu-items
         [{:name :contract-information
           :label [:contract :contract-information]
           :navigate {:page :contract}
           :href-fn #(str "#/contracts/" %)
           :hotkey "1"}]]
-    (if (common-controller/feature-enabled? :contract-partners)
+    (if (and (common-controller/feature-enabled? :contract-partners)
+             allowed-to-contract-partners?)
       (conj menu-items
             {:name :contract-partners
              :label [:contract :partner-information]
@@ -59,7 +60,7 @@
           (tr [:common :hotkey] {:key hotkey})]]))))
 
 (defn contract-menu
-  [_e! _app _contract]
+  [_e! _app _contract _allowed-to-contract-partners?]
   (let [open? (r/atom false)
         anchor-el (atom nil)
         toggle-open! #(do
@@ -68,7 +69,7 @@
         set-anchor! #(reset! anchor-el %)]
     (common/component
       (hotkeys/hotkey "Q" toggle-open!)
-      (fn [e! app contract]
+      (fn [e! app contract allowed-to-contract-partners?]
         [:div
          [buttons/small-button-primary {:start-icon (r/as-element [icons/navigation-menu])
                                         :on-click toggle-open!
@@ -81,7 +82,7 @@
           [ClickAwayListener {:on-click-away toggle-open!}
            [Paper
             (into [MenuList {}]
-                  (for [page (contract-pages)]
+                  (for [page (contract-pages allowed-to-contract-partners?)]
                     [contract-menu-item
                      e! toggle-open! page
                      (contract-model/contract-url-id contract)]))]]]]))))
