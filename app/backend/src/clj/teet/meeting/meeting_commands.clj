@@ -32,6 +32,9 @@
 
 (defn- edit-authorized? [db user meeting-id]
   (or (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      (authorization/authorized-for-action? {:action :meeting/update
+                                             :user user
+                                             :db db})
       (authorization-check/authorized?
        user :meeting/edit-meeting
        {:entity (du/entity db meeting-id)
@@ -121,7 +124,8 @@
                            (meta-model/creation-meta user)))]})
 
 (defmethod special-authorization :meeting/update
-  [{:keys [db user entity-id]}]
+  [{:keys [db user entity-id] :as args}]
+  (def args* args)
   (meeting-db/user-is-organizer-or-reviewer? db user entity-id))
 
 (defcommand :meeting/update
