@@ -427,7 +427,7 @@
                   [typography/SmallText (tr [:land-owner-opinion :edit-opinion])])
        :open? false
        :edit-atom edit-open-atom
-       :heading-button [authorization-check/when-authorized :land/manage-land-owner-opinions project
+       :heading-button [authorization-check/when-authorized :land-owner-opinion/save-opinion project
                         [form/form-container-button
                          {:form-component [owner-opinion-edit-form e! form-data
                                            close-form-and-refresh project target]
