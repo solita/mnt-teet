@@ -214,17 +214,21 @@
   "Fetch history for kps entity."
   [db id]
   (let [times (sort-by first
-                       (d/q '[:find ?txi ?id
+                       (d/q '[:find ?txi
                               :where
                               [?e :company-contract-employee/key-person-status ?id ?tx true]
                               [?tx :db/txInstant ?txi]
                               :in $ ?e]
                             (d/history db) id))]
     (into []
-          (map (fn [[t kps-id]]
+          (map (fn [[t]]
                  (let [db (d/as-of db t)]
-                   (d/pull db '[*
-                                {:meta/modifier [:user/given-name :user/family-name]}] kps-id))))
+                   (d/pull db '[:company-contract-employee/key-person?
+                                :meta/modified-at
+                                {:meta/modifier [:user/given-name :user/family-name]}
+                                {:company-contract-employee/key-person-status
+                                 [*
+                                  {:meta/modifier [:user/given-name :user/family-name]}]}] id))))
           times)))
 
 (defn with-key-person-status-history [db contract]

@@ -52,7 +52,7 @@
   :user-no-global-role "No global role",
   :user-global-role "Global role",
   :past-permissions "Past permissions",
-  :ta-project-manager "TRAM Project manager",
+  :ta-project-manager "TRAM Project managers",
   :reactivated-successfully "User reactivated successfully",
   :ta-responsible-person "TRAM responsible persons",
   :mandatory-information "Mandatory information",
@@ -323,6 +323,7 @@
    "Are you sure you want to change the person's status?",
    :key-person-submitted "Key person has been submitted for approval",
    :on "on",
+   :key-person-assignment-removed "Key person assignment removed",
    :key-person-files "Certificates and documents",
    :edit-person "Edit person",
    :activate "Activate"},
@@ -348,7 +349,7 @@
    :key-person-approved "Key person approved"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active persons",
-  :confirm-remove-key-person-text "If removed it can not be undone.",
+  :confirm-remove-key-person-text "If removed it can be redone.",
   :responsible
   {:header
    {:task "Task",
@@ -420,7 +421,7 @@
     :project-name "Object name",
     :ta/region "Region",
     :partner-name "Partner name",
-    :project-manager "TA Project manager",
+    :project-manager "TRAM Project manager",
     :contract-status "Contract status",
     :contract-type "Procurement type",
     :contract-name "Procurement name",

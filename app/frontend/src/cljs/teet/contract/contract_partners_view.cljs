@@ -654,19 +654,23 @@
                               :button-component [buttons/button-warning {}
                                                  (tr [:contract :partner :reject-person-button])]}])])
 
-(defn key-person-approvals-status [status comment modification-meta]
+(defn key-person-approvals-status [status comment modification-meta key-person?]
   [:div
    [:div.person-appproval {:class (<class common-styles/flex-row)}
     [:div.person-appproval-approver {:class (<class common-styles/flex-table-column-style 30)}
 
-     [:span {:style {:margin-left "0.2rem"}}
-      [tr [:contract :partner :tram-approver]]]]
+     [:span
+      (tr [:contract :partner :tram-approver])]]
     [:div.person-appproval-status {:class (<class common-styles/flex-table-column-style 70 :space-between)}
-     [key-person-icon status]
-     [:span {:style {:margin "0 0.4rem"}}
-      (tr-enum status)]
-     ;; modification time shown when status is approval-requested
-     (contract-partners-controller/status-modified-string-maybe status modification-meta)]]
+     (if key-person?
+       [:<>
+        [key-person-icon status]
+        [:span {:style {:margin "0 0.4rem"}}
+         (tr-enum status)]]
+       [:<>
+        [:span]
+        [:span {:style {:margin "0 0.4rem"}}
+         (tr [:contract :partner :key-person-assignment-removed])]])]]
 
    [:div.person-appproval-comment {:class (<class common-styles/margin-bottom 1)}
     (when comment
@@ -674,12 +678,11 @@
        [:strong (tr [:comment :comment]) ":"]
        [:p {:style {:margin-bottom "0.5rem"}}
         comment]])
-    (when (#{:key-person.status/rejected :key-person.status/approved} status)
-      (let [[time user] modification-meta]
-        [typography/SmallGrayText
-         (user-model/user-name user) " "
-         (tr [:contract :partner :on]) " "
-         (format/date-time-with-seconds time)]))]])
+    (let [[time user] modification-meta]
+      [typography/SmallGrayText
+       (user-model/user-name user) " "
+       (tr [:contract :partner :on]) " "
+       (format/date-time-with-seconds time)])]])
 
 (defn- edit-license-form [e! employee-id close-event form-atom]
   [form/form {:e! e!
@@ -801,29 +804,33 @@
        [key-person-licenses e! employee selected-partner]
        [:div {:class (<class common-styles/margin 1 0 1 0)
               :style {:max-width "800px"}}
-        [:h3 (tr [:contract :employee :approvals])
+        [:div {:class (<class common-styles/flex-row-w100-space-between-center)
+               :style {:margin-bottom "0.5rem"}}
+         [:h3 (tr [:contract :employee :approvals])]
          (when (seq (:company-contract-employee/key-person-status-history employee))
-           [buttons/button-secondary {:size :small
-                                      :style {:float :right
-                                              :top "10px"}
-                                      :on-click #(swap! show-history? not)}
-            (if @show-history?
-              (tr [:admin :hide-history])
-              (tr [:admin :show-history]))])]
+           [:div
+            [buttons/button-secondary {:size :small
+                                       :on-click #(swap! show-history? not)}
+             (if @show-history?
+               (tr [:admin :hide-history])
+               (tr [:admin :show-history]))]])]
         (if @show-history?
           ;; Show all kps entries
-          [:<>
+          [:div
            (mapc
-            (fn [status-entity]
-              (let [status (du/enum->kw (:key-person/status status-entity))
-                    comment (:key-person/approval-comment status-entity)
-                    modification-meta [(:meta/modified-at status-entity) (:meta/modifier status-entity)]]
-                [key-person-approvals-status status comment modification-meta]))
+            (fn [{:company-contract-employee/keys [key-person-status key-person?]
+                  :meta/keys [modified-at modifier]}]
+              (let [status (du/enum->kw (:key-person/status key-person-status))
+                    comment (:key-person/approval-comment key-person-status)
+                    modification-meta (if key-person?
+                                        [(:meta/modified-at key-person-status) (:meta/modifier key-person-status)]
+                                        [modified-at modifier])]
+                [key-person-approvals-status status comment modification-meta key-person?]))
             (:company-contract-employee/key-person-status-history employee))]
 
           ;; Show only the current
-          [key-person-approvals-status status comment modification-meta])
-        [:div {:class (<class common-styles/flex-row-space-between) }
+          [key-person-approvals-status status comment modification-meta true])
+        [:div {:class (<class common-styles/flex-row-space-between)}
          [authorization-check/when-authorized :thk.contract/submit-key-person (:company-contract/company selected-partner)
           [:div {:class (<class contract-style/key-person-assignment-header)}
            (when (#{:key-person.status/assigned :key-person.status/rejected} status)

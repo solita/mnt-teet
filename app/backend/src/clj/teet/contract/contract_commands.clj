@@ -215,6 +215,7 @@
               (merge {:key-person/status :key-person.status/assigned}
                      (meta-model/modification-meta user))
               :company-contract-employee/key-person? key-person?}
+             (meta-model/modification-meta user)
              (when (and key-person? (seq user-files))
                {:company-contract-employee/attached-files (mapv :db/id user-files)})
              (when (and key-person? (seq user-licenses))
