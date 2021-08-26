@@ -7,7 +7,8 @@
             [teet.util.collection :as cu]
             [teet.project.project-model :as project-model]
             [teet.project.task-model :as task-model]
-            [teet.meta.meta-query :as meta-query]))
+            [teet.meta.meta-query :as meta-query]
+            [teet.contract.contract-db :as contract-db]))
 
 
 (defn- user-tasks
@@ -68,7 +69,8 @@
 
         permission-projects (map :db/id
                                  (mapcat :permission/projects
-                                         (permission-db/user-permissions db user-ref)))]
+                                         (permission-db/user-permissions db user-ref)))
+        contract-access-projects (contract-db/projects-the-user-has-access-through-contracts db user-ref)]
     (map
       project-model/project-with-status
       (meta-query/without-deleted
@@ -98,7 +100,8 @@
                    db (distinct (concat owned-projects
                                         managing-activity-projects
                                         permission-projects
-                                        project-ids))))))))
+                                        project-ids
+                                        contract-access-projects))))))))
 
 
 (defn user-dashboard [db user]
