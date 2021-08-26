@@ -23,7 +23,8 @@
             [teet.integration.integration-id :as integration-id]
             [teet.file.file-db :as file-db]
             [teet.db-api.db-api-large-text :as db-api-large-text]
-            [teet.comment.comment-db :as comment-db]))
+            [teet.comment.comment-db :as comment-db]
+            [teet.contract.contract-db :as contract-db]))
 
 (defquery :thk.project/integration-id->thk-id
   {:doc "Fetch THK project id for given entity :integration/id number"
@@ -235,19 +236,21 @@
 
 (defquery :thk.project/listing
   {:doc "List all project basic info"
-   :context {db :db}
+   :context {db :db
+             user :user}
    :args _
    :spec empty?
    :allowed-for-all-users? true}
-  (map
-    project-model/project-with-status
-    (meta-query/without-deleted
-      db
-      (mapv first
-            (d/q '[:find (pull ?e columns)
-                   :in $ columns
-                   :where [?e :thk.project/id _]]
-                 db project-model/project-list-with-status-attributes)))))
+  {:projects-with-contract-access (contract-db/projects-the-user-has-access-through-contracts db (:db/id user))
+   :projects (map
+               project-model/project-with-status
+               (meta-query/without-deleted
+                 db
+                 (mapv first
+                       (d/q '[:find (pull ?e columns)
+                              :in $ columns
+                              :where [?e :thk.project/id _]]
+                            db project-model/project-list-with-status-attributes))))})
 
 (defmulti search-clause (fn [[field _value]] field))
 

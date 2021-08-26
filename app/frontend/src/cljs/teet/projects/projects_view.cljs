@@ -82,9 +82,10 @@
 (defn- user-participates-in-project?
   "The user is considered participating in a project if they're the
   manager or owner, or if they have a valid permission of any kind for
-  the project."
-  [user project]
-  (or (= (-> project :thk.project/owner :user/id)
+  the project. Or if they are part of a contract that is targeting that project."
+  [user projects-with-contract-access project]
+  (or ((set projects-with-contract-access) (:db/id project))
+      (= (-> project :thk.project/owner :user/id)
          (:user/id user))
       (= (-> project :thk.project/manager :user/id)
          (:user/id user))
@@ -93,13 +94,12 @@
             set)
        (:db/id project))))
 
-(defn- filtered-by [value current-user all-projects]
-
+(defn- filtered-by [value current-user all-projects projects-with-contract-access]
   (cond (= value "unassigned-only")
         (filter (complement :thk.project/owner) all-projects)
 
         (= value "my-projects")
-        (filter (partial user-participates-in-project? current-user)
+        (filter (partial user-participates-in-project? current-user projects-with-contract-access)
                 all-projects)
 
         :else
@@ -118,7 +118,7 @@
       [common/Link {:href (routes/url-for (assoc-in route [:query :row-filter] my-filter))}
        filter-text])))
 
-(defn- projects-listing [e! app all-projects]
+(defn- projects-listing [e! app all-projects projects-with-contract-access]
   (let [row-filter (or (-> app :query :row-filter)
                        "my-projects")
         current-route (select-keys app [:page :params :query])]
@@ -130,7 +130,7 @@
                                  [filter-link current-route "unassigned-only" row-filter]]
                    :on-row-click (comp (e! project-controller/->NavigateToProject) :thk.project/id)
                    :label (tr [:projects :title])
-                   :data (filtered-by row-filter @app-state/user all-projects)
+                   :data (filtered-by row-filter @app-state/user all-projects projects-with-contract-access)
                    :columns project-model/project-listing-display-columns
                    :get-column project-model/get-column
                    :get-column-compare project-model/get-column-compare
@@ -171,6 +171,6 @@
                                              :fit-on-load? true})}))}
      (:map app)]))
 
-(defn projects-list-page [e! app projects]
+(defn projects-list-page [e! app {:keys [projects projects-with-contract-access]}]
   [:div {:class (<class projects-style/projects-table-container)}
-   [projects-listing e! app projects]])
+   [projects-listing e! app projects projects-with-contract-access]])

@@ -522,3 +522,16 @@
      ;; ... and each company with no representatives
      (mapv (fn [cc] {:company-contract cc})
                   ccs-without-representatives))))
+
+(defn projects-the-user-has-access-through-contracts
+  [db user-id]
+  (->> (d/q '[:find ?project
+              :where
+              (contract-target-project ?c ?project)
+              [?cc :company-contract/contract ?c]
+              [?cc :company-contract/employees ?cce]
+              [?cce :company-contract-employee/active? true]
+              [?cce :company-contract-employee/user ?user]
+              :in $ % ?user]
+            db contract-query-rules user-id)
+       (mapv first)))
