@@ -303,7 +303,7 @@
    :license-saved "Litsents salvestatud",
    :edit-license-title "Muuda litsentsi",
    :view-license-history "Kuva aegunud litsentse",
-   :file-link-removed "Võtmeisiku dokumendi viide kustutatud.",
+   :file-link-removed "Võtmeisiku dokumendi viide eemaldatud.",
    :person-updated "Isiku admed muudetud",
    :tram-approver "Transpordiamet",
    :hide-license-history "Peida aegunud litsentsid",
@@ -341,12 +341,12 @@
    :key-person-is-waiting-approvals "Võtmeisik ootab kinnitust",
    :approvals "Kinnitus",
    :key-person-not-submitted "Võtmeisiku kinnitamist ei ole soovitud",
-   :key-person-rejected "Võtmeisik kinnitamine tagasi lükatud",
+   :key-person-rejected "Võtmeisiku kinnitamine tagasi lükatud",
    :key-person-approved "Võtmeisik kinnitatud"},
   :cannot-delete-company-with-persons
   "Saate partneri lepingust eemaldada ainult siis, kui sellel pole ühtegi aktiivset isikut",
   :confirm-remove-key-person-text
-  "Kui on kustutatud, siis seda on võimalik hiljem taastada.",
+  "Kui on eemaldatud, siis seda on võimalik hiljem taastada.",
   :responsible
   {:header
    {:task "Ülesanne",
@@ -354,7 +354,7 @@
     :company-responsible "Ettevõtte vastutav isik",
     :status "Olek"}},
   :persons "Isikud",
-  :delete-button-text "Jah, kustuta",
+  :delete-button-text "Jah, eemalda",
   :add-company "Lisan ettevõtte",
   :status "Staatus",
   :are-you-sure-delete-partner "Olete kindel, et soovite eemaldada?",
@@ -376,7 +376,7 @@
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :are-you-sure-remove-key-person-assignment
-  "Kas olete kindel, et soovite võtmeisiku ülesande kustutada?",
+  "Kas olete kindel, et soovite võtmeisiku ülesande eemaldada?",
   :partners-listing "Partnerite info",
   :responsibilities-listing "Isikute vastutused",
   :thk.contract.status/signed "Allkirjastatud",

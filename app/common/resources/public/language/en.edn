@@ -349,7 +349,7 @@
    :key-person-approved "Key person approved"},
   :cannot-delete-company-with-persons
   "You can remove partner from the contract only if it does not have any active persons",
-  :confirm-remove-key-person-text "If removed it can be redone.",
+  :confirm-remove-key-person-text "If removed, it can be redone.",
   :responsible
   {:header
    {:task "Task",
