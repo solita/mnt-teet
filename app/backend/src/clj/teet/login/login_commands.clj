@@ -6,7 +6,8 @@
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.permission.permission-db :as permission-db]
-            [teet.user.user-db :as user-db])
+            [teet.user.user-db :as user-db]
+            [teet.contract.contract-db :as contract-db])
   (:import (java.util Date)))
 
 
@@ -127,6 +128,7 @@
         update-last-login (when-not (and deactivated? (empty? permissions))
                                     (d/transact conn {:tx-data [{:user/id id
                                                                  :user/last-login (Date.)}]}))
+        active-contracts (contract-db/users-active-contracts db [:user/id id])
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
@@ -134,8 +136,9 @@
                                  (cond
                                    deactivated?
                                    "?error=user-deactivated"
-                                   (empty? permissions)
-                                   "?error=no-roles"
+                                   (and (empty? permissions)
+                                        (empty? active-contracts))
+                                   "?error=no-roles-or-active-contracts"
                                    :else
                                    (str "?token="
                                         (jwt-token/create-token
