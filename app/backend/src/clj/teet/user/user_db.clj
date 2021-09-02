@@ -67,8 +67,7 @@
      [(missing? $ ?u :user/deactivated?)]
      [?u :user/family-name ?family]
      [(str ?given " " ?family) ?full-name]
-     [(.toLowerCase ?full-name) ?full-name-lower]
-     [(.contains ^String ?full-name-lower ?search)]]])
+     [(.contains ^String ?full-name ?search)]]])
 
 (defn find-user-by-name [db name]
   (d/q '[:find (pull ?u [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
@@ -77,7 +76,7 @@
          :in $ % ?name]
        db
        user-query-rules
-       (str/lower-case name)))
+       name))
 
 (defn find-all-users [db]
   (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
