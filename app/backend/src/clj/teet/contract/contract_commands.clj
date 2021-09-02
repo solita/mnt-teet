@@ -318,7 +318,6 @@
                          [updated-user
                           (merge
                            {:db/id company-contract-employee
-                            :company-contract-employee/active? true
                             :company-contract-employee/user [:user/id (:user/id employee-fields)]
                             :company-contract-employee/role roles-update}
                            (meta-model/modification-meta user))])]
