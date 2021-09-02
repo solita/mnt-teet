@@ -535,3 +535,15 @@
               :in $ % ?user]
             db contract-query-rules user-id)
        (mapv first)))
+
+(defn users-active-contracts
+  [db user]
+  (->> (d/q '[:find ?contract
+              :where
+              [?cce :company-contract-employee/user ?user]
+              [?cce :company-contract-employee/active? true]
+              [?cc :company-contract/employees ?cce]
+              [?cc :company-contract/contract ?contract]
+              :in $ ?user]
+            db user)
+       (mapv first)))
