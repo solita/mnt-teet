@@ -788,7 +788,7 @@
                                             :loading? loading?))
 
                                   (when loading?
-                                    (e! (->CompleteUser t
+                                    (e! (->CompleteUser (clojure.string/lower-case t)
                                                         (fn [users]
                                                           (swap! state assoc
                                                                  :loading? false
