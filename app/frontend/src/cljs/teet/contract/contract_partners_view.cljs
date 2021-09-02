@@ -963,7 +963,7 @@
                [select/select-search
                 {:e! e!
                  :query (fn [text]
-                          {:args {:search text
+                          {:args {:search (clojure.string/lower-case text)
                                   :company-contract-id (:db/id selected-partner)}
                            :query :contract/possible-partner-employees})
                  :format-result select/user-search-select-result
