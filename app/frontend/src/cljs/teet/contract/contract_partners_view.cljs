@@ -194,18 +194,19 @@
                     :text-align :center}}
       [:div {:class (<class common-styles/margin-bottom 1)}
        (when cancel
-         [buttons/button-secondary {:style {:margin-right "1rem"}
-                                    :disabled disabled?
+         [buttons/button-secondary {:disabled disabled?
                                     :class "cancel"
                                     :on-click cancel}
           (tr [:buttons :cancel])])
        (if (and estonia-selected? (not search-success?) (not existing-company?))
-         [buttons/button-primary {:disabled search-disabled?
-                                  :on-click (e! contract-partners-controller/->SearchBusinessRegistry :new-partner
-                                                (:company/business-registry-code form-value))}
-          (tr [:buttons :search])]
+         (when (not search-disabled?)
+           [buttons/button-primary {:style {:margin-left "1rem"}
+                                    :on-click (e! contract-partners-controller/->SearchBusinessRegistry :new-partner
+                                                                             (:company/business-registry-code form-value))}
+                                       (tr [:buttons :search])])
          (when validate
-           [buttons/button-primary {:disabled disabled?
+           [buttons/button-primary {:style {:margin-left "1rem"}
+                                    :disabled disabled?
                                     :type :submit
                                     :class "submit"
                                     :on-click validate}
