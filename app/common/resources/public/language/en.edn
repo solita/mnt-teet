@@ -1656,6 +1656,7 @@
  :validation
  {:invalid-business-id "Invalid business registry id",
   :invalid-estonian-person-id "Invalid person id",
+  :empty-value "Empty value",
   :invalid-email "Invalid email address",
   :invalid-date "Invalid date. Please select correct one."},
  :warning

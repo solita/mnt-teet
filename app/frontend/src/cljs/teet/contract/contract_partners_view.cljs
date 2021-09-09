@@ -215,9 +215,11 @@
   []
   [:div
    ^{:key "foreign-code"}
-   [form/field :company/business-registry-code
+   [form/field {:attribute :company/business-registry-code
+                :validate validation/not-empty?}
     [TextField {}]]
-   [form/field :company/name
+   [form/field {:attribute :company/name
+                :validate validation/not-empty?}
     [TextField {}]]
    [form/field {:attribute :company/email
                 :validate validation/validate-email-optional}
