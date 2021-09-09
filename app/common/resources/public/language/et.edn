@@ -372,7 +372,7 @@
   :select-user-roles "Valin rollid",
   :contract-related-entities "Lepinguga seotud üksused",
   :no-companies-matching-search
-  "Otsingule vastavaid ettevõtteid ei leitud või on juba lisatud",
+  "Otsingule vastavaid ettevõtteid ei leitud või on juba lisatud antud lepingusse",
   :xroad-exception-content
   "Proovige mõne minuti pärast uuesti või võtke ühendust süsteemi administraatoriga, kui probleem püsib",
   :are-you-sure-remove-key-person-assignment
@@ -1655,6 +1655,7 @@
  :validation
  {:invalid-business-id "Vale äriregistri kood",
   :invalid-estonian-person-id "Vale isikukood",
+  :empty-value "Tühi väärtus",
   :invalid-email "Vale e-posti aadress",
   :invalid-date "Sobimatu kuupäev. Palun vali õige."},
  :warning

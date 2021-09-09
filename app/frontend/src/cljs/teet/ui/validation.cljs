@@ -29,6 +29,11 @@
   (or (nil? (first value))
     (str/blank? (first value))))
 
+(defn not-empty? [value]
+  (when
+    (and (not (nil? value))
+         (empty-value? value))
+    (tr [:validation :empty-value])))
 
 (defn validate-email
   [value]
