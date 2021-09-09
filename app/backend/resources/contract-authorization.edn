@@ -3,12 +3,9 @@
  :land/update-cadastral-units
  #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :cost-items/add-cost-items
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :meeting/create-decision
  #{:admin :ta-project-manager :ta-responsible-person},
@@ -18,30 +15,22 @@
  :contract/view-partner-information
  #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :contract/submit-key-person-for-approval
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :activity/review-activity #{:admin :ta-responsible-person},
  :comment/delete-comment #{:admin},
  :meeting/delete-agenda
  #{:admin :ta-project-manager :ta-responsible-person},
  :task/edit-task-part
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :cost-items/edit-cost-items
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :meeting/update #{:admin :ta-project-manager :ta-responsible-person},
  :meeting/change-participation-absence
@@ -54,22 +43,16 @@
  :project/edit-project
  #{:admin :ta-project-manager :ta-responsible-person},
  :document/upload-files
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :comment/update #{:admin},
  :comments/edit-all-comments #{:admin},
  :document/edit-files
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :cost-items/locking-unlocking-and-versioning
  #{:admin :ta-project-manager :ta-responsible-person},
@@ -78,12 +61,9 @@
  :meeting/delete-decision
  #{:admin :ta-project-manager :ta-responsible-person},
  :document/delete-files
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :admin/remove-user #{:admin},
  :admin/add-user #{:admin},
@@ -98,37 +78,23 @@
  :contract/edit-company-information
  #{:admin :ta-project-manager :ta-responsible-person},
  :task/submit-task-and-task-parts
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :comments/track-comment-status
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
-   :company-contract-employee.role/company-representative},
+ #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :meeting/create-meeting
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :activity/create-activity
  #{:admin :ta-project-manager :ta-responsible-person},
  :land/manage-land-acquisitions
  #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :contract/manage-company-employees
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :meeting/review #{:admin :ta-project-manager :ta-responsible-person},
  :activity/edit-activity
@@ -136,12 +102,9 @@
  :meeting/remove-participation
  #{:admin :ta-project-manager :ta-responsible-person},
  :cost-items/delete-cost-items
- #{:admin
-   :company-contract-employee.role/company-project-manager
-   :ta-consultant
-   :company-contract-employee.role/team-member
-   :ta-project-manager
-   :ta-responsible-person
+ #{:admin :company-contract-employee.role/company-project-manager
+   :ta-consultant :company-contract-employee.role/team-member
+   :ta-project-manager :ta-responsible-person
    :company-contract-employee.role/company-representative},
  :admin/inspector #{:admin},
  :meeting/update-agenda
@@ -150,7 +113,7 @@
  :task/reopen-task-part
  #{:admin :ta-project-manager :ta-responsible-person},
  :cooperation/manage-opinions-of-competent-authority
- #{:admin :ta-project-manager :ta-responsible-person},
+ #{:admin :ta-consultant :ta-project-manager :ta-responsible-person},
  :activity/submit-activity
  #{:admin :ta-project-manager :ta-responsible-person},
  :meeting/cancel #{:admin :ta-project-manager :ta-responsible-person},
@@ -159,4 +122,4 @@
  :contract/manage-contract-companies
  #{:admin :ta-project-manager :ta-responsible-person},
  :task/review-task-and-task-parts
- #{:admin :ta-consultant :ta-project-manager :ta-responsible-person}}
+ #{:admin :ta-project-manager :ta-responsible-person}}
