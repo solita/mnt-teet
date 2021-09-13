@@ -864,19 +864,28 @@
 
 (defn contract-personnel-form-footer
   [form-value {:keys [cancel validate disabled?]}]
-  (let [save-disabled? (not (boolean (:company-contract-employee/user form-value)))]
+  (let [save-disabled? (and
+                         (not (boolean (:company-contract-employee/user form-value)))
+                         (not (boolean (:company-contract-employee/role form-value)))
+                         (not (boolean (:user/given-name form-value)))
+                         (not (boolean (:user/family-name form-value)))
+                         (not (boolean (:user/email form-value)))
+                         (not (boolean (:user/person-id form-value))))]
     [:div {:class (<class form/form-buttons)}
      [:div {:style {:margin-left :auto
                     :text-align :center}}
       [:div {:class (<class common-styles/margin-bottom 1)}
        (when cancel
-         [buttons/button-secondary {:style {:margin-right "1rem"}
-                                    :disabled disabled?
+         [buttons/button-secondary {:disabled disabled?
                                     :class "cancel"
                                     :on-click cancel}
           (tr [:buttons :cancel])])
        (when validate
-         [buttons/button-primary {:disabled disabled?
+         [buttons/button-primary {:style {:margin-left "1rem"
+                                          :display (if save-disabled?
+                                                     :none
+                                                     :inline-block)}
+                                  :disabled disabled?
                                   :type :submit
                                   :class "submit"
                                   :on-click validate}
